@@ -1,0 +1,13 @@
+/vendor/
+/.idea/
+/.phpunit.cache/
+/.phpunit.result.cache
+/var/
+/.env.local
+/.runs/
+/node_modules/
+/client/node_modules/
+/client/dist/
+/public/build/
+.DS_Store
+/.pi/settings.json

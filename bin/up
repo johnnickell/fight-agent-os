@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -eu
+if [ ! -f vendor/autoload.php ]; then
+    echo "Dependencies are not installed. Run: ./bin/composer install --no-interaction --prefer-dist --no-progress" >&2
+    exit 1
+fi
+
+docker compose up --detach --build
+docker compose port web 8080

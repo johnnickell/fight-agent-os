@@ -1,0 +1,69 @@
+{
+    "schema_version": "fight-common.framework-support-receipt/v1",
+    "content_id": "2d0e6d47adb41f726ac003b2ff7fa846cb57f7a1da07721ff965ad491a6594e7",
+    "candidate": {
+        "package": "johnnickell/fight-common",
+        "version": "1.2.0-dev",
+        "reference": "fad24ae9fdcf4ac00fa55c59ef7d35f7c7531911"
+    },
+    "framework": {
+        "name": "slim",
+        "version": "4.15.3",
+        "providers": [
+            "doctrine/dbal@4.4.4",
+            "doctrine/orm@3.6.8",
+            "guzzlehttp/guzzle@7.15.5",
+            "lcobucci/jwt@5.6.0",
+            "league/flysystem@3.36.0",
+            "league/flysystem-local@3.35.3",
+            "monolog/monolog@3.11.0",
+            "slim/psr7@1.8.0",
+            "symfony/cache@v8.1.6",
+            "symfony/filesystem@v8.1.6",
+            "symfony/mailer@v8.1.5",
+            "symfony/mercure@v0.7.2",
+            "symfony/process@v8.1.6",
+            "symfony/validator@v8.1.6",
+            "twig/twig@v3.28.0"
+        ]
+    },
+    "lock_sha256": "e6f18dea1a5fadc986503f31f7f723e06bd7c57ab5d6ed21574b1a90e41ed396",
+    "capabilities": {
+        "container.explicit_fight_contracts": "ship",
+        "security.php_hmac_jwt": "wire",
+        "validation.native_services": "wire",
+        "messaging.synchronous": "wire",
+        "persistence.dbal_transactions": "ship",
+        "cache.psr6": "wire",
+        "http.guzzle_psr17_jsend_middleware": "ship",
+        "filesystem.symfony": "ship",
+        "storage.flysystem_local": "wire",
+        "file_transfer.null_fallback": "wire",
+        "process_scheduler": "wire",
+        "routing.slim_url_generation": "ship",
+        "mail_sms.null_fallbacks": "wire",
+        "templating.twig": "ship",
+        "serialization.json": "ship",
+        "observability.null_health": "wire",
+        "publication.mercure_configurable": "wire"
+    },
+    "journeys": [
+        {
+            "name": "lowest_booted_slim_capabilities",
+            "status": "passed",
+            "evidence": "composer-lowest.lock; scripts/verify-dependency-lanes.sh"
+        },
+        {
+            "name": "latest_booted_slim_capabilities",
+            "status": "passed",
+            "evidence": "composer.lock; tests/Integration; tests/Functional"
+        }
+    ],
+    "result": "passed",
+    "evidence": {
+        "build": "./bin/build",
+        "planning_check": "./bin/planning-check",
+        "receipt_sha256": "e01174b6222fb4f4439adca1214f1ef400ae673acbeb863b9e18fed28ddca9dc"
+    },
+    "next_action": null
+}

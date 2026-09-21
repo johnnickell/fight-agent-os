@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+set -eu
+
+image=fight-agent-os-build
+git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
+docker build --file etc/docker/cli/Dockerfile --tag "$image" .
+docker run --rm --volume "$(pwd):/app" --volume "$git_common_dir:$git_common_dir:ro" \
+  --workdir /app "$image" sh -ec '
+  sh scripts/validate-composer-candidate.sh
+  composer install --no-interaction --prefer-dist --no-progress
+  php scripts/generate-framework-support-receipt.php
+  sh scripts/verify-dependency-lanes.sh
+
+  work_root=$(mktemp -d)
+  trap "rm -rf \"$work_root\" || true" EXIT
+  git clone --quiet --no-checkout https://github.com/johnnickell/fight-common "$work_root/fight-common"
+  candidate_reference=$(php scripts/framework-support-profile.php --candidate-reference)
+  git -C "$work_root/fight-common" checkout --quiet --detach "$candidate_reference"
+  php scripts/verify-framework-support-receipt.php "$work_root/fight-common"
+
+  ./bin/planning-check
+  php vendor/bin/phpunit
+
+  production_root="$work_root/production"
+  mkdir "$production_root"
+  cp -a . "$production_root"
+  cd "$production_root"
+  composer install --no-dev --no-interaction --prefer-dist --no-progress
+  php scripts/public-contract-check.php
+  php scripts/verify-production-framework-support-profile.php
+'

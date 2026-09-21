@@ -1,0 +1,25 @@
+# Index
+
+- `.pi`
+- `AGENTS.md`
+- `ARCHITECTURE.md`
+- `LICENSE`
+- `README.md`
+- `bin`
+- `bootstrap`
+- `client`
+- `compose.yaml`
+- `composer-lowest.lock`
+- `composer-lowest.lock.sha256`
+- `composer.json`
+- `composer.lock`
+- `config`
+- `docs`
+- `etc`
+- `evidence`
+- `phpunit.xml`
+- `planning`
+- `public`
+- `scripts`
+- `src`
+- `tests`
