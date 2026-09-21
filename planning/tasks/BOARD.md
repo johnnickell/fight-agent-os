@@ -1,6 +1,6 @@
 # TASK Board
 
-No implementation has been planned yet. Start with the [foundation planning brief](../FOUNDATION.md).
+Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 
 <!-- planning:board -->
 ## Active Work
@@ -43,5 +43,5 @@ No implementation has been planned yet. Start with the [foundation planning brie
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 1 | [TASK-00001](00001-TASK.md) | Add the initial project-local planning skills | [TICKET-00001 — Seed the planning skill foundation](../tickets/00001-TICKET.md) | done | — | — |
 <!-- /planning:board -->

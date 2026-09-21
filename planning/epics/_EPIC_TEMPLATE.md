@@ -22,5 +22,5 @@ Link accepted decisions and their consequences, including security and validatio
 
 ## Progress
 
-Record durable outcomes and remaining decisions. Grilling writes this EPIC; TICKET/TASK decomposition follows
+Record durable outcomes and remaining decisions. Grill writes this EPIC; TICKET/TASK decomposition follows
 separately, and the table above will reflect the resulting records.

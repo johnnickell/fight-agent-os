@@ -18,7 +18,7 @@ both live and archived records before allocating the next ID. This is a fresh pl
 Every artifact directory keeps a copy-ready `_…_TEMPLATE.md`. Templates are not records and receive no ID. ADRs
 remain in `adr/` with `NNNN-description.md` names; focused agent instructions remain in `agents/`.
 
-Grilling writes the EPIC only. Decompose it into TICKETs, then TASKs before implementation. Record use cases,
+Grill writes the EPIC only. Decompose it into TICKETs, then TASKs before implementation. Record use cases,
 commands, queries, events, expected side effects, validation, permissions, and observable acceptance evidence.
 Explain concerns that are not applicable rather than silently omitting them.
 

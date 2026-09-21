@@ -3,5 +3,5 @@
 <!-- planning:records -->
 | ID | Title | Status | Parent |
 |---|---|---|---|
-| None | — | — | — |
+| [EPIC-00001](00001-EPIC.md) | Establish project-local planning skills | done | — |
 <!-- /planning:records -->
