@@ -51,7 +51,7 @@ No application permission model applies because this is a repository-local agent
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00002](../tasks/00002-TASK.md) | Establish and prove safe TASK execution | ready-for-human |
+| [TASK-00002](../tasks/00002-TASK.md) | Establish and prove safe TASK execution | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
