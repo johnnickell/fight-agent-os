@@ -7,13 +7,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | ready-for-agent | — | — |
 | 5 | [TASK-00005](00005-TASK.md) | Establish and prove disposable product-design exploration | [TICKET-00005 — Establish disposable product-design exploration](../tickets/00005-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
