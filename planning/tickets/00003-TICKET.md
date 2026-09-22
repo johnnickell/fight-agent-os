@@ -50,7 +50,7 @@ No application permission model applies. The skill receives read/verification au
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00003](../tasks/00003-TASK.md) | Establish and prove independent implementation review | in-progress |
+| [TASK-00003](../tasks/00003-TASK.md) | Establish and prove independent implementation review | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
