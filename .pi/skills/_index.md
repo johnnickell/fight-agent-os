@@ -3,6 +3,7 @@
 - `README.md`
 - `grill/SKILL.md`
 - `land/SKILL.md`
+- `next/SKILL.md`
 - `prototype/SKILL.md`
 - `review/SKILL.md`
 - `research/SKILL.md`
