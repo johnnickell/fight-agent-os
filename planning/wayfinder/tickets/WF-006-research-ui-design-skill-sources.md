@@ -2,7 +2,7 @@
 
 **Labels:** `wayfinder:research`
 **Mode:** AFK
-**Status:** Open
+**Status:** Closed
 **Map:** [Usable web application foundation](../usable-web-application-foundation-map.md)
 **Depends on:** —
 
@@ -23,4 +23,10 @@ This ticket may produce cited research and recommendations for UI/design skills.
 
 ## Resolution
 
-Write this only when the decision is closed. Link the research note and any recommended installation or skill-creation handoff.
+[Research](../research/WF-006-research-ui-design-skill-sources.md) finds OpenDesign `v0.3.1` useful as MIT-licensed workflow inspiration but rejects an as-is installation. Its tagged static viewer works locally, and its skills fit the Agent Skills shape, but the stock workflow downloads from mutable `main`, may execute unpinned `npx`, serves the repository root without a loopback bind, uses an unsandboxed same-origin preview, writes outside `.runs/`, and assumes host form/subagent capabilities not present in this Pi workflow.
+
+WF-002 should grill two project-owned capabilities: design/exploration and independent design review. They should preserve the existing `prototype` skill's disposable lifecycle, use W3C/Bootstrap/application requirements as authorities, and adapt only reviewed ideas from OpenDesign, Anthropic's Apache-2.0 design skills, and selected MIT community examples. Do not install OpenDesign, Superdesign, `baoyu-design`, or a broad skill pack through this decision.
+
+Design evidence belongs under ignored `.runs/prototypes/<scope>/`: a brief, sourced/licensed references, meaningful alternatives, flows/states, semantic tokens when warranted, disposable fake-data prototype, deterministic responsive/state screenshots, actual automated/manual check results, and a verdict. Only accepted decisions and implementation requirements become durable planning. A later approved TASK must recreate the chosen design in the production React/Bootstrap architecture rather than promote prototype code.
+
+The skill-creation handoff must harden any local viewer, pin browser/tool dependencies, add required third-party notices, and prove the workflow on one bounded UI question before authentication or dashboard implementation relies on it.

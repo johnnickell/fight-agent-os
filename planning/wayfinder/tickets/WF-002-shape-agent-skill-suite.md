@@ -2,7 +2,7 @@
 
 **Labels:** `wayfinder:grill`
 **Mode:** HITL
-**Status:** Open
+**Status:** Closed
 **Map:** [Usable web application foundation](../usable-web-application-foundation-map.md)
 **Depends on:** [WF-001](WF-001-recover-source-conventions.md), [WF-006](WF-006-research-ui-design-skill-sources.md)
 
@@ -24,4 +24,6 @@ This ticket may settle the first execution and design skill suite and authorize 
 
 ## Resolution
 
-Write this only when the decision is closed. Link the created skill-planning EPIC/TICKETs or the implementation handoff.
+[EPIC-00002](../../epics/00002-EPIC.md) establishes the project-local `work`, `review`, `land`, `design`, and `design-review` suite with short names and no imported Factory workflow machinery. The skills consume approved planning rather than creating or decomposing it. `work` owns implementation and worktree coordination, `review` owns independent signoff, and `land` finalizes the documented `done` state, publication readiness, and bounded TASK-owned cleanup before human merge control.
+
+Design remains evidence-first and disposable under `.runs/prototypes/`, with independent rendered review and a project-owned Bootswatch-like visual-language specimen. Concise project-owned engineering and design standards support the skills. TICKET/TASK decomposition remains a separate operation.
