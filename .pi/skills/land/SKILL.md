@@ -24,12 +24,13 @@ Do not inspect implementation to issue another verdict or repair a finding. Miss
 
 ## 3. Finalize the TASK
 
-1. Record actual acceptance evidence, review and finding dispositions, warnings, risks, publication state, and cleanup decisions in the TASK.
-2. Set the TASK to `done` only when implementation acceptance and required verification are supported.
-3. Run `./bin/planning-check --write`, inspect generated changes, then run focused checks, `./bin/planning-check`, `git diff --check`, and final `./bin/build`.
-4. Inspect the complete diff/status, stage only owned paths, inspect the staged diff, and create an authorized landing commit.
+1. Run the required focused checks, `./bin/planning-check`, `git diff --check`, and `./bin/build` to obtain fresh results and counts before asserting completion.
+2. Record those actual commands, results, and counts with the acceptance evidence, review and finding dispositions, warnings, risks, publication state, and cleanup decisions in the TASK.
+3. Set the TASK to `done` only when implementation acceptance and required verification are supported, then run `./bin/planning-check --write` and inspect the generated changes.
+4. Rerun the focused checks, `./bin/planning-check`, `git diff --check`, and final `./bin/build` after the authoritative record update.
+5. Inspect the complete diff/status, stage only owned paths, inspect the staged diff, and create an authorized landing commit.
 
-A failed or skipped required check blocks publication. Keep planning truthful as directed by the landing standards; never present an earlier receipt as final-tree evidence.
+A failed or skipped required check blocks publication. If a rerun changes a recorded result, update the TASK and repeat the final checks before commit. Keep planning truthful as directed by the landing standards; never present an earlier receipt as final-tree evidence.
 
 ## 4. Publish only what was authorized
 

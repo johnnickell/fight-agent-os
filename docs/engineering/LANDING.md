@@ -26,13 +26,14 @@ Reconcile each acceptance criterion with accepted review evidence and fresh impl
 
 When acceptance is supported:
 
-1. Update the TASK completion notes and set its status to `done`; do not alter requirement scope.
-2. Run `./bin/planning-check --write` and inspect the generated changes.
-3. Run focused checks, `./bin/planning-check`, `git diff --check`, and the final `./bin/build` on the candidate landing tree.
-4. Inspect the complete diff and status for scope, secrets, debris, and preserved unrelated work.
-5. Stage only owned paths, inspect the staged diff, and create a landing commit only when authorized.
+1. Run focused checks, `./bin/planning-check`, `git diff --check`, and `./bin/build` to obtain fresh results and counts on the accepted implementation before asserting completion.
+2. Record those actual commands, results, and counts in the TASK completion notes, then set its status to `done`; do not alter requirement scope.
+3. Run `./bin/planning-check --write` and inspect the generated changes.
+4. Rerun the focused checks, `./bin/planning-check`, `git diff --check`, and final `./bin/build` after the authoritative TASK and generated views have changed.
+5. Inspect the complete diff and status for scope, secrets, debris, and preserved unrelated work.
+6. Stage only owned paths, inspect the staged diff, and create a landing commit only when authorized.
 
-A failed or skipped required check prevents publication. Restore the TASK to a truthful non-`done` state using only landing-owned edits, refresh generated views, and record the incomplete result; if safe restoration is uncertain, stop and ask. Never hide a failure or reuse an earlier build as final-tree evidence.
+A failed or skipped required check prevents publication. If a rerun changes a result recorded in the TASK, update the record and repeat the final checks before commit. Restore the TASK to a truthful non-`done` state using only landing-owned edits when acceptance is no longer supported, refresh generated views, and record the incomplete result; if safe restoration is uncertain, stop and ask. Never hide a failure or reuse an earlier build as final-tree evidence.
 
 `done` means accepted implementation and required local verification. It does not mean committed, pushed, published as a PR, approved by a hosting platform, merged, archived, released, deployed, or certified.
 
