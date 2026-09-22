@@ -4,8 +4,8 @@
 | ID | Title | Status | Parent |
 |---|---|---|---|
 | [TASK-00001](00001-TASK.md) | Add the initial project-local planning skills | done | [TICKET-00001](../tickets/00001-TICKET.md) |
-| [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | ready-for-agent | [TICKET-00002](../tickets/00002-TICKET.md) |
-| [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | ready-for-agent | [TICKET-00003](../tickets/00003-TICKET.md) |
+| [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | done | [TICKET-00002](../tickets/00002-TICKET.md) |
+| [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | done | [TICKET-00003](../tickets/00003-TICKET.md) |
 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | ready-for-agent | [TICKET-00004](../tickets/00004-TICKET.md) |
 | [TASK-00005](00005-TASK.md) | Establish and prove disposable product-design exploration | ready-for-agent | [TICKET-00005](../tickets/00005-TICKET.md) |
 | [TASK-00006](00006-TASK.md) | Establish and prove independent design review | ready-for-agent | [TICKET-00006](../tickets/00006-TICKET.md) |

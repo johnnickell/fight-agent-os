@@ -2,7 +2,7 @@
 
 ## Matt Pocock skills
 
-This project-local skill suite is inspired by the public Matt Pocock skills project, including its planning-oriented skill names and conversational planning patterns. The Fight Agent OS skills are adapted for this repository's EPIC → TICKET → TASK planning model and are not vendored as a copy of that project.
+This project-local skill suite is inspired by the public Matt Pocock skills project, including its planning-oriented skill names, conversational planning patterns, and `writing-for-agents` authoring guidance. The Fight Agent OS skills are adapted for this repository's EPIC → TICKET → TASK planning model and are not vendored as a copy of that project.
 
 Source: <https://github.com/mattpocock/skills>
 
