@@ -1,7 +1,5 @@
 /vendor/
 /.idea/
-/.phpunit.cache/
-/.phpunit.result.cache
 /var/
 /.env.local
 /.runs/
