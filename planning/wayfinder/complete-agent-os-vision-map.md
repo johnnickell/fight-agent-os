@@ -87,10 +87,10 @@ Focused child maps are recommended once an umbrella decision exposes multiple in
 ```text
 WF-008 repository identity
   ├──→ WF-009 context precedence ──┬──→ WF-010 planning domain ──→ WF-011 migration/cutover ──┐
-  │                               │                         └──→ WF-012 browser planning ──┐ │
-  │                               └──→ WF-013 MCP/Pi research ──→ WF-014 skill/harness ───┤ │
+  │                                │                         └──→ WF-012 browser planning ──┐ │
+  │                                └──→ WF-013 MCP/Pi research ──→ WF-014 skill/harness ──┤ │
   └───────────────────────────────────────────────────────────────────────────────────────┘ │
-                                                                                             │
+                                                                                            │
 WF-010 + WF-012 + WF-014 ──→ WF-015 coordination ──→ WF-016 runner dispatch ──→ WF-017 history/events
 WF-012 + WF-017 ──→ WF-018 sessions prototype
 WF-011 + WF-014 + WF-015 + WF-016 + WF-017 + WF-018 ──→ WF-019 proof and EPIC handoff
