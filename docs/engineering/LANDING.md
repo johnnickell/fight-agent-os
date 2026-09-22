@@ -1,12 +1,14 @@
 # Landing Standards
 
-Landing closes independently reviewed implementation and returns merge control to a human. It verifies review and evidence prerequisites, finalizes the authoritative TASK record, publishes only authorized work, and cleans only resources whose ownership is proved. It does not repeat review or repair defects. Apply the shared [execution](EXECUTION.md) and [review](REVIEW.md) boundaries throughout.
+Landing closes independently reviewed implementation and returns a published pull request and merge control to a human. It verifies review and evidence prerequisites, finalizes the authoritative TASK record, publishes the complete branch, and cleans only resources whose ownership is proved. It does not repeat review or repair defects. Apply the shared [execution](EXECUTION.md) and [review](REVIEW.md) boundaries throughout.
 
 ## Landing target and authority
 
-Identify the TASK, accepted scope, repository, feature branch, `develop` ancestry, reviewed base and head commits, current status, remote, and existing PR before changing anything. The implementation must be committed, and the reviewed target must be exact. Record every post-review change; only mechanical landing records and generated planning views may follow the accepted head without another independent review.
+Identify the TASK, accepted scope, repository, feature branch, `develop` ancestry, reviewed base and head commits, current status, authenticated remote/hosting access, remote branch, existing PR, and exact cleanup candidates before changing anything. The implementation must be committed, and the reviewed target must be exact. Record every post-review change; only mechanical landing records, publication metadata, generated planning views, and their verification evidence may follow the accepted head without another independent review.
 
-Derive separate authority for each side effect: planning finalization, landing commit, push, PR creation or update, and cleanup. An approved implementation TASK or a request to inspect landing readiness does not silently authorize publication or deletion. Stop for an inconsistent branch or diff, unexpected changes, uncertain ownership, missing credentials, or an unavailable required remote.
+Explicit invocation of `land` for a named TASK grants bounded authority to finalize that TASK's planning, create landing commits, push its named feature branch without force, create or update its PR against the accepted base, and remove its clean non-active isolated worktree plus exact ownership-proven TASK resources. It does not authorize approval, merge, local or remote branch deletion, archive, release, deployment, certification, broad Docker pruning, shared teardown, or ambiguous deletion.
+
+Confirm before mutation that credentials, the required remote and hosting service, and safe cleanup prerequisites are available. When an isolated target worktree is to be removed, landing must run from another checkout; refuse before finalization when the target is the active session checkout. Stop for an inconsistent branch or diff, unexpected changes, uncertain ownership, dirty cleanup candidates, missing credentials, or unavailable publication operations. Successful landing may not silently degrade to a local-only handoff.
 
 ## Review qualification
 
@@ -31,7 +33,7 @@ When acceptance is supported:
 3. Run `./bin/planning-check --write` and inspect the generated changes.
 4. Rerun the focused checks, `./bin/planning-check`, `git diff --check`, and final `./bin/build` after the authoritative TASK and generated views have changed.
 5. Inspect the complete diff and status for scope, secrets, debris, and preserved unrelated work.
-6. Stage only owned paths, inspect the staged diff, and create a landing commit only when authorized.
+6. Stage only owned paths, inspect the staged diff, and create the landing commit.
 
 A failed or skipped required check prevents publication. If a rerun changes a result recorded in the TASK, update the record and repeat the final checks before commit. Restore the TASK to a truthful non-`done` state using only landing-owned edits when acceptance is no longer supported, refresh generated views, and record the incomplete result; if safe restoration is uncertain, stop and ask. Never hide a failure or reuse an earlier build as final-tree evidence.
 
@@ -39,22 +41,25 @@ A failed or skipped required check prevents publication. If a rerun changes a re
 
 ## Publication and human handoff
 
-Before any network effect, restate the granted push and PR authority and inspect the remote branch and existing PR. Push only the authorized feature branch without force. Create or update only the intended PR, preserving the accepted base and target. Never approve or merge it.
+Push only the named feature branch without force, then create or update only its intended PR against the accepted base. Capture the canonical PR URL, write it to the TASK metadata and completion evidence, refresh and inspect generated planning views, rerun focused checks plus `./bin/planning-check`, `git diff --check`, and `./bin/build`, commit those mechanical publication records, and push the final commit without force. Do not invent a changelog when the repository has none; update the authoritative TASK, generated Board/indexes, and any existing project completion surface.
 
-If publication is not authorized or cannot complete, preserve the local commit and report the exact missing action. The handoff identifies TASK, branch, base/head and landing commits, PR state or simulated effect, checks and warnings, review disposition, cleanup result, unrelated work, unresolved risks, and the human actions still required.
+After the final push, query the hosting service and verify that the PR is open, names the accepted base and feature head, and reports the same head commit as local `HEAD`. Authentication, initial push, PR creation/update, record update, verification, final checks, commit, final push, or remote-head mismatch blocks cleanup and successful landing. Preserve the worktree and report the exact failure instead of presenting local-only completion.
+
+The handoff identifies TASK, branch, base/review/landing/publication commits, checks and warnings, review disposition, cleanup result, unrelated work, unresolved risks, and human actions still required. It always presents the canonical PR URL as a clickable link. Never approve or merge the PR.
 
 ## Resource ownership and cleanup
 
-Treat resources as shared or ambiguous until ownership is demonstrated. A TASK ID in a path or name is useful but not sufficient when the resource can contain durable evidence, another checkout, shared state, or uncommitted work.
+Treat resources as shared or ambiguous until ownership is demonstrated. A TASK ID in a path or name is useful but not sufficient when the resource can contain durable evidence, another checkout, shared state, or uncommitted work. Landing invocation authorizes cleanup only after the final PR head is verified and only within the ownership bounds below.
 
 Accept ownership only from inspectable evidence appropriate to the resource:
 
 - scratch/prototype paths: expected TASK-scoped root, ownership marker or creation record, and contents confirmed disposable;
-- worktrees: registered path and branch, clean status, preserved commits, and confirmation it is not the active checkout;
+- worktrees: registered path and branch, clean status at the verified published commit, and confirmation it is not the active checkout;
+- ignored worktree output: an exact preview proving each path is ignored, inside the target worktree, disposable, and produced by TASK checks;
 - processes: captured PID plus matching command and start identity, not a PID alone;
 - databases: exact TASK-specific name, confirmed test endpoint, and no shared or production authority;
 - containers and volumes: exact TASK-specific Compose project, labels, or IDs and no shared dependency.
 
-Preview the cleanup set and operations before applying them. Use exact identifiers, never broad globs, global pruning, shared Compose teardown, recursive deletion outside the owned root, forced worktree removal, or inferred PID ownership. Preserve source files, required evidence, shared services, durable records, and anything ambiguous. Refusal to clean an uncertain resource is a successful safety outcome, not incomplete housekeeping.
+Preview the cleanup set and operations at intake and recheck it immediately before deletion. Remove exact TASK containers and volumes before their worktree. When containerized checks leave root-owned ignored output, an ephemeral helper may mount only the exact target worktree and remove only previewed approved paths; record its image, mount, paths, and result. Then remove the registered clean isolated worktree without force and verify both registration and path are gone. Retain the local feature branch so the human can delete it after merge.
 
-Cleanup authority is narrower than publication authority and must be explicit. Record each removed, stopped, retained, or refused resource and the evidence supporting that decision.
+Never use broad globs, global pruning, shared Compose teardown, recursive deletion outside the owned root, forced worktree removal, or inferred PID ownership. Preserve dirty, active, or unregistered worktrees, source files, required evidence, shared services, durable records, and anything ambiguous. A cleanup refusal now makes landing incomplete: preserve the resource and report the exact condition rather than weakening the ownership rule or claiming successful landing.
