@@ -51,7 +51,7 @@ No application permission model applies. The skill may finalize authorized plann
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00004](../tasks/00004-TASK.md) | Establish and prove controlled landing | in-progress |
+| [TASK-00004](../tasks/00004-TASK.md) | Establish and prove controlled landing | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
