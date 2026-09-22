@@ -1,6 +1,6 @@
 # Decision title
 
-**Labels:** `wayfinder:grilling`
+**Labels:** `wayfinder:grill`
 **Mode:** HITL
 **Status:** Open
 **Map:** [Wayfinder Map](../map-name-map.md)

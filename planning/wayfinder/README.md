@@ -3,5 +3,5 @@
 <!-- planning:maps -->
 | Map | Status |
 |---|---|
-| None | — |
+| [usable-web-application-foundation-map](usable-web-application-foundation-map.md) | Closed |
 <!-- /planning:maps -->

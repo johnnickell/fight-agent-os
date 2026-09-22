@@ -5,14 +5,14 @@
 - Source MIT notices are retained in [LICENSE](../LICENSE) and [Fight Common's notice](licenses/fight-common-MIT.txt)
 
 The starter's Git history, historical planning records, local dependencies, secrets, ignored run data, and
-editor configuration were not copied. Source code, test fixtures, dependency locks, and framework-support
-qualification machinery are inherited. Their receipts describe the upstream profile, not completed Agent OS features.
+editor configuration were not copied. Source code, test fixtures, and the primary dependency lock are inherited.
+Inherited framework-support receipts and lowest-lock artifacts were removed during the planning skills foundation.
 
 The initial adaptation changes project/package identity, the build image name, and the default development port
 to `18087` (`FIGHT_AGENT_OS_PORT` can override it). The starter runtime behavior is otherwise unchanged.
 
 Agent OS logo variants retain the FIGHT family mark and outlined wordmark, adding an AGENT OS descriptor.
 
-Composer's own content-hash calculation refreshed both lockfiles after the package rename. Dependency
-versions and source references remain identical to the starter. The lowest-lock digest and support receipt
-were refreshed to match; the inherited full gate then passed. See the foundation brief for baseline warnings.
+Composer's own content-hash calculation refreshed the primary lockfile after the package rename. Dependency
+versions and source references remain identical to the starter unless later planning records say otherwise. See the
+foundation brief for baseline warnings and current gate expectations.
