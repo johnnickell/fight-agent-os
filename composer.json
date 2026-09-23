@@ -8,8 +8,8 @@
     "doctrine/orm": "^3.5",
     "guzzlehttp/guzzle": "^7.10",
     "php": ">=8.5",
-    "johnnickell/fight-access-control": "dev-develop",
-    "johnnickell/fight-common": "dev-develop#fad24ae9fdcf4ac00fa55c59ef7d35f7c7531911 as 1.2.0-dev",
+    "johnnickell/fight-access-control": "^0.2.0",
+    "johnnickell/fight-common": "~1.2.0",
     "lcobucci/jwt": "^5.6",
     "league/flysystem": "^3.30",
     "league/flysystem-local": "^3.30",
@@ -40,7 +40,7 @@
     {"type": "vcs", "url": "https://github.com/johnnickell/fight-access-control", "no-api": true}
   ],
   "config": {"platform": {"php": "8.5.4"}, "optimize-autoloader": true, "preferred-install": "dist", "sort-packages": true},
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "prefer-stable": true,
   "scripts": {"test": "phpunit"}
 }

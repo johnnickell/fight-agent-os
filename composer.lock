@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e93eb696786f0bd6e9e522ccd4b717c7",
+    "content-hash": "3d4c0c4c8f43891979f4f96253d995bd",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -1212,20 +1212,20 @@
         },
         {
             "name": "johnnickell/fight-access-control",
-            "version": "dev-develop",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/johnnickell/fight-access-control",
-                "reference": "4259ea0b77bc2e1d87e62ab70b64af63bae99477"
+                "reference": "c986b488ef8490c16c7a69e4675b5348f8d6dbf5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/johnnickell/fight-access-control/zipball/4259ea0b77bc2e1d87e62ab70b64af63bae99477",
-                "reference": "4259ea0b77bc2e1d87e62ab70b64af63bae99477",
+                "url": "https://api.github.com/repos/johnnickell/fight-access-control/zipball/c986b488ef8490c16c7a69e4675b5348f8d6dbf5",
+                "reference": "c986b488ef8490c16c7a69e4675b5348f8d6dbf5",
                 "shasum": ""
             },
             "require": {
-                "johnnickell/fight-common": "^1.1",
+                "johnnickell/fight-common": "^1.2",
                 "php": ">=8.5"
             },
             "require-dev": {
@@ -1235,9 +1235,12 @@
                 "rector/rector": "^2.4",
                 "slevomat/coding-standard": "^8.27",
                 "squizlabs/php_codesniffer": "^4.0",
-                "symfony/process": "^7.0"
+                "symfony/process": "^7.0",
+                "zircote/swagger-php": "^6.5"
             },
-            "default-branch": true,
+            "suggest": {
+                "zircote/swagger-php": "Generate a consumer-owned OpenAPI document from the opt-in openapi/ component catalog."
+            },
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -1254,20 +1257,20 @@
                 "MIT"
             ],
             "description": "Framework-neutral identity, credential, session, authorization, and account-lifecycle contracts",
-            "time": "2026-08-31T03:38:38+00:00"
+            "time": "2026-09-14T01:04:07+00:00"
         },
         {
             "name": "johnnickell/fight-common",
-            "version": "dev-develop",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/johnnickell/fight-common",
-                "reference": "fad24ae9fdcf4ac00fa55c59ef7d35f7c7531911"
+                "reference": "a2cd615d9b5064c9c30e994655536176249cd73b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/johnnickell/fight-common/zipball/fad24ae9fdcf4ac00fa55c59ef7d35f7c7531911",
-                "reference": "fad24ae9fdcf4ac00fa55c59ef7d35f7c7531911",
+                "url": "https://api.github.com/repos/johnnickell/fight-common/zipball/a2cd615d9b5064c9c30e994655536176249cd73b",
+                "reference": "a2cd615d9b5064c9c30e994655536176249cd73b",
                 "shasum": ""
             },
             "require": {
@@ -1317,7 +1320,6 @@
                 "symfony/routing": "^8.1",
                 "twig/twig": "^3.0",
                 "twilio/sdk": "^8.0",
-                "yiisoft/config": "^1.2",
                 "yiisoft/db": "^2.0",
                 "yiisoft/db-sqlite": "^2.0",
                 "yiisoft/di": "^1.4",
@@ -1357,7 +1359,6 @@
                 "symfony/routing": "Required for the URL generator",
                 "twig/twig": "Required by the Twig template engine adapter",
                 "twilio/sdk": "Required by the Twilio SMS transport adapter",
-                "yiisoft/config": "Required to select Yii capability configuration groups",
                 "yiisoft/db": "Required by the Yii DB transactional unit of work adapter",
                 "yiisoft/db-sqlite": "Required to run the Yii DB transactional unit of work adapter conformance tests",
                 "yiisoft/di": "Required to boot Yii capability service providers",
@@ -1367,7 +1368,6 @@
                 "yiisoft/router-fastroute": "Required to run the Yii URL generator adapter conformance tests",
                 "yiisoft/view": "Required to evaluate Yii View against the shared Fight templating conformance suite"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -1388,7 +1388,7 @@
                 "MIT"
             ],
             "description": "A shared PHP library for Hexagonal Architecture, CQRS, and reusable domain primitives",
-            "time": "2026-09-09T18:43:20+00:00"
+            "time": "2026-09-13T00:57:20+00:00"
         },
         {
             "name": "lcobucci/jwt",
@@ -6847,19 +6847,9 @@
             "time": "2025-11-17T20:03:58+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "johnnickell/fight-common",
-            "version": "dev-develop",
-            "alias": "1.2.0-dev",
-            "alias_normalized": "1.2.0.0-dev"
-        }
-    ],
-    "minimum-stability": "dev",
-    "stability-flags": {
-        "johnnickell/fight-access-control": 20,
-        "johnnickell/fight-common": 20
-    },
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
