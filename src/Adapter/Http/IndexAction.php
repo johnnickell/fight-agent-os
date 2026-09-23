@@ -11,8 +11,8 @@ final class IndexAction
 {
     public function handle(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        $response->getBody()->write('Fight Slim starter is ready.');
+        $response->getBody()->write('Fight Agent OS is ready.');
 
-        return $response;
+        return $response->withHeader('Content-Type', 'text/plain; charset=utf-8');
     }
 }
