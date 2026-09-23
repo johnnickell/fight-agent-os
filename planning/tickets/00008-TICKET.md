@@ -47,7 +47,7 @@ No user-facing permissions apply because this is an architecture foundation. Rep
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00009](../tasks/00009-TASK.md) | Accept the application ownership and orchestration ADR | ready-for-agent |
+| [TASK-00009](../tasks/00009-TASK.md) | Accept the application ownership and orchestration ADR | done |
 | [TASK-00010](../tasks/00010-TASK.md) | Prove and enforce application ownership boundaries | ready-for-agent |
 <!-- /planning:children -->
 
