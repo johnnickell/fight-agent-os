@@ -4,7 +4,7 @@
 **Mode:** HITL
 **Status:** Open
 **Map:** [Complete Fight Agent OS vision](../complete-agent-os-vision-map.md)
-**Depends on:** [WF-011](WF-011-prove-markdown-migration-and-authority-switch.md), [WF-014](WF-014-define-skill-trust-and-harness-distribution.md), [WF-015](WF-015-define-coordinated-task-authority-protocol.md), [WF-016](WF-016-define-runner-dispatch-and-recovery.md), [WF-017](WF-017-define-execution-history-and-event-authority.md), [WF-018](WF-018-prototype-sessions-first-browser-experience.md)
+**Depends on:** [WF-011](WF-011-prove-markdown-migration-and-authority-switch.md), [WF-014](WF-014-define-skill-trust-and-harness-distribution.md), [WF-015](WF-015-define-coordinated-task-authority-protocol.md), [WF-016](WF-016-define-runner-dispatch-and-recovery.md), [WF-017](WF-017-define-execution-history-and-event-authority.md), [WF-018](WF-018-prototype-sessions-first-browser-experience.md), [WF-020](WF-020-define-developer-onboarding-and-operator-guidance.md), [WF-021](WF-021-define-new-project-creation-and-registration.md), [WF-022](WF-022-define-browser-instruction-inspection-and-assisted-editing.md)
 
 ## Question
 
@@ -16,7 +16,7 @@ What is the smallest useful end-to-end proof, and what dependency-ordered EPIC g
 - Whether the proof uses existing Markdown authority or requires a disposable database planning slice; it must not disguise a projection as database authority or trigger cutover.
 - Explicit proof exclusions, disposable versus production components, success/failure evidence, security controls, cleanup ownership, and human stop points.
 - Which existing accepted EPIC/TICKET/TASK dependencies must land first and which can proceed independently.
-- Proposed future EPIC boundaries, ordering, child-map handoffs, and grill briefs for repository/planning authority, harness/skills, coordination/runners, and browser observability.
+- Proposed future EPIC boundaries, ordering, child-map handoffs, and grill briefs for repository/planning authority, harness/skills, coordination/runners, browser observability, developer onboarding, new-project creation, and browser-assisted instruction editing.
 - A first future decision or grill frontier after this map closes; no implementation TASK may be selected from this handoff itself.
 
 ## Resolution boundary

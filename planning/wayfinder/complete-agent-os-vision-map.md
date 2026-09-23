@@ -50,8 +50,8 @@ Focused child maps are recommended once an umbrella decision exposes multiple in
 
 ## Decisions so far
 
-1. **[Establish repository identity and registration boundaries](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md) is open.** Define the stable identities and boundaries on which every later repository-scoped record and runner mapping depends.
-2. **[Define repository context and policy precedence](tickets/WF-009-define-repository-context-and-policy-precedence.md) is open.** Decide how registered context, local instructions, transition modes, and conflicts compose once per Pi session.
+1. **[Establish repository identity and registration boundaries](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md) is closed.** Use one explicit Workspace initially; mint COMB-backed repository, checkout, worktree, and host identities; treat source and Git facts as matching evidence; confirm new checkout links; preserve history through archive/restore; and grant no execution or migration authority through registration.
+2. **[Define repository context and policy precedence](tickets/WF-009-define-repository-context-and-policy-precedence.md) is closed.** Resolve one compact, versioned context snapshot per Pi session; preserve native instructions without treating prose as policy; use a small conflict wizard; pin revisions; fail closed on drift or service loss; and make planning-authority upgrades explicit.
 3. **[Define the authoritative planning domain and lifecycle](tickets/WF-010-define-authoritative-planning-domain-and-lifecycle.md) is open.** Set the canonical PostgreSQL planning model, lifecycle, concurrency, permissions, and executable-work query.
 4. **[Prove the Markdown migration and authority switch](tickets/WF-011-prove-markdown-migration-and-authority-switch.md) is open.** Establish a reversible, identity-preserving migration and explicit authority cutover.
 5. **[Define browser planning and conversation ownership](tickets/WF-012-define-browser-planning-and-conversation-ownership.md) is open.** Set the shared application operations and persistence boundary for browser planning conversations and artifacts.
@@ -62,14 +62,17 @@ Focused child maps are recommended once an umbrella decision exposes multiple in
 10. **[Define execution history and event authority](tickets/WF-017-define-execution-history-and-event-authority.md) is open.** Separate authoritative workflow state from observational events and resumable Pi conversations.
 11. **[Prototype the sessions-first browser experience](tickets/WF-018-prototype-sessions-first-browser-experience.md) is open.** Use disposable evidence to validate the paginated overview and lazily loaded detail model without implementing production UI.
 12. **[Select the end-to-end proof and EPIC handoff](tickets/WF-019-select-end-to-end-proof-and-epic-handoff.md) is open.** Choose the smallest useful proof and a non-competing EPIC planning sequence after prerequisite decisions close.
+13. **[Define developer onboarding and operator guidance](tickets/WF-020-define-developer-onboarding-and-operator-guidance.md) is open.** Decide how the Dashboard safely teaches new developers to prepare source access, Pi, the shared harness, checkouts, and runners without silently performing setup mutations.
+14. **[Define new project creation and registration](tickets/WF-021-define-new-project-creation-and-registration.md) is open.** Decide how a user safely creates a named project from an approved starter, optionally publishes it to GitHub, establishes its checkout and context, and registers it without hiding partial side effects.
+15. **[Define browser instruction inspection and assisted editing](tickets/WF-022-define-browser-instruction-inspection-and-assisted-editing.md) is open.** Decide how authorized users and browser AI conversations inspect and propose edits to recognized instruction files through an online checkout without creating a general-purpose IDE or hiding filesystem and Git effects.
 
 ## Tickets
 
 <!-- planning:decisions -->
 | Decision ID | Title | Type | Mode | Status | Depends on |
 |---|---|---|---|---|---|
-| [WF-008](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md) | Establish repository identity and registration boundaries | wayfinder:grill | HITL | Open | — |
-| [WF-009](tickets/WF-009-define-repository-context-and-policy-precedence.md) | Define repository context and policy precedence | wayfinder:grill | HITL | Open | [WF-008](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md) |
+| [WF-008](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md) | Establish repository identity and registration boundaries | wayfinder:grill | HITL | Closed | — |
+| [WF-009](tickets/WF-009-define-repository-context-and-policy-precedence.md) | Define repository context and policy precedence | wayfinder:grill | HITL | Closed | [WF-008](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md) |
 | [WF-010](tickets/WF-010-define-authoritative-planning-domain-and-lifecycle.md) | Define the authoritative planning domain and lifecycle | wayfinder:grill | HITL | Open | [WF-008](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md), [WF-009](tickets/WF-009-define-repository-context-and-policy-precedence.md) |
 | [WF-011](tickets/WF-011-prove-markdown-migration-and-authority-switch.md) | Prove the Markdown migration and authority switch | wayfinder:prototype | AFK + HITL | Open | [WF-010](tickets/WF-010-define-authoritative-planning-domain-and-lifecycle.md) |
 | [WF-012](tickets/WF-012-define-browser-planning-and-conversation-ownership.md) | Define browser planning and conversation ownership | wayfinder:grill | HITL | Open | [WF-010](tickets/WF-010-define-authoritative-planning-domain-and-lifecycle.md) |
@@ -79,7 +82,10 @@ Focused child maps are recommended once an umbrella decision exposes multiple in
 | [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md) | Define runner dispatch and recovery | wayfinder:grill | HITL | Open | [WF-008](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md), [WF-015](tickets/WF-015-define-coordinated-task-authority-protocol.md) |
 | [WF-017](tickets/WF-017-define-execution-history-and-event-authority.md) | Define execution history and event authority | wayfinder:grill | HITL | Open | [WF-010](tickets/WF-010-define-authoritative-planning-domain-and-lifecycle.md), [WF-015](tickets/WF-015-define-coordinated-task-authority-protocol.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md) |
 | [WF-018](tickets/WF-018-prototype-sessions-first-browser-experience.md) | Prototype the sessions-first browser experience | wayfinder:prototype | AFK + HITL | Open | [WF-012](tickets/WF-012-define-browser-planning-and-conversation-ownership.md), [WF-017](tickets/WF-017-define-execution-history-and-event-authority.md) |
-| [WF-019](tickets/WF-019-select-end-to-end-proof-and-epic-handoff.md) | Select the end-to-end proof and EPIC handoff | wayfinder:task | HITL | Open | [WF-011](tickets/WF-011-prove-markdown-migration-and-authority-switch.md), [WF-014](tickets/WF-014-define-skill-trust-and-harness-distribution.md), [WF-015](tickets/WF-015-define-coordinated-task-authority-protocol.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md), [WF-017](tickets/WF-017-define-execution-history-and-event-authority.md), [WF-018](tickets/WF-018-prototype-sessions-first-browser-experience.md) |
+| [WF-019](tickets/WF-019-select-end-to-end-proof-and-epic-handoff.md) | Select the end-to-end proof and EPIC handoff | wayfinder:task | HITL | Open | [WF-011](tickets/WF-011-prove-markdown-migration-and-authority-switch.md), [WF-014](tickets/WF-014-define-skill-trust-and-harness-distribution.md), [WF-015](tickets/WF-015-define-coordinated-task-authority-protocol.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md), [WF-017](tickets/WF-017-define-execution-history-and-event-authority.md), [WF-018](tickets/WF-018-prototype-sessions-first-browser-experience.md), [WF-020](tickets/WF-020-define-developer-onboarding-and-operator-guidance.md), [WF-021](tickets/WF-021-define-new-project-creation-and-registration.md), [WF-022](tickets/WF-022-define-browser-instruction-inspection-and-assisted-editing.md) |
+| [WF-020](tickets/WF-020-define-developer-onboarding-and-operator-guidance.md) | Define developer onboarding and operator guidance | wayfinder:grill | HITL | Open | [WF-014](tickets/WF-014-define-skill-trust-and-harness-distribution.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md) |
+| [WF-021](tickets/WF-021-define-new-project-creation-and-registration.md) | Define new project creation and registration | wayfinder:grill | HITL | Open | [WF-009](tickets/WF-009-define-repository-context-and-policy-precedence.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md) |
+| [WF-022](tickets/WF-022-define-browser-instruction-inspection-and-assisted-editing.md) | Define browser instruction inspection and assisted editing | wayfinder:grill | HITL | Open | [WF-009](tickets/WF-009-define-repository-context-and-policy-precedence.md), [WF-012](tickets/WF-012-define-browser-planning-and-conversation-ownership.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md) |
 <!-- /planning:decisions -->
 
 ## Blocking relationships
@@ -93,22 +99,26 @@ WF-008 repository identity
                                                                                             │
 WF-010 + WF-012 + WF-014 ──→ WF-015 coordination ──→ WF-016 runner dispatch ──→ WF-017 history/events
 WF-012 + WF-017 ──→ WF-018 sessions prototype
-WF-011 + WF-014 + WF-015 + WF-016 + WF-017 + WF-018 ──→ WF-019 proof and EPIC handoff
+WF-014 + WF-016 ──→ WF-020 onboarding and operator guidance
+WF-009 + WF-016 ──→ WF-021 new project creation and registration
+WF-009 + WF-012 + WF-016 ──→ WF-022 browser instruction inspection/editing
+WF-011 + WF-014 + WF-015 + WF-016 + WF-017 + WF-018 + WF-020 + WF-021 + WF-022 ──→ WF-019 proof and EPIC handoff
 ```
 
 ## Frontier
 
-[Establish repository identity and registration boundaries (WF-008)](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md) is the one recommended next decision. It comes first because planning rows, policy lookup, runner checkout mappings, claims, sessions, skill approvals, and repository isolation all need a stable repository/workspace identity; choosing those downstream contracts first would embed accidental clone paths or remote assumptions.
+[Define the authoritative planning domain and lifecycle (WF-010)](tickets/WF-010-define-authoritative-planning-domain-and-lifecycle.md) is the one recommended next decision. WF-008 and WF-009 now provide stable repository identity, explicit planning-authority modes, immutable session context, and safe configuration revision semantics; the next dependency is deciding the authoritative PostgreSQL planning model and concurrency rules before migration or browser planning can be specified.
 
 ## Not yet specified (fog)
 
 - Exact schemas, API routes, migration classes, UI component boundaries, table columns, indexes, event payloads, and retention durations.
-- Whether newly exposed complexity warrants the candidate child maps above and which new decisions each would own.
+- Whether newly exposed complexity warrants the candidate child maps above and which new decisions each would own; WF-020 will decide whether platform-specific onboarding needs its own focused child map, and WF-021 will make the same decision for starter qualification and project provisioning.
 - Authentication and authorization details beyond the accepted single-installation shell, including the eventual relationship among installation, workspace, repository, user, agent, and runner permissions.
 - Exact coordinator process topology, model/provider assignment, cost budgets, retry values, scheduling fairness, and concurrency limits.
 - Whether deliberately supported stacked PRs are worthwhile; no dependent work may assume stacking until WF-015 decides it.
 - Real-time browser transport, artifact storage backend, log indexing/search, and long-term execution-history retention.
 - The exact reusable MCP component, if any, that belongs in Fight Common; application planning and workflow policy remain Agent OS concerns.
+- The project-local `grill` skill still assumes every grill session creates exactly one EPIC; a later standalone bugfix should distinguish EPIC-producing grill from `wayfinder:grill`, where one map may eventually hand off to zero, one, or several EPICs. Do not allocate that TASK while concurrent planning work may be creating TASK records.
 - Deployment, remote runner fleets, release management, merge automation, and operation after human merge.
 
 ## Out of scope

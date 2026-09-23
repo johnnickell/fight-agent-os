@@ -16,6 +16,7 @@ What repository-scoped PostgreSQL domain model and application invariants can be
 - How parent/child and dependency relationships preserve repository terminology and keep WF decision tickets distinct from requirement TICKETs.
 - Status and lifecycle transitions, including who may make them, validation errors, archive/restore, and the distinct meanings of TASK completion, review acceptance, PR publication, and merge.
 - Revision, authorship, decision-history, optimistic-concurrency or merge behavior, and reconciliation of simultaneous browser and agent edits.
+- Atomic, idempotent identity and human-readable sequence allocation under competing browser, agent, checkout, and worktree requests so independently created records cannot collide.
 - Workspace/repository isolation and permission checks at every command and query.
 - A single application query for “next executable TASK,” including priority, unresolved decisions, dependencies, claims, prerequisite availability, and an explanation of eligibility or exclusion.
 - The application operations that both browser actions and agent/MCP tools must call, rather than duplicating rules or writing SQL.
