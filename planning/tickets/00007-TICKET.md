@@ -48,7 +48,7 @@ No runtime permission model applies. Dependency and test changes require approve
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00007](../tasks/00007-TASK.md) | Adopt and prove the stable dependency graph | ready-for-agent |
+| [TASK-00007](../tasks/00007-TASK.md) | Adopt and prove the stable dependency graph | done |
 | [TASK-00008](../tasks/00008-TASK.md) | Replace inherited receipts with the Agent OS smoke baseline | ready-for-agent |
 <!-- /planning:children -->
 

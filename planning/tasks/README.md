@@ -9,7 +9,7 @@
 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | done | [TICKET-00004](../tickets/00004-TICKET.md) |
 | [TASK-00005](00005-TASK.md) | Establish and prove disposable product-design exploration | done | [TICKET-00005](../tickets/00005-TICKET.md) |
 | [TASK-00006](00006-TASK.md) | Establish and prove independent design review | done | [TICKET-00006](../tickets/00006-TICKET.md) |
-| [TASK-00007](00007-TASK.md) | Adopt and prove the stable dependency graph | ready-for-agent | [TICKET-00007](../tickets/00007-TICKET.md) |
+| [TASK-00007](00007-TASK.md) | Adopt and prove the stable dependency graph | done | [TICKET-00007](../tickets/00007-TICKET.md) |
 | [TASK-00008](00008-TASK.md) | Replace inherited receipts with the Agent OS smoke baseline | ready-for-agent | [TICKET-00007](../tickets/00007-TICKET.md) |
 | [TASK-00009](00009-TASK.md) | Accept the application ownership and orchestration ADR | ready-for-agent | [TICKET-00008](../tickets/00008-TICKET.md) |
 | [TASK-00010](00010-TASK.md) | Prove and enforce application ownership boundaries | ready-for-agent | [TICKET-00008](../tickets/00008-TICKET.md) |

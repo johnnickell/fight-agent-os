@@ -7,8 +7,9 @@ docker build --file etc/docker/cli/Dockerfile --tag "$image" .
 docker run --rm --volume "$(pwd):/app" --volume "$git_common_dir:$git_common_dir:ro" \
   --workdir /app "$image" sh -ec '
   git config --global --add safe.directory /app
-  sh scripts/validate-composer-candidate.sh
+  composer validate --strict
   composer install --no-interaction --prefer-dist --no-progress
+  composer audit --locked --no-dev
 
   ./bin/planning-check
   php vendor/bin/phpunit
@@ -20,6 +21,12 @@ docker run --rm --volume "$(pwd):/app" --volume "$git_common_dir:$git_common_dir
   cp -a . "$production_root"
   cd "$production_root"
   git config --global --add safe.directory "$production_root"
+  rm -rf vendor
   composer install --no-dev --no-interaction --prefer-dist --no-progress
+  if composer show phpunit/phpunit >/dev/null 2>&1; then
+    echo "Development-only package phpunit/phpunit is installed in production." >&2
+    exit 1
+  fi
+  echo "Production development-package exclusion passed."
   php scripts/public-contract-check.php
 '
