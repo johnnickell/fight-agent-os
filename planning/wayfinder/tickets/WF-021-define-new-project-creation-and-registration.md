@@ -4,7 +4,7 @@
 **Mode:** HITL
 **Status:** Open
 **Map:** [Complete Fight Agent OS vision](../complete-agent-os-vision-map.md)
-**Depends on:** [WF-009](WF-009-define-repository-context-and-policy-precedence.md), [WF-016](WF-016-define-runner-dispatch-and-recovery.md)
+**Depends on:** [WF-009](WF-009-define-repository-context-and-policy-precedence.md), [WF-016](WF-016-define-runner-dispatch-and-recovery.md), [WF-023](WF-023-define-local-runtime-and-shared-ingress-topology.md)
 
 ## Question
 

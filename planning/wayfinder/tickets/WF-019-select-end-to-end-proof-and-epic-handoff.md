@@ -4,7 +4,7 @@
 **Mode:** HITL
 **Status:** Open
 **Map:** [Complete Fight Agent OS vision](../complete-agent-os-vision-map.md)
-**Depends on:** [WF-011](WF-011-prove-markdown-migration-and-authority-switch.md), [WF-014](WF-014-define-skill-trust-and-harness-distribution.md), [WF-015](WF-015-define-coordinated-task-authority-protocol.md), [WF-016](WF-016-define-runner-dispatch-and-recovery.md), [WF-017](WF-017-define-execution-history-and-event-authority.md), [WF-018](WF-018-prototype-sessions-first-browser-experience.md), [WF-020](WF-020-define-developer-onboarding-and-operator-guidance.md), [WF-021](WF-021-define-new-project-creation-and-registration.md), [WF-022](WF-022-define-browser-instruction-inspection-and-assisted-editing.md)
+**Depends on:** [WF-011](WF-011-prove-markdown-migration-and-authority-switch.md), [WF-014](WF-014-define-skill-trust-and-harness-distribution.md), [WF-015](WF-015-define-coordinated-task-authority-protocol.md), [WF-016](WF-016-define-runner-dispatch-and-recovery.md), [WF-017](WF-017-define-execution-history-and-event-authority.md), [WF-018](WF-018-prototype-sessions-first-browser-experience.md), [WF-020](WF-020-define-developer-onboarding-and-operator-guidance.md), [WF-021](WF-021-define-new-project-creation-and-registration.md), [WF-022](WF-022-define-browser-instruction-inspection-and-assisted-editing.md), [WF-023](WF-023-define-local-runtime-and-shared-ingress-topology.md)
 
 ## Question
 
