@@ -7,7 +7,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 4 | [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 

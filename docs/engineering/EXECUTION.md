@@ -14,6 +14,14 @@ Use a `feature/*` branch from `develop` in the user-selected main checkout or is
 
 One TASK normally produces one independently reviewable PR outcome. Stage explicit TASK-owned paths, inspect the staged diff, and keep the implementation commit bounded. A commit grants no push, publication, review, landing, merge, archive, release, or deployment authority.
 
+## Review handoff intake
+
+Resolve the base worktree through canonical Git common-directory and registered-worktree metadata, selecting and verifying the sole worktree whose Git directory equals the common directory. Do not assume the current checkout is the base, trust list order without validation, derive it from parent paths, or search arbitrary directories. The only implementation-review handoff is `<base-worktree>/.runs/reviews/<TASK-ID>/review.md`, as defined by the [review standards](REVIEW.md).
+
+Every `work` intake states whether it is first implementation or requested revision and checks that canonical path automatically. No report is normal only for first implementation. A requested revision without a readable canonical report stops. When a file exists, require review handoff version 1, every defined identity key, and the full ordered report. Validate its TASK, repository/base identity, canonical path, target identifier and branch state, full reviewed base/head OIDs, exact status, recomputed dirty-content digest where applicable, and verdict against the selected current target. A changed local path alone is permissible only when all immutable target and content identity still matches unambiguously.
+
+Reject stale, superseded, mismatched, partial, duplicate, redirected, unreadable, or ambiguous review material rather than using chat history, searching linked worktrees, editing the report, or silently falling back to first-implementation behavior. A matching `revise` report is authoritative correction input: preserve its findings and trace revision work to each blocker. A matching `accept` report does not authorize more implementation; route it to landing unless separate approved work has invalidated it and requires a new review.
+
 ## Verification and evidence
 
 Use focused checks while iterating and run `./bin/build` as the complete local gate. Also inspect the final diff and status and run `git diff --check`. Refresh generated planning views before their read-only checks when the TASK authorizes planning edits.
