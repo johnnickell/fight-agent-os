@@ -71,4 +71,5 @@
 | [TASK-00066](00066-TASK.md) | Prove critical browser continuity and close the foundation gate | ready-for-agent | [TICKET-00022](../tickets/00022-TICKET.md) |
 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | done | — |
 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | done | — |
+| [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | done | — |
 <!-- /planning:records -->
