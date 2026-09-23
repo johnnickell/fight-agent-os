@@ -51,7 +51,7 @@ No application permission model, commands, queries, or domain events apply becau
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00005](../tasks/00005-TASK.md) | Establish and prove disposable product-design exploration | ready-for-agent |
+| [TASK-00005](../tasks/00005-TASK.md) | Establish and prove disposable product-design exploration | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
