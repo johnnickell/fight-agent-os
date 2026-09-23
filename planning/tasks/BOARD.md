@@ -7,13 +7,13 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 6 | [TASK-00006](00006-TASK.md) | Establish and prove independent design review | [TICKET-00006 — Establish independent design review](../tickets/00006-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 6 | [TASK-00006](00006-TASK.md) | Establish and prove independent design review | [TICKET-00006 — Establish independent design review](../tickets/00006-TICKET.md) | ready-for-agent | — | — |
+| None | — | — | — | — | — | — |
 
 ## Waiting
 
