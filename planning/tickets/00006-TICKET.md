@@ -51,7 +51,7 @@ No application permission model applies. The reviewer receives read/render/check
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00006](../tasks/00006-TASK.md) | Establish and prove independent design review | in-progress |
+| [TASK-00006](../tasks/00006-TASK.md) | Establish and prove independent design review | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
