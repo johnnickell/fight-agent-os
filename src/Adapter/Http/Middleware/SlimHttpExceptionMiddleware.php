@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Http;
+namespace App\Adapter\Http\Middleware;
 
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
@@ -15,10 +15,16 @@ use Slim\Exception\HttpException;
 
 final readonly class SlimHttpExceptionMiddleware implements MiddlewareInterface
 {
+    /**
+     * Constructs SlimHttpExceptionMiddleware
+     */
     public function __construct(private JSendResponseFactory $responseFactory)
     {
     }
 
+    /**
+     * @inheritDoc
+     */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         try {

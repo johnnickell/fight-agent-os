@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Http\Middleware\SlimHttpExceptionMiddleware;
+use App\Adapter\Http\Middleware\UnexpectedErrorMiddleware;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
-use Fight\Common\Adapter\Middleware\Psr15\JSendErrorMiddleware;
 use Fight\Common\Adapter\Middleware\Psr15\JsonRequestMiddleware;
-use App\Adapter\Http\SlimHttpExceptionMiddleware;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Slim\App;
 
 /** @var App $app */
@@ -15,4 +16,7 @@ use Slim\App;
 $app->addRoutingMiddleware();
 $app->add(new SlimHttpExceptionMiddleware($container->get(JSendResponseFactory::class)));
 $app->add(new JsonRequestMiddleware());
-$app->add(new JSendErrorMiddleware($container->get(JSendResponseFactory::class)));
+$app->add(new UnexpectedErrorMiddleware(
+    $container->get(JSendResponseFactory::class),
+    $container->get(LoggerInterface::class)
+));

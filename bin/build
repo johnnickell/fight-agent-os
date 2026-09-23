@@ -23,10 +23,56 @@ docker run --rm --volume "$(pwd):/app" --volume "$git_common_dir:$git_common_dir
   git config --global --add safe.directory "$production_root"
   rm -rf vendor
   composer install --no-dev --no-interaction --prefer-dist --no-progress
-  if composer show phpunit/phpunit >/dev/null 2>&1; then
-    echo "Development-only package phpunit/phpunit is installed in production." >&2
+  php scripts/production-contract-check.php
+
+  domain_fixture=src/Domain/ProductionContractFixture.php
+  application_fixture=src/Application/ProductionContractFixture.php
+  mkdir -p "$(dirname "$domain_fixture")" "$(dirname "$application_fixture")"
+  cat > "$domain_fixture" <<EOF
+<?php
+namespace App\\Domain;
+final class ProductionContractFixture {}
+EOF
+  cat > "$application_fixture" <<EOF
+<?php
+namespace App\\Application;
+final class ProductionContractFixture {}
+EOF
+  php scripts/production-contract-check.php
+
+  cat > "$domain_fixture" <<EOF
+<?php
+namespace Fight\\Common\\Copied;
+final class ProductionContractFixture {}
+EOF
+  if output=$(php scripts/production-contract-check.php 2>&1); then
+    echo "Production contract accepted a copied Fight\\Common namespace." >&2
     exit 1
   fi
-  echo "Production development-package exclusion passed."
-  php scripts/public-contract-check.php
+  printf "%s\\n" "$output"
+  case "$output" in
+    *"Fight\\Common\\Copied"*) ;;
+    *) echo "Production contract did not identify the copied Fight\\Common namespace." >&2; exit 1 ;;
+  esac
+
+  cat > "$domain_fixture" <<EOF
+<?php
+namespace App\\Domain;
+final class ProductionContractFixture {}
+EOF
+  cat > "$application_fixture" <<EOF
+<?php
+namespace Fight\\AccessControl\\Copied;
+final class ProductionContractFixture {}
+EOF
+  if output=$(php scripts/production-contract-check.php 2>&1); then
+    echo "Production contract accepted a copied Fight\\AccessControl namespace." >&2
+    exit 1
+  fi
+  printf "%s\\n" "$output"
+  case "$output" in
+    *"Fight\\AccessControl\\Copied"*) ;;
+    *) echo "Production contract did not identify the copied Fight\\AccessControl namespace." >&2; exit 1 ;;
+  esac
+  echo "Production contract negative namespace checks passed."
 '
