@@ -12,7 +12,7 @@ Close reviewed implementation without re-reviewing or merging it. Read the proje
 1. Read the TASK, parent TICKET, accepted decisions, Board, completion claims, and independent review report.
 2. Inspect repository identity, feature branch and `develop` ancestry, reviewed base/head, status, authenticated remote/hosting access, remote branch, and existing PR.
 3. Inventory unrelated changes and preview the exact worktree, ignored build output, container, volume, process, database, and scratch cleanup candidates without modifying them.
-4. Confirm the landing session runs outside any isolated target worktree it must remove. If the target is the active checkout, stop before mutation and require `land` to be rerun from another checkout.
+4. Classify the target as the canonical base worktree or a registered isolated worktree. Finalize and publish from the target checkout; defer any isolated-worktree removal to the final cleanup operation from the base worktree.
 
 Explicit `/skill:land TASK-NNNNN` invocation grants bounded authority to finalize that TASK's planning, create landing commits, push its named feature branch without force, create or update its PR against the accepted base, and remove its clean isolated worktree plus exact ownership-proven TASK resources. It never grants approval, merge, remote-branch deletion, archive, release, deployment, certification, broad pruning, shared teardown, or ambiguous deletion.
 
@@ -47,7 +47,7 @@ Any authentication, push, PR, metadata, verification, or final-push failure bloc
 
 Use the preview from intake and recheck state immediately before cleanup. Remove only exact TASK-owned containers and volumes proven by Compose project, labels, or IDs; never prune globally or stop shared services. Preview ignored files inside the target worktree and remove only inspected disposable build output. If containerized checks created root-owned ignored output, an ephemeral helper may mount only the exact target worktree and remove only those approved paths; record its image, mount, and paths.
 
-Require the isolated worktree to remain registered, clean, non-active, and at the verified published commit. Remove it without force, then verify registration and path removal. Retain the local feature branch for the human until merge. Preserve dirty/current/unregistered worktrees, source, required evidence, shared or durable resources, and anything ambiguous; report refusal as a landing failure rather than weakening cleanup.
+Preserve the canonical base worktree. Require an isolated target worktree to remain registered, clean, and at the verified published commit. After every other tool operation is complete, change to the base worktree and remove the isolated target without force; verify registration and path removal in that same final operation. Retain the local feature branch for the human until merge. Preserve dirty or unregistered worktrees, source, required evidence, shared or durable resources, and anything ambiguous; report refusal as a landing failure rather than weakening cleanup.
 
 ## 6. Return human control
 
