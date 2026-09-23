@@ -74,5 +74,45 @@ EOF
     *"Fight\\AccessControl\\Copied"*) ;;
     *) echo "Production contract did not identify the copied Fight\\AccessControl namespace." >&2; exit 1 ;;
   esac
+
+  cat > "$domain_fixture" <<EOF
+<?php
+namespace fight\\common\\Copied;
+final class ProductionContractFixture {}
+EOF
+  cat > "$application_fixture" <<EOF
+<?php
+namespace App\\Application;
+final class ProductionContractFixture {}
+EOF
+  if output=$(php scripts/production-contract-check.php 2>&1); then
+    echo "Production contract accepted a case-variant Fight\\Common namespace." >&2
+    exit 1
+  fi
+  printf "%s\\n" "$output"
+  case "$output" in
+    *"fight\\common\\Copied"*) ;;
+    *) echo "Production contract did not identify the case-variant Fight\\Common namespace." >&2; exit 1 ;;
+  esac
+
+  cat > "$domain_fixture" <<EOF
+<?php
+namespace App\\Domain;
+final class ProductionContractFixture {}
+EOF
+  cat > "$application_fixture" <<EOF
+<?php
+namespace fight\\accesscontrol\\Copied;
+final class ProductionContractFixture {}
+EOF
+  if output=$(php scripts/production-contract-check.php 2>&1); then
+    echo "Production contract accepted a case-variant Fight\\AccessControl namespace." >&2
+    exit 1
+  fi
+  printf "%s\\n" "$output"
+  case "$output" in
+    *"fight\\accesscontrol\\Copied"*) ;;
+    *) echo "Production contract did not identify the case-variant Fight\\AccessControl namespace." >&2; exit 1 ;;
+  esac
   echo "Production contract negative namespace checks passed."
 '

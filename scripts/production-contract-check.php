@@ -73,7 +73,7 @@ try {
         return $namespaces;
     };
 
-    $forbiddenNamespaces = ['Fight\\Common', 'Fight\\AccessControl'];
+    $forbiddenNamespaces = ['fight\\common', 'fight\\accesscontrol'];
     $files = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($sourceRoot, FilesystemIterator::SKIP_DOTS)
     );
@@ -92,8 +92,12 @@ try {
         }
 
         foreach ($readNamespaces($file->getPathname()) as $namespace) {
+            $normalizedNamespace = strtolower($namespace);
             foreach ($forbiddenNamespaces as $forbiddenNamespace) {
-                if ($namespace === $forbiddenNamespace || str_starts_with($namespace, "{$forbiddenNamespace}\\")) {
+                if (
+                    $normalizedNamespace === $forbiddenNamespace
+                    || str_starts_with($normalizedNamespace, "{$forbiddenNamespace}\\")
+                ) {
                     throw new RuntimeException(
                         "Copied package namespace {$namespace} is forbidden in src/{$relativePath}."
                     );
