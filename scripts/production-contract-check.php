@@ -78,15 +78,18 @@ try {
         new RecursiveDirectoryIterator($sourceRoot, FilesystemIterator::SKIP_DOTS)
     );
     foreach ($files as $file) {
-        if (!$file->isFile() || strtolower($file->getExtension()) !== 'php') {
-            continue;
-        }
-
         $relativePath = str_replace(
             DIRECTORY_SEPARATOR,
             '/',
             substr($file->getPathname(), strlen($sourceRoot) + 1)
         );
+        if ($file->isLink()) {
+            throw new RuntimeException("Symlink is forbidden in owned source: src/{$relativePath}.");
+        }
+        if (!$file->isFile() || strtolower($file->getExtension()) !== 'php') {
+            continue;
+        }
+
         if (preg_match('#(^|/)Fight/(Common|AccessControl)(/|$)#i', $relativePath) === 1) {
             throw new RuntimeException("Copied Fight package source path is forbidden: src/{$relativePath}.");
         }

@@ -114,5 +114,32 @@ EOF
     *"fight\\accesscontrol\\Copied"*) ;;
     *) echo "Production contract did not identify the case-variant Fight\\AccessControl namespace." >&2; exit 1 ;;
   esac
-  echo "Production contract negative namespace checks passed."
+
+  cat > "$application_fixture" <<EOF
+<?php
+namespace App\\Application;
+final class ProductionContractFixture {}
+EOF
+  symlink_target="$work_root/copied-access-control"
+  mkdir -p "$symlink_target" src/Fight
+  cat > "$symlink_target/Collision.php" <<EOF
+<?php
+namespace fIgHt\\aCcEsScOnTrOl\\Copied;
+final class Collision {}
+EOF
+  ln -s "$symlink_target" src/Fight/AccessControl
+  if output=$(php scripts/production-contract-check.php 2>&1); then
+    echo "Production contract accepted a source-directory symlink for Fight\\AccessControl." >&2
+    exit 1
+  fi
+  printf "%s\\n" "$output"
+  case "$output" in
+    *"Symlink"*"src/Fight/AccessControl"*) ;;
+    *) echo "Production contract did not identify the Fight\\AccessControl source-directory symlink." >&2; exit 1 ;;
+  esac
+  rm src/Fight/AccessControl
+  rmdir src/Fight
+  php scripts/production-contract-check.php
+
+  echo "Production contract negative namespace and symlink checks passed."
 '
