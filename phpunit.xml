@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="tests/bootstrap.php" cacheDirectory="var/cache/phpunit" colors="true">
+    <php>
+        <env name="APP_ENV" value="test" force="true"/>
+    </php>
     <testsuites>
         <testsuite name="application">
             <directory>tests</directory>
+            <exclude>tests/Integration/Postgres</exclude>
+        </testsuite>
+        <testsuite name="postgres">
+            <directory>tests/Integration/Postgres</directory>
         </testsuite>
     </testsuites>
 </phpunit>

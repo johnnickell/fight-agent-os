@@ -4,5 +4,46 @@ services:
       context: .
       dockerfile: etc/docker/cli/Dockerfile
     command: php -S 0.0.0.0:8080 -t public
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres_test:
+        condition: service_healthy
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-agent_os}:${POSTGRES_PASSWORD:-agent_os_local}@postgres:5432/${POSTGRES_DB:-agent_os}
+      TEST_DATABASE_ALLOWED_HOST: postgres_test
+      TEST_DATABASE_URL: postgresql://${POSTGRES_TEST_USER:-agent_os_test}:${POSTGRES_TEST_PASSWORD:-agent_os_test_local}@postgres_test:5432/${POSTGRES_TEST_DB:-agent_os_test}
     ports: ["127.0.0.1:${FIGHT_AGENT_OS_PORT:-18087}:8080"]
     volumes: [".:/app"]
+
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agent_os}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agent_os_local}
+      POSTGRES_USER: ${POSTGRES_USER:-agent_os}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  postgres_test:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_TEST_DB:-agent_os_test}
+      POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD:-agent_os_test_local}
+      POSTGRES_USER: ${POSTGRES_TEST_USER:-agent_os_test}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    tmpfs:
+      - /var/lib/postgresql/data
+
+volumes:
+  postgres_data:

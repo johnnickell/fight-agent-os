@@ -18,5 +18,10 @@ $container['app.src_dir'] = sprintf('%s/src', $rootDir);
 $container['app.tests_dir'] = sprintf('%s/tests', $rootDir);
     $container['app.vendor_dir'] = sprintf('%s/vendor', $rootDir);
     $container['app.storage_dir'] = sprintf('%s/var/storage', $rootDir);
-    $container['app.database_url'] = getenv('DATABASE_URL') ?: 'sqlite:///:memory:';
+    $databaseUrl = getenv('DATABASE_URL');
+    if ($databaseUrl === false || $databaseUrl === '') {
+        throw new RuntimeException('DATABASE_URL must be configured.');
+    }
+
+    $container['app.database_url'] = $databaseUrl;
 };
