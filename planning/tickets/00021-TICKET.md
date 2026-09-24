@@ -22,7 +22,7 @@ Out of scope: custom roles/permissions, active email change, disable/enable/dele
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
 | List safe users | N/A — read-only interaction | `ListUsers` and safe lifecycle projection | N/A — no domain event | Authorized operator sees canonical email and approved lifecycle/role/invitation state only |
-| Invite a regular user | `InvitePendingUser` with managed `ROLE_USER` assignment | Detect existing/pending identity and managed role | `UserInvited`, `RoleAssignedToUser` as applicable | Pending user and durable delivery intent are created |
+| Invite a regular user | `InvitePendingUser` with managed `ROLE_USER` assignment | Detect existing/pending identity and managed role | `UserInvited`, `RoleAssignedToUser` as applicable | Pending user and package-owned recoverable delivery state are created |
 | Inspect and recover invitation | `RetryInvitationDelivery`, `ResendInvitationDelivery`, `CorrectPendingInvitation` | `FindInvitationDeliveryStatus`, safe user state | Retry/resend/correction events | Delivery retries or replacement/correction occur with predecessor grant invalidation where applicable |
 | Invite/assign a Super Admin | `InvitePendingUser`, `AssignRoleToUser` through explicit elevated orchestrator | Resolve current `ASSIGN_SUPER_ADMIN` authority and target state | Invitation/role events plus durable safe audit evidence | Elevated pending identity/assignment occurs only after explicit confirmation |
 

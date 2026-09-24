@@ -23,8 +23,8 @@ Out of scope: external compromised-password APIs, hints/security questions, emai
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Request password reset | `RequestPasswordReset` | Resolve canonical eligible identity without public disclosure | `PasswordResetRequested` | If eligible, hashed one-time grant and durable delivery intent are recorded; response remains generic |
-| Confirm/expire delivery state | `ConfirmPasswordResetDelivery`, `ExpirePasswordResetDelivery` | Safe internal delivery/grant state | `PasswordResetDeliveryConfirmed`, `PasswordResetDeliveryExpired` | Delivery lifecycle is durable and recoverable without exposing grant material |
+| Request password reset | `RequestPasswordReset` | Resolve canonical eligible identity without public disclosure | `PasswordResetRequested` | If eligible, hashed one-time grant and package-owned recoverable delivery state are recorded; response remains generic |
+| Process delivery state | Qualified direct package delivery handler | Package due-work discovery and safe internal delivery/grant state | Package delivery outcome events as defined upstream | Claimed provider work and matching outcomes remain package-owned and recoverable without exposing grant material |
 | Complete password reset | `AuthenticationService::resetPassword()` | Resolve valid grant and authoritative user/session state | `PasswordResetCompleted`, session revocation outcomes | New Argon2id hash commits, grant is consumed, all sessions are revoked |
 | Change known password | `AuthenticationService::changePassword()` | Resolve current principal and verify current hash | `PasswordChanged`, applicable session invalidation outcomes | Password changes atomically and configured authority invalidation occurs |
 

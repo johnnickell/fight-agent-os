@@ -24,8 +24,8 @@ Out of scope: public registration, `ROLE_ADMIN`, custom-role/permission administ
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
 | Reconcile managed authority | `ReconcileManagedPolicy` | `PreviewManagedPolicy`, role/permission repository reads | `ManagedPolicyReconciled` | Managed roles, permissions, and grants match version-controlled policy idempotently |
-| Bootstrap the first Super Admin | Explicit Agent OS console orchestrator using `InvitePendingUser` and `AssignRoleToUser` | Query whether effective Super Admin authority already exists | `UserInvited`, `RoleAssignedToUser`, safe audited bootstrap evidence | One pending elevated identity and recoverable invitation intent are committed; later bootstrap is refused |
-| Invite an ordinary user from console | `InvitePendingUser` with managed `ROLE_USER` assignment | Existing-user/pending-state lookup | `UserInvited`, `RoleAssignedToUser` as applicable | Pending ordinary identity and delivery intent are created without printing credentials |
+| Bootstrap the first Super Admin | Explicit Agent OS console orchestrator using `InvitePendingUser` and `AssignRoleToUser` | Query whether effective Super Admin authority already exists | `UserInvited`, `RoleAssignedToUser`, safe audited bootstrap evidence | One pending elevated identity and package-owned recoverable invitation state are committed; later bootstrap is refused |
+| Invite an ordinary user from console | `InvitePendingUser` with managed `ROLE_USER` assignment | Existing-user/pending-state lookup | `UserInvited`, `RoleAssignedToUser` as applicable | Pending ordinary identity and package-owned delivery state are created without printing credentials |
 
 ## Validation and permissions
 
