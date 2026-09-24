@@ -49,7 +49,7 @@ Test configuration must use dedicated credentials/database names, require explic
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00011](../tasks/00011-TASK.md) | Accept the PostgreSQL consistency and durable-effects ADR | ready-for-agent |
+| [TASK-00011](../tasks/00011-TASK.md) | Accept the PostgreSQL consistency and durable-effects ADR | done |
 | [TASK-00012](../tasks/00012-TASK.md) | Establish guarded PostgreSQL persistence through managed authority | ready-for-agent |
 | [TASK-00013](../tasks/00013-TASK.md) | Persist identities and refresh sessions atomically | ready-for-agent |
 | [TASK-00014](../tasks/00014-TASK.md) | Persist activation grants and replacement races | ready-for-agent |
