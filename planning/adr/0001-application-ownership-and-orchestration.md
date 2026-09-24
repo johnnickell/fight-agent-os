@@ -164,7 +164,7 @@ The following are explicitly prohibited:
 
 | Rule | Enforcement owner |
 |---|---|
-| Direct package-type composition, inward dependency direction, constructor injection, no business-code container access, no copied Fight namespaces, and representative invalid dependency proofs | [TASK-00010](../tasks/00010-TASK.md) introduces the representative composition and deterministic architecture checks |
+| Direct package-type composition and inward dependency direction | [TASK-00010](../tasks/00010-TASK.md) introduces the representative composition and Deptrac checks; semantic ownership and injection concerns remain review responsibilities |
 | Exact transaction capability, PostgreSQL adapter contracts, shared connection, and atomic state/durable-intent behavior | [TICKET-00009](../tickets/00009-TICKET.md) and its persistence ADR/tests |
 | One-Action/one-interaction, endpoint Responders, explicit safe representations, transport validation, and centralized safe errors | [TICKET-00010](../tickets/00010-TICKET.md) with functional HTTP evidence |
 | Post-commit external delivery, recovery, retry, leasing, idempotency, and secret-safe provider adapters | [TICKET-00011](../tickets/00011-TICKET.md) with behavior and PostgreSQL concurrency evidence |
@@ -179,15 +179,15 @@ The backend phases include PHP syntax linting, PHPCS configured from Fight Commo
 Deptrac, Rector in dry-run mode, and one coherent PHPUnit/coverage execution. Every configured Unit, Integration,
 Functional, and PostgreSQL-backed suite runs exactly once in the canonical gate; a coverage policy reads that same
 run's report rather than rerunning tests. Focused wrappers remain iteration tools and are not additional canonical
-passes. Frontend phases remain bounded to the accepted locked install, formatting/lint/type checks, Vitest behavior
-and coverage, production build, and justified Storybook/component checks. One-time seeded-failure evidence belongs
-in disposable TASK evidence and is not a recurring gate phase.
+passes. Frontend phases remain bounded to formatting/lint/type checks, Vitest behavior and coverage, production
+build, and justified Storybook/component checks. Dependency installation, updates, and audits remain explicit
+maintenance operations rather than pre-submit tests.
 
-The production contract already rejects copied `Fight\Common` and `Fight\AccessControl` namespaces under owned
-source. Until representative code exists, semantic rules such as “genuine orchestration,” one interaction per
-Action, correct authorization placement, event ownership, and absence of speculative abstractions require direct
-review. Later TICKETs must add behavior evidence when their representative boundaries exist rather than testing
-this Markdown or manufacturing placeholder source.
+The gate does not test its wrappers, orchestration, configuration, static-analysis tools, test infrastructure, or
+seed deliberately invalid source merely to prove tool behavior. Semantic rules such as “genuine orchestration,”
+one interaction per Action, correct authorization placement, event ownership, package ownership, and absence of
+speculative abstractions require direct review where Deptrac cannot represent them. Later TICKETs add behavior
+evidence only when their real boundaries exist rather than manufacturing placeholder source or tests.
 
 ## Alternatives considered
 

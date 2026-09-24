@@ -2,11 +2,11 @@
 
 [ADR 0001](../../planning/adr/0001-application-ownership-and-orchestration.md) is the authority for package ownership and dependency direction. This document records the first executable proof and the boundaries automated by TASK-00010.
 
-## Representative composition proof
+## Representative composition
 
 The outer query configuration registers Fight Access Control's public `ListPermissions` query directly to its public `ListPermissionsHandler`. The handler receives the package-owned `PermissionRepository` capability through constructor injection. The production composition intentionally does not bind a repository implementation: PostgreSQL authority and that adapter belong to TICKET-00009.
 
-The integration proof supplies a test-only recording repository, resolves the package handler through the existing Fight Common query bus, dispatches the package query, and receives package-owned `PermissionView` records. This is a query-only, non-user-facing composition proof. A command and event are not added because they would require transaction, persistence, audit, or delivery behavior owned by later requirements. No `App\Application` orchestrator is justified or introduced because this interaction is already wholly owned by Fight Access Control.
+This is query-only, non-user-facing composition. A command and event are not added because they would require transaction, persistence, audit, or delivery behavior owned by later requirements. No `App\Application` orchestrator is justified or introduced because this interaction is already wholly owned by Fight Access Control. Configuration wiring is not a product behavior and has no dedicated PHPUnit test; any real interaction that uses this path will fail directly if composition is invalid.
 
 ## Automated rules
 
@@ -23,9 +23,7 @@ Deptrac analyses owned production source and enforces these currently representa
 - `App\Adapter` may depend inward, on selected package layers, and on infrastructure.
 - Dependencies from an owned layer to an unclassified type are reported and fail the check, so an external framework cannot bypass the rules merely because its namespace is absent from the configured infrastructure collector.
 
-The companion source-contract check rejects copied `Fight\Common` or `Fight\AccessControl` namespaces, service-container location from owned Domain/Application code, source symlinks in analysed roots, and the mechanically detectable renaming-wrapper case where an owned Domain/Application declaration duplicates a referenced Fight package type name. Generic-wrapper intent beyond that deterministic name collision remains a review concern.
-
-Seeded invalid dependencies are one-time TASK evidence under ignored `.runs/notes/TASK-00010/`; they are not a recurring quality-gate phase. TICKET-00013 owns integration and extension of this focused architecture check into the final pre-submit gate.
+Package ownership, service-location, wrapper intent, and other semantic concerns not represented by dependency direction remain code-review responsibilities. The build does not test Deptrac with deliberately invalid source. TICKET-00013 owns integration and extension of the focused dependency check into the final pre-submit gate.
 
 ## Deferred enforcement
 

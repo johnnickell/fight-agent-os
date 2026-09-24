@@ -32,7 +32,7 @@
 | [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00029](00029-TASK.md) | Establish the production component catalog and state evidence | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
-| [TASK-00030](00030-TASK.md) | Complete PHP style static-analysis and dependency enforcement | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
+| [TASK-00030](00030-TASK.md) | Complete PHP style and static analysis | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00032](00032-TASK.md) | Enforce deterministic frontend quality checks | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
@@ -72,4 +72,5 @@
 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | done | — |
 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | done | — |
 | [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | done | — |
+| [TASK-00070](00070-TASK.md) | Remove build and test self-verification bloat | done | — |
 <!-- /planning:records -->
