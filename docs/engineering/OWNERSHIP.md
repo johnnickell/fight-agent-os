@@ -21,6 +21,7 @@ Deptrac analyses owned production source and enforces these currently representa
 - `App\Domain` may depend only on owned Domain, package Domain contracts, Fight Common Domain, and PHP internals.
 - `App\Application` may depend inward and on public Fight Access Control Domain/Application and Fight Common Domain/Application contracts, but not adapters or infrastructure.
 - `App\Adapter` may depend inward, on selected package layers, and on infrastructure.
+- Dependencies from an owned layer to an unclassified type are reported and fail the check, so an external framework cannot bypass the rules merely because its namespace is absent from the configured infrastructure collector.
 
 The companion source-contract check rejects copied `Fight\Common` or `Fight\AccessControl` namespaces, service-container location from owned Domain/Application code, source symlinks in analysed roots, and the mechanically detectable renaming-wrapper case where an owned Domain/Application declaration duplicates a referenced Fight package type name. Generic-wrapper intent beyond that deterministic name collision remains a review concern.
 
