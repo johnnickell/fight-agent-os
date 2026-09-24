@@ -35,7 +35,7 @@ LocalDevelopment domain enrollment and the production/runtime topology remain to
 ```sh
 ./bin/planning-check --write  # Refresh planning views
 ./bin/planning-check          # Validate planning
-./bin/build                   # Inherited complete Slim gate
+./bin/build                   # Complete gate in the running web service
 ./bin/down                    # Stop the development service
 ```
 

@@ -14,7 +14,9 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Use multiline docblocks, capitalized active-verb summaries without periods, and inheritDoc for inherited behavior
 - Keep PHP properties camelCase and HTTP JSON/database fields snake_case; follow Fight helper conventions where available
 - Write testable code, then tests. For bugs, reproduce and add a failing regression test before repairing
-- Use repository `./bin/*` Docker wrappers. The inherited `./bin/build` is the full gate; focused checks do not replace it
+- Test owned application behavior and important integration contracts; never add product-suite tests for architecture, dependency rules, container/configuration wiring, migrations, generated files, wrappers, build/planning/static-analysis mechanisms, or test infrastructure
+- Validate tooling and infrastructure directly with their owning tools; never test that tests or quality tools detect deliberately seeded failures
+- Use repository `./bin/*` Docker wrappers. `./bin/build` is the full gate; focused checks do not replace it
 - Surface warnings and incomplete verification. Do not label inherited receipts as fresh application evidence
 - Before task publication, record completed implementation and verification; keep formal review and merge status separate
 - Ask for checkout/worktree choice before implementation unless already provided. Use `feature/*` from `develop`
