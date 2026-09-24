@@ -54,7 +54,7 @@ Test configuration must use dedicated credentials/database names, require explic
 | [TASK-00013](../tasks/00013-TASK.md) | Persist identities and refresh sessions atomically | ready-for-agent |
 | [TASK-00014](../tasks/00014-TASK.md) | Persist activation grants and replacement races | ready-for-agent |
 | [TASK-00015](../tasks/00015-TASK.md) | Persist password-reset grants and terminal succession | ready-for-agent |
-| [TASK-00016](../tasks/00016-TASK.md) | Establish atomic audit evidence and durable delivery intent | ready-for-agent |
+| [TASK-00016](../tasks/00016-TASK.md) | Establish atomic audit evidence and package delivery persistence | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress

@@ -1,9 +1,9 @@
 # ADR 0002: Define PostgreSQL consistency and durable effects
 
 - **Status:** Accepted
-- **Date:** 2026-09-23
+- **Date:** 2026-09-24
 - **Decision owners:** Fight Agent OS maintainers
-- **Acceptance:** Explicitly accepted by the human maintainer under TASK-00011 on 2026-09-23
+- **Acceptance:** Explicitly reaccepted by the human maintainer after the package-owned delivery revision under TASK-00011 on 2026-09-24
 
 ## Context
 
@@ -23,6 +23,19 @@ This decision specializes [EPIC-00003](../epics/00003-EPIC.md), the closed
 [TICKET-00009](../tickets/00009-TICKET.md), and the ownership boundary in
 [ADR 0001](0001-application-ownership-and-orchestration.md). It gates schema and adapter work beginning with
 [TASK-00012](../tasks/00012-TASK.md).
+
+The locked package does not yet expose a viable durable-intent integration. `InvitePendingUserHandler` owns and
+commits the user, activation grant, encrypted delivery state, and audit transaction, then emits `UserInvited` only
+after commit. The grant state survives a crash, but `v0.2.0` has no deterministic due-work discovery, committed
+lease, stale-claim fence, or recovery runner contract. `DeliverUserInvitationHandler` claims delivery, invokes
+`InvitationDeliveryInvoker`, and records success or failure inside one transaction, so binding that invoker to an
+external provider violates the no-external-effect rule.
+
+Fight Access Control's accepted `EPIC-00006`, `WF-009`, and `WF-010` planning on `develop` at
+`182748eec05aeeeed1390b9d104f68ca219d2a0d` resolves the missing boundary for proposed `v0.3.0`: existing
+package-owned grant delivery state, not a consumer outbox, is the authoritative durable queue for invitation,
+password-reset, and email-change credentials. That plan is implementation-ready but is not yet a tagged dependency
+available to Agent OS.
 
 ## Decision
 
@@ -66,7 +79,10 @@ compatibility, not an owned alias for the package contract, and is removed when 
 upgraded. The deprecated `DoctrineUnitOfWork` must not become a second transaction authority.
 
 Events preserve their package or application ownership. Immediate in-process dispatch and any provider attempt
-occur only after a successful commit. A post-commit callback is an optimization, not recovery authority.
+occur only after a successful commit. A post-commit callback is an optimization, not recovery authority. The
+current package handlers cannot be surrounded by an Agent OS transaction, decorated through audit persistence,
+or followed by an event subscriber to manufacture the missing atomicity; those approaches respectively create a
+nested transaction, hide delivery policy in an unrelated repository, or retain the crash window.
 
 ### Mapping policy
 
@@ -103,8 +119,9 @@ generations.
 | `RoleRepository` | Role scalar state is mapped separately from a unique role-permission join table with foreign keys to both authorities; role IDs and canonical names are unique | Add/replace/validate take the permission-reference fence and lock referenced permissions in stable ID order. Replacement compares the complete expected role and exact membership set. Remove takes the role-reference fence and rejects assigned roles. Containing/managed/page queries use explicit stable ordering |
 | `UserRepository` | User scalar state, password hash, lifecycle, authentication/assignment/email revisions, role assignments, and canonical/live-reservation email claims are persisted. A normalized email-claim table gives one unique canonical value across canonical addresses and live reservations; assignments have unique pairs and foreign keys | Complete-state conditional operations update only the allowed field group and exact revision increments. A per-user authentication-authority transaction lock serializes authority replacement, reset scans, confirmation, and coupled session insertion. Role assignment uses the role-reference fence. `replaceAuthenticationAuthorityAndAddRefreshSession()` uses targeted DBAL on the shared connection so neither half can commit alone |
 | `RefreshSessionRepository` | Session ownership, current one-way credential digest, historical used digests, expiry, authentication version, remembered/revoked state, and revision are persisted with unique IDs/digests and user references | Replacement is `UPDATE ... WHERE id = ? AND revision = ?` plus complete immutable-state checks and exact `+1` revision. Active scans evaluate both expiries and revocation at the supplied time. Current and used digest indexes support exact lookup without storing raw credentials |
-| `ActivationGrantRepository` | Purpose-specific grant generations and owned delivery generations store only package-approved credential digests plus recoverable encrypted delivery ciphertext; IDs, delivery IDs, per-user generation numbers, and per-user historical digests are unique and user references are enforced | A per-user grant transaction lock plus latest-row `FOR UPDATE` serializes add, replace, `replaceWithSuccessor`, and `addSuccessor`. The adapter compares complete security-relevant predecessor state and exact next revision. Terminalization and successor insert are one transaction. Latest order is generation descending |
-| `PasswordResetGrantRepository` | Separate purpose-specific tables use the same safe shape without sharing activation identity or credential namespaces accidentally; raw reset credentials are never stored | A per-user reset-grant transaction lock plus latest-row `FOR UPDATE` enforces complete-state replacement, terminal append, and atomic succession. Purpose, ownership, exact next revision, terminal state, and historical digest freshness are checked before mutation |
+| `ActivationGrantRepository` | Purpose-specific grant generations and owned delivery generations store only package-approved credential digests plus recoverable encrypted delivery ciphertext; IDs, delivery IDs, per-user generation numbers, and per-user historical digests are unique and user references are enforced | A per-user grant transaction lock plus latest-row `FOR UPDATE` serializes add, replace, `replaceWithSuccessor`, and `addSuccessor`. The adapter compares complete security-relevant predecessor state and exact next revision. Terminalization and successor insert are one transaction. The locked `v0.3.0` contract must additionally govern due discovery, committed leases, retry timing, and expected outcomes |
+| `PasswordResetGrantRepository` | Separate purpose-specific tables use the same safe shape without sharing activation identity or credential namespaces accidentally; raw reset credentials are never stored | A per-user reset-grant transaction lock plus latest-row `FOR UPDATE` enforces complete-state replacement, terminal append, and atomic succession. Purpose, ownership, exact next revision, terminal state, and historical digest freshness are checked before mutation. The locked `v0.3.0` contract must add the same recoverable delivery lifecycle without merging purpose namespaces |
+| `EmailChangeGrantRepository` | The qualified `v0.3.0` mapping persists package-owned email-change grant and delivery generations, encrypted material, reservation references, stable delivery identity, and terminal ciphertext destruction; email-change provider wiring remains deferred | Per-user email-change fences and complete-state conditional writes protect request, replacement, cancellation, expiry, claim, retry, and outcome transitions. Due-work behavior must match the package contract rather than an Agent OS variant |
 | `AuditEvidenceRepository` | Append-only rows store actor ID, action, explicit `user` or `agent` subject type and ID, and bounded deterministic string context. Agent subjects intentionally have no Agent foreign key because Agent persistence is deferred | Inserts participate in the enclosing transaction. No update/delete repository operation is exposed. Context rejects secrets, unsupported values, and configured size excess before persistence; stable created-at/ID ordering supports later operations without implying an audit UI |
 
 The authorization fences are PostgreSQL transaction-scoped advisory locks in separate fixed namespaces for
@@ -119,43 +136,58 @@ to the repository's declared `false`, absence, or known safe Domain/Application 
 secret-bearing value collided. Unknown driver errors are internal failures, logged only through sanitized
 correlation context, and are not reclassified broadly by SQLSTATE alone.
 
-### Durable delivery intent
+### Durable credential delivery intent
 
-Required external delivery uses an application-owned transactional outbox named durable delivery intent. Creating
-an intent is an Application capability invoked inside the same `commitTransactional()` operation as authoritative
-business state and required audit evidence. Each row contains:
+The authoritative durable queue for invitation, password-reset, and email-change credentials is the delivery state
+owned by each Fight Access Control grant generation. Agent OS must not create a parallel credential outbox. The
+originating package handler atomically commits aggregate state, encrypted delivery material, and required audit
+evidence through the shared `commitTransactional()` boundary; that committed package state remains recoverable if
+post-commit event dispatch never occurs.
 
-- a stable intent ID and globally unique idempotency key;
-- one allowlisted effect type and non-secret aggregate/delivery reference;
-- minimal provider-neutral, versioned, non-secret routing metadata;
-- `pending`, `claimed`, `retryable`, `delivered`, or `terminal` status;
-- monotonic revision, attempt count, next-eligible time, lease owner and expiry;
-- safe failure class/code without arbitrary provider text; and
-- created, updated, delivered/terminal, and retention-eligible timestamps.
+Integration is blocked on separately authorized completion and qualification of Fight Access Control EPIC-00006, a
+tagged stable `v0.3.0` release, and an Agent OS lock update. That release must provide the accepted package contract:
 
-Raw activation credentials, reset credentials, password hashes, access/refresh tokens, provider secrets,
-credential-bearing URLs, and plaintext mail bodies are prohibited in intent payloads. Invitation/reset intent
-references the package delivery ID; later processing resolves the authoritative encrypted delivery material and
-uses the registered decrypting capability only after claim. Routine reads and diagnostics expose references and
-safe classifications, never ciphertext or decrypted content.
+- secret-free deterministic bounded discovery across pending, due-retry, and expired-lease invitation, reset, and
+  email-change generations;
+- a short transaction that claims one exact generation with an opaque token, lease deadline, attempt metadata, and
+  compare-and-set revision, and commits before provider invocation;
+- package-controlled decryption only after that committed claim and only for the invocation lifetime;
+- a provider-neutral consumer capability receiving the immutable delivery-generation ID as stable idempotency
+  identity and returning typed delivered, retryable, or permanent outcomes;
+- a separate expected-state transaction that accepts only the matching live claim token and revision, rejects stale
+  claimants, records safe outcome/audit evidence, and destroys ciphertext on delivered or permanent outcomes;
+- package-owned bounded increasing backoff for retryable outcomes until the owning grant expires, with expired claims
+  becoming discoverable for safe recovery; and
+- direct package command/handler ownership without an Agent OS alias, duplicated lifecycle policy, outer transaction,
+  or post-commit event as recovery authority.
 
-Discovery selects bounded eligible rows in `next_attempt_at, created_at, id` order and claims them in a short
-transaction with `FOR UPDATE SKIP LOCKED`, a lease, and an exact revision advance. The transaction commits before
-any provider call. Success, retry, or terminal failure is recorded in a later transaction only when lease identity
-and expected revision still match. Expired claims become eligible for recovery. Retry delay and maximum attempts
-are bounded configuration owned by TICKET-00011 and driven by an injected clock; changing those values does not
-change the persistence guarantee.
+Raw credentials, hashes, ciphertext, access/refresh tokens, provider secrets, credential-bearing URLs, plaintext
+mail bodies, and arbitrary provider messages are prohibited in Commands, Events, Queries, safe Views, audit context,
+and ordinary diagnostics. Consumer provider adapters hold plaintext only during invocation and must honor the stable
+idempotency identity. A crash after provider acceptance but before outcome commit may produce another attempt after
+lease recovery, so the guarantee is durable at-least-once delivery, never exactly once.
 
-This closes the business-commit/immediate-dispatch crash window because a committed pending intent remains
-queryable after process restart. It does not provide exactly-once delivery. A crash after provider acceptance but
-before recording success causes another attempt. The stable idempotency key is supplied to capabilities/providers
-that support deduplication, and consumers must tolerate duplicates. Provider execution, process triggering,
-retries, operational views, and provider enrollment belong to [TICKET-00011](../tickets/00011-TICKET.md).
+Post-commit package events may request immediate processing, but a bounded Agent OS scheduler must use package due-
+work discovery and dispatch the same direct package handlers after restart. Agent OS owns PostgreSQL repository
+adapters on the shared connection, provider implementations, operational scheduling/capacity, and composition; the
+package owns discovery semantics, claims, leases, retry timing, terminal policy, stale-outcome fencing, credential
+materialization, and handler orchestration.
 
-Delivered and terminal intent metadata is retained for 90 days after terminalization, after which a separate
-explicit maintenance operation may purge it in bounded batches. Pending, claimed, and retryable intents are never
-age-purged. Purging intent metadata does not delete package grant or audit history, and retention changes require an
-operationally reviewed configuration or migration rather than request-time cleanup.
+Fight Access Control includes all three credential families to avoid incompatible public delivery models. Agent OS
+may defer email-change product/provider wiring, but its persistence mapping must not invent a different lifecycle.
+The exact `v0.3.0` public types must be taken from the qualified tagged release, not guessed from planning or patched
+in `vendor/`. Until that release is locked, TASK-00016 and TICKET-00011 remain `needs-info`; independent guarded
+PostgreSQL and `v0.2.0` repository work may continue after this ADR is accepted.
+
+Durable audit evidence committed through `AuditEvidenceRepository` is the authoritative audit effect for the current
+foundation. No external audit-publication provider is demonstrated, so this ADR does not create a speculative second
+outbox for it. A future external audit sink requires separately accepted requirements for durable publication,
+idempotency, retention, and recovery rather than reusing credential delivery state.
+
+Delivered, permanent, expired, replaced, revoked, and cancelled credential generations retain only package-approved
+secret-free historical status and audit evidence; ciphertext is destroyed when the package contract makes work
+terminal. This ADR selects no age-based purge of package grant history. Any later purge requires explicit retention
+requirements and must never remove pending, retryable, or live claimed work.
 
 ### Guarded test databases
 
@@ -210,9 +242,16 @@ reject unrelated valid work or fail to enforce the actual authority being change
 Rejected. PostgreSQL cannot roll back accepted email, HTTP, filesystem, or provider effects, while a slow provider
 would hold locks and increase deadlocks. Provider work starts only after commit.
 
-### In-memory post-commit events without durable intent
+### In-memory post-commit events without durable discovery
 
-Rejected. A process can fail after commit and before dispatch, permanently losing a required effect.
+Rejected. A process can fail after commit and before dispatch. Persisted package delivery state closes that window
+only when deterministic discovery and claim/recovery contracts can find and process it after restart.
+
+### Consumer-owned credential outbox
+
+Rejected. It duplicates package-owned grant delivery state, creates two lifecycle authorities requiring
+reconciliation, and makes recovery depend on consumer registration. The qualified package state is the sole
+credential queue.
 
 ### Event sourcing or a general job platform
 
@@ -229,9 +268,15 @@ is durable at-least-once attempts with stable idempotency identity.
 - Persistence and concurrency behavior are production-faithful and directly testable against PostgreSQL.
 - Repository implementations are more explicit than generic CRUD and require disciplined SQL, lock ordering, and
   contract tests.
-- All state, audit, and required intent writes can commit or roll back together on one connection.
-- External delivery survives the commit/dispatch crash window, but downstream effects may be attempted more than
-  once.
+- Existing package delivery state remains the single credential-work authority; Agent OS does not reconcile a
+  duplicate outbox.
+- Once the required tagged package release is locked, aggregate state, encrypted delivery material, and audit evidence
+  commit or roll back together, while provider invocation and outcome persistence use separate later phases.
+- External credential delivery survives the commit/dispatch crash window after that integration, but provider
+  effects may be attempted more than once.
+- Fight Access Control `v0.2.0` is insufficient for recoverable provider integration; attempting to work around it
+  in Agent OS is a stop condition rather than an implementation option.
+- External audit publication is deferred rather than supported by a speculative generic outbox.
 - Test setup is slower than SQLite but deterministic and structurally guarded against destructive target mistakes.
 - Stable package reconstruction is a hard qualification gate; a missing supported path causes upstream work rather
   than a brittle local workaround.
@@ -246,8 +291,8 @@ is durable at-least-once attempts with stable idempotency identity.
 | User, email-claim, assignment, refresh-session, authentication-authority, and coupled session contracts | [TASK-00013](../tasks/00013-TASK.md) |
 | Activation-grant generations, encrypted delivery state, complete-state comparison, and succession races | [TASK-00014](../tasks/00014-TASK.md) |
 | Purpose-separated password-reset generations, terminal append, comparison, and succession races | [TASK-00015](../tasks/00015-TASK.md) |
-| Audit evidence, durable-intent schema/capability, atomicity, claiming, restart discovery, and safe metadata | [TASK-00016](../tasks/00016-TASK.md) |
-| Post-commit provider capabilities, processing, retry policy, recovery operation, observability, and redaction | [TICKET-00011](../tickets/00011-TICKET.md) |
+| Audit evidence plus qualified `v0.3.0` cross-family due-work/claim/outcome persistence integration after the tagged package prerequisite is locked | [TASK-00016](../tasks/00016-TASK.md) |
+| Provider adapters, direct package-handler composition, scheduled discovery, recovery operation, observability, and redaction after the same prerequisite | [TICKET-00011](../tickets/00011-TICKET.md) |
 | PostgreSQL suite and complete quality-gate enforcement | [TICKET-00013](../tickets/00013-TICKET.md) |
 
 Every implementing TASK must test migrations from zero, exact round trips and absence behavior, known constraint
@@ -257,16 +302,18 @@ external effect inside transactions, no raw secret in intent/audit/logging, and 
 
 ## Deferred concerns
 
-`AgentRepository`, Agent credential/nonces, and `EmailChangeGrantRepository` are present in Fight Access Control
-`v0.2.0` but are deferred because the approved foundation implementation does not yet persist Agent authorities or
-deliver the email-change journey. Audit evidence still accepts Agent subjects without requiring an Agent row.
-`UserRepository` email reservation and confirmation state is not deferred: the installed contract requires exact
-round-trip persistence even though the product email-change journey is deferred.
+`AgentRepository` and Agent credential/nonces are deferred because the approved foundation does not yet persist
+Agent authorities. Audit evidence still accepts Agent subjects without requiring an Agent row. Email-change product
+routes and provider wiring remain deferred, but the qualified `v0.3.0` `EmailChangeGrantRepository` persistence
+contract is included so Agent OS does not invent an incompatible credential lifecycle. `UserRepository` email
+reservation and confirmation state also remains required for exact round-trip persistence.
 
-Exact migration names, PostgreSQL server version, Doctrine Migrations version, table/column dimensions, retry
-counts/delays, operational trigger, and provider enrollment are implementation details for their owning TASKs so
-long as they preserve this decision. Any package API needed for exact reconstitution requires separately
-authorized upstream work, a tagged stable release, and an updated lock; it must not be patched in `vendor/`.
+Exact migration names, PostgreSQL server version, Doctrine Migrations version, table/column dimensions, operational
+trigger, worker cadence/capacity, and provider enrollment are implementation details for their owning
+TASKs so long as they preserve package-owned retry timing and this decision. Package APIs needed for exact
+reconstitution or recoverable credential delivery require separately authorized upstream work, a tagged stable
+release, and an updated lock; they must not be patched in `vendor/`. External audit publication and its retention
+policy remain deferred until a provider requirement demonstrates a separate durable-publication boundary.
 
 ## Evidence reviewed
 
@@ -275,6 +322,11 @@ authorized upstream work, a tagged stable release, and an updated lock; it must 
 - Locked Fight Access Control `v0.2.0` repository contracts and entities for permissions, roles, users, refresh
   sessions, activation grants, password-reset grants, and audit evidence, including package in-memory contract
   fixtures used to clarify complete-state, fence, rollback, and latest-generation behavior.
+- Locked invitation, password-reset, and email-change originating/delivery handlers and subscribers, whose
+  transaction ownership, event timing, missing due-work discovery, and in-transaction invokers prove that `v0.2.0`
+  lacks the required recovery contract.
+- Fight Access Control `develop` at `182748eec05aeeeed1390b9d104f68ca219d2a0d`: accepted EPIC-00006, WF-009,
+  WF-010, TICKET-00007, and TASK-00037 through TASK-00039 planning for package-owned `v0.3.0` credential delivery.
 - Locked Fight Common `v1.2.0` `TransactionalUnitOfWork`, compatibility `UnitOfWork`,
   `DoctrineTransactionalUnitOfWork`, and deprecated `DoctrineUnitOfWork`.
 - Current `config/common/persistence.php`, which already constructs one DBAL connection and EntityManager but uses
@@ -284,7 +336,9 @@ authorized upstream work, a tagged stable release, and an updated lock; it must 
 
 ## Acceptance
 
-The human maintainer explicitly accepted ADR 0002 as drafted on 2026-09-23. Acceptance covers the PostgreSQL,
-migration, shared-connection transaction, contract-specific persistence/concurrency, guarded-test, and durable-
-intent decisions above. It does not claim that downstream schemas, adapters, providers, workers, or operational
-tooling are implemented.
+The human maintainer explicitly reaccepted ADR 0002 on 2026-09-24 after reviewing the package-owned durable queue,
+its Fight Access Control `v0.3.0` release prerequisite, and the corrected downstream ownership. Acceptance covers
+the PostgreSQL/persistence decisions and permits independent schema/repository work beginning with TASK-00012. It
+does not claim that upstream EPIC-00006, a tagged package release, the dependency update, schemas, adapters,
+providers, workers, or operational tooling are implemented; TASK-00016 and TICKET-00011 remain `needs-info` until
+the package prerequisite is satisfied.

@@ -18,15 +18,15 @@
 | [TASK-00013](00013-TASK.md) | Persist identities and refresh sessions atomically | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
 | [TASK-00014](00014-TASK.md) | Persist activation grants and replacement races | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
 | [TASK-00015](00015-TASK.md) | Persist password-reset grants and terminal succession | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
-| [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and durable delivery intent | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
+| [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and package delivery persistence | needs-info | [TICKET-00009](../tickets/00009-TICKET.md) |
 | [TASK-00017](00017-TASK.md) | Accept the browser-authentication security-profile ADR | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00022](00022-TASK.md) | Establish secret-safe outbound effect capabilities | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
-| [TASK-00023](00023-TASK.md) | Process registered durable intents after commit | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
-| [TASK-00024](00024-TASK.md) | Recover retry and observe durable effect delivery | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
+| [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
+| [TASK-00023](00023-TASK.md) | Compose direct package credential delivery | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
+| [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
 | [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00026](00026-TASK.md) | Establish the React and TypeScript application shell | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |

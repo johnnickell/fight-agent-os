@@ -13,7 +13,7 @@
 | [TICKET-00008](00008-TICKET.md) | Establish application ownership and orchestration boundaries | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00009](00009-TICKET.md) | Establish authoritative PostgreSQL persistence | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00010](00010-TICKET.md) | Establish safe versioned HTTP API delivery | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
-| [TICKET-00011](00011-TICKET.md) | Establish recoverable external-effect delivery | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
+| [TICKET-00011](00011-TICKET.md) | Establish recoverable external-effect delivery | needs-info | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00012](00012-TICKET.md) | Establish the React and component-catalog foundation | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00013](00013-TICKET.md) | Complete the owned-code quality gate | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00014](00014-TICKET.md) | Accept the authentication and dashboard design language | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |

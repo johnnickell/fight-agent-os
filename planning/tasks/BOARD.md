@@ -25,13 +25,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 13 | [TASK-00013](00013-TASK.md) | Persist identities and refresh sessions atomically | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | ready-for-agent | [TASK-00012](00012-TASK.md) | — |
 | 14 | [TASK-00014](00014-TASK.md) | Persist activation grants and replacement races | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | ready-for-agent | [TASK-00013](00013-TASK.md) | — |
 | 15 | [TASK-00015](00015-TASK.md) | Persist password-reset grants and terminal succession | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | ready-for-agent | [TASK-00013](00013-TASK.md) | — |
-| 16 | [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and durable delivery intent | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | ready-for-agent | [TASK-00012](00012-TASK.md) | — |
 | 19 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00018](00018-TASK.md) | — |
 | 20 | [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00019](00019-TASK.md) | — |
 | 21 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00017](00017-TASK.md), [TASK-00020](00020-TASK.md) | — |
-| 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe outbound effect capabilities | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | [TASK-00016](00016-TASK.md) | — |
-| 23 | [TASK-00023](00023-TASK.md) | Process registered durable intents after commit | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | [TASK-00022](00022-TASK.md) | — |
-| 24 | [TASK-00024](00024-TASK.md) | Recover retry and observe durable effect delivery | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | [TASK-00023](00023-TASK.md) | — |
+| 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | [TASK-00016](00016-TASK.md) | — |
+| 23 | [TASK-00023](00023-TASK.md) | Compose direct package credential delivery | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | [TASK-00022](00022-TASK.md) | — |
+| 24 | [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | [TASK-00023](00023-TASK.md) | — |
 | 25 | [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | [TASK-00017](00017-TASK.md) | — |
 | 26 | [TASK-00026](00026-TASK.md) | Establish the React and TypeScript application shell | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | [TASK-00025](00025-TASK.md) | — |
 | 27 | [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | [TASK-00021](00021-TASK.md), [TASK-00026](00026-TASK.md) | — |
@@ -78,7 +77,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 16 | [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and package delivery persistence | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | needs-info | [TASK-00014](00014-TASK.md), [TASK-00015](00015-TASK.md) | — |
 
 ## Human Action
 
