@@ -12,7 +12,7 @@
 | [TASK-00007](00007-TASK.md) | Adopt and prove the stable dependency graph | done | [TICKET-00007](../tickets/00007-TICKET.md) |
 | [TASK-00008](00008-TASK.md) | Replace inherited receipts with the Agent OS smoke baseline | done | [TICKET-00007](../tickets/00007-TICKET.md) |
 | [TASK-00009](00009-TASK.md) | Accept the application ownership and orchestration ADR | done | [TICKET-00008](../tickets/00008-TICKET.md) |
-| [TASK-00010](00010-TASK.md) | Prove and enforce application ownership boundaries | ready-for-agent | [TICKET-00008](../tickets/00008-TICKET.md) |
+| [TASK-00010](00010-TASK.md) | Prove and enforce application ownership boundaries | done | [TICKET-00008](../tickets/00008-TICKET.md) |
 | [TASK-00011](00011-TASK.md) | Accept the PostgreSQL consistency and durable-effects ADR | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
 | [TASK-00012](00012-TASK.md) | Establish guarded PostgreSQL persistence through managed authority | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
 | [TASK-00013](00013-TASK.md) | Persist identities and refresh sessions atomically | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |

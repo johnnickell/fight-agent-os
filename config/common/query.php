@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Fight\AccessControl\Application\AccessControl\Permission\QueryHandler\ListPermissionsHandler;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
+use Fight\AccessControl\Domain\AccessControl\Permission\Query\ListPermissions;
 use Fight\Common\Adapter\Messaging\Query\QueryPipeline;
 use Fight\Common\Adapter\Messaging\Query\Routing\ServiceAwareQueryRouter;
 use Fight\Common\Adapter\Messaging\Query\RoutingQueryBus;
@@ -22,7 +25,15 @@ return [
         QueryBus::class => static function (Container $container): QueryBus {
             return $container->get('messaging.query.bus');
         },
+        ListPermissionsHandler::class => static function (Container $container): ListPermissionsHandler {
+            $permissionRepository = $container->get(PermissionRepository::class);
+            assert($permissionRepository instanceof PermissionRepository);
+
+            return new ListPermissionsHandler($permissionRepository);
+        },
     ],
-    'handlers' => [],
+    'handlers' => [
+        ListPermissions::class => ListPermissionsHandler::class,
+    ],
     'filters' => [],
 ];

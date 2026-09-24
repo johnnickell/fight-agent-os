@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -eu
+
+path=${1:-src}
+docker compose run --rm --env DEPTRAC_PATHS="$path" web sh -ec '
+  php vendor/bin/deptrac analyse --config-file=deptrac.php --formatter=table --no-progress
+  php scripts/architecture-contract-check.php "$DEPTRAC_PATHS"
+'
