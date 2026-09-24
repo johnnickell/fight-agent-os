@@ -65,7 +65,7 @@ Focused child maps are recommended once an umbrella decision exposes multiple in
 13. **[Define developer onboarding and operator guidance](tickets/WF-020-define-developer-onboarding-and-operator-guidance.md) is open.** Decide how the Dashboard safely teaches new developers to prepare source access, Pi, the shared harness, checkouts, and runners without silently performing setup mutations.
 14. **[Define new project creation and registration](tickets/WF-021-define-new-project-creation-and-registration.md) is open.** Decide how a user safely creates a named project from an approved starter, optionally publishes it to GitHub, establishes its checkout and context, and registers it without hiding partial side effects.
 15. **[Define browser instruction inspection and assisted editing](tickets/WF-022-define-browser-instruction-inspection-and-assisted-editing.md) is open.** Decide how authorized users and browser AI conversations inspect and propose edits to recognized instruction files through an online checkout without creating a general-purpose IDE or hiding filesystem and Git effects.
-16. **[Define local runtime and shared ingress topology](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) is open.** Complete the Compose service graph, container-native command contract, shared reverse-proxy network, local hostname and privileged-host setup boundaries, and deployment shape for the artifact backend selected by WF-017.
+16. **[Define local runtime and shared ingress topology](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) is closed.** Use an installation-owned Compose stack with `nginx-proxy` shared ingress, explicit private shared-resource networks, canonical HTTPS with `.localhost` or operator-approved custom names, a complete bounded application/runner/Mailpit runtime, private SeaweedFS Artifact storage, container-native PHP commands, deliberate upgrades and host mutations, and no speculative observability or preview services.
 
 ## Tickets
 
@@ -87,7 +87,7 @@ Focused child maps are recommended once an umbrella decision exposes multiple in
 | [WF-020](tickets/WF-020-define-developer-onboarding-and-operator-guidance.md) | Define developer onboarding and operator guidance | wayfinder:grill | HITL | Open | [WF-014](tickets/WF-014-define-skill-trust-and-harness-distribution.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md), [WF-023](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) |
 | [WF-021](tickets/WF-021-define-new-project-creation-and-registration.md) | Define new project creation and registration | wayfinder:grill | HITL | Open | [WF-009](tickets/WF-009-define-repository-context-and-policy-precedence.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md), [WF-023](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) |
 | [WF-022](tickets/WF-022-define-browser-instruction-inspection-and-assisted-editing.md) | Define browser instruction inspection and assisted editing | wayfinder:grill | HITL | Open | [WF-009](tickets/WF-009-define-repository-context-and-policy-precedence.md), [WF-012](tickets/WF-012-define-browser-planning-and-conversation-ownership.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md) |
-| [WF-023](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) | Define local runtime and shared ingress topology | wayfinder:grill | HITL | Open | [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md), [WF-017](tickets/WF-017-define-execution-history-and-event-authority.md) |
+| [WF-023](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) | Define local runtime and shared ingress topology | wayfinder:grill | HITL | Closed | [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md), [WF-017](tickets/WF-017-define-execution-history-and-event-authority.md) |
 <!-- /planning:decisions -->
 
 ## Blocking relationships
@@ -110,7 +110,7 @@ WF-011 + WF-014 + WF-015 + WF-016 + WF-017 + WF-018 + WF-020 + WF-021 + WF-022 +
 
 ## Frontier
 
-[Define local runtime and shared ingress topology (WF-023)](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) is the one recommended next decision. The container-native runner, Workflow/evidence authority, artifact capability, and sessions-first browser evidence are settled; WF-023 can now complete the local service graph, concrete S3-compatible deployment, shared proxy/network, hostname, command, and privileged-host boundaries needed before onboarding and new-project creation can be resolved.
+[Define developer onboarding and operator guidance (WF-020)](tickets/WF-020-define-developer-onboarding-and-operator-guidance.md) is the one recommended next decision. The Harness distribution, runner protocol, complete local runtime, shared ingress, hostname, command, Artifact-service, and privileged-host boundaries are settled, so onboarding can now define the safe path that teaches and verifies them.
 
 ## Not yet specified (fog)
 
@@ -119,7 +119,7 @@ WF-011 + WF-014 + WF-015 + WF-016 + WF-017 + WF-018 + WF-020 + WF-021 + WF-022 +
 - Authentication and authorization details beyond the accepted single-installation shell, including the eventual relationship among installation, workspace, repository, user, agent, and runner permissions.
 - Exact model/provider assignment, cost-budget values, and per-repository resource-lock catalogs beyond the accepted three-consumer default and bounded attempt policy.
 - Exact cursor encoding and expiry, Mercure topic and reconnect behavior, Dashboard component/query boundaries, stale thresholds, log indexing/search, diff rendering thresholds, theme-switcher placement, and safe artifact-preview implementation remain downstream choices under the accepted WF-017/WF-018 semantics; WF-023 owns their local runtime dependencies, not production UI.
-- Complete local Compose, concrete S3-compatible service, shared ingress, hostname, and optional infrastructure topology; WF-023 owns these choices, while isolated-worktree preview URLs remain a future consideration rather than a promised capability.
+- Exact Compose files, image tags, health and restart intervals, volume names, proxy labels, certificate and local-DNS utilities, secret formats, backup commands, SeaweedFS settings, and bounded worker process configuration within WF-023's accepted topology.
 - Whether a second real Fight consumer eventually proves a stable policy-neutral MCP SDK wrapper for Fight Common; protocol transport and current application planning, trust, and workflow policy remain outside Fight Common.
 - The project-local `grill` skill still assumes every grill session creates exactly one EPIC; a later standalone bugfix should distinguish EPIC-producing grill from `wayfinder:grill`, where one map may eventually hand off to zero, one, or several EPICs. Do not allocate that TASK while concurrent planning work may be creating TASK records.
 - Deployment, remote runner fleets, release management, merge automation, and operation after human merge.
