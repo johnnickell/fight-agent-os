@@ -2,46 +2,46 @@
 id: TICKET-00011
 epic: EPIC-00003
 title: Establish recoverable external-effect delivery
-status: ready-for-agent
+status: needs-info
 ---
 
 # Establish recoverable external-effect delivery
 
 ## Problem statement
 
-Invitation, recovery, and audit effects must not disappear if the process fails between committing authoritative state and contacting an external provider. Performing email or network effects inside the transaction is also unsafe, and exactly-once delivery cannot be promised.
+Invitation, password-reset, and later email-change credential effects must not disappear if the process fails between committing package-owned delivery state and contacting an external provider. Performing email or network effects inside the transaction is unsafe, and exactly-once delivery cannot be promised. Durable database audit evidence is authoritative for the current foundation; external audit publication is not yet a demonstrated requirement.
 
 ## Solution and boundaries
 
-Implement the recoverable durable-intent mechanism accepted by the PostgreSQL ADR. Commit authoritative state and required delivery intent on the same transactional connection, dispatch only after commit, and process pending work with explicit retry, idempotency, leasing/concurrency, and at-least-once semantics. Record safe delivery state and diagnostics sufficient for later recovery UI.
+After qualified Fight Access Control `v0.3.0` is tagged and locked, compose its package-owned credential-delivery queue. Persist exact package grant/delivery contracts on the shared connection, dispatch direct package handlers only after committed claims, and schedule package due-work discovery for restart recovery. Package policy owns leases, retry-until-expiry, terminal outcomes, stale-claim fencing, and credential materialization; Agent OS owns repository/provider adapters, scheduling capacity, and composition.
 
-Establish mail and audit capability seams with deterministic null/in-memory test adapters. Prove the commit/dispatch crash window, duplicate processing, retries, competing workers, terminal outcomes, and credential redaction before EPIC-00004 relies on delivery.
+Establish secret-safe credential provider adapters with deterministic null/in-memory test implementations. Prove the commit/dispatch crash window, provider-success/outcome-commit crash, duplicate processing, package retry policy, competing workers, terminal ciphertext destruction, and credential redaction before EPIC-00004 relies on delivery.
 
-Out of scope: exactly-once claims, provider-specific production enrollment, external effects inside business transactions, invitation UI/business policy, general event sourcing, and unrelated background-job infrastructure.
+Out of scope: a consumer credential outbox, external audit publication, exactly-once claims, provider-specific production enrollment, external effects inside business transactions, invitation/reset policy duplication, product email-change wiring, general event sourcing, and unrelated background-job infrastructure.
 
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Record a required effect | The originating package/application command changes authoritative state | Repositories inspect existing state and idempotency/delivery references | Post-commit events may request immediate coordination; durable intent remains authoritative for recovery | Business state and required delivery intent commit atomically |
-| Dispatch pending intent | A delivery-processing operation claims and attempts eligible intent | Query pending/retryable delivery state with deterministic ordering and locking | Success/failure coordination may be emitted only after durable outcome recording | External mail/audit capability is invoked after commit, and attempt/outcome state is recorded |
-| Retry a recoverable failure | A bounded retry operation reclaims eligible intent | Query attempts, schedule, terminal state, and idempotency key | No duplicate business event is inferred from a repeated attempt | At-least-once processing retries safely without losing or corrupting intent |
-| Recover after commit/dispatch crash | A recovery runner processes committed unhandled intent | Query durable pending state after simulated process loss | Original in-memory event may be absent; durable intent still drives work | Required effect remains discoverable and is eventually attempted |
+| Record required credential work | The originating package command changes authoritative state | Package repositories inspect current generation and delivery state | Post-commit events may request immediate coordination | Aggregate, encrypted delivery material, and audit evidence commit atomically; package state is the sole queue |
+| Dispatch due package work | A direct package delivery handler claims and attempts one exact generation | Package due-work query returns deterministic secret-free references | Package outcome coordination follows durable state | Claim commits, provider runs with no transaction open, and matching outcome commits separately |
+| Retry a recoverable failure | The same package operation reclaims work when package due time or lease expiry permits | Query attempts, next due time, lease, grant expiry, and stable delivery ID | No duplicate business event is inferred | At-least-once processing reuses delivery ID and retries under package policy until grant expiry |
+| Recover after commit/dispatch crash | An Agent OS runner dispatches package-discovered work | Query pending, due-retry, and expired-lease generations | Original in-memory event may be absent | Committed package work remains discoverable and is eventually attempted |
 
 ## Validation and permissions
 
-Intent payloads must contain only the minimum safe provider input and must never expose raw activation/reset credentials through ordinary reads, logs, errors, or audit metadata. Retry policy must be bounded/configurable, times deterministic in tests, idempotency stable, and competing claims safe. Permanent versus recoverable failures require explicit state and operator-safe diagnostics.
+Package discovery and safe status expose only minimum references and must never expose raw credentials, hashes, ciphertext, tokens, provider secrets, URLs, or arbitrary errors. Package-owned bounded increasing backoff remains eligible until grant expiry; deterministic clocks prove timing, the immutable delivery-generation ID is stable idempotency identity, and competing claims are safe. Delivered and permanent outcomes destroy ciphertext and retain only operator-safe status/audit evidence.
 
-The processor may execute only registered capability types from valid committed intent. End-user permission checks belong to the originating use case; processing authority is an internal operational capability with least-privilege credentials. Provider secrets remain external and are never persisted in intent.
+The runner may dispatch only registered direct package handlers for valid discovered package work. End-user permission checks belong to the originating use case; processing authority is an internal operational capability with least-privilege credentials. Provider secrets remain external and never enter package delivery state.
 
 ## Acceptance and evidence
 
-- The accepted PostgreSQL/durable-effects ADR names the implemented mechanism and consistency guarantees.
-- State and required delivery intent commit atomically; external capabilities are not called inside that transaction.
-- Pending, claimed, retryable, delivered, and terminal behavior is durable and observable without exposing secrets.
-- Deterministic tests prove rollback, post-commit dispatch, simulated crash recovery, duplicate attempt safety, bounded retry, and competing-worker behavior against PostgreSQL where concurrency matters.
-- Null/in-memory mail and audit adapters support fast behavior tests without network access.
-- Logs and safe views redact credentials, tokens, secret provider data, and credential-bearing URLs.
+- The accepted PostgreSQL/durable-effects ADR and locked package identify package grant delivery state as the sole credential queue.
+- Originating state, encrypted delivery material, and audit evidence commit atomically; no provider capability is called inside that transaction.
+- Pending, claimed, retryable, delivered, permanent, expired, and abandoned-lease behavior follows package contracts and is observable without exposing secrets.
+- Deterministic tests prove rollback, lost immediate dispatch, restart discovery, provider-success/outcome-commit recovery, stable duplicate identity, retry-until-expiry, terminal ciphertext destruction, and competing workers against PostgreSQL where concurrency matters.
+- Null/in-memory credential provider adapters support fast behavior tests without network access.
+- Logs and safe views redact credentials, hashes, ciphertext, tokens, provider data, URLs, and arbitrary errors.
 - Focused delivery/recovery tests and `./bin/build` pass with fresh evidence and warnings.
 
 ## TASKs
@@ -49,11 +49,16 @@ The processor may execute only registered capability types from valid committed 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00022](../tasks/00022-TASK.md) | Establish secret-safe outbound effect capabilities | ready-for-agent |
-| [TASK-00023](../tasks/00023-TASK.md) | Process registered durable intents after commit | ready-for-agent |
-| [TASK-00024](../tasks/00024-TASK.md) | Recover retry and observe durable effect delivery | ready-for-agent |
+| [TASK-00022](../tasks/00022-TASK.md) | Establish secret-safe credential provider adapters | ready-for-agent |
+| [TASK-00023](../tasks/00023-TASK.md) | Compose direct package credential delivery | ready-for-agent |
+| [TASK-00024](../tasks/00024-TASK.md) | Recover and observe package credential delivery | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+This TICKET is `needs-info`: Fight Access Control `v0.2.0` lacks due-work discovery, committed leases, and out-of-
+transaction provider orchestration. Accepted upstream EPIC-00006/WF-009/WF-010 select package grant delivery state
+as the sole queue for proposed `v0.3.0`. Implementation, qualification, a tagged stable release, and an Agent OS lock
+update are required before composition may begin. Consumer outbox or retry-policy work must not bypass that gate.
 
 Implements the durable external-effect direction approved by [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md). It depends on the transaction and durable-intent contract in [TICKET-00009](00009-TICKET.md) and gates EPIC-00004 invitation/recovery delivery.

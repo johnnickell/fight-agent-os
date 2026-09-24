@@ -23,7 +23,7 @@ Out of scope: public registration, administrators choosing passwords, raw grants
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Issue and deliver an invitation | `InvitePendingUser`, `DeliverUserInvitation` | Existing user/pending state; `FindInvitationDeliveryStatus` | `UserInvited`, `UserInvitationDelivered` | Pending identity, hashed grant, durable delivery intent, and safe status are recorded |
+| Issue and deliver an invitation | `InvitePendingUser`, qualified package delivery handlers | Existing user/pending state; `FindInvitationDeliveryStatus`; package due-work discovery | `UserInvited` and package delivery events | Pending identity, hashed grant, package-owned recoverable delivery state, and safe status are recorded |
 | Activate a pending identity | `AuthenticationService::activate()` via an explicit Action/orchestrator | Resolve one-time grant and pending user | `UserActivated` | Password hash is set and identity becomes active atomically; grant becomes unusable |
 | Retry or resend delivery | `RetryInvitationDelivery`, `ResendInvitationDelivery` | `FindInvitationDeliveryStatus` | `InvitationDeliveryRetryRequested`, `InvitationDeliveryResent` | Retry is requested or a replacement grant/delivery supersedes the predecessor |
 | Correct a pending address | `CorrectPendingInvitation` | Pending identity and delivery state | `PendingInvitationCorrected` | Canonical email and associated invitation state change atomically without affecting active users |
@@ -36,7 +36,7 @@ Public activation needs possession of the valid grant but reveals no account sta
 
 ## Acceptance and evidence
 
-- Issuance commits pending identity and recoverable delivery intent; provider effects occur post-commit.
+- Issuance commits pending identity and package-owned recoverable delivery state; qualified package discovery, claims, direct handlers, and outcomes run provider effects after commit without a consumer intent.
 - Activation enforces password policy, consumes the grant once, and activates atomically.
 - Status Views contain no raw credential; logs, responses, referrers, history, analytics, and screenshots are redacted.
 - Retry, resend, correction, expiry, and invalid/used grant behavior are recoverable and generic.
