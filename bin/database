@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+set -eu
+
+cd "$(dirname "$0")/.."
+command="${1:-}"
+
+case "$command" in
+  start)
+    exec docker compose up --detach --wait postgres postgres_test
+    ;;
+  check)
+    docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-agent_os}" -d "${POSTGRES_DB:-agent_os}"
+    exec docker compose run --rm -e APP_ENV=test web php scripts/guarded_test_database.php check
+    ;;
+  migrate)
+    exec docker compose run --rm web php vendor/bin/doctrine-migrations migrate --no-interaction
+    ;;
+  status)
+    exec docker compose run --rm web php vendor/bin/doctrine-migrations status
+    ;;
+  test-reset)
+    docker compose run --rm -e APP_ENV=test web php scripts/guarded_test_database.php reset
+    exec docker compose run --rm -e APP_ENV=test web sh -lc 'DATABASE_URL="$TEST_DATABASE_URL" php vendor/bin/doctrine-migrations migrate --no-interaction'
+    ;;
+  test-status)
+    exec docker compose run --rm -e APP_ENV=test web sh -lc 'DATABASE_URL="$TEST_DATABASE_URL" php vendor/bin/doctrine-migrations status'
+    ;;
+  test)
+    docker compose run --rm -e APP_ENV=test web php scripts/guarded_test_database.php check
+    exec docker compose run --rm -e APP_ENV=test web php vendor/bin/phpunit --testsuite postgres
+    ;;
+  *)
+    echo "Usage: ./bin/database {start|check|migrate|status|test-reset|test-status|test}" >&2
+    exit 2
+    ;;
+esac

@@ -78,6 +78,11 @@ must bind that exact package capability to a narrow Adapter compatibility implem
 compatibility, not an owned alias for the package contract, and is removed when the stable package signature is
 upgraded. The deprecated `DoctrineUnitOfWork` must not become a second transaction authority.
 
+Fight Access Control `v0.3.0` now requires `TransactionalUnitOfWork` directly. The temporary compatibility binding
+is removed: composition binds Fight Common's `DoctrineTransactionalUnitOfWork` directly as the sole transactional
+capability on the shared EntityManager/DBAL connection. The paragraph above records the original `v0.2.0` decision,
+not a current requirement for a deprecated binding.
+
 Events preserve their package or application ownership. Immediate in-process dispatch and any provider attempt
 occur only after a successful commit. A post-commit callback is an optimization, not recovery authority. The
 current package handlers cannot be surrounded by an Agent OS transaction, decorated through audit persistence,
