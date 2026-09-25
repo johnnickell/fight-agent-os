@@ -78,7 +78,15 @@ Emergency redaction is narrow, attributed and tombstoned; it never becomes ordin
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00085](../tasks/00085-TASK.md) | Establish event-sourced Wayfinder planning authority | ready-for-agent |
+| [TASK-00086](../tasks/00086-TASK.md) | Complete Wayfinder decisions and handoff readiness | ready-for-agent |
+| [TASK-00087](../tasks/00087-TASK.md) | Version research notes and prototype evidence | ready-for-agent |
+| [TASK-00088](../tasks/00088-TASK.md) | Create and revise EPIC and TICKET artifacts | ready-for-agent |
+| [TASK-00089](../tasks/00089-TASK.md) | Create and revise implementation TASK artifacts | ready-for-agent |
+| [TASK-00090](../tasks/00090-TASK.md) | Enforce Planning hierarchy and dependency revisions | ready-for-agent |
+| [TASK-00091](../tasks/00091-TASK.md) | Record stable Planning criteria and evidence | ready-for-agent |
+| [TASK-00092](../tasks/00092-TASK.md) | Complete Planning lifecycle and archive operations | ready-for-agent |
+| [TASK-00093](../tasks/00093-TASK.md) | Rebuild, redact and render Planning authority | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress

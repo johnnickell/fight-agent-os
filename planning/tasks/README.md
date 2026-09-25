@@ -87,4 +87,13 @@
 | [TASK-00082](00082-TASK.md) | Resolve deterministic repository context snapshots | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
 | [TASK-00083](00083-TASK.md) | Record narrowing context choices | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
 | [TASK-00084](00084-TASK.md) | Enforce snapshot drift and unavailable-authority boundaries | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
+| [TASK-00085](00085-TASK.md) | Establish event-sourced Wayfinder planning authority | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
+| [TASK-00086](00086-TASK.md) | Complete Wayfinder decisions and handoff readiness | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
+| [TASK-00087](00087-TASK.md) | Version research notes and prototype evidence | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
+| [TASK-00088](00088-TASK.md) | Create and revise EPIC and TICKET artifacts | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
+| [TASK-00089](00089-TASK.md) | Create and revise implementation TASK artifacts | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
+| [TASK-00090](00090-TASK.md) | Enforce Planning hierarchy and dependency revisions | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
+| [TASK-00091](00091-TASK.md) | Record stable Planning criteria and evidence | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
+| [TASK-00092](00092-TASK.md) | Complete Planning lifecycle and archive operations | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
+| [TASK-00093](00093-TASK.md) | Rebuild, redact and render Planning authority | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
 <!-- /planning:records -->
