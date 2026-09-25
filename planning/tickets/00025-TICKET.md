@@ -73,7 +73,10 @@ unnecessary identifiers do not enter prompt projections.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00081](../tasks/00081-TASK.md) | Version repository configuration and rollback | ready-for-agent |
+| [TASK-00082](../tasks/00082-TASK.md) | Resolve deterministic repository context snapshots | ready-for-agent |
+| [TASK-00083](../tasks/00083-TASK.md) | Record narrowing context choices | ready-for-agent |
+| [TASK-00084](../tasks/00084-TASK.md) | Enforce snapshot drift and unavailable-authority boundaries | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress

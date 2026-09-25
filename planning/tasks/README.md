@@ -83,4 +83,8 @@
 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
 | [TASK-00079](00079-TASK.md) | Confirm and designate checkout and worktree links | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
 | [TASK-00080](00080-TASK.md) | Complete repository reconciliation and lifecycle operations | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
+| [TASK-00081](00081-TASK.md) | Version repository configuration and rollback | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
+| [TASK-00082](00082-TASK.md) | Resolve deterministic repository context snapshots | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
+| [TASK-00083](00083-TASK.md) | Record narrowing context choices | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
+| [TASK-00084](00084-TASK.md) | Enforce snapshot drift and unavailable-authority boundaries | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
 <!-- /planning:records -->
