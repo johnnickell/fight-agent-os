@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\Repository;
 
+use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
+use App\Adapter\Persistence\PersistenceConflict;
+use App\Adapter\Persistence\PostgresUniqueConstraintRace;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;

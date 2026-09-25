@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Integration\Postgres;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Adapter\Persistence\Repository\AuthorizationReferenceFences;
-use App\Adapter\Persistence\Repository\PersistenceConflict;
+use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
+use App\Adapter\Persistence\PersistenceConflict;
 use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use DateTimeImmutable;

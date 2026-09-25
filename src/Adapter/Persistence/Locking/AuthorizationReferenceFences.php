@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence\Repository;
+namespace App\Adapter\Persistence\Locking;
 
 use Doctrine\DBAL\Connection;
 use LogicException;
