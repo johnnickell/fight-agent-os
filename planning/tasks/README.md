@@ -73,4 +73,5 @@
 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | done | — |
 | [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | done | — |
 | [TASK-00070](00070-TASK.md) | Remove build and test self-verification bloat | done | — |
+| [TASK-00071](00071-TASK.md) | Prepare develop documentation for public visibility | done | — |
 <!-- /planning:records -->
