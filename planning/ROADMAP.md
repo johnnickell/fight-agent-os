@@ -16,4 +16,5 @@ This is direction, not an implementation commitment or an approved EPIC. See the
 | [EPIC-00002](epics/00002-EPIC.md) | Establish project-local execution and design skills | foundation | ready-for-agent |
 | [EPIC-00003](epics/00003-EPIC.md) | Establish the web application architecture foundation | foundation | ready-for-agent |
 | [EPIC-00004](epics/00004-EPIC.md) | Deliver the invite-only authenticated application shell | foundation | ready-for-agent |
+| [EPIC-00005](epics/00005-EPIC.md) | Deliver the registered Planning workspace | registered-planning-workspace | ready-for-agent |
 <!-- /planning:epics -->
