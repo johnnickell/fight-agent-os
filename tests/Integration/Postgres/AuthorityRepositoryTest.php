@@ -39,7 +39,7 @@ final class AuthorityRepositoryTest extends TestCase
     protected function setUp(): void
     {
         $this->connection = $this->connection();
-        $this->connection->executeStatement('TRUNCATE role_permissions, roles, permissions');
+        $this->connection->executeStatement('TRUNCATE role_permissions, roles, permissions CASCADE');
         $fences = new AuthorizationReferenceFences($this->connection);
         $this->permissions = new PostgresPermissionRepository($this->connection, $fences);
         $this->roles = new PostgresRoleRepository($this->connection, $fences);
