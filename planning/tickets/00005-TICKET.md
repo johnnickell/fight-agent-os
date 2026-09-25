@@ -2,7 +2,7 @@
 id: TICKET-00005
 epic: EPIC-00002
 title: Establish disposable product-design exploration
-status: ready-for-agent
+status: done
 ---
 
 # Establish disposable product-design exploration
@@ -56,4 +56,8 @@ No application permission model, commands, queries, or domain events apply becau
 
 ## Decisions and progress
 
-Implements the `design` boundary approved by [WF-002](../wayfinder/tickets/WF-002-shape-agent-skill-suite.md) using the source qualification in [WF-006](../wayfinder/tickets/WF-006-research-ui-design-skill-sources.md). It may proceed alongside implementation-review and landing work after the shared standards structure from [TICKET-00002](00002-TICKET.md) is stable.
+Completed through [TASK-00005](../tasks/00005-TASK.md). The project-local `design` Skill, shared design
+standards, sourced disposable prototype, regression-driven revisions, fresh verification, and independent acceptance
+satisfy this requirement without promoting prototype code. The implementation shipped in merged
+[PR #7](https://github.com/johnnickell/fight-agent-os/pull/7). The accepted evidence limitations remain in the TASK
+completion record; production design implementation and archive remain separate.

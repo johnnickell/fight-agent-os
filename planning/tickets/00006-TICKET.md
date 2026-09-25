@@ -2,7 +2,7 @@
 id: TICKET-00006
 epic: EPIC-00002
 title: Establish independent design review
-status: ready-for-agent
+status: done
 ---
 
 # Establish independent design review
@@ -56,4 +56,8 @@ No application permission model applies. The reviewer receives read/render/check
 
 ## Decisions and progress
 
-Implements the independent `design-review` boundary approved by [WF-002](../wayfinder/tickets/WF-002-shape-agent-skill-suite.md) and the evidence constraints from [WF-006](../wayfinder/tickets/WF-006-research-ui-design-skill-sources.md). Its executable work follows the disposable design contract in [TICKET-00005](00005-TICKET.md).
+Completed through [TASK-00006](../tasks/00006-TASK.md). The project-local `design-review` Skill and review
+guidance independently challenged the retained design artifact, preserved reviewer non-modification, corrected the
+reported evidence boundary, and reached an accepted verdict with limitations explicit. The implementation shipped in
+merged [PR #10](https://github.com/johnnickell/fight-agent-os/pull/10). Production design authority, archive,
+release, and deployment remain separate.

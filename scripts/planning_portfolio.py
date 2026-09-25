@@ -181,6 +181,56 @@ def projections(records: dict) -> dict[tuple[Path, str], str]:
             if identifier.startswith("EPIC-") and "archive" not in path.parts]
     views[roadmap, "epics"] = table(["EPIC ID", "Title", "Target", "Status"], rows)
 
+    live_records = {
+        identifier: (path, data) for identifier, (path, data) in records.items()
+        if "archive" not in path.parts
+    }
+
+    def children_of(identifier: str) -> list[tuple[str, Path, dict[str, str]]]:
+        parent_key = "epic" if identifier.startswith("EPIC-") else "ticket"
+        return [
+            (child_id, child_path, child_data)
+            for child_id, (child_path, child_data) in live_records.items()
+            if child_data.get(parent_key) == identifier
+        ]
+
+    epics_without_tickets = []
+    tickets_without_tasks = []
+    closeout_candidates = []
+    for identifier, (path, data) in sorted(live_records.items()):
+        if data["status"] in TERMINAL or identifier.startswith("TASK-"):
+            continue
+        children = children_of(identifier)
+        if not children:
+            if identifier.startswith("EPIC-"):
+                epics_without_tickets.append([
+                    linked(roadmap, path, identifier), cell(data["title"]), cell(data["status"]),
+                ])
+            else:
+                parent = data["epic"]
+                tickets_without_tasks.append([
+                    linked(roadmap, path, identifier), cell(data["title"]),
+                    linked(roadmap, records[parent][0], parent), cell(data["status"]),
+                ])
+        elif all(child_data["status"] in TERMINAL for _, _, child_data in children):
+            closeout_candidates.append([
+                "EPIC" if identifier.startswith("EPIC-") else "TICKET",
+                linked(roadmap, path, identifier), cell(data["title"]), cell(data["status"]),
+                f"{len(children)}/{len(children)} terminal",
+            ])
+
+    views[roadmap, "frontier"] = "\n\n".join([
+        "### EPICs without TICKETs\n\n" + table(
+            ["EPIC ID", "Title", "Status"], epics_without_tickets
+        ),
+        "### TICKETs without TASKs\n\n" + table(
+            ["TICKET ID", "Title", "Parent EPIC", "Status"], tickets_without_tasks
+        ),
+        "### Parents ready for closeout review\n\n" + table(
+            ["Type", "ID", "Title", "Status", "Children"], closeout_candidates
+        ),
+    ])
+
     for identifier, (path, data) in records.items():
         if "archive" in path.parts or identifier.startswith("TASK-"):
             continue

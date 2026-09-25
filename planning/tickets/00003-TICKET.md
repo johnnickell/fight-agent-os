@@ -2,7 +2,7 @@
 id: TICKET-00003
 epic: EPIC-00002
 title: Establish independent implementation review
-status: ready-for-agent
+status: done
 ---
 
 # Establish independent implementation review
@@ -55,4 +55,8 @@ No application permission model applies. The skill receives read/verification au
 
 ## Decisions and progress
 
-Implements the independent `review` boundary approved by [WF-002](../wayfinder/tickets/WF-002-shape-agent-skill-suite.md). It follows [TICKET-00002](00002-TICKET.md)'s shared execution standards and must review the bootstrap `work` capability before that capability is relied upon for production application changes.
+Completed through [TASK-00003](../tasks/00003-TASK.md). The project-local `review` Skill and shared review
+standards detected the seeded unsupported claim, independently accepted both bootstrap capabilities, and preserved
+review-only authority. The implementation shipped with TICKET-00002 in merged
+[PR #2](https://github.com/johnnickell/fight-agent-os/pull/2). Preserved evidence limitations remain in the TASK
+completion record; archive, release, and deployment remain separate.

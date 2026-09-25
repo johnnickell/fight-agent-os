@@ -4,11 +4,11 @@
 | ID | Title | Status | Parent |
 |---|---|---|---|
 | [TICKET-00001](00001-TICKET.md) | Seed the planning skill foundation | done | [EPIC-00001](../epics/00001-EPIC.md) |
-| [TICKET-00002](00002-TICKET.md) | Establish safe TASK execution | ready-for-agent | [EPIC-00002](../epics/00002-EPIC.md) |
-| [TICKET-00003](00003-TICKET.md) | Establish independent implementation review | ready-for-agent | [EPIC-00002](../epics/00002-EPIC.md) |
-| [TICKET-00004](00004-TICKET.md) | Establish controlled landing and human handoff | ready-for-agent | [EPIC-00002](../epics/00002-EPIC.md) |
-| [TICKET-00005](00005-TICKET.md) | Establish disposable product-design exploration | ready-for-agent | [EPIC-00002](../epics/00002-EPIC.md) |
-| [TICKET-00006](00006-TICKET.md) | Establish independent design review | ready-for-agent | [EPIC-00002](../epics/00002-EPIC.md) |
+| [TICKET-00002](00002-TICKET.md) | Establish safe TASK execution | done | [EPIC-00002](../epics/00002-EPIC.md) |
+| [TICKET-00003](00003-TICKET.md) | Establish independent implementation review | done | [EPIC-00002](../epics/00002-EPIC.md) |
+| [TICKET-00004](00004-TICKET.md) | Establish controlled landing and human handoff | done | [EPIC-00002](../epics/00002-EPIC.md) |
+| [TICKET-00005](00005-TICKET.md) | Establish disposable product-design exploration | done | [EPIC-00002](../epics/00002-EPIC.md) |
+| [TICKET-00006](00006-TICKET.md) | Establish independent design review | done | [EPIC-00002](../epics/00002-EPIC.md) |
 | [TICKET-00007](00007-TICKET.md) | Stabilize application dependencies and smoke baseline | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00008](00008-TICKET.md) | Establish application ownership and orchestration boundaries | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00009](00009-TICKET.md) | Establish authoritative PostgreSQL persistence | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |

@@ -13,7 +13,7 @@ This is direction, not an implementation commitment or an approved EPIC. See the
 | EPIC ID | Title | Target | Status |
 |---|---|---|---|
 | [EPIC-00001](epics/00001-EPIC.md) | Establish project-local planning skills | foundation | done |
-| [EPIC-00002](epics/00002-EPIC.md) | Establish project-local execution and design skills | foundation | ready-for-agent |
+| [EPIC-00002](epics/00002-EPIC.md) | Establish project-local execution and design skills | foundation | done |
 | [EPIC-00003](epics/00003-EPIC.md) | Establish the web application architecture foundation | foundation | ready-for-agent |
 | [EPIC-00004](epics/00004-EPIC.md) | Deliver the invite-only authenticated application shell | foundation | ready-for-agent |
 | [EPIC-00005](epics/00005-EPIC.md) | Deliver the registered Planning workspace | registered-planning-workspace | ready-for-agent |
@@ -23,3 +23,40 @@ This is direction, not an implementation commitment or an approved EPIC. See the
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | deterministic-project-creation | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | repository-instruction-editing | ready-for-agent |
 <!-- /planning:epics -->
+
+## Planning Frontier
+
+This generated view keeps requirement decomposition and parent closeout visible without changing executable TASK
+priority on the [TASK Board](tasks/BOARD.md). Non-terminal EPICs and TICKETs remain listed until they receive their
+next-level records; parents with only terminal children remain listed until an explicit closeout.
+
+<!-- planning:frontier -->
+### EPICs without TICKETs
+
+| EPIC ID | Title | Status |
+|---|---|---|
+| [EPIC-00006](epics/00006-EPIC.md) | Deliver browser Planning Agents and the trusted Harness | ready-for-agent |
+| [EPIC-00007](epics/00007-EPIC.md) | Coordinate one TASK through implementation | ready-for-agent |
+| [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | ready-for-agent |
+| [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | ready-for-agent |
+| [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | ready-for-agent |
+
+### TICKETs without TASKs
+
+| TICKET ID | Title | Parent EPIC | Status |
+|---|---|---|---|
+| [TICKET-00023](tickets/00023-TICKET.md) | Operate the local Planning installation | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
+| [TICKET-00024](tickets/00024-TICKET.md) | Register repositories and designated checkouts | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
+| [TICKET-00025](tickets/00025-TICKET.md) | Resolve versioned repository context | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
+| [TICKET-00026](tickets/00026-TICKET.md) | Establish authoritative Planning artifacts and lifecycles | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
+| [TICKET-00027](tickets/00027-TICKET.md) | Deliver the canonical Planning queue and Roadmap | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
+| [TICKET-00028](tickets/00028-TICKET.md) | Migrate and cut over Markdown Planning authority | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
+| [TICKET-00029](tickets/00029-TICKET.md) | Deliver the registered Planning Dashboard | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
+
+### Parents ready for closeout review
+
+| Type | ID | Title | Status | Children |
+|---|---|---|---|---|
+| TICKET | [TICKET-00007](tickets/00007-TICKET.md) | Stabilize application dependencies and smoke baseline | ready-for-agent | 2/2 terminal |
+| TICKET | [TICKET-00008](tickets/00008-TICKET.md) | Establish application ownership and orchestration boundaries | ready-for-agent | 2/2 terminal |
+<!-- /planning:frontier -->
