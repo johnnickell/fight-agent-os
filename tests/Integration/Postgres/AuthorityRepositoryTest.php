@@ -201,6 +201,112 @@ final class AuthorityRepositoryTest extends TestCase
         self::assertRoleEquals($replacement, $this->roles->getById($current->getId()));
     }
 
+    public function test_competing_permission_name_replacements_return_a_controlled_loser(): void
+    {
+        $winner = $this->managedPermission('MANAGE_USERS');
+        $loser = $this->managedPermission('MANAGE_ROLES');
+        $this->permissions->add($winner);
+        $this->permissions->add($loser);
+        $replacementName = PermissionName::fromString('MANAGE_AUTHORITY');
+        $winnerReplacement = $winner->reconcileManaged(
+            $replacementName,
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $winner->getUpdatedAt()->modify('+1 second')
+        );
+        $loserReplacement = $loser->reconcileManaged(
+            $replacementName,
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $loser->getUpdatedAt()->modify('+1 second')
+        );
+        $competingConnection = $this->connection();
+        $competingRepository = new PostgresPermissionRepository(
+            $competingConnection,
+            new AuthorizationReferenceFences($competingConnection)
+        );
+
+        $this->connection->beginTransaction();
+        $competingConnection->beginTransaction();
+        $competingConnection->executeStatement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+
+        try {
+            self::assertNotNull($competingRepository->getById($loser->getId()));
+            self::assertTrue($this->permissions->replace($winner, $winnerReplacement));
+            $this->connection->commit();
+
+            self::assertFalse($competingRepository->replace($loser, $loserReplacement));
+            self::assertSame(1, $competingConnection->fetchOne('SELECT 1'));
+            $competingConnection->commit();
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($competingConnection->isTransactionActive()) {
+                $competingConnection->rollBack();
+            }
+            $competingConnection->close();
+        }
+
+        self::assertPermissionEquals($winnerReplacement, $this->permissions->getById($winner->getId()));
+        self::assertPermissionEquals($loser, $this->permissions->getById($loser->getId()));
+    }
+
+    public function test_competing_role_name_replacements_return_a_controlled_loser(): void
+    {
+        $winner = Role::define(
+            RoleId::generate(),
+            RoleName::fromString('ROLE_EDITOR'),
+            [],
+            new DateTimeImmutable('2026-10-01T13:00:00+00:00')
+        );
+        $loser = Role::define(
+            RoleId::generate(),
+            RoleName::fromString('ROLE_REVIEWER'),
+            [],
+            new DateTimeImmutable('2026-10-01T13:00:01+00:00')
+        );
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($winner));
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($loser));
+        $replacementName = RoleName::fromString('ROLE_AUTHORITY_MANAGER');
+        $winnerReplacement = $winner->renameCustom(
+            $replacementName,
+            $winner->getUpdatedAt()->modify('+1 second')
+        );
+        $loserReplacement = $loser->renameCustom(
+            $replacementName,
+            $loser->getUpdatedAt()->modify('+1 second')
+        );
+        $competingConnection = $this->connection();
+        $competingRepository = new PostgresRoleRepository(
+            $competingConnection,
+            new AuthorizationReferenceFences($competingConnection)
+        );
+
+        $this->connection->beginTransaction();
+        $competingConnection->beginTransaction();
+        $competingConnection->executeStatement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+
+        try {
+            self::assertNotNull($competingRepository->getById($loser->getId()));
+            self::assertTrue($this->roles->replace($winner, $winnerReplacement));
+            $this->connection->commit();
+
+            self::assertFalse($competingRepository->replace($loser, $loserReplacement));
+            self::assertSame(1, $competingConnection->fetchOne('SELECT 1'));
+            $competingConnection->commit();
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($competingConnection->isTransactionActive()) {
+                $competingConnection->rollBack();
+            }
+            $competingConnection->close();
+        }
+
+        self::assertRoleEquals($winnerReplacement, $this->roles->getById($winner->getId()));
+        self::assertRoleEquals($loser, $this->roles->getById($loser->getId()));
+    }
+
     public function test_permission_removal_rejects_role_membership_and_then_succeeds(): void
     {
         $permission = $this->customPermission('VIEW_USERS');

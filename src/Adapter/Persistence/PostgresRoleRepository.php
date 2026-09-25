@@ -182,8 +182,11 @@ SQL,
             return false;
         }
 
-        $updated = $this->connection->executeStatement(
-            <<<'SQL'
+        $updated = PostgresUniqueConstraintRace::execute(
+            $this->connection,
+            'uq_roles_name',
+            fn(): int => $this->connection->executeStatement(
+                <<<'SQL'
 UPDATE roles
 SET name = :name, managed = :managed, updated_at = :updated_at
 WHERE id = :id
@@ -207,7 +210,8 @@ SQL,
                     'created_at' => $this->date($expected->getCreatedAt()),
                     'expected_updated_at' => $this->date($expected->getUpdatedAt()),
                 ],
-            ['managed' => ParameterType::BOOLEAN, 'expected_managed' => ParameterType::BOOLEAN]
+                ['managed' => ParameterType::BOOLEAN, 'expected_managed' => ParameterType::BOOLEAN]
+            )
         );
         if ($updated !== 1) {
             return false;

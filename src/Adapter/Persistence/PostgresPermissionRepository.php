@@ -131,8 +131,11 @@ SQL,
             return false;
         }
 
-        return $this->connection->executeStatement(
-            <<<'SQL'
+        return PostgresUniqueConstraintRace::execute(
+            $this->connection,
+            'uq_permissions_name',
+            fn(): int => $this->connection->executeStatement(
+                <<<'SQL'
 UPDATE permissions
 SET name = :replacement_name,
     tier = :replacement_tier,
@@ -162,10 +165,11 @@ SQL,
                     'replacement_managed' => $replacement->isManaged(),
                     'replacement_updated_at' => $this->date($replacement->getUpdatedAt()),
                 ],
-            [
-                'expected_managed' => ParameterType::BOOLEAN,
-                'replacement_managed' => ParameterType::BOOLEAN,
-            ]
+                [
+                    'expected_managed' => ParameterType::BOOLEAN,
+                    'replacement_managed' => ParameterType::BOOLEAN,
+                ]
+            )
         ) === 1;
     }
 
