@@ -74,7 +74,10 @@ PR, or merge.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00077](../tasks/00077-TASK.md) | Accept the repository identity and link-consistency ADR | ready-for-agent |
+| [TASK-00078](../tasks/00078-TASK.md) | Register and inspect stable repositories | ready-for-agent |
+| [TASK-00079](../tasks/00079-TASK.md) | Confirm and designate checkout and worktree links | ready-for-agent |
+| [TASK-00080](../tasks/00080-TASK.md) | Complete repository reconciliation and lifecycle operations | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
