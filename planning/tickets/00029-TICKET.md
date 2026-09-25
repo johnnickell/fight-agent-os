@@ -77,7 +77,16 @@ failure and never imply that a client-side optimistic move succeeded before serv
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00105](../tasks/00105-TASK.md) | Explore the registered Planning workspace design | ready-for-agent |
+| [TASK-00106](../tasks/00106-TASK.md) | Independently accept the Planning workspace handoff | ready-for-agent |
+| [TASK-00107](../tasks/00107-TASK.md) | Deliver repository registration, selection, and context workspace | ready-for-agent |
+| [TASK-00108](../tasks/00108-TASK.md) | Browse complete Planning hierarchy and history | ready-for-agent |
+| [TASK-00109](../tasks/00109-TASK.md) | Edit Planning through semantic forms | ready-for-agent |
+| [TASK-00110](../tasks/00110-TASK.md) | Operate guarded lifecycle and relationship work | ready-for-agent |
+| [TASK-00111](../tasks/00111-TASK.md) | Operate the canonical Roadmap and work queue | ready-for-agent |
+| [TASK-00112](../tasks/00112-TASK.md) | Operate migration and Planning authority | ready-for-agent |
+| [TASK-00113](../tasks/00113-TASK.md) | Complete integrated Planning Dashboard states and accessibility | ready-for-agent |
+| [TASK-00114](../tasks/00114-TASK.md) | Qualify the migrated Planning Dashboard | ready-for-human |
 <!-- /planning:children -->
 
 ## Decisions and progress

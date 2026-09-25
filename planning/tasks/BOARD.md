@@ -103,6 +103,15 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 98 | [TASK-00101](00101-TASK.md) | Approve an exact Planning migration rehearsal | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00100](00100-TASK.md) | — |
 | 99 | [TASK-00102](00102-TASK.md) | Cut over Planning authority atomically | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00101](00101-TASK.md) | — |
 | 100 | [TASK-00103](00103-TASK.md) | Enforce database-only Planning consumers | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00102](00102-TASK.md) | — |
+| 102 | [TASK-00105](00105-TASK.md) | Explore the registered Planning workspace design | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00103](00103-TASK.md) | — |
+| 103 | [TASK-00106](00106-TASK.md) | Independently accept the Planning workspace handoff | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00105](00105-TASK.md) | — |
+| 104 | [TASK-00107](00107-TASK.md) | Deliver repository registration, selection, and context workspace | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00106](00106-TASK.md) | — |
+| 105 | [TASK-00108](00108-TASK.md) | Browse complete Planning hierarchy and history | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00107](00107-TASK.md) | — |
+| 106 | [TASK-00109](00109-TASK.md) | Edit Planning through semantic forms | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00108](00108-TASK.md) | — |
+| 107 | [TASK-00110](00110-TASK.md) | Operate guarded lifecycle and relationship work | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00109](00109-TASK.md) | — |
+| 108 | [TASK-00111](00111-TASK.md) | Operate the canonical Roadmap and work queue | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00108](00108-TASK.md) | — |
+| 109 | [TASK-00112](00112-TASK.md) | Operate migration and Planning authority | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00107](00107-TASK.md) | — |
+| 110 | [TASK-00113](00113-TASK.md) | Complete integrated Planning Dashboard states and accessibility | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00110](00110-TASK.md), [TASK-00111](00111-TASK.md), [TASK-00112](00112-TASK.md) | — |
 
 ## Needs Info
 
@@ -116,6 +125,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 |---|---|---|---|---|---|---|
 | 73 | [TASK-00076](00076-TASK.md) | Qualify supported local Planning operation | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-human | [TASK-00075](00075-TASK.md) | — |
 | 101 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-human | [TASK-00103](00103-TASK.md) | — |
+| 111 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-human | [TASK-00104](00104-TASK.md), [TASK-00113](00113-TASK.md) | — |
 
 ## Needs Triage
 

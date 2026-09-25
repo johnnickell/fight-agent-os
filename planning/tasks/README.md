@@ -107,4 +107,14 @@
 | [TASK-00102](00102-TASK.md) | Cut over Planning authority atomically | ready-for-agent | [TICKET-00028](../tickets/00028-TICKET.md) |
 | [TASK-00103](00103-TASK.md) | Enforce database-only Planning consumers | ready-for-agent | [TICKET-00028](../tickets/00028-TICKET.md) |
 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | ready-for-human | [TICKET-00028](../tickets/00028-TICKET.md) |
+| [TASK-00105](00105-TASK.md) | Explore the registered Planning workspace design | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00106](00106-TASK.md) | Independently accept the Planning workspace handoff | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00107](00107-TASK.md) | Deliver repository registration, selection, and context workspace | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00108](00108-TASK.md) | Browse complete Planning hierarchy and history | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00109](00109-TASK.md) | Edit Planning through semantic forms | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00110](00110-TASK.md) | Operate guarded lifecycle and relationship work | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00111](00111-TASK.md) | Operate the canonical Roadmap and work queue | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00112](00112-TASK.md) | Operate migration and Planning authority | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00113](00113-TASK.md) | Complete integrated Planning Dashboard states and accessibility | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | ready-for-human | [TICKET-00029](../tickets/00029-TICKET.md) |
 <!-- /planning:records -->

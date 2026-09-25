@@ -45,7 +45,7 @@ next-level records; parents with only terminal children remain listed until an e
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00029](tickets/00029-TICKET.md) | Deliver the registered Planning Dashboard | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
+| None | — | — | — |
 
 ### Parents ready for closeout review
 
