@@ -74,6 +74,11 @@ is no executable work, say so. Execution priority is authored in record metadata
 appear on the Board without inventing an EPIC. Live EPICs and TICKETs have generated child tables. Archived
 progress prose remains historical completion evidence, not a live status source.
 
+`ROADMAP.md` also generates a Planning Frontier for every non-terminal EPIC without TICKETs, every non-terminal
+TICKET without TASKs, and every non-terminal parent whose children are all terminal and therefore needs explicit
+closeout review. This keeps decomposition and closeout visible without turning planning operations into executable
+TASK Board rows.
+
 Generated sections use `<!-- planning:NAME -->` and `<!-- /planning:NAME -->`. After editing source records:
 
 ```bash

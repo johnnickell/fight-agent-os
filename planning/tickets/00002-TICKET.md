@@ -2,7 +2,7 @@
 id: TICKET-00002
 epic: EPIC-00002
 title: Establish safe TASK execution
-status: ready-for-agent
+status: done
 ---
 
 # Establish safe TASK execution
@@ -56,4 +56,8 @@ No application permission model applies because this is a repository-local agent
 
 ## Decisions and progress
 
-Implements the `work` boundary approved by [WF-002](../wayfinder/tickets/WF-002-shape-agent-skill-suite.md) and the first executable frontier selected by [WF-007](../wayfinder/tickets/WF-007-prepare-implementation-handoff.md). This is the first EPIC-00002 requirement to decompose into TASKs and is an explicit bootstrap workflow because `work` does not yet exist.
+Completed through [TASK-00002](../tasks/00002-TASK.md). The project-local `work` Skill, shared execution
+standards, bounded bootstrap exercise, fresh verification, and later independent acceptance satisfy this requirement.
+The implementation shipped in merged [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2). Preserved
+evidence limitations and warnings remain in the TASK completion record; archive, release, and deployment remain
+separate.

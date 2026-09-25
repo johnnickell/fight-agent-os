@@ -2,7 +2,7 @@
 id: TICKET-00004
 epic: EPIC-00002
 title: Establish controlled landing and human handoff
-status: ready-for-agent
+status: done
 ---
 
 # Establish controlled landing and human handoff
@@ -56,4 +56,8 @@ No application permission model applies. The skill may finalize authorized plann
 
 ## Decisions and progress
 
-Implements the `land` boundary approved by [WF-002](../wayfinder/tickets/WF-002-shape-agent-skill-suite.md). Its executable work follows the safe execution requirements in [TICKET-00002](00002-TICKET.md) and the independent review contract in [TICKET-00003](00003-TICKET.md).
+Completed through [TASK-00004](../tasks/00004-TASK.md). The project-local `land` Skill and ownership standards
+proved accepted closeout, required final verification, refusal behavior, bounded cleanup, non-force publication,
+and human merge handoff. The implementation shipped in merged
+[PR #4](https://github.com/johnnickell/fight-agent-os/pull/4). TASK `done`, PR publication, merge, archive, release,
+and deployment remain distinct facts.
