@@ -72,7 +72,11 @@ upgrade, reconfigure, or repair services from a read-only check.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00072](../tasks/00072-TASK.md) | Establish the installation-owned Planning runtime | ready-for-agent |
+| [TASK-00073](../tasks/00073-TASK.md) | Establish contained approved-root access | ready-for-agent |
+| [TASK-00074](../tasks/00074-TASK.md) | Expose authorized installation capabilities and diagnostics | ready-for-agent |
+| [TASK-00075](../tasks/00075-TASK.md) | Deliver the guided Planning installation journey | ready-for-agent |
+| [TASK-00076](../tasks/00076-TASK.md) | Qualify supported local Planning operation | ready-for-human |
 <!-- /planning:children -->
 
 ## Decisions and progress

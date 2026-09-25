@@ -45,7 +45,6 @@ next-level records; parents with only terminal children remain listed until an e
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00023](tickets/00023-TICKET.md) | Operate the local Planning installation | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
 | [TICKET-00024](tickets/00024-TICKET.md) | Register repositories and designated checkouts | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
 | [TICKET-00025](tickets/00025-TICKET.md) | Resolve versioned repository context | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
 | [TICKET-00026](tickets/00026-TICKET.md) | Establish authoritative Planning artifacts and lifecycles | [EPIC-00005](epics/00005-EPIC.md) | ready-for-agent |
