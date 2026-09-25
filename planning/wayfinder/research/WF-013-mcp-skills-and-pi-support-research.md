@@ -117,7 +117,7 @@ The installed Pi package is `@earendil-works/pi-coding-agent` 0.87.1, MIT, from 
 
 Neither installed source/docs nor current upstream contains `skills/list`, `skills/get`, `resources/directory/read`, an MCP dependency, or a generic MCP client. A prior generic MCP extension [PR #3774](https://github.com/earendil-works/pi/pull/3774) was auto-closed unmerged and is not product capability. Generic MCP tools/Resources support must therefore not be attributed to Pi, and Skills support cannot be inferred.
 
-Pi does implement local Agent Skills with filesystem paths. It advertises name, description, and an absolute `SKILL.md` location, then instructs the model to use `read` or `bash`. Name collisions keep the first discovered skill. This conflicts with the MCP requirements to disambiguate collisions, preserve origin in model context, and keep a remote cache outside filesystem discovery. [Pi skill loading](https://github.com/earendil-works/pi/blob/f07218c4d4bbc12bef056a7058c3dd49dfe41abe/packages/coding-agent/src/core/skills.ts) · [installed Skills documentation](/home/john/.local/share/mise/installs/pi/0.87.1/pi/docs/skills.md)
+Pi does implement local Agent Skills with filesystem paths. It advertises name, description, and an absolute `SKILL.md` location, then instructs the model to use `read` or `bash`. Name collisions keep the first discovered skill. This conflicts with the MCP requirements to disambiguate collisions, preserve origin in model context, and keep a remote cache outside filesystem discovery. [Pi skill loading](https://github.com/earendil-works/pi/blob/f07218c4d4bbc12bef056a7058c3dd49dfe41abe/packages/coding-agent/src/core/skills.ts) · installed Pi 0.87.1 `docs/skills.md` documentation
 
 #### Available seams
 
@@ -213,7 +213,7 @@ Use the official TypeScript SDK in the Pi adapter and, if Agent OS later serves 
 - [Pi extension documentation](https://github.com/earendil-works/pi/blob/f07218c4d4bbc12bef056a7058c3dd49dfe41abe/packages/coding-agent/docs/extensions.md)
 - [Pi package documentation](https://github.com/earendil-works/pi/blob/f07218c4d4bbc12bef056a7058c3dd49dfe41abe/packages/coding-agent/docs/packages.md)
 - [Unmerged generic MCP extension PR #3774](https://github.com/earendil-works/pi/pull/3774)
-- [Installed Pi documentation](/home/john/.local/share/mise/installs/pi/0.87.1/pi/docs)
+- Installed Pi 0.87.1 `docs/` documentation
 
 ## Open questions
 

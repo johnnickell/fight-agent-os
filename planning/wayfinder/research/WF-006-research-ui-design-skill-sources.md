@@ -189,7 +189,7 @@ WF-006 can close with these constraints for downstream decisions:
 - [Prototype skill](../../../.pi/skills/prototype/SKILL.md)
 - [Project architecture](../../../ARCHITECTURE.md)
 - [Foundation scope](../../FOUNDATION.md)
-- Pi `0.87.0` skill documentation: `/home/john/.local/share/mise/installs/pi/0.87.0/pi/docs/skills.md`
+- Pi `0.87.0` skill documentation: installed Pi `docs/skills.md`
 - [Pi skill documentation upstream](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md)
 
 ### Agent/design skills
