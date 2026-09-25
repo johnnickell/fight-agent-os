@@ -96,4 +96,8 @@
 | [TASK-00091](00091-TASK.md) | Record stable Planning criteria and evidence | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
 | [TASK-00092](00092-TASK.md) | Complete Planning lifecycle and archive operations | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
 | [TASK-00093](00093-TASK.md) | Rebuild, redact and render Planning authority | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
+| [TASK-00094](00094-TASK.md) | Version authoritative Roadmap ordering | ready-for-agent | [TICKET-00027](../tickets/00027-TICKET.md) |
+| [TASK-00095](00095-TASK.md) | Version TASK sequencing and queue overrides | ready-for-agent | [TICKET-00027](../tickets/00027-TICKET.md) |
+| [TASK-00096](00096-TASK.md) | Resolve canonical executable TASK eligibility | ready-for-agent | [TICKET-00027](../tickets/00027-TICKET.md) |
+| [TASK-00097](00097-TASK.md) | Expose canonical Roadmap and work-queue views | ready-for-agent | [TICKET-00027](../tickets/00027-TICKET.md) |
 <!-- /planning:records -->

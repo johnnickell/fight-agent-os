@@ -93,6 +93,10 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 88 | [TASK-00091](00091-TASK.md) | Record stable Planning criteria and evidence | [TICKET-00026 — Establish authoritative Planning artifacts and lifecycles](../tickets/00026-TICKET.md) | ready-for-agent | [TASK-00087](00087-TASK.md), [TASK-00089](00089-TASK.md) | — |
 | 89 | [TASK-00092](00092-TASK.md) | Complete Planning lifecycle and archive operations | [TICKET-00026 — Establish authoritative Planning artifacts and lifecycles](../tickets/00026-TICKET.md) | ready-for-agent | [TASK-00090](00090-TASK.md), [TASK-00091](00091-TASK.md) | — |
 | 90 | [TASK-00093](00093-TASK.md) | Rebuild, redact and render Planning authority | [TICKET-00026 — Establish authoritative Planning artifacts and lifecycles](../tickets/00026-TICKET.md) | ready-for-agent | [TASK-00092](00092-TASK.md) | — |
+| 91 | [TASK-00094](00094-TASK.md) | Version authoritative Roadmap ordering | [TICKET-00027 — Deliver the canonical Planning queue and Roadmap](../tickets/00027-TICKET.md) | ready-for-agent | [TASK-00093](00093-TASK.md) | — |
+| 92 | [TASK-00095](00095-TASK.md) | Version TASK sequencing and queue overrides | [TICKET-00027 — Deliver the canonical Planning queue and Roadmap](../tickets/00027-TICKET.md) | ready-for-agent | [TASK-00094](00094-TASK.md) | — |
+| 93 | [TASK-00096](00096-TASK.md) | Resolve canonical executable TASK eligibility | [TICKET-00027 — Deliver the canonical Planning queue and Roadmap](../tickets/00027-TICKET.md) | ready-for-agent | [TASK-00084](00084-TASK.md), [TASK-00095](00095-TASK.md) | — |
+| 94 | [TASK-00097](00097-TASK.md) | Expose canonical Roadmap and work-queue views | [TICKET-00027 — Deliver the canonical Planning queue and Roadmap](../tickets/00027-TICKET.md) | ready-for-agent | [TASK-00096](00096-TASK.md) | — |
 
 ## Needs Info
 

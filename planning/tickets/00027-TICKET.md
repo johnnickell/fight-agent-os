@@ -69,7 +69,10 @@ express a specific command intent but cannot apply or simulate a successful auth
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00094](../tasks/00094-TASK.md) | Version authoritative Roadmap ordering | ready-for-agent |
+| [TASK-00095](../tasks/00095-TASK.md) | Version TASK sequencing and queue overrides | ready-for-agent |
+| [TASK-00096](../tasks/00096-TASK.md) | Resolve canonical executable TASK eligibility | ready-for-agent |
+| [TASK-00097](../tasks/00097-TASK.md) | Expose canonical Roadmap and work-queue views | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
