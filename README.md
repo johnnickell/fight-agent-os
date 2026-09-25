@@ -8,7 +8,7 @@
 A personal AI operating system, starting with software engineering: plan in the browser, build in a customized
 Pi terminal, and understand the work through a companion dashboard.
 
-**Status: private, planning-ready scaffold.** The application currently contains an inherited Slim/PHP foundation.
+**Status: planning-ready scaffold.** The application currently contains an inherited Slim/PHP foundation.
 The React client, Swagger UI, application authentication, Pi workflows, and database-backed planning are not built yet.
 
 ## Start planning
@@ -43,4 +43,4 @@ Runtime, PHP tests, and dependency qualification come from the starter; its full
 quality standard. Scratch, evidence, and worktrees belong under ignored `.runs/` subfolders.
 
 See [architecture](ARCHITECTURE.md), [roadmap](planning/ROADMAP.md), and [scaffold origin](docs/ORIGIN.md).
-The inherited starter retains its [MIT license](LICENSE). This repository is private.
+The inherited starter retains its [MIT license](LICENSE).

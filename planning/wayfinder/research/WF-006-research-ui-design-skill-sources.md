@@ -10,7 +10,7 @@ This matters before WF-002 names the first design skills and before WF-005 defin
 
 Use **OpenDesign as reviewed inspiration, not as an installed upstream plugin**. Its MIT-licensed `v0.3.1` skills provide useful patterns: context-first intake, structurally distinct wireframes, HTML prototypes, explicit design-system discovery, a separate verifier, and a handoff warning that prototype HTML is not production code. Its basic viewer works locally with only static files and Python/Chromium.
 
-The stock workflow is not safe or reproducible enough for this private repository. It downloads a viewer from mutable `main`, can run an unpinned `npx --yes serve`, binds Python's server without a loopback restriction, serves the entire repository root, embeds previews in an unsandboxed same-origin iframe, writes to a durable top-level `opendesign/` directory, and assumes host features Pi does not currently expose here, such as structured forms and verifier subagents.
+The stock workflow is not safe or reproducible enough for this repository. It downloads a viewer from mutable `main`, can run an unpinned `npx --yes serve`, binds Python's server without a loopback restriction, serves the entire repository root, embeds previews in an unsandboxed same-origin iframe, writes to a durable top-level `opendesign/` directory, and assumes host features Pi does not currently expose here, such as structured forms and verifier subagents.
 
 Create project-owned Pi skills through planning instead. Combine:
 
@@ -189,7 +189,7 @@ WF-006 can close with these constraints for downstream decisions:
 - [Prototype skill](../../../.pi/skills/prototype/SKILL.md)
 - [Project architecture](../../../ARCHITECTURE.md)
 - [Foundation scope](../../FOUNDATION.md)
-- Pi `0.87.0` skill documentation: installed Pi `docs/skills.md`
+- Pi `0.87.0` installed skill documentation (`docs/skills.md`)
 - [Pi skill documentation upstream](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md)
 
 ### Agent/design skills
