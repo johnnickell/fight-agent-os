@@ -117,4 +117,5 @@
 | [TASK-00112](00112-TASK.md) | Operate migration and Planning authority | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
 | [TASK-00113](00113-TASK.md) | Complete integrated Planning Dashboard states and accessibility | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | ready-for-human | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | in-progress | — |
 <!-- /planning:records -->
