@@ -2,7 +2,7 @@
 
 ## Accepted starting points
 
-- A private Fight Agent OS repository, independent of Ideaverse and the existing SoftwareFactory
+- A standalone Fight Agent OS repository, independent of Ideaverse and the existing SoftwareFactory
 - Slim as the initial framework; reconsider Symfony later if a concrete need warrants it
 - PHP Domain/Application/Adapter architecture, CQRS, dependency injection, and domain-owned business behavior
 - A customized Pi terminal for engineering execution, with a companion dashboard

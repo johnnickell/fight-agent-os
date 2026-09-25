@@ -7,7 +7,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 1 | [TASK-00071](00071-TASK.md) | Prepare develop documentation for public visibility | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 

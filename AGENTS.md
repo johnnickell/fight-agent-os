@@ -4,7 +4,7 @@ Read [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md), and [planning/C
 Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 [planning/FOUNDATION.md](planning/FOUNDATION.md) for the starting scope and unfinished integrations.
 
-- This is a fresh, private project. Do not import existing Factory workflows, historical plans, or approvals
+- This is a fresh, independent project. Do not import existing Factory workflows, historical plans, or approvals
 - Planning uses EPIC → TICKET → TASK. Grilling writes an EPIC; decomposition is a separate operation
 - Follow repository terminology when using external planning skills. Do not silently map a TASK to a TICKET
 - Put fresh Pi skills in `.pi/skills/<name>/SKILL.md`; design their behavior through planning

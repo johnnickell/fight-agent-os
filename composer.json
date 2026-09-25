@@ -1,6 +1,6 @@
 {
   "name": "johnnickell/fight-agent-os",
-  "description": "A private, extensible AI operating system built on Fight libraries and Pi.",
+  "description": "An extensible personal AI operating system built on Fight libraries and Pi.",
   "license": "MIT",
   "type": "project",
   "require": {
