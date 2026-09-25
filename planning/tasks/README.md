@@ -100,4 +100,11 @@
 | [TASK-00095](00095-TASK.md) | Version TASK sequencing and queue overrides | ready-for-agent | [TICKET-00027](../tickets/00027-TICKET.md) |
 | [TASK-00096](00096-TASK.md) | Resolve canonical executable TASK eligibility | ready-for-agent | [TICKET-00027](../tickets/00027-TICKET.md) |
 | [TASK-00097](00097-TASK.md) | Expose canonical Roadmap and work-queue views | ready-for-agent | [TICKET-00027](../tickets/00027-TICKET.md) |
+| [TASK-00098](00098-TASK.md) | Inventory immutable Markdown Planning source | ready-for-agent | [TICKET-00028](../tickets/00028-TICKET.md) |
+| [TASK-00099](00099-TASK.md) | Map complete Markdown baseline events | ready-for-agent | [TICKET-00028](../tickets/00028-TICKET.md) |
+| [TASK-00100](00100-TASK.md) | Rehearse and compare complete PostgreSQL import | ready-for-agent | [TICKET-00028](../tickets/00028-TICKET.md) |
+| [TASK-00101](00101-TASK.md) | Approve an exact Planning migration rehearsal | ready-for-agent | [TICKET-00028](../tickets/00028-TICKET.md) |
+| [TASK-00102](00102-TASK.md) | Cut over Planning authority atomically | ready-for-agent | [TICKET-00028](../tickets/00028-TICKET.md) |
+| [TASK-00103](00103-TASK.md) | Enforce database-only Planning consumers | ready-for-agent | [TICKET-00028](../tickets/00028-TICKET.md) |
+| [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | ready-for-human | [TICKET-00028](../tickets/00028-TICKET.md) |
 <!-- /planning:records -->

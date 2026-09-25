@@ -97,6 +97,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 92 | [TASK-00095](00095-TASK.md) | Version TASK sequencing and queue overrides | [TICKET-00027 — Deliver the canonical Planning queue and Roadmap](../tickets/00027-TICKET.md) | ready-for-agent | [TASK-00094](00094-TASK.md) | — |
 | 93 | [TASK-00096](00096-TASK.md) | Resolve canonical executable TASK eligibility | [TICKET-00027 — Deliver the canonical Planning queue and Roadmap](../tickets/00027-TICKET.md) | ready-for-agent | [TASK-00084](00084-TASK.md), [TASK-00095](00095-TASK.md) | — |
 | 94 | [TASK-00097](00097-TASK.md) | Expose canonical Roadmap and work-queue views | [TICKET-00027 — Deliver the canonical Planning queue and Roadmap](../tickets/00027-TICKET.md) | ready-for-agent | [TASK-00096](00096-TASK.md) | — |
+| 95 | [TASK-00098](00098-TASK.md) | Inventory immutable Markdown Planning source | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00097](00097-TASK.md) | — |
+| 96 | [TASK-00099](00099-TASK.md) | Map complete Markdown baseline events | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00098](00098-TASK.md) | — |
+| 97 | [TASK-00100](00100-TASK.md) | Rehearse and compare complete PostgreSQL import | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00099](00099-TASK.md) | — |
+| 98 | [TASK-00101](00101-TASK.md) | Approve an exact Planning migration rehearsal | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00100](00100-TASK.md) | — |
+| 99 | [TASK-00102](00102-TASK.md) | Cut over Planning authority atomically | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00101](00101-TASK.md) | — |
+| 100 | [TASK-00103](00103-TASK.md) | Enforce database-only Planning consumers | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00102](00102-TASK.md) | — |
 
 ## Needs Info
 
@@ -109,6 +115,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 73 | [TASK-00076](00076-TASK.md) | Qualify supported local Planning operation | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-human | [TASK-00075](00075-TASK.md) | — |
+| 101 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-human | [TASK-00103](00103-TASK.md) | — |
 
 ## Needs Triage
 

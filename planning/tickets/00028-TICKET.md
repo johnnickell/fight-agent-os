@@ -77,7 +77,13 @@ automatic fallback to Markdown writing.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00098](../tasks/00098-TASK.md) | Inventory immutable Markdown Planning source | ready-for-agent |
+| [TASK-00099](../tasks/00099-TASK.md) | Map complete Markdown baseline events | ready-for-agent |
+| [TASK-00100](../tasks/00100-TASK.md) | Rehearse and compare complete PostgreSQL import | ready-for-agent |
+| [TASK-00101](../tasks/00101-TASK.md) | Approve an exact Planning migration rehearsal | ready-for-agent |
+| [TASK-00102](../tasks/00102-TASK.md) | Cut over Planning authority atomically | ready-for-agent |
+| [TASK-00103](../tasks/00103-TASK.md) | Enforce database-only Planning consumers | ready-for-agent |
+| [TASK-00104](../tasks/00104-TASK.md) | Migrate Fight Agent OS Planning authority | ready-for-human |
 <!-- /planning:children -->
 
 ## Decisions and progress
