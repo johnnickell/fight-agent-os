@@ -21,6 +21,8 @@ final class PostgresAtomicOperation
      * Executes the operation, rolling back its savepoint before any failure propagates
      *
      * @param Closure(): mixed $operation
+     *
+     * @throws Throwable
      */
     public static function execute(Connection $connection, Closure $operation): mixed
     {
