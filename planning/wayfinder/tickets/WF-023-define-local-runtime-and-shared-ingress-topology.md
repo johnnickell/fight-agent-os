@@ -106,8 +106,9 @@ Host-invoked `bin/composer` and `bin/npm` may create and remove pinned disposabl
 containers. No other ad hoc or persistent container joins the topology without John's explicit approval. The
 browser suite runs through approved disposable tooling rather than a persistent browser service and is capped
 at ten named end-to-end scenarios across at most four explicitly configured browser projects. The complete
-matrix therefore permits at most forty scenario/browser executions. Configuration and the build gate reject
-hidden data-driven expansion, retries, quarantine, or extra browser projects.
+matrix therefore permits at most forty scenario/browser executions. Keep the named inventory, projects, retries,
+and quarantine policy explicit and inspect them directly; do not add product-suite tests or seeded failures for
+browser configuration, wrappers, or build machinery.
 
 Run one container for each application role initially, one scheduler process, one ordinary worker process, and
 the accepted three one-shot Agent consumers. Counts may change only through explicit bounded installation
