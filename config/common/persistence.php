@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Persistence\AuthorizationReferenceFences;
-use App\Adapter\Persistence\FailClosedUnitOfWork;
-use App\Adapter\Persistence\PostgresPermissionRepository;
-use App\Adapter\Persistence\PostgresRoleRepository;
+use App\Adapter\Persistence\Repository\AuthorizationReferenceFences;
+use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
+use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
@@ -16,7 +15,6 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
-use Fight\Common\Application\Repository\UnitOfWork;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
@@ -49,8 +47,5 @@ return static function (Container $container): void {
     });
     $container->set(TransactionalUnitOfWork::class, static function (Container $container): TransactionalUnitOfWork {
         return new DoctrineTransactionalUnitOfWork($container->get(EntityManagerInterface::class));
-    });
-    $container->set(UnitOfWork::class, static function (Container $container): UnitOfWork {
-        return new FailClosedUnitOfWork($container->get(TransactionalUnitOfWork::class));
     });
 };

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence;
+namespace App\Adapter\Persistence\Repository;
 
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -51,7 +51,7 @@ SQL,
      */
     public function getById(PermissionId $id): ?Permission
     {
-        return $this->one('SELECT * FROM permissions WHERE id = ?', $id->toString());
+        return $this->one('id', $id->toString());
     }
 
     /**
@@ -59,7 +59,7 @@ SQL,
      */
     public function getByName(PermissionName $name): ?Permission
     {
-        return $this->one('SELECT * FROM permissions WHERE name = ?', $name->toString());
+        return $this->one('name', $name->toString());
     }
 
     /**
@@ -91,17 +91,20 @@ SQL,
      */
     public function getAll(Pagination $pagination): ResultSet
     {
-        $rows = $this->connection->fetchAllAssociative(
-            'SELECT * FROM permissions ORDER BY created_at, id LIMIT ? OFFSET ?',
-            [$pagination->limit(), $pagination->offset()],
-            [ParameterType::INTEGER, ParameterType::INTEGER]
-        );
+        $rows = $this->connection->createQueryBuilder()
+            ->select('*')
+            ->from('permissions')
+            ->orderBy('created_at')
+            ->addOrderBy('id')
+            ->setMaxResults($pagination->limit())
+            ->setFirstResult($pagination->offset())
+            ->fetchAllAssociative();
         $records = ArrayList::of(Permission::class)->replace(array_map($this->hydrate(...), $rows));
 
         return new ResultSet(
             $pagination->page(),
             $pagination->perPage(),
-            (int) $this->connection->fetchOne('SELECT COUNT(*) FROM permissions'),
+            (int) $this->connection->createQueryBuilder()->select('COUNT(*)')->from('permissions')->fetchOne(),
             $records
         );
     }
@@ -113,9 +116,13 @@ SQL,
     {
         return array_map(
             $this->hydrate(...),
-            $this->connection->fetchAllAssociative(
-                'SELECT * FROM permissions WHERE managed = TRUE ORDER BY created_at, id'
-            )
+            $this->connection->createQueryBuilder()
+                ->select('*')
+                ->from('permissions')
+                ->where('managed = TRUE')
+                ->orderBy('created_at')
+                ->addOrderBy('id')
+                ->fetchAllAssociative()
         );
     }
 
@@ -134,26 +141,21 @@ SQL,
         return PostgresUniqueConstraintRace::execute(
             $this->connection,
             'uq_permissions_name',
-            fn(): int => $this->connection->executeStatement(
-                <<<'SQL'
-UPDATE permissions
-SET name = :replacement_name,
-    tier = :replacement_tier,
-    managed = :replacement_managed,
-    updated_at = :replacement_updated_at
-WHERE id = :id
-  AND name = :expected_name
-  AND tier IS NOT DISTINCT FROM :expected_tier
-  AND managed = :expected_managed
-  AND created_at = :expected_created_at
-  AND updated_at = :expected_updated_at
-  AND NOT EXISTS (
-      SELECT 1 FROM permissions conflicting
-      WHERE conflicting.name = :replacement_name
-        AND conflicting.id <> :id
-  )
-SQL,
-                [
+            fn(): int => $this->connection->createQueryBuilder()
+                ->update('permissions')
+                ->set('name', ':replacement_name')
+                ->set('tier', ':replacement_tier')
+                ->set('managed', ':replacement_managed')
+                ->set('updated_at', ':replacement_updated_at')
+                ->where('id = :id')
+                ->andWhere('name = :expected_name')
+                ->andWhere('tier IS NOT DISTINCT FROM :expected_tier')
+                ->andWhere('managed = :expected_managed')
+                ->andWhere('created_at = :expected_created_at')
+                ->andWhere('updated_at = :expected_updated_at')
+                ->andWhere('NOT EXISTS (SELECT 1 FROM permissions conflicting '
+                    . 'WHERE conflicting.name = :replacement_name AND conflicting.id <> :id)')
+                ->setParameters([
                     'id' => $expected->getId()->toString(),
                     'expected_name' => $expected->getName()->toString(),
                     'expected_tier' => $expected->getTier()?->value,
@@ -164,12 +166,11 @@ SQL,
                     'replacement_tier' => $replacement->getTier()?->value,
                     'replacement_managed' => $replacement->isManaged(),
                     'replacement_updated_at' => $this->date($replacement->getUpdatedAt()),
-                ],
-                [
+                ], [
                     'expected_managed' => ParameterType::BOOLEAN,
                     'replacement_managed' => ParameterType::BOOLEAN,
-                ]
-            )
+                ])
+                ->executeStatement()
         ) === 1;
     }
 
@@ -180,34 +181,34 @@ SQL,
     {
         $this->referenceFences->holdPermissionReferences();
 
-        return $this->connection->executeStatement(
-            <<<'SQL'
-DELETE FROM permissions
-WHERE id = :id
-  AND name = :name
-  AND tier IS NOT DISTINCT FROM :tier
-  AND managed = :managed
-  AND created_at = :created_at
-  AND updated_at = :updated_at
-  AND NOT EXISTS (
-      SELECT 1 FROM role_permissions WHERE permission_id = :id
-  )
-SQL,
-                [
-                    'id' => $permission->getId()->toString(),
-                    'name' => $permission->getName()->toString(),
-                    'tier' => $permission->getTier()?->value,
-                    'managed' => $permission->isManaged(),
-                    'created_at' => $this->date($permission->getCreatedAt()),
-                    'updated_at' => $this->date($permission->getUpdatedAt()),
-                ],
-            ['managed' => ParameterType::BOOLEAN]
-        ) === 1;
+        return $this->connection->createQueryBuilder()
+            ->delete('permissions')
+            ->where('id = :id')
+            ->andWhere('name = :name')
+            ->andWhere('tier IS NOT DISTINCT FROM :tier')
+            ->andWhere('managed = :managed')
+            ->andWhere('created_at = :created_at')
+            ->andWhere('updated_at = :updated_at')
+            ->andWhere('NOT EXISTS (SELECT 1 FROM role_permissions WHERE permission_id = :id)')
+            ->setParameters([
+                'id' => $permission->getId()->toString(),
+                'name' => $permission->getName()->toString(),
+                'tier' => $permission->getTier()?->value,
+                'managed' => $permission->isManaged(),
+                'created_at' => $this->date($permission->getCreatedAt()),
+                'updated_at' => $this->date($permission->getUpdatedAt()),
+            ], ['managed' => ParameterType::BOOLEAN])
+            ->executeStatement() === 1;
     }
 
-    private function one(string $sql, string $value): ?Permission
+    private function one(string $column, string $value): ?Permission
     {
-        $row = $this->connection->fetchAssociative($sql, [$value]);
+        $row = $this->connection->createQueryBuilder()
+            ->select('*')
+            ->from('permissions')
+            ->where($column . ' = :value')
+            ->setParameter('value', $value)
+            ->fetchAssociative();
 
         return $row === false ? null : $this->hydrate($row);
     }

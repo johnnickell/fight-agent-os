@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Persistence\DatabaseTargetGuard;
+use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 

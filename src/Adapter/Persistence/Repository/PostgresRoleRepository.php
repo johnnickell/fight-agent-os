@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence;
+namespace App\Adapter\Persistence\Repository;
 
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
@@ -59,7 +59,7 @@ SQL,
      */
     public function getById(RoleId $id): ?Role
     {
-        return $this->one('SELECT * FROM roles WHERE id = ?', $id->toString());
+        return $this->one('id', $id->toString());
     }
 
     /**
@@ -67,7 +67,7 @@ SQL,
      */
     public function getByName(RoleName $name): ?Role
     {
-        return $this->one('SELECT * FROM roles WHERE name = ?', $name->toString());
+        return $this->one('name', $name->toString());
     }
 
     /**
@@ -99,17 +99,20 @@ SQL,
      */
     public function getAll(Pagination $pagination): ResultSet
     {
-        $rows = $this->connection->fetchAllAssociative(
-            'SELECT * FROM roles ORDER BY created_at, id LIMIT ? OFFSET ?',
-            [$pagination->limit(), $pagination->offset()],
-            [ParameterType::INTEGER, ParameterType::INTEGER]
-        );
+        $rows = $this->connection->createQueryBuilder()
+            ->select('*')
+            ->from('roles')
+            ->orderBy('created_at')
+            ->addOrderBy('id')
+            ->setMaxResults($pagination->limit())
+            ->setFirstResult($pagination->offset())
+            ->fetchAllAssociative();
         $records = ArrayList::of(Role::class)->replace(array_map($this->hydrate(...), $rows));
 
         return new ResultSet(
             $pagination->page(),
             $pagination->perPage(),
-            (int) $this->connection->fetchOne('SELECT COUNT(*) FROM roles'),
+            (int) $this->connection->createQueryBuilder()->select('COUNT(*)')->from('roles')->fetchOne(),
             $records
         );
     }
@@ -121,9 +124,13 @@ SQL,
     {
         return array_map(
             $this->hydrate(...),
-            $this->connection->fetchAllAssociative(
-                'SELECT * FROM roles WHERE managed = TRUE ORDER BY created_at, id'
-            )
+            $this->connection->createQueryBuilder()
+                ->select('*')
+                ->from('roles')
+                ->where('managed = TRUE')
+                ->orderBy('created_at')
+                ->addOrderBy('id')
+                ->fetchAllAssociative()
         );
     }
 
@@ -134,16 +141,15 @@ SQL,
     {
         return array_map(
             $this->hydrate(...),
-            $this->connection->fetchAllAssociative(
-                <<<'SQL'
-SELECT roles.*
-FROM roles
-INNER JOIN role_permissions ON role_permissions.role_id = roles.id
-WHERE role_permissions.permission_id = ?
-ORDER BY roles.created_at, roles.id
-SQL,
-                [$id->toString()]
-            )
+            $this->connection->createQueryBuilder()
+                ->select('roles.*')
+                ->from('roles')
+                ->innerJoin('roles', 'role_permissions', 'rp', 'rp.role_id = roles.id')
+                ->where('rp.permission_id = :id')
+                ->setParameter('id', $id->toString())
+                ->orderBy('roles.created_at')
+                ->addOrderBy('roles.id')
+                ->fetchAllAssociative()
         );
     }
 
@@ -174,10 +180,13 @@ SQL,
             return false;
         }
 
-        $current = $this->connection->fetchAssociative(
-            'SELECT * FROM roles WHERE id = ? FOR UPDATE',
-            [$expected->getId()->toString()]
-        );
+        $current = $this->connection->createQueryBuilder()
+            ->select('*')
+            ->from('roles')
+            ->where('id = :id')
+            ->setParameter('id', $expected->getId()->toString())
+            ->forUpdate()
+            ->fetchAssociative();
         if ($current === false || !$this->matches($expected, $current)) {
             return false;
         }
@@ -185,22 +194,19 @@ SQL,
         $updated = PostgresUniqueConstraintRace::execute(
             $this->connection,
             'uq_roles_name',
-            fn(): int => $this->connection->executeStatement(
-                <<<'SQL'
-UPDATE roles
-SET name = :name, managed = :managed, updated_at = :updated_at
-WHERE id = :id
-  AND name = :expected_name
-  AND managed = :expected_managed
-  AND created_at = :created_at
-  AND updated_at = :expected_updated_at
-  AND NOT EXISTS (
-      SELECT 1 FROM roles conflicting
-      WHERE conflicting.name = :name
-        AND conflicting.id <> :id
-  )
-SQL,
-                [
+            fn(): int => $this->connection->createQueryBuilder()
+                ->update('roles')
+                ->set('name', ':name')
+                ->set('managed', ':managed')
+                ->set('updated_at', ':updated_at')
+                ->where('id = :id')
+                ->andWhere('name = :expected_name')
+                ->andWhere('managed = :expected_managed')
+                ->andWhere('created_at = :created_at')
+                ->andWhere('updated_at = :expected_updated_at')
+                ->andWhere('NOT EXISTS (SELECT 1 FROM roles conflicting '
+                    . 'WHERE conflicting.name = :name AND conflicting.id <> :id)')
+                ->setParameters([
                     'id' => $expected->getId()->toString(),
                     'name' => $replacement->getName()->toString(),
                     'managed' => $replacement->isManaged(),
@@ -209,9 +215,8 @@ SQL,
                     'expected_managed' => $expected->isManaged(),
                     'created_at' => $this->date($expected->getCreatedAt()),
                     'expected_updated_at' => $this->date($expected->getUpdatedAt()),
-                ],
-                ['managed' => ParameterType::BOOLEAN, 'expected_managed' => ParameterType::BOOLEAN]
-            )
+                ], ['managed' => ParameterType::BOOLEAN, 'expected_managed' => ParameterType::BOOLEAN])
+                ->executeStatement()
         );
         if ($updated !== 1) {
             return false;
@@ -230,24 +235,21 @@ SQL,
     {
         $this->referenceFences->holdRoleReferences();
 
-        return $this->connection->executeStatement(
-            <<<'SQL'
-DELETE FROM roles
-WHERE id = :id
-  AND name = :name
-  AND managed = :managed
-  AND created_at = :created_at
-  AND updated_at = :updated_at
-SQL,
-                [
-                    'id' => $role->getId()->toString(),
-                    'name' => $role->getName()->toString(),
-                    'managed' => $role->isManaged(),
-                    'created_at' => $this->date($role->getCreatedAt()),
-                    'updated_at' => $this->date($role->getUpdatedAt()),
-                ],
-            ['managed' => ParameterType::BOOLEAN]
-        ) === 1;
+        return $this->connection->createQueryBuilder()
+            ->delete('roles')
+            ->where('id = :id')
+            ->andWhere('name = :name')
+            ->andWhere('managed = :managed')
+            ->andWhere('created_at = :created_at')
+            ->andWhere('updated_at = :updated_at')
+            ->setParameters([
+                'id' => $role->getId()->toString(),
+                'name' => $role->getName()->toString(),
+                'managed' => $role->isManaged(),
+                'created_at' => $this->date($role->getCreatedAt()),
+                'updated_at' => $this->date($role->getUpdatedAt()),
+            ], ['managed' => ParameterType::BOOLEAN])
+            ->executeStatement() === 1;
     }
 
     /**
@@ -264,6 +266,7 @@ SQL,
             return true;
         }
 
+        // DBAL QueryBuilder only supports FOR UPDATE; membership needs the weaker KEY SHARE lock.
         $found = $this->connection->fetchFirstColumn(
             'SELECT id FROM permissions WHERE id IN (?) ORDER BY id FOR KEY SHARE',
             [$ids],
@@ -289,9 +292,14 @@ SQL,
         }
     }
 
-    private function one(string $sql, string $value): ?Role
+    private function one(string $column, string $value): ?Role
     {
-        $row = $this->connection->fetchAssociative($sql, [$value]);
+        $row = $this->connection->createQueryBuilder()
+            ->select('*')
+            ->from('roles')
+            ->where($column . ' = :value')
+            ->setParameter('value', $value)
+            ->fetchAssociative();
 
         return $row === false ? null : $this->hydrate($row);
     }
@@ -306,10 +314,7 @@ SQL,
         $createdAt = new DateTimeImmutable((string) $row['created_at']);
         $permissionIds = array_map(
             static fn(mixed $permissionId): PermissionId => PermissionId::fromString((string) $permissionId),
-            $this->connection->fetchFirstColumn(
-                'SELECT permission_id FROM role_permissions WHERE role_id = ? ORDER BY permission_id',
-                [(string) $row['id']]
-            )
+            $this->membershipIds((string) $row['id'])
         );
         $role = $this->boolean($row['managed'])
             ? Role::defineManaged($id, $name, $permissionIds, $createdAt)
@@ -341,10 +346,7 @@ SQL,
 
         $stored = array_map(
             'strval',
-            $this->connection->fetchFirstColumn(
-                'SELECT permission_id FROM role_permissions WHERE role_id = ? ORDER BY permission_id',
-                [$expected->getId()->toString()]
-            )
+            $this->membershipIds($expected->getId()->toString())
         );
         $wanted = array_values(array_unique(array_map(
             static fn(PermissionId $id): string => $id->toString(),
@@ -353,6 +355,20 @@ SQL,
         sort($wanted);
 
         return $stored === $wanted;
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    private function membershipIds(string $roleId): array
+    {
+        return $this->connection->createQueryBuilder()
+            ->select('permission_id')
+            ->from('role_permissions')
+            ->where('role_id = :role_id')
+            ->setParameter('role_id', $roleId)
+            ->orderBy('permission_id')
+            ->fetchFirstColumn();
     }
 
     /**

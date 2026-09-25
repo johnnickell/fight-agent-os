@@ -18,7 +18,7 @@
 | [TASK-00013](00013-TASK.md) | Persist identities and refresh sessions atomically | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
 | [TASK-00014](00014-TASK.md) | Persist activation grants and replacement races | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
 | [TASK-00015](00015-TASK.md) | Persist password-reset grants and terminal succession | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
-| [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and package delivery persistence | needs-info | [TICKET-00009](../tickets/00009-TICKET.md) |
+| [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and package delivery persistence | ready-for-agent | [TICKET-00009](../tickets/00009-TICKET.md) |
 | [TASK-00017](00017-TASK.md) | Accept the browser-authentication security-profile ADR | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |

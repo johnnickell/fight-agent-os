@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
-use App\Adapter\Persistence\AuthorizationReferenceFences;
-use App\Adapter\Persistence\DatabaseTargetGuard;
-use App\Adapter\Persistence\FailClosedUnitOfWork;
-use App\Adapter\Persistence\PersistenceConflict;
-use App\Adapter\Persistence\PostgresPermissionRepository;
-use App\Adapter\Persistence\PostgresRoleRepository;
+use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
+use App\Adapter\Persistence\Repository\AuthorizationReferenceFences;
+use App\Adapter\Persistence\Repository\PersistenceConflict;
+use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
+use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -379,16 +378,6 @@ final class AuthorityRepositoryTest extends TestCase
     {
         $this->expectException(LogicException::class);
         $this->roles->validatePermissionReference(PermissionId::generate());
-    }
-
-    public function test_compatibility_unit_of_work_delegates_transactions_and_rejects_commit(): void
-    {
-        $compatibility = new FailClosedUnitOfWork($this->unitOfWork);
-        self::assertSame('committed', $compatibility->commitTransactional(static fn(): string => 'committed'));
-
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Unscoped persistence commits are not supported.');
-        $compatibility->commit();
     }
 
     private function connection(): Connection

@@ -33,7 +33,8 @@ Docker Compose is required. This is an application with committed Composer lockf
 The inherited endpoint runs at http://localhost:18087. Override the port with `FIGHT_AGENT_OS_PORT`.
 Development and test PostgreSQL identities are separate; override their local-only Compose defaults through the
 variables shown in `.env.example`. Destructive test operations require explicit test mode and a guarded `_test`
-database, role, and allowlisted host.
+database, role, and allowlisted host. PostgreSQL migrations live in `database/migrations/`; future database
+schemas and fixtures belong alongside `migrations/` under `database/`.
 
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services
