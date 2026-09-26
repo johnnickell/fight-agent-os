@@ -30,7 +30,12 @@ Docker Compose is required. This is an application with committed Composer lockf
 ./bin/database migrate
 ```
 
-The inherited endpoint runs at http://localhost:18087. Override the port with `FIGHT_AGENT_OS_PORT`.
+The inherited root endpoint runs at http://localhost:18087. Override the port with `FIGHT_AGENT_OS_PORT`.
+Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTTPS origin and
+`APP_CSRF_MAC_KEY` as an independent, external hex-encoded 32-byte-or-stronger random key
+(e.g. generate with `openssl rand -hex 32`); do not commit either secret or use the JWT/HMAC signing key.
+The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. The inherited local
+HTTP port is **not** an authenticated browser deployment; HTTPS/proxy enrollment is separate work.
 Development and test PostgreSQL identities are separate; override their local-only Compose defaults through the
 variables shown in `.env.example`. Destructive test operations require explicit test mode and a guarded `_test`
 database, role, and allowlisted host. PostgreSQL migrations live in `database/migrations/`; future database

@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Application\Security\CsrfClock;
+use App\Application\Security\CsrfNonceGenerator;
+use App\Application\Security\CsrfProofs;
+use App\Application\Security\GetCsrfProof;
+use App\Application\Security\GetCsrfProofHandler;
 use Fight\AccessControl\Application\AccessControl\Permission\QueryHandler\ListPermissionsHandler;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\Query\ListPermissions;
@@ -25,6 +30,13 @@ return [
         QueryBus::class               => static function (Container $container): QueryBus {
             return $container->get('messaging.query.bus');
         },
+        GetCsrfProofHandler::class    => static function (Container $container): GetCsrfProofHandler {
+            return new GetCsrfProofHandler(
+                $container->get(CsrfNonceGenerator::class),
+                $container->get(CsrfClock::class),
+                $container->get(CsrfProofs::class)
+            );
+        },
         ListPermissionsHandler::class => static function (Container $container): ListPermissionsHandler {
             $permissionRepository = $container->get(PermissionRepository::class);
             assert($permissionRepository instanceof PermissionRepository);
@@ -33,7 +45,8 @@ return [
         }
     ],
     'handlers' => [
-        ListPermissions::class => ListPermissionsHandler::class
+        ListPermissions::class => ListPermissionsHandler::class,
+        GetCsrfProof::class    => GetCsrfProofHandler::class
     ],
     'filters'  => []
 ];
