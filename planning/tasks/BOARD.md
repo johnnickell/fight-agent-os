@@ -13,7 +13,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 18 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | — | — |
+| 17 | [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | — (standalone chore) | ready-for-agent | — | — |
 | 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | — | — |
 | 25 | [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
@@ -22,6 +22,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 18 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00116](00116-TASK.md) | — |
 | 19 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00018](00018-TASK.md) | — |
 | 20 | [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00019](00019-TASK.md) | — |
 | 21 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00020](00020-TASK.md) | — |
