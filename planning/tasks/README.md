@@ -131,4 +131,5 @@
 | [TASK-00126](00126-TASK.md) | Qualify the upstream v0.4.0 authorization contract and consumer update | needs-info | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | done | — |
 <!-- /planning:records -->
