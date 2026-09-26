@@ -7,6 +7,9 @@ namespace App\Adapter\Persistence\Locking;
 use Doctrine\DBAL\Connection;
 use LogicException;
 
+/**
+ * Class AuthorizationReferenceFences
+ */
 final readonly class AuthorizationReferenceFences
 {
     private const int NAMESPACE = 24120;
@@ -20,16 +23,25 @@ final readonly class AuthorizationReferenceFences
     {
     }
 
+    /**
+     * Acquires locks on referenced permissions during a write
+     */
     public function holdPermissionReferences(): void
     {
         $this->hold(self::PERMISSION_REFERENCES);
     }
 
+    /**
+     * Acquires locks on referenced roles during a write
+     */
     public function holdRoleReferences(): void
     {
         $this->hold(self::ROLE_REFERENCES);
     }
 
+    /**
+     * Acquires the authoritative record lock for the current transaction
+     */
     private function hold(int $key): void
     {
         if (!$this->connection->isTransactionActive()) {

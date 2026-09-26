@@ -8,13 +8,22 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
+/**
+ * Class Version20260925231111
+ */
 final class Version20260925231111 extends AbstractMigration
 {
+    /**
+     * @inheritDoc
+     */
     public function getDescription(): string
     {
         return 'Creates authoritative user identity, email-claim, role-assignment, and refresh-session storage';
     }
 
+    /**
+     * @inheritDoc
+     */
     public function up(Schema $schema): void
     {
         $this->abortIf(
@@ -121,6 +130,9 @@ CREATE TABLE refresh_session_used_credentials (
 SQL);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function down(Schema $schema): void
     {
         $this->addSql('DROP TABLE refresh_session_used_credentials');

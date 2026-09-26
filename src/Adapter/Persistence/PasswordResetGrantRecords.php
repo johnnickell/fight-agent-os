@@ -18,10 +18,19 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 
 /**
+ * Class PasswordResetGrantRecords
+ *
  * Maps password-reset rows to exact package-owned aggregate and delivery state
  */
 final class PasswordResetGrantRecords
 {
+    /**
+     * Constructs PasswordResetGrantRecords
+     */
+    private function __construct()
+    {
+    }
+
     /**
      * Returns the stored state without raw credentials
      *
@@ -32,26 +41,26 @@ final class PasswordResetGrantRecords
         $delivery = $grant->getDelivery();
 
         return [
-            'id' => $grant->getId()->toString(),
-            'user_id' => $grant->getUserId()->toString(),
-            'credential_digest' => $grant->getCredentialHash(),
-            'expires_at' => self::date($grant->getExpiresAt()),
-            'consumed_at' => self::dateOrNull($grant->getConsumedAt()),
-            'revoked_at' => self::dateOrNull($grant->getRevokedAt()),
-            'revision' => $grant->getRevision(),
-            'delivery_id' => $delivery->getId()->toString(),
-            'delivery_email' => $delivery->getEmail()->canonical(),
-            'delivery_ciphertext' => $delivery->getEncryptedMaterial()?->reveal(),
-            'delivery_expires_at' => self::date($delivery->getExpiresAt()),
-            'delivery_due_at' => self::date($delivery->getDueAt()),
-            'delivery_status' => $delivery->getStatus()->value,
-            'delivery_claim_token' => $delivery->getClaimToken()?->toString(),
-            'delivery_claimed_at' => self::dateOrNull($delivery->getClaimedAt()),
-            'delivery_lease_until' => self::dateOrNull($delivery->getLeaseUntil()),
-            'delivery_attempt_count' => $delivery->getAttemptCount(),
+            'id'                       => $grant->getId()->toString(),
+            'user_id'                  => $grant->getUserId()->toString(),
+            'credential_digest'        => $grant->getCredentialHash(),
+            'expires_at'               => self::date($grant->getExpiresAt()),
+            'consumed_at'              => self::dateOrNull($grant->getConsumedAt()),
+            'revoked_at'               => self::dateOrNull($grant->getRevokedAt()),
+            'revision'                 => $grant->getRevision(),
+            'delivery_id'              => $delivery->getId()->toString(),
+            'delivery_email'           => $delivery->getEmail()->canonical(),
+            'delivery_ciphertext'      => $delivery->getEncryptedMaterial()?->reveal(),
+            'delivery_expires_at'      => self::date($delivery->getExpiresAt()),
+            'delivery_due_at'          => self::date($delivery->getDueAt()),
+            'delivery_status'          => $delivery->getStatus()->value,
+            'delivery_claim_token'     => $delivery->getClaimToken()?->toString(),
+            'delivery_claimed_at'      => self::dateOrNull($delivery->getClaimedAt()),
+            'delivery_lease_until'     => self::dateOrNull($delivery->getLeaseUntil()),
+            'delivery_attempt_count'   => $delivery->getAttemptCount(),
             'delivery_last_attempt_at' => self::dateOrNull($delivery->getLastAttemptAt()),
             'delivery_last_outcome_at' => self::dateOrNull($delivery->getLastOutcomeAt()),
-            'delivery_last_failure' => $delivery->getLastFailure()?->value,
+            'delivery_last_failure'    => $delivery->getLastFailure()?->value
         ];
     }
 
@@ -67,17 +76,23 @@ final class PasswordResetGrantRecords
             PasswordResetDeliveryId::fromString((string) $row['delivery_id']),
             $userId,
             EmailAddress::fromString((string) $row['delivery_email']),
-            $row['delivery_ciphertext'] === null ? null : EncryptedCredentialMaterial::fromString((string) $row['delivery_ciphertext']),
+            $row['delivery_ciphertext'] === null ? null : EncryptedCredentialMaterial::fromString(
+                (string) $row['delivery_ciphertext']
+            ),
             self::parse($row['delivery_expires_at']),
             self::parse($row['delivery_due_at']),
             CredentialDeliveryStatus::from((string) $row['delivery_status']),
-            $row['delivery_claim_token'] === null ? null : CredentialDeliveryClaimToken::fromString((string) $row['delivery_claim_token']),
+            $row['delivery_claim_token'] === null ? null : CredentialDeliveryClaimToken::fromString(
+                (string) $row['delivery_claim_token']
+            ),
             self::parseOptional($row['delivery_claimed_at']),
             self::parseOptional($row['delivery_lease_until']),
             (int) $row['delivery_attempt_count'],
             self::parseOptional($row['delivery_last_attempt_at']),
             self::parseOptional($row['delivery_last_outcome_at']),
-            $row['delivery_last_failure'] === null ? null : CredentialDeliveryFailure::from((string) $row['delivery_last_failure'])
+            $row['delivery_last_failure'] === null ? null : CredentialDeliveryFailure::from(
+                (string) $row['delivery_last_failure']
+            )
         );
 
         return PersistedPasswordResetGrant::reconstitute(
@@ -92,27 +107,35 @@ final class PasswordResetGrantRecords
         );
     }
 
+    /**
+     * Formats a date for PostgreSQL
+     */
     private static function date(DateTimeImmutable $date): string
     {
         return $date->format('Y-m-d H:i:s.uP');
     }
 
+    /**
+     * Formats an optional date for PostgreSQL
+     */
     private static function dateOrNull(?DateTimeImmutable $date): ?string
     {
         return $date === null ? null : self::date($date);
     }
 
+    /**
+     * Parses a required stored date
+     */
     private static function parse(mixed $value): DateTimeImmutable
     {
         return new DateTimeImmutable((string) $value);
     }
 
+    /**
+     * Parses an optional stored date
+     */
     private static function parseOptional(mixed $value): ?DateTimeImmutable
     {
         return $value === null ? null : self::parse($value);
-    }
-
-    private function __construct()
-    {
     }
 }

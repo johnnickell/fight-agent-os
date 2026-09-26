@@ -11,6 +11,8 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 
 /**
+ * Class PersistedActivationGrant
+ *
  * Reconstitutes package-owned activation authority through its supported protected constructor
  */
 final class PersistedActivationGrant extends ActivationGrant

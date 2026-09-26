@@ -29,6 +29,9 @@ use LogicException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
+/**
+ * Class AuthorityRepositoryTest
+ */
 final class AuthorityRepositoryTest extends TestCase
 {
     private Connection $connection;
@@ -36,6 +39,9 @@ final class AuthorityRepositoryTest extends TestCase
     private PostgresPermissionRepository $permissions;
     private PostgresRoleRepository $roles;
 
+    /**
+     * @inheritDoc
+     */
     protected function setUp(): void
     {
         $this->connection = $this->connection();
@@ -49,7 +55,10 @@ final class AuthorityRepositoryTest extends TestCase
         $this->unitOfWork = new DoctrineTransactionalUnitOfWork($entityManager);
     }
 
-    public function test_permission_contract_round_trips_managed_and_custom_state(): void
+    /**
+     * Verifies permission contract round trips managed and custom state
+     */
+    public function testPermissionContractRoundTripsManagedAndCustomState(): void
     {
         $createdAt = new DateTimeImmutable('2026-10-01T12:00:00.123456+00:00');
         $custom = Permission::define(
@@ -77,7 +86,7 @@ final class AuthorityRepositoryTest extends TestCase
                     $managed->getId(),
                     PermissionId::generate(),
                     $custom->getId(),
-                    $managed->getId(),
+                    $managed->getId()
                 ])
             )
         );
@@ -91,7 +100,10 @@ final class AuthorityRepositoryTest extends TestCase
         );
     }
 
-    public function test_permission_replacement_compares_complete_expected_state(): void
+    /**
+     * Verifies permission replacement compares complete expected state
+     */
+    public function testPermissionReplacementComparesCompleteExpectedState(): void
     {
         $current = $this->managedPermission('MANAGE_USERS');
         $this->permissions->add($current);
@@ -106,7 +118,10 @@ final class AuthorityRepositoryTest extends TestCase
         self::assertPermissionEquals($replacement, $this->permissions->getById($current->getId()));
     }
 
-    public function test_known_identity_conflicts_are_safe_and_do_not_leak_sql(): void
+    /**
+     * Verifies known identity conflicts are safe and do not leak sql
+     */
+    public function testKnownIdentityConflictsAreSafeAndDoNotLeakSql(): void
     {
         $first = $this->customPermission('VIEW_USERS');
         $this->permissions->add($first);
@@ -125,7 +140,10 @@ final class AuthorityRepositoryTest extends TestCase
         }
     }
 
-    public function test_role_contract_round_trips_membership_queries_and_pages(): void
+    /**
+     * Verifies role contract round trips membership queries and pages
+     */
+    public function testRoleContractRoundTripsMembershipQueriesAndPages(): void
     {
         $first = $this->customPermission('VIEW_USERS');
         $second = $this->managedPermission('MANAGE_USERS');
@@ -159,7 +177,10 @@ final class AuthorityRepositoryTest extends TestCase
         );
     }
 
-    public function test_role_add_and_replace_reject_missing_permission_references(): void
+    /**
+     * Verifies role add and replace reject missing permission references
+     */
+    public function testRoleAddAndReplaceRejectMissingPermissionReferences(): void
     {
         $role = Role::define(
             RoleId::generate(),
@@ -173,7 +194,10 @@ final class AuthorityRepositoryTest extends TestCase
         $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
     }
 
-    public function test_role_replacement_compares_membership_and_rejects_stale_state(): void
+    /**
+     * Verifies role replacement compares membership and rejects stale state
+     */
+    public function testRoleReplacementComparesMembershipAndRejectsStaleState(): void
     {
         $first = $this->customPermission('VIEW_USERS');
         $second = $this->customPermission('EDIT_USERS');
@@ -200,7 +224,10 @@ final class AuthorityRepositoryTest extends TestCase
         self::assertRoleEquals($replacement, $this->roles->getById($current->getId()));
     }
 
-    public function test_competing_permission_name_replacements_return_a_controlled_loser(): void
+    /**
+     * Verifies competing permission name replacements return a controlled loser
+     */
+    public function testCompetingPermissionNameReplacementsReturnAControlledLoser(): void
     {
         $winner = $this->managedPermission('MANAGE_USERS');
         $loser = $this->managedPermission('MANAGE_ROLES');
@@ -249,7 +276,10 @@ final class AuthorityRepositoryTest extends TestCase
         self::assertPermissionEquals($loser, $this->permissions->getById($loser->getId()));
     }
 
-    public function test_competing_role_name_replacements_return_a_controlled_loser(): void
+    /**
+     * Verifies competing role name replacements return a controlled loser
+     */
+    public function testCompetingRoleNameReplacementsReturnAControlledLoser(): void
     {
         $winner = Role::define(
             RoleId::generate(),
@@ -306,7 +336,10 @@ final class AuthorityRepositoryTest extends TestCase
         self::assertRoleEquals($loser, $this->roles->getById($loser->getId()));
     }
 
-    public function test_permission_removal_rejects_role_membership_and_then_succeeds(): void
+    /**
+     * Verifies permission removal rejects role membership and then succeeds
+     */
+    public function testPermissionRemovalRejectsRoleMembershipAndThenSucceeds(): void
     {
         $permission = $this->customPermission('VIEW_USERS');
         $this->permissions->add($permission);
@@ -330,7 +363,10 @@ final class AuthorityRepositoryTest extends TestCase
         self::assertNull($this->permissions->getById($permission->getId()));
     }
 
-    public function test_transaction_rolls_back_authority_state_after_injected_failure(): void
+    /**
+     * Verifies transaction rolls back authority state after injected failure
+     */
+    public function testTransactionRollsBackAuthorityStateAfterInjectedFailure(): void
     {
         $permission = $this->customPermission('VIEW_USERS');
 
@@ -346,7 +382,10 @@ final class AuthorityRepositoryTest extends TestCase
         self::assertNull($this->permissions->getById($permission->getId()));
     }
 
-    public function test_reference_fence_serializes_competing_membership_and_removal(): void
+    /**
+     * Verifies reference fence serializes competing membership and removal
+     */
+    public function testReferenceFenceSerializesCompetingMembershipAndRemoval(): void
     {
         $permission = $this->customPermission('VIEW_USERS');
         $this->permissions->add($permission);
@@ -374,12 +413,18 @@ final class AuthorityRepositoryTest extends TestCase
         }
     }
 
-    public function test_fenced_operations_fail_closed_without_an_enclosing_transaction(): void
+    /**
+     * Verifies fenced operations fail closed without an enclosing transaction
+     */
+    public function testFencedOperationsFailClosedWithoutAnEnclosingTransaction(): void
     {
         $this->expectException(LogicException::class);
         $this->roles->validatePermissionReference(PermissionId::generate());
     }
 
+    /**
+     * Opens a guarded PostgreSQL test connection
+     */
     private function connection(): Connection
     {
         $databaseUrl = getenv('TEST_DATABASE_URL');
@@ -395,14 +440,17 @@ final class AuthorityRepositoryTest extends TestCase
         ))));
         $expected = $guard->assertConfigured((string) getenv('APP_ENV'), $databaseUrl);
         $connection = DriverManager::getConnection((new DsnParser([
-            'postgres' => 'pdo_pgsql',
-            'postgresql' => 'pdo_pgsql',
+            'postgres'   => 'pdo_pgsql',
+            'postgresql' => 'pdo_pgsql'
         ]))->parse($databaseUrl));
         $guard->assertConnected($connection, $expected);
 
         return $connection;
     }
 
+    /**
+     * Creates a custom permission for repository checks
+     */
     private function customPermission(string $name): Permission
     {
         return Permission::define(
@@ -412,6 +460,9 @@ final class AuthorityRepositoryTest extends TestCase
         );
     }
 
+    /**
+     * Creates a managed permission for repository checks
+     */
     private function managedPermission(string $name): Permission
     {
         return Permission::defineManaged(
@@ -422,6 +473,9 @@ final class AuthorityRepositoryTest extends TestCase
         );
     }
 
+    /**
+     * Verifies the persisted permission matches the expected state
+     */
     private static function assertPermissionEquals(Permission $expected, ?Permission $actual): void
     {
         self::assertNotNull($actual);
@@ -433,6 +487,9 @@ final class AuthorityRepositoryTest extends TestCase
         self::assertEquals($expected->getUpdatedAt(), $actual->getUpdatedAt());
     }
 
+    /**
+     * Verifies the persisted role matches the expected state
+     */
     private static function assertRoleEquals(Role $expected, ?Role $actual): void
     {
         self::assertNotNull($actual);

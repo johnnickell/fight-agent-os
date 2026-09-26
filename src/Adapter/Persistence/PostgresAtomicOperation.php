@@ -9,6 +9,8 @@ use Doctrine\DBAL\Connection;
 use Throwable;
 
 /**
+ * Class PostgresAtomicOperation
+ *
  * Runs one adapter-owned multi-statement operation atomically
  *
  * When an enclosing transaction is active the operation is wrapped in a savepoint, so a known conflict can be
@@ -18,17 +20,26 @@ use Throwable;
 final class PostgresAtomicOperation
 {
     /**
+     * Constructs PostgresAtomicOperation
+     */
+    private function __construct()
+    {
+    }
+
+    /**
      * Executes the operation, rolling back its savepoint before any failure propagates
      *
-     * @param Closure(): mixed $operation
+     * @phpstan-param Closure(): mixed $operation
      *
      * @throws Throwable
      */
     public static function execute(Connection $connection, Closure $operation): mixed
     {
-        $savepoint = $connection->isTransactionActive()
-            ? sprintf('atomic_operation_%d_%d', spl_object_id($connection), spl_object_id($operation))
-            : null;
+        $savepoint = $connection->isTransactionActive() ? sprintf(
+            'atomic_operation_%d_%d',
+            spl_object_id($connection),
+            spl_object_id($operation)
+        ) : null;
 
         if ($savepoint !== null) {
             $connection->createSavepoint($savepoint);
@@ -50,9 +61,5 @@ final class PostgresAtomicOperation
         }
 
         return $result;
-    }
-
-    private function __construct()
-    {
     }
 }

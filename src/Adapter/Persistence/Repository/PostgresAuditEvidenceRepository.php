@@ -12,6 +12,8 @@ use InvalidArgumentException;
 use LogicException;
 
 /**
+ * Class PostgresAuditEvidenceRepository
+ *
  * Appends bounded, typed, secret-free evidence on the caller's connection
  */
 final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRepository
@@ -35,9 +37,11 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
         $actor = $evidence->actorId();
         $action = $evidence->action();
         $context = $evidence->context();
-        if (!$this->approvedActor($actor, $action)
+        if (
+            !$this->approvedActor($actor, $action)
             || strlen($action) > 128 || !preg_match('/^[a-z][a-z0-9_.]*$/D', $action)
-            || !$this->approvedContext($action, $context)) {
+            || !$this->approvedContext($action, $context)
+        ) {
             throw new InvalidArgumentException('Audit evidence contains unsupported public fields.');
         }
 
@@ -48,16 +52,16 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
         }
 
         $this->connection->insert('audit_evidence', [
-            'actor_id' => $actor,
-            'action' => $action,
+            'actor_id'     => $actor,
+            'action'       => $action,
             'subject_type' => $evidence->subjectId() instanceof AgentId ? 'agent' : 'user',
-            'subject_id' => $evidence->subjectId()->toString(),
-            'context' => $json,
+            'subject_id'   => $evidence->subjectId()->toString(),
+            'context'      => $json
         ]);
     }
 
     /**
-     * Accepts only canonical principal IDs or the package's anonymous reset actor
+     * Validates canonical principal IDs or the package's anonymous reset actor
      */
     private function approvedActor(string $actor, string $action): bool
     {
@@ -65,7 +69,7 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
             return in_array($action, [
                 'user.password_reset_requested',
                 'user.password_reset_delivery.failed',
-                'user.password_reset_delivery.confirmed',
+                'user.password_reset_delivery.confirmed'
             ], true);
         }
 
@@ -73,17 +77,19 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
     }
 
     /**
-     * Accepts only package-defined context values, never arbitrary payloads or errors
+     * Validates package-defined context values without accepting arbitrary payloads
      *
-     * @param array<string, string> $context
+     * @phpstan-param array<string, mixed> $context
      */
     private function approvedContext(string $action, array $context): bool
     {
         if ($context === []) {
             return true;
         }
-        if ($action !== 'refresh_session.administratively_revoked'
-            || array_keys($context) !== ['refresh_session_id', 'reason']) {
+        if (
+            $action !== 'refresh_session.administratively_revoked'
+            || array_keys($context) !== ['refresh_session_id', 'reason']
+        ) {
             return false;
         }
 
@@ -92,6 +98,9 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
             && is_string($context['reason'])
             && $context['reason'] !== '' && preg_match_all('/./us', $context['reason']) <= 500
             && preg_match('/[\x00-\x1f\x7f]/', $context['reason']) === 0
-            && preg_match('/(?:password|token|credential|secret|authorization|bearer|ciphertext|https?:\/\/)/i', $context['reason']) === 0;
+            && preg_match(
+                '/(?:password|token|credential|secret|authorization|bearer|ciphertext|https?:\/\/)/i',
+                $context['reason']
+            ) === 0;
     }
 }

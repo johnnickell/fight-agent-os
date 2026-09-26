@@ -23,6 +23,8 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use LogicException;
 
 /**
+ * Class PostgresActivationGrantRepository
+ *
  * Persists activation generations on the shared connection with per-user transaction fences
  */
 final readonly class PostgresActivationGrantRepository implements ActivationGrantRepository
@@ -48,16 +50,27 @@ final readonly class PostgresActivationGrantRepository implements ActivationGran
         // Bound discovery in PostgreSQL and never load encrypted material into a due-work projection.
         // Select the latest generation before eligibility: historical pending work is never discoverable.
         $rows = $this->connection->createQueryBuilder()
-            ->select('g.delivery_id', 'g.user_id', 'g.delivery_status', 'g.revision',
-                'g.delivery_due_at', 'g.delivery_lease_until')
+            ->select(
+                'g.delivery_id',
+                'g.user_id',
+                'g.delivery_status',
+                'g.revision',
+                'g.delivery_due_at',
+                'g.delivery_lease_until'
+            )
             ->from('activation_grants', 'g')
-            ->where('NOT EXISTS (SELECT 1 FROM activation_grants newer WHERE newer.user_id = g.user_id '
-                . 'AND (newer.generation > g.generation OR '
-                . '(newer.generation = g.generation AND newer.id > g.id)))')
+            ->where(<<<'SQL'
+NOT EXISTS (SELECT 1 FROM activation_grants newer WHERE newer.user_id = g.user_id
+    AND (newer.generation > g.generation OR (newer.generation = g.generation AND newer.id > g.id)))
+SQL
+            )
             ->andWhere('g.delivery_ciphertext IS NOT NULL')
             ->andWhere('g.expires_at > :at')
-            ->andWhere('((g.delivery_status IN (:pending, :retry) AND g.delivery_due_at <= :at) '
-                . 'OR (g.delivery_status = :claimed AND g.delivery_lease_until <= :at))')
+            ->andWhere(<<<'SQL'
+((g.delivery_status IN (:pending, :retry) AND g.delivery_due_at <= :at)
+    OR (g.delivery_status = :claimed AND g.delivery_lease_until <= :at))
+SQL
+            )
             ->setParameter('at', ActivationGrantRecords::date($at))
             ->setParameter('pending', CredentialDeliveryStatus::PENDING->value)
             ->setParameter('retry', CredentialDeliveryStatus::RETRY_PENDING->value)
@@ -67,13 +80,21 @@ final readonly class PostgresActivationGrantRepository implements ActivationGran
             ->setMaxResults($limit)
             ->fetchAllAssociative();
 
-        return array_map(static fn(array $row): DueCredentialDelivery => new DueCredentialDelivery(
-            'activation', ActivationDeliveryId::fromString((string) $row['delivery_id']),
-            UserId::fromString((string) $row['user_id']),
-            new DateTimeImmutable((string) ($row['delivery_status'] === CredentialDeliveryStatus::CLAIMED->value
-                ? $row['delivery_lease_until'] : $row['delivery_due_at'])),
-            (int) $row['revision'], CredentialDeliveryStatus::from((string) $row['delivery_status'])
-        ), $rows);
+        return array_values(array_map(static function (array $row): DueCredentialDelivery {
+            $dueAt = $row['delivery_due_at'];
+            if ($row['delivery_status'] === CredentialDeliveryStatus::CLAIMED->value) {
+                $dueAt = $row['delivery_lease_until'];
+            }
+
+            return new DueCredentialDelivery(
+                'activation',
+                ActivationDeliveryId::fromString((string) $row['delivery_id']),
+                UserId::fromString((string) $row['user_id']),
+                new DateTimeImmutable((string) $dueAt),
+                (int) $row['revision'],
+                CredentialDeliveryStatus::from((string) $row['delivery_status'])
+            );
+        }, $rows));
     }
 
     /**
@@ -108,7 +129,10 @@ final readonly class PostgresActivationGrantRepository implements ActivationGran
     public function add(ActivationGrant $activationGrant): bool
     {
         $this->hold($activationGrant->getUserId());
-        if (!ActivationGrantTransitions::pristine($activationGrant) || $this->latestRow($activationGrant->getUserId()) !== false) {
+        if (
+            !ActivationGrantTransitions::pristine($activationGrant)
+            || $this->latestRow($activationGrant->getUserId()) !== false
+        ) {
             return false;
         }
 
@@ -122,8 +146,10 @@ final readonly class PostgresActivationGrantRepository implements ActivationGran
     {
         $this->hold($predecessor->getUserId());
         $row = $this->latestRow($predecessor->getUserId(), true);
-        if (!$this->matches($row, $predecessor)
-            || !ActivationGrantTransitions::replacement($predecessor, $replacement)) {
+        if (
+            !$this->matches($row, $predecessor)
+            || !ActivationGrantTransitions::replacement($predecessor, $replacement)
+        ) {
             return false;
         }
 
@@ -140,10 +166,13 @@ final readonly class PostgresActivationGrantRepository implements ActivationGran
     ): bool {
         $this->hold($predecessor->getUserId());
         $row = $this->latestRow($predecessor->getUserId(), true);
-        if (!$this->matches($row, $predecessor)
+        if (
+            $row === false
+            || !$this->matches($row, $predecessor)
             || !ActivationGrantTransitions::replacement($predecessor, $terminalPredecessor)
             || !$this->terminal($terminalPredecessor)
-            || !$this->validSuccessor($predecessor, $successor)) {
+            || !$this->validSuccessor($predecessor, $successor)
+        ) {
             return false;
         }
 
@@ -174,36 +203,54 @@ final readonly class PostgresActivationGrantRepository implements ActivationGran
         return $this->write(fn(): bool => $this->insert($successor, (int) $row['generation'] + 1, $previous->getId()));
     }
 
+    /**
+     * Reconstitutes one grant from a database result
+     */
     private function one(string $column, string $id): ?ActivationGrant
     {
         $row = $this->connection->createQueryBuilder()
-            ->select('*')->from('activation_grants')->where($column . ' = :id')
+            ->select('*')->from('activation_grants')->where($column.' = :id')
             ->setParameter('id', $id)->fetchAssociative();
 
         return $row === false ? null : ActivationGrantRecords::hydrate($row);
     }
 
-    /** @return array<string, mixed>|false */
+    /**
+     * Fetches the latest grant row for a user
+     *
+     * @phpstan-return array<string, mixed>|false
+     */
     private function latestRow(UserId $userId, bool $lock = false): array|false
     {
-        return $this->connection->fetchAssociative(
-            'SELECT * FROM activation_grants WHERE user_id = ? ORDER BY generation DESC, id DESC LIMIT 1'
-                . ($lock ? ' FOR UPDATE' : ''),
-            [$userId->toString()]
-        );
+        $sql = 'SELECT * FROM activation_grants WHERE user_id = ? ORDER BY generation DESC, id DESC LIMIT 1';
+        if ($lock) {
+            $sql .= ' FOR UPDATE';
+        }
+
+        return $this->connection->fetchAssociative($sql, [$userId->toString()]);
     }
 
-    /** @param array<string, mixed>|false $row */
+    /**
+     * Checks a stored grant against the expected predecessor
+     *
+     * @phpstan-param array<string, mixed>|false $row
+     */
     private function matches(array|false $row, ActivationGrant $predecessor): bool
     {
         return $row !== false && ActivationGrantRecords::same(ActivationGrantRecords::hydrate($row), $predecessor);
     }
 
+    /**
+     * Checks whether a grant has reached a terminal state
+     */
     private function terminal(ActivationGrant $grant): bool
     {
         return !$grant->isIssued() && !$grant->getDelivery()->isRetryable();
     }
 
+    /**
+     * Checks that a successor grant follows the predecessor
+     */
     private function validSuccessor(ActivationGrant $previous, ActivationGrant $successor): bool
     {
         return ActivationGrantTransitions::pristine($successor)
@@ -212,33 +259,53 @@ final readonly class PostgresActivationGrantRepository implements ActivationGran
             && !$previous->getDelivery()->getId()->equals($successor->getDelivery()->getId());
     }
 
+    /**
+     * Inserts a grant record
+     */
     private function insert(ActivationGrant $grant, int $generation, ?ActivationGrantId $predecessorId = null): bool
     {
         $this->connection->insert('activation_grants', ActivationGrantRecords::fields($grant) + [
-            'generation' => $generation,
-            'predecessor_id' => $predecessorId?->toString(),
+            'generation'     => $generation,
+            'predecessor_id' => $predecessorId?->toString()
         ]);
 
         return true;
     }
 
+    /**
+     * Updates a grant record
+     */
     private function update(ActivationGrant $replacement, ActivationGrant $predecessor): bool
     {
         $fields = ActivationGrantRecords::fields($replacement);
-        unset($fields['id'], $fields['user_id'], $fields['credential_digest'], $fields['expires_at'], $fields['delivery_id']);
+        unset(
+            $fields['id'],
+            $fields['user_id'],
+            $fields['credential_digest'],
+            $fields['expires_at'],
+            $fields['delivery_id']
+        );
 
         return $this->connection->update('activation_grants', $fields, [
-            'id' => $predecessor->getId()->toString(), 'revision' => $predecessor->getRevision(),
+            'id' => $predecessor->getId()->toString(), 'revision' => $predecessor->getRevision()
         ]) === 1;
     }
 
+    /**
+     * Acquires the authoritative record lock for the current transaction
+     */
     private function hold(UserId $userId): void
     {
         if (!$this->connection->isTransactionActive()) {
             throw new LogicException('Activation-grant persistence requires an enclosing transaction.');
         }
         // Fence deletion of the owning user until this transaction ends.
-        if ($this->connection->fetchOne('SELECT 1 FROM users WHERE id = ? FOR KEY SHARE', [$userId->toString()]) === false) {
+        if (
+            $this->connection->fetchOne(
+                'SELECT 1 FROM users WHERE id = ? FOR KEY SHARE',
+                [$userId->toString()]
+            ) === false
+        ) {
             throw new PersistenceConflict('The activation grant owner is unavailable.');
         }
         $this->connection->executeQuery(
@@ -247,7 +314,11 @@ final readonly class PostgresActivationGrantRepository implements ActivationGran
         );
     }
 
-    /** @param \Closure(): bool $operation */
+    /**
+     * Executes a grant write while classifying known conflicts
+     *
+     * @phpstan-param \Closure(): bool $operation
+     */
     private function write(\Closure $operation): bool
     {
         try {
@@ -259,8 +330,13 @@ final readonly class PostgresActivationGrantRepository implements ActivationGran
         } catch (DriverException $exception) {
             // PostgreSQL check failures are not translated into a dedicated DBAL exception type.
             // Recognize only this table's named constraints; do not classify unknown driver failures by SQLSTATE.
-            if ($exception->getSQLState() === '23514'
-                && preg_match('/constraint "(ck_activation_grants_(?:generation|digest|terminal|delivery_status|delivery_claim|delivery_material|delivery_attempts))"/', $exception->getMessage()) === 1) {
+            $constraintPattern = implode('', [
+                '/constraint "(ck_activation_grants_(?:generation|digest|terminal|delivery_status|',
+                'delivery_claim|delivery_material|delivery_attempts))"/'
+            ]);
+            $isKnownConstraint = $exception->getSQLState() === '23514'
+                && preg_match($constraintPattern, $exception->getMessage()) === 1;
+            if ($isKnownConstraint) {
                 return false;
             }
             throw $exception;

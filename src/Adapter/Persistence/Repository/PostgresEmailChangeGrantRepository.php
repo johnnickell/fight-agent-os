@@ -21,6 +21,8 @@ use LogicException;
 use Throwable;
 
 /**
+ * Class PostgresEmailChangeGrantRepository
+ *
  * Persists purpose-separated email-change generations on the caller's transaction
  */
 final readonly class PostgresEmailChangeGrantRepository implements EmailChangeGrantRepository
@@ -40,7 +42,8 @@ final readonly class PostgresEmailChangeGrantRepository implements EmailChangeGr
         if ($limit < 1) {
             return [];
         }
-        $rows = $this->connection->fetchAllAssociative(<<<'SQL'
+        $rows = $this->connection->fetchAllAssociative(
+            <<<'SQL'
 SELECT g.* FROM email_change_grants g
 WHERE g.generation = (SELECT MAX(other.generation) FROM email_change_grants other WHERE other.user_id = g.user_id)
   AND g.consumed_at IS NULL AND g.revoked_at IS NULL AND g.expired_at IS NULL
@@ -50,15 +53,23 @@ WHERE g.generation = (SELECT MAX(other.generation) FROM email_change_grants othe
 ORDER BY CASE WHEN g.delivery_status = 'claimed' THEN g.delivery_lease_until ELSE g.delivery_due_at END,
     g.delivery_id
 LIMIT ?
-SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
-            [ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::INTEGER]);
+SQL,
+            [$this->date($at), $this->date($at), $this->date($at), $limit],
+            [ParameterType::STRING, ParameterType::STRING, ParameterType::STRING, ParameterType::INTEGER]
+        );
 
         return array_map(static function (array $row): DueCredentialDelivery {
             $grant = EmailChangeGrantRecords::hydrate($row);
             $delivery = $grant->getDelivery();
 
-            return new DueCredentialDelivery($grant->purpose(), $delivery->getId(), $grant->getUserId(),
-                $delivery->getNextAttemptAt(), $grant->getRevision(), $delivery->getStatus());
+            return new DueCredentialDelivery(
+                $grant->purpose(),
+                $delivery->getId(),
+                $grant->getUserId(),
+                $delivery->getNextAttemptAt(),
+                $grant->getRevision(),
+                $delivery->getStatus()
+            );
         }, $rows);
     }
 
@@ -67,7 +78,10 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
      */
     public function getByDeliveryId(EmailChangeDeliveryId $emailChangeDeliveryId): ?EmailChangeGrant
     {
-        $row = $this->connection->fetchAssociative('SELECT * FROM email_change_grants WHERE delivery_id = ?', [$emailChangeDeliveryId->toString()]);
+        $row = $this->connection->fetchAssociative(
+            'SELECT * FROM email_change_grants WHERE delivery_id = ?',
+            [$emailChangeDeliveryId->toString()]
+        );
 
         return $row === false ? null : EmailChangeGrantRecords::hydrate($row);
     }
@@ -107,9 +121,11 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
         $this->requireTransaction();
         $this->hold($terminalPredecessor->getUserId());
         $row = $this->latestRow($terminalPredecessor->getUserId(), true);
-        if ($row === false || !$this->sameState(EmailChangeGrantRecords::hydrate($row), $terminalPredecessor)
+        if (
+            $row === false || !$this->sameState(EmailChangeGrantRecords::hydrate($row), $terminalPredecessor)
             || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->isRecoverable()
-            || !$this->successorValid($terminalPredecessor, $successor)) {
+            || !$this->successorValid($terminalPredecessor, $successor)
+        ) {
             return false;
         }
 
@@ -124,18 +140,33 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
         $this->requireTransaction();
         $this->hold($predecessor->getUserId());
         $row = $this->latestRow($predecessor->getUserId(), true);
-        if ($row === false || !$this->sameState(EmailChangeGrantRecords::hydrate($row), $predecessor)
-            || !$this->allowedReplacement($predecessor, $replacement)) {
+        if (
+            $row === false || !$this->sameState(EmailChangeGrantRecords::hydrate($row), $predecessor)
+            || !$this->allowedReplacement($predecessor, $replacement)
+        ) {
             return false;
         }
         $fields = EmailChangeGrantRecords::fields($replacement);
-        unset($fields['id'], $fields['user_id'], $fields['credential_digest'], $fields['expires_at'],
-            $fields['delivery_id'], $fields['delivery_email'], $fields['delivery_expires_at']);
+        unset(
+            $fields['id'],
+            $fields['user_id'],
+            $fields['credential_digest'],
+            $fields['expires_at'],
+            $fields['delivery_id'],
+            $fields['delivery_email'],
+            $fields['delivery_expires_at']
+        );
 
-        return $this->connection->update('email_change_grants', $fields,
-            ['id' => $predecessor->getId()->toString(), 'revision' => $predecessor->getRevision()]) === 1;
+        return $this->connection->update(
+            'email_change_grants',
+            $fields,
+            ['id' => $predecessor->getId()->toString(), 'revision' => $predecessor->getRevision()]
+        ) === 1;
     }
 
+    /**
+     * Requires an active transaction for a state transition
+     */
     private function requireTransaction(): void
     {
         if (!$this->connection->isTransactionActive()) {
@@ -143,32 +174,55 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
         }
     }
 
+    /**
+     * Acquires the authoritative record lock for the current transaction
+     */
     private function hold(UserId $userId): void
     {
-        $this->connection->executeQuery('SELECT pg_advisory_xact_lock(hashtextextended(?, ?))', [$userId->toString(), 24124]);
+        $this->connection->executeQuery(
+            'SELECT pg_advisory_xact_lock(hashtextextended(?, ?))',
+            [$userId->toString(), 24124]
+        );
     }
 
     /**
+     * Fetches the latest email change grant row for a user
+     *
      * @return array<string, mixed>|false
      */
     private function latestRow(UserId $userId, bool $lock = false): array|false
     {
-        return $this->connection->fetchAssociative('SELECT * FROM email_change_grants WHERE user_id = ? '
-            . 'ORDER BY generation DESC, id DESC LIMIT 1' . ($lock ? ' FOR UPDATE' : ''), [$userId->toString()]);
+        $sql = 'SELECT * FROM email_change_grants WHERE user_id = ? ORDER BY generation DESC, id DESC LIMIT 1';
+        if ($lock) {
+            $sql .= ' FOR UPDATE';
+        }
+
+        return $this->connection->fetchAssociative($sql, [$userId->toString()]);
     }
 
+    /**
+     * Inserts a grant while handling uniqueness conflicts
+     */
     private function insertSafely(EmailChangeGrant $grant, int $generation): bool
     {
         try {
-            PostgresAtomicOperation::execute($this->connection,
-                fn() => $this->connection->insert('email_change_grants', EmailChangeGrantRecords::fields($grant) + ['generation' => $generation]));
+            PostgresAtomicOperation::execute(
+                $this->connection,
+                fn() => $this->connection->insert(
+                    'email_change_grants',
+                    EmailChangeGrantRecords::fields($grant) + ['generation' => $generation]
+                )
+            );
 
             return true;
-        } catch (UniqueConstraintViolationException|ForeignKeyConstraintViolationException) {
+        } catch (UniqueConstraintViolationException | ForeignKeyConstraintViolationException) {
             return false;
         }
     }
 
+    /**
+     * Checks whether a grant is unchanged since issuance
+     */
     private function pristine(EmailChangeGrant $grant): bool
     {
         $delivery = $grant->getDelivery();
@@ -179,6 +233,9 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
             && preg_match('/^[0-9a-f]{64}$/D', $grant->getCredentialHash()) === 1;
     }
 
+    /**
+     * Checks that the successor belongs to the expected grant generation
+     */
     private function successorValid(EmailChangeGrant $before, EmailChangeGrant $after): bool
     {
         return $this->pristine($after) && $before->getUserId()->equals($after->getUserId())
@@ -186,6 +243,9 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
             && !$before->getDelivery()->getId()->equals($after->getDelivery()->getId());
     }
 
+    /**
+     * Checks that persisted and expected grant states match
+     */
     private function sameState(EmailChangeGrant $left, EmailChangeGrant $right): bool
     {
         return $left->getId()->equals($right->getId()) && $left->getUserId()->equals($right->getUserId())
@@ -198,16 +258,21 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
             && $left->getDelivery()->sameStateAs($right->getDelivery());
     }
 
+    /**
+     * Checks that the proposed grant transition is allowed
+     */
     private function allowedReplacement(EmailChangeGrant $before, EmailChangeGrant $after): bool
     {
-        if (!$before->getId()->equals($after->getId()) || !$before->getUserId()->equals($after->getUserId())
+        if (
+            !$before->getId()->equals($after->getId()) || !$before->getUserId()->equals($after->getUserId())
             || $before->getCredentialHash() !== $after->getCredentialHash()
             || $before->getExpiresAt() != $after->getExpiresAt()
             || !$before->getDelivery()->getId()->equals($after->getDelivery()->getId())
             || !$before->getDelivery()->getUserId()->equals($after->getDelivery()->getUserId())
             || $before->getDelivery()->getEmail()->canonical() !== $after->getDelivery()->getEmail()->canonical()
             || $before->getDelivery()->getExpiresAt() != $after->getDelivery()->getExpiresAt()
-            || $after->getRevision() !== $before->getRevision() + 1) {
+            || $after->getRevision() !== $before->getRevision() + 1
+        ) {
             return false;
         }
 
@@ -216,13 +281,27 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
                 $delivery = $before->getDelivery();
                 $next = $after->getDelivery();
                 $expected = match ($next->getStatus()) {
-                    CredentialDeliveryStatus::CLAIMED => $before->claimDelivery($next->getClaimToken(), $next->getClaimedAt(), $next->getLeaseUntil()),
-                    CredentialDeliveryStatus::RETRY_PENDING => $before->failDelivery($delivery->getClaimToken(), $next->getLastOutcomeAt(), $next->getLastFailure()),
+                    CredentialDeliveryStatus::CLAIMED => $before->claimDelivery(
+                        $next->getClaimToken(),
+                        $next->getClaimedAt(), $next->getLeaseUntil()
+                    ),
+                    CredentialDeliveryStatus::RETRY_PENDING => $before->failDelivery(
+                        $delivery->getClaimToken(),
+                        $next->getLastOutcomeAt(), $next->getLastFailure()
+                    ),
                     CredentialDeliveryStatus::PENDING => $before->requestDeliveryRetry(),
-                    CredentialDeliveryStatus::DELIVERED => $before->confirmDelivery($delivery->getClaimToken(), $next->getLastOutcomeAt()),
-                    CredentialDeliveryStatus::PERMANENT_FAILURE => $before->failDeliveryPermanently($delivery->getClaimToken(), $next->getLastOutcomeAt()),
+                    CredentialDeliveryStatus::DELIVERED => $before->confirmDelivery(
+                        $delivery->getClaimToken(),
+                        $next->getLastOutcomeAt()
+                    ),
+                    CredentialDeliveryStatus::PERMANENT_FAILURE => $before->failDeliveryPermanently(
+                        $delivery->getClaimToken(),
+                        $next->getLastOutcomeAt()
+                    ),
                     CredentialDeliveryStatus::EXPIRED => $this->expectedExpiry($before, $after),
-                    CredentialDeliveryStatus::INVALIDATED => throw new LogicException('Delivery invalidation must follow an authority transition.'),
+                    CredentialDeliveryStatus::INVALIDATED => throw new LogicException(
+                        'Delivery invalidation must follow an authority transition.'
+                    ),
                 };
             } elseif ($before->isIssued() && $after->isConsumed()) {
                 $expected = $before->consume($after->getConsumedAt());
@@ -240,6 +319,9 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
         return $this->sameState($expected, $after);
     }
 
+    /**
+     * Calculates the expected expiry for a grant
+     */
     private function expectedExpiry(EmailChangeGrant $before, EmailChangeGrant $after): EmailChangeGrant
     {
         $next = $after->getDelivery();
@@ -252,14 +334,23 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
         // Compare the entire result: retained failure evidence from an older claim
         // must not be mistaken for a new provider outcome.
         $delivery = $before->getDelivery();
-        if ($delivery->getStatus() === CredentialDeliveryStatus::CLAIMED
-            && $next->getLastOutcomeAt() !== null && $next->getLastFailure() !== null) {
-            return $before->failDelivery($delivery->getClaimToken(), $next->getLastOutcomeAt(), $next->getLastFailure());
+        if (
+            $delivery->getStatus() === CredentialDeliveryStatus::CLAIMED
+            && $next->getLastOutcomeAt() !== null && $next->getLastFailure() !== null
+        ) {
+            return $before->failDelivery(
+                $delivery->getClaimToken(),
+                $next->getLastOutcomeAt(),
+                $next->getLastFailure()
+            );
         }
 
         return $expired;
     }
 
+    /**
+     * Formats a date for PostgreSQL
+     */
     private function date(DateTimeImmutable $value): string
     {
         return $value->format('Y-m-d H:i:s.uP');

@@ -32,6 +32,8 @@ use Fight\Common\Domain\Value\Internet\EmailAddress;
 use LogicException;
 
 /**
+ * Class PostgresUserRepository
+ *
  * Implements the stable Fight Access Control user repository on the shared PostgreSQL connection
  *
  * Scalar identity state compares completely through conditional statements. Canonical and live-reservation email
@@ -266,14 +268,14 @@ final readonly class PostgresUserRepository implements UserRepository
 
                     if ($destination instanceof EmailAddress) {
                         $this->connection->insert('user_email_claims', [
-                            'user_id' => $replacement->getId()->toString(),
+                            'user_id'    => $replacement->getId()->toString(),
                             'claim_type' => 'reservation',
-                            'email' => $destination->canonical(),
+                            'email'      => $destination->canonical()
                         ]);
                     } else {
                         $this->connection->delete('user_email_claims', [
-                            'user_id' => $replacement->getId()->toString(),
-                            'claim_type' => 'reservation',
+                            'user_id'    => $replacement->getId()->toString(),
+                            'claim_type' => 'reservation'
                         ]);
                     }
 
@@ -345,14 +347,14 @@ final readonly class PostgresUserRepository implements UserRepository
                     }
 
                     $this->connection->delete('user_email_claims', [
-                        'user_id' => $replacement->getId()->toString(),
-                        'claim_type' => 'reservation',
+                        'user_id'    => $replacement->getId()->toString(),
+                        'claim_type' => 'reservation'
                     ]);
                     $this->connection->update('user_email_claims', [
-                        'email' => $replacement->getEmail()->canonical(),
+                        'email' => $replacement->getEmail()->canonical()
                     ], [
-                        'user_id' => $replacement->getId()->toString(),
-                        'claim_type' => 'canonical',
+                        'user_id'    => $replacement->getId()->toString(),
+                        'claim_type' => 'canonical'
                     ]);
 
                     return true;
@@ -400,10 +402,10 @@ final readonly class PostgresUserRepository implements UserRepository
                     }
 
                     $this->connection->update('user_email_claims', [
-                        'email' => $replacement->getEmail()->canonical(),
+                        'email' => $replacement->getEmail()->canonical()
                     ], [
-                        'user_id' => $replacement->getId()->toString(),
-                        'claim_type' => 'canonical',
+                        'user_id'    => $replacement->getId()->toString(),
+                        'claim_type' => 'canonical'
                     ]);
 
                     return true;
@@ -435,9 +437,7 @@ final readonly class PostgresUserRepository implements UserRepository
             ->setParameter('replacement_state', $replacement->getState()->value)
             ->setParameter(
                 'replacement_password_hash',
-                $replacement->getPasswordHash() instanceof PasswordHash
-                    ? $replacement->getPasswordHash()->toString()
-                    : null
+                $replacement->getPasswordHash()?->toString()
             )
             ->setParameter('replacement_updated_at', RefreshSessionRecords::date($replacement->getUpdatedAt()));
 
@@ -467,6 +467,9 @@ final readonly class PostgresUserRepository implements UserRepository
         );
     }
 
+    /**
+     * Updates authority only when the expected state matches
+     */
     private function conditionalAuthorityUpdate(User $expected, User $replacement): int
     {
         $builder = $this->connection->createQueryBuilder()->update('users');
@@ -487,9 +490,12 @@ final readonly class PostgresUserRepository implements UserRepository
             )
             ->setParameter('replacement_updated_at', RefreshSessionRecords::date($replacement->getUpdatedAt()));
 
-        return $builder->executeStatement();
+        return (int) $builder->executeStatement();
     }
 
+    /**
+     * Adds expected state conditions to a guarded update
+     */
     private function applyExpectedState(QueryBuilder $builder, User $expected): void
     {
         $builder
@@ -506,14 +512,17 @@ final readonly class PostgresUserRepository implements UserRepository
             ->andWhere('users.created_at = :expected_created_at')
             ->andWhere('users.updated_at = :expected_updated_at')
             ->andWhere(
-                'NOT EXISTS (SELECT 1 FROM user_role_assignments expected_extra '
-                . 'WHERE expected_extra.user_id = users.id '
-                . 'AND expected_extra.role_id <> ALL(:expected_roles::uuid[]))'
+                <<<'SQL'
+NOT EXISTS (SELECT 1 FROM user_role_assignments expected_extra
+    WHERE expected_extra.user_id = users.id AND expected_extra.role_id <> ALL(:expected_roles::uuid[]))
+SQL
             )
             ->andWhere(
-                'NOT EXISTS (SELECT 1 FROM unnest(:expected_roles::uuid[]) AS expected_role(role_id) '
-                . 'WHERE NOT EXISTS (SELECT 1 FROM user_role_assignments expected_stored '
-                . 'WHERE expected_stored.user_id = users.id AND expected_stored.role_id = expected_role.role_id))'
+                <<<'SQL'
+NOT EXISTS (SELECT 1 FROM unnest(:expected_roles::uuid[]) AS expected_role(role_id)
+    WHERE NOT EXISTS (SELECT 1 FROM user_role_assignments expected_stored
+        WHERE expected_stored.user_id = users.id AND expected_stored.role_id = expected_role.role_id))
+SQL
             )
             ->setParameter('expected_id', $expected->getId()->toString())
             ->setParameter('expected_email', $expected->getEmail()->toString())
@@ -530,9 +539,7 @@ final readonly class PostgresUserRepository implements UserRepository
             )
             ->setParameter(
                 'expected_pending_email_change',
-                $expected->getPendingEmailChange() instanceof EmailAddress
-                    ? $expected->getPendingEmailChange()->toString()
-                    : null
+                $expected->getPendingEmailChange()?->toString()
             )
             ->setParameter(
                 'expected_email_change_reservation_revision',
@@ -545,7 +552,9 @@ final readonly class PostgresUserRepository implements UserRepository
     }
 
     /**
-     * @param list<RoleId> $roleIds
+     * Acquires reference locks on assigned roles
+     *
+     * @phpstan-param list<RoleId> $roleIds
      */
     private function lockAuthoritativeRoles(array $roleIds): bool
     {
@@ -568,7 +577,9 @@ final readonly class PostgresUserRepository implements UserRepository
     }
 
     /**
-     * @param list<RoleId> $roleIds
+     * Formats role IDs for the guarded database comparison
+     *
+     * @phpstan-param list<RoleId> $roleIds
      */
     private function roleLiteral(array $roleIds): string
     {
@@ -577,15 +588,18 @@ final readonly class PostgresUserRepository implements UserRepository
             $roleIds
         )));
 
-        return '{' . implode(',', $ids) . '}';
+        return '{'.implode(',', $ids).'}';
     }
 
+    /**
+     * Reconstitutes one user from a database result
+     */
     private function one(string $column, string $value): ?User
     {
         $row = $this->connection->createQueryBuilder()
             ->select('*')
             ->from('users')
-            ->where($column . ' = :value')
+            ->where($column.' = :value')
             ->setParameter('value', $value)
             ->fetchAssociative();
 
@@ -593,11 +607,13 @@ final readonly class PostgresUserRepository implements UserRepository
     }
 
     /**
-     * @param array<string, mixed> $row
+     * Reconstitutes a user and assigned roles from a database row
+     *
+     * @phpstan-param array<string, mixed> $row
      */
     private function hydrate(array $row): User
     {
-        $roleIds = array_map(
+        $roleIds = array_values(array_map(
             static fn(mixed $roleId): RoleId => RoleId::fromString((string) $roleId),
             $this->connection->createQueryBuilder()
                 ->select('role_id')
@@ -606,7 +622,7 @@ final readonly class PostgresUserRepository implements UserRepository
                 ->setParameter('user_id', (string) $row['id'])
                 ->orderBy('role_id')
                 ->fetchFirstColumn()
-        );
+        ));
 
         return PersistedUser::reconstitute(
             UserId::fromString((string) $row['id']),
@@ -619,50 +635,59 @@ final readonly class PostgresUserRepository implements UserRepository
             (int) $row['authentication_authority_revision'],
             $roleIds,
             (int) $row['authorization_assignment_revision'],
-            $row['pending_email_change'] === null
-                ? null
-                : EmailAddress::fromString((string) $row['pending_email_change']),
+            $row['pending_email_change'] === null ? null : EmailAddress::fromString(
+                (string) $row['pending_email_change']
+            ),
             (int) $row['email_change_reservation_revision'],
             (int) $row['canonical_email_revision']
         );
     }
 
+    /**
+     * Inserts a user record
+     */
     private function insertUser(User $user): void
     {
         $this->connection->insert('users', [
-            'id' => $user->getId()->toString(),
-            'email' => $user->getEmail()->toString(),
-            'state' => $user->getState()->value,
-            'password_hash' => $user->getPasswordHash()?->toString(),
-            'authentication_version' => $user->getAuthenticationVersion(),
+            'id'                                => $user->getId()->toString(),
+            'email'                             => $user->getEmail()->toString(),
+            'state'                             => $user->getState()->value,
+            'password_hash'                     => $user->getPasswordHash()?->toString(),
+            'authentication_version'            => $user->getAuthenticationVersion(),
             'authentication_authority_revision' => $user->getAuthenticationAuthorityRevision(),
             'authorization_assignment_revision' => $user->getAuthorizationAssignmentRevision(),
-            'pending_email_change' => $user->getPendingEmailChange()?->toString(),
+            'pending_email_change'              => $user->getPendingEmailChange()?->toString(),
             'email_change_reservation_revision' => $user->getEmailChangeReservationRevision(),
-            'canonical_email_revision' => $user->getCanonicalEmailRevision(),
-            'created_at' => RefreshSessionRecords::date($user->getCreatedAt()),
-            'updated_at' => RefreshSessionRecords::date($user->getUpdatedAt()),
+            'canonical_email_revision'          => $user->getCanonicalEmailRevision(),
+            'created_at'                        => RefreshSessionRecords::date($user->getCreatedAt()),
+            'updated_at'                        => RefreshSessionRecords::date($user->getUpdatedAt())
         ]);
     }
 
+    /**
+     * Inserts the email claims held by a user
+     */
     private function insertEmailClaims(User $user): void
     {
         $this->connection->insert('user_email_claims', [
-            'user_id' => $user->getId()->toString(),
+            'user_id'    => $user->getId()->toString(),
             'claim_type' => 'canonical',
-            'email' => $user->getEmail()->canonical(),
+            'email'      => $user->getEmail()->canonical()
         ]);
 
         $pendingEmailChange = $user->getPendingEmailChange();
         if ($pendingEmailChange instanceof EmailAddress) {
             $this->connection->insert('user_email_claims', [
-                'user_id' => $user->getId()->toString(),
+                'user_id'    => $user->getId()->toString(),
                 'claim_type' => 'reservation',
-                'email' => $pendingEmailChange->canonical(),
+                'email'      => $pendingEmailChange->canonical()
             ]);
         }
     }
 
+    /**
+     * Inserts role assignments held by a user
+     */
     private function insertAssignments(User $user): void
     {
         $ids = array_values(array_unique(array_map(
@@ -674,11 +699,14 @@ final readonly class PostgresUserRepository implements UserRepository
         foreach ($ids as $roleId) {
             $this->connection->insert('user_role_assignments', [
                 'user_id' => $user->getId()->toString(),
-                'role_id' => $roleId,
+                'role_id' => $roleId
             ]);
         }
     }
 
+    /**
+     * Checks that an authentication replacement preserves authority
+     */
     private function authenticationReplacementIsValid(User $expected, User $replacement): bool
     {
         $stateIsValid = $replacement->getState() === $expected->getState()
@@ -688,34 +716,42 @@ final readonly class PostgresUserRepository implements UserRepository
             );
         $versionIsValid = $replacement->getAuthenticationVersion() === $expected->getAuthenticationVersion()
             || $replacement->getAuthenticationVersion() === $expected->getAuthenticationVersion() + 1;
+        $authorityRevision = $expected->getAuthenticationAuthorityRevision();
+        $assignmentRevision = $expected->getAuthorizationAssignmentRevision();
 
         return $expected->getId()->equals($replacement->getId())
             && $expected->getCreatedAt() == $replacement->getCreatedAt()
             && $this->emailStateMatches($expected, $replacement)
             && $stateIsValid
             && $versionIsValid
-            && $replacement->getAuthenticationAuthorityRevision()
-                === $expected->getAuthenticationAuthorityRevision() + 1
-            && $replacement->getAuthorizationAssignmentRevision()
-                === $expected->getAuthorizationAssignmentRevision()
+            && $replacement->getAuthenticationAuthorityRevision() === $authorityRevision + 1
+            && $replacement->getAuthorizationAssignmentRevision() === $assignmentRevision
             && $this->roleAssignmentsMatch($expected, $replacement)
             && $replacement->getPasswordHash() instanceof PasswordHash;
     }
 
+    /**
+     * Checks that a role assignment replacement preserves authority
+     */
     private function roleAssignmentReplacementIsValid(User $expected, User $replacement): bool
     {
+        $authorityRevision = $expected->getAuthenticationAuthorityRevision();
+        $assignmentRevision = $expected->getAuthorizationAssignmentRevision();
+
         return $expected->getId()->equals($replacement->getId())
             && $expected->getCreatedAt() == $replacement->getCreatedAt()
             && $this->emailStateMatches($expected, $replacement)
             && $expected->getState() === $replacement->getState()
             && $expected->getAuthenticationVersion() === $replacement->getAuthenticationVersion()
-            && $expected->getAuthenticationAuthorityRevision() === $replacement->getAuthenticationAuthorityRevision()
+            && $authorityRevision === $replacement->getAuthenticationAuthorityRevision()
             && $this->passwordHashesMatch($expected->getPasswordHash(), $replacement->getPasswordHash())
-            && $replacement->getAuthorizationAssignmentRevision()
-                === $expected->getAuthorizationAssignmentRevision() + 1
+            && $replacement->getAuthorizationAssignmentRevision() === $assignmentRevision + 1
             && !$this->roleAssignmentsMatch($expected, $replacement);
     }
 
+    /**
+     * Checks an email change reservation transition
+     */
     private function emailChangeReservationReplacementIsValid(User $expected, User $replacement): bool
     {
         $expectedPending = $expected->getPendingEmailChange();
@@ -735,21 +771,25 @@ final readonly class PostgresUserRepository implements UserRepository
             && $this->passwordHashesMatch($expected->getPasswordHash(), $replacement->getPasswordHash())
             && $expected->getAuthenticationVersion() === $replacement->getAuthenticationVersion()
             && $expected->getAuthenticationAuthorityRevision() === $replacement->getAuthenticationAuthorityRevision()
-            && $expected->getAuthorizationAssignmentRevision()
-                === $replacement->getAuthorizationAssignmentRevision()
+            && $expected->getAuthorizationAssignmentRevision() === $replacement->getAuthorizationAssignmentRevision()
             && $this->roleAssignmentsMatch($expected, $replacement)
-            && $replacement->getEmailChangeReservationRevision()
-                === $expected->getEmailChangeReservationRevision() + 1
+            && $replacement->getEmailChangeReservationRevision() === $expected->getEmailChangeReservationRevision() + 1
             && $replacement->getCanonicalEmailRevision() === $expected->getCanonicalEmailRevision()
             && $reservationTransitionIsValid;
     }
 
+    /**
+     * Checks an email change confirmation transition
+     */
     private function emailChangeConfirmationReplacementIsValid(User $expected, User $replacement): bool
     {
         $pendingEmailChange = $expected->getPendingEmailChange();
         if (!$pendingEmailChange instanceof EmailAddress) {
             return false;
         }
+        $authorityRevision = $expected->getAuthenticationAuthorityRevision();
+        $assignmentRevision = $expected->getAuthorizationAssignmentRevision();
+        $reservationRevision = $expected->getEmailChangeReservationRevision();
 
         return $expected->getId()->equals($replacement->getId())
             && $expected->getCreatedAt() == $replacement->getCreatedAt()
@@ -758,17 +798,16 @@ final readonly class PostgresUserRepository implements UserRepository
             && $replacement->getState() === UserState::ACTIVE
             && $this->passwordHashesMatch($expected->getPasswordHash(), $replacement->getPasswordHash())
             && $replacement->getAuthenticationVersion() === $expected->getAuthenticationVersion() + 1
-            && $replacement->getAuthenticationAuthorityRevision()
-                === $expected->getAuthenticationAuthorityRevision() + 1
-            && $replacement->getAuthorizationAssignmentRevision()
-                === $expected->getAuthorizationAssignmentRevision()
+            && $replacement->getAuthenticationAuthorityRevision() === $authorityRevision + 1
+            && $replacement->getAuthorizationAssignmentRevision() === $assignmentRevision
             && $this->roleAssignmentsMatch($expected, $replacement)
-            && $replacement->getEmailChangeReservationRevision()
-                === $expected->getEmailChangeReservationRevision() + 1
-            && $replacement->getCanonicalEmailRevision()
-                === $expected->getCanonicalEmailRevision() + 1;
+            && $replacement->getEmailChangeReservationRevision() === $reservationRevision + 1
+            && $replacement->getCanonicalEmailRevision() === $expected->getCanonicalEmailRevision() + 1;
     }
 
+    /**
+     * Checks a pending invitation email replacement
+     */
     private function pendingInvitationEmailReplacementIsValid(User $expected, User $replacement): bool
     {
         return $expected->getId()->equals($replacement->getId())
@@ -779,14 +818,15 @@ final readonly class PostgresUserRepository implements UserRepository
             && $this->passwordHashesMatch($expected->getPasswordHash(), $replacement->getPasswordHash())
             && $expected->getAuthenticationVersion() === $replacement->getAuthenticationVersion()
             && $expected->getAuthenticationAuthorityRevision() === $replacement->getAuthenticationAuthorityRevision()
-            && $expected->getAuthorizationAssignmentRevision()
-                === $replacement->getAuthorizationAssignmentRevision()
+            && $expected->getAuthorizationAssignmentRevision() === $replacement->getAuthorizationAssignmentRevision()
             && $this->roleAssignmentsMatch($expected, $replacement)
-            && $replacement->getEmailChangeReservationRevision()
-                === $expected->getEmailChangeReservationRevision()
+            && $replacement->getEmailChangeReservationRevision() === $expected->getEmailChangeReservationRevision()
             && $replacement->getCanonicalEmailRevision() === $expected->getCanonicalEmailRevision() + 1;
     }
 
+    /**
+     * Checks a user lifecycle state replacement
+     */
     private function lifecycleStateReplacementIsValid(User $expected, User $replacement): bool
     {
         if (!$this->lifecycleTransitionIsValid($expected->getState(), $replacement->getState())) {
@@ -806,11 +846,13 @@ final readonly class PostgresUserRepository implements UserRepository
             && $this->emailStateMatches($expected, $replacement)
             && $expected->getAuthenticationVersion() === $replacement->getAuthenticationVersion()
             && $expected->getAuthenticationAuthorityRevision() === $replacement->getAuthenticationAuthorityRevision()
-            && $expected->getAuthorizationAssignmentRevision()
-                === $replacement->getAuthorizationAssignmentRevision()
+            && $expected->getAuthorizationAssignmentRevision() === $replacement->getAuthorizationAssignmentRevision()
             && $this->roleAssignmentsMatch($expected, $replacement);
     }
 
+    /**
+     * Checks that a lifecycle transition is permitted
+     */
     private function lifecycleTransitionIsValid(UserState $expected, UserState $target): bool
     {
         return match (true) {
@@ -824,6 +866,9 @@ final readonly class PostgresUserRepository implements UserRepository
         };
     }
 
+    /**
+     * Checks expected email state against stored state
+     */
     private function emailStateMatches(User $left, User $right): bool
     {
         return $left->getEmail()->canonical() === $right->getEmail()->canonical()
@@ -832,6 +877,9 @@ final readonly class PostgresUserRepository implements UserRepository
             && $left->getCanonicalEmailRevision() === $right->getCanonicalEmailRevision();
     }
 
+    /**
+     * Checks expected role assignments against stored assignments
+     */
     private function roleAssignmentsMatch(User $left, User $right): bool
     {
         $leftRoleIds = $left->getRoleIds();
@@ -845,6 +893,9 @@ final readonly class PostgresUserRepository implements UserRepository
         );
     }
 
+    /**
+     * Checks expected and stored password hashes for equality
+     */
     private function passwordHashesMatch(?PasswordHash $left, ?PasswordHash $right): bool
     {
         if (!$left instanceof PasswordHash || !$right instanceof PasswordHash) {
@@ -854,6 +905,9 @@ final readonly class PostgresUserRepository implements UserRepository
         return hash_equals($left->toString(), $right->toString());
     }
 
+    /**
+     * Requires a transaction for an authoritative write
+     */
     private function assertTransaction(): void
     {
         if (!$this->connection->isTransactionActive()) {

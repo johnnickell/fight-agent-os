@@ -21,6 +21,8 @@ use LogicException;
 use Throwable;
 
 /**
+ * Class PostgresPasswordResetGrantRepository
+ *
  * Persists purpose-specific reset generations on the caller's PostgreSQL transaction
  *
  * Per-user advisory locks serialize the latest-generation decision, while constraints arbitrate identities,
@@ -44,7 +46,8 @@ final readonly class PostgresPasswordResetGrantRepository implements PasswordRes
             return [];
         }
 
-        $rows = $this->connection->fetchAllAssociative(<<<'SQL'
+        $rows = $this->connection->fetchAllAssociative(
+            <<<'SQL'
 SELECT g.* FROM password_reset_grants g
 WHERE g.generation = (SELECT MAX(other.generation) FROM password_reset_grants other WHERE other.user_id = g.user_id)
   AND g.delivery_ciphertext IS NOT NULL AND ? < g.delivery_expires_at
@@ -53,14 +56,28 @@ WHERE g.generation = (SELECT MAX(other.generation) FROM password_reset_grants ot
 ORDER BY CASE WHEN g.delivery_status = 'claimed' THEN g.delivery_lease_until ELSE g.delivery_due_at END,
     g.delivery_id
 LIMIT ?
-SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::STRING, \Doctrine\DBAL\ParameterType::INTEGER]);
+SQL,
+            [$this->date($at), $this->date($at), $this->date($at), $limit],
+            [
+                \Doctrine\DBAL\ParameterType::STRING,
+                \Doctrine\DBAL\ParameterType::STRING,
+                \Doctrine\DBAL\ParameterType::STRING,
+                \Doctrine\DBAL\ParameterType::INTEGER
+            ]
+        );
 
         return array_map(static function (array $row): DueCredentialDelivery {
             $grant = PasswordResetGrantRecords::hydrate($row);
             $delivery = $grant->getDelivery();
 
-            return new DueCredentialDelivery($grant->purpose(), $delivery->getId(), $grant->getUserId(),
-                $delivery->getNextAttemptAt(), $grant->getRevision(), $delivery->getStatus());
+            return new DueCredentialDelivery(
+                $grant->purpose(),
+                $delivery->getId(),
+                $grant->getUserId(),
+                $delivery->getNextAttemptAt(),
+                $grant->getRevision(),
+                $delivery->getStatus()
+            );
         }, $rows);
     }
 
@@ -69,7 +86,10 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
      */
     public function getById(PasswordResetGrantId $passwordResetGrantId): ?PasswordResetGrant
     {
-        $row = $this->connection->fetchAssociative('SELECT * FROM password_reset_grants WHERE id = ?', [$passwordResetGrantId->toString()]);
+        $row = $this->connection->fetchAssociative(
+            'SELECT * FROM password_reset_grants WHERE id = ?',
+            [$passwordResetGrantId->toString()]
+        );
 
         return $row === false ? null : PasswordResetGrantRecords::hydrate($row);
     }
@@ -79,7 +99,10 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
      */
     public function getByDeliveryId(PasswordResetDeliveryId $passwordResetDeliveryId): ?PasswordResetGrant
     {
-        $row = $this->connection->fetchAssociative('SELECT * FROM password_reset_grants WHERE delivery_id = ?', [$passwordResetDeliveryId->toString()]);
+        $row = $this->connection->fetchAssociative(
+            'SELECT * FROM password_reset_grants WHERE delivery_id = ?',
+            [$passwordResetDeliveryId->toString()]
+        );
 
         return $row === false ? null : PasswordResetGrantRecords::hydrate($row);
     }
@@ -119,9 +142,11 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
         $this->requireTransaction();
         $this->hold($terminalPredecessor->getUserId());
         $row = $this->latestRow($terminalPredecessor->getUserId(), true);
-        if ($row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $terminalPredecessor)
+        if (
+            $row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $terminalPredecessor)
             || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->isRecoverable()
-            || !$this->successorValid($terminalPredecessor, $successor)) {
+            || !$this->successorValid($terminalPredecessor, $successor)
+        ) {
             return false;
         }
 
@@ -136,8 +161,10 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
         $this->requireTransaction();
         $this->hold($predecessor->getUserId());
         $row = $this->latestRow($predecessor->getUserId(), true);
-        if ($row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $predecessor)
-            || !$this->allowedReplacement($predecessor, $replacement)) {
+        if (
+            $row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $predecessor)
+            || !$this->allowedReplacement($predecessor, $replacement)
+        ) {
             return false;
         }
 
@@ -155,15 +182,22 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
         $this->requireTransaction();
         $this->hold($predecessor->getUserId());
         $row = $this->latestRow($predecessor->getUserId(), true);
-        if ($row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $predecessor)
+        if (
+            $row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $predecessor)
             || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->isRecoverable()
             || !$this->allowedReplacement($predecessor, $terminalPredecessor)
-            || !$this->successorValid($predecessor, $successor)) {
+            || !$this->successorValid($predecessor, $successor)
+        ) {
             return false;
         }
 
         try {
-            return PostgresAtomicOperation::execute($this->connection, function () use ($predecessor, $terminalPredecessor, $successor, $row): bool {
+            return PostgresAtomicOperation::execute($this->connection, function () use (
+                $predecessor,
+                $terminalPredecessor,
+                $successor,
+                $row
+            ): bool {
                 if (!$this->update($predecessor, $terminalPredecessor)) {
                     return false;
                 }
@@ -171,11 +205,14 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
 
                 return true;
             });
-        } catch (UniqueConstraintViolationException|ForeignKeyConstraintViolationException) {
+        } catch (UniqueConstraintViolationException | ForeignKeyConstraintViolationException) {
             return false;
         }
     }
 
+    /**
+     * Requires an active transaction for a state transition
+     */
     private function requireTransaction(): void
     {
         if (!$this->connection->isTransactionActive()) {
@@ -183,46 +220,83 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
         }
     }
 
+    /**
+     * Acquires the authoritative record lock for the current transaction
+     */
     private function hold(UserId $userId): void
     {
-        $this->connection->executeQuery('SELECT pg_advisory_xact_lock(hashtextextended(?, ?))', [$userId->toString(), 24123]);
+        $this->connection->executeQuery(
+            'SELECT pg_advisory_xact_lock(hashtextextended(?, ?))',
+            [$userId->toString(), 24123]
+        );
     }
 
     /**
+     * Fetches the latest reset grant row for a user
+     *
      * @return array<string, mixed>|false
      */
     private function latestRow(UserId $userId, bool $lock = false): array|false
     {
-        return $this->connection->fetchAssociative('SELECT * FROM password_reset_grants WHERE user_id = ? '
-            . 'ORDER BY generation DESC, id DESC LIMIT 1' . ($lock ? ' FOR UPDATE' : ''), [$userId->toString()]);
+        $sql = 'SELECT * FROM password_reset_grants WHERE user_id = ? ORDER BY generation DESC, id DESC LIMIT 1';
+        if ($lock) {
+            $sql .= ' FOR UPDATE';
+        }
+
+        return $this->connection->fetchAssociative($sql, [$userId->toString()]);
     }
 
+    /**
+     * Inserts a grant while handling uniqueness conflicts
+     */
     private function insertSafely(PasswordResetGrant $grant, int $generation): bool
     {
         try {
             PostgresAtomicOperation::execute($this->connection, fn() => $this->insert($grant, $generation));
 
             return true;
-        } catch (UniqueConstraintViolationException|ForeignKeyConstraintViolationException) {
+        } catch (UniqueConstraintViolationException | ForeignKeyConstraintViolationException) {
             return false;
         }
     }
 
+    /**
+     * Inserts a grant record
+     */
     private function insert(PasswordResetGrant $grant, int $generation): void
     {
-        $this->connection->insert('password_reset_grants', PasswordResetGrantRecords::fields($grant) + ['generation' => $generation]);
+        $this->connection->insert(
+            'password_reset_grants',
+            PasswordResetGrantRecords::fields($grant) + ['generation' => $generation]
+        );
     }
 
+    /**
+     * Updates a grant record
+     */
     private function update(PasswordResetGrant $before, PasswordResetGrant $after): bool
     {
         $fields = PasswordResetGrantRecords::fields($after);
-        unset($fields['id'], $fields['user_id'], $fields['credential_digest'], $fields['expires_at'],
-            $fields['delivery_id'], $fields['delivery_email'], $fields['delivery_expires_at']);
+        unset(
+            $fields['id'],
+            $fields['user_id'],
+            $fields['credential_digest'],
+            $fields['expires_at'],
+            $fields['delivery_id'],
+            $fields['delivery_email'],
+            $fields['delivery_expires_at']
+        );
 
-        return $this->connection->update('password_reset_grants', $fields,
-            ['id' => $before->getId()->toString(), 'revision' => $before->getRevision()]) === 1;
+        return $this->connection->update(
+            'password_reset_grants',
+            $fields,
+            ['id' => $before->getId()->toString(), 'revision' => $before->getRevision()]
+        ) === 1;
     }
 
+    /**
+     * Checks whether a grant is unchanged since issuance
+     */
     private function pristine(PasswordResetGrant $grant): bool
     {
         $delivery = $grant->getDelivery();
@@ -233,6 +307,9 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
             && preg_match('/^[0-9a-f]{64}$/D', $grant->getCredentialHash()) === 1;
     }
 
+    /**
+     * Checks that the successor belongs to the expected grant generation
+     */
     private function successorValid(PasswordResetGrant $before, PasswordResetGrant $after): bool
     {
         return $this->pristine($after) && $before->getUserId()->equals($after->getUserId())
@@ -240,6 +317,9 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
             && !$before->getDelivery()->getId()->equals($after->getDelivery()->getId());
     }
 
+    /**
+     * Checks that persisted and expected grant states match
+     */
     private function sameState(PasswordResetGrant $left, PasswordResetGrant $right): bool
     {
         return $left->getId()->equals($right->getId())
@@ -252,16 +332,21 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
             && $left->getDelivery()->sameStateAs($right->getDelivery());
     }
 
+    /**
+     * Checks that the proposed grant transition is allowed
+     */
     private function allowedReplacement(PasswordResetGrant $before, PasswordResetGrant $after): bool
     {
-        if (!$before->getId()->equals($after->getId()) || !$before->getUserId()->equals($after->getUserId())
+        if (
+            !$before->getId()->equals($after->getId()) || !$before->getUserId()->equals($after->getUserId())
             || $before->getCredentialHash() !== $after->getCredentialHash()
             || $before->getExpiresAt() != $after->getExpiresAt()
             || !$before->getDelivery()->getId()->equals($after->getDelivery()->getId())
             || !$before->getDelivery()->getUserId()->equals($after->getDelivery()->getUserId())
             || $before->getDelivery()->getEmail()->canonical() !== $after->getDelivery()->getEmail()->canonical()
             || $before->getDelivery()->getExpiresAt() != $after->getDelivery()->getExpiresAt()
-            || $after->getRevision() !== $before->getRevision() + 1) {
+            || $after->getRevision() !== $before->getRevision() + 1
+        ) {
             return false;
         }
 
@@ -270,15 +355,32 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
                 $delivery = $before->getDelivery();
                 $next = $after->getDelivery();
                 $expected = match ($next->getStatus()) {
-                    CredentialDeliveryStatus::CLAIMED => $before->claimDelivery($next->getClaimToken(), $next->getClaimedAt(), $next->getLeaseUntil()),
-                    CredentialDeliveryStatus::RETRY_PENDING => $before->failDelivery($delivery->getClaimToken(), $next->getLastOutcomeAt(), $next->getLastFailure()),
+                    CredentialDeliveryStatus::CLAIMED => $before->claimDelivery(
+                        $next->getClaimToken(),
+                        $next->getClaimedAt(), $next->getLeaseUntil()
+                    ),
+                    CredentialDeliveryStatus::RETRY_PENDING => $before->failDelivery(
+                        $delivery->getClaimToken(),
+                        $next->getLastOutcomeAt(), $next->getLastFailure()
+                    ),
                     CredentialDeliveryStatus::PENDING => $before->requestDeliveryRetry(),
-                    CredentialDeliveryStatus::DELIVERED => $before->confirmDelivery($delivery->getClaimToken(), $next->getLastOutcomeAt()),
-                    CredentialDeliveryStatus::PERMANENT_FAILURE => $before->failDeliveryPermanently($delivery->getClaimToken(), $next->getLastOutcomeAt()),
-                    CredentialDeliveryStatus::EXPIRED => $delivery->getStatus() === CredentialDeliveryStatus::CLAIMED
-                        && $next->getLastOutcomeAt() !== null && $next->getLastFailure() !== null
-                            ? $before->failDelivery($delivery->getClaimToken(), $next->getLastOutcomeAt(), $next->getLastFailure())
-                            : $before->expireDeliveryAt($next->getExpiresAt()),
+                    CredentialDeliveryStatus::DELIVERED => $before->confirmDelivery(
+                        $delivery->getClaimToken(),
+                        $next->getLastOutcomeAt()
+                    ),
+                    CredentialDeliveryStatus::PERMANENT_FAILURE => $before->failDeliveryPermanently(
+                        $delivery->getClaimToken(),
+                        $next->getLastOutcomeAt()
+                    ),
+                    CredentialDeliveryStatus::EXPIRED => match (true) {
+                        $delivery->getStatus() === CredentialDeliveryStatus::CLAIMED
+                            && $next->getLastOutcomeAt() !== null && $next->getLastFailure() !== null
+                            => $before->failDelivery(
+                                $delivery->getClaimToken(),
+                                $next->getLastOutcomeAt(), $next->getLastFailure()
+                            ),
+                        default => $before->expireDeliveryAt($next->getExpiresAt())
+                    },
                     CredentialDeliveryStatus::INVALIDATED => $before->invalidateDelivery(),
                 };
             } elseif ($before->isIssued() && ($after->isConsumed() xor $after->isRevoked())) {
@@ -294,6 +396,9 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit], [\Doctrine\
         return $this->sameState($expected, $after);
     }
 
+    /**
+     * Formats a date for PostgreSQL
+     */
     private function date(DateTimeImmutable $at): string
     {
         return $at->format('Y-m-d H:i:s.uP');

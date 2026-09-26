@@ -20,6 +20,9 @@ use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpTooManyRequestsException;
 use Slim\Exception\HttpUnauthorizedException;
 
+/**
+ * Class HttpExceptionMiddleware
+ */
 final readonly class HttpExceptionMiddleware implements MiddlewareInterface
 {
     /**
@@ -44,12 +47,12 @@ final readonly class HttpExceptionMiddleware implements MiddlewareInterface
                 $exception instanceof HttpNotFoundException => ['Not found.', HttpStatus::NOT_FOUND],
                 $exception instanceof HttpMethodNotAllowedException => [
                     'Method not allowed.',
-                    HttpStatus::METHOD_NOT_ALLOWED,
+                    HttpStatus::METHOD_NOT_ALLOWED
                 ],
                 $exception instanceof HttpGoneException => ['Gone.', HttpStatus::GONE],
                 $exception instanceof HttpTooManyRequestsException => [
                     'Too many requests.',
-                    HttpStatus::TOO_MANY_REQUESTS,
+                    HttpStatus::TOO_MANY_REQUESTS
                 ],
                 default => null,
             };

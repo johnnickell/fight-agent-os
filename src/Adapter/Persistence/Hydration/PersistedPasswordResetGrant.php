@@ -11,6 +11,8 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGra
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 
 /**
+ * Class PersistedPasswordResetGrant
+ *
  * Reconstitutes the package-owned reset generation through its protected constructor
  */
 final class PersistedPasswordResetGrant extends PasswordResetGrant

@@ -7,8 +7,14 @@ namespace App\Adapter\Http;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * Class IndexAction
+ */
 final class IndexAction
 {
+    /**
+     * @inheritDoc
+     */
     public function handle(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $response->getBody()->write('Fight Agent OS is ready.');

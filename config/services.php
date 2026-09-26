@@ -6,8 +6,8 @@ use Fight\Common\Application\Service\Container;
 
 $container = new Container();
 
-/** @var callable(Container): void $configure */
-foreach ([
+foreach (
+    [
     'parameters/paths.php',
     'common/security.php',
     'common/observability.php',
@@ -19,8 +19,10 @@ foreach ([
     'common/system.php',
     'common/communication.php',
     'common/presentation.php',
-    'application/controller.php',
-] as $manifestEntry) {
+    'application/controller.php'
+    ] as $manifestEntry
+) {
+    /** @var callable(Container): void $configure */
     $configure = require sprintf('%s/%s', __DIR__, $manifestEntry);
     $configure($container);
 }

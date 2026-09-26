@@ -34,6 +34,9 @@ use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
+/**
+ * Class IdentityRepositoryTest
+ */
 final class IdentityRepositoryTest extends TestCase
 {
     private Connection $connection;
@@ -41,12 +44,16 @@ final class IdentityRepositoryTest extends TestCase
     private PostgresUserRepository $users;
     private PostgresRoleRepository $roles;
 
+    /**
+     * @inheritDoc
+     */
     protected function setUp(): void
     {
         $this->connection = $this->connection();
-        $this->connection->executeStatement(
-            'TRUNCATE refresh_session_used_credentials, refresh_sessions, user_role_assignments, '
-            . 'user_email_claims, users, role_permissions, roles, permissions CASCADE'
+        $this->connection->executeStatement(<<<'SQL'
+TRUNCATE refresh_session_used_credentials, refresh_sessions, user_role_assignments,
+    user_email_claims, users, role_permissions, roles, permissions CASCADE
+SQL
         );
         $this->users = new PostgresUserRepository(
             $this->connection,
@@ -63,7 +70,10 @@ final class IdentityRepositoryTest extends TestCase
         $this->unitOfWork = new DoctrineTransactionalUnitOfWork($entityManager);
     }
 
-    public function test_add_and_resolve_round_trips_pending_identity_with_roles(): void
+    /**
+     * Verifies add and resolve round trips pending identity with roles
+     */
+    public function testAddAndResolveRoundTripsPendingIdentityWithRoles(): void
     {
         $roleId = $this->role('ROLE_VIEWER');
         $user = $this->pendingUser('pending@example.test');
@@ -77,7 +87,10 @@ final class IdentityRepositoryTest extends TestCase
         self::assertSame(1, $this->users->getAll(new Pagination())->totalRecords());
     }
 
-    public function test_add_rejects_canonical_and_live_reservation_email_claims(): void
+    /**
+     * Verifies add rejects canonical and live reservation email claims
+     */
+    public function testAddRejectsCanonicalAndLiveReservationEmailClaims(): void
     {
         $this->commitAdd($this->pendingUser('claimed@example.test'));
 
@@ -110,7 +123,10 @@ final class IdentityRepositoryTest extends TestCase
         }
     }
 
-    public function test_replace_authentication_authority_compares_expected_state(): void
+    /**
+     * Verifies replace authentication authority compares expected state
+     */
+    public function testReplaceAuthenticationAuthorityComparesExpectedState(): void
     {
         $user = $this->activeUser('authority@example.test');
         $this->commitAdd($user);
@@ -144,7 +160,10 @@ final class IdentityRepositoryTest extends TestCase
         ));
     }
 
-    public function test_replace_authentication_authority_and_add_refresh_session_is_indivisible(): void
+    /**
+     * Verifies replace authentication authority and add refresh session is indivisible
+     */
+    public function testReplaceAuthenticationAuthorityAndAddRefreshSessionIsIndivisible(): void
     {
         $user = $this->activeUser('coupled@example.test');
         $this->commitAdd($user);
@@ -180,7 +199,10 @@ final class IdentityRepositoryTest extends TestCase
         );
     }
 
-    public function test_coupled_session_insert_failure_and_caller_rollback_leave_no_partial_authority(): void
+    /**
+     * Verifies coupled session insert failure and caller rollback leave no partial authority
+     */
+    public function testCoupledSessionInsertFailureAndCallerRollbackLeaveNoPartialAuthority(): void
     {
         $user = $this->activeUser('coupled-rollback@example.test');
         $this->commitAdd($user);
@@ -233,7 +255,10 @@ final class IdentityRepositoryTest extends TestCase
         );
     }
 
-    public function test_reset_and_coupled_login_serialize_in_both_orders(): void
+    /**
+     * Verifies reset and coupled login serialize in both orders
+     */
+    public function testResetAndCoupledLoginSerializeInBothOrders(): void
     {
         $user = $this->activeUser('reset-login-race@example.test');
         $this->commitAdd($user);
@@ -259,8 +284,8 @@ final class IdentityRepositoryTest extends TestCase
             try {
                 $competingUsers->replaceAuthenticationAuthorityAndAddRefreshSession($expected, $login, $firstSession);
                 self::fail('Login must wait for the reset authority fence.');
-            } catch (DriverException) {
-                self::assertTrue(true);
+            } catch (DriverException $exception) {
+                self::assertSame('55P03', $exception->getSQLState());
             }
             $this->connection->commit();
             $competingConnection->rollBack();
@@ -294,8 +319,8 @@ final class IdentityRepositoryTest extends TestCase
             try {
                 $competingUsers->replaceAuthenticationAuthority($postReset, $laterReset);
                 self::fail('Reset must wait for the coupled login authority fence.');
-            } catch (DriverException) {
-                self::assertTrue(true);
+            } catch (DriverException $exception) {
+                self::assertSame('55P03', $exception->getSQLState());
             }
             $this->connection->commit();
             $competingConnection->rollBack();
@@ -319,7 +344,10 @@ final class IdentityRepositoryTest extends TestCase
         }
     }
 
-    public function test_replace_role_assignments_handles_roles_and_stale_state(): void
+    /**
+     * Verifies replace role assignments handles roles and stale state
+     */
+    public function testReplaceRoleAssignmentsHandlesRolesAndStaleState(): void
     {
         $first = $this->role('ROLE_EDITOR');
         $second = $this->role('ROLE_REVIEWER');
@@ -357,7 +385,10 @@ final class IdentityRepositoryTest extends TestCase
         ));
     }
 
-    public function test_live_reservation_conflicts_are_atomically_rejected(): void
+    /**
+     * Verifies live reservation conflicts are atomically rejected
+     */
+    public function testLiveReservationConflictsAreAtomicallyRejected(): void
     {
         $first = $this->activeUser('first-reserver@example.test');
         $second = $this->activeUser('second-reserver@example.test');
@@ -385,7 +416,10 @@ final class IdentityRepositoryTest extends TestCase
         self::assertNull($this->users->getById($second->getId())?->getPendingEmailChange());
     }
 
-    public function test_email_change_reservation_confirmation_and_correction(): void
+    /**
+     * Verifies email change reservation confirmation and correction
+     */
+    public function testEmailChangeReservationConfirmationAndCorrection(): void
     {
         $user = $this->activeUser('emailchange@example.test');
         $this->commitAdd($user);
@@ -423,7 +457,10 @@ final class IdentityRepositoryTest extends TestCase
         self::assertUserEquals($corrected, $this->users->getById($pending->getId()));
     }
 
-    public function test_lifecycle_transitions_and_coupled_rollback(): void
+    /**
+     * Verifies lifecycle transitions and coupled rollback
+     */
+    public function testLifecycleTransitionsAndCoupledRollback(): void
     {
         $user = $this->activeUser('lifecycle@example.test');
         $this->commitAdd($user);
@@ -479,7 +516,10 @@ final class IdentityRepositoryTest extends TestCase
         self::assertNull($this->users->getById($rollback->getId()));
     }
 
-    public function test_competing_authentication_authority_replacements_serialize(): void
+    /**
+     * Verifies competing authentication authority replacements serialize
+     */
+    public function testCompetingAuthenticationAuthorityReplacementsSerialize(): void
     {
         $user = $this->activeUser('race@example.test');
         $this->commitAdd($user);
@@ -507,8 +547,8 @@ final class IdentityRepositoryTest extends TestCase
             try {
                 $competingUsers->replaceAuthenticationAuthority($expected, $loser);
                 self::fail('A competing authority replacement must wait on the per-user fence.');
-            } catch (DriverException) {
-                self::assertTrue(true);
+            } catch (DriverException $exception) {
+                self::assertSame('55P03', $exception->getSQLState());
             }
             $this->connection->commit();
             $competingConnection->rollBack();
@@ -525,7 +565,10 @@ final class IdentityRepositoryTest extends TestCase
         self::assertUserEquals($winner, $this->users->getById($user->getId()));
     }
 
-    public function test_role_reference_fence_serializes_competing_role_removal(): void
+    /**
+     * Verifies role reference fence serializes competing role removal
+     */
+    public function testRoleReferenceFenceSerializesCompetingRoleRemoval(): void
     {
         $roleId = $this->role('ROLE_FENCED');
         $user = $this->activeUser('fenced@example.test');
@@ -551,8 +594,8 @@ final class IdentityRepositoryTest extends TestCase
             try {
                 $competingRoles->remove($role);
                 self::fail('A competing role removal must wait on the role-reference fence.');
-            } catch (DriverException) {
-                self::assertTrue(true);
+            } catch (DriverException $exception) {
+                self::assertSame('55P03', $exception->getSQLState());
             }
             $this->connection->commit();
             $competingConnection->rollBack();
@@ -569,17 +612,26 @@ final class IdentityRepositoryTest extends TestCase
         self::assertTrue($this->users->hasRoleAssignment($roleId));
     }
 
-    public function test_add_fails_closed_without_an_enclosing_transaction(): void
+    /**
+     * Verifies add fails closed without an enclosing transaction
+     */
+    public function testAddFailsClosedWithoutAnEnclosingTransaction(): void
     {
         $this->expectException(\LogicException::class);
         $this->users->add($this->pendingUser('no-transaction@example.test'));
     }
 
+    /**
+     * Persists a user inside a test transaction
+     */
     private function commitAdd(User $user): void
     {
         $this->unitOfWork->commitTransactional(fn() => $this->users->add($user));
     }
 
+    /**
+     * Rebuilds the test transaction boundary
+     */
     private function rebuildUnitOfWork(): void
     {
         $configuration = ORMSetup::createAttributeMetadataConfiguration([], true);
@@ -588,6 +640,9 @@ final class IdentityRepositoryTest extends TestCase
         $this->unitOfWork = new DoctrineTransactionalUnitOfWork($entityManager);
     }
 
+    /**
+     * Creates a role for repository checks
+     */
     private function role(string $name): RoleId
     {
         $roleId = RoleId::generate();
@@ -602,6 +657,9 @@ final class IdentityRepositoryTest extends TestCase
         return $roleId;
     }
 
+    /**
+     * Creates a pending user for repository checks
+     */
     private function pendingUser(string $email): User
     {
         return User::invite(
@@ -611,6 +669,9 @@ final class IdentityRepositoryTest extends TestCase
         );
     }
 
+    /**
+     * Creates an active user for repository checks
+     */
     private function activeUser(string $email): User
     {
         $user = $this->pendingUser($email);
@@ -619,6 +680,9 @@ final class IdentityRepositoryTest extends TestCase
         return $user;
     }
 
+    /**
+     * Advances user authority for replacement checks
+     */
     private function withAdvancedAuthority(User $user): User
     {
         $replacement = clone $user;
@@ -627,6 +691,9 @@ final class IdentityRepositoryTest extends TestCase
         return $replacement;
     }
 
+    /**
+     * Creates a refresh session for repository checks
+     */
     private function session(
         User $user,
         DateTimeImmutable $createdAt,
@@ -644,16 +711,25 @@ final class IdentityRepositoryTest extends TestCase
         );
     }
 
+    /**
+     * Creates a password hash for repository checks
+     */
     private function passwordHash(string $plain): PasswordHash
     {
         return PasswordHash::fromString((string) password_hash($plain, PASSWORD_BCRYPT));
     }
 
+    /**
+     * Returns a deterministic clock for repository checks
+     */
     private function clock(string $value): DateTimeImmutable
     {
         return new DateTimeImmutable($value);
     }
 
+    /**
+     * Opens a guarded PostgreSQL test connection
+     */
     private function connection(): Connection
     {
         $databaseUrl = getenv('TEST_DATABASE_URL');
@@ -669,14 +745,17 @@ final class IdentityRepositoryTest extends TestCase
         ))));
         $expected = $guard->assertConfigured((string) getenv('APP_ENV'), $databaseUrl);
         $connection = DriverManager::getConnection((new DsnParser([
-            'postgres' => 'pdo_pgsql',
-            'postgresql' => 'pdo_pgsql',
+            'postgres'   => 'pdo_pgsql',
+            'postgresql' => 'pdo_pgsql'
         ]))->parse($databaseUrl));
         $guard->assertConnected($connection, $expected);
 
         return $connection;
     }
 
+    /**
+     * Verifies the persisted user matches the expected state
+     */
     private static function assertUserEquals(User $expected, ?User $actual): void
     {
         self::assertNotNull($actual);

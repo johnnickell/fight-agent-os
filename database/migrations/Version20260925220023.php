@@ -8,13 +8,22 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
+/**
+ * Class Version20260925220023
+ */
 final class Version20260925220023 extends AbstractMigration
 {
+    /**
+     * @inheritDoc
+     */
     public function getDescription(): string
     {
         return 'Creates authoritative permission, role, and role-permission membership storage';
     }
 
+    /**
+     * @inheritDoc
+     */
     public function up(Schema $schema): void
     {
         $this->abortIf(
@@ -67,6 +76,9 @@ SQL);
         $this->addSql('CREATE INDEX idx_role_permissions_permission ON role_permissions (permission_id, role_id)');
     }
 
+    /**
+     * @inheritDoc
+     */
     public function down(Schema $schema): void
     {
         $this->addSql('DROP TABLE role_permissions');

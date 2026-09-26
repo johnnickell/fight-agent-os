@@ -8,21 +8,32 @@ use Closure;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 
+/**
+ * Class PostgresUniqueConstraintRace
+ */
 final class PostgresUniqueConstraintRace
 {
     /**
+     * Constructs PostgresUniqueConstraintRace
+     */
+    private function __construct()
+    {
+    }
+
+    /**
      * Executes one statement and maps only the named unique-constraint race to no change
      *
-     * @param Closure(): int $statement
+     * @phpstan-param Closure(): int $statement
      */
     public static function execute(
         Connection $connection,
         string $constraintName,
         Closure $statement
     ): int {
-        $savepoint = $connection->isTransactionActive()
-            ? sprintf('authority_name_replacement_%d', spl_object_id($connection))
-            : null;
+        $savepoint = null;
+        if ($connection->isTransactionActive()) {
+            $savepoint = sprintf('authority_name_replacement_%d', spl_object_id($connection));
+        }
 
         if ($savepoint !== null) {
             $connection->createSavepoint($savepoint);
@@ -31,10 +42,12 @@ final class PostgresUniqueConstraintRace
         try {
             $result = $statement();
         } catch (UniqueConstraintViolationException $exception) {
-            if (!str_contains(
-                $exception->getMessage(),
-                sprintf('unique constraint "%s"', $constraintName)
-            )) {
+            if (
+                !str_contains(
+                    $exception->getMessage(),
+                    sprintf('unique constraint "%s"', $constraintName)
+                )
+            ) {
                 throw $exception;
             }
 
@@ -51,9 +64,5 @@ final class PostgresUniqueConstraintRace
         }
 
         return $result;
-    }
-
-    private function __construct()
-    {
     }
 }

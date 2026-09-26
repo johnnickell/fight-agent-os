@@ -10,6 +10,8 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 
 /**
+ * Class PersistedRefreshSession
+ *
  * Reconstitutes a persisted Fight Access Control refresh session through the package's protected constructor.
  *
  * The locked package exposes no public full-state factory and prohibits reflection or serialization. The package
@@ -21,7 +23,7 @@ final class PersistedRefreshSession extends RefreshSession
     /**
      * Reconstitutes a refresh session from authoritative stored state
      *
-     * @param list<string> $usedCredentialDigests
+     * @phpstan-param list<string> $usedCredentialDigests
      */
     public static function reconstitute(
         RefreshSessionId $id,

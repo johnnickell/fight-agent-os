@@ -14,6 +14,9 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
+/**
+ * Class UnexpectedErrorMiddleware
+ */
 final readonly class UnexpectedErrorMiddleware implements MiddlewareInterface
 {
     /**
@@ -38,16 +41,16 @@ final readonly class UnexpectedErrorMiddleware implements MiddlewareInterface
             $this->logger->error('Unhandled HTTP request failure.', [
                 'correlation_id' => $correlationId,
                 'request_method' => $request->getMethod(),
-                'request_path' => $request->getUri()->getPath(),
-                'exception' => $exception,
+                'request_path'   => $request->getUri()->getPath(),
+                'exception'      => $exception
             ]);
 
             return $this->responseFactory->fromEnvelope(
                 JSendEnvelope::error('Internal server error.'),
                 HttpStatus::INTERNAL_SERVER_ERROR,
                 [
-                    'Cache-Control' => 'no-store',
-                    'X-Correlation-ID' => $correlationId,
+                    'Cache-Control'    => 'no-store',
+                    'X-Correlation-ID' => $correlationId
                 ]
             );
         }

@@ -13,16 +13,16 @@ use Fight\Common\Application\Service\Container;
 
 return [
     'services' => [
-        'messaging.query.router' => static function (Container $container): ServiceAwareQueryRouter {
+        'messaging.query.router'      => static function (Container $container): ServiceAwareQueryRouter {
             return new ServiceAwareQueryRouter($container);
         },
-        'messaging.query.routing' => static function (Container $container): RoutingQueryBus {
+        'messaging.query.routing'     => static function (Container $container): RoutingQueryBus {
             return new RoutingQueryBus($container->get('messaging.query.router'));
         },
-        'messaging.query.bus' => static function (Container $container): QueryPipeline {
+        'messaging.query.bus'         => static function (Container $container): QueryPipeline {
             return new QueryPipeline($container->get('messaging.query.routing'));
         },
-        QueryBus::class => static function (Container $container): QueryBus {
+        QueryBus::class               => static function (Container $container): QueryBus {
             return $container->get('messaging.query.bus');
         },
         ListPermissionsHandler::class => static function (Container $container): ListPermissionsHandler {
@@ -30,10 +30,10 @@ return [
             assert($permissionRepository instanceof PermissionRepository);
 
             return new ListPermissionsHandler($permissionRepository);
-        },
+        }
     ],
     'handlers' => [
-        ListPermissions::class => ListPermissionsHandler::class,
+        ListPermissions::class => ListPermissionsHandler::class
     ],
-    'filters' => [],
+    'filters'  => []
 ];

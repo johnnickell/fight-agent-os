@@ -8,13 +8,22 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
+/**
+ * Class Version20260926002821
+ */
 final class Version20260926002821 extends AbstractMigration
 {
+    /**
+     * @inheritDoc
+     */
     public function getDescription(): string
     {
         return 'Creates purpose-separated password-reset grant and recoverable delivery generations';
     }
 
+    /**
+     * @inheritDoc
+     */
     public function up(Schema $schema): void
     {
         $this->abortIf(
@@ -52,9 +61,13 @@ CREATE TABLE password_reset_grants (
     CONSTRAINT ck_password_reset_grants_generation CHECK (generation >= 0 AND revision >= 0),
     CONSTRAINT ck_password_reset_grants_digest CHECK (credential_digest ~ '^[0-9a-f]{64}$'),
     CONSTRAINT ck_password_reset_grants_authority CHECK (consumed_at IS NULL OR revoked_at IS NULL),
-    CONSTRAINT ck_password_reset_grants_expiry CHECK (delivery_expires_at = expires_at AND delivery_due_at <= expires_at),
+    CONSTRAINT ck_password_reset_grants_expiry CHECK (
+        delivery_expires_at = expires_at AND delivery_due_at <= expires_at
+    ),
     CONSTRAINT ck_password_reset_grants_delivery_status CHECK (
-        delivery_status IN ('pending', 'claimed', 'retry_pending', 'delivered', 'permanent_failure', 'expired', 'invalidated')
+        delivery_status IN (
+            'pending', 'claimed', 'retry_pending', 'delivered', 'permanent_failure', 'expired', 'invalidated'
+        )
     ),
     CONSTRAINT ck_password_reset_grants_delivery_shape CHECK (
         delivery_attempt_count >= 0
@@ -65,7 +78,9 @@ CREATE TABLE password_reset_grants (
             AND delivery_claimed_at IS NULL AND delivery_lease_until IS NULL))
         AND ((delivery_status IN ('pending', 'retry_pending') AND delivery_ciphertext IS NOT NULL)
           OR (delivery_status NOT IN ('pending', 'retry_pending')))
-        AND ((delivery_status IN ('delivered', 'permanent_failure', 'expired', 'invalidated')
+        AND ((delivery_status IN (
+            'delivered', 'permanent_failure', 'expired', 'invalidated'
+        )
             AND delivery_ciphertext IS NULL)
           OR (delivery_status NOT IN ('delivered', 'permanent_failure', 'expired', 'invalidated')))
         AND (delivery_ciphertext IS NULL OR length(delivery_ciphertext) > 0)
@@ -76,9 +91,14 @@ CREATE TABLE password_reset_grants (
     )
 )
 SQL);
-        $this->addSql('CREATE INDEX idx_password_reset_grants_due ON password_reset_grants (delivery_due_at, delivery_id)');
+        $this->addSql(
+            'CREATE INDEX idx_password_reset_grants_due ON password_reset_grants (delivery_due_at, delivery_id)'
+        );
     }
 
+    /**
+     * @inheritDoc
+     */
     public function down(Schema $schema): void
     {
         $this->addSql('DROP TABLE password_reset_grants');

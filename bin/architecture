@@ -1,7 +1,12 @@
 #!/usr/bin/env sh
 set -eu
 
-path=${1:-src}
-exec docker compose exec -T --env DEPTRAC_PATHS="$path" web \
+if [ "$#" -eq 0 ]; then
+  exec docker compose exec -T web \
+    php vendor/bin/deptrac analyse --config-file=deptrac.php --formatter=table --no-progress \
+    --report-uncovered --fail-on-uncovered
+fi
+
+exec docker compose exec -T --env DEPTRAC_PATHS="$1" web \
   php vendor/bin/deptrac analyse --config-file=deptrac.php --formatter=table --no-progress \
   --report-uncovered --fail-on-uncovered

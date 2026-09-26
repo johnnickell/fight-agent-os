@@ -8,7 +8,7 @@ use Doctrine\Migrations\Configuration\Connection\ExistingConnection;
 use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
 use Doctrine\Migrations\DependencyFactory;
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__.'/vendor/autoload.php';
 
 $databaseUrl = getenv('DATABASE_URL');
 if ($databaseUrl === false || $databaseUrl === '') {
@@ -16,11 +16,11 @@ if ($databaseUrl === false || $databaseUrl === '') {
 }
 
 $connection = DriverManager::getConnection((new DsnParser([
-    'postgres' => 'pdo_pgsql',
-    'postgresql' => 'pdo_pgsql',
+    'postgres'   => 'pdo_pgsql',
+    'postgresql' => 'pdo_pgsql'
 ]))->parse($databaseUrl));
 
 return DependencyFactory::fromConnection(
-    new ConfigurationArray(require __DIR__ . '/migrations.php'),
+    new ConfigurationArray(require __DIR__.'/migrations.php'),
     new ExistingConnection($connection)
 );

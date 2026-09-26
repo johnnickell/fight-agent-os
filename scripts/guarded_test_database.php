@@ -6,7 +6,7 @@ use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require dirname(__DIR__).'/vendor/autoload.php';
 
 $action = $argv[1] ?? 'check';
 if (!in_array($action, ['check', 'reset'], true)) {
@@ -24,8 +24,8 @@ if ($databaseUrl === false || $databaseUrl === '' || $allowedHost === false || $
 $guard = new DatabaseTargetGuard(array_values(array_filter(array_map('trim', explode(',', $allowedHost)))));
 $expected = $guard->assertConfigured($environment === false ? '' : $environment, $databaseUrl);
 $connection = DriverManager::getConnection((new DsnParser([
-    'postgres' => 'pdo_pgsql',
-    'postgresql' => 'pdo_pgsql',
+    'postgres'   => 'pdo_pgsql',
+    'postgresql' => 'pdo_pgsql'
 ]))->parse($databaseUrl));
 $guard->assertConnected($connection, $expected);
 

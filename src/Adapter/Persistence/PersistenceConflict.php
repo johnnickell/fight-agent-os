@@ -6,6 +6,9 @@ namespace App\Adapter\Persistence;
 
 use RuntimeException;
 
+/**
+ * Class PersistenceConflict
+ */
 final class PersistenceConflict extends RuntimeException
 {
 }

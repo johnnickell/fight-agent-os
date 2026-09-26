@@ -22,6 +22,8 @@ use Fight\Common\Domain\Repository\ResultSet;
 use LogicException;
 
 /**
+ * Class PostgresRefreshSessionRepository
+ *
  * Implements the stable Fight Access Control refresh-session repository on the shared PostgreSQL connection
  *
  * Sessions claim current and historical one-way digests in a single PostgreSQL namespace. Active scans evaluate
@@ -99,10 +101,10 @@ final readonly class PostgresRefreshSessionRepository implements RefreshSessionR
             ->addOrderBy('id')
             ->fetchAllAssociative();
 
-        return array_map(
+        return array_values(array_map(
             fn(array $row): RefreshSession => RefreshSessionRecords::hydrate($this->connection, $row),
             $rows
-        );
+        ));
     }
 
     /**
@@ -210,6 +212,9 @@ final readonly class PostgresRefreshSessionRepository implements RefreshSessionR
         }
     }
 
+    /**
+     * Applies the active-session filter to a query
+     */
     private function applyActiveFilter(QueryBuilder $builder, UserId $userId, DateTimeImmutable $at): void
     {
         $builder
@@ -221,6 +226,9 @@ final readonly class PostgresRefreshSessionRepository implements RefreshSessionR
             ->setParameter('active_at', RefreshSessionRecords::date($at));
     }
 
+    /**
+     * Adds expected state conditions to a guarded update
+     */
     private function applyExpectedState(QueryBuilder $builder, RefreshSession $expected): void
     {
         $builder
@@ -257,6 +265,9 @@ final readonly class PostgresRefreshSessionRepository implements RefreshSessionR
             ->setParameter('expected_revoked', $expected->isRevoked(), ParameterType::BOOLEAN);
     }
 
+    /**
+     * Checks that a session replacement preserves its invariants
+     */
     private function replacementIsValid(RefreshSession $expected, RefreshSession $replacement): bool
     {
         if (
