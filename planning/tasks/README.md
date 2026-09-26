@@ -132,5 +132,9 @@
 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | done | — |
-| [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and add project-local skills | needs-info | — |
+| [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | done | — |
+| [TASK-00131](00131-TASK.md) | Design the project-local audit skill | ready-for-agent | — |
+| [TASK-00132](00132-TASK.md) | Design the diagnosis-to-bug-TASK fix skill | ready-for-agent | — |
+| [TASK-00133](00133-TASK.md) | Design the CQRS and DDD architecture skill | ready-for-agent | — |
+| [TASK-00134](00134-TASK.md) | Design the project-alignment adopt skill | ready-for-agent | — |
 <!-- /planning:records -->

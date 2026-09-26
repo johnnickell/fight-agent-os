@@ -10,7 +10,7 @@ Treat pre-existing modifications as unrelated until ownership is proved. Preserv
 
 ## Branches and commits
 
-Use a `feature/*` branch from `develop` in the user-selected main checkout or isolated worktree. Establish branch ancestry and a status baseline before implementation. Never use cleanup, reset, checkout, or force operations against uncertain work.
+For a new TASK use `feature/task-NNNNN-<slug>` from `develop` in the user-selected main checkout or isolated worktree; preserve an already established branch even if named under the prior `feature/*` convention. Establish branch ancestry and a status baseline before implementation. Never use cleanup, reset, checkout, or force operations against uncertain work.
 
 One TASK normally produces one independently reviewable PR outcome. Stage explicit TASK-owned paths, inspect the staged diff, and keep the implementation commit bounded. A commit grants no push, publication, review, landing, merge, archive, release, or deployment authority.
 

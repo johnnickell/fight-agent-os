@@ -46,7 +46,7 @@ New reports use this small header:
 ---
 review_handoff_version: 3
 task: TASK-NNNNN
-target_branch: feature/example
+target_branch: feature/task-00130-example
 base_commit: <full Git OID>
 head_commit: <full Git OID>
 target_status: clean
