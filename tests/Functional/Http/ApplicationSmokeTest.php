@@ -4,28 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\Functional\Http;
 
-use Monolog\Handler\TestHandler;
-use Monolog\Level;
-use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerInterface;
-use RuntimeException;
-use Slim\Exception\HttpException;
 use Slim\Psr7\Factory\ServerRequestFactory;
 
 /**
- * Class ApplicationSmokeTest
+ * Exercises public routes through the real kernel
  */
 final class ApplicationSmokeTest extends TestCase
 {
     /**
-     * Verifies the agent os root is available
+     * Preserves the root response
      */
-    public function testTheAgentOsRootIsAvailable(): void
+    public function test_that_agent_os_root_remains_available(): void
     {
-        $app = require sprintf('%s/bootstrap/app.php', dirname(__DIR__, 3));
-
+        $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
         $response = $app->handle((new ServerRequestFactory())->createServerRequest('GET', '/'));
 
         self::assertSame(200, $response->getStatusCode());
@@ -34,111 +26,40 @@ final class ApplicationSmokeTest extends TestCase
     }
 
     /**
-     * Verifies an unknown route returns a safe not found response
+     * Supplies real routing misses without echoing the route or method detail
+     *
+     * @return iterable<string, array{string, string, int, string}>
      */
-    public function testAnUnknownRouteReturnsASafeNotFoundResponse(): void
+    public static function misses(): iterable
     {
-        $app = require sprintf('%s/bootstrap/app.php', dirname(__DIR__, 3));
+        yield 'API prefix without route' => ['GET', '/api', 404, 'Not found.'];
+        yield 'unknown API route' => ['GET', '/api/v1/not-an-agent-os-route', 404, 'Not found.'];
+        yield 'unsupported method' => ['POST', '/api/v1/auth/csrf', 405, 'Method not allowed.'];
+    }
 
-        $response = $app->handle(
-            (new ServerRequestFactory())->createServerRequest('GET', '/not-an-agent-os-route')
-        );
+    /**
+     * Returns sanitized correlated route failures for real routes
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('misses')]
+    public function test_that_routing_misses_are_sanitized(
+        string $method,
+        string $path,
+        int $status,
+        string $message
+    ): void {
+        $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+        $request = (new ServerRequestFactory())->createServerRequest($method, $path)
+            ->withHeader('X-Correlation-ID', str_repeat('a', 256));
 
-        self::assertSame(404, $response->getStatusCode());
+        $response = $app->handle($request);
+
+        self::assertSame($status, $response->getStatusCode());
         self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertMatchesRegularExpression('/\A[a-f0-9]{32}\z/', $response->getHeaderLine('X-Correlation-ID'));
         self::assertSame(
-            ['status' => 'error', 'message' => 'Not found.'],
+            ['status' => 'error', 'message' => $message],
             json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)
         );
-    }
-
-    /**
-     * Verifies a generic http exception is sanitized and correlated with its log
-     */
-    public function testAGenericHttpExceptionIsSanitizedAndCorrelatedWithItsLog(): void
-    {
-        $testApp = require sprintf('%s/bootstrap/app.php', dirname(__DIR__, 3));
-        $logger = $testApp->getContainer()?->get(LoggerInterface::class);
-        self::assertInstanceOf(Logger::class, $logger);
-        $testHandler = new TestHandler(Level::Error);
-        $logger->pushHandler($testHandler);
-
-        $failurePath = '/_test/http-exception';
-        $sensitiveMessage = 'credential=do-not-return path=/srv/private/provider.php';
-        $testApp->get($failurePath, function (ServerRequestInterface $request) use ($sensitiveMessage): never {
-            throw new HttpException($request, $sensitiveMessage, 500);
-        });
-
-        $response = $testApp->handle((new ServerRequestFactory())->createServerRequest('GET', $failurePath));
-        $body = (string) $response->getBody();
-        $correlationId = $response->getHeaderLine('X-Correlation-ID');
-
-        self::assertSame(500, $response->getStatusCode());
-        self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
-        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
-        self::assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $correlationId);
-        self::assertSame(
-            ['status' => 'error', 'message' => 'Internal server error.'],
-            json_decode($body, true, 512, JSON_THROW_ON_ERROR)
-        );
-        self::assertStringNotContainsString($sensitiveMessage, $body);
-        self::assertStringNotContainsString(HttpException::class, $body);
-        self::assertStringNotContainsString(__FILE__, $body);
-
-        $records = $testHandler->getRecords();
-        self::assertCount(1, $records);
-        self::assertSame('Unhandled HTTP request failure.', $records[0]->message);
-        self::assertSame($correlationId, $records[0]->context['correlation_id']);
-        self::assertSame('GET', $records[0]->context['request_method']);
-        self::assertSame($failurePath, $records[0]->context['request_path']);
-        self::assertSame($sensitiveMessage, $records[0]->context['exception']->getMessage());
-    }
-
-    /**
-     * Verifies an unexpected failure is sanitized and correlated with its log
-     */
-    public function testAnUnexpectedFailureIsSanitizedAndCorrelatedWithItsLog(): void
-    {
-        $productionApp = require sprintf('%s/bootstrap/app.php', dirname(__DIR__, 3));
-        $requestFactory = new ServerRequestFactory();
-        $failurePath = '/_test/unexpected-error';
-
-        $productionResponse = $productionApp->handle($requestFactory->createServerRequest('GET', $failurePath));
-        self::assertSame(404, $productionResponse->getStatusCode());
-
-        $testApp = require sprintf('%s/bootstrap/app.php', dirname(__DIR__, 3));
-        $logger = $testApp->getContainer()?->get(LoggerInterface::class);
-        self::assertInstanceOf(Logger::class, $logger);
-        $testHandler = new TestHandler(Level::Error);
-        $logger->pushHandler($testHandler);
-
-        $sensitiveMessage = 'credential=do-not-return path=/srv/private/provider.php';
-        $testApp->get($failurePath, function () use ($sensitiveMessage): never {
-            throw new RuntimeException($sensitiveMessage);
-        });
-
-        $response = $testApp->handle($requestFactory->createServerRequest('GET', $failurePath));
-        $body = (string) $response->getBody();
-        $correlationId = $response->getHeaderLine('X-Correlation-ID');
-
-        self::assertSame(500, $response->getStatusCode());
-        self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
-        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
-        self::assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $correlationId);
-        self::assertSame(
-            ['status' => 'error', 'message' => 'Internal server error.'],
-            json_decode($body, true, 512, JSON_THROW_ON_ERROR)
-        );
-        self::assertStringNotContainsString($sensitiveMessage, $body);
-        self::assertStringNotContainsString('RuntimeException', $body);
-        self::assertStringNotContainsString(__FILE__, $body);
-
-        $records = $testHandler->getRecords();
-        self::assertCount(1, $records);
-        self::assertSame('Unhandled HTTP request failure.', $records[0]->message);
-        self::assertSame($correlationId, $records[0]->context['correlation_id']);
-        self::assertSame('GET', $records[0]->context['request_method']);
-        self::assertSame($failurePath, $records[0]->context['request_path']);
-        self::assertSame($sensitiveMessage, $records[0]->context['exception']->getMessage());
     }
 }

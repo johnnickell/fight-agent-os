@@ -22,7 +22,7 @@
 | [TASK-00017](00017-TASK.md) | Accept the browser-authentication security-profile ADR | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | done | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
 | [TASK-00023](00023-TASK.md) | Compose direct package credential delivery | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
@@ -132,4 +132,5 @@
 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | done | — |
+| [TASK-00130](00130-TASK.md) | Strengthen architecture, testing, and two-pass review guidance | ready-for-agent | — |
 <!-- /planning:records -->
