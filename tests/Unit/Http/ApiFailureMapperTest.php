@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Http;
 
-use App\Adapter\Http\Middleware\ApiFailureMapper;
+use App\Adapter\Http\Api\Failure\ApiFailureMapper;
 use App\Application\Failure\AuthenticationRequired;
 use App\Application\Failure\PermissionDenied;
 use App\Application\Failure\ResourceNotFound;

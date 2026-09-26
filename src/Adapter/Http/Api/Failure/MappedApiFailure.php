@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Http\Middleware;
+namespace App\Adapter\Http\Api\Failure;
 
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 
 /**
- * Class FailureClassification
+ * Class MappedApiFailure
  *
  * Holds an allowlisted public failure without exposing exception details
  */
-final readonly class FailureClassification
+final readonly class MappedApiFailure
 {
     /**
-     * Constructs FailureClassification
+     * Constructs MappedApiFailure
      */
     public function __construct(public int $status, public JSendEnvelope $envelope)
     {

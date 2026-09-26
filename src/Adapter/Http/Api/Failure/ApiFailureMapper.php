@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Http\Middleware;
+namespace App\Adapter\Http\Api\Failure;
 
-use App\Adapter\Http\Middleware\Api\Validation\InputFailures;
+use App\Adapter\Http\Api\Validation\InputFailures;
 use App\Application\Failure\AuthenticationRequired;
 use App\Application\Failure\PermissionDenied;
 use App\Application\Failure\ResourceNotFound;
@@ -33,16 +33,16 @@ final readonly class ApiFailureMapper
     /**
      * Returns a safe public failure or null for an unknown throwable
      */
-    public function classify(Throwable $exception): ?FailureClassification
+    public function classify(Throwable $exception): ?MappedApiFailure
     {
         if ($exception instanceof TransportValidationException) {
-            return new FailureClassification(400, JSendEnvelope::fail(new InputFailures([
+            return new MappedApiFailure(400, JSendEnvelope::fail(new InputFailures([
                 'body' => ['Invalid input.']
             ])));
         }
 
         if ($exception instanceof DomainValidationException) {
-            return new FailureClassification(422, JSendEnvelope::fail(new InputFailures([
+            return new MappedApiFailure(422, JSendEnvelope::fail(new InputFailures([
                 'input' => ['Invalid value.']
             ])));
         }
@@ -63,6 +63,6 @@ final readonly class ApiFailureMapper
             default => null
         };
 
-        return $known === null ? null : new FailureClassification($known[0], JSendEnvelope::error($known[1]));
+        return $known === null ? null : new MappedApiFailure($known[0], JSendEnvelope::error($known[1]));
     }
 }

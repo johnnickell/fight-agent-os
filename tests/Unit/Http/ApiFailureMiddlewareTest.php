@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Http;
 
-use App\Adapter\Http\Middleware\ApiFailureBoundary;
-use App\Adapter\Http\Middleware\ApiFailureMapper;
+use App\Adapter\Http\Api\Failure\ApiFailureMapper;
+use App\Adapter\Http\Middleware\Api\ApiFailureMiddleware;
 use App\Application\Failure\PermissionDenied;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Monolog\Formatter\JsonFormatter;
@@ -24,7 +24,7 @@ use Slim\Psr7\Factory\StreamFactory;
 /**
  * Exercises correlation, redaction and public failure handling directly
  */
-final class ApiFailureBoundaryTest extends TestCase
+final class ApiFailureMiddlewareTest extends TestCase
 {
     /**
      * Supplies malformed or untrusted external correlation values
@@ -48,7 +48,7 @@ final class ApiFailureBoundaryTest extends TestCase
     public function test_that_invalid_correlation_is_replaced(array|string $id): void
     {
         $logger = new Logger('test');
-        $request = (new ServerRequestFactory())->createServerRequest('GET', '/')
+        $request = (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/auth/csrf')
             ->withHeader('X-Correlation-ID', $id);
         $handler = $this->createStub(RequestHandlerInterface::class);
         $handler->method('handle')->willReturn((new ResponseFactory())->createResponse(204));
@@ -60,12 +60,28 @@ final class ApiFailureBoundaryTest extends TestCase
     }
 
     /**
+     * Leaves paths outside the API prefix to their own transport boundary
+     */
+    public function test_that_non_api_path_is_not_rendered_as_jsend(): void
+    {
+        $request = (new ServerRequestFactory())->createServerRequest('GET', '/apiary/missing');
+        $failure = new RuntimeException('Other transport decides its response.');
+        $next = $this->createStub(RequestHandlerInterface::class);
+        $next->method('handle')->willThrowException($failure);
+
+        $this->expectExceptionObject($failure);
+
+        $this->boundary(new Logger('test'))->process($request, $next);
+    }
+
+    /**
      * Propagates a well-formed client value only as a diagnostic reference
      */
     public function test_that_valid_correlation_propagates_to_success(): void
     {
         $id = str_repeat('a', 32);
-        $request = (new ServerRequestFactory())->createServerRequest('GET', '/')->withHeader('X-Correlation-ID', $id);
+        $request = (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/auth/csrf')
+            ->withHeader('X-Correlation-ID', $id);
         $handler = $this->createStub(RequestHandlerInterface::class);
         $handler->method('handle')->willReturn((new ResponseFactory())->createResponse(204)
             ->withHeader('X-Correlation-ID', 'untrusted-downstream'));
@@ -84,7 +100,7 @@ final class ApiFailureBoundaryTest extends TestCase
         $handler->setFormatter(new JsonFormatter());
         $logger = new Logger('test', [$handler]);
         $id = str_repeat('b', 32);
-        $request = (new ServerRequestFactory())->createServerRequest('GET', '/grant/private-id?token=secret')
+        $request = (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/grant/private-id?token=secret')
             ->withHeader('X-Correlation-ID', $id)
             ->withHeader('Authorization', 'Bearer credential-secret')
             ->withHeader('Cookie', 'session=secret')
@@ -122,7 +138,7 @@ final class ApiFailureBoundaryTest extends TestCase
      */
     public function test_that_generic_http_exception_is_not_automatically_public(): void
     {
-        $request = (new ServerRequestFactory())->createServerRequest('GET', '/');
+        $request = (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/auth/csrf');
         $logger = new Logger('test', [$records = new TestHandler(Level::Error)]);
         $next = $this->createStub(RequestHandlerInterface::class);
         $next->method('handle')->willThrowException(new HttpException($request, 'private SQL', 404));
@@ -138,7 +154,7 @@ final class ApiFailureBoundaryTest extends TestCase
      */
     public function test_that_known_failure_is_safe_without_exception_logging(): void
     {
-        $request = (new ServerRequestFactory())->createServerRequest('GET', '/');
+        $request = (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/auth/csrf');
         $logger = new Logger('test', [$records = new TestHandler(Level::Error)]);
         $next = $this->createStub(RequestHandlerInterface::class);
         $next->method('handle')->willThrowException(new PermissionDenied('credential=secret'));
@@ -155,9 +171,9 @@ final class ApiFailureBoundaryTest extends TestCase
     /**
      * Creates the real presentation boundary without application container wiring
      */
-    private function boundary(Logger $logger): ApiFailureBoundary
+    private function boundary(Logger $logger): ApiFailureMiddleware
     {
-        return new ApiFailureBoundary(
+        return new ApiFailureMiddleware(
             new ApiFailureMapper(),
             new JSendResponseFactory(new ResponseFactory(), new StreamFactory()),
             $logger

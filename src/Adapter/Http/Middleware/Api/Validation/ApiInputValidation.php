@@ -6,6 +6,7 @@ namespace App\Adapter\Http\Middleware\Api\Validation;
 
 use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
 use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
+use App\Adapter\Http\Api\Validation\InputFailures;
 use App\Adapter\Http\Attribute\JsonBody;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Attribute\Validation;

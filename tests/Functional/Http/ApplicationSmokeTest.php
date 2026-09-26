@@ -13,18 +13,16 @@ use Slim\Psr7\Factory\ServerRequestFactory;
 final class ApplicationSmokeTest extends TestCase
 {
     /**
-     * Preserves the root response and adds only a correlation header
+     * Preserves the root response
      */
     public function test_that_agent_os_root_remains_available(): void
     {
         $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
-        $response = $app->handle((new ServerRequestFactory())->createServerRequest('GET', '/')
-            ->withHeader('X-Correlation-ID', str_repeat('a', 32)));
+        $response = $app->handle((new ServerRequestFactory())->createServerRequest('GET', '/'));
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('text/plain; charset=utf-8', $response->getHeaderLine('Content-Type'));
         self::assertSame('Fight Agent OS is ready.', (string) $response->getBody());
-        self::assertSame(str_repeat('a', 32), $response->getHeaderLine('X-Correlation-ID'));
     }
 
     /**
@@ -34,7 +32,8 @@ final class ApplicationSmokeTest extends TestCase
      */
     public static function misses(): iterable
     {
-        yield 'unknown route' => ['GET', '/not-an-agent-os-route', 404, 'Not found.'];
+        yield 'API prefix without route' => ['GET', '/api', 404, 'Not found.'];
+        yield 'unknown API route' => ['GET', '/api/v1/not-an-agent-os-route', 404, 'Not found.'];
         yield 'unsupported method' => ['POST', '/api/v1/auth/csrf', 405, 'Method not allowed.'];
     }
 

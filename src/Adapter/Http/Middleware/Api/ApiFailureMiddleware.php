@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Http\Middleware;
+namespace App\Adapter\Http\Middleware\Api;
 
+use App\Adapter\Http\Api\Failure\ApiFailureMapper;
+use App\Adapter\Http\Api\Failure\MappedApiFailure;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use Psr\Http\Message\ResponseInterface;
@@ -14,14 +16,14 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Class ApiFailureBoundary
+ * Class ApiFailureMiddleware
  *
- * Correlates every HTTP response and contains all downstream failures
+ * Correlates API responses and contains downstream API failures
  */
-final readonly class ApiFailureBoundary implements MiddlewareInterface
+final readonly class ApiFailureMiddleware implements MiddlewareInterface
 {
     /**
-     * Constructs ApiFailureBoundary
+     * Constructs ApiFailureMiddleware
      */
     public function __construct(
         private ApiFailureMapper $mapper,
@@ -35,6 +37,11 @@ final readonly class ApiFailureBoundary implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        $path = $request->getUri()->getPath();
+        if ($path !== '/api' && !str_starts_with($path, '/api/')) {
+            return $handler->handle($request);
+        }
+
         $inbound = $request->getHeader('X-Correlation-ID');
         $accepted = count($inbound) === 1 && preg_match('/\A[a-f0-9]{32}\z/D', $inbound[0]) === 1;
         $correlationId = $accepted ? $inbound[0] : bin2hex(random_bytes(16));
@@ -53,7 +60,7 @@ final readonly class ApiFailureBoundary implements MiddlewareInterface
                     'request_method'     => preg_match('/\A[A-Z]{1,16}\z/D', $method) ? $method : 'UNKNOWN',
                     'exception_type'     => $exception::class
                 ]);
-                $classification = new FailureClassification(500, JSendEnvelope::error('Internal server error.'));
+                $classification = new MappedApiFailure(500, JSendEnvelope::error('Internal server error.'));
             }
 
             $response = $this->responses->fromEnvelope(
