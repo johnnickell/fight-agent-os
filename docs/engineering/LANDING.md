@@ -1,65 +1,31 @@
 # Landing Standards
 
-Landing closes independently reviewed implementation and returns a published pull request and merge control to a human. It verifies review and evidence prerequisites, finalizes the authoritative TASK record, publishes the complete branch, and cleans only resources whose ownership is proved. It does not repeat review or repair defects. Apply the shared [execution](EXECUTION.md) and [review](REVIEW.md) boundaries throughout.
+Land publishes an independently accepted TASK as a PR against `develop` and returns merge control to a human. Apply the shared [execution](EXECUTION.md) and [review](REVIEW.md) boundaries. Landing may reconcile a reviewed branch with an advancing base; a changed commit OID by itself is not a changed implementation.
 
-## Landing target and authority
+## Intake and authority
 
-Identify the TASK, accepted scope, repository, feature branch, `develop` ancestry, reviewed base and head commits, current status, authenticated remote/hosting access, remote branch, existing PR, and exact cleanup candidates before changing anything. The implementation must be committed, and the reviewed target must be exact. Record every post-review change; only mechanical landing records, publication metadata, generated planning views, and their verification evidence may follow the accepted head without another independent review.
+Read the TASK, parent, decisions, Board, and canonical review report. Confirm independence, `accept`, requirement coverage, findings and limitations, reviewed branch/base/head and status. Inspect local and remote branches, current base, PR, worktrees and unrelated changes. Choose the user's authorized checkout; preserve unrelated work. Confirm hosting credentials and push path before modifying the target. An explicit `land TASK-NNNNN` authorizes branch reconciliation, TASK/PR metadata, non-force push, PR publication and ownership-proven cleanup. It does not authorize implementation fixes, force push, approval, merge, remote-branch deletion, archive, release or deployment.
 
-Explicit invocation of `land` for a named TASK grants bounded authority to finalize that TASK's planning, create landing commits, push its named feature branch without force, create or update its PR against the accepted base, and remove its clean non-active isolated worktree plus exact ownership-proven TASK resources. It does not authorize approval, merge, local or remote branch deletion, archive, release, deployment, certification, broad Docker pruning, shared teardown, or ambiguous deletion.
+## Reconcile an advancing base
 
-Confirm before mutation that credentials, the required remote and hosting service, and safe cleanup prerequisites are available. Classify the target as the canonical base worktree or a registered isolated worktree. Finalization and publication may run from the target checkout; preserve the base worktree and defer any isolated-target removal until every other tool operation is complete. Stop for an inconsistent branch or diff, unexpected changes, uncertain ownership, dirty cleanup candidates, missing credentials, or unavailable publication operations. Successful landing may not silently degrade to a local-only handoff.
+The accepted report anchors **review provenance**, not a requirement that `develop` remain frozen. If the feature branch is still based on the reviewed base, reconcile it with current `develop` when needed:
 
-## Review qualification
+1. Record reviewed base/head and current base/head. Require a clean target and a usable canonical `accept` report for the original snapshot. Check remote publication first: a local unpublished branch may be rebased; a published branch must be updated without rewriting published history (for example, merge `develop`) or left for the hosting platform. Explain the choice if the user asked specifically for a rebase that would need a force push.
+2. Reconcile conflicts in generated planning views by regenerating them from authoritative records. For overlapping configuration or other files, inspect both sides and the final effective result; do not silently choose one side. Preserve both TASKs' behavior. Use `git range-diff` where applicable, compare the old reviewed change with the new-base effective diff, and inspect changes on the new base that interact with the TASK. An identical patch alone is not proof against changed dependencies.
+3. Record a concise provenance bridge: old and new base/head OIDs, conflict resolutions, effective implementation differences, dependency interactions, and fresh focused and full-gate results. If only mechanical integration (including generated views and independent registrations) changed and the reviewed behavior remains intact, the independent `accept` remains applicable. A semantic implementation change, unproven interaction, unexpected scope change, or failing check requires a new independent review of the new target; preserve the branch and stop publication. Never rewrite the original review to pretend it reviewed the new OIDs.
 
-Require an independent report that identifies its reviewer relationship, TASK, exact target and baseline, target status, verification, findings, evidence limits, and an `accept` verdict. Confirm that:
+Landing can resolve mechanical conflicts but not repair an implementation defect. If reconciliation cannot complete safely, stop with the exact conflict and hand off to `work` and then `review` as needed. Rebase/merge must never force-update a published branch.
 
-- the reviewer did not materially author, direct, repair, or provide acceptance evidence for the target;
-- the report covers the current implementation commit and required acceptance criteria;
-- every blocking finding is absent or corrected and covered by a later independent `accept` verdict;
-- every non-blocking finding has an explicit disposition, such as accepted now or deferred with rationale and owner;
-- post-review changes have not made the verdict stale.
+## Verify and publish
 
-This is provenance and disposition checking, not another implementation review. Missing, ambiguous, stale, or contradictory evidence requires refusal or a new review, not an inferred acceptance.
+Use the TASK completion notes to record the accepted report and any finding dispositions, reconciliation proof, fresh checks with counts/warnings, risks, and publication state. `done` means accepted implementation and required local verification, not PR approval or merge. Keep generated Board/indexes synchronized with authored planning changes.
 
-## Finalization and verification
+Run focused checks, `./bin/planning-check`, `git diff --check`, and `./bin/build` on the reconciled implementation before initial publication. Stage only owned planning or reconciliation files; inspect the staged diff and commit them if needed. Push the feature branch without force; create or update its PR against `develop`. Record the actual PR URL in the TASK and refresh generated views. Run focused checks, planning validation, diff check and the full gate on that final tree before committing/pushing the PR metadata. If a result changes, correct the evidence and rerun the affected checks. Avoid repeating gates for an unchanged tree merely to accumulate receipts.
 
-Reconcile each acceptance criterion with accepted review evidence and fresh implementation receipts. Completion notes name the implemented scope, files, commits, review target and verdict, finding dispositions, fresh commands and counts, warnings, skips, residual risk, publication state, cleanup decisions, and retained human actions.
+After final push, query the hosting service: PR open, base `develop`, intended head branch, remote head equal to local `HEAD`. Authentication, checks, publication, or remote-head mismatch blocks a successful landing; preserve the worktree. No approval or merge occurs here.
 
-When acceptance is supported:
+## Cleanup and handoff
 
-1. Run focused checks, `./bin/planning-check`, `git diff --check`, and `./bin/build` to obtain fresh results and counts on the accepted implementation before asserting completion.
-2. Record those actual commands, results, and counts in the TASK completion notes, then set its status to `done`; do not alter requirement scope.
-3. Run `./bin/planning-check --write` and inspect the generated changes.
-4. Rerun the focused checks, `./bin/planning-check`, `git diff --check`, and final `./bin/build` after the authoritative TASK and generated views have changed.
-5. Inspect the complete diff and status for scope, secrets, debris, and preserved unrelated work.
-6. Stage only owned paths, inspect the staged diff, and create the landing commit.
+Preview cleanup candidates before publication and recheck immediately before deletion. Remove only ownership-proven TASK-specific disposable resources: exact Compose project containers/volumes, inspected build output and a clean registered isolated worktree at the published commit. Preserve shared, durable, ambiguous and dirty resources, including review reports and unrelated worktrees. For isolated worktrees, remove without force from the base checkout as the final tool operation after all other work; retain the local feature branch for the human. If safe cleanup is unavailable, report landing incomplete rather than broadening deletion authority.
 
-A failed or skipped required check prevents publication. If a rerun changes a result recorded in the TASK, update the record and repeat the final checks before commit. Restore the TASK to a truthful non-`done` state using only landing-owned edits when acceptance is no longer supported, refresh generated views, and record the incomplete result; if safe restoration is uncertain, stop and ask. Never hide a failure or reuse an earlier build as final-tree evidence.
-
-`done` means accepted implementation and required local verification. It does not mean committed, pushed, published as a PR, approved by a hosting platform, merged, archived, released, deployed, or certified.
-
-## Publication and human handoff
-
-Push only the named feature branch without force, then create or update only its intended PR against the accepted base. Capture the canonical PR URL, write it to the TASK metadata and completion evidence, refresh and inspect generated planning views, rerun focused checks plus `./bin/planning-check`, `git diff --check`, and `./bin/build`, commit those mechanical publication records, and push the final commit without force. Do not invent a changelog when the repository has none; update the authoritative TASK, generated Board/indexes, and any existing project completion surface.
-
-After the final push, query the hosting service and verify that the PR is open, names the accepted base and feature head, and reports the same head commit as local `HEAD`. Authentication, initial push, PR creation/update, record update, verification, final checks, commit, final push, or remote-head mismatch blocks cleanup and successful landing. Preserve the worktree and report the exact failure instead of presenting local-only completion.
-
-The handoff identifies TASK, branch, base/review/landing/publication commits, checks and warnings, review disposition, cleanup result, unrelated work, unresolved risks, and human actions still required. It always presents the canonical PR URL as a clickable link. Never approve or merge the PR.
-
-## Resource ownership and cleanup
-
-Treat resources as shared or ambiguous until ownership is demonstrated. A TASK ID in a path or name is useful but not sufficient when the resource can contain durable evidence, another checkout, shared state, or uncommitted work. Landing invocation authorizes cleanup only after the final PR head is verified and only within the ownership bounds below.
-
-Accept ownership only from inspectable evidence appropriate to the resource:
-
-- scratch/prototype paths: expected TASK-scoped root, ownership marker or creation record, and contents confirmed disposable;
-- worktrees: registered path and branch, clean status at the verified published commit, and confirmation it is not the active checkout;
-- ignored worktree output: an exact preview proving each path is ignored, inside the target worktree, disposable, and produced by TASK checks;
-- processes: captured PID plus matching command and start identity, not a PID alone;
-- databases: exact TASK-specific name, confirmed test endpoint, and no shared or production authority;
-- containers and volumes: exact TASK-specific Compose project, labels, or IDs and no shared dependency.
-
-Preview the cleanup set and operations at intake and recheck it immediately before deletion. Remove exact TASK containers and volumes before their worktree. When containerized checks leave root-owned ignored output, an ephemeral helper may mount only the exact target worktree and remove only previewed approved paths; record its image, mount, paths, and result. Preserve the canonical base worktree. For a registered clean isolated target, make removal the final tool operation: change to the base worktree, remove the target without force, and verify both registration and path removal in that same operation. Retain the local feature branch so the human can delete it after merge.
-
-Never use broad globs, global pruning, shared Compose teardown, recursive deletion outside the owned root, forced worktree removal, or inferred PID ownership. Preserve dirty, active, or unregistered worktrees, source files, required evidence, shared services, durable records, and anything ambiguous. A cleanup refusal now makes landing incomplete: preserve the resource and report the exact condition rather than weakening the ownership rule or claiming successful landing.
+Return the PR link, review provenance and any reconciliation bridge, final checks and warnings, cleanup result and remaining human actions. Publication, approval, merge, branch deletion, archive, release and deployment are distinct states.

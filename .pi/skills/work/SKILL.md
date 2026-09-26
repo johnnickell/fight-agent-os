@@ -1,64 +1,16 @@
 ---
 name: work
-description: Use to implement one approved TASK as bounded, tested work on a feature branch, from checkout choice through commit and implementation handoff.
+description: Implement or revise an approved TASK on a feature branch, verify it, and hand the committed work to independent review.
 ---
 
 # Work
 
-Turn one approved TASK into an implementation commit. Planning, independent review, publication, landing, merge, release, and deployment remain separate authority.
+Read the TASK and parent, [engineering standards](../../../docs/engineering/STANDARDS.md) and [execution standards](../../../docs/engineering/EXECUTION.md). Work owns implementation, not independent acceptance or publication.
 
-Before changing files, read the repository instructions and the shared [engineering](../../../docs/engineering/STANDARDS.md) and [execution](../../../docs/engineering/EXECUTION.md) standards.
+1. **Bound and place.** Check accepted scope, blockers, Board, branch, ancestry and status. Preserve unrelated changes. Ask whether to use the main checkout or an isolated worktree unless chosen. Use a `feature/*` branch from `develop`; keep scratch under `.runs/`.
+2. **Read the handoff.** Resolve the canonical base worktree through Git metadata and inspect `.runs/reviews/<TASK-ID>/review.md`. A first implementation may have none; a revision requires the canonical `revise` report and traces every blocker. Version-2 and version-3 reports are usable when their target identity and recorded snapshot match. If the branch has moved, trace changes to know whether findings remain applicable. An accepted implementation routes to `land`, which may reconcile an advancing base; do not use `work` solely to rebase an unchanged accepted implementation.
+3. **Implement and reconcile before review.** Follow the TASK's dependencies, add behavior and tests at the narrowest useful boundary, and verify each acceptance criterion. Integrate current `develop` when needed, regenerate planning views from authoritative records, inspect conflicts and effective changes, and preserve other TASKs' work. If a conflict changes behavior or scope, record it explicitly for review. Never force-update a published branch.
+4. **Verify and record.** Run focused checks, `./bin/planning-check` when planning changed, `git diff --check`, and `./bin/build`. Inspect the final diff/status. Record actual results, counts, warnings, omissions, files changed and remaining risks in the TASK; keep review and PR status truthful.
+5. **Commit and hand off.** Stage only owned files, inspect staged changes, and commit. Return branch/head, scope, evidence, risks and unrelated work preserved; request independent review. Stop before push, PR, approval or merge without separate authority.
 
-## 1. Bound the work
-
-1. Read the TASK, parent TICKET, relevant accepted decisions, and current Board.
-2. Inspect repository identity, current branch/worktree, ancestry, and status. Record existing changes as unrelated unless the TASK clearly owns them.
-3. Require executable TASK scope with resolved blockers. Ask for main-checkout or isolated-worktree placement before mutation unless the user already chose.
-4. Resolve the base worktree from Git metadata: canonicalize the absolute common directory, enumerate registered worktrees, and select the sole worktree whose absolute Git directory equals that common directory. Verify its top level; never infer the base from the current directory, parent paths, or list ordering.
-5. Set the canonical review path to `<base-worktree>/.runs/reviews/<TASK-ID>/review.md`, recognize immutable history only at sibling `review-<NNNNN>.md` paths, and state whether this invocation is a first implementation or an explicitly requested revision. `review.md` alone selects the latest handoff; never choose a numbered file, search linked worktrees, or use chat/session history for findings.
-6. Write TASK-owned scratch only beneath `.runs/`; put an isolated worktree beneath `.runs/worktrees/`.
-
-The intake is complete when approved scope and exclusions, placement, base, branch, review mode and path, and every pre-existing change are explicit. Stop for ambiguity, unexpected modifications, unsafe ownership, or missing authority.
-
-## 2. Establish the branch
-
-Use `feature/<description>` from `develop`. In the main checkout, create or continue the authorized feature branch without disturbing unrelated changes. For isolation, create the feature branch and worktree beneath `.runs/worktrees/`. Never hide, overwrite, clean, reset, or relocate work whose ownership is uncertain.
-
-Continue only when branch ancestry and status are understood and the TASK owns the intended writes.
-
-## 3. Qualify revision input
-
-Check the canonical review path and its sequence state automatically after establishing the target branch or worktree.
-
-- If neither canonical nor numbered reports exist and this is first implementation, record the absence and continue normally. If revision was requested, stop with the exact missing path. Any history without a canonical report is an incomplete handoff, not first implementation.
-- Require one readable, non-symlink regular `review.md` within the ignored canonical review root. Enumerate only its sibling `review-<NNNNN>.md` history, require positive five-digit contiguous sequences, and reject malformed review names, gaps, redirects, duplicate candidates, or other fallbacks. The canonical bytes must equal the highest numbered file; never infer “latest” by timestamps, findings, chat, or branch state.
-- Require `review_handoff_version: 2`, every exact identity key defined by the review standards, a positive `review_sequence` matching the highest `history_report`, and all complete ordered sections. Version 1 or unversioned reports are retained history but are not safe revision input; request a fresh review rather than guessing missing identity.
-- Validate TASK, repository common directory, base worktree, both report paths, target kind/identifier, branch or detached state, full base/head OIDs, exact status, manifest, reviewed artifact count, content digest, and verdict against the requested TASK and current target snapshot. Rebuild the canonical JSON Lines manifest, including every selected reviewed ignored root and descendant, and recompute its digest. A clean Git status does not permit a null digest when reviewed ignored artifacts exist. A relocated checkout may have a different local path only when immutable repository, target, base/head, status, manifest, and content identity still match unambiguously.
-- Reject an unreadable, malformed, partial, stale, superseded, mismatched, ambiguous, or interrupted report with the exact path and reason. A changed ignored artifact, addition, removal, type, mode, symlink target, or content digest is stale. Do not alter review findings or silently treat the invocation as first implementation.
-- Treat a matching `revise` report and all of its blocking findings as the authoritative correction handoff. Build the revision SUBTASK outline from those findings and the approved TASK; do not broaden scope. A matching `accept` report supplies no revision authority—stop and hand it to the separate landing workflow unless separately approved work changed the target and requires a new review.
-
-## 4. Implement the TASK
-
-- Keep a dependency-ordered SUBTASK outline in TASK-owned scratch when the work needs coordination. For revision, trace every item to a persisted blocking finding.
-- Inspect and edit only what the accepted scope requires. Stop and ask before broadening product or planning scope.
-- Make behavior testable, then add the smallest tests that prove acceptance. For a bug, first reproduce it and make a regression test fail when technically possible.
-- Run focused checks as the change develops. Treat surprising generated files, secrets, unrelated failures, and destructive operations as stop conditions.
-
-Implementation is complete only when every acceptance criterion is either demonstrated or explicitly unresolved and, for revision, every persisted blocking finding has an explicit disposition.
-
-## 5. Verify and record
-
-1. Refresh generated planning views when authorized planning records changed.
-2. Run focused checks, `git diff --check`, and the canonical `./bin/build`.
-3. Inspect the final diff and status for scope, secrets, generated debris, and unrelated changes.
-4. Record fresh commands, exit results, test counts, changed files, warnings, deprecations, skips, incomplete checks, and remaining uncertainty in the TASK completion notes. Keep detailed logs in TASK-owned scratch.
-
-A failed or skipped required check remains incomplete; an inherited receipt is context, not fresh evidence.
-
-## 6. Commit and hand off
-
-Stage only TASK-owned paths, inspect the staged diff, and create the authorized implementation commit. Leave unrelated work untouched.
-
-Hand off the TASK ID, branch and commit, approved scope, changed files, verification results and counts, warnings, unresolved risks, planning status, and preserved unrelated work. Request independent review; for a bootstrap exception, request the named human review required by the TASK.
-
-Stop before review acceptance, push, PR publication, landing, merge, archive, release, or deployment unless a separate workflow and explicit authority grant that action.
+A failing required check or unsupported criterion is incomplete work, not a green handoff.
