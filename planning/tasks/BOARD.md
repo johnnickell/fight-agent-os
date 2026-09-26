@@ -119,7 +119,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00130](00130-TASK.md) | Strengthen architecture, testing, and two-pass review guidance | — (standalone chore) | needs-info | — | — |
+| 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and add project-local skills | — (standalone chore) | needs-info | — | — |
 | 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream v0.4.0 authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | needs-info | [TASK-00036](00036-TASK.md) | — |
 
 ## Human Action

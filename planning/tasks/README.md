@@ -132,5 +132,5 @@
 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | done | — |
-| [TASK-00130](00130-TASK.md) | Strengthen architecture, testing, and two-pass review guidance | needs-info | — |
+| [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and add project-local skills | needs-info | — |
 <!-- /planning:records -->
