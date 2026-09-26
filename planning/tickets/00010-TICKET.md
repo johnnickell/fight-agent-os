@@ -51,7 +51,7 @@ Authorization remains server-side and endpoint-specific; framework middleware ma
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00017](../tasks/00017-TASK.md) | Accept the browser-authentication security-profile ADR | ready-for-agent |
+| [TASK-00017](../tasks/00017-TASK.md) | Accept the browser-authentication security-profile ADR | done |
 | [TASK-00018](../tasks/00018-TASK.md) | Establish the versioned JSend API interaction boundary | ready-for-agent |
 | [TASK-00019](../tasks/00019-TASK.md) | Reject invalid API input before dispatch | ready-for-agent |
 | [TASK-00020](../tasks/00020-TASK.md) | Centralize correlated and sanitized API failures | ready-for-agent |
