@@ -13,7 +13,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 14 | [TASK-00014](00014-TASK.md) | Persist activation grants and replacement races | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | ready-for-agent | — | — |
+| 16 | [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and package delivery persistence | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | ready-for-agent | — | — |
 | 17 | [TASK-00017](00017-TASK.md) | Accept the browser-authentication security-profile ADR | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | — | — |
 | 18 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | — | — |
 | 30 | [TASK-00030](00030-TASK.md) | Complete PHP style and static analysis | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | ready-for-agent | — | — |
@@ -23,7 +23,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 16 | [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and package delivery persistence | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | ready-for-agent | [TASK-00014](00014-TASK.md) | — |
 | 19 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00018](00018-TASK.md) | — |
 | 20 | [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00019](00019-TASK.md) | — |
 | 21 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00017](00017-TASK.md), [TASK-00020](00020-TASK.md) | — |
@@ -35,7 +34,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 27 | [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | [TASK-00021](00021-TASK.md), [TASK-00026](00026-TASK.md) | — |
 | 28 | [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | [TASK-00027](00027-TASK.md) | — |
 | 29 | [TASK-00029](00029-TASK.md) | Establish the production component catalog and state evidence | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | [TASK-00026](00026-TASK.md) | — |
-| 31 | [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | ready-for-agent | [TASK-00014](00014-TASK.md), [TASK-00021](00021-TASK.md), [TASK-00024](00024-TASK.md), [TASK-00030](00030-TASK.md) | — |
+| 31 | [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | ready-for-agent | [TASK-00021](00021-TASK.md), [TASK-00024](00024-TASK.md), [TASK-00030](00030-TASK.md) | — |
 | 32 | [TASK-00032](00032-TASK.md) | Enforce deterministic frontend quality checks | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | ready-for-agent | [TASK-00028](00028-TASK.md), [TASK-00029](00029-TASK.md) | — |
 | 33 | [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | ready-for-agent | [TASK-00031](00031-TASK.md), [TASK-00032](00032-TASK.md) | — |
 | 34 | [TASK-00034](00034-TASK.md) | Explore the authentication and dashboard design language | [TICKET-00014 — Accept the authentication and dashboard design language](../tickets/00014-TICKET.md) | ready-for-agent | [TASK-00033](00033-TASK.md) | — |
@@ -151,6 +150,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 12 | [TASK-00012](00012-TASK.md) | Establish guarded PostgreSQL persistence through managed authority | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #17](https://github.com/johnnickell/fight-agent-os/pull/17) |
 | 12 | [TASK-00070](00070-TASK.md) | Remove build and test self-verification bloat | — (standalone chore) | done | — | [PR #16](https://github.com/johnnickell/fight-agent-os/pull/16) |
 | 13 | [TASK-00013](00013-TASK.md) | Persist identities and refresh sessions atomically | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #20](https://github.com/johnnickell/fight-agent-os/pull/20) |
+| 14 | [TASK-00014](00014-TASK.md) | Persist activation grants and replacement races | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | — |
 | 15 | [TASK-00015](00015-TASK.md) | Persist password-reset grants and terminal succession | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #21](https://github.com/johnnickell/fight-agent-os/pull/21) |
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
