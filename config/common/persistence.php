@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\Repository\PostgresActivationGrantRepository;
+use App\Adapter\Persistence\Repository\PostgresAuditEvidenceRepository;
+use App\Adapter\Persistence\Repository\PostgresEmailChangeGrantRepository;
 use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresPasswordResetGrantRepository;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
@@ -17,6 +19,8 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
+use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
@@ -72,6 +76,12 @@ return static function (Container $container): void {
     });
     $container->set(ActivationGrantRepository::class, static function (Container $container): ActivationGrantRepository {
         return new PostgresActivationGrantRepository($container->get(Connection::class));
+    });
+    $container->set(EmailChangeGrantRepository::class, static function (Container $container): EmailChangeGrantRepository {
+        return new PostgresEmailChangeGrantRepository($container->get(Connection::class));
+    });
+    $container->set(AuditEvidenceRepository::class, static function (Container $container): AuditEvidenceRepository {
+        return new PostgresAuditEvidenceRepository($container->get(Connection::class));
     });
     $container->set(TransactionalUnitOfWork::class, static function (Container $container): TransactionalUnitOfWork {
         return new DoctrineTransactionalUnitOfWork($container->get(EntityManagerInterface::class));
