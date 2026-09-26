@@ -13,11 +13,11 @@ A new private installation needs deterministic managed authority and a safe firs
 
 ## Solution and boundaries
 
-Use `ReconcileManagedPolicy` to maintain `ROLE_USER`, `ROLE_SUPER_ADMIN`, and the permissions `VIEW_DASHBOARD`, `LIST_USERS`, `INVITE_USERS`, `MANAGE_USER_INVITATIONS`, and `ASSIGN_SUPER_ADMIN`. `ROLE_USER` receives dashboard access; `ROLE_SUPER_ADMIN` receives all initial permissions.
+Use `ReconcileManagedPolicy` to maintain `ROLE_USER`, `ROLE_SUPER_ADMIN`, and the exact catalog: `VIEW_DASHBOARD`, `READ_OWN_SESSIONS`, `DELETE_OWN_SESSIONS`, `READ_USERS`, `INVITE_USERS`, `MANAGE_USER_INVITATIONS`, `ASSIGN_SUPER_ADMIN`, `REMOVE_SUPER_ADMIN`, `DISABLE_USERS`, `ENABLE_USERS`, `DELETE_USERS`, `RESTORE_USERS`, `MANAGE_USER_ROLES`, `READ_SESSIONS`, `DELETE_SESSIONS`, `READ_ROLES`, `CREATE_ROLES`, `UPDATE_ROLES`, `DELETE_ROLES`, `READ_PERMISSIONS`, and `MANAGE_ROLE_PERMISSIONS`. The former planned `LIST_USERS` becomes `READ_USERS` before policy implementation; pending invitation remains `INVITE_USERS`, not unrestricted `CREATE_USERS`. `ROLE_USER` gets only dashboard and own-session permissions. `ROLE_SUPER_ADMIN` gets all approved permissions; installation-wide ones are marked `SUPER_ADMIN_ONLY`, with current authoritative checks, not role-name bypasses. Do not define unused generic create/update user or profile permissions until a concrete supported operation exists.
 
 Provide a one-time guarded console bootstrap that reconciles policy, verifies no Super Admin authority exists, creates a pending identity through `InvitePendingUser`, assigns `ROLE_SUPER_ADMIN` through package behavior, records a distinct bootstrap actor and durable audit evidence, and requires normal activation. Provide a trusted console path for ordinary `ROLE_USER` invitations. Later elevated invitation/assignment requires authenticated `ASSIGN_SUPER_ADMIN`, explicit confirmation, and audit evidence.
 
-Out of scope: public registration, `ROLE_ADMIN`, custom-role/permission administration, role-name bypasses, multi-workspace authority, and administrator-chosen passwords.
+Out of scope: public registration, `ROLE_ADMIN`, implementation of custom-role/permission administration (TICKET-00031), role-name bypasses, multi-workspace authority, administrator-chosen passwords, and enforcing tier grants merely by storing a tier label.
 
 ## Use cases
 
@@ -31,7 +31,7 @@ Out of scope: public registration, `ROLE_ADMIN`, custom-role/permission administ
 
 Canonical email, managed identifiers, exact policy membership, pending lifecycle, and one-time bootstrap guard are authoritative and race-safe in PostgreSQL. Reconciliation is idempotent and reports drift safely. Bootstrap must fail closed after any effective Super Admin exists, including competing attempts.
 
-Bootstrap is a separately audited trusted-console capability, not anonymous web authority. Ordinary console invitation requires explicit trusted operator access. Web elevated assignment requires `ASSIGN_SUPER_ADMIN`; all other authorization is permission- or ownership-based.
+Bootstrap is a separately audited trusted-console capability, not anonymous web authority. Ordinary console invitation requires explicit trusted operator access. Web elevated invitation requires `INVITE_USERS` and `ASSIGN_SUPER_ADMIN`; direct managed-role assignment also requires `MANAGE_USER_ROLES`; removing managed Super Admin requires `MANAGE_USER_ROLES` plus separate `REMOVE_SUPER_ADMIN`, with last-admin/self-change safeguards in Agent OS Application, regardless of package handler permission checks. All other authorization is permission- or ownership-based. Package ownership authorization callbacks for invitation, session and email-change workflows remain distinct from global permission grants.
 
 ## Acceptance and evidence
 

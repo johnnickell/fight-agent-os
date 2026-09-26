@@ -9,13 +9,13 @@ status: ready-for-agent
 
 ## Problem statement
 
-Authorized operators need a safe interface to inspect installation-wide user lifecycle state, invite users, and recover pending invitations. Broad user administration, role-name checks, or credential exposure would exceed the initial foundation.
+Authorized operators need a safe interface to inspect installation-wide user lifecycle state, invite users, and recover pending invitations. This TICKET owns the initial invitation/directory slice; the later full user/role/session administration TICKETs do not turn this invitation path into arbitrary user creation or permit role-name shortcuts.
 
 ## Solution and boundaries
 
 Deliver permission-controlled Super Admin routes and APIs to list safe users, invite ordinary users, inspect invitation/delivery status, retry/resend, and atomically correct pending email. Permit elevated invitation/assignment only with `ASSIGN_SUPER_ADMIN`, explicit confirmation, and durable audit evidence. Use exact permission checks and existing lifecycle commands/queries; never expose raw grants.
 
-Out of scope: custom roles/permissions, active email change, disable/enable/delete/restore UI, cross-user sessions, workspace membership, raw activation/reset credentials, and a role-name Super Admin bypass.
+Out of scope for this TICKET: custom roles/permissions (TICKET-00031), active email change, disable/enable/delete/restore and cross-user sessions (TICKET-00030), workspace membership, raw activation/reset credentials, and a role-name Super Admin bypass.
 
 ## Use cases
 
@@ -30,7 +30,7 @@ Out of scope: custom roles/permissions, active email change, disable/enable/dele
 
 Canonical email, target lifecycle, managed role, confirmation, stale version, and delivery-state validations are server-owned. Conflicts and concurrent correction/resend/activation return safe recoverable results rather than overwriting authoritative state. Listings paginate/filter only through explicitly supported safe fields.
 
-`LIST_USERS`, `INVITE_USERS`, `MANAGE_USER_INVITATIONS`, and `ASSIGN_SUPER_ADMIN` gate their exact interactions. Possessing `ROLE_SUPER_ADMIN` is not itself an authorization bypass. Audit evidence records actor, target, action, time, result, and safe context without grants/passwords.
+`READ_USERS`, `INVITE_USERS`, `MANAGE_USER_INVITATIONS`, and `ASSIGN_SUPER_ADMIN` gate their exact interactions. Possessing `ROLE_SUPER_ADMIN` is not itself an authorization bypass. Audit evidence records actor, target, action, time, result, and safe context without grants/passwords.
 
 ## Acceptance and evidence
 

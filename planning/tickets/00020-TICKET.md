@@ -29,7 +29,7 @@ Out of scope: cross-user Super Admin access, logout-everywhere, raw refresh cred
 
 Session identifiers are validated and safe for transport but reveal no credential. Device/activity descriptions are coarse, escaped, and non-authoritative; do not add fingerprinting. Idle/absolute timestamps and current marker derive from authoritative session state. Revocation is idempotent or returns a safe generic conflict/not-found according to the API contract.
 
-Every read/mutation requires authenticated ownership. The target must belong to the current user and must not be the current session; failures do not reveal cross-user existence. Client hiding never replaces server checks.
+Every read/mutation requires both authoritative `READ_OWN_SESSIONS`/`DELETE_OWN_SESSIONS` as appropriate and package-enforced actor/target ownership. The target must belong to the current user and must not be the current session; failures do not reveal cross-user existence. `READ_SESSIONS`/`DELETE_SESSIONS` are separate installation-wide administrative permissions owned by TICKET-00030; they do not broaden this self-service endpoint. Client hiding never replaces server checks.
 
 ## Acceptance and evidence
 

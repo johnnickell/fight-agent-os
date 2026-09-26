@@ -15,9 +15,9 @@ Feature Actions need a single versioned, validated, documented, and sanitized tr
 
 Establish JSON APIs beneath `/api/v1` using JSend envelopes, explicit safe response/View models, snake_case transport fields, one final Action per interaction, and endpoint-specific successful Responders. Add post-routing/pre-Action `#[Validation]`, centralized known-exception mapping, generic correlated unknown-error handling, OpenAPI contracts, and restricted Swagger UI.
 
-Record the browser-authentication security-profile ADR before authentication transport is implemented. It must cover access-JWT signature and registered/custom claim validation, external key/secret configuration and rotation expectations, refresh-cookie scope, CSRF/Origin/Fetch Metadata controls, refresh conflict/reuse outcomes, multi-tab behavior, and logout/invalidation semantics. This TICKET defines and proves the transport seams but does not implement login or invitation endpoints.
+Record the browser-authentication security-profile ADR before authentication transport is implemented. It must cover access-JWT signature and registered/custom claim validation, external key/secret configuration and rotation expectations, refresh-cookie scope, CSRF/Origin/Fetch Metadata controls, refresh conflict/reuse outcomes, multi-tab behavior, and logout/invalidation semantics. This TICKET defines and proves the transport seams using the real ADR 0003 CSRF bootstrap. It does not implement login, user/session administration or invitation endpoints. Protected API-v1 Actions remain unavailable until the separately owned JWT-by-default route guard is in place.
 
-Out of scope: authentication/invitation/account endpoints, entity serialization, arbitrary exception-message exposure, generic `LookupException` to `404` mapping, CORS without an approved client, and broad browser automation.
+Out of scope: authentication/invitation/account endpoints other than the ADR-approved CSRF bootstrap, entity serialization, arbitrary exception-message exposure, generic `LookupException` to `404` mapping, CORS without an approved client, and broad browser automation.
 
 ## Use cases
 
@@ -38,12 +38,13 @@ Authorization remains server-side and endpoint-specific; framework middleware ma
 ## Acceptance and evidence
 
 - An accepted browser-authentication security ADR covers the required token, cookie, CSRF/origin, refresh, multi-tab, and invalidation decisions before EPIC-00004 transport implementation.
-- `/api/v1` composition supports final Actions, endpoint Responders, explicit Views, JSend, and snake_case mapping.
-- `#[Validation]` runs post-routing/pre-Action and produces deterministic dotted-field failures without dispatch.
+- `/api/v1` composition supports FQCN final Actions, endpoint Responders, explicit Views, JSend, and snake_case mapping through `GET /api/v1/auth/csrf`; no unauthenticated access-control catalog is exposed.
+- Post-routing/pre-Action validation rejects malformed/banned input without dispatch on implemented operations. Dotted-field `#[Validation]` DTO matrices wait for the first real request-body operation; no test-only route/DTO is invented.
 - Central exception mapping handles each known category and keeps generic lookup failures out of automatic `404` treatment.
 - Unknown failures have correlated secret-safe logs and generic client responses.
-- OpenAPI covers representative requests, success, and failure schemas; Swagger UI has explicit environment/authorization restrictions.
-- Functional tests prove boot, unknown route, invalid JSON/shape, known mappings, and sanitized unknown errors.
+- OpenAPI describes the implemented CSRF bootstrap and actual failure schemas; it does not invent a protected resource or a request-body operation. Swagger UI has explicit environment/authorization restrictions.
+- A separately owned, JWT-by-default API-v1 guard reads matched FQCN Action attributes without eager Action instantiation. Protected routes fail closed on missing/invalid metadata, authenticate from current authority, and enforce conjunctive permissions before dispatch while application/package target policies remain authoritative.
+- Functional tests prove boot, unknown route, invalid bootstrap body/shape and reachable errors without a fabricated POST; first real body-bearing Action later proves malformed JSON and DTO shape, while the mapper is checked at its own boundary.
 - Focused HTTP/OpenAPI tests and `./bin/build` pass with fresh evidence and warnings.
 
 ## TASKs
@@ -56,6 +57,7 @@ Authorization remains server-side and endpoint-specific; framework middleware ma
 | [TASK-00019](../tasks/00019-TASK.md) | Reject invalid API input before dispatch | ready-for-agent |
 | [TASK-00020](../tasks/00020-TASK.md) | Centralize correlated and sanitized API failures | ready-for-agent |
 | [TASK-00021](../tasks/00021-TASK.md) | Publish and restrict the representative OpenAPI contract | ready-for-agent |
+| [TASK-00117](../tasks/00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress

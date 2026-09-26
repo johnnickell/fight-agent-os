@@ -13,7 +13,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 17 | [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | — (standalone chore) | ready-for-agent | — | — |
+| 18 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | — | — |
 | 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | — | — |
 | 25 | [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
@@ -22,7 +22,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 18 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00116](00116-TASK.md) | — |
 | 19 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00018](00018-TASK.md) | — |
 | 20 | [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00019](00019-TASK.md) | — |
 | 21 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00020](00020-TASK.md) | — |
@@ -42,15 +41,16 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 38 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00037](00037-TASK.md) | — |
 | 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00033](00033-TASK.md) | — |
 | 40 | [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00038](00038-TASK.md) | — |
-| 41 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00040](00040-TASK.md) | — |
+| 41 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00040](00040-TASK.md), [TASK-00117](00117-TASK.md) | — |
 | 42 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00041](00041-TASK.md) | — |
 | 43 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00035](00035-TASK.md), [TASK-00039](00039-TASK.md), [TASK-00042](00042-TASK.md) | — |
-| 44 | [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00043](00043-TASK.md) | — |
+| 44 | [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00036](00036-TASK.md) | — |
 | 45 | [TASK-00045](00045-TASK.md) | Enforce browser authentication request controls | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00043](00043-TASK.md) | — |
 | 46 | [TASK-00046](00046-TASK.md) | Deliver the canonical email and password login journey | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00044](00044-TASK.md), [TASK-00045](00045-TASK.md) | — |
 | 47 | [TASK-00047](00047-TASK.md) | Deliver rotating refresh and current-session logout | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00046](00046-TASK.md) | — |
 | 48 | [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00047](00047-TASK.md) | — |
-| 49 | [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00048](00048-TASK.md) | — |
+| 49 | [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00048](00048-TASK.md), [TASK-00117](00117-TASK.md) | — |
+| 49 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00020](00020-TASK.md), [TASK-00044](00044-TASK.md) | — |
 | 50 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00035](00035-TASK.md) | — |
 | 51 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00049](00049-TASK.md), [TASK-00050](00050-TASK.md) | — |
 | 52 | [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00051](00051-TASK.md) | — |
@@ -107,12 +107,22 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 108 | [TASK-00111](00111-TASK.md) | Operate the canonical Roadmap and work queue | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00108](00108-TASK.md) | — |
 | 109 | [TASK-00112](00112-TASK.md) | Operate migration and Planning authority | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00107](00107-TASK.md) | — |
 | 110 | [TASK-00113](00113-TASK.md) | Complete integrated Planning Dashboard states and accessibility | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00110](00110-TASK.md), [TASK-00111](00111-TASK.md), [TASK-00112](00112-TASK.md) | — |
+| 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00059](00059-TASK.md), [TASK-00117](00117-TASK.md) | — |
+| 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00118](00118-TASK.md) | — |
+| 114 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00119](00119-TASK.md) | — |
+| 115 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md), [TASK-00126](00126-TASK.md) | — |
+| 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00058](00058-TASK.md), [TASK-00118](00118-TASK.md) | — |
+| 117 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md), [TASK-00121](00121-TASK.md), [TASK-00122](00122-TASK.md), [TASK-00062](00062-TASK.md) | — |
+| 118 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00117](00117-TASK.md), [TASK-00036](00036-TASK.md) | — |
+| 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00124](00124-TASK.md) | — |
+| 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00125](00125-TASK.md), [TASK-00126](00126-TASK.md) | — |
+| 122 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00124](00124-TASK.md), [TASK-00125](00125-TASK.md), [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
 
 ## Needs Info
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream v0.4.0 authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | needs-info | [TASK-00036](00036-TASK.md) | — |
 
 ## Human Action
 
@@ -152,6 +162,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 15 | [TASK-00015](00015-TASK.md) | Persist password-reset grants and terminal succession | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #21](https://github.com/johnnickell/fight-agent-os/pull/21) |
 | 16 | [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and package delivery persistence | [TICKET-00009 — Establish authoritative PostgreSQL persistence](../tickets/00009-TICKET.md) | done | — | [PR #24](https://github.com/johnnickell/fight-agent-os/pull/24) |
 | 17 | [TASK-00017](00017-TASK.md) | Accept the browser-authentication security-profile ADR | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #26](https://github.com/johnnickell/fight-agent-os/pull/26) |
+| 17 | [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | — (standalone chore) | done | — | [PR #28](https://github.com/johnnickell/fight-agent-os/pull/28) |
 | 30 | [TASK-00030](00030-TASK.md) | Complete PHP style and static analysis | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | done | — | [PR #25](https://github.com/johnnickell/fight-agent-os/pull/25) |
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |

@@ -238,9 +238,11 @@ are bounded implementation choices for their named TASKs; they must be fixed and
 
 | Owner | Required evidence before claiming the profile is enforced |
 |---|---|
-| [TASK-00021](../tasks/00021-TASK.md) | Document Bearer vs scoped cookie/CSRF and sanitized error behavior in OpenAPI, not an implemented authentication claim |
+| [TASK-00018](../tasks/00018-TASK.md) | Real `GET /api/v1/auth/csrf` bootstrap, transport-free query/verifier, nonce cookie, short-lived MAC proof and same-origin/no-store evidence; no claim that issuance alone protects mutations |
+| [TASK-00021](../tasks/00021-TASK.md) | Document the implemented bootstrap plus future Bearer vs scoped cookie/CSRF semantics in OpenAPI without claiming JWT/login already work |
 | [TASK-00044](../tasks/00044-TASK.md) | Claim/header/key/time matrix, rotation cutoff and authoritative request-resolution security/HTTP/PostgreSQL tests; reject unsupported duplicate-key parsing rather than guessing |
-| [TASK-00045](../tasks/00045-TASK.md) | Cookie/CSRF/bootstrap/Origin/Fetch/JSON/HTTPS startup, limiter/rollback/concurrency and redaction tests; production limiter must exist |
+| [TASK-00045](../tasks/00045-TASK.md) | Apply TASK-00018's CSRF verifier and cookie/Origin/Fetch/JSON/HTTPS guards before login/refresh/logout, with limiter/rollback/concurrency and redaction tests; production limiter must exist |
+| [TASK-00117](../tasks/00117-TASK.md) | JWT-by-default FQCN Action/permission metadata guard and real authenticated `/me` query, without weakening credential-flow protections |
 | [TASK-00046](../tasks/00046-TASK.md) | Both lifetime policies, generic login failure, token/cookie response and intended-route tests |
 | [TASK-00047](../tasks/00047-TASK.md) | Atomic refresh/replay/conflict/current-logout race, cookie expiry and terminal outcome tests |
 | [TASK-00048](../tasks/00048-TASK.md) | Client tab-generation, conservative `iat`/`exp` skew/delay/wake scheduling, lock/channel timeout/fallback, storage scans and real secure-origin browser smoke |

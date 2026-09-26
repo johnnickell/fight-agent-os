@@ -118,5 +118,17 @@
 | [TASK-00113](00113-TASK.md) | Complete integrated Planning Dashboard states and accessibility | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | ready-for-human | [TICKET-00029](../tickets/00029-TICKET.md) |
 | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | done | — |
-| [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | ready-for-agent | — |
+| [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | done | — |
+| [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00126](00126-TASK.md) | Qualify the upstream v0.4.0 authorization contract and consumer update | needs-info | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 <!-- /planning:records -->
