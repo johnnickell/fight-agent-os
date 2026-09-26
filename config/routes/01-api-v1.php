@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Api\V1\Auth\CsrfBootstrapAction;
-use App\Adapter\Http\Api\V1\Auth\CsrfBootstrapGuard;
+use App\Adapter\Http\Middleware\Api\Auth\CsrfBootstrapGuard;
 use Fight\Common\Application\Service\Container;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;

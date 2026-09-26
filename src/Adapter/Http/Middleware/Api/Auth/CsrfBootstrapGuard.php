@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Http\Api\V1\Auth;
+namespace App\Adapter\Http\Middleware\Api\Auth;
 
 use App\Adapter\Security\HmacCsrfProofs;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Http\Api\V1\Auth\CsrfBootstrapGuard;
+use App\Adapter\Http\Middleware\Api\Auth\CsrfBootstrapGuard;
 use App\Adapter\Security\HmacCsrfProofs;
 use App\Adapter\Security\RandomCsrfNonceGenerator;
 use App\Adapter\Security\SystemCsrfClock;
