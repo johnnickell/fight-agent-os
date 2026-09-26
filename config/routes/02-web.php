@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Http\IndexAction;
+use App\Adapter\Http\Action\IndexAction;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

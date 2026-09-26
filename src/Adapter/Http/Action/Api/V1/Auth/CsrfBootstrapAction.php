@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Http\Api\V1\Auth;
+namespace App\Adapter\Http\Action\Api\V1\Auth;
 
+use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
+use App\Adapter\Http\Responder\Api\V1\Auth\CsrfBootstrapResponder;
 use App\Adapter\Security\HmacCsrfProofs;
-use App\Application\Security\CsrfProof;
-use App\Application\Security\GetCsrfProof;
+use App\Domain\Security\Csrf\Query\CsrfProofView;
+use App\Domain\Security\Csrf\Query\GetCsrfProof;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -19,8 +21,6 @@ use Slim\Exception\HttpBadRequestException;
  */
 final readonly class CsrfBootstrapAction
 {
-    public const string COOKIE = '__Secure-agent_os_csrf';
-
     /**
      * Constructs CsrfBootstrapAction
      */
@@ -42,7 +42,7 @@ final readonly class CsrfBootstrapAction
         $found = false;
         foreach (explode(';', $cookies[0] ?? '') as $cookie) {
             $pair = explode('=', trim($cookie), 2);
-            if ($pair[0] !== self::COOKIE) {
+            if ($pair[0] !== CsrfCookie::NAME) {
                 continue;
             }
 
@@ -55,7 +55,7 @@ final readonly class CsrfBootstrapAction
         }
 
         $result = $this->queries->fetch(new GetCsrfProof($nonce));
-        if (!$result instanceof CsrfProof) {
+        if (!$result instanceof CsrfProofView) {
             throw new \UnexpectedValueException('Unexpected CSRF query result.');
         }
 

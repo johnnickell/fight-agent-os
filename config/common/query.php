@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Application\Security\CsrfClock;
-use App\Application\Security\CsrfNonceGenerator;
-use App\Application\Security\CsrfProofs;
-use App\Application\Security\GetCsrfProof;
-use App\Application\Security\GetCsrfProofHandler;
+use App\Application\Security\Csrf\Clock\CsrfClock;
+use App\Application\Security\Csrf\QueryHandler\GetCsrfProofHandler;
+use App\Application\Security\Csrf\Service\CsrfNonceGenerator;
+use App\Application\Security\Csrf\Service\CsrfProofs;
+use App\Domain\Security\Csrf\Query\GetCsrfProof;
 use Fight\AccessControl\Application\AccessControl\Permission\QueryHandler\ListPermissionsHandler;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\Query\ListPermissions;

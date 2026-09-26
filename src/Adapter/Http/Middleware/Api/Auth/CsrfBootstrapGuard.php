@@ -47,10 +47,7 @@ final readonly class CsrfBootstrapGuard implements MiddlewareInterface
             return $this->reject(403);
         }
 
-        if (
-            $uri->getQuery() !== '' || (string) $request->getBody() !== ''
-            || $request->hasHeader('Content-Type')
-        ) {
+        if ($uri->getQuery() !== '') {
             return $this->reject(400);
         }
 

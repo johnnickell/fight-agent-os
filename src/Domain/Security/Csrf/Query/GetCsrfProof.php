@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Security;
+namespace App\Domain\Security\Csrf\Query;
 
 use Fight\Common\Domain\Messaging\Query\Query;
 use InvalidArgumentException;
@@ -19,6 +19,9 @@ final readonly class GetCsrfProof implements Query
      */
     public function __construct(public ?string $nonce)
     {
+        if ($nonce !== null && preg_match('/\A[0-9a-f]{64}\z/D', $nonce) !== 1) {
+            throw new InvalidArgumentException('Invalid CSRF query input.');
+        }
     }
 
     /**

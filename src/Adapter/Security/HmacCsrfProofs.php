@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Security;
 
-use App\Application\Security\CsrfProofs;
+use App\Application\Security\Csrf\Service\CsrfProofs;
 use InvalidArgumentException;
 
 /**

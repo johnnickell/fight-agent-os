@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Security;
 
-use App\Application\Security\CsrfNonceGenerator;
+use App\Application\Security\Csrf\Service\CsrfNonceGenerator;
 
 /**
  * Class RandomCsrfNonceGenerator
