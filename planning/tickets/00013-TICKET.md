@@ -49,7 +49,7 @@ No runtime permission model applies. Tool configuration changes require approved
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00030](../tasks/00030-TASK.md) | Complete PHP style and static analysis | ready-for-agent |
+| [TASK-00030](../tasks/00030-TASK.md) | Complete PHP style and static analysis | done |
 | [TASK-00031](../tasks/00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | ready-for-agent |
 | [TASK-00032](../tasks/00032-TASK.md) | Enforce deterministic frontend quality checks | ready-for-agent |
 | [TASK-00033](../tasks/00033-TASK.md) | Make bin build the complete read-only application gate | ready-for-agent |
