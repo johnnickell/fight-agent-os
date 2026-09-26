@@ -5,10 +5,54 @@ on:
     branches: [develop, main, 'release/**']
   pull_request:
     branches: [develop, main, 'release/**']
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres_test:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_DB: agent_os_test
+          POSTGRES_USER: agent_os_test
+          POSTGRES_PASSWORD: agent_os_test_local
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agent_os_test -d agent_os_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      APP_ENV: test
+      COMPOSER_ROOT_VERSION: dev-develop
+      TEST_DATABASE_ALLOWED_HOST: postgres_test
     steps:
       - uses: actions/checkout@v4
-      - run: ./bin/build
+      - name: Address the isolated PostgreSQL service directly
+        run: |
+          # The test guard compares PostgreSQL's server-side address to this hostname.
+          # Connecting through the runner's published loopback port would fail that check.
+          service_ip="$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' '${{ job.services.postgres_test.id }}')"
+          if [[ ! "$service_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'Cannot resolve the isolated PostgreSQL service address.' >&2
+            exit 1
+          fi
+          printf '%s postgres_test\n' "$service_ip" | sudo tee -a /etc/hosts >/dev/null
+          echo 'DATABASE_URL=postgresql://agent_os_test:agent_os_test_local@postgres_test:5432/agent_os_test' >> "$GITHUB_ENV"
+          echo 'TEST_DATABASE_URL=postgresql://agent_os_test:agent_os_test_local@postgres_test:5432/agent_os_test' >> "$GITHUB_ENV"
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_pgsql, mbstring, dom, xml, curl, zip
+          tools: composer:v2
+          coverage: none
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Guard and migrate isolated test database
+        run: |
+          php scripts/guarded_test_database.php reset
+          php vendor/bin/doctrine-migrations migrate --no-interaction
+      - name: Run application build
+        run: php scripts/build.php
