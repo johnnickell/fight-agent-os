@@ -11,6 +11,8 @@ services:
         condition: service_healthy
     environment:
       APP_ENV: development
+      APP_BROWSER_ORIGIN: ${APP_BROWSER_ORIGIN:-}
+      APP_CSRF_MAC_KEY: ${APP_CSRF_MAC_KEY:-}
       DATABASE_URL: postgresql://${POSTGRES_USER:-agent_os}:${POSTGRES_PASSWORD:-agent_os_local}@postgres:5432/${POSTGRES_DB:-agent_os}
       TEST_DATABASE_ALLOWED_HOST: postgres_test
       TEST_DATABASE_URL: postgresql://${POSTGRES_TEST_USER:-agent_os_test}:${POSTGRES_TEST_PASSWORD:-agent_os_test_local}@postgres_test:5432/${POSTGRES_TEST_DB:-agent_os_test}

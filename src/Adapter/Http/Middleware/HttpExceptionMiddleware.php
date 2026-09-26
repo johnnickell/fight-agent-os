@@ -63,7 +63,8 @@ final readonly class HttpExceptionMiddleware implements MiddlewareInterface
 
             return $this->responseFactory->fromEnvelope(
                 JSendEnvelope::error($publicError[0]),
-                $publicError[1]
+                $publicError[1],
+                ['Cache-Control' => 'no-store']
             );
         }
     }
