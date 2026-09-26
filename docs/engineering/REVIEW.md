@@ -1,52 +1,48 @@
 # Review Standards
 
-Review is an independent attempt to falsify an implementation's acceptance claims. It reports evidence and a verdict; implementation and landing remain separate work.
+Review is an independent attempt to disprove a TASK's acceptance claims. It reports findings and evidence; implementation, publication, and merge are separate.
 
-## Independence and target
+## Target and independence
 
-Disclose whether the reviewer authored, directed, repaired, or supplied acceptance evidence for the target. Any material contribution prevents an independent verdict. Identify the approved TASK, exact base and head, working-tree state, and claimed evidence before judging the change. Ambiguous scope or provenance limits the verdict explicitly.
+Read the TASK, its accepted decisions, the diff against the identified base, current status, and claimed tests. Disclose whether the reviewer authored, directed, repaired, or supplied evidence for the implementation. A material contributor cannot independently accept it. Include staged, unstaged, and untracked target changes in the reviewed scope; a clean committed target is preferable for a landing handoff.
 
-Use repository files and fresh command output as primary evidence. A summary, prior green receipt, generated status, or inherited test proves only what can be traced to the reviewed target.
+A review of a rebased branch challenges the new base and effective diff, not just the old patch. A prior report may remain applicable through a **proven mechanical reconciliation** under [landing standards](LANDING.md); changed commit IDs alone neither prove a defect nor require another review. Substantive behavior changes or uncertain integration require a new independent review.
 
-## Coverage
+## Challenge acceptance
 
-Attempt to disprove every applicable area:
+Map every acceptance criterion to changed behavior, tests, and fresh evidence. Inspect the actual diff and trace applicable boundaries:
 
-- **Scope:** acceptance is complete; exclusions and unrelated files remain untouched; planning claims match observable state.
-- **Architecture:** dependency direction, Domain/Application/Adapter ownership, injected capability boundaries, and stated transaction or delivery guarantees hold.
-- **CQRS and HTTP:** commands, queries, events, Actions, Responders, safe Views, validation, mapping, and error behavior keep their accepted responsibilities.
-- **Security:** authorization is server-enforced; credentials, secrets, sensitive data, and diagnostics are handled safely; negative and abuse paths fail closed.
-- **Behavior and tests:** success, rejection, failure, regression, and side effects are proved at the narrowest useful boundary without tests that merely mirror implementation.
-- **Evidence:** commands are fresh and reproducible; counts and warnings are accurate; failures, skips, deprecations, unavailable checks, and uncertainty are disclosed.
+- scope, exclusions, and truthful planning claims;
+- dependency direction and Domain/Application/Adapter ownership;
+- CQRS, HTTP validation, response mapping, and safe Views where changed;
+- server authorization, secrets, sensitive data, and error paths;
+- success, rejection, failure, side effects, and PostgreSQL/transaction behavior where relevant;
+- fresh check results, counts, warnings, skips, and limitations.
 
-Mark a coverage area not applicable only with a reason tied to the TASK and diff.
+Mark inapplicable areas briefly with a reason. Test unsupported claims at the narrowest useful boundary; run the canonical gate when acceptance depends on it. Do not fix implementation or change planning status while reviewing.
 
-## Findings
+## Findings and verdict
 
-A blocking finding is an acceptance, correctness, security, authorization, data-integrity, scope, or evidence defect that prevents trust in the claimed result. Rank it `critical`, `high`, `medium`, or `low` by plausible impact and reach.
+A blocking finding is a traceable acceptance, correctness, security, data-integrity, scope, or evidence defect. Give severity (`critical`, `high`, `medium`, `low`), affected criterion, reproducible evidence, expected versus observed behavior, and correction. Separate non-blocking improvements from unproved residual risks. `accept` requires sufficient evidence for all criteria and no blockers; otherwise `revise`. An independent review does not approve a PR or authorize merge.
 
-A non-blocking finding is traceable improvement work that does not invalidate acceptance. A subjective preference is not a finding unless an approved standard or requirement establishes the expected behavior. A residual risk records an evidence limit or untested uncertainty without asserting a defect.
+## Durable handoff
 
-Every actionable finding names the affected requirement, reproducing evidence, expected and observed behavior, and required correction. Findings without traceable evidence do not support a `revise` verdict.
+Publish the complete report at `<base-worktree>/.runs/reviews/<TASK-ID>/review.md`; chat is only a pointer. Resolve the base via Git's common directory and registered worktrees, and keep the ignored report directory within that base without following symlinks. Existing numbered `review-<NNNNN>.md` files are historical evidence: preserve them, but do not create new sequence entries. Replace only the canonical report, using a temporary file in the same directory and atomic rename. If writing or read-back fails, report an incomplete handoff and do not return an actionable chat-only verdict.
 
-## Durable review handoff
+New reports use this small header:
 
-Every completed review publishes its full report at `<base-worktree>/.runs/reviews/<TASK-ID>/review.md` and retains the same bytes in immutable sequence history at `review-<NNNNN>.md`; chat output is only a pointer and summary. `review.md` is always the sole canonical latest handoff, so consumers never choose among history files. Resolve the base from Git's canonical common directory and registered-worktree metadata by selecting the sole worktree whose Git directory is the common directory. Verify the selected top level. Do not assume the current checkout is primary, treat the first listed worktree as authority without validation, derive the base from a parent directory, or search outside registered worktrees.
+```yaml
+---
+review_handoff_version: 3
+task: TASK-NNNNN
+target_branch: feature/example
+base_commit: <full Git OID>
+head_commit: <full Git OID>
+target_status: clean
+verdict: accept
+---
+```
 
-The report starts with YAML front matter identified by `review_handoff_version: 2`. Its exact identity keys are `review_sequence`, `task`, `repository_common_directory`, `base_worktree`, `canonical_report`, `history_report`, `target_kind`, `target_identifier`, `target_branch`, `target_worktree`, `base_commit`, `head_commit`, `target_status`, `reviewed_artifact_count`, `reviewed_content_digest`, and `verdict`. Use canonical absolute paths and full commit OIDs. The positive sequence must equal the five-digit `history_report` suffix. Status is `clean` or the complete porcelain-v1 snapshot including untracked files.
+`target_status` is `clean` or the full `git status --porcelain=v1 --untracked-files=all` snapshot (use a YAML block scalar for multiple lines). For dirty reviews, identify each reviewed file version by path, state and digest or retained patch so a later session can detect drift; identify any selected ignored evidence even when Git status is clean. Include reviewer relationship, exact target/base, findings (or `None`), criterion-to-evidence coverage, fresh commands/results, limitations, risks, and final verdict in the body. Read the canonical report back before handoff.
 
-Snapshot identity covers every reviewed staged, unstaged, and untracked version plus every explicitly reviewed ignored artifact. When any such state exists, section 1 contains a fenced `Reviewed snapshot manifest` in canonical JSON Lines. Every record uses keys `domain`, `path`, `root`, `type`, `mode`, `size`, and `sha256` in that order. Domains sort as `index`, `worktree`, then `external`; records then sort by normalized target-relative UTF-8 path bytes. External selected roots use `root: true`, descendants use false, directories are recursively inventoried, and `reviewed_artifact_count` counts the roots. Types are `regular`, `directory`, `symlink`, and `absent`; modes are lower-case octal; sizes and SHA-256 values cover regular-file bytes or non-followed symlink-target bytes, while directories and absence records use null size/digest. Reject escaping, duplicate, non-UTF-8, or special-file entries. The digest is SHA-256 of the exact newline-terminated manifest bytes and is null only for a Git-clean target with no reviewed ignored artifacts. Consumers re-enumerate each root, so a path, type, mode, content, addition, or removal changes identity.
-
-The report then contains, in order, independence and scope, blocking findings, non-blocking findings, acceptance matrix, verification, evidence limitations, residual risks, and verdict. Identity, status, manifest, findings, evidence, limitations, and verdict describe one snapshot. Exclude secrets, credentials, private production data, and unrelated worktree content.
-
-The report directory and files remain within the ignored base `.runs/reviews/` root and never traverse symlinks. Numbered files must be contiguous, regular, non-symlink files and are never rewritten or removed. The canonical file must be byte-identical to the highest numbered report. If a sole pre-sequence canonical report exists, preserve it unchanged as `review-00001.md` before publishing sequence 2; all other gaps, malformed names, divergence, or interrupted states fail closed.
-
-Write a mode-`0600` report-owned temporary regular file beside the final files and verify completeness. Atomically publish it without replacement as the next history report and atomically replace `review.md` with the same bytes. Read the final canonical and history files back and verify byte equality, digest, ordered sections, identity, sequence, manifest, and verdict. Publication completes only after both names validate. Any base, path, sequence, write, publication, rename, or read-back failure means no completed handoff exists: name both exact paths and the failure, preserve immutable history and the implementation, and do not leave an actionable `accept` or `revise` verdict only in ephemeral output.
-
-A successful final response prominently names the verdict, sequence, absolute canonical path, and immutable history path. The canonical persisted report is the unambiguous handoff consumed by later execution and landing sessions; history is retained evidence, not an alternative input. Both remain ignored scratch, not authoritative planning records or committed artifacts.
-
-## Verdict
-
-Return `revise` when any blocking finding remains or evidence is too incomplete to establish acceptance. Return `accept` only when every acceptance criterion is supported, applicable coverage has been challenged, warnings and limitations are disclosed, and no blocking finding remains.
-
-Neither verdict marks planning complete or grants PR approval, landing, push, merge, release, or deployment authority.
+Older version-2 reports remain valid handoffs; read their canonical file and verify its declared branch, base/head, status, verdict, and any recorded snapshot against the target. Keep existing immutable history untouched. Only the canonical `review.md` supplies the latest verdict; never pick an older numbered file to override it.
