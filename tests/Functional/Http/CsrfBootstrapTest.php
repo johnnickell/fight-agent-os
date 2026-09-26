@@ -77,7 +77,7 @@ final class CsrfBootstrapTest extends TestCase
             '__Secure-agent_os_csrf='.$nonce.'; __Secure-agent_os_csrf='.$nonce
         ));
         self::assertSame(400, $ambiguous->getStatusCode());
-        self::assertSame(['status' => 'error', 'message' => 'Bad request.'], json_decode(
+        self::assertSame(['status' => 'fail', 'data' => ['fields' => ['cookie' => ['Ambiguous cookie.']]]], json_decode(
             (string) $ambiguous->getBody(),
             true,
             512,
@@ -131,6 +131,66 @@ final class CsrfBootstrapTest extends TestCase
         self::assertSame('safe-proof', $body['data']['proof']);
         self::assertSame(['proof', 'expires_at'], array_keys($body['data']));
         self::assertSame('', $response->getHeaderLine('Set-Cookie'));
+    }
+
+    /**
+     * Verifies rejected bootstrap transport input never reaches the query bus
+     */
+    public function testRejectedTransportInputDoesNotDispatch(): void
+    {
+        $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+        $bus = new class implements QueryBus {
+            public int $calls = 0;
+
+            /**
+             * @inheritDoc
+             */
+            public function fetch(Query $query): mixed
+            {
+                ++$this->calls;
+
+                return new CsrfProof(bin2hex(random_bytes(32)), 'safe-proof', time() + 900, false);
+            }
+
+            /**
+             * @inheritDoc
+             */
+            public function dispatch(QueryMessage $queryMessage): mixed
+            {
+                throw new \LogicException('The Action must dispatch through fetch.');
+            }
+        };
+        $app->getContainer()?->set(QueryBus::class, static fn (): QueryBus => $bus);
+        $base = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf');
+        $cases = [
+            [$base->withBody((new \Slim\Psr7\Factory\StreamFactory())->createStream('{"secret":"do-not-echo"}')),
+                'body', 'Body is not allowed.'],
+            [$base->withBody((new \Slim\Psr7\Factory\StreamFactory())->createStream('{bad-json')),
+                'body', 'Body is not allowed.'],
+            [$base->withHeader('Content-Type', 'application/json'), 'body', 'Body is not allowed.'],
+            [$base->withHeader('Cookie', ['a=b', 'c=d']), 'cookie', 'Invalid cookie.'],
+            [$base->withHeader('Cookie', str_repeat('a', 4097)), 'cookie', 'Invalid cookie.'],
+            [$base->withHeader('Cookie', '__Secure-agent_os_csrf'), 'cookie', 'Ambiguous cookie.'],
+            [$base->withHeader('Cookie', '__Secure-agent_os_csrf=x; __Secure-agent_os_csrf=y'),
+                'cookie', 'Ambiguous cookie.']
+        ];
+        foreach ($cases as [$request, $field, $message]) {
+            $response = $app->handle($request);
+            self::assertSame(400, $response->getStatusCode());
+            self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
+            self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+            self::assertSame('', $response->getHeaderLine('Set-Cookie'));
+            self::assertSame(
+                ['status' => 'fail', 'data' => ['fields' => [$field => [$message]]]],
+                json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)
+            );
+            self::assertStringNotContainsString('do-not-echo', (string) $response->getBody());
+        }
+        self::assertSame(0, $bus->calls);
+        self::assertSame(405, $app->handle($base->withMethod('POST'))->getStatusCode());
+        self::assertSame(0, $bus->calls);
+        self::assertSame(200, $app->handle($base)->getStatusCode());
+        self::assertSame(1, $bus->calls);
     }
 
     /**

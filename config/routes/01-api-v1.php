@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Api\V1\Auth\CsrfBootstrapAction;
+use App\Adapter\Http\Middleware\Api\ApiInputValidation;
 use App\Adapter\Http\Middleware\Api\Auth\CsrfBootstrapGuard;
 use Fight\Common\Application\Service\Container;
 use Slim\App;
@@ -15,4 +16,4 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     $api->get('/auth/csrf', CsrfBootstrapAction::class)
         ->add($container->get(CsrfBootstrapGuard::class))
         ->setName('api.v1.auth.csrf');
-});
+})->add($container->get(ApiInputValidation::class));

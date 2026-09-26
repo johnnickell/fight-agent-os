@@ -21,7 +21,7 @@
 | [TASK-00016](00016-TASK.md) | Establish atomic audit evidence and package delivery persistence | done | [TICKET-00009](../tickets/00009-TICKET.md) |
 | [TASK-00017](00017-TASK.md) | Accept the browser-authentication security-profile ADR | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | done | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
