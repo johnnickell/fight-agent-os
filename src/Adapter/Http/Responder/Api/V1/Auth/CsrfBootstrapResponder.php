@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Http\Api\V1\Auth;
+namespace App\Adapter\Http\Responder\Api\V1\Auth;
 
-use App\Application\Security\CsrfProof;
+use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
+use App\Domain\Security\Csrf\Query\CsrfProofView;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use Psr\Http\Message\ResponseInterface;
@@ -26,17 +27,17 @@ final readonly class CsrfBootstrapResponder
     /**
      * Returns a no-store JSend proof and a new session cookie only when needed
      */
-    public function respond(CsrfProof $result): ResponseInterface
+    public function respond(CsrfProofView $result): ResponseInterface
     {
         $headers = ['Cache-Control' => 'no-store'];
         if ($result->newNonce) {
             $headers['Set-Cookie'] = sprintf(
                 '%s=%s; Path=/api/v1/auth; Secure; HttpOnly; SameSite=Strict',
-                CsrfBootstrapAction::COOKIE,
+                CsrfCookie::NAME,
                 $result->nonce
             );
         }
 
-        return $this->responses->fromEnvelope(JSendEnvelope::success(new CsrfProofView($result)), 200, $headers);
+        return $this->responses->fromEnvelope(JSendEnvelope::success(new CsrfBootstrapData($result)), 200, $headers);
     }
 }

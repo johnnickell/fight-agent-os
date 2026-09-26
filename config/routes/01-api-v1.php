@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Http\Api\V1\Auth\CsrfBootstrapAction;
-use App\Adapter\Http\Middleware\Api\ApiInputValidation;
+use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
 use App\Adapter\Http\Middleware\Api\Auth\CsrfBootstrapGuard;
+use App\Adapter\Http\Middleware\Api\Validation\ApiInputValidation;
 use Fight\Common\Application\Service\Container;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;

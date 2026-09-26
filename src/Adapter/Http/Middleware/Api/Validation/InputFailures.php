@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Http\Api\V1;
+namespace App\Adapter\Http\Middleware\Api\Validation;
 
 use Fight\Common\Domain\Type\Arrayable;
 

@@ -17,4 +17,8 @@
     <exclude-pattern>*/.runs/*</exclude-pattern>
     <arg name="extensions" value="php"/>
     <rule ref="./vendor/johnnickell/fight-common/src/Standards/Phpcs/ruleset.xml"/>
+    <!-- Match Fight Common's snake_case test names without relaxing production method naming -->
+    <rule ref="PSR1.Methods.CamelCapsMethodName">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
 </ruleset>

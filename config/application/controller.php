@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Http\Api\V1\Auth\CsrfBootstrapAction;
-use App\Adapter\Http\Api\V1\Auth\CsrfBootstrapResponder;
-use App\Adapter\Http\IndexAction;
-use App\Adapter\Http\Middleware\Api\ApiInputValidation;
+use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
+use App\Adapter\Http\Action\IndexAction;
+use App\Adapter\Http\Middleware\Api\Validation\ApiInputValidation;
+use App\Adapter\Http\Responder\Api\V1\Auth\CsrfBootstrapResponder;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;

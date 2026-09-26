@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Middleware\Api\Auth\CsrfBootstrapGuard;
+use App\Adapter\Security\Clock\SystemCsrfClock;
 use App\Adapter\Security\HmacCsrfProofs;
 use App\Adapter\Security\RandomCsrfNonceGenerator;
-use App\Adapter\Security\SystemCsrfClock;
-use App\Application\Security\CsrfClock;
-use App\Application\Security\CsrfNonceGenerator;
-use App\Application\Security\CsrfProofs;
+use App\Application\Security\Csrf\Clock\CsrfClock;
+use App\Application\Security\Csrf\Service\CsrfNonceGenerator;
+use App\Application\Security\Csrf\Service\CsrfProofs;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Service\Container;
 

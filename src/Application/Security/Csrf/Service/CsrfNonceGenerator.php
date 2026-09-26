@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Security;
+namespace App\Application\Security\Csrf\Service;
 
 /**
  * Interface CsrfNonceGenerator

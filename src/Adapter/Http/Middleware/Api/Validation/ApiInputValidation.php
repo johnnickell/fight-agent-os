@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Http\Middleware\Api;
+namespace App\Adapter\Http\Middleware\Api\Validation;
 
-use App\Adapter\Http\Api\V1\Auth\CsrfBootstrapAction;
-use App\Adapter\Http\Api\V1\InputFailures;
-use App\Adapter\Http\Api\V1\JsonBody;
+use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
+use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
+use App\Adapter\Http\Attribute\JsonBody;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Attribute\Validation;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
@@ -62,7 +62,7 @@ final readonly class ApiInputValidation implements MiddlewareInterface
                 $found = false;
                 foreach (explode(';', $cookies[0] ?? '') as $cookie) {
                     $pair = explode('=', trim($cookie), 2);
-                    if ($pair[0] !== CsrfBootstrapAction::COOKIE) {
+                    if ($pair[0] !== CsrfCookie::NAME) {
                         continue;
                     }
 
