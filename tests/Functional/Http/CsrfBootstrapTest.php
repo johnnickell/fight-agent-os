@@ -24,7 +24,8 @@ final class CsrfBootstrapTest extends TestCase
     public function test_that_bootstrap_route_issues_proof(): void
     {
         $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
-        $request = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf');
+        $request = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf')
+            ->withHeader('X-Correlation-ID', str_repeat('c', 32));
 
         $response = $app->handle($request);
 
@@ -32,6 +33,7 @@ final class CsrfBootstrapTest extends TestCase
             'success',
             json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)['status']
         );
+        self::assertSame(str_repeat('c', 32), $response->getHeaderLine('X-Correlation-ID'));
     }
 
     /**
@@ -63,10 +65,13 @@ final class CsrfBootstrapTest extends TestCase
         };
         $app->getContainer()?->set(QueryBus::class, static fn (): QueryBus => $bus);
         $request = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf')
-            ->withBody((new StreamFactory())->createStream('not-json'));
+            ->withBody((new StreamFactory())->createStream('not-json'))
+            ->withHeader('X-Correlation-ID', str_repeat('d', 32));
 
-        $app->handle($request);
+        $response = $app->handle($request);
 
         self::assertSame(0, $bus->calls);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertSame(str_repeat('d', 32), $response->getHeaderLine('X-Correlation-ID'));
     }
 }

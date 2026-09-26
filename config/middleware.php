@@ -2,19 +2,26 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Http\Middleware\HttpExceptionMiddleware;
-use App\Adapter\Http\Middleware\UnexpectedErrorMiddleware;
+use App\Adapter\Http\Middleware\ApiFailureBoundary;
+use App\Adapter\Http\Middleware\ApiFailureMapper;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Monolog\Formatter\JsonFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Level;
+use Monolog\Logger;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use Slim\App;
 
 /** @var App $app */
 /** @var ContainerInterface $container */
-// Slim executes middleware last-in, first-out: generic error -> Slim HTTP error -> routing -> API validation -> route.
+// Slim executes middleware last-in, first-out: failure boundary -> routing -> API validation -> route.
 $app->addRoutingMiddleware();
-$app->add(new HttpExceptionMiddleware($container->get(JSendResponseFactory::class)));
-$app->add(new UnexpectedErrorMiddleware(
+$failureLog = new Logger('http-failure');
+$failureHandler = new StreamHandler('php://stderr', Level::Error);
+$failureHandler->setFormatter(new JsonFormatter());
+$failureLog->pushHandler($failureHandler);
+$app->add(new ApiFailureBoundary(
+    new ApiFailureMapper(),
     $container->get(JSendResponseFactory::class),
-    $container->get(LoggerInterface::class)
+    $failureLog
 ));
