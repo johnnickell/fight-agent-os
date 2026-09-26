@@ -119,6 +119,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 2 | [TASK-00130](00130-TASK.md) | Strengthen architecture, testing, and two-pass review guidance | — (standalone chore) | needs-info | — | — |
 | 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream v0.4.0 authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | needs-info | [TASK-00036](00036-TASK.md) | — |
 
 ## Human Action
@@ -142,7 +143,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00001](00001-TASK.md) | Add the initial project-local planning skills | [TICKET-00001 — Seed the planning skill foundation](../tickets/00001-TICKET.md) | done | — | — |
 | 1 | [TASK-00071](00071-TASK.md) | Prepare develop documentation for public visibility | — (standalone chore) | done | — | [PR #18](https://github.com/johnnickell/fight-agent-os/pull/18) |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
-| 2 | [TASK-00130](00130-TASK.md) | Strengthen architecture, testing, and two-pass review guidance | — (standalone chore) | done | — | — |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |
 | 4 | [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | — (standalone bug) | done | — | [PR #8](https://github.com/johnnickell/fight-agent-os/pull/8) |
