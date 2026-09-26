@@ -32,4 +32,6 @@
 | [TICKET-00027](00027-TICKET.md) | Deliver the canonical Planning queue and Roadmap | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
 | [TICKET-00028](00028-TICKET.md) | Migrate and cut over Markdown Planning authority | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
 | [TICKET-00029](00029-TICKET.md) | Deliver the registered Planning Dashboard | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
+| [TICKET-00030](00030-TICKET.md) | Administer installation users and cross-user sessions | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
+| [TICKET-00031](00031-TICKET.md) | Read authority catalogs and administer custom roles | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 <!-- /planning:records -->
