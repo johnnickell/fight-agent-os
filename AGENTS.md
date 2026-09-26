@@ -26,4 +26,5 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 
 ## Learnings
 
-Record concise, evidence-backed project learnings here when requested.
+- Generate Doctrine migration versions with `doctrine-migrations generate` or `diff` so new names carry their real generation timestamp; never invent future dates. When correcting an older version, use a verifiable historical timestamp and account for databases that already recorded the old version. TASK-00012/00013 migrations were named October 1/2 before those dates; their introduction commits on September 25 provide verifiable correction times.
+- Generate UUIDs using the owning package's ID factory or a UUID library, including in fixtures and examples; never improvise UUID literals. This is a convention, not a reason to add product tests of tooling or naming.
