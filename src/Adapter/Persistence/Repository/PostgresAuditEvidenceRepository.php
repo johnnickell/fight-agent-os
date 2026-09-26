@@ -35,7 +35,7 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
         $actor = $evidence->actorId();
         $action = $evidence->action();
         $context = $evidence->context();
-        if ($actor === '' || strlen($actor) > 128 || preg_match('/[\x00-\x1f\x7f]/', $actor)
+        if (!$this->approvedActor($actor, $action)
             || strlen($action) > 128 || !preg_match('/^[a-z][a-z0-9_.]*$/D', $action)
             || !$this->approvedContext($action, $context)) {
             throw new InvalidArgumentException('Audit evidence contains unsupported public fields.');
@@ -54,6 +54,22 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
             'subject_id' => $evidence->subjectId()->toString(),
             'context' => $json,
         ]);
+    }
+
+    /**
+     * Accepts only canonical principal IDs or the package's anonymous reset actor
+     */
+    private function approvedActor(string $actor, string $action): bool
+    {
+        if ($actor === 'anonymous') {
+            return in_array($action, [
+                'user.password_reset_requested',
+                'user.password_reset_delivery.failed',
+                'user.password_reset_delivery.confirmed',
+            ], true);
+        }
+
+        return preg_match('/\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $actor) === 1;
     }
 
     /**

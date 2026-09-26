@@ -221,10 +221,7 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
                     CredentialDeliveryStatus::PENDING => $before->requestDeliveryRetry(),
                     CredentialDeliveryStatus::DELIVERED => $before->confirmDelivery($delivery->getClaimToken(), $next->getLastOutcomeAt()),
                     CredentialDeliveryStatus::PERMANENT_FAILURE => $before->failDeliveryPermanently($delivery->getClaimToken(), $next->getLastOutcomeAt()),
-                    CredentialDeliveryStatus::EXPIRED => $delivery->getStatus() === CredentialDeliveryStatus::CLAIMED
-                        && $next->getLastOutcomeAt() !== null && $next->getLastFailure() !== null
-                            ? $before->failDelivery($delivery->getClaimToken(), $next->getLastOutcomeAt(), $next->getLastFailure())
-                            : $before->expireDeliveryAt($next->getExpiresAt()),
+                    CredentialDeliveryStatus::EXPIRED => $this->expectedExpiry($before, $after),
                     CredentialDeliveryStatus::INVALIDATED => throw new LogicException('Delivery invalidation must follow an authority transition.'),
                 };
             } elseif ($before->isIssued() && $after->isConsumed()) {
@@ -241,6 +238,26 @@ SQL, [$this->date($at), $this->date($at), $this->date($at), $limit],
         }
 
         return $this->sameState($expected, $after);
+    }
+
+    private function expectedExpiry(EmailChangeGrant $before, EmailChangeGrant $after): EmailChangeGrant
+    {
+        $next = $after->getDelivery();
+        $expired = $before->expireDeliveryAt($next->getExpiresAt());
+        if ($this->sameState($expired, $after)) {
+            return $expired;
+        }
+
+        // A live claim can also expire when package backoff crosses grant expiry.
+        // Compare the entire result: retained failure evidence from an older claim
+        // must not be mistaken for a new provider outcome.
+        $delivery = $before->getDelivery();
+        if ($delivery->getStatus() === CredentialDeliveryStatus::CLAIMED
+            && $next->getLastOutcomeAt() !== null && $next->getLastFailure() !== null) {
+            return $before->failDelivery($delivery->getClaimToken(), $next->getLastOutcomeAt(), $next->getLastFailure());
+        }
+
+        return $expired;
     }
 
     private function date(DateTimeImmutable $value): string

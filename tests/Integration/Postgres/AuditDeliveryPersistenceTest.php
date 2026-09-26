@@ -83,21 +83,21 @@ final class AuditDeliveryPersistenceTest extends TestCase
     {
         $agent = AgentId::generate();
         $this->commit(function () use ($agent): void {
-            $this->audit->add(AuditEvidence::record('operator', 'user.invited', $this->userId));
-            $this->audit->add(AuditEvidence::agentProvisioned('operator', $agent));
+            $this->audit->add(AuditEvidence::record($this->userId->toString(), 'user.invited', $this->userId));
+            $this->audit->add(AuditEvidence::agentProvisioned($this->userId->toString(), $agent));
         });
         $rows = $this->connection->fetchAllAssociative('SELECT actor_id, action, subject_type, subject_id, context FROM audit_evidence ORDER BY id');
         self::assertCount(2, $rows);
         self::assertSame(['user', 'agent'], array_column($rows, 'subject_type'));
         self::assertSame([$this->userId->toString(), $agent->toString()], array_column($rows, 'subject_id'));
         self::assertSame(['user.invited', 'agent.provisioned'], array_column($rows, 'action'));
-        self::assertSame(['operator', 'operator'], array_column($rows, 'actor_id'));
+        self::assertSame([$this->userId->toString(), $this->userId->toString()], array_column($rows, 'actor_id'));
         self::assertSame(['{}', '{}'], array_column($rows, 'context'));
         [$grant] = $this->grant();
         try {
             $this->commit(function () use ($grant): void {
                 self::assertTrue($this->changes->add($grant));
-                $this->audit->add(AuditEvidence::record('operator', 'user.email_change_administratively_requested', $this->userId));
+                $this->audit->add(AuditEvidence::record($this->userId->toString(), 'user.email_change_administratively_requested', $this->userId));
                 throw new RuntimeException('caller rollback');
             });
             self::fail('Expected caller rollback.');
@@ -113,28 +113,61 @@ final class AuditDeliveryPersistenceTest extends TestCase
         $invalid = new class($this->userId) extends AuditEvidence {
             public function __construct(UserId $user)
             {
-                parent::__construct('operator', 'user.invited', $user, ['access_token' => 'private']);
+                parent::__construct($user->toString(), 'user.invited', $user, ['access_token' => 'private']);
             }
         };
-        try {
-            $this->commit(fn() => $this->audit->add($invalid));
-            self::fail('Unsupported context must be rejected.');
-        } catch (InvalidArgumentException $exception) {
-            self::assertSame('Audit evidence contains unsupported public fields.', $exception->getMessage());
-        }
+        $this->assertAuditRejected($invalid);
         $oversized = new class($this->userId) extends AuditEvidence {
             public function __construct(UserId $user)
             {
                 parent::__construct(str_repeat('a', 129), 'user.invited', $user);
             }
         };
-        try {
-            $this->commit(fn() => $this->audit->add($oversized));
-            self::fail('Oversized evidence must be rejected.');
-        } catch (InvalidArgumentException $exception) {
-            self::assertSame('Audit evidence contains unsupported public fields.', $exception->getMessage());
-        }
+        $this->assertAuditRejected($oversized);
+        $secretActor = AuditEvidence::record('Bearer '.bin2hex(random_bytes(32)), 'user.invited', $this->userId);
+        $this->assertAuditRejected($secretActor);
+        $this->assertAuditRejected(AuditEvidence::record('anonymous', 'user.invited', $this->userId));
         self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        $this->commit(fn() => $this->audit->add(AuditEvidence::record('anonymous', 'user.password_reset_requested', $this->userId)));
+        self::assertSame('anonymous', $this->connection->fetchOne('SELECT actor_id FROM audit_evidence'));
+    }
+
+    public function test_expiry_after_retry_and_reclaim_destroys_material_and_rejects_stale_outcomes(): void
+    {
+        [$grant] = $this->grant();
+        self::assertTrue($this->commit(fn(): bool => $this->changes->add($grant)));
+        $firstToken = CredentialDeliveryClaimToken::generate();
+        $claimed = $grant->claimDelivery($firstToken, $this->now, $this->now->modify('+5 minutes'));
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($grant, $claimed)));
+        $retry = $claimed->failDelivery($firstToken, $this->now->modify('+1 minute'), CredentialDeliveryFailure::UNEXPECTED_PROVIDER);
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($claimed, $retry)));
+        $dueAt = $retry->getDelivery()->getDueAt();
+        $nextToken = CredentialDeliveryClaimToken::generate();
+        $reclaimed = $retry->claimDelivery($nextToken, $dueAt, $dueAt->modify('+5 minutes'));
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($retry, $reclaimed)));
+        $expired = $reclaimed->expireDeliveryAt($grant->getExpiresAt());
+        self::assertSame(CredentialDeliveryStatus::EXPIRED, $expired->getDelivery()->getStatus());
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($reclaimed, $expired)));
+        self::assertTrue($expired->getDelivery()->sameStateAs($this->changes->getLatestByUserId($this->userId)?->getDelivery()));
+        self::assertNull($this->connection->fetchOne('SELECT delivery_ciphertext FROM email_change_grants WHERE id = ?', [$grant->getId()->toString()]));
+        self::assertSame([], $this->changes->findDue($grant->getExpiresAt(), 10));
+        self::assertFalse($this->commit(fn(): bool => $this->changes->replace($reclaimed,
+            $reclaimed->confirmDelivery($nextToken, $dueAt->modify('+1 minute')))));
+    }
+
+    public function test_retry_backoff_crossing_expiry_persists_package_terminal_outcome(): void
+    {
+        [$grant] = $this->grant();
+        self::assertTrue($this->commit(fn(): bool => $this->changes->add($grant)));
+        $claimedAt = $this->now->modify('+59 minutes');
+        $token = CredentialDeliveryClaimToken::generate();
+        $claimed = $grant->claimDelivery($token, $claimedAt, $grant->getExpiresAt());
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($grant, $claimed)));
+        $failed = $claimed->failDelivery($token, $claimedAt->modify('+30 seconds'), CredentialDeliveryFailure::UNEXPECTED_PROVIDER);
+        self::assertSame(CredentialDeliveryStatus::EXPIRED, $failed->getDelivery()->getStatus());
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($claimed, $failed)));
+        self::assertTrue($failed->getDelivery()->sameStateAs($this->changes->getLatestByUserId($this->userId)?->getDelivery()));
+        self::assertNull($this->connection->fetchOne('SELECT delivery_ciphertext FROM email_change_grants WHERE id = ?', [$grant->getId()->toString()]));
     }
 
     public function test_cross_family_due_work_survives_lost_event_and_email_change_claim_outcomes(): void
@@ -150,7 +183,7 @@ final class AuditDeliveryPersistenceTest extends TestCase
             self::assertTrue($this->changes->add($change));
             self::assertTrue($activations->add($activation));
             self::assertTrue($resets->add($reset));
-            $this->audit->add(AuditEvidence::record('operator', 'user.invited', $this->userId));
+            $this->audit->add(AuditEvidence::record($this->userId->toString(), 'user.invited', $this->userId));
         });
         $finder = new FindDueCredentialDeliveriesHandler($activations, $resets, $this->changes);
         // A new repository/connection observes committed work without a post-commit event.
@@ -310,6 +343,19 @@ final class AuditDeliveryPersistenceTest extends TestCase
 
         return [EmailChangeGrant::issue($this->userId, $credential, $this->now, $this->now->modify('+1 hour'),
             EmailAddress::fromString('new@example.test'), 'encrypted-email-change'), $credential];
+    }
+
+    private function assertAuditRejected(AuditEvidence $evidence): void
+    {
+        $this->connection->beginTransaction();
+        try {
+            $this->audit->add($evidence);
+            self::fail('Unsupported evidence must be rejected.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertSame('Audit evidence contains unsupported public fields.', $exception->getMessage());
+        } finally {
+            $this->connection->rollBack();
+        }
     }
 
     private function commit(callable $work): mixed
