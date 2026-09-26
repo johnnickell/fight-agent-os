@@ -29,7 +29,7 @@ jobs:
       COMPOSER_ROOT_VERSION: dev-develop
       TEST_DATABASE_ALLOWED_HOST: postgres_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Address the isolated PostgreSQL service directly
         run: |
           # The test guard compares PostgreSQL's server-side address to this hostname.
