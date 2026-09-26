@@ -190,6 +190,160 @@ final class RefreshSessionRepositoryTest extends TestCase
         ));
     }
 
+    public function test_spent_credential_cannot_become_current_on_coupled_insert_or_rotation(): void
+    {
+        $base = $this->clock('2026-10-01T13:00:00+00:00');
+        [$user, $pairs] = $this->userWithSessions(2, $base);
+        [$first, $spent] = $pairs[0];
+        [$second] = $pairs[1];
+        $rotated = $first->rotate($this->credential(), $base->modify('+10 minutes'), $base->modify('+70 minutes'));
+        self::assertTrue($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->sessions->replace($first, $rotated)
+        ));
+
+        $expectedUser = $this->users->getById($user->getId());
+        self::assertNotNull($expectedUser);
+        $replacementUser = clone $expectedUser;
+        $replacementUser->advanceAuthenticationAuthorityRevision();
+        $newSession = RefreshSession::start(
+            RefreshSessionId::generate(),
+            $user->getId(),
+            $spent,
+            $base->modify('+20 minutes'),
+            $base->modify('+80 minutes'),
+            $base->modify('+1 day'),
+            $replacementUser->getAuthenticationVersion(),
+            false
+        );
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->users->replaceAuthenticationAuthorityAndAddRefreshSession(
+                $expectedUser,
+                $replacementUser,
+                $newSession
+            )
+        ));
+        self::assertSame(
+            $expectedUser->getAuthenticationAuthorityRevision(),
+            $this->users->getById($user->getId())?->getAuthenticationAuthorityRevision()
+        );
+        self::assertNull($this->sessions->getById($newSession->getId()));
+
+        $otherRotation = $second->rotate($spent, $base->modify('+21 minutes'), $base->modify('+81 minutes'));
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->sessions->replace($second, $otherRotation)
+        ));
+        self::assertSame(
+            $second->getCredentialDigest(),
+            $this->sessions->getById($second->getId())?->getCredentialDigest()
+        );
+        self::assertNull($this->sessions->getByCredential($spent));
+        self::assertSame(
+            $first->getId()->toString(),
+            $this->sessions->getByUsedCredential($spent)?->getId()->toString()
+        );
+    }
+
+    public function test_session_cannot_rotate_back_to_its_own_spent_credential(): void
+    {
+        $base = $this->clock('2026-10-01T13:00:00+00:00');
+        [, $pairs] = $this->userWithSessions(1, $base);
+        [$original, $spent] = $pairs[0];
+        $rotated = $original->rotate($this->credential(), $base->modify('+10 minutes'), $base->modify('+70 minutes'));
+        self::assertTrue($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->sessions->replace($original, $rotated)
+        ));
+        $reused = $rotated->rotate($spent, $base->modify('+20 minutes'), $base->modify('+80 minutes'));
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->sessions->replace($rotated, $reused)
+        ));
+        self::assertSame(
+            $rotated->getCredentialDigest(),
+            $this->sessions->getById($original->getId())?->getCredentialDigest()
+        );
+        self::assertNull($this->sessions->getByCredential($spent));
+        self::assertNotNull($this->sessions->getByUsedCredential($spent));
+    }
+
+    public function test_competing_digest_claims_wait_and_preserve_single_owner(): void
+    {
+        $base = $this->clock('2026-10-01T13:00:00+00:00');
+        [$user, $pairs] = $this->userWithSessions(1, $base);
+        [$original, $oldCredential] = $pairs[0];
+        $shared = $this->credential();
+        $rotated = $original->rotate($shared, $base->modify('+10 minutes'), $base->modify('+70 minutes'));
+
+        $expectedUser = $this->users->getById($user->getId());
+        self::assertNotNull($expectedUser);
+        $replacementUser = clone $expectedUser;
+        $replacementUser->advanceAuthenticationAuthorityRevision();
+        $newSession = RefreshSession::start(
+            RefreshSessionId::generate(),
+            $user->getId(),
+            $shared,
+            $base->modify('+11 minutes'),
+            $base->modify('+71 minutes'),
+            $base->modify('+1 day'),
+            $replacementUser->getAuthenticationVersion(),
+            false
+        );
+        $competingConnection = $this->connection();
+        $competingUsers = new PostgresUserRepository(
+            $competingConnection,
+            new AuthorizationReferenceFences($competingConnection),
+            new AuthenticationAuthorityFences($competingConnection)
+        );
+
+        $this->connection->beginTransaction();
+        $competingConnection->beginTransaction();
+        $competingConnection->executeStatement("SET LOCAL lock_timeout = '100ms'");
+        try {
+            self::assertTrue($this->sessions->replace($original, $rotated));
+            try {
+                $competingUsers->replaceAuthenticationAuthorityAndAddRefreshSession(
+                    $expectedUser,
+                    $replacementUser,
+                    $newSession
+                );
+                self::fail('A competing digest claim must wait for the first transaction.');
+            } catch (DriverException) {
+                self::assertTrue(true);
+            }
+            $this->connection->commit();
+            $competingConnection->rollBack();
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($competingConnection->isTransactionActive()) {
+                $competingConnection->rollBack();
+            }
+            $competingConnection->close();
+        }
+
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->users->replaceAuthenticationAuthorityAndAddRefreshSession(
+                $expectedUser,
+                $replacementUser,
+                $newSession
+            )
+        ));
+        self::assertSame(
+            $expectedUser->getAuthenticationAuthorityRevision(),
+            $this->users->getById($user->getId())?->getAuthenticationAuthorityRevision()
+        );
+        self::assertNull($this->sessions->getById($newSession->getId()));
+        self::assertSame(
+            $original->getId()->toString(),
+            $this->sessions->getByCredential($shared)?->getId()->toString()
+        );
+        self::assertNull($this->sessions->getByUsedCredential($shared));
+        self::assertNull($this->sessions->getByCredential($oldCredential));
+        self::assertSame(
+            $original->getId()->toString(),
+            $this->sessions->getByUsedCredential($oldCredential)?->getId()->toString()
+        );
+    }
+
     public function test_competing_rotations_allow_one_winner(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');

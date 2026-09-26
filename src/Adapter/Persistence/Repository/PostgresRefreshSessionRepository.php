@@ -24,7 +24,7 @@ use LogicException;
 /**
  * Implements the stable Fight Access Control refresh-session repository on the shared PostgreSQL connection
  *
- * Sessions keep a unique current one-way credential digest plus unique historical digests. Active scans evaluate
+ * Sessions claim current and historical one-way digests in a single PostgreSQL namespace. Active scans evaluate
  * revocation and both expiries at the supplied time. Replacement compares complete expected state and the exact
  * next revision before appending the superseded digest.
  */

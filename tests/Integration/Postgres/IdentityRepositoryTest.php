@@ -180,6 +180,145 @@ final class IdentityRepositoryTest extends TestCase
         );
     }
 
+    public function test_coupled_session_insert_failure_and_caller_rollback_leave_no_partial_authority(): void
+    {
+        $user = $this->activeUser('coupled-rollback@example.test');
+        $this->commitAdd($user);
+        $expected = $this->users->getById($user->getId());
+        self::assertNotNull($expected);
+        $replacement = $this->withAdvancedAuthority($expected);
+        $existingSession = $this->session($replacement, $this->clock('2026-10-01T12:05:00+00:00'));
+        self::assertTrue($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->users->replaceAuthenticationAuthorityAndAddRefreshSession(
+                $expected,
+                $replacement,
+                $existingSession
+            )
+        ));
+
+        $afterFirst = $this->users->getById($user->getId());
+        self::assertNotNull($afterFirst);
+        $afterSecond = $this->withAdvancedAuthority($afterFirst);
+        // The duplicate ID fails only after the conditional authority update has succeeded.
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->users->replaceAuthenticationAuthorityAndAddRefreshSession(
+                $afterFirst,
+                $afterSecond,
+                $existingSession
+            )
+        ));
+        self::assertUserEquals($afterFirst, $this->users->getById($user->getId()));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT COUNT(*) FROM refresh_sessions'));
+
+        $newSession = $this->session($afterSecond, $this->clock('2026-10-01T12:06:00+00:00'));
+        try {
+            $this->unitOfWork->commitTransactional(function () use ($afterFirst, $afterSecond, $newSession): never {
+                self::assertTrue($this->users->replaceAuthenticationAuthorityAndAddRefreshSession(
+                    $afterFirst,
+                    $afterSecond,
+                    $newSession
+                ));
+                throw new RuntimeException('Injected failure after session insertion');
+            });
+            self::fail('The caller transaction must roll back after a downstream failure.');
+        } catch (RuntimeException $exception) {
+            self::assertSame('Injected failure after session insertion', $exception->getMessage());
+        }
+
+        self::assertUserEquals($afterFirst, $this->users->getById($user->getId()));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT COUNT(*) FROM refresh_sessions'));
+        self::assertSame(
+            1,
+            (int) $this->connection->fetchOne('SELECT COUNT(*) FROM refresh_session_credential_claims')
+        );
+    }
+
+    public function test_reset_and_coupled_login_serialize_in_both_orders(): void
+    {
+        $user = $this->activeUser('reset-login-race@example.test');
+        $this->commitAdd($user);
+        $expected = $this->users->getById($user->getId());
+        self::assertNotNull($expected);
+        $reset = clone $expected;
+        $reset->resetPassword($this->passwordHash('reset'), $this->clock('2026-10-01T12:15:00+00:00'));
+        $reset->advanceAuthenticationAuthorityRevision();
+        $login = $this->withAdvancedAuthority($expected);
+        $firstSession = $this->session($login, $this->clock('2026-10-01T12:16:00+00:00'));
+
+        $competingConnection = $this->connection();
+        $competingUsers = new PostgresUserRepository(
+            $competingConnection,
+            new AuthorizationReferenceFences($competingConnection),
+            new AuthenticationAuthorityFences($competingConnection)
+        );
+        try {
+            $this->connection->beginTransaction();
+            $competingConnection->beginTransaction();
+            $competingConnection->executeStatement("SET LOCAL lock_timeout = '100ms'");
+            self::assertTrue($this->users->replaceAuthenticationAuthority($expected, $reset));
+            try {
+                $competingUsers->replaceAuthenticationAuthorityAndAddRefreshSession($expected, $login, $firstSession);
+                self::fail('Login must wait for the reset authority fence.');
+            } catch (DriverException) {
+                self::assertTrue(true);
+            }
+            $this->connection->commit();
+            $competingConnection->rollBack();
+
+            self::assertFalse($this->unitOfWork->commitTransactional(
+                fn(): bool => $this->users->replaceAuthenticationAuthorityAndAddRefreshSession(
+                    $expected,
+                    $login,
+                    $firstSession
+                )
+            ));
+            self::assertUserEquals($reset, $this->users->getById($user->getId()));
+            self::assertSame(0, (int) $this->connection->fetchOne('SELECT COUNT(*) FROM refresh_sessions'));
+
+            $postReset = $this->users->getById($user->getId());
+            self::assertNotNull($postReset);
+            $secondLogin = $this->withAdvancedAuthority($postReset);
+            $secondSession = $this->session($secondLogin, $this->clock('2026-10-01T12:17:00+00:00'));
+            $laterReset = clone $postReset;
+            $laterReset->resetPassword($this->passwordHash('later-reset'), $this->clock('2026-10-01T12:18:00+00:00'));
+            $laterReset->advanceAuthenticationAuthorityRevision();
+
+            $this->connection->beginTransaction();
+            $competingConnection->beginTransaction();
+            $competingConnection->executeStatement("SET LOCAL lock_timeout = '100ms'");
+            self::assertTrue($this->users->replaceAuthenticationAuthorityAndAddRefreshSession(
+                $postReset,
+                $secondLogin,
+                $secondSession
+            ));
+            try {
+                $competingUsers->replaceAuthenticationAuthority($postReset, $laterReset);
+                self::fail('Reset must wait for the coupled login authority fence.');
+            } catch (DriverException) {
+                self::assertTrue(true);
+            }
+            $this->connection->commit();
+            $competingConnection->rollBack();
+
+            self::assertFalse($this->unitOfWork->commitTransactional(
+                fn(): bool => $this->users->replaceAuthenticationAuthority($postReset, $laterReset)
+            ));
+            self::assertUserEquals($secondLogin, $this->users->getById($user->getId()));
+            self::assertSame(
+                $secondSession->getId()->toString(),
+                $this->connection->fetchOne('SELECT id FROM refresh_sessions')
+            );
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($competingConnection->isTransactionActive()) {
+                $competingConnection->rollBack();
+            }
+            $competingConnection->close();
+        }
+    }
+
     public function test_replace_role_assignments_handles_roles_and_stale_state(): void
     {
         $first = $this->role('ROLE_EDITOR');
