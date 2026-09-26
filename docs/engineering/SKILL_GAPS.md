@@ -18,7 +18,30 @@ This is a bounded comparison for [TASK-00130](../../planning/tasks/00130-TASK.md
 3. **[Architecture — TASK-00133](../../planning/tasks/00133-TASK.md):** examine one bounded architectural question for package ownership, CQRS flow, authority, transaction/effect guarantees and dependency semantics. Verify Matt Pocock's `improve-architecture` source and relevant Mathias Verraes/Robert C. Martin work before adapting anything; Agent OS naming and accepted ADRs prevail. No autonomous refactoring or independent TASK approval.
 4. **[Adopt — TASK-00134](../../planning/tasks/00134-TASK.md):** compare a chosen project's existing authority, conventions and Fight package contracts with current Agent OS guidance; offer graded alignment choices, not automatic adoption or a PR.
 
-The current `work`, `review`, `land` and `design-review` already own implementation, independent TASK acceptance, PR publication and design critique. Self-learn is deferred until observability provides actual evidence. Other security/protocol assessment skills remain unapproved; do not create them from this gap map.
+## Complete Factory skill inventory at `5ba0fc0`
+
+The table enumerates all 16 `skills/Fight-*-Skill.md` files in that snapshot. Source paths are relative to the read-only Factory checkout; local links point to current Agent OS skills. A counterpart means a **bounded local responsibility**, not imported Factory authority or equivalent runtime automation. The four selected handoffs above remain independent TASKs.
+
+| Factory source path | Agent OS counterpart or disposition | Boundary / reason |
+|---|---|---|
+| `skills/Fight-Adopt-Skill.md` | **Selected, adapt:** [TASK-00134](../../planning/tasks/00134-TASK.md) | Compare project authority and offer choices; no automatic project rewrite, enrollment, push or PR. |
+| `skills/Fight-Ask-Skill.md` | **Defer:** read-only questions need no dedicated skill yet; [next](../../.pi/skills/next/SKILL.md) routes only the planning frontier | Do not confuse the Factory read-only repository explorer with the local next-work router or grant a question permission to create records. |
+| `skills/Fight-Audit-Skill.md` | **Selected, adapt:** [TASK-00131](../../planning/tasks/00131-TASK.md) | Read-only broader-scope evidence; no required PDF/Desktop artifact or automatic TASK creation. |
+| `skills/Fight-Build-Skill.md` | **Do not transfer:** [work](../../.pi/skills/work/SKILL.md), [review](../../.pi/skills/review/SKILL.md), [land](../../.pi/skills/land/SKILL.md) remain separate | No Factory launcher, spokes, auto-review/repair loop or automatic publication. |
+| `skills/Fight-Deploy-Skill.md` | **Defer:** no project-local deploy workflow approved | Production mutation needs its own target, runbook and explicit authority; a green build is not deployment proof. |
+| `skills/Fight-Fix-Skill.md` | **Selected, narrow:** [TASK-00132](../../planning/tasks/00132-TASK.md) | Diagnose and draft an approved bug TASK; regression-first implementation belongs to `work`, not fix-and-publish. |
+| `skills/Fight-Grill-Skill.md` | **Existing bounded counterpart:** [grill](../../.pi/skills/grill/SKILL.md) | Interview into one EPIC only; decomposition remains separate. |
+| `skills/Fight-Land-Skill.md` | **Existing bounded counterpart:** [land](../../.pi/skills/land/SKILL.md) | Publish accepted work as a PR; do not import Factory's automatic merge/release cleanup authority. |
+| `skills/Fight-Map-Skill.md` | **Existing bounded counterpart:** [wayfinder](../../.pi/skills/wayfinder/SKILL.md) | WF decision map and handoff before EPIC; no automatic grilling or archival. [research](../../.pi/skills/research/SKILL.md), [prototype](../../.pi/skills/prototype/SKILL.md), [design](../../.pi/skills/design/SKILL.md) supply separate bounded evidence, not Factory map stages. |
+| `skills/Fight-Plan-Skill.md` | **Do not transfer as coordinator:** wayfinder → grill → [to-tickets](../../.pi/skills/to-tickets/SKILL.md) → [to-tasks](../../.pi/skills/to-tasks/SKILL.md) only by their own authorizations | No implicit end-to-end decomposition from an idea or automatic implementation. |
+| `skills/Fight-Release-Skill.md` | **Defer:** no project-local release skill approved | Factory signed-library/version and maintenance-line procedure is not the application's release policy. |
+| `skills/Fight-Review-Skill.md` | **Existing, adapted:** review | Two named Spec/Standards passes by one independent reviewer; no scored reviewer pair or Factory handoff format. |
+| `skills/Fight-Self-Learn-Skill.md` | **Defer:** no trustworthy Agent OS run/usage observability yet | Do not extrapolate cost/quality trends from absent telemetry or install Factory's registry/launcher. |
+| `skills/Fight-Tasks-Skill.md` | **Existing bounded counterpart:** to-tasks | Decompose accepted **TICKET** requirements into TASKs; never silently treat a TASK as a TICKET. |
+| `skills/Fight-Tickets-Skill.md` | **Existing bounded counterpart:** to-tickets | Decompose an approved EPIC into requirement TICKETs only. |
+| `skills/Fight-Work-Skill.md` | **Existing, adapted:** work | Implement and verify one TASK; separate independent review and publication instead of Factory's push/PR in work. |
+
+Local [design-review](../../.pi/skills/design-review/SKILL.md) critiques disposable design evidence, not a Factory implementation review counterpart. Factory protocol/security assessments beyond these skill files remain unapproved; do not create them from this map.
 
 ## Checklist exercise: TASK-00020 boundary correction
 
