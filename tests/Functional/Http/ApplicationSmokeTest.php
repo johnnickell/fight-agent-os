@@ -14,9 +14,15 @@ use RuntimeException;
 use Slim\Exception\HttpException;
 use Slim\Psr7\Factory\ServerRequestFactory;
 
+/**
+ * Class ApplicationSmokeTest
+ */
 final class ApplicationSmokeTest extends TestCase
 {
-    public function test_the_agent_os_root_is_available(): void
+    /**
+     * Verifies the agent os root is available
+     */
+    public function testTheAgentOsRootIsAvailable(): void
     {
         $app = require sprintf('%s/bootstrap/app.php', dirname(__DIR__, 3));
 
@@ -27,7 +33,10 @@ final class ApplicationSmokeTest extends TestCase
         self::assertSame('Fight Agent OS is ready.', (string) $response->getBody());
     }
 
-    public function test_an_unknown_route_returns_a_safe_not_found_response(): void
+    /**
+     * Verifies an unknown route returns a safe not found response
+     */
+    public function testAnUnknownRouteReturnsASafeNotFoundResponse(): void
     {
         $app = require sprintf('%s/bootstrap/app.php', dirname(__DIR__, 3));
 
@@ -43,7 +52,10 @@ final class ApplicationSmokeTest extends TestCase
         );
     }
 
-    public function test_a_generic_http_exception_is_sanitized_and_correlated_with_its_log(): void
+    /**
+     * Verifies a generic http exception is sanitized and correlated with its log
+     */
+    public function testAGenericHttpExceptionIsSanitizedAndCorrelatedWithItsLog(): void
     {
         $testApp = require sprintf('%s/bootstrap/app.php', dirname(__DIR__, 3));
         $logger = $testApp->getContainer()?->get(LoggerInterface::class);
@@ -82,7 +94,10 @@ final class ApplicationSmokeTest extends TestCase
         self::assertSame($sensitiveMessage, $records[0]->context['exception']->getMessage());
     }
 
-    public function test_an_unexpected_failure_is_sanitized_and_correlated_with_its_log(): void
+    /**
+     * Verifies an unexpected failure is sanitized and correlated with its log
+     */
+    public function testAnUnexpectedFailureIsSanitizedAndCorrelatedWithItsLog(): void
     {
         $productionApp = require sprintf('%s/bootstrap/app.php', dirname(__DIR__, 3));
         $requestFactory = new ServerRequestFactory();

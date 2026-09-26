@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+set -eu
+
+cd "$(dirname "$0")/.."
+
+if ! docker compose ps --status running --services | grep -Fxq web; then
+    echo 'The Compose web service is not running. Start it with ./bin/up.' >&2
+    exit 1
+fi
+
+case "${1:-}" in
+    syntax)   exec docker compose exec -T web php scripts/php_syntax.php ;;
+    style)    exec docker compose exec -T web php vendor/bin/phpcs -s ;;
+    static)   exec docker compose exec -T web php vendor/bin/phpstan analyse --no-progress ;;
+    rector)   exec docker compose exec -T web php vendor/bin/rector process --dry-run --no-progress-bar ;;
+    *)        echo 'Usage: ./bin/backend-analysis {syntax|style|static|rector}' >&2; exit 2 ;;
+esac

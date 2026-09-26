@@ -13,6 +13,8 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 
 /**
+ * Class RefreshSessionRecords
+ *
  * Maps refresh-session rows without leaking persistence records to consumers
  *
  * The locked package exposes no getter for historical credential digests, so the adapter maintains them
@@ -21,33 +23,40 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 final class RefreshSessionRecords
 {
     /**
+     * Constructs RefreshSessionRecords
+     */
+    private function __construct()
+    {
+    }
+
+    /**
      * Inserts one refresh session and its historical credential digests
      */
     public static function insert(Connection $connection, RefreshSession $session): void
     {
         $connection->insert('refresh_sessions', [
-            'id' => $session->getId()->toString(),
-            'user_id' => $session->getUserId()->toString(),
-            'credential_digest' => $session->getCredentialDigest(),
-            'created_at' => self::date($session->getCreatedAt()),
-            'last_activity_at' => self::date($session->getLastActivityAt()),
-            'rotated_at' => null,
-            'idle_expires_at' => self::date($session->getIdleExpiresAt()),
-            'absolute_expires_at' => self::date($session->getAbsoluteExpiresAt()),
+            'id'                     => $session->getId()->toString(),
+            'user_id'                => $session->getUserId()->toString(),
+            'credential_digest'      => $session->getCredentialDigest(),
+            'created_at'             => self::date($session->getCreatedAt()),
+            'last_activity_at'       => self::date($session->getLastActivityAt()),
+            'rotated_at'             => null,
+            'idle_expires_at'        => self::date($session->getIdleExpiresAt()),
+            'absolute_expires_at'    => self::date($session->getAbsoluteExpiresAt()),
             'authentication_version' => $session->getAuthenticationVersion(),
-            'remembered' => $session->isRemembered(),
-            'revision' => $session->getRevision(),
-            'revoked' => $session->isRevoked(),
+            'remembered'             => $session->isRemembered(),
+            'revision'               => $session->getRevision(),
+            'revoked'                => $session->isRevoked()
         ], [
             'remembered' => ParameterType::BOOLEAN,
-            'revoked' => ParameterType::BOOLEAN,
+            'revoked'    => ParameterType::BOOLEAN
         ]);
     }
 
     /**
      * Reconstitutes a refresh session from one stored row
      *
-     * @param array<string, mixed> $row
+     * @phpstan-param array<string, mixed> $row
      */
     public static function hydrate(Connection $connection, array $row): RefreshSession
     {
@@ -76,22 +85,24 @@ final class RefreshSessionRecords
     public static function appendUsedDigest(Connection $connection, string $sessionId, string $digest): void
     {
         $sequence = (int) $connection->fetchOne(
-            'SELECT COALESCE(MAX(sequence), -1) + 1 FROM refresh_session_used_credentials '
-            . 'WHERE refresh_session_id = ?',
+            <<<'SQL'
+SELECT COALESCE(MAX(sequence), -1) + 1 FROM refresh_session_used_credentials
+WHERE refresh_session_id = ?
+SQL,
             [$sessionId]
         );
 
         $connection->insert('refresh_session_used_credentials', [
             'refresh_session_id' => $sessionId,
-            'sequence' => $sequence,
-            'credential_digest' => $digest,
+            'sequence'           => $sequence,
+            'credential_digest'  => $digest
         ]);
     }
 
     /**
      * Returns the ordered historical credential digests for a session
      *
-     * @return list<string>
+     * @phpstan-return list<string>
      */
     public static function usedDigests(Connection $connection, string $sessionId): array
     {
@@ -103,7 +114,7 @@ final class RefreshSessionRecords
             ->orderBy('sequence')
             ->fetchFirstColumn();
 
-        return array_map(strval(...), $digests);
+        return array_values(array_map(strval(...), $digests));
     }
 
     /**
@@ -114,12 +125,11 @@ final class RefreshSessionRecords
         return $date->format('Y-m-d H:i:s.uP');
     }
 
+    /**
+     * Converts a database boolean value
+     */
     private static function boolean(mixed $value): bool
     {
         return $value === true || $value === 1 || $value === '1' || $value === 't';
-    }
-
-    private function __construct()
-    {
     }
 }

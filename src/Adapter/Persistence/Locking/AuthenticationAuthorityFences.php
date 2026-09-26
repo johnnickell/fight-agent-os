@@ -9,6 +9,8 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use LogicException;
 
 /**
+ * Class AuthenticationAuthorityFences
+ *
  * Serializes authentication-authority mutation for a single user
  *
  * Holds a transaction-scoped PostgreSQL advisory lock derived from a collision-resistant key so that authority

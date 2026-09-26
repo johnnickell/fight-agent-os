@@ -20,6 +20,9 @@ use Fight\Common\Domain\Collection\ArrayList;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Repository\ResultSet;
 
+/**
+ * Class PostgresRoleRepository
+ */
 final readonly class PostgresRoleRepository implements RoleRepository
 {
     /**
@@ -125,7 +128,7 @@ SQL,
      */
     public function getManaged(): array
     {
-        return array_map(
+        return array_values(array_map(
             $this->hydrate(...),
             $this->connection->createQueryBuilder()
                 ->select('*')
@@ -134,7 +137,7 @@ SQL,
                 ->orderBy('created_at')
                 ->addOrderBy('id')
                 ->fetchAllAssociative()
-        );
+        ));
     }
 
     /**
@@ -142,7 +145,7 @@ SQL,
      */
     public function getContainingPermission(PermissionId $id): array
     {
-        return array_map(
+        return array_values(array_map(
             $this->hydrate(...),
             $this->connection->createQueryBuilder()
                 ->select('roles.*')
@@ -153,7 +156,7 @@ SQL,
                 ->orderBy('roles.created_at')
                 ->addOrderBy('roles.id')
                 ->fetchAllAssociative()
-        );
+        ));
     }
 
     /**
@@ -197,7 +200,7 @@ SQL,
         $updated = PostgresUniqueConstraintRace::execute(
             $this->connection,
             'uq_roles_name',
-            fn(): int => $this->connection->createQueryBuilder()
+            fn(): int => (int) $this->connection->createQueryBuilder()
                 ->update('roles')
                 ->set('name', ':name')
                 ->set('managed', ':managed')
@@ -207,17 +210,20 @@ SQL,
                 ->andWhere('managed = :expected_managed')
                 ->andWhere('created_at = :created_at')
                 ->andWhere('updated_at = :expected_updated_at')
-                ->andWhere('NOT EXISTS (SELECT 1 FROM roles conflicting '
-                    . 'WHERE conflicting.name = :name AND conflicting.id <> :id)')
+                ->andWhere(<<<'SQL'
+NOT EXISTS (SELECT 1 FROM roles conflicting
+    WHERE conflicting.name = :name AND conflicting.id <> :id)
+SQL
+                )
                 ->setParameters([
-                    'id' => $expected->getId()->toString(),
-                    'name' => $replacement->getName()->toString(),
-                    'managed' => $replacement->isManaged(),
-                    'updated_at' => $this->date($replacement->getUpdatedAt()),
-                    'expected_name' => $expected->getName()->toString(),
-                    'expected_managed' => $expected->isManaged(),
-                    'created_at' => $this->date($expected->getCreatedAt()),
-                    'expected_updated_at' => $this->date($expected->getUpdatedAt()),
+                    'id'                  => $expected->getId()->toString(),
+                    'name'                => $replacement->getName()->toString(),
+                    'managed'             => $replacement->isManaged(),
+                    'updated_at'          => $this->date($replacement->getUpdatedAt()),
+                    'expected_name'       => $expected->getName()->toString(),
+                    'expected_managed'    => $expected->isManaged(),
+                    'created_at'          => $this->date($expected->getCreatedAt()),
+                    'expected_updated_at' => $this->date($expected->getUpdatedAt())
                 ], ['managed' => ParameterType::BOOLEAN, 'expected_managed' => ParameterType::BOOLEAN])
                 ->executeStatement()
         );
@@ -246,17 +252,19 @@ SQL,
             ->andWhere('created_at = :created_at')
             ->andWhere('updated_at = :updated_at')
             ->setParameters([
-                'id' => $role->getId()->toString(),
-                'name' => $role->getName()->toString(),
-                'managed' => $role->isManaged(),
+                'id'         => $role->getId()->toString(),
+                'name'       => $role->getName()->toString(),
+                'managed'    => $role->isManaged(),
                 'created_at' => $this->date($role->getCreatedAt()),
-                'updated_at' => $this->date($role->getUpdatedAt()),
+                'updated_at' => $this->date($role->getUpdatedAt())
             ], ['managed' => ParameterType::BOOLEAN])
             ->executeStatement() === 1;
     }
 
     /**
-     * @param list<PermissionId> $permissionIds
+     * Acquires reference locks on the role's permissions
+     *
+     * @phpstan-param list<PermissionId> $permissionIds
      */
     private function lockAuthoritativePermissions(array $permissionIds): bool
     {
@@ -279,6 +287,9 @@ SQL,
         return count($found) === count($ids);
     }
 
+    /**
+     * Inserts role membership records
+     */
     private function insertMemberships(Role $role): void
     {
         $ids = array_values(array_unique(array_map(
@@ -289,18 +300,21 @@ SQL,
 
         foreach ($ids as $permissionId) {
             $this->connection->insert('role_permissions', [
-                'role_id' => $role->getId()->toString(),
-                'permission_id' => $permissionId,
+                'role_id'       => $role->getId()->toString(),
+                'permission_id' => $permissionId
             ]);
         }
     }
 
+    /**
+     * Reconstitutes one role from a database result
+     */
     private function one(string $column, string $value): ?Role
     {
         $row = $this->connection->createQueryBuilder()
             ->select('*')
             ->from('roles')
-            ->where($column . ' = :value')
+            ->where($column.' = :value')
             ->setParameter('value', $value)
             ->fetchAssociative();
 
@@ -308,7 +322,9 @@ SQL,
     }
 
     /**
-     * @param array<string, mixed> $row
+     * Reconstitutes a role and its permissions from a database row
+     *
+     * @phpstan-param array<string, mixed> $row
      */
     private function hydrate(array $row): Role
     {
@@ -319,22 +335,28 @@ SQL,
             static fn(mixed $permissionId): PermissionId => PermissionId::fromString((string) $permissionId),
             $this->membershipIds((string) $row['id'])
         );
-        $role = $this->boolean($row['managed'])
-            ? Role::defineManaged($id, $name, $permissionIds, $createdAt)
-            : Role::define($id, $name, $permissionIds, $createdAt);
+        if ($this->boolean($row['managed'])) {
+            $role = Role::defineManaged($id, $name, $permissionIds, $createdAt);
+        } else {
+            $role = Role::define($id, $name, $permissionIds, $createdAt);
+        }
         $updatedAt = new DateTimeImmutable((string) $row['updated_at']);
 
         if ($role->getUpdatedAt() != $updatedAt) {
-            $role = $role->isManaged()
-                ? $role->reconcileManaged($name, $permissionIds, $updatedAt)
-                : $role->renameCustom($name, $updatedAt);
+            if ($role->isManaged()) {
+                $role = $role->reconcileManaged($name, $permissionIds, $updatedAt);
+            } else {
+                $role = $role->renameCustom($name, $updatedAt);
+            }
         }
 
         return $role;
     }
 
     /**
-     * @param array<string, mixed> $row
+     * Checks stored role state against the expected role
+     *
+     * @phpstan-param array<string, mixed> $row
      */
     private function matches(Role $expected, array $row): bool
     {
@@ -361,38 +383,48 @@ SQL,
     }
 
     /**
-     * @return list<mixed>
+     * Lists the permission IDs assigned to a role
+     *
+     * @phpstan-return list<mixed>
      */
     private function membershipIds(string $roleId): array
     {
-        return $this->connection->createQueryBuilder()
+        return array_values($this->connection->createQueryBuilder()
             ->select('permission_id')
             ->from('role_permissions')
             ->where('role_id = :role_id')
             ->setParameter('role_id', $roleId)
             ->orderBy('permission_id')
-            ->fetchFirstColumn();
+            ->fetchFirstColumn());
     }
 
     /**
-     * @return array<string, mixed>
+     * Maps role fields to database columns
+     *
+     * @phpstan-return array<string, mixed>
      */
     private function values(Role $role): array
     {
         return [
-            'id' => $role->getId()->toString(),
-            'name' => $role->getName()->toString(),
-            'managed' => $role->isManaged(),
+            'id'         => $role->getId()->toString(),
+            'name'       => $role->getName()->toString(),
+            'managed'    => $role->isManaged(),
             'created_at' => $this->date($role->getCreatedAt()),
-            'updated_at' => $this->date($role->getUpdatedAt()),
+            'updated_at' => $this->date($role->getUpdatedAt())
         ];
     }
 
+    /**
+     * Converts a database boolean value
+     */
     private function boolean(mixed $value): bool
     {
         return $value === true || $value === 1 || $value === '1' || $value === 't';
     }
 
+    /**
+     * Formats a date for PostgreSQL
+     */
     private function date(DateTimeImmutable $date): string
     {
         return $date->format('Y-m-d H:i:s.uP');

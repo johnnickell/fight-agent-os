@@ -7,12 +7,15 @@ namespace App\Adapter\Persistence\Guard;
 use Doctrine\DBAL\Connection;
 use RuntimeException;
 
+/**
+ * Class DatabaseTargetGuard
+ */
 final readonly class DatabaseTargetGuard
 {
     /**
      * Constructs DatabaseTargetGuard
      *
-     * @param list<string> $allowedHosts
+     * @phpstan-param list<string> $allowedHosts
      */
     public function __construct(private array $allowedHosts)
     {
@@ -21,7 +24,7 @@ final readonly class DatabaseTargetGuard
     /**
      * Validates a destructive test target before connection
      *
-     * @return array{host: string, database: string, user: string}
+     * @phpstan-return array{host: string, database: string, user: string}
      */
     public function assertConfigured(string $environment, string $databaseUrl): array
     {
@@ -56,14 +59,16 @@ final readonly class DatabaseTargetGuard
     /**
      * Verifies the connected server identity before mutation
      *
-     * @param array{host: string, database: string, user: string} $expected
+     * @phpstan-param array{host: string, database: string, user: string} $expected
      */
     public function assertConnected(Connection $connection, array $expected): void
     {
         /** @var array{database_name: string, role_name: string, server_address: string|null}|false $actual */
         $actual = $connection->fetchAssociative(
-            'SELECT current_database() AS database_name, current_user AS role_name, '
-            . 'inet_server_addr()::text AS server_address'
+            <<<'SQL'
+SELECT current_database() AS database_name, current_user AS role_name,
+    inet_server_addr()::text AS server_address
+SQL
         );
 
         if (
@@ -82,6 +87,9 @@ final readonly class DatabaseTargetGuard
         }
     }
 
+    /**
+     * Detects a protected non-test database identity
+     */
     private function isKnownNonTestIdentity(string $identity): bool
     {
         return in_array(strtolower($identity), [
@@ -90,7 +98,7 @@ final readonly class DatabaseTargetGuard
             'local',
             'postgres',
             'production',
-            'staging',
+            'staging'
         ], true);
     }
 }

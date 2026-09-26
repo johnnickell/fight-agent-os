@@ -15,6 +15,8 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 
 /**
+ * Class PersistedActivationDelivery
+ *
  * Reconstitutes package-owned encrypted delivery state through its supported protected constructor
  */
 final class PersistedActivationDelivery extends ActivationDelivery
@@ -39,8 +41,20 @@ final class PersistedActivationDelivery extends ActivationDelivery
         ?CredentialDeliveryFailure $lastFailure
     ): self {
         return new self(
-            $id, $userId, $email, $material, $expiresAt, $dueAt, $status, $token, $claimedAt, $leaseUntil,
-            $attemptCount, $lastAttemptAt, $lastOutcomeAt, $lastFailure
+            $id,
+            $userId,
+            $email,
+            $material,
+            $expiresAt,
+            $dueAt,
+            $status,
+            $token,
+            $claimedAt,
+            $leaseUntil,
+            $attemptCount,
+            $lastAttemptAt,
+            $lastOutcomeAt,
+            $lastFailure
         );
     }
 }

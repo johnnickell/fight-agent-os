@@ -11,22 +11,22 @@ use Fight\Common\Application\Service\Container;
 
 return [
     'services' => [
-        'messaging.command.router' => static function (Container $container): ServiceAwareCommandRouter {
+        'messaging.command.router'   => static function (Container $container): ServiceAwareCommandRouter {
             return new ServiceAwareCommandRouter($container);
         },
-        'messaging.command.routing' => static function (Container $container): RoutingCommandBus {
+        'messaging.command.routing'  => static function (Container $container): RoutingCommandBus {
             return new RoutingCommandBus($container->get('messaging.command.router'));
         },
-        'messaging.command.bus' => static function (Container $container): CommandPipeline {
+        'messaging.command.bus'      => static function (Container $container): CommandPipeline {
             return new CommandPipeline($container->get('messaging.command.routing'));
         },
-        CommandBus::class => static function (Container $container): CommandBus {
+        CommandBus::class            => static function (Container $container): CommandBus {
             return $container->get('messaging.command.bus');
         },
         SynchronousCommandBus::class => static function (Container $container): SynchronousCommandBus {
             return $container->get('messaging.command.bus');
-        },
+        }
     ],
     'handlers' => [],
-    'filters' => [],
+    'filters'  => []
 ];

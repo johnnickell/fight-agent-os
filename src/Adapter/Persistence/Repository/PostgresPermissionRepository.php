@@ -19,6 +19,9 @@ use Fight\Common\Domain\Collection\ArrayList;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Repository\ResultSet;
 
+/**
+ * Class PostgresPermissionRepository
+ */
 final readonly class PostgresPermissionRepository implements PermissionRepository
 {
     /**
@@ -117,7 +120,7 @@ SQL,
      */
     public function getManaged(): array
     {
-        return array_map(
+        return array_values(array_map(
             $this->hydrate(...),
             $this->connection->createQueryBuilder()
                 ->select('*')
@@ -126,7 +129,7 @@ SQL,
                 ->orderBy('created_at')
                 ->addOrderBy('id')
                 ->fetchAllAssociative()
-        );
+        ));
     }
 
     /**
@@ -144,7 +147,7 @@ SQL,
         return PostgresUniqueConstraintRace::execute(
             $this->connection,
             'uq_permissions_name',
-            fn(): int => $this->connection->createQueryBuilder()
+            fn(): int => (int) $this->connection->createQueryBuilder()
                 ->update('permissions')
                 ->set('name', ':replacement_name')
                 ->set('tier', ':replacement_tier')
@@ -156,22 +159,25 @@ SQL,
                 ->andWhere('managed = :expected_managed')
                 ->andWhere('created_at = :expected_created_at')
                 ->andWhere('updated_at = :expected_updated_at')
-                ->andWhere('NOT EXISTS (SELECT 1 FROM permissions conflicting '
-                    . 'WHERE conflicting.name = :replacement_name AND conflicting.id <> :id)')
+                ->andWhere(<<<'SQL'
+NOT EXISTS (SELECT 1 FROM permissions conflicting
+    WHERE conflicting.name = :replacement_name AND conflicting.id <> :id)
+SQL
+                )
                 ->setParameters([
-                    'id' => $expected->getId()->toString(),
-                    'expected_name' => $expected->getName()->toString(),
-                    'expected_tier' => $expected->getTier()?->value,
-                    'expected_managed' => $expected->isManaged(),
-                    'expected_created_at' => $this->date($expected->getCreatedAt()),
-                    'expected_updated_at' => $this->date($expected->getUpdatedAt()),
-                    'replacement_name' => $replacement->getName()->toString(),
-                    'replacement_tier' => $replacement->getTier()?->value,
-                    'replacement_managed' => $replacement->isManaged(),
-                    'replacement_updated_at' => $this->date($replacement->getUpdatedAt()),
+                    'id'                     => $expected->getId()->toString(),
+                    'expected_name'          => $expected->getName()->toString(),
+                    'expected_tier'          => $expected->getTier()?->value,
+                    'expected_managed'       => $expected->isManaged(),
+                    'expected_created_at'    => $this->date($expected->getCreatedAt()),
+                    'expected_updated_at'    => $this->date($expected->getUpdatedAt()),
+                    'replacement_name'       => $replacement->getName()->toString(),
+                    'replacement_tier'       => $replacement->getTier()?->value,
+                    'replacement_managed'    => $replacement->isManaged(),
+                    'replacement_updated_at' => $this->date($replacement->getUpdatedAt())
                 ], [
-                    'expected_managed' => ParameterType::BOOLEAN,
-                    'replacement_managed' => ParameterType::BOOLEAN,
+                    'expected_managed'    => ParameterType::BOOLEAN,
+                    'replacement_managed' => ParameterType::BOOLEAN
                 ])
                 ->executeStatement()
         ) === 1;
@@ -194,22 +200,25 @@ SQL,
             ->andWhere('updated_at = :updated_at')
             ->andWhere('NOT EXISTS (SELECT 1 FROM role_permissions WHERE permission_id = :id)')
             ->setParameters([
-                'id' => $permission->getId()->toString(),
-                'name' => $permission->getName()->toString(),
-                'tier' => $permission->getTier()?->value,
-                'managed' => $permission->isManaged(),
+                'id'         => $permission->getId()->toString(),
+                'name'       => $permission->getName()->toString(),
+                'tier'       => $permission->getTier()?->value,
+                'managed'    => $permission->isManaged(),
                 'created_at' => $this->date($permission->getCreatedAt()),
-                'updated_at' => $this->date($permission->getUpdatedAt()),
+                'updated_at' => $this->date($permission->getUpdatedAt())
             ], ['managed' => ParameterType::BOOLEAN])
             ->executeStatement() === 1;
     }
 
+    /**
+     * Reconstitutes one permission from a database result
+     */
     private function one(string $column, string $value): ?Permission
     {
         $row = $this->connection->createQueryBuilder()
             ->select('*')
             ->from('permissions')
-            ->where($column . ' = :value')
+            ->where($column.' = :value')
             ->setParameter('value', $value)
             ->fetchAssociative();
 
@@ -217,6 +226,8 @@ SQL,
     }
 
     /**
+     * Reconstitutes a permission from a database row
+     *
      * @param array<string, mixed> $row
      */
     private function hydrate(array $row): Permission
@@ -244,21 +255,25 @@ SQL,
     }
 
     /**
-     * @return array<string, mixed>
+     * Maps permission fields to database columns
+     *
+     * @phpstan-return array<string, mixed>
      */
     private function values(Permission $permission): array
     {
         return [
-            'id' => $permission->getId()->toString(),
-            'name' => $permission->getName()->toString(),
-            'tier' => $permission->getTier()?->value,
-            'managed' => $permission->isManaged(),
+            'id'         => $permission->getId()->toString(),
+            'name'       => $permission->getName()->toString(),
+            'tier'       => $permission->getTier()?->value,
+            'managed'    => $permission->isManaged(),
             'created_at' => $this->date($permission->getCreatedAt()),
-            'updated_at' => $this->date($permission->getUpdatedAt()),
+            'updated_at' => $this->date($permission->getUpdatedAt())
         ];
     }
 
     /**
+     * Declares database parameter types for a permission write
+     *
      * @return array<string, ParameterType>
      */
     private function types(): array
@@ -266,11 +281,17 @@ SQL,
         return ['managed' => ParameterType::BOOLEAN];
     }
 
+    /**
+     * Converts a database boolean value
+     */
     private function boolean(mixed $value): bool
     {
         return $value === true || $value === 1 || $value === '1' || $value === 't';
     }
 
+    /**
+     * Formats a date for PostgreSQL
+     */
     private function date(DateTimeImmutable $date): string
     {
         return $date->format('Y-m-d H:i:s.uP');

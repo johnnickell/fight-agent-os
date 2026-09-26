@@ -8,13 +8,22 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
+/**
+ * Class Version20260926002702
+ */
 final class Version20260926002702 extends AbstractMigration
 {
+    /**
+     * @inheritDoc
+     */
     public function getDescription(): string
     {
         return 'Creates authoritative activation grant generations and recoverable encrypted delivery state';
     }
 
+    /**
+     * @inheritDoc
+     */
     public function up(Schema $schema): void
     {
         $this->abortIf(
@@ -81,6 +90,9 @@ SQL);
         $this->addSql('CREATE INDEX idx_activation_grants_due ON activation_grants (delivery_due_at, delivery_id)');
     }
 
+    /**
+     * @inheritDoc
+     */
     public function down(Schema $schema): void
     {
         $this->addSql('DROP TABLE activation_grants');

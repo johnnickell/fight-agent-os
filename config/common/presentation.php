@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Fight\Common\Adapter\Templating\TwigEngine;
+use Fight\Common\Application\Serialization\JsonSerializer;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Application\Templating\TemplateEngine;
-use Fight\Common\Application\Serialization\JsonSerializer;
 use Fight\Common\Domain\Serialization\Serializer;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;

@@ -1,0 +1,20 @@
+parameters:
+    level: 7
+    paths:
+        - src
+        - tests
+        - config
+        - bootstrap
+        - database/migrations
+        - scripts
+        - public
+        - cli-config.php
+        - deptrac.php
+        - migrations.php
+        - rector.php
+    tmpDir: var/cache/phpstan
+    excludePaths:
+        analyseAndScan:
+            - vendor
+            - var
+            - .runs

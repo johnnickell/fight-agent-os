@@ -8,13 +8,22 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
+/**
+ * Class Version20260926011841
+ */
 final class Version20260926011841 extends AbstractMigration
 {
+    /**
+     * @inheritDoc
+     */
     public function getDescription(): string
     {
         return 'Creates append-only typed audit evidence and email-change credential generations';
     }
 
+    /**
+     * @inheritDoc
+     */
     public function up(Schema $schema): void
     {
         $this->abortIf(!$this->connection->getDatabasePlatform() instanceof PostgreSQLPlatform, 'PostgreSQL required.');
@@ -30,7 +39,9 @@ CREATE TABLE audit_evidence (
     CONSTRAINT ck_audit_evidence_actor CHECK (length(actor_id) > 0),
     CONSTRAINT ck_audit_evidence_action CHECK (action ~ '^[a-z][a-z0-9_.]*$'),
     CONSTRAINT ck_audit_evidence_subject CHECK (subject_type IN ('user', 'agent')),
-    CONSTRAINT ck_audit_evidence_context CHECK (jsonb_typeof(context) = 'object' AND octet_length(context::text) <= 4096)
+    CONSTRAINT ck_audit_evidence_context CHECK (
+        jsonb_typeof(context) = 'object' AND octet_length(context::text) <= 4096
+    )
 )
 SQL);
         $this->addSql('CREATE INDEX idx_audit_evidence_subject ON audit_evidence (subject_type, subject_id, id)');
@@ -70,7 +81,9 @@ CREATE TABLE email_change_grants (
     ),
     CONSTRAINT ck_email_change_grants_expiry CHECK (delivery_expires_at = expires_at AND delivery_due_at <= expires_at),
     CONSTRAINT ck_email_change_grants_delivery_status CHECK (
-        delivery_status IN ('pending', 'claimed', 'retry_pending', 'delivered', 'permanent_failure', 'expired', 'invalidated')
+        delivery_status IN (
+            'pending', 'claimed', 'retry_pending', 'delivered', 'permanent_failure', 'expired', 'invalidated'
+        )
     ),
     CONSTRAINT ck_email_change_grants_delivery_shape CHECK (
         delivery_attempt_count >= 0
@@ -94,6 +107,9 @@ SQL);
         $this->addSql('CREATE INDEX idx_email_change_grants_due ON email_change_grants (delivery_due_at, delivery_id)');
     }
 
+    /**
+     * @inheritDoc
+     */
     public function down(Schema $schema): void
     {
         $this->addSql('DROP TABLE email_change_grants');

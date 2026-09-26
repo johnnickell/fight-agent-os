@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Fight\Common\Adapter\FileStorage\FlysystemStorage;
-use Fight\Common\Adapter\FileTransfer\Null\NullFileTransport;
 use Fight\Common\Adapter\Filesystem\Symfony\SymfonyFilesystem as FightSymfonyFilesystem;
+use Fight\Common\Adapter\FileTransfer\Null\NullFileTransport;
 use Fight\Common\Application\FileStorage\FileStorage;
 use Fight\Common\Application\FileStorage\StorageService;
+use Fight\Common\Application\Filesystem\Filesystem as FightFilesystem;
 use Fight\Common\Application\FileTransfer\FileTransferService;
 use Fight\Common\Application\FileTransfer\Transport\FileTransport;
-use Fight\Common\Application\Filesystem\Filesystem as FightFilesystem;
 use Fight\Common\Application\Service\Container;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemOperator;

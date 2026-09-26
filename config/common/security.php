@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 use Fight\Common\Adapter\Auth\Hmac\HmacRequestService;
-use Fight\Common\Adapter\Auth\Security\PhpPasswordHasher;
-use Fight\Common\Adapter\Auth\Security\PhpPasswordValidator;
 use Fight\Common\Adapter\Auth\Security\JwtDecoder;
 use Fight\Common\Adapter\Auth\Security\JwtEncoder;
+use Fight\Common\Adapter\Auth\Security\PhpPasswordHasher;
+use Fight\Common\Adapter\Auth\Security\PhpPasswordValidator;
 use Fight\Common\Application\Auth\RequestService;
 use Fight\Common\Application\Auth\Security\PasswordHasher;
 use Fight\Common\Application\Auth\Security\PasswordValidator;
 use Fight\Common\Application\Auth\Security\TokenDecoder;
 use Fight\Common\Application\Auth\Security\TokenEncoder;
 use Fight\Common\Application\Service\Container;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 return static function (Container $container): void {
     $requiredEnvironmentValue = static function (string $name): string {

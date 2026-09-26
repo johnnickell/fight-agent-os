@@ -13,8 +13,15 @@ return static function (Container $container): void {
     ContainerCapabilityRegistrar::registerMessaging(
         $container,
         [...$command['services'], ...$query['services'], ...$event['services']],
-        [], $command['handlers'], $query['handlers'], $event['subscribers'],
+        [],
+        $command['handlers'],
+        $query['handlers'],
+        $event['subscribers'],
         [...$command['filters'], ...$query['filters']],
-        ['command.router' => 'messaging.command.router', 'query.router' => 'messaging.query.router', 'event.dispatcher' => 'messaging.event.dispatcher']
+        [
+            'command.router'   => 'messaging.command.router',
+            'query.router'     => 'messaging.query.router',
+            'event.dispatcher' => 'messaging.event.dispatcher'
+        ]
     );
 };

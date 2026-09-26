@@ -28,9 +28,11 @@ return static function (Container $container): void {
         return new Mailer(Transport::fromDsn(getenv('MAILER_DSN') ?: 'null://null'));
     });
     $container->set(MailTransport::class, static function (Container $container): MailTransport {
-        return getenv('MAILER_DSN')
-            ? new SymfonyMailTransport($container->get(MailerInterface::class))
-            : new NullMailTransport();
+        if (!getenv('MAILER_DSN')) {
+            return new NullMailTransport();
+        }
+
+        return new SymfonyMailTransport($container->get(MailerInterface::class));
     });
     $container->set(MailService::class, static function (Container $container): MailService {
         return new MailService($container->get(MailTransport::class), new SymfonyMailFactory());

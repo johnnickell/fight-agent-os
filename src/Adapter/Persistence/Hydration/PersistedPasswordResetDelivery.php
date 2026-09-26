@@ -15,6 +15,8 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 
 /**
+ * Class PersistedPasswordResetDelivery
+ *
  * Reconstitutes the package-owned delivery through its protected constructor
  */
 final class PersistedPasswordResetDelivery extends PasswordResetDelivery
@@ -38,7 +40,21 @@ final class PersistedPasswordResetDelivery extends PasswordResetDelivery
         ?DateTimeImmutable $lastOutcomeAt,
         ?CredentialDeliveryFailure $lastFailure
     ): PasswordResetDelivery {
-        return new self($id, $userId, $email, $material, $expiresAt, $dueAt, $status, $claimToken, $claimedAt,
-            $leaseUntil, $attemptCount, $lastAttemptAt, $lastOutcomeAt, $lastFailure);
+        return new self(
+            $id,
+            $userId,
+            $email,
+            $material,
+            $expiresAt,
+            $dueAt,
+            $status,
+            $claimToken,
+            $claimedAt,
+            $leaseUntil,
+            $attemptCount,
+            $lastAttemptAt,
+            $lastOutcomeAt,
+            $lastFailure
+        );
     }
 }

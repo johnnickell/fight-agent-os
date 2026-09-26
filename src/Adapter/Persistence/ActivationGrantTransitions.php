@@ -10,10 +10,19 @@ use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDelive
 use Throwable;
 
 /**
+ * Class ActivationGrantTransitions
+ *
  * Validates proposed storage transitions by replaying package-owned aggregate operations
  */
 final class ActivationGrantTransitions
 {
+    /**
+     * Constructs ActivationGrantTransitions
+     */
+    private function __construct()
+    {
+    }
+
     /**
      * Checks pristine initial state and aggregate delivery ownership
      */
@@ -63,18 +72,22 @@ final class ActivationGrantTransitions
             } elseif ($before->isIssued() && $after->isIssued()) {
                 $expected = match ($newDelivery->getStatus()) {
                     CredentialDeliveryStatus::CLAIMED => $before->claimDelivery(
-                        $newDelivery->getClaimToken(), $newDelivery->getClaimedAt(), $newDelivery->getLeaseUntil()
+                        $newDelivery->getClaimToken(),
+                        $newDelivery->getClaimedAt(), $newDelivery->getLeaseUntil()
                     ),
                     CredentialDeliveryStatus::RETRY_PENDING => $before->failDelivery(
-                        $oldDelivery->getClaimToken(), $newDelivery->getLastOutcomeAt(),
+                        $oldDelivery->getClaimToken(),
+                        $newDelivery->getLastOutcomeAt(),
                         $newDelivery->getLastFailure()
                     ),
                     CredentialDeliveryStatus::PENDING => $before->requestDeliveryRetry(),
                     CredentialDeliveryStatus::DELIVERED => $before->confirmDelivery(
-                        $oldDelivery->getClaimToken(), $newDelivery->getLastOutcomeAt()
+                        $oldDelivery->getClaimToken(),
+                        $newDelivery->getLastOutcomeAt()
                     ),
                     CredentialDeliveryStatus::PERMANENT_FAILURE => $before->failDeliveryPermanently(
-                        $oldDelivery->getClaimToken(), $newDelivery->getLastOutcomeAt()
+                        $oldDelivery->getClaimToken(),
+                        $newDelivery->getLastOutcomeAt()
                     ),
                     CredentialDeliveryStatus::EXPIRED => self::expire($before, $after),
                     CredentialDeliveryStatus::INVALIDATED => null,
@@ -89,6 +102,9 @@ final class ActivationGrantTransitions
         return $expected instanceof ActivationGrant && ActivationGrantRecords::same($expected, $after);
     }
 
+    /**
+     * Transitions an outstanding grant to expired
+     */
     private static function expire(ActivationGrant $before, ActivationGrant $after): ActivationGrant
     {
         $oldDelivery = $before->getDelivery();
@@ -99,14 +115,12 @@ final class ActivationGrantTransitions
             && $newDelivery->getLastFailure() !== null
         ) {
             return $before->failDelivery(
-                $oldDelivery->getClaimToken(), $newDelivery->getLastOutcomeAt(), $newDelivery->getLastFailure()
+                $oldDelivery->getClaimToken(),
+                $newDelivery->getLastOutcomeAt(),
+                $newDelivery->getLastFailure()
             );
         }
 
         return $before->expireDeliveryAt($newDelivery->getExpiresAt());
-    }
-
-    private function __construct()
-    {
     }
 }

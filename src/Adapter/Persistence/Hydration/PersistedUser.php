@@ -13,6 +13,8 @@ use Fight\AccessControl\Domain\AccessControl\User\UserState;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 
 /**
+ * Class PersistedUser
+ *
  * Reconstitutes a persisted Fight Access Control user through the package's protected constructor.
  *
  * The locked package exposes no public full-state factory and prohibits reflection or serialization. The package
@@ -24,7 +26,7 @@ final class PersistedUser extends User
     /**
      * Reconstitutes an identity from authoritative stored state
      *
-     * @param list<RoleId> $roleIds
+     * @phpstan-param list<RoleId> $roleIds
      */
     public static function reconstitute(
         UserId $id,

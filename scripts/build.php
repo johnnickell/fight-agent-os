@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use Symfony\Component\Process\Process;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require dirname(__DIR__).'/vendor/autoload.php';
 
 $steps = [
     'Composer manifest' => ['composer', 'validate', '--strict', '--no-interaction'],
-    'Planning' => ['./bin/planning-check'],
-    'Architecture' => [
+    'Planning'          => ['./bin/planning-check'],
+    'Architecture'      => [
         'php',
         'vendor/bin/deptrac',
         'analyse',
@@ -17,9 +17,9 @@ $steps = [
         '--formatter=table',
         '--no-progress',
         '--report-uncovered',
-        '--fail-on-uncovered',
+        '--fail-on-uncovered'
     ],
-    'PHPUnit' => ['php', 'vendor/bin/phpunit'],
+    'PHPUnit'           => ['php', 'vendor/bin/phpunit']
 ];
 
 foreach ($steps as $name => $command) {

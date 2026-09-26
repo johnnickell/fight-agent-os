@@ -11,6 +11,8 @@ use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantId
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 
 /**
+ * Class PersistedEmailChangeGrant
+ *
  * Reconstitutes a persisted package-owned email-change generation
  */
 final class PersistedEmailChangeGrant extends EmailChangeGrant

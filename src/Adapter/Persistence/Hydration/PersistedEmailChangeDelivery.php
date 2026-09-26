@@ -15,6 +15,8 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 
 /**
+ * Class PersistedEmailChangeDelivery
+ *
  * Reconstitutes the package-owned email-change delivery state
  */
 final class PersistedEmailChangeDelivery extends EmailChangeDelivery
@@ -38,7 +40,21 @@ final class PersistedEmailChangeDelivery extends EmailChangeDelivery
         ?DateTimeImmutable $lastOutcomeAt,
         ?CredentialDeliveryFailure $lastFailure
     ): EmailChangeDelivery {
-        return new self($id, $userId, $email, $material, $expiresAt, $dueAt, $status, $claimToken, $claimedAt,
-            $leaseUntil, $attemptCount, $lastAttemptAt, $lastOutcomeAt, $lastFailure);
+        return new self(
+            $id,
+            $userId,
+            $email,
+            $material,
+            $expiresAt,
+            $dueAt,
+            $status,
+            $claimToken,
+            $claimedAt,
+            $leaseUntil,
+            $attemptCount,
+            $lastAttemptAt,
+            $lastOutcomeAt,
+            $lastFailure
+        );
     }
 }

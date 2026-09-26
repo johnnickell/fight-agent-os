@@ -27,6 +27,9 @@ use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Class RefreshSessionRepositoryTest
+ */
 final class RefreshSessionRepositoryTest extends TestCase
 {
     private Connection $connection;
@@ -34,12 +37,16 @@ final class RefreshSessionRepositoryTest extends TestCase
     private PostgresRefreshSessionRepository $sessions;
     private PostgresUserRepository $users;
 
+    /**
+     * @inheritDoc
+     */
     protected function setUp(): void
     {
         $this->connection = $this->connection();
-        $this->connection->executeStatement(
-            'TRUNCATE refresh_session_used_credentials, refresh_sessions, user_role_assignments, '
-            . 'user_email_claims, users, role_permissions, roles, permissions CASCADE'
+        $this->connection->executeStatement(<<<'SQL'
+TRUNCATE refresh_session_used_credentials, refresh_sessions, user_role_assignments,
+    user_email_claims, users, role_permissions, roles, permissions CASCADE
+SQL
         );
         $this->sessions = new PostgresRefreshSessionRepository($this->connection);
         $this->users = new PostgresUserRepository(
@@ -53,7 +60,10 @@ final class RefreshSessionRepositoryTest extends TestCase
         $this->unitOfWork = new DoctrineTransactionalUnitOfWork($entityManager);
     }
 
-    public function test_session_round_trip_and_active_pagination(): void
+    /**
+     * Verifies session round trip and active pagination
+     */
+    public function testSessionRoundTripAndActivePagination(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [$user, $pairs] = $this->userWithSessions(3, $base);
@@ -70,7 +80,10 @@ final class RefreshSessionRepositoryTest extends TestCase
         self::assertSame($pairs[1][0]->getId()->toString(), $all[1]->getId()->toString());
     }
 
-    public function test_current_and_used_credential_lookup_after_rotation(): void
+    /**
+     * Verifies current and used credential lookup after rotation
+     */
+    public function testCurrentAndUsedCredentialLookupAfterRotation(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [, $pairs] = $this->userWithSessions(1, $base);
@@ -97,7 +110,10 @@ final class RefreshSessionRepositoryTest extends TestCase
         );
     }
 
-    public function test_revocation_is_stored_and_excluded_from_active_queries(): void
+    /**
+     * Verifies revocation is stored and excluded from active queries
+     */
+    public function testRevocationIsStoredAndExcludedFromActiveQueries(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [$user, $pairs] = $this->userWithSessions(2, $base);
@@ -119,7 +135,10 @@ final class RefreshSessionRepositoryTest extends TestCase
         );
     }
 
-    public function test_expired_sessions_are_excluded_from_active_queries(): void
+    /**
+     * Verifies expired sessions are excluded from active queries
+     */
+    public function testExpiredSessionsAreExcludedFromActiveQueries(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [$user, $pairs] = $this->userWithSessions(1, $base);
@@ -135,12 +154,19 @@ final class RefreshSessionRepositoryTest extends TestCase
         self::assertNotNull($this->sessions->getById($pairs[0][0]->getId()));
     }
 
-    public function test_replace_rejects_stale_revision_and_advances_used_history(): void
+    /**
+     * Verifies replace rejects stale revision and advances used history
+     */
+    public function testReplaceRejectsStaleRevisionAndAdvancesUsedHistory(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [, $pairs] = $this->userWithSessions(1, $base);
         $original = $pairs[0][0];
-        $replacement = $original->rotate($this->credential(), $base->modify('+10 minutes'), $base->modify('+70 minutes'));
+        $replacement = $original->rotate(
+            $this->credential(),
+            $base->modify('+10 minutes'),
+            $base->modify('+70 minutes')
+        );
 
         self::assertTrue($this->unitOfWork->commitTransactional(
             fn(): bool => $this->sessions->replace($original, $replacement)
@@ -166,7 +192,10 @@ final class RefreshSessionRepositoryTest extends TestCase
         );
     }
 
-    public function test_reused_credential_digest_is_rejected(): void
+    /**
+     * Verifies reused credential digest is rejected
+     */
+    public function testReusedCredentialDigestIsRejected(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [, $pairs] = $this->userWithSessions(2, $base);
@@ -190,7 +219,10 @@ final class RefreshSessionRepositoryTest extends TestCase
         ));
     }
 
-    public function test_spent_credential_cannot_become_current_on_coupled_insert_or_rotation(): void
+    /**
+     * Verifies spent credential cannot become current on coupled insert or rotation
+     */
+    public function testSpentCredentialCannotBecomeCurrentOnCoupledInsertOrRotation(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [$user, $pairs] = $this->userWithSessions(2, $base);
@@ -243,7 +275,10 @@ final class RefreshSessionRepositoryTest extends TestCase
         );
     }
 
-    public function test_session_cannot_rotate_back_to_its_own_spent_credential(): void
+    /**
+     * Verifies session cannot rotate back to its own spent credential
+     */
+    public function testSessionCannotRotateBackToItsOwnSpentCredential(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [, $pairs] = $this->userWithSessions(1, $base);
@@ -264,7 +299,10 @@ final class RefreshSessionRepositoryTest extends TestCase
         self::assertNotNull($this->sessions->getByUsedCredential($spent));
     }
 
-    public function test_competing_digest_claims_wait_and_preserve_single_owner(): void
+    /**
+     * Verifies competing digest claims wait and preserve single owner
+     */
+    public function testCompetingDigestClaimsWaitAndPreserveSingleOwner(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [$user, $pairs] = $this->userWithSessions(1, $base);
@@ -305,8 +343,8 @@ final class RefreshSessionRepositoryTest extends TestCase
                     $newSession
                 );
                 self::fail('A competing digest claim must wait for the first transaction.');
-            } catch (DriverException) {
-                self::assertTrue(true);
+            } catch (DriverException $exception) {
+                self::assertSame('55P03', $exception->getSQLState());
             }
             $this->connection->commit();
             $competingConnection->rollBack();
@@ -344,7 +382,10 @@ final class RefreshSessionRepositoryTest extends TestCase
         );
     }
 
-    public function test_competing_rotations_allow_one_winner(): void
+    /**
+     * Verifies competing rotations allow one winner
+     */
+    public function testCompetingRotationsAllowOneWinner(): void
     {
         $base = $this->clock('2026-10-01T13:00:00+00:00');
         [, $pairs] = $this->userWithSessions(1, $base);
@@ -365,8 +406,8 @@ final class RefreshSessionRepositoryTest extends TestCase
             try {
                 $competingSessions->replace($expected, $loser);
                 self::fail('A competing rotation must wait on the authoritative session row.');
-            } catch (DriverException) {
-                self::assertTrue(true);
+            } catch (DriverException $exception) {
+                self::assertSame('55P03', $exception->getSQLState());
             }
             $this->connection->commit();
             $competingConnection->rollBack();
@@ -428,6 +469,9 @@ final class RefreshSessionRepositoryTest extends TestCase
         return [$user, $pairs];
     }
 
+    /**
+     * Creates an active user for repository checks
+     */
     private function activeUser(string $email): User
     {
         $now = $this->clock('2026-10-01T12:30:00+00:00');
@@ -440,16 +484,25 @@ final class RefreshSessionRepositoryTest extends TestCase
         return $user;
     }
 
+    /**
+     * Generates a refresh credential for repository checks
+     */
     private function credential(): RefreshCredential
     {
         return RefreshCredential::fromString(bin2hex(random_bytes(32)));
     }
 
+    /**
+     * Returns a deterministic clock for repository checks
+     */
     private function clock(string $value): DateTimeImmutable
     {
         return new DateTimeImmutable($value);
     }
 
+    /**
+     * Opens a guarded PostgreSQL test connection
+     */
     private function connection(): Connection
     {
         $databaseUrl = getenv('TEST_DATABASE_URL');
@@ -465,14 +518,17 @@ final class RefreshSessionRepositoryTest extends TestCase
         ))));
         $expected = $guard->assertConfigured((string) getenv('APP_ENV'), $databaseUrl);
         $connection = DriverManager::getConnection((new DsnParser([
-            'postgres' => 'pdo_pgsql',
-            'postgresql' => 'pdo_pgsql',
+            'postgres'   => 'pdo_pgsql',
+            'postgresql' => 'pdo_pgsql'
         ]))->parse($databaseUrl));
         $guard->assertConnected($connection, $expected);
 
         return $connection;
     }
 
+    /**
+     * Verifies the persisted session matches the expected state
+     */
     private static function assertSessionEquals(RefreshSession $expected, ?RefreshSession $actual): void
     {
         self::assertNotNull($actual);
