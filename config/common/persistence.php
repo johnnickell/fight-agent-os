@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
+use App\Adapter\Persistence\Repository\PostgresPasswordResetGrantRepository;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
@@ -15,6 +16,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
@@ -62,6 +64,9 @@ return static function (Container $container): void {
     });
     $container->set(RefreshSessionRepository::class, static function (Container $container): RefreshSessionRepository {
         return new PostgresRefreshSessionRepository($container->get(Connection::class));
+    });
+    $container->set(PasswordResetGrantRepository::class, static function (Container $container): PasswordResetGrantRepository {
+        return new PostgresPasswordResetGrantRepository($container->get(Connection::class));
     });
     $container->set(TransactionalUnitOfWork::class, static function (Container $container): TransactionalUnitOfWork {
         return new DoctrineTransactionalUnitOfWork($container->get(EntityManagerInterface::class));
