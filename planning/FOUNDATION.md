@@ -13,7 +13,7 @@ executable priority. Historical gate receipts remain historical.
 | Browser experience | Requirements/design exploration in planning | Production React application and complete browser Planning/observability remain planned |
 | Registered Planning | EPIC-00005 and TICKETs | Registered repository/checkout authority, verified import and database cutover remain planned; Markdown is authoritative now |
 | Managed Harness and SDLC team | EPIC-00006, team-template requirements; installable `harness/pi` terminal identity | Presentation does not imply managed Agent execution |
-| Isolated TASK execution | EPIC-00007, TICKET-00032 and TASK-00138 local two-environment probe | Candidate primitives observed; source quotas, Git/broker isolation and production PHP start/recovery remain unqualified/unimplemented |
+| Isolated TASK execution | EPIC-00007, TICKET-00032 and TASK-00138 [local VM qualification](../docs/engineering/DOCKER_SANDBOX_QUALIFICATION.md) | Two VMs passed synthetic storage/restart checks; pinned Pi CLI passed synthetic SSE, secret substitution and revocation. Full isolation/profile, real-provider broker and host accounting remain unqualified; production PHP start/recovery is unimplemented |
 | Independent review, QA and delivery | Local review/land guidance; EPIC-00008 and TICKET-00033 | Managed review/QA/publication phases remain planned; release/deployment need separate runbooks and implementation |
 | Verification | Current `scripts/build.php`: Composer validation, planning validation, Deptrac and PHPUnit | This is not proof of 100% unit coverage or browser acceptance; report each lane and unavailable coverage honestly |
 

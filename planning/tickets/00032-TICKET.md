@@ -98,3 +98,9 @@ TASK-00138–00142 now own the ordered path. Necessary authorization, durability
 [rootless mode](https://docs.docker.com/engine/security/rootless/), and
 [bubblewrap's policy responsibility](https://github.com/containers/bubblewrap#sandbox-security).
 These are candidates, not proof of this application's isolation.
+
+The [Docker Sandboxes follow-up](../../docs/engineering/DOCKER_SANDBOX_QUALIFICATION.md) passed scoped two-VM
+storage and persistence checks. Its worker sudo/private-engine model is a profile proposal requiring an explicit
+decision before Agent launch; it does not relax the installation-engine, credentials or role boundaries above.
+Pinned Pi subsequently passed a synthetic Codex transport/substitution/revocation fixture. Real OAuth, refresh,
+account mapping and broker-enforced grants remain unqualified; the fixture is not a managed Workflow.
