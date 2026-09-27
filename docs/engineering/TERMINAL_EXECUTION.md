@@ -22,11 +22,15 @@ own claims, grants, process fencing, sandbox policy or the authoritative transit
 
 These are responsibility boundaries to guide implementation, not instructions to create empty classes. Keep
 capabilities such as TaskEligibility, SandboxProvisioner and AgentLauncher small and use-case driven. Design the
-public commands, safe results and denial reasons before persistence/transport code.
+public commands, safe results and denial reasons before persistence/transport code. The
+[authority handoff](TERMINAL_AUTHORITY.md) specifies these contracts, package integration, source-publication race
+and the decisions still required; it is not an implemented or accepted enrollment flow.
 
 Until cutover, a Markdown adapter supplies immutable TASK, dependency and effective-context revisions. Planning
 authority stays in Markdown. PostgreSQL owns runtime claims, grants, Workflow events and durable effect intents.
 Re-read the selected revision and dependencies while acquiring a claim; stale or conflicting input rejects start.
+This requires the controlled source-publication contract in the authority handoff: a database transaction cannot
+atomically protect arbitrary human filesystem edits, and a pre/post hash alone is not sufficient proof.
 The database Planning adapter later replaces the read source without replacing Workflow orchestration.
 
 An enrolled operator explicitly grants one TASK, repository/base, permitted roles/tools, limits and cleanup
@@ -113,8 +117,9 @@ and qualification are required before accepting the profile.
 1. Accept and enforce the complete storage profile. The Docker Sandboxes follow-up below observed bounded
    VM-local disks and successful reclamation; configurable workspace limits and aggregate host storage remain
    unqualified. A normal host bind mount or Docker volume name supplies no per-Workflow hard quota.
-2. Qualify controlled Git ingestion/export. Private Git administration worked in synthetic fixtures. Keep shared
-   refs and sibling metadata outside the Agent; enforce exact ancestry, allowed refs and bounded untrusted input.
+2. Qualify controlled Git ingestion/export. Private Git administration and ten small-fixture admission/rejection
+   assertions passed. Keep shared refs and sibling metadata outside the Agent; enforce exact ancestry, allowed
+   refs and bounded untrusted input. The host fixture did not qualify expansion/resource limits or hostile trees.
 3. Implement and qualify the provider/dependency broker, role credentials and authenticated operator enrollment.
 4. Exercise provisioning/launch crash points, process fencing, quiescence and ownership-checked retirement through
    the production PHP path. The disposable probe is not a recovery implementation.
@@ -156,9 +161,13 @@ host accounting and retirement are distinct requirements. This candidate's sudo/
 an explicit profile decision; it does not silently replace the restricted-container contract above.
 
 The current candidate therefore remains **unqualified for autonomous Agents**. TASK-00138 stays in progress;
-TASK-00139–00142 remain dependency-blocked. Pinned Pi now passes synthetic SSE, host secret substitution and
-revocation checks. Next complete real-provider/broker qualification and settle the VM profile and operator
-enrollment, then implement the production PHP lifecycle against those boundaries.
+TASK-00139–00142 remain dependency-blocked. Pinned Pi passes synthetic SSE, host secret substitution and
+revocation checks. Fresh isolation counterchecks confirm the default VM worker has sudo and a writable root;
+reject it against the current restricted-worker contract rather than silently granting private-engine authority.
+The [qualification closeout](DOCKER_SANDBOX_QUALIFICATION.md#qualification-closeout) separates passing observations,
+failed/unsupported requirements and the explicit decisions still needed. The [authority handoff](TERMINAL_AUTHORITY.md)
+now records operator/package integration, command semantics, Markdown race handling, role/broker boundaries and
+resource admission. None of these design contracts supplies production runtime verification.
 
 Docker's [security guidance](https://docs.docker.com/engine/security/) describes namespace/capability boundaries
 and the powerful daemon API; [rootless mode](https://docs.docker.com/engine/security/rootless/) reduces daemon/runtime

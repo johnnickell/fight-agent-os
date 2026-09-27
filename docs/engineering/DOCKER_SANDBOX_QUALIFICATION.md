@@ -158,6 +158,70 @@ grant. Do not infer role/model enforcement from secret substitution, use OAuth p
 scoped credential silently restore broader global authority. Account-header mapping, authenticated upstream
 transport, token refresh, entitlement and real-provider revocation still need separate qualification.
 
+### Two-VM isolation countercheck
+
+A fresh shell-only probe on 2026-09-27 UTC reused the pinned 0.45.1 CLI/template, one CPU, 1 GiB RAM,
+2 GiB Docker disks, mountless creation, skills off and deny-all network. Host: macOS 26.6.2 (25G83), ARM64.
+Evidence: `.runs/task-00138/isolation-study/result.json`, `commands.jsonl` and `cleanup.json`.
+
+- Both VMs could read their own source markers but not sampled sibling source/cache/artifact/temp paths, the
+  disposable host marker or a symlink to that marker. Kernel boot and private engine IDs differed. Neither engine
+  listed containers. These checks do not establish resistance to arbitrary kernel or hypervisor exploits.
+- Proxy requests to the host fixture and example.com returned 403. Direct requests to that fixture, 1.1.1.1,
+  the attempted installation-engine TCP endpoint and metadata address failed. The bounded host listener received
+  zero connections. `getent ahostsv4 example.com` failed. No broad host scan, packet capture, DNS-tunnel/UDP/IPv6
+  test or sibling network-server test was performed; those properties remain unqualified.
+- The default worker successfully ran `sudo -n id -u` as UID 0 and created/deleted a root-filesystem marker.
+  `/sys/fs/cgroup/pids.max` was absent at the sampled root. This proves neither a read-only runtime nor a bounded
+  process profile. Reject the default worker against the current TICKET; do not quietly reinterpret it as compliant.
+- The probe's initial `ssh_forward_absent` assertion failed because `SSH_AUTH_SOCK` was set. Counterchecks in both
+  VMs found its path absent and connection failed with ENOENT; no keys were queried or exposed. An environment
+  variable alone is not forwarding evidence. Preserve the failed aggregate result rather than rewriting it green.
+- Initial non-interactive removal requested confirmation. Recovery rechecked each persisted VM ID and used
+  `rm --force` only to skip that confirmation, not force-detach storage. Both VMs were normally stopped/removed,
+  the inventory was empty and the idle daemon stopped. The host marker was removed. Backing-file reclamation
+  was not remeasured in this run; the earlier storage study owns that evidence.
+
+### Controlled Git probe
+
+A fresh disposable host fixture used Apple Git 2.50.1, private source/target repositories and no application refs.
+`.runs/task-00138/git-study/qualify.py` and `result.json` record **10 passing assertions**: hooks disabled, exact
+handoff-head/ancestor admission, accepted ref identity, stale-head rejection, compressed-byte-limit rejection,
+unrelated-history rejection, extra-ref rejection, bundle-symlink rejection, malformed-bundle rejection and unchanged
+private target base ref. Fixtures were removed after recording OIDs and results. No real credentials were involved.
+
+The initial script iterations used unsupported bundle refspec syntax, omitted thin-bundle prerequisites and checked
+an unborn HEAD instead of the candidate ref. The corrected fixture explicitly creates the handoff ref, seeds the
+approved base into quarantine and resolves the candidate ref. These were probe defects, not application defects.
+
+This is a small trusted-fixture protocol check, **not hostile Git ingestion qualification**: byte checks do not
+bound expanded pack size, strict fsck does not make tree content safe, and this host fixture has no hard object-count,
+expanded-storage or memory ceiling. Production must run the importer in a bounded quarantine, without checkout,
+network, hooks, global config or canonical ref access until validation. No seeded-failure product tests were added.
+
+### Qualification closeout
+
+The [authority handoff](TERMINAL_AUTHORITY.md) now defines the command, enrollment, revision, broker and resource
+contracts precisely enough to expose the missing decisions rather than invent authority from the probes.
+
+| Required boundary | Evidence / disposition | Remaining action |
+|---|---|---|
+| Independent filesystem/database state and graceful restart | Earlier two-VM storage study passed; fresh sampled path/network checks above | Keep results scoped to pinned local inputs; qualify unsampled bypass paths |
+| Restricted worker and forbidden provisioning | Default sudo/writable-root worker does not meet TICKET-00032 | Qualify restricted inner execution, or obtain explicit parent amendment for a root/private-engine worker |
+| Role isolation | Separate trust-boundary contract specified; no multi-role Agent run | Enforce launch binding and separate role resources in the production path |
+| Immutable input identities | CLI/template hashes and Pi lockfile retained; host version recorded | Bake/pin complete runtime and Fight Harness; the shell template plus an npm fixture is not that image |
+| CPU/memory/storage | Measured 1 CPU/1 GiB and bounded 20 GiB workspace/2 GiB Docker disks | Enforce PID/runtime restrictions, aggregate host/cache/log/artifact limits and admission reservations |
+| Git transfer | Private stores and 10 small-fixture checks | Qualify bounded untrusted quarantine, tree validation and atomic canonical publication |
+| Provider/broker | Earlier synthetic SSE/substitution/revocation only | Host-only real OAuth/account/renewal, scope enforcement, global fallback denial and bounded in-flight cancellation |
+| Operator and Markdown authority | Package-backed design and race boundary documented | Accept/configure enrollment and permissions; qualify controlled source publication before claiming atomic eligibility |
+| PHP Workflow recovery | Defined, not implemented; no production claim/dispatch or Agent launch | TASK-00139–00142, only after the TASK-00138 dependency is satisfied and separately started |
+| Platform coverage | macOS ARM64 observations only | Native Linux/other hosts unavailable until independently qualified |
+
+**Disposition: incomplete, not launchable.** Neither TASK-00138 nor the parent is accepted. No real provider request,
+personal credential enrollment, independent review, autonomous TASK execution or TASK-00139 implementation occurred.
+Completing the real-provider lane requires an authorized host broker and credential flow, not moving authentication
+into a worker. The current restricted-worker requirement remains authoritative pending the explicit profile decision.
+
 ### Decision and outstanding requirements
 
 Prefer Docker Sandboxes for the next backend qualification step. The measured local storage behavior addresses
@@ -165,7 +229,8 @@ the APFS file-sharing experiment's exhaustion/reclamation failure. It does not c
 live Agent execution. In particular:
 
 - Resolve the profile change explicitly: the existing TICKET describes restricted containers without a Docker
-  socket; this candidate gives the worker sudo and its private in-VM engine. Never expose the installation engine.
+  socket; fresh probes confirm this candidate gives the worker sudo and its private in-VM engine. Until amended,
+  reject that default worker and qualify a restricted inner profile instead. Never expose the installation engine.
   Put separate role credentials, review and authoritative evidence outside an Engineer-controlled VM.
 - Complete selected OpenAI/Codex qualification through the broker: the pinned Pi synthetic SSE/substitution check
   passed, but real OAuth, refresh, account mapping and role/model/attempt enforcement remain unqualified. Qualify
