@@ -14,6 +14,11 @@ The accepted report anchors **review provenance**, not a requirement that `devel
 2. Reconcile conflicts in generated planning views by regenerating them from authoritative records. For overlapping configuration or other files, inspect both sides and the final effective result; do not silently choose one side. Preserve both TASKs' behavior. Use `git range-diff` where applicable, compare the old reviewed change with the new-base effective diff, and inspect changes on the new base that interact with the TASK. An identical patch alone is not proof against changed dependencies.
 3. Record a concise provenance bridge: old and new base/head OIDs, conflict resolutions, effective implementation differences, dependency interactions, and fresh focused and full-gate results. If only mechanical integration (including generated views and independent registrations) changed and the reviewed behavior remains intact, the independent `accept` remains applicable. A semantic implementation change, unproven interaction, unexpected scope change, or failing check requires a new independent review of the new target; preserve the branch and stop publication. Never rewrite the original review to pretend it reviewed the new OIDs.
 
+Example: two independent TASKs update the Board, an index or completion notes. Preserve both source records,
+regenerate derived views, inspect the effective diff and run required checks. Existing acceptance remains usable;
+no second model review, extra human approval step or revision-cycle charge is required solely for that conflict.
+A Markdown requirement, authority rule or behavioral contract change is substantive and does not get this exception.
+
 Landing can resolve mechanical conflicts but not repair an implementation defect. If reconciliation cannot complete safely, stop with the exact conflict and hand off to `work` and then `review` as needed. Rebase/merge must never force-update a published branch.
 
 ## Verify and publish
@@ -29,3 +34,9 @@ After final push, query the hosting service: PR open, base `develop`, intended h
 Preview cleanup candidates before publication and recheck immediately before deletion. Remove only ownership-proven TASK-specific disposable resources: exact Compose project containers/volumes, inspected build output and a clean registered isolated worktree at the published commit. Preserve shared, durable, ambiguous and dirty resources, including review reports and unrelated worktrees. For isolated worktrees, remove without force from the base checkout as the final tool operation after all other work; retain the local feature branch for the human. If safe cleanup is unavailable, report landing incomplete rather than broadening deletion authority.
 
 Return the PR link, review provenance and any reconciliation bridge, final checks and warnings, cleanup result and remaining human actions. Publication, approval, merge, branch deletion, archive, release and deployment are distinct states.
+
+## Visual evidence
+
+For UI/TUI changes consume current post-review QA evidence under [QA standards](QA.md) and include the PR
+Before/After table with accessible real captures. Non-visual work records N/A or omits that section. Do not run
+unnecessary screenshot steps on documentation-only changes. Missing required evidence remains visible.

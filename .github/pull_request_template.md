@@ -20,6 +20,21 @@
 | `git diff --check` | Not yet recorded |
 | `./bin/build` | Not yet recorded |
 
+## Visual changes
+
+<!-- For UI/TUI changes use actual comparable baseline/result captures after technical review and before land.
+Record scenario and base/head identities; use PR-accessible image links. TUI image capture may be unavailable:
+state the limitation and link a sanitized real transcript/recording. For a new screen explain absent baseline.
+Remove this section for non-visual work. Do not leave placeholders or substitute mockups for actual behavior. -->
+
+Scenario and baseline/result commits:
+
+| Before | After |
+|---|---|
+| Baseline capture | Reviewed-result capture |
+
+QA actions/results and remaining limits:
+
 ## Evidence and review limits
 
 - Acceptance evidence (real scenarios, direct checks or accessible captures/links as applicable):

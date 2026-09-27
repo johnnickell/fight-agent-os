@@ -13,3 +13,7 @@ Read [review standards](../../../docs/engineering/REVIEW.md) before starting and
 4. **Publish.** Write a complete version-3 report to the canonical path with the required identity, independence, findings, acceptance evidence, verification, limitations and verdict. Preserve any older numbered history and prior canonical report until the replacement is ready; atomically replace the canonical report and read it back. If publication fails, state the path and failure rather than giving a chat-only verdict.
 
 Return the verdict and absolute canonical report path. Stop before fixes, planning finalization, push, approval or merge.
+
+After technical acceptance, interactive changes route to post-review QA under [QA standards](../../../docs/engineering/QA.md)
+before `land`. Do not claim screenshots were verified unless actually inspected. Mechanical Board/docs reconciliation
+uses the existing landing bridge; another review is not required merely because commit IDs changed.

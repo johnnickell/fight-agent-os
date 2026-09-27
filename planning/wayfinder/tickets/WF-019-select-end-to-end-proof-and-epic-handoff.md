@@ -40,23 +40,23 @@ The first coordinated slice begins only after database-authoritative Planning is
 
 1. an authorized human selects an eligible TASK and invokes **Start coordinated work**;
 2. the application atomically revalidates eligibility, claims the TASK, and creates its durable Workflow;
-3. Coordinator validates the grant, context and Harness snapshots, checkout, limits, and current authority;
-4. Coordinator dispatches one bounded Builder phase in a Workflow-owned isolated worktree;
-5. Builder implements the TASK, runs its required checks, and creates an implementation commit;
-6. Builder submits the commit-specific durable handoff accepted by WF-015; and
+3. Team Lead validates the grant, context and Harness snapshots, checkout, limits, and current authority;
+4. Team Lead dispatches one bounded Software Engineer phase in a Workflow-owned isolated worktree;
+5. Software Engineer implements the TASK, runs its required checks, and creates an implementation commit;
+6. Software Engineer submits the commit-specific durable handoff accepted by WF-015; and
 7. the Dashboard presents current state, activity, changes, evidence, checks, usage, interruptions, recovery, and
    the resulting **Awaiting review** state.
 
-This is the beginning of the accepted production state machine, not a recurring step before coordination. Planner
-owns authorized Wayfinder and EPIC → TICKET → TASK Planning. Coordinator owns the transition from an approved TASK
-to its execution Workflow. Builder owns the detailed implementation approach and source changes within approved
+This is the beginning of the accepted production state machine, not a recurring step before coordination. Project Manager
+owns authorized Wayfinder and EPIC → TICKET → TASK Planning. Team Lead owns the transition from an approved TASK
+to its execution Workflow. Software Engineer owns the detailed implementation approach and source changes within approved
 scope. Explorer remains available for genuine bounded research or design uncertainty but is not a mandatory
-preflight and does not create an execution plan for Coordinator.
+preflight and does not create an execution plan for Team Lead.
 
 The first slice stops durably at **Awaiting review**. Until automated review lands, an authorized human may inspect,
 pause, cancel, resume, or take over according to the existing Workflow and cleanup boundaries while preserving
 its branch, worktree, claim, sessions, and evidence. The next coordinated EPIC extends this same Workflow through
-Reviewer and Publisher; it does not replace the first slice.
+Senior Engineer and Release Manager; it does not replace the first slice.
 
 ### Existing prerequisites and implementation order
 
@@ -98,7 +98,7 @@ never treat an Agent's self-reported guess as measured fact. Retain observed out
 forecasts and make actual versus predicted duration inspectable without turning the estimate into Workflow
 authority.
 
-The Coordinator → Builder slice estimates only through **Awaiting review**. Once Reviewer and Publisher exist, the
+The Team Lead → Software Engineer slice estimates only through **Awaiting review**. Once Senior Engineer and Release Manager exist, the
 same projection estimates through PR handoff. Exact forecasting method, cohorts, defaults, confidence thresholds,
 and copy remain downstream requirements and implementation choices; they do not require another Wayfinder map.
 
@@ -121,7 +121,7 @@ consumer through the approved migration rather than a disposable database slice.
 #### 2. Deliver provider-configurable browser Planning Agents and trusted Harness
 
 Deliver the versioned Harness package and snapshots, managed Agent identities and profiles, trusted and custom
-Workspace Skills, and browser Planner conversations for Wayfinder and EPIC → TICKET → TASK proposal and
+Workspace Skills, and browser Project Manager conversations for Wayfinder and EPIC → TICKET → TASK proposal and
 acceptance. Include the reusable instruction-writing Skill adapted with attribution from Matt Pocock's
 MIT-licensed `writing-for-agents`. Do not include coding execution yet.
 
@@ -143,14 +143,14 @@ ownership.
 
 #### 3. Coordinate one TASK through implementation
 
-Deliver Runner enrollment and approved roots, Workflow/event/evidence/Artifact persistence, Coordinator claim and
-Builder dispatch, isolated implementation, commit-specific handoff, sessions-first Dashboard observation, and
+Deliver Runner enrollment and approved roots, Workflow/event/evidence/Artifact persistence, Team Lead claim and
+Software Engineer dispatch, isolated implementation, commit-specific handoff, sessions-first Dashboard observation, and
 the dynamic completion forecast. Use it on one real TASK and stop durably at **Awaiting review**.
 
 #### 4. Complete independent review and PR publication
 
-Extend the same Workflow with independent Reviewer, bounded Builder revisions, commit-specific acceptance,
-Publisher, push and PR creation, human merge handoff, and safe post-merge reconciliation.
+Extend the same Workflow with independent Senior Engineer, bounded Software Engineer revisions, commit-specific acceptance,
+Release Manager, push and PR creation, human merge handoff, and safe post-merge reconciliation.
 
 #### 5. Create and register new projects
 
@@ -169,12 +169,12 @@ The core dependency order is:
 ```text
 Registered Planning workspace
   → browser Planning Agents and Harness
-  → Coordinator and Builder
-  → Reviewer and Publisher
+  → Team Lead and Software Engineer
+  → Senior Engineer and Release Manager
 ```
 
 Project creation depends on registration and onboarding but not coordinated execution. Instruction editing depends
-on registration and Harness writing assistance but not automated Reviewer/Publisher orchestration. Either may move
+on registration and Harness writing assistance but not automated Senior Engineer/Release Manager orchestration. Either may move
 earlier only when it does not compete with the core path for the same application, Runner, Harness, or UI
 foundation. Onboarding guidance evolves with each installed capability rather than becoming a disconnected
 documentation EPIC.
@@ -190,3 +190,12 @@ This resolution is a sequencing and EPIC-planning brief. It selects no executabl
 TICKET, TASK, branch, Workflow, claim, Agent, process, provider credential, migration, database record, or
 production implementation. Its first separately approved grill handoff is
 [EPIC-00005 — Deliver the registered Planning workspace](../../epics/00005-EPIC.md).
+
+## Approved follow-through amendment — 2026-09-26
+
+The first proof remains Team Lead → Software Engineer → Awaiting review. Its later extension is Senior Engineer
+review → QA Engineer verification → Release Manager landing, using the same Workflow and shared revision budget.
+[TICKET-00032](../../tickets/00032-TICKET.md) makes isolated container startup/recovery explicit;
+[TICKET-00033](../../tickets/00033-TICKET.md) owns post-review browser/TUI evidence. Deterministic PHP validates
+mechanical-reconciliation bridges so basic Board/docs conflicts do not require another review cycle. Team Lead
+owns the initial bounded execution plan and human escalation; Explorer assists only when scouting is useful.

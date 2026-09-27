@@ -133,8 +133,16 @@
 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | done | — |
 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | done | — |
-| [TASK-00131](00131-TASK.md) | Design the project-local audit skill | ready-for-agent | — |
-| [TASK-00132](00132-TASK.md) | Design the diagnosis-to-bug-TASK fix skill | ready-for-agent | — |
-| [TASK-00133](00133-TASK.md) | Design the CQRS and DDD architecture skill | ready-for-agent | — |
-| [TASK-00134](00134-TASK.md) | Design the project-alignment adopt skill | ready-for-agent | — |
+| [TASK-00131](00131-TASK.md) | Design the project-local audit skill | done | — |
+| [TASK-00132](00132-TASK.md) | Design the diagnosis-to-bug-TASK fix skill | done | — |
+| [TASK-00133](00133-TASK.md) | Design the CQRS and DDD architecture skill | done | — |
+| [TASK-00134](00134-TASK.md) | Design the project-alignment adopt skill | done | — |
+| [TASK-00135](00135-TASK.md) | Reconcile execution planning and add priority Pi skills | done | — |
+| [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | done | — |
+| [TASK-00137](00137-TASK.md) | Package and install the Fight Pi terminal identity | done | [TICKET-00035](../tickets/00035-TICKET.md) |
+| [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | in-progress | [TICKET-00032](../tickets/00032-TICKET.md) |
+| [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
+| [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
+| [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
+| [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 <!-- /planning:records -->

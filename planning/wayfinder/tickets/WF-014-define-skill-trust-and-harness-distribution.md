@@ -59,6 +59,10 @@ Repository content cannot add or redirect a trusted endpoint. Credentials remain
 
 Show a persistent textual profile and environment indicator. Profiles may choose distinct packaged or database-backed themes, and profile creation or editing warns when another enabled connection resolves to the same theme or light/dark theme pair. The warning is overridable for accessibility or preference; color is never the only indicator.
 
+The custom terminal identity requirement in [EPIC-00006](../../epics/00006-EPIC.md) adds a Fight `F`/Fight Agent OS
+welcome treatment, compact working identity and portable text fallback. Its visual design belongs to the Harness
+presentation work and does not replace the persistent profile/environment indicator or block initial execution.
+
 ### First-party MCP scope and origin trust
 
 V1 accepts Skills only from the explicitly configured first-party Agent OS MCP origin associated with the active connection profile: either the registered local development installation or an authenticated hosted installation. `localhost` by itself is not trusted, and a hostname is connection evidence rather than origin identity. Use the host-assigned installation/origin identity throughout the registry, cache, model context, and evidence.
@@ -105,7 +109,7 @@ The permission-filtered MCP tool seam is accepted future integration, not curren
 
 ### Agent profile templates and credentials
 
-Harness owns semantic **Agent profile templates**. They may choose Skills, prompts, personas, models or other preferences, operating constraints, repository applicability, and a requested direct-Permission set. They are not Fight Access Control `Role` entities and cannot grant authority themselves. Exact initial templates—potentially Explorer, Planner, Builder, Reviewer, Publisher, and Coordinator—and their authority split remain for WF-015.
+Harness owns semantic **Agent profile templates**. They may choose Skills, prompts, personas, models or other preferences, operating constraints, repository applicability, and a requested direct-Permission set. They are not Fight Access Control `Role` entities and cannot grant authority themselves. Exact initial templates—potentially Explorer, Project Manager, Software Engineer, Senior Engineer, Release Manager, and Team Lead—and their authority split remain for WF-015.
 
 Support managed templates and authorized custom workspace- or repository-scoped templates. Record template ancestry and immutable revisions. Provisioning an actual Agent validates every requested Permission through Access Control and records the template revision used. Browser-delegated authority remains capped by both the initiating user's current permissions and the acting Agent's direct permissions.
 

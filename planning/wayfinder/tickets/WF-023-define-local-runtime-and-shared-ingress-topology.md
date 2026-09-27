@@ -100,10 +100,12 @@ entrypoint. Business and orchestration logic does not live in shell wrappers.
 `bin/build` runs PHP scripts and PHP tools inside the already running PHP-FPM container. The underlying scripts
 remain Docker-free. Inside a prepared PHP-FPM or Agent-runner environment, container-native callers execute the
 underlying scripts directly, so managed work never invokes recursive Docker. The Agent runner has no Docker
-socket and cannot control its own or sibling containers.
+socket. The approved isolated-execution amendment permits deterministic provisioning requests through the
+installation-owned constrained provisioner; Agent sessions cannot control their own or sibling containers.
 
 Host-invoked `bin/composer` and `bin/npm` may create and remove pinned disposable Composer and Node tool
-containers. No other ad hoc or persistent container joins the topology without John's explicit approval. The
+containers. Workflow-owned execution and private test-service containers may be provisioned under the approved installation
+profile and TASK grant. Other ad hoc or persistent containers require explicit approval. The
 browser suite runs through approved disposable tooling rather than a persistent browser service and is capped
 at ten named end-to-end scenarios across at most four explicitly configured browser projects. The complete
 matrix therefore permits at most forty scenario/browser executions. Keep the named inventory, projects, retries,
@@ -156,3 +158,11 @@ these boundaries.
 This decision starts no container, creates no Docker network or volume, exposes no port, edits no host mapping,
 installs no certificate, stores no secret, migrates no schema, and creates no preview environment, EPIC,
 requirement TICKET, or implementation TASK.
+
+## Approved isolated-execution amendment — 2026-09-26
+
+[TICKET-00032](../../tickets/00032-TICKET.md) supersedes the earlier deferral of per-worktree service orchestration
+for TASK execution/testing. A constrained installation-owned provisioner creates and reconciles isolated execution
+containers and required private services on deterministic PHP requests. Agent sessions have no Docker authority.
+Public preview URLs, arbitrary stacks and deployment remain excluded; local browser QA may access only its owned
+private application. Installation profile selection must prove isolation on supported hosts before managed launch.
