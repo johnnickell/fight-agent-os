@@ -72,6 +72,23 @@ stale enrollment/permission revision, replayed Agent nonce, lost provisioning/ro
 store and concurrent revocation. These are future owned behavior/integration checks, not product tests of wiring.
 No User, Agent, grant or provider credential was created by this inspection.
 
+### R1 upstream operation-recovery dependency
+
+On 2026-09-27 John approved preparing a separately scoped upstream contract before implementation. The
+[Agent operation-recovery proposal](ACCESS_CONTROL_AGENT_OPERATIONS_PROPOSAL.md) records the current upstream
+source/planning inspection and requires caller-scoped, request-bound operation identity, atomic committed-outcome
+correlation, safe provision/rotation retries and explicitly bounded credential-delivery recovery. It recommends
+fixed-destination protected delivery rather than unrestricted secret retrieval and requires behavior proof for
+response loss, concurrent retries, revocation/supersession, unavailable storage and post-commit event failures.
+
+The proposal is not an accepted package API, an upstream work record or a release. The inspected upstream
+`develop` at `60e2ff7aeb77e89a661bb6cc4230b3eb27847dae` still has the same provision/rotation services as the
+installed v0.3.0; existing recoverable email-credential delivery does not cover Agent HMAC credentials. Durable
+enrollment depends on upstream acceptance, implementation/release and separate consumer qualification through
+public package contracts. Do not patch vendor code, correlate by name, nest transactions or recreate the lifecycle
+in Agent OS. R1 remains open, including operator authentication, the execution permission extension, host secret
+store and controlled Markdown publication. R2–R3 and the no-launch disposition are unchanged.
+
 ## Immutable eligibility and explicit grants
 
 `TaskEligibility` consumes server-registered repository identity plus a selected immutable source snapshot. The
