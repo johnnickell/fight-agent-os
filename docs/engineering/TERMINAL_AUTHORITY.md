@@ -41,6 +41,37 @@ operations after binding the request to the launched role/attempt; it is not an 
 nonce consumption/revision validation remains mandatory. Agent persistence, nonce storage and these adapters are
 still missing; do not fabricate a local principal or replace package authentication to skip them.
 
+### Enrollment qualification findings
+
+Read-only tracing on 2026-09-27 used locked Access Control v0.3.0 (`22ffab6452b2278b82df9b147e8949630b97355f`)
+and Common v1.2.0 (`a2cd615d9b5064c9c30e994655536176249cd73b`), not live operator credentials:
+
+- `config/common/security.php` binds Common `JwtDecoder`. Its `decode()` validates `SignedWith`, not the complete
+  expiry/issuer/audience/session profile. It cannot alone establish enrolled operator authority. The planned complete
+  authentication adapter must precede current-principal resolution; do not treat the decoder binding as readiness.
+- `config/common/persistence.php` binds User/Role/Permission/session/grant repositories, but not `AgentRepository`
+  or `AgentRequestNonceConsumer`. Searches of `src/`, `config/` and `bin/` found no operator enrollment or managed
+  Agent authentication composition. `config/common/command.php` has no registered handlers. No runtime authentication
+  or enrollment denial was claimed from this source inspection.
+- `AgentProvisioningService::provision()` generates an Agent ID inside its own transaction and returns secret-bearing
+  material afterward. Its API accepts no enrollment/idempotency key; `AgentRepository` supplies no lookup by enrollment
+  key. A crash after commit but before recording the returned ID/secret therefore cannot be declared safely retryable
+  under the proposed intent alone. Stop in Needs Human; do not provision another Agent or correlate by display name.
+  Recovery needs a separately qualified package-supported correlation/credential recovery design before enrollment
+  can be called durable. Do not hide atomic enrollment writes in an audit adapter or nest package transactions.
+- `AgentCredentialLifecycleService::rotate()` checks the expected credential ID and returns new secret material;
+  losing that result also requires reconciliation, not blind rotation. `CurrentAgentPrincipalProvider` consumes the
+  nonce in its own Unit of Work and caches the resulting principal per request. Use a fresh provider for each request;
+  broker admission must additionally check the live attempt/grant and fence revocation races.
+- The foundation catalog in [TASK-00036](../../planning/tasks/00036-TASK.md) explicitly has twenty-one permissions
+  and excludes additions. Execution enrollment/start/inspection permissions need an explicit catalog extension and
+  references, not an invented Super Admin bypass or an unrecorded change to that TASK.
+
+Remaining enrollment evidence must cover valid login/confirmation, disabled/revoked/expired operator, wrong repository,
+stale enrollment/permission revision, replayed Agent nonce, lost provisioning/rotation response, unavailable secret
+store and concurrent revocation. These are future owned behavior/integration checks, not product tests of wiring.
+No User, Agent, grant or provider credential was created by this inspection.
+
 ## Immutable eligibility and explicit grants
 
 `TaskEligibility` consumes server-registered repository identity plus a selected immutable source snapshot. The
@@ -93,20 +124,22 @@ qualified start queued. Neither case permits unsandboxed work.
 
 The installation-owned provisioner alone holds host sandbox/engine authority. Its input is a persisted effect ID,
 Workflow/role owner, generation, approved source digest and profile ID. It resolves limits, images, paths and network
-rules server-side. Reject arbitrary command strings, Docker/Compose policy from the worktree, additional mounts,
-mutable images, host namespaces, privilege flags and unregistered owners. Return observed IDs, effective policy
-and bounded readiness evidence; names/labels alone are not ownership proof.
+rules server-side. Reject arbitrary host command strings, worktree-authored host Docker/Compose policy, host mounts,
+mutable VM bootstrap images, host namespaces/privilege flags and unregistered owners. Return observed IDs, effective
+policy and bounded readiness evidence; names/labels alone are not ownership proof.
 
-The existing restricted-worker requirement remains in force: non-root Pi, no sudo, no engine socket/credentials,
-read-only runtime, dropped capabilities, no-new-privileges and bounded processes. The default Docker Sandboxes shell
-**does not meet it**. A VM can be an outer boundary with a trusted provisioner managing restricted inner execution,
-but that composition has not been qualified. Alternatively, permitting Engineer root/private Docker authority is
-an explicit parent-contract amendment requiring human approval, not an implementation shortcut.
+On 2026-09-27 John approved Engineer sudo/root and private Docker-engine access inside its dedicated mountless VM.
+The entire guest is Engineer-controlled, including privileged containers, Pi, runtime/Harness files, guest cgroups,
+Git objects and check output. Non-root/read-only/no-private-engine requirements are superseded for this profile;
+the VM/hypervisor and external control plane, not an inner container or trusted guest process, enforce isolation.
+Guest root may administer its own Docker resources but cannot reconfigure host VM policy or create host/sibling VMs.
+Pinned input digests attest what was supplied, not continuous guest integrity. Local tool restrictions are advisory;
+external tool permissions, provider limits and acceptance remain enforced by the host authority.
 
 Never put Team Lead, Engineer or future reviewer authority in the same Engineer-writable boundary. Allocate distinct
 role boundaries and grants; hand off only immutable, bounded artifacts through the host authority. A role switch
 requires a new authorized launch binding, never an in-session prompt. Canonical refs, broker credentials, independent
-check receipts and acceptance remain outside the Engineer boundary even if the private-engine amendment is accepted.
+check receipts and acceptance remain outside the Engineer boundary under the approved private-engine amendment.
 Worker check output is untrusted evidence until the appropriate independent phase validates it.
 
 ## Broker authority and cancellation
@@ -132,6 +165,11 @@ cannot be declared quiescent from deletion of a substitution secret. If terminat
 retain the claim and show Needs Human. Host renewal of OAuth material is serialized and secret-safe; worker placeholder
 renewal must revalidate its live launch binding. No real access/refresh token or account secret goes into a worker.
 
+The [VM-boundary probe](DOCKER_SANDBOX_QUALIFICATION.md#engineer-controlled-vm-and-broker-probe) now demonstrates
+that removing a scoped substitution secret does **not** stop an admitted stream. The external fixture stopped its
+own stream explicitly; this is not measured production cancellation. VM-scoped canaries distinguished identical
+placeholders from two VMs, but durable role/attempt/Agent authorization and real-provider renewal remain unqualified.
+
 ## Git and resource admission
 
 Keep one private Git store per Workflow, seeded from approved immutable objects. Export one named handoff ref plus
@@ -153,11 +191,24 @@ is uncertain. A free-space sample alone is not a hard quota and must not qualify
 broker streams, logs and exported evidence; workers cannot select them. Retirement releases reservations only after
 owned processes and backing files are proved absent. Keep interrupted/failed evidence under retention policy.
 
+For the pinned local template the observed writable disks are 20 GiB workspace plus 2 GiB Docker per VM. Reserve
+at least 22 GiB per retained VM, not its currently allocated sparse blocks; three Workflows retaining both Lead and
+Engineer VMs would require at least 132 GiB **before** immutable caches, logs, artifacts and safety reserve. The
+fresh two-VM sample had 44 GiB logical backing but only 1,667,997,696 allocated bytes. Neither figure is an enforced
+aggregate host quota. Inventory reservations, cache/retention caps and crash recovery are still unimplemented.
+
+Externally bound vCPU/memory/disk allocation, host VM/proxy process resources, network/request rates, disk I/O and
+export/log volume. Guest root may remove guest PID/cgroup controls; their absence is not a profile failure now, and
+their presence is not proof of a host limit. Qualification must show bounded host impact and sibling availability
+under controlled guest stress without exhausting the actual host. Stop new admissions on unknown allocations or
+resource exhaustion, retain ownership/claims and use external VM stop for quiescence; guest acknowledgments alone
+cannot prove it. No process/fork bomb or host-capacity exhaustion is authorized by this requirement.
+
 ## Required closeout
 
 The [qualification decision table](DOCKER_SANDBOX_QUALIFICATION.md#qualification-closeout) is the authoritative
-summary of observed versus missing proof for this TASK. Before implementation begins, resolve the restricted-worker
-profile choice, enrollment/catalog/secret-store integration and controlled Markdown publication contract. Before any
+summary of observed versus missing proof for this TASK. The Engineer-controlled VM choice is approved, but before
+implementation begins resolve enrollment/catalog/secret-store integration and controlled Markdown publication. Before any
 live launch, also qualify real-provider host-only OAuth/renewal/cancellation, complete resource accounting, denied
 network/provisioning paths and the production PHP lifecycle. Native Linux is unqualified and must be unavailable;
 this local macOS evaluation cannot certify it. No product tests or PHP startup implementation were added here.

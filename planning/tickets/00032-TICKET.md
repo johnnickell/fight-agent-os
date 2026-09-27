@@ -14,36 +14,47 @@ parallel TASKs or installation secrets. A separate worktree or Compose project n
 
 ## Solution and boundaries
 
-Deterministic PHP owns the following recoverable sequence; Agents never generate its privileged commands:
+Deterministic PHP owns the following recoverable sequence; Agents never generate its host-privileged commands.
+The approved Engineer profile uses a dedicated, mountless VM; the entire guest is Engineer-controlled:
 
 1. Authorize the TASK revision, grant, dependencies and Runner capabilities; atomically claim and persist dispatch.
 2. Resolve an exact base commit, create an owned branch/worktree under an approved root and persist identity.
-3. Ask a constrained installation-owned provisioner for Workflow-specific execution containers, private networks,
-   temporary paths, writable volumes and required application/database/cache test services.
+3. Ask a constrained installation-owned provisioner for a role-specific VM, external limits/network policy and
+   approved immutable inputs. Engineer-owned application/database/cache containers and private volumes live inside
+   its VM; its private engine cannot provision host or sibling resources.
 4. Verify actual ownership, mounts, filesystem/process/network boundaries, service endpoints, credentials and
    resource limits. Persist the effective isolation profile and results before marking the environment ready.
 5. Launch the authorized Pi role with immutable context/Harness versions and container-native build/test commands.
 6. Reconcile interrupted provisioning and attempts; pause preserves state; retire only owned resources after
    authorized cancellation/publication policy and proved quiescence. Never delete failed evidence silently.
 
-Use proven mechanisms before custom enforcement: evaluate hardened/rootless OCI execution and, where suitable,
-Linux namespace confinement such as bubblewrap. PHP owns policy and lifecycle adapters, not a new kernel sandbox.
-The selected backend must demonstrate required behavior on native Linux and the supported local Docker Desktop
-environment; unsupported hosts stay queued/Needs Human with no unsandboxed fallback. Record remaining shared-host
-and shared-Git risks; stronger hostile-workload containment requires an explicitly selected VM boundary.
+Use proven VM mechanisms before custom enforcement. PHP owns policy and lifecycle adapters, not a new kernel
+sandbox. Qualify macOS/ARM64 locally and native Linux separately; unsupported hosts/profiles remain unavailable
+with no unsandboxed fallback. A VM boundary is not a claim of resistance to every hostile workload or hypervisor bug.
 
-No Docker socket, engine credentials, host home, sibling worktrees, installation database or broad host network
-is available to Pi. The provisioner validates server-selected immutable profiles and canonical contained paths,
-rejects symlink escapes, arbitrary mounts/images/privilege flags and mutable worktree Compose policy. Changes
-to a repository Dockerfile/Compose definition are untrusted input for later review, never permission expansion.
-Keep provider/source-host/storage credentials in the protected broker. Provide short-lived sandbox-only test
-credentials where needed. Default-deny outbound shell traffic; allow required package traffic by explicit policy.
-Use non-root execution, minimal capabilities, read-only runtime, private process namespace and bounded CPU,
-memory/process/storage consumption as supported and verified. Sharing mutable caches requires an explicit policy.
+The Engineer may use sudo/root, writable guest runtime and its private Docker engine, including privileged guest
+containers. Guest users, cgroups, mounts, Docker policy and checks are not trusted boundaries against the Engineer.
+No installation Docker socket/engine credentials, host home, human checkout/Git administration, sibling VM/worktree,
+installation database or broad host network is available. The host provisioner accepts only server-selected immutable
+VM profiles and canonical contained transfer paths; it rejects arbitrary host mounts/images/privilege flags, symlink
+escapes and worktree-authored host policy. Repository Compose/Dockerfile edits may affect the private guest only.
 
-Git worktrees share administrative storage. Keep shared ref/worktree administration behind trusted PHP operations;
-qualify the minimal Git view and commit operation required by the Engineer without exposing sibling metadata or
-arbitrary refs. Record the chosen boundary and its limitations before declaring sandbox readiness.
+Keep provider/source-host/storage and Agent HMAC credentials in the external protected broker. Only short-lived,
+VM-local test-service credentials may enter the guest. Bind broker capabilities to the actual VM/Workflow/role/attempt,
+not guest-reported identity. Enforce default-deny egress and
+explicit package traffic policy outside the guest. CPU, memory, disk/aggregate host storage, I/O/output and host-side
+process/service limits must be externally enforced and accounted for; guest PID limits cannot protect host authority.
+Do not require a guest PID ceiling that guest root can remove or present it as isolation evidence. Bound the VM and
+its host control-plane impact instead. No mutable cache crosses role/Workflow boundaries without explicit policy.
+
+Team Lead and independent reviewer run in separate trust boundaries with separate broker bindings; neither
+credentials nor authoritative evidence reside in the Engineer VM. Worker-generated checks, Git objects and reports
+remain untrusted until independently validated. Pinned bootstrap/Harness digests identify supplied inputs, not
+continuous guest integrity; root can modify them, so policy must not depend on an untampered Pi process.
+
+Keep one private Git store and worktree inside the Engineer VM. Trusted PHP seeds the approved base and validates
+bounded exports in quarantine before any canonical ref publication. No shared canonical Git administration or
+sibling metadata enters the VM. Exact ancestry/ref checks do not establish that exported content is safe to execute.
 
 Persist intent → idempotent effect → observed result → authoritative completion for each step. Resource names and
 labels derive from persisted Workflow/sandbox identities. Retried dispatch reconciles actual resources and verifies
@@ -64,13 +75,18 @@ Names above describe semantic operations; exact PHP classes and storage schemas 
 
 Domain owns grants, claim/transition invariants and resource ownership. Application coordinates typed capabilities;
 Adapter implements Git, processes and the constrained provisioner. Persist redacted evidence. Preparation and
-cleanup are not model tools granting arbitrary container access. This TICKET does not authorize live provisioning.
+host cleanup are not model tools granting arbitrary host container/VM access. Engineer private-engine access is
+confined to its VM. This TICKET does not itself authorize live provisioning or autonomous execution.
 
 ## Acceptance and evidence
 
 - Two concurrent TASKs cannot change each other's source, database, cache, temporary files or artifacts.
-- Directly qualify filesystem escape, sibling access, network/credential exposure and forbidden provisioning.
-  Use the owning sandbox tooling in disposable environments; do not add configuration-text tests to product suites.
+- Qualify from guest root and privileged private-engine containers: host/sibling filesystem and network isolation,
+  credential/broker exposure, external policy bypass and forbidden host provisioning. Private-engine access itself
+  is permitted. Use owning tools in disposable environments, not configuration-text product tests.
+- Prove externally imposed VM/resource ceilings, aggregate host admission/accounting and bounded control-plane,
+  cache/log/export growth. Guest settings or resource reports alone are insufficient.
+- Prove separate role/broker bindings and independently validate Engineer-generated results outside its VM.
 - Owned application tests prove authorization, idempotency, stale-owner fencing, state transitions and recovery.
 - Interrupt after claim, worktree creation, container creation, readiness, process spawn and completion; reconcile
   each point without duplicate effects, lost claims or fabricated success.
@@ -100,7 +116,10 @@ TASK-00138–00142 now own the ordered path. Necessary authorization, durability
 These are candidates, not proof of this application's isolation.
 
 The [Docker Sandboxes follow-up](../../docs/engineering/DOCKER_SANDBOX_QUALIFICATION.md) passed scoped two-VM
-storage and persistence checks. Its worker sudo/private-engine model is a profile proposal requiring an explicit
-decision before Agent launch; it does not relax the installation-engine, credentials or role boundaries above.
-Pinned Pi subsequently passed a synthetic Codex transport/substitution/revocation fixture. Real OAuth, refresh,
-account mapping and broker-enforced grants remain unqualified; the fixture is not a managed Workflow.
+storage and persistence checks. On 2026-09-27 John explicitly amended this contract to permit Engineer sudo/root
+and private Docker-engine access in its dedicated mountless VM, treating the entire VM as Engineer-controlled.
+This supersedes the former non-root/read-only/no-private-socket requirements for this profile only; host/sibling
+isolation, private Git, external broker/credential authority, externally enforced limits and separate role boundaries
+remain mandatory. Worker checks require independent validation. Approval of the boundary is not its qualification.
+Pinned Pi passed a synthetic Codex transport/substitution/revocation fixture. Real OAuth, refresh, account mapping,
+broker-enforced grants, enrollment and aggregate resource accounting remain unqualified; the fixture is not a Workflow.

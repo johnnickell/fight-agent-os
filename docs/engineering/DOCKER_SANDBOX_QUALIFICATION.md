@@ -4,11 +4,13 @@ Candidate evaluation for [TASK-00138](../../planning/tasks/00138-TASK.md), follo
 [terminal execution contract](TERMINAL_EXECUTION.md). This document guides the provisioner implementation and
 its direct tooling qualification. It does not authorize live Agent execution or declare a supported profile.
 
-## Candidate boundary
+## Approved boundary, qualification pending
 
-Evaluate one local microVM per execution trust boundary, with private Git storage, application containers and
-test databases inside it. PHP retains TASK eligibility, grants, claims, attempt fencing, resource ownership and
-acceptance. Pi remains the worker. No cloud execution is part of this evaluation.
+On 2026-09-27 John approved one dedicated mountless local VM per Engineer trust boundary, with sudo/root,
+private Git storage, private Docker engine, application containers and test databases inside it. Treat the entire
+VM as Engineer-controlled. This replaces the earlier restricted-worker proposal, not the host/sibling, external
+credential/broker, resource-limit or separate-role requirements. PHP retains TASK eligibility, grants, claims,
+attempt fencing, resource ownership and acceptance. No cloud or autonomous execution is part of this evaluation.
 
 Docker documents a separate kernel and Docker engine for each sandbox. That can let an Engineer use ordinary
 container tooling without reaching the installation's Docker daemon. The VM is the outer boundary: the default
@@ -21,11 +23,13 @@ trust boundary. See [Docker's isolation model](https://docs.docker.com/ai/sandbo
 | Concern | Qualification requirement |
 |---|---|
 | Workspace | Create without a workspace path; transfer a synthetic bundle first, later only the approved immutable Git snapshot. Do not use direct mounts of human checkouts. |
-| Git | Private repository and linked worktree inside the VM; exact base and head recorded; controlled export/import outside canonical refs. |
+| Engineer authority | Sudo/root and privileged private-engine containers permitted inside the guest. Guest runtime, cgroups, checks and all reports are untrusted; verify host policy externally. |
+| Git | Private repository and linked worktree inside the VM; exact base and head recorded; bounded quarantine export/import outside canonical refs. |
 | Host integrations | Shared skills off; SSH-agent forwarding off; no host MCP tools, clipboard reads or host lifecycle commands. Copy approved Harness/skills as versioned inputs. |
 | Network | Deny all during filesystem qualification. Later enumerate exact model/dependency destinations and test denied paths, including direct connections, DNS and host services. |
 | Credentials | No real model or source-host credentials for qualification. Later verify placeholder substitution and role-scoped authority without copying personal Pi authentication. |
-| Resources | Explicit CPU/memory allocation and bounded writable disks; measure workspace, Docker data, temporary storage, logs, image caches and host-side artifacts separately. |
+| Resources | Externally enforce VM CPU/memory/disk limits and bound host process/proxy, I/O/network/output and aggregate storage impact. Measure workspace, Docker data, temporary storage, logs, caches and artifacts separately; root-removable guest limits do not count. |
+| Role/evidence authority | Separate Team Lead/reviewer trust boundaries and external broker bindings. Independently validate Engineer check results; guest bootstrap digests are not continuing integrity attestations. |
 | Ownership | Persist create intent and observed runtime identity; reconcile ambiguous completion before reuse or retry. Names alone do not prove ownership. |
 | Recovery | Preserve commits and database state through workload and VM restart; reconcile identities and verify readiness before relaunch. |
 | Retirement | Stop owned workloads, preserve evidence, remove only identified probe VMs, and prove their resources are gone without restarting unrelated services. |
@@ -61,8 +65,10 @@ version and the approved Fight Harness package before any model request.
    stops creation; the operator completes authentication through Docker's official flow.
 3. Create two uniquely owned mountless fixtures with explicit limits. Observe runtime identities, mounts,
    filesystems, network policy and absence of host integrations before executing probe code.
-4. Write distinct Git and database markers. Attempt sibling/host access. Exhaust only an explicitly bounded
-   disposable filesystem, delete the filler, and prove space can be reused while the other fixture still works.
+4. Write distinct Git and database markers. Attempt sibling/host access as guest root and from privileged private
+   containers. Verify that guest policy changes cannot expand external permissions or resources. Exhaust only an
+   explicitly bounded disposable filesystem, delete the filler, and prove reuse while the sibling still works.
+   Do not exhaust the host or run uncontrolled process stress. Count paused VMs and host-side overhead in admission.
 5. Stop and restart workload containers, then stop and restart their VMs. Verify exact Git heads and database
    markers. Do not equate graceful restart with forced-crash recovery or PHP process fencing.
 6. Export evidence and retire each owned fixture normally. Preserve failed results and partial-resource identities.
@@ -172,8 +178,9 @@ Evidence: `.runs/task-00138/isolation-study/result.json`, `commands.jsonl` and `
   zero connections. `getent ahostsv4 example.com` failed. No broad host scan, packet capture, DNS-tunnel/UDP/IPv6
   test or sibling network-server test was performed; those properties remain unqualified.
 - The default worker successfully ran `sudo -n id -u` as UID 0 and created/deleted a root-filesystem marker.
-  `/sys/fs/cgroup/pids.max` was absent at the sampled root. This proves neither a read-only runtime nor a bounded
-  process profile. Reject the default worker against the current TICKET; do not quietly reinterpret it as compliant.
+  `/sys/fs/cgroup/pids.max` was absent at the sampled root. This failed the then-current restricted-worker contract.
+  The later explicit VM amendment permits root/writable guest state; preserve the observation, but evaluate limits
+  at the external VM/control-plane boundary instead. No guest PID-cap enforcement is claimed.
 - The probe's initial `ssh_forward_absent` assertion failed because `SSH_AUTH_SOCK` was set. Counterchecks in both
   VMs found its path absent and connection failed with ENOENT; no keys were queried or exposed. An environment
   variable alone is not forwarding evidence. Preserve the failed aggregate result rather than rewriting it green.
@@ -199,6 +206,44 @@ bound expanded pack size, strict fsck does not make tree content safe, and this 
 expanded-storage or memory ceiling. Production must run the importer in a bounded quarantine, without checkout,
 network, hooks, global config or canonical ref access until validation. No seeded-failure product tests were added.
 
+### Engineer-controlled VM and broker probe
+
+After the explicit amendment, a fresh two-VM probe on 2026-09-27 UTC reused the pinned CLI/template with one vCPU,
+1 GiB RAM and 2 GiB Docker disks per mountless VM, skills off, SSH forwarding off and only the local synthetic
+broker's exact host/port aliases allowed. No Pi/model execution or real credential was involved. Raw evidence:
+`.runs/task-00138/vm-boundary-study/{qualify.py,result.json,commands.jsonl,reconcile.py,cleanup.json}`.
+`assessment.json` records 13 passing scoped observations, including the negative result that an admitted stream
+survives secret removal; `launch_qualified` remains false.
+
+| Probe | Observation and limit |
+|---|---|
+| Approved guest authority | UID 0 and private engines worked. Each engine ran an offline-image privileged container with its own guest `/` mounted and wrote a guest-only marker. This is intended guest authority, not host access. |
+| Sampled host separation | Both guest-root probes found host home/canary paths absent; attempted host-engine TCP connection failed. Privileged-container checks saw no `/Users` through the guest-root mount. This is sampling, not comprehensive escape/network qualification. |
+| VM-scoped substitution | Both VMs used identical public placeholder bytes. The external server received distinct synthetic host-only canaries and derived different bindings. Each could request its own fixture operation (200); claiming its sibling's binding received 403. The denial rule is fixture code, not implemented Workflow/Agent authorization. |
+| Host resolver rotation | Replacing VM A's host-only synthetic canary worked on the next request without a guest placeholder/configuration change. This is on-demand resolver behavior, not OAuth renewal or recovery. |
+| New requests after revocation | Removing A's scoped substitution entry caused its next request to arrive with the public placeholder and receive 401. B still received 200. No global credential was installed or changed, so global-fallback denial remains unqualified. |
+| In-flight revocation | A previously admitted SSE stream **continued after secret removal**. The fixture server explicitly closed it afterward; server closure was observed about 23 ms after that signal and the client finished. This proves substitution removal is insufficient, not a production cancellation SLA or upstream rollback. |
+| Resource identity | Host backing files showed two 20 GiB workspace and two 2 GiB Docker images: 44 GiB logical total versus 1,667,997,696 allocated bytes at that instant. Guest root observed one CPU and 1,023,824 KiB RAM per VM. Guest observations alone do not prove immutable external CPU/memory enforcement. |
+| Retirement | After matching persisted VM IDs, scoped secrets were empty and ordinary stop/removal completed. A post-removal directory scan raced asynchronous snapshot deletion and failed. The separate read-only reconciliation proved all four new backing files and runtime records absent, empty VM inventory, stopped idle daemon, closed listener and removed synthetic canary files. No backing file was manually deleted. |
+
+The deletion race is an accounting requirement: inventory collection must tolerate disappearing entries, preserve
+uncertainty and re-observe before releasing reservations. The raw first result remains intact. Disk capacity must
+be reserved at worst-case logical size, not current sparse allocation; guest deletion/paused state cannot reduce
+that reservation. Host template/cache/log/export quotas, process overhead, I/O/rate limits, persisted admission and
+stress/restart accounting remain unqualified. No full-capacity fill was repeated; earlier storage stress is historical.
+
+Enrollment source tracing also found a concrete durability gap: the installed package provisioning API has no
+caller-supplied idempotency key and generates the Agent ID inside its transaction. An intent alone cannot reconcile
+a lost committed provisioning response. The [enrollment findings](TERMINAL_AUTHORITY.md#enrollment-qualification-findings)
+record exact package/configuration seams and required recovery evidence. No operator identity was enrolled to bypass it.
+
+A separate fresh guest-root surface check in `.runs/task-00138/root-surfaces-study/` observed the internally
+supplied resolver virtiofs mount as read-only; opening `/etc/resolv.conf` write-only failed with EROFS without any
+write. Guest block metadata marked template disks `vda`/`vdc` read-only and private writable disks `vdb`/`vdd`
+writable. Host home/control-service paths were absent. No raw block-device write, remount bypass or host-capacity
+stress was attempted; this is not proof against those attacks. The VM ID matched before ordinary removal, followed
+by an empty inventory and stopped idle daemon. This run did not remeasure backing-file reclamation.
+
 ### Qualification closeout
 
 The [authority handoff](TERMINAL_AUTHORITY.md) now defines the command, enrollment, revision, broker and resource
@@ -207,20 +252,22 @@ contracts precisely enough to expose the missing decisions rather than invent au
 | Required boundary | Evidence / disposition | Remaining action |
 |---|---|---|
 | Independent filesystem/database state and graceful restart | Earlier two-VM storage study passed; fresh sampled path/network checks above | Keep results scoped to pinned local inputs; qualify unsampled bypass paths |
-| Restricted worker and forbidden provisioning | Default sudo/writable-root worker does not meet TICKET-00032 | Qualify restricted inner execution, or obtain explicit parent amendment for a root/private-engine worker |
+| Engineer-controlled VM and forbidden host provisioning | Root/private-engine boundary explicitly approved; fresh privileged guest-container operation observed | Complete root-level host/sibling/network and external-policy bypass qualification; guest privilege itself is permitted |
 | Role isolation | Separate trust-boundary contract specified; no multi-role Agent run | Enforce launch binding and separate role resources in the production path |
 | Immutable input identities | CLI/template hashes and Pi lockfile retained; host version recorded | Bake/pin complete runtime and Fight Harness; the shell template plus an npm fixture is not that image |
-| CPU/memory/storage | Measured 1 CPU/1 GiB and bounded 20 GiB workspace/2 GiB Docker disks | Enforce PID/runtime restrictions, aggregate host/cache/log/artifact limits and admission reservations |
+| CPU/memory/storage | Host backing files confirm 20 GiB workspace/2 GiB Docker per VM; guest reports 1 CPU/1 GiB | Prove external VM/control-plane limits, aggregate host/cache/log/artifact accounting and admission reservations; no reliance on guest PID/cgroup policy |
 | Git transfer | Private stores and 10 small-fixture checks | Qualify bounded untrusted quarantine, tree validation and atomic canonical publication |
-| Provider/broker | Earlier synthetic SSE/substitution/revocation only | Host-only real OAuth/account/renewal, scope enforcement, global fallback denial and bounded in-flight cancellation |
-| Operator and Markdown authority | Package-backed design and race boundary documented | Accept/configure enrollment and permissions; qualify controlled source publication before claiming atomic eligibility |
+| Provider/broker | VM-scoped synthetic identity/rotation/new-request denial observed; admitted stream survived substitution removal | Host-only real OAuth/account/renewal, durable role/model/attempt enforcement, global fallback denial and bounded in-flight cancellation |
+| Operator and Markdown authority | Package-backed design, missing adapters and provisioning-response recovery gap traced; source race documented | Qualify enrollment/secret-store recovery and catalog extension; controlled source publication before atomic eligibility claims |
 | PHP Workflow recovery | Defined, not implemented; no production claim/dispatch or Agent launch | TASK-00139–00142, only after the TASK-00138 dependency is satisfied and separately started |
 | Platform coverage | macOS ARM64 observations only | Native Linux/other hosts unavailable until independently qualified |
 
-**Disposition: incomplete, not launchable.** Neither TASK-00138 nor the parent is accepted. No real provider request,
+**Disposition: incomplete, not launchable.** Neither TASK-00138 nor the parent implementation is accepted. No real provider request,
 personal credential enrollment, independent review, autonomous TASK execution or TASK-00139 implementation occurred.
 Completing the real-provider lane requires an authorized host broker and credential flow, not moving authentication
-into a worker. The current restricted-worker requirement remains authoritative pending the explicit profile decision.
+into a worker. The Engineer-controlled VM boundary is now approved; external authority and the remaining evidence
+requirements are unchanged. The earlier guest-privilege mismatch is resolved by explicit amendment, not by relabeling
+old failed probes as new successful verification.
 
 ### Decision and outstanding requirements
 
@@ -228,10 +275,9 @@ Prefer Docker Sandboxes for the next backend qualification step. The measured lo
 the APFS file-sharing experiment's exhaustion/reclamation failure. It does not complete TASK-00138 or authorize
 live Agent execution. In particular:
 
-- Resolve the profile change explicitly: the existing TICKET describes restricted containers without a Docker
-  socket; fresh probes confirm this candidate gives the worker sudo and its private in-VM engine. Until amended,
-  reject that default worker and qualify a restricted inner profile instead. Never expose the installation engine.
-  Put separate role credentials, review and authoritative evidence outside an Engineer-controlled VM.
+- Apply the approved Engineer-root/private-engine profile only inside its dedicated mountless VM. Never expose
+  the installation engine. Keep separate role credentials, review and authoritative evidence outside the VM;
+  qualify isolation and limits from guest root rather than trusting inner-container restrictions.
 - Complete selected OpenAI/Codex qualification through the broker: the pinned Pi synthetic SSE/substitution check
   passed, but real OAuth, refresh, account mapping and role/model/attempt enforcement remain unqualified. Qualify
   the Fight Harness and broader dependency/denied network paths. The contributed Anthropic kit is not evidence

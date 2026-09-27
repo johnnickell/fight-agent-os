@@ -18,7 +18,7 @@ own claims, grants, process fencing, sandbox policy or the authoritative transit
 | Adapter / Persistence / Execution | PostgreSQL transactions, event-store integration, dispatch and projections |
 | Adapter / Runner / Provisioning | Constrained Git/container operations and observed ownership/readiness |
 | Adapter / Runner / Pi | Distinct role sessions, brokered capabilities and process/session lineage |
-| Harness / Pi | Presentation and typed client integration; no Docker or host-shell provisioning authority |
+| Harness / Pi | Presentation and typed client integration; no host Docker/VM authority; Engineer may use its private guest engine |
 
 These are responsibility boundaries to guide implementation, not instructions to create empty classes. Keep
 capabilities such as TaskEligibility, SandboxProvisioner and AgentLauncher small and use-case driven. Design the
@@ -36,7 +36,19 @@ The database Planning adapter later replaces the read source without replacing W
 An enrolled operator explicitly grants one TASK, repository/base, permitted roles/tools, limits and cleanup
 policy. The console authenticates that enrollment; possession of a shell or a role name is insufficient. Managed
 Agents use separate package-owned identities and bounded credentials. The exact enrollment/credential protocol
-must be accepted and implemented before TASK-00139 can launch work.
+must be accepted and implemented before managed work can launch. TASK-00139 has not been started.
+
+## Approved Engineer VM boundary
+
+John explicitly amended the parent contract on 2026-09-27: permit Engineer sudo/root and private Docker-engine
+access inside its dedicated mountless VM and treat the entire guest as Engineer-controlled. Private Git and
+application/test containers stay inside it; human checkouts, canonical Git administration, host engine, sibling
+state and real credentials stay outside. Guest runtime/checks/cgroups are not authority. External VM/resource and
+network limits, broker authorization, separate Team Lead/reviewer boundaries and independent validation of worker
+check results remain mandatory. Bootstrap digests describe supplied inputs, not continuing guest integrity.
+
+This resolves the guest-privilege policy choice only. The [qualification criteria](DOCKER_SANDBOX_QUALIFICATION.md)
+now target the external VM boundary; this amendment does not supply missing evidence or authorize execution.
 
 ## Recoverable lifecycle
 
@@ -57,9 +69,9 @@ extend this same Workflow. They are not silently activated by installing the bra
 
 ## Provisioner and model broker handoff
 
-Implement these capabilities through the existing PHP ownership boundaries, after TASK-00138 settles their
-remaining enrollment/profile decisions. The synthetic Pi fixture establishes transport feasibility; it supplies
-no production grant, authenticated operator or recoverable Runner. Capability names below describe cohesive
+Implement these capabilities through the existing PHP ownership boundaries, after TASK-00138 settles enrollment
+contracts and required external-profile qualification. The synthetic Pi fixture establishes transport feasibility;
+it supplies no production grant, authenticated operator or recoverable Runner. Capability names below describe cohesive
 contracts, not a requirement to introduce speculative classes before their use cases.
 
 | Capability | Trusted input | Result and uncertainty handling |
@@ -73,7 +85,8 @@ contracts, not a requirement to introduce speculative classes before their use c
 The protected broker owns real access/refresh tokens and account headers. It must derive routing from the grant,
 reject arbitrary URLs and disallowed model changes, bound payload/decompression and stream resources, redact
 secrets, and stop admitting requests for revoked or stale attempts. Define how already admitted streams terminate
-on cancellation and measure that behavior; deleting a proxy secret alone is insufficient. No fallback to global
+on cancellation and measure that behavior; the fresh two-VM fixture confirms an admitted stream survives scoped
+secret removal. Deleting a proxy secret alone is insufficient. No fallback to global
 credentials or another model/provider is permitted when scoped readiness fails.
 
 The inspected Pi 0.87.1 native Codex path expects OAuth-shaped storage and parses an account claim before sending
@@ -87,7 +100,7 @@ Implement command behavior and durable effect reconciliation in TASK-00139/00140
 TASK-00141. Direct infrastructure probes remain qualification evidence; do not turn the disposable probe scripts
 into a second production runner or add tests that merely inspect their configuration text.
 
-## Local candidate and measured evidence
+## Historical restricted-container candidate and measured evidence
 
 On 2026-09-26, Docker Desktop on linux/aarch64 reported built-in seccomp and cgroup namespaces, but did not report
 rootless mode. A bounded experiment created two concurrent fixture environments, each with a separate source
@@ -145,8 +158,8 @@ Desktop and unrelated containers were not restarted. Raw evidence and the failed
 `.runs/task-00138/storage-study/fight-storage-9710c285f9/`; the owning probe and reconciliation scripts are beside
 that directory. No application source or human Git refs were mounted or modified by the experiment.
 
-Retain **one private Git store per Workflow** as a candidate: the Engineer can use ordinary Git inside its own
-boundary, while PHP alone seeds approved objects and imports an explicitly named handoff. Shared canonical refs
+Use **one private Git store per Workflow** under the approved VM boundary: the Engineer can use ordinary Git inside
+its own boundary, while PHP alone seeds approved objects and imports an explicitly named handoff. Shared canonical refs
 remain outside the sandbox. Before adoption, qualify bounded bundle/object ingestion, exact base ancestry,
 allowed refs, hook/config isolation and untrusted-content handling. A valid bundle alone does not authorize an
 import or prove the submitted tree is safe. This is an alternative to a commit broker, not an expansion of Agent
@@ -157,13 +170,14 @@ The next experiment used VM-local storage through Docker Sandboxes. Read the
 Two independent VMs passed synthetic capacity exhaustion/reclamation and Git/database persistence checks,
 including container and VM restart. The probe used private Git stores and private in-VM Docker engines, with no
 host workspace mount or model credentials. Host backing storage remained allocated after guest deletion, so
-host accounting and retirement are distinct requirements. This candidate's sudo/private-engine model also needs
-an explicit profile decision; it does not silently replace the restricted-container contract above.
+host accounting and retirement are distinct requirements. The later explicit VM amendment permits sudo/private-engine
+use and supersedes the restricted guest policy; it does not weaken the external boundary or qualify resource accounting.
 
 The current candidate therefore remains **unqualified for autonomous Agents**. TASK-00138 stays in progress;
 TASK-00139–00142 remain dependency-blocked. Pinned Pi passes synthetic SSE, host secret substitution and
-revocation checks. Fresh isolation counterchecks confirm the default VM worker has sudo and a writable root;
-reject it against the current restricted-worker contract rather than silently granting private-engine authority.
+revocation checks. Fresh guest-root/private-engine probes exercise the explicitly approved VM boundary, and scoped
+synthetic broker checks distinguish two VMs using identical placeholders. Neither result implements external authority.
+Enrollment tracing found missing adapters and a lost-provisioning-response recovery gap; see the authority handoff.
 The [qualification closeout](DOCKER_SANDBOX_QUALIFICATION.md#qualification-closeout) separates passing observations,
 failed/unsupported requirements and the explicit decisions still needed. The [authority handoff](TERMINAL_AUTHORITY.md)
 now records operator/package integration, command semantics, Markdown race handling, role/broker boundaries and
