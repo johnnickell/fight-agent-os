@@ -133,7 +133,7 @@ GitHub creation uses the existing authenticated `gh` identity without collecting
 that identity and its permission for the selected personal or organization owner. Use the configured Git
 transport, preferably SSH, for pushes. Organization policy, SAML, credential, Permission, scope, collision, and
 connectivity failures stop visibly. This human-authorized project operation is distinct from managed Workflow
-Publisher authority, and no Builder, Reviewer, or other managed coding Agent receives source-host credentials.
+Release Manager authority, and no Software Engineer, Senior Engineer, or other managed coding Agent receives source-host credentials.
 
 ### Durable progress and recovery
 

@@ -29,6 +29,10 @@ jobs:
       TEST_DATABASE_ALLOWED_HOST: postgres_test
     steps:
       - uses: actions/checkout@v5
+      - name: Check the Fight terminal presentation
+        run: |
+          docker pull node@sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94
+          ./bin/harness-check
       - name: Address the isolated PostgreSQL service directly
         run: |
           # The test guard compares PostgreSQL's server-side address to this hostname.

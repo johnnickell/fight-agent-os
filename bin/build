@@ -3,6 +3,8 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
+./bin/harness-check
+
 if ! docker compose ps --status running --services | grep -Fxq web; then
   echo "The Compose web service is not running. Start it with ./bin/up." >&2
   exit 1

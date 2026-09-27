@@ -7,6 +7,7 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - This is a fresh, independent project. Do not import existing Factory workflows, historical plans, or approvals
 - Planning uses EPIC → TICKET → TASK. Grilling writes an EPIC; decomposition is a separate operation
 - Follow repository terminology when using external planning skills. Do not silently map a TASK to a TICKET
+- Use `.pi/skills/writing-for-agents/SKILL.md` when authoring skills or agent-facing instructions
 - Put fresh Pi skills in `.pi/skills/<name>/SKILL.md`; design their behavior through planning
 - Keep PHP business logic in Domain, orchestration in Application, and framework/provider concerns in Adapter
 - Prefer capability-named interfaces without an Interface suffix, injected dependencies, and single-use-case HTTP Actions

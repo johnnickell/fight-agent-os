@@ -1,13 +1,38 @@
 # Roadmap
 
-Fight Agent OS begins as a small Slim application and grows through approved planning sessions.
+The accepted sequence is governed by EPICs and their requirements, with current implementation facts in the
+[capability inventory](FOUNDATION.md). Markdown remains authoritative until the explicit verified cutover.
 
-1. Plan the application foundation: development runtime, React client, API documentation, and identity
-2. Prove a customized Pi terminal with a companion observatory
-3. Build project-scoped planning in the browser, including research, grill sessions, and prototypes
-4. Move planning authority into the database through a verified, explicit migration
+1. Package the approved Fight terminal identity and qualify the local execution boundary (EPIC-00006–00007).
+2. Deliver the terminal path first: PHP-owned operator authorization, immutable Markdown TASK snapshots, exclusive
+   claims and durable Workflow state; recoverable worktree/container/test-database preparation; then distinct
+   Team Lead → Software Engineer Pi sessions to durable Awaiting review. Prove two independent TASKs can run safely.
+3. Extend the same Workflow through Senior Engineer review → QA → Release Manager landing → human PR handoff
+   (EPIC-00008). Proven mechanical documentation reconciliation preserves acceptance.
+4. Complete authenticated browser journeys, registered database Planning and browser Planning Agents
+   (EPIC-00003–00006), reusing the same application operations and explicit verified Markdown cutover.
+5. Deliver project creation and safe instruction editing along their own dependencies (EPIC-00009–00010).
 
-This is direction, not an implementation commitment or an approved EPIC. See the [foundation brief](FOUNDATION.md).
+John approved terminal-first sequencing on 2026-09-26. Browser pages, React and database Planning cutover are no
+longer blanket prerequisites for terminal execution. Required identity, permission, repository enrollment,
+immutable context/Harness versions, PostgreSQL durability and credential isolation remain prerequisites of the
+operations that consume them. Markdown remains authoritative before cutover; a revision-bound read adapter feeds
+the same eligibility/claim operations, not a second Workflow engine. The console must not infer an operator's
+business authority merely from access to a terminal. Exact enrollment and grant contracts are settled before launch.
+
+The next execution TASKs are [sandbox boundary](tasks/00138-TASK.md), [authorized console start](tasks/00139-TASK.md),
+[recoverable preparation](tasks/00140-TASK.md), [Pi delegation](tasks/00141-TASK.md), and
+[parallel/recovery qualification](tasks/00142-TASK.md). They are incremental delivery slices, not a promise that
+existing foundation dependencies disappear or that a container alone is ready for autonomous work.
+
+Current amendments define [Team roles](../docs/engineering/TEAM.md), [sandbox startup](tickets/00032-TICKET.md),
+[post-review QA](tickets/00033-TICKET.md), and [team templates](tickets/00034-TICKET.md). Those TICKETs cover selected
+cross-cutting requirements, not full decomposition of their parent EPICs; remaining EPIC requirements still need
+TICKET/TASK coverage before execution. Prioritize Graphify and Writing for Agents locally, then security audit and
+the existing skill backlog. Signed releases, application deployment and operational hotfix automation require
+separate accepted implementation scope; self-learning awaits trustworthy metrics. Personal daily workflows are excluded.
+
+The [external architecture study](research/atomic-lessons.md) informs contracts without importing Atomic's runtime.
 
 <!-- planning:epics -->
 | EPIC ID | Title | Target | Status |
@@ -35,9 +60,6 @@ next-level records; parents with only terminal children remain listed until an e
 
 | EPIC ID | Title | Status |
 |---|---|---|
-| [EPIC-00006](epics/00006-EPIC.md) | Deliver browser Planning Agents and the trusted Harness | ready-for-agent |
-| [EPIC-00007](epics/00007-EPIC.md) | Coordinate one TASK through implementation | ready-for-agent |
-| [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | ready-for-agent |
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | ready-for-agent |
 
@@ -45,7 +67,8 @@ next-level records; parents with only terminal children remain listed until an e
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| None | — | — | — |
+| [TICKET-00033](tickets/00033-TICKET.md) | Verify reviewed behavior with independent QA before landing | [EPIC-00008](epics/00008-EPIC.md) | ready-for-agent |
+| [TICKET-00034](tickets/00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
 
 ### Parents ready for closeout review
 

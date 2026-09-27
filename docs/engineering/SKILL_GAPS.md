@@ -11,7 +11,7 @@ This is a bounded comparison for [TASK-00130](../../planning/tasks/00130-TASK.md
 | `docs/engineering/standards/Review.md`, `skills/Fight-Review-Skill.md`, `skills/Fight-Work-Skill.md` — stable Spec/Standards criteria, evidence and independence | **Adapt:** stable project-local IDs with two named passes in one independent invocation; builder uses them only for internal completeness. **Reject:** required GPT reviewer pair, numerical scores/overrides, Factory orchestration/spokes and automatic push/PR as part of work. Agent OS review writes one canonical report, and `land` separately owns publication. |
 | `skills/Fight-Audit-Skill.md` — read-only broader-scope audit, adversarial findings, proposed groupings | **Handoff:** [TASK-00131](../../planning/tasks/00131-TASK.md) designs the project-local audit skill. Its PDF/Desktop output and Factory map/grill commands are not Agent OS requirements. |
 
-## Approved separate skill handoffs (not implemented here)
+## Skill handoffs from TASK-00130
 
 1. **[Audit — TASK-00131](../../planning/tasks/00131-TASK.md):** one scoped read-only cross-module assessment beyond a TASK diff, with sampling limits, counterchecked findings and work-group recommendations. No code repair, certification or automatic planning.
 2. **[Fix — TASK-00132](../../planning/tasks/00132-TASK.md):** diagnose a reported problem and draft a human-approved standalone `kind: bug` TASK; `work` owns the failing regression and repair. Reject Factory's combined fix-and-publish workflow.
@@ -20,7 +20,7 @@ This is a bounded comparison for [TASK-00130](../../planning/tasks/00130-TASK.md
 
 ## Complete Factory skill inventory at `5ba0fc0`
 
-The table enumerates all 16 `skills/Fight-*-Skill.md` files in that snapshot. Source paths are relative to the read-only Factory checkout; local links point to current Agent OS skills. A counterpart means a **bounded local responsibility**, not imported Factory authority or equivalent runtime automation. The four selected handoffs above remain independent TASKs.
+The table enumerates all 16 `skills/Fight-*-Skill.md` files in that snapshot. Source paths are relative to the read-only Factory checkout; local links point to current Agent OS skills. A counterpart means a **bounded local responsibility**, not imported Factory authority or equivalent runtime automation. The four selected handoffs above retain independent acceptance records; their local implementation is recorded below.
 
 | Factory source path | Agent OS counterpart or disposition | Boundary / reason |
 |---|---|---|
@@ -61,3 +61,70 @@ Apply the current [Spec and Standards IDs](REVIEW.md#two-named-passes) to the **
 | Standards ST-05 | Are revision, gate and acceptance claims honest? | **Unverified until fresh target evidence:** an earlier accept for the global tree does not accept the revised scope; later TASK-00020 notes distinguish the fresh revision review and gate from that receipt. |
 
 The original would receive **revise**, not a numerical average: SP-01/SP-03/SP-04/ST-02 are confirmed scope/placement failures, and missing route-boundary evidence cannot be waved away by the other passes. For a new review, replace each desk outcome with evidence from the actual reviewed tree; N/A and Unverified must be justified per target. This demonstrates why Spec checks the API/non-API requirement even if style passes, while Standards catches misplaced mapper/value types even if API responses otherwise work.
+
+## Broader skill assessment — approved 2026-09-26
+
+The original Factory comparison above is historical source analysis, not a complete inventory of useful workflows.
+TASK-00135 expands it without importing another project's authority.
+
+| Capability | Current decision |
+|---|---|
+| Graphify | Added locally: scoped query/trace and explicitly requested maintenance, source/freshness/provenance checks; no automatic install, hooks or broad extraction |
+| Writing for Agents | Added locally now with exact upstream attribution/license; EPIC-00006 later distributes trusted revisioned resources |
+| Audit / fix / architecture / adopt | Implemented locally under TASK-00131–00134 in the approved skill batch; architecture includes human-first interfaces and namespace cohesion |
+| Security audit | Implemented locally under [TASK-00136](../../planning/tasks/00136-TASK.md); bounded threat/evidence assessment, no automatic repair |
+| QA | Post-review browser/TUI interaction and capture workflow under [TICKET-00033](../../planning/tickets/00033-TICKET.md) |
+| Skill maintenance | Use Writing for Agents plus explicit inventory/provenance checks; add automation only after demonstrated need |
+| Domain modeling / testing / conflict resolution | Improve existing planning/work/review guidance; ordinary feature TDD is not required; meaningful 100% unit coverage is the goal |
+| Release / hotfix | Define role/runbook boundaries in [Team roles](TEAM.md); subsequent accepted work owns operational skills and automation |
+| Portable handoff | Reuse existing work/review evidence contracts first; a cross-session convenience skill remains a later candidate |
+| Self-learning | Deferred until reliable usage, review, recovery and outcome metrics exist; no automatic instruction mutation |
+| Daily planning / closeout | Excluded from this engineering suite |
+
+Raw class counts, framework preferences and confidence numbers do not establish defects. Keep security severity
+separate from confidence, and distinguish local taste recommendations from violations of accepted requirements.
+
+## Local skill implementation — 2026-09-26
+
+The maintainer subsequently authorized skill implementation and related TASK closeout in the same checkout as
+TASK-00135. TASK-00131–00134 and TASK-00136 retain their own scope and completion records; the separate-PR packaging
+of the original handoffs is superseded for this batch. The source comparisons above remain historical evidence.
+
+| Skill | Source comparison and local decision |
+|---|---|
+| [audit](../../.pi/skills/audit/SKILL.md) | Re-read `Fight-Audit-Skill.md`: **adopt** bounded use-case tracing and adversarial counterchecks; **adapt** to local standards/severity, explicit sampling and optional work groups; **reject** mandatory PDF/Desktop output and Factory map/grill invocation. Original local instructions, no copied source artifact. |
+| [fix](../../.pi/skills/fix/SKILL.md) | Re-read `Fight-Fix-Skill.md`: **adopt** expected/observed diagnosis and duplicate-owner checks; **adapt** to standalone `kind: bug` draft, live/archive allocation and explicit acceptance; **reject** automatic continuation through repair/publication. `work` owns the authorized regression-first repair. |
+| [adopt](../../.pi/skills/adopt/SKILL.md) | Re-read `Fight-Adopt-Skill.md`: **adopt** inspecting target authority and compatibility before decisions; **adapt** to graded read-only options; **reject** default standards/planning replacement, run reorganization, enrollment and commit/push/PR. The target's local rules and package contracts prevail. |
+| [architecture](../../.pi/skills/architecture/SKILL.md) | Bounded design alternatives, package/transaction authority, human-first interfaces and namespace cohesion; source decisions below. No automatic source/ADR mutation or independent acceptance. |
+| [security-audit](../../.pi/skills/security-audit/SKILL.md) | Original local instructions for threat/evidence tracing, confidence separate from severity, runtime versus planned controls and safe handoff; source decisions below. No scanner installation, exploitation, remediation or certification. |
+
+### Architecture and security source decisions
+
+Primary sources inspected on 2026-09-26; they supply ideas, not local authority:
+
+- Matt Pocock's [improve-codebase-architecture](https://github.com/mattpocock/skills/blob/c55ee46073ed923f86ce59a5eb3b6d895095d1b7/skills/engineering/improve-codebase-architecture/SKILL.md),
+  commit `c55ee46073ed923f86ce59a5eb3b6d895095d1b7`, is the current source behind the earlier `improve-architecture`
+  shorthand. **Adapt** exploration of navigation friction and useful encapsulation into human-first ownership and
+  interface alternatives. **Reject** mandatory vocabulary, automatic subagents, HTML/CDN report, grilling and inline
+  domain-document mutation. Its repository MIT notice was verified and is retained in the local architecture skill.
+- Mathias Verraes, [DRY is about Knowledge](https://verraes.net/2014/08/dry-is-about-knowledge/), 2014-08-02:
+  **adopt** reasons for change as a cohesion test; **reject** deduplication based only on similar syntax. This supports
+  evaluating distinct persistence responsibilities rather than merging them into a generic helper. Link and original
+  summary only; no article/code reproduction or assumption of a software license.
+- Robert C. Martin, [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html),
+  2012-08-13: **adopt** inward source dependencies and separation of policy from mechanisms; **adapt** through accepted
+  Domain/Application/Adapter and package ownership. **Reject** adding layers/wrappers merely to imitate a diagram.
+  Link and original summary only; no article/diagram reproduction or unverified reuse license.
+- OWASP, [Authorization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html):
+  **adopt** tracing server-side permission/ownership checks and failed-check behavior. It supports checking every
+  relevant entry path, without replacing Fight's accepted permission model. The page identifies CC BY-SA 4.0;
+  no source prose, tables or code are copied into the original local skill.
+- OWASP, [LLM Prompt Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html):
+  **adapt** tool-call permission validation and least privilege to deterministic PHP and the trusted provisioner.
+  A model guardrail is supplementary; **reject** treating it as sandbox enforcement or logging all raw conversations
+  despite local secret-handling rules. The series identifies CC BY-SA 4.0; this is a cited idea comparison, not a
+  copied or translated cheat sheet.
+
+The [bounded qualification](SKILL_QUALIFICATION.md) records real source walkthroughs, a retrospective bug handoff,
+non-mutating project comparison and limits. These are builder qualification, not independent forward-testing or
+formal TASK review. Local skill discovery metadata is verified separately from any future managed Harness execution.

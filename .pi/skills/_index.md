@@ -1,15 +1,22 @@
 # Index
 
 - `README.md`
+- `adopt/SKILL.md`
+- `architecture/SKILL.md`
+- `audit/SKILL.md`
 - `design/SKILL.md`
 - `design-review/SKILL.md`
+- `fix/SKILL.md`
+- `graphify/SKILL.md`
 - `grill/SKILL.md`
 - `land/SKILL.md`
 - `next/SKILL.md`
 - `prototype/SKILL.md`
 - `review/SKILL.md`
 - `research/SKILL.md`
+- `security-audit/SKILL.md`
 - `to-tasks/SKILL.md`
 - `to-tickets/SKILL.md`
 - `wayfinder/SKILL.md`
 - `work/SKILL.md`
+- `writing-for-agents/SKILL.md`

@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+set -eu
+
+cd "$(dirname "$0")/.."
+
+# Run the owned presentation tests without installing Node or peers into the application image.
+exec docker run --rm --pull=never --network=none --read-only \
+  --user 1000:1000 --cap-drop=ALL --security-opt=no-new-privileges:true \
+  --pids-limit=64 --memory=256m --cpus=1 --tmpfs /tmp:rw,noexec,nosuid,size=16m \
+  --mount "type=bind,source=$(pwd)/harness/pi,target=/app,readonly" --workdir /app \
+  node@sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94 \
+  node --test tests/header.test.mjs
