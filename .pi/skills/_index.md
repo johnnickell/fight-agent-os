@@ -12,6 +12,7 @@
 - `land/SKILL.md`
 - `next/SKILL.md`
 - `prototype/SKILL.md`
+- `release/SKILL.md`
 - `review/SKILL.md`
 - `research/SKILL.md`
 - `security-audit/SKILL.md`

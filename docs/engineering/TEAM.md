@@ -45,7 +45,9 @@ uses [landing standards](LANDING.md), preserving applicable technical and QA evi
 TASK landing remains bounded PR publication, not release or deployment. Release Manager prepares project-specific
 runbooks naming exact commits, versions, checks, signing mechanism, effects, rollback/forward options and human
 steps. Package signed tags and release publication are distinct from application migrations, deployment and health
-qualification. Team Lead coordinates decisions. These later flows require their own accepted implementation plans.
+qualification. Team Lead coordinates decisions. The local [release skill](../../.pi/skills/release/SKILL.md),
+delivered by [TASK-00143](../../planning/tasks/00143-TASK.md), coordinates package release stages using target-owned
+policy and certification. Managed execution and application deployment still require their own accepted plans.
 
 Hotfix is a short path: identify incident and authority, record one bounded bug TASK and impact, isolate, repair,
 run focused regression and applicable gates, obtain independent Senior Engineer review, then targeted QA where

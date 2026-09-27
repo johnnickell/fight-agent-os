@@ -24,3 +24,10 @@ Read-only engineering skills are available locally: [audit](audit/SKILL.md) for 
 [architecture](architecture/SKILL.md) for design options, [security-audit](security-audit/SKILL.md) for trust
 boundaries, and [adopt](adopt/SKILL.md) for project comparisons. [Fix](fix/SKILL.md) diagnoses bugs and prepares
 a tracking handoff; `work` owns repair. None substitutes for independent `review`.
+
+[Release](release/SKILL.md) coordinates versioned package releases from their observed stage, using each target's
+own policy and certifier. It covers docs, branches, human signing scripts, publication, Packagist and merge-back.
+Use `/skill:release 0.4.0 status` for a read-only inventory or `/skill:release 0.5.0` to prepare and continue within
+the authorized scope. The existing global Pi skills link on the maintainer's machine also exposes this skill in
+other repositories; run `/reload` in an active Pi session after updating these files. No new installation is needed
+where that link is configured. Release guidance does not enable managed Runner execution or application deployment.

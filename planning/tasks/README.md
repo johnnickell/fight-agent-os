@@ -145,4 +145,5 @@
 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
+| [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | done | — |
 <!-- /planning:records -->
