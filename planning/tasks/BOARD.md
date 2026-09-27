@@ -180,5 +180,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
 | — | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | — (standalone chore) | done | — | [PR #19](https://github.com/johnnickell/fight-agent-os/pull/19) |
 | — | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | — (standalone bug) | done | — | — |
-| — | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | — (standalone chore) | done | — | — |
+| — | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | — (standalone chore) | done | — | [PR #35](https://github.com/johnnickell/fight-agent-os/pull/35) |
 <!-- /planning:board -->
