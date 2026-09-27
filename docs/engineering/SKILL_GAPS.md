@@ -76,7 +76,7 @@ TASK-00135 expands it without importing another project's authority.
 | QA | Post-review browser/TUI interaction and capture workflow under [TICKET-00033](../../planning/tickets/00033-TICKET.md) |
 | Skill maintenance | Use Writing for Agents plus explicit inventory/provenance checks; add automation only after demonstrated need |
 | Domain modeling / testing / conflict resolution | Improve existing planning/work/review guidance; ordinary feature TDD is not required; meaningful 100% unit coverage is the goal |
-| Release / hotfix | Define role/runbook boundaries in [Team roles](TEAM.md); subsequent accepted work owns operational skills and automation |
+| Release / hotfix | Package [release](../../.pi/skills/release/SKILL.md) guidance added under [TASK-00143](../../planning/tasks/00143-TASK.md); target-owned certification, resumable stages and human signing. Hotfix, deployment and managed automation remain separate work under [Team roles](TEAM.md) |
 | Portable handoff | Reuse existing work/review evidence contracts first; a cross-session convenience skill remains a later candidate |
 | Self-learning | Deferred until reliable usage, review, recovery and outcome metrics exist; no automatic instruction mutation |
 | Daily planning / closeout | Excluded from this engineering suite |

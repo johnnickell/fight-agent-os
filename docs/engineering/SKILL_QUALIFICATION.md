@@ -109,3 +109,41 @@ return the evidence gap/required authority while completing the safe source asse
 No application-wide security claim, browser test, sandbox escape test, vulnerability disclosure, remediation or
 production certification results from these walkthroughs. Relevant source provenance and adaptation decisions are
 in the [skill comparison](SKILL_GAPS.md#architecture-and-security-source-decisions).
+
+## Release: scoped author qualification — 2026-09-27
+
+[TASK-00143](../../planning/tasks/00143-TASK.md) adds the portable [release skill](../../.pi/skills/release/SKILL.md).
+Read the actual Fight Common release README/accepted ADR 0027 and Access Control release wrapper/Delivery standard
+to derive the two conditional profiles. Their certification schemas and asset policies differ; neither profile
+replaces current target authority. Official Git, GitHub CLI/immutable-release and Packagist references are linked
+at the relevant steps. Instructions are original; no external workflow or source implementation was copied.
+
+The following are **author instruction walkthroughs**, not autonomous agent trials or live release effects:
+
+| Scenario | Routed outcome and boundary checked |
+|---|---|
+| Version requested before a release branch exists | Inventory readiness and docs, use the current target's branch/review/gate policy; no implied blanket publication authority |
+| Release already merged to main, no tag yet | Identify the actual merge; certify the final commit and prepare its signing handoff instead of cutting another branch |
+| Main merge has the candidate's tree but a different commit | Candidate receipt is insufficient for final signing; certify the tag's exact commit |
+| Existing local or remote tag has a conflicting object, signer or peeled commit | Stop mutation and reconcile; no deletion, force or automatic re-signing |
+| Tag push or release publication loses its response | Inspect provider state before retry; a matching effect is reused, transport failure remains unknown |
+| Common release has no uploaded assets | Read the applicable accepted decision; zero assets may be valid, with observed inventory recorded |
+| Access Control certification directory already exists | Inspect partial evidence and preserve it; use supported recovery or an approved fresh worktree, not evidence deletion |
+| Human handoff runs after checkout, remote or receipt changes | Required script preconditions fail before sign/push; handoff binds full commit, files, signer and destinations |
+| GitHub release published, Packagist not yet showing the version | Keep publication recorded, bound registry observations and report projection incomplete; do not recreate the release |
+| Packagist supplies abbreviated Composer v2 metadata | Expand using owning tooling before comparing version/references; a raw abbreviated entry is not complete evidence |
+| Published version has stale planning prose | Separate ordinary docs correction and merge-back; preserve the published tag and historical checkpoints |
+| Read-only status request | Inspect the ledger only; no release docs, branch, tag or provider mutation |
+
+Pi 0.87.1's actual skill loader found exactly one `release` entry through the existing global skill path when
+called with Agent OS, Fight Common and Access Control as working directories; no discovery diagnostics were
+reported. No global configuration changed. This checks resource discovery, not a live model-driven Pi release.
+YAML/frontmatter and linked local resources were checked directly. The Skill Creator Python validator could not
+start because PyYAML is absent in both available Python runtimes; Ruby YAML checks and Pi's loader passed instead.
+No dependency was installed to run that optional validator.
+
+No package was modified, certified, signed or published. No real signer script was generated without a concrete
+certified candidate. Its generation/guard contract was inspected; execution of such a script and end-to-end
+release behavior remain unverified until an authorized release. No tests of tooling/instructions were added to
+the product suite. Fresh application gate results and ignored evidence locations are recorded in TASK-00143;
+independent formal review remains separate from this builder qualification.
