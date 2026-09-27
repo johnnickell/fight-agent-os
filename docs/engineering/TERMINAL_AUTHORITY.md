@@ -89,6 +89,22 @@ public package contracts. Do not patch vendor code, correlate by name, nest tran
 in Agent OS. R1 remains open, including operator authentication, the execution permission extension, host secret
 store and controlled Markdown publication. R2–R3 and the no-launch disposition are unchanged.
 
+Following the independent proposal-only review of `ff3e0f1`, the proposal now separates immutable global delivery
+identity, changing claim fences and cross-operation credential/destination ordering, with exact-bound receipts and
+inert late writes. It defines one package-owned atomic admission transaction in which consumer authorization
+participates on the same connection; caller/delegation, destination and credential changes share the fence. A
+previous check or receipt is not continuing authority. Agent OS must qualify its authorization writers, deadlines,
+broker-use checks and protected sink against that protocol; unfenced external authority is unsupported.
+
+The recommended dependency is a separately versioned breaking replacement of raw-return issuance, not coexistence
+with an unfenced legacy path. Existing Agents retain authentication authority but gain no manufactured recovery
+bindings. Adoption requires compatible schema/adapters and an exclusively fenced writer/worker cohort, preserved
+historical canonical-request versions, and a qualified forward-repair/restore strategy after external effects.
+The proposal records all four finding dispositions and adds uncertain-commit, scheduler-only, key-failure and
+compatibility/race evidence requirements. These are proposed contracts and future proof, not completed integration.
+Another independent proposal review and upstream acceptance remain next; no upstream implementation, dependency
+upgrade, R1 closure or TASK-00138 acceptance follows from this revision.
+
 ## Immutable eligibility and explicit grants
 
 `TaskEligibility` consumes server-registered repository identity plus a selected immutable source snapshot. The
