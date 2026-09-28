@@ -49,7 +49,7 @@ Only explicit non-sensitive presentation preferences may use browser persistence
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00025](../tasks/00025-TASK.md) | Accept the client-authority and runtime-state ADR | ready-for-agent |
+| [TASK-00025](../tasks/00025-TASK.md) | Accept the client-authority and runtime-state ADR | done |
 | [TASK-00026](../tasks/00026-TASK.md) | Establish the React and TypeScript application shell | ready-for-agent |
 | [TASK-00027](../tasks/00027-TASK.md) | Establish the typed shared API client boundary | ready-for-agent |
 | [TASK-00028](../tasks/00028-TASK.md) | Establish fail-closed client authority and guarded routing | ready-for-agent |
