@@ -36,6 +36,13 @@ Setup regenerates those leaves, sets `.env` mode 600 and updates only `APP_BROWS
 `https://localhost:18443`; other settings, including the CSRF key, remain unchanged. A conflicting shell origin
 override is rejected rather than silently ignored. Compose shell variables take precedence over `.env`.
 
+The setup editor supports single-line `NAME=value` assignments (including quoted values, comments and optional
+`export`). It rejects multiline values and other unsupported dotenv syntax during preflight, **before** CA
+trust enrollment, leaf generation or `.env` changes. This is intentionally narrower than Compose's parser:
+setup must not mistake text inside an unrelated value for an origin assignment. If rejected, leave the file
+unchanged and inspect it privately; only convert a value to a supported representation if its meaning is
+preserved. `up`/`status` still use Compose's parser and do not rewrite `.env`.
+
 Leave `FIGHT_AGENT_OS_PORT=18087`: it controls the inherited HTTP listener, not TLS. `./bin/https up` starts
 both the ordinary stack and optional TLS services, refreshing their environment. After future `.env` changes,
 use this wrapper again to update both PHP runtimes. Ordinary `./bin/up` does not enable the HTTPS profile.

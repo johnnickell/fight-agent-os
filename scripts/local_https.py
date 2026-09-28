@@ -38,18 +38,43 @@ def environment():
     return settings
 
 
+def local_origin_content():
+    """Prepare an origin-only edit, rejecting syntax this editor cannot preserve."""
+    assignment = re.compile(r"^[ \t]*(?:export[ \t]+)?([A-Za-z_][A-Za-z0-9_]*)[ \t]*=[ \t]*(.*)$")
+    quoted = re.compile(
+        r"""(?:'(?:[^'\\\r\n]|\\[^\r\n])*'|"(?:[^"\\\r\n]|\\[^\r\n])*")[ \t]*(?:#.*)?"""
+    )
+    lines = []
+    # Split only on LF, not Unicode separators that may be literal value content.
+    # Keep original CRLF bytes, spacing and comments on every unrelated line.
+    for line in ENV.read_bytes().decode("utf-8").split("\n"):
+        stripped = line.removesuffix("\r").strip(" \t")
+        if not stripped or stripped.startswith("#"):
+            lines.append(line)
+            continue
+        match = assignment.fullmatch(line.removesuffix("\r"))
+        value = match[2].lstrip() if match else ""
+        if match is None or (
+            value.startswith(("'", '"')) and not quoted.fullmatch(value)
+        ):
+            raise ValueError(
+                "HTTPS setup supports only single-line .env assignments and comments; "
+                "inspect .env privately."
+            )
+        if match[1] != "APP_BROWSER_ORIGIN":
+            lines.append(line)
+    content = "\n".join(lines)
+    if content and not content.endswith("\n"):
+        content += "\n"
+    return content + f"APP_BROWSER_ORIGIN={ORIGIN}\n"
+
+
 def configure():
     """Preserve existing settings and key while setting the local HTTPS origin."""
     environment()
     if os.environ.get("APP_BROWSER_ORIGIN", ORIGIN) != ORIGIN:
         raise ValueError("Unset the shell APP_BROWSER_ORIGIN override before local HTTPS setup.")
-    lines = ENV.read_text().splitlines(keepends=True)
-    assignment = re.compile(r"^\s*(?:export\s+)?APP_BROWSER_ORIGIN\s*=")
-    lines = [line for line in lines if not assignment.match(line)]
-    content = "".join(lines)
-    if content and not content.endswith("\n"):
-        content += "\n"
-    content += f"APP_BROWSER_ORIGIN={ORIGIN}\n"
+    content = local_origin_content()
     STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
     temporary = None
     try:
@@ -71,8 +96,10 @@ def main():
         settings = environment()
         if command == "check" and settings.get("APP_BROWSER_ORIGIN") != ORIGIN:
             raise ValueError("Local HTTPS requires APP_BROWSER_ORIGIN=https://localhost:18443.")
-        if command == "preflight" and os.environ.get("APP_BROWSER_ORIGIN", ORIGIN) != ORIGIN:
-            raise ValueError("Unset the shell APP_BROWSER_ORIGIN override before local HTTPS setup.")
+        if command == "preflight":
+            if os.environ.get("APP_BROWSER_ORIGIN", ORIGIN) != ORIGIN:
+                raise ValueError("Unset the shell APP_BROWSER_ORIGIN override before local HTTPS setup.")
+            local_origin_content()
     else:
         raise ValueError("Usage: local_https.py {preflight|configure|check}")
 

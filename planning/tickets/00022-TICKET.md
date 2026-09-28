@@ -54,7 +54,7 @@ Security checks include anonymous, ordinary user, Super Admin, stale authority, 
 | [TASK-00064](../tasks/00064-TASK.md) | Prove integrated authorization throttling and secret safety | ready-for-agent |
 | [TASK-00065](../tasks/00065-TASK.md) | Prove the integrated accessibility and responsive baseline | ready-for-agent |
 | [TASK-00066](../tasks/00066-TASK.md) | Prove critical browser continuity and close the foundation gate | ready-for-agent |
-| [TASK-00145](../tasks/00145-TASK.md) | Enable opt-in trusted local HTTPS | done |
+| [TASK-00145](../tasks/00145-TASK.md) | Enable opt-in trusted local HTTPS | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
