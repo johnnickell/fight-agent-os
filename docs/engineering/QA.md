@@ -1,6 +1,8 @@
 # QA and visual evidence
 
-The planned QA Engineer runs after independent technical acceptance and before `land`. Until managed QA exists,
+The planned QA Engineer runs after independent technical acceptance and before accepted landing. An authorized
+[draft PR for hosted evidence](LANDING.md#draft-publication-to-obtain-hosted-evidence) may precede QA while
+disclosing that QA remains pending. Until managed QA exists,
 an explicitly assigned independent QA session can supply the same evidence. No change to application behavior
 or tests is allowed during this verification phase.
 

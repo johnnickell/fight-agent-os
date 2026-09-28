@@ -147,3 +147,78 @@ certified candidate. Its generation/guard contract was inspected; execution of s
 release behavior remain unverified until an authorized release. No tests of tooling/instructions were added to
 the product suite. Fresh application gate results and ignored evidence locations are recorded in TASK-00143;
 independent formal review remains separate from this builder qualification.
+
+
+## Hosted-evidence handoff: author qualification — 2026-09-28
+
+TASK-00144 corrects a reproduced instruction cycle: acceptance requires PR-triggered hosted proof while ordinary
+landing requires acceptance before publishing the PR. This is direct author inspection and scenario walkthrough,
+not independent acceptance or a live model-driven invocation. No consumer review or CI policy was modified.
+
+| Scenario inspected | Route established by the revised instructions |
+|---|---|
+| Independent review passes everything except PR-triggered hosted CI; publication authorized | `land` publishes/reuses a draft, preserves incomplete status and report, and returns evidence |
+| Same report but only `work` authorized | No edit, empty commit or push; identify the missing publication authority |
+| Missing hosted proof plus an implementation defect or missing local proof | Draft exception is unavailable; address the actual outstanding work |
+| Hosted run succeeds for unchanged reviewed content | Independent reviewer checks provenance and new evidence; inherited local checks stay labeled |
+| CI tests a merge candidate or an old source head | Establish source/base/tested-commit identities; an old run cannot prove current acceptance |
+| Run queued, absent, cancelled or infrastructure-failed | Evidence action remains pending; inspect triggers/cause, do not manufacture a repair or poll indefinitely |
+| Source changed substantively after review | Review affected implementation and interactions; no evidence-only shortcut |
+| Existing ready PR or pending visual QA | Reuse PR as draft; required QA remains a prerequisite for accepted landing |
+| No hosted requirement exists, including private repositories with no routine hosted runs | Local gate and acceptance evidence support review; report hosted checks as not run/unavailable without inventing a blocker |
+| Workflow file exists but no accepted hosted requirement | The file does not opt the TASK into a hosted acceptance gate |
+| Optional hosted run reports a reproducible application failure | Investigate the actual defect; optional CI does not excuse broken implementation |
+| Hosted checks required only by branch protection | Report the merge restriction separately; technical acceptance does not authorize bypass |
+| Old report incorrectly assumes optional CI is mandatory | Independent reassessment uses the explicit policy; builder does not overwrite the verdict |
+| Next-work request while CI is the sole blocker | Keep Board selection, recommend the evidence action rather than another implementation pass |
+
+Ruby YAML checks passed for all four changed skill entrypoints. Local Markdown file/heading links, planning and
+whitespace checks passed. The optional skill-creator Python validator could not run because PyYAML is absent;
+no dependency was installed. These checks establish instruction structure, not runtime behavior.
+
+The canonical build passed in the isolated `fight-agent-os-task00144` Compose project: 7 Pi tests, 147 PHP tests /
+1,133 assertions; Deptrac 651 allowed with zero violations, uncovered dependencies, warnings or errors. The build
+reported no skips. Test database setup emitted two normal migration notices and completed six migrations.
+Receipts, logs and tested-file hashes are under ignored `.runs/notes/task-00144/`. Only completion/qualification
+records and generated planning views changed after that build and were revalidated directly.
+
+Global Pi settings were inspected read-only and still reference the main checkout. These worktree instructions
+are not globally active until integrated there. No hosted publication or independent formal review was performed.
+
+
+The local-first refinement was freshly revalidated on 2026-09-28: the final canonical build exited 0 with the
+same 7 Pi tests and 147 PHP tests / 1,133 assertions, no reported build warnings or skips, and zero Deptrac
+violations/warnings/errors. Ruby metadata, 724 local file/heading links, planning and whitespace checks passed.
+Optional hosted absence, workflow-file-only discovery, actual failures in optional CI, separate merge checks
+and mistaken older review requirements were covered by direct author walkthroughs. Final receipts and source
+hashes are in `local-first-final-build.*` and `local-first-final-tested-files.json` under the TASK scratch directory.
+The revised instructions were not executed in a live Pi publication workflow. Consumer repositories and their
+reviews remain untouched. Temporary validation containers, network and owned volume were retired.
+
+### R1 revision: final candidate and tracked completion
+
+The independent TASK-00144 review identified a second cycle. Before editing, the author traced its retained
+snapshot: hosted success and acceptance of A allowed completion metadata B, but B needed hosted success while
+TASK status had to remain incomplete. Recording `done` afterward created C and repeated the condition. This is
+an instruction-level regression reproduction, not a failing product test. The review's 13 file hashes matched
+revision intake. The canonical report remains untouched and still says `revise`; the following is author
+qualification only.
+
+The revised [closeout contract](LANDING.md#acceptance-candidate-and-administrative-closeout) was walked through
+[completion](../../planning/CONVENTIONS.md#metadata-and-lifecycle), review continuation and land/work/next routing:
+
+| Scenario | Trace and stopping boundary |
+|---|---|
+| Accepted policy permits candidate acceptance plus final-head delivery checks | Publish draft A with incomplete TASK → required CI for A succeeds → independent acceptance of A → required QA → prepare B containing `done`, A's acceptance evidence, actual PR URL and regenerated views, explicitly noting delivery pending → local gate, commit and non-force push → literal-head CI for B succeeds → independent continuation proves administrative-only A → B and run provenance → record success in canonical report/ignored receipt/PR body → ready PR and ownership-proven cleanup. B stays the final head; no C is created. |
+| Literal-final-head success is an acceptance prerequisite for tracked `done` | Stop completion mutation and request the requirement owner's amendment to the split; publication authority is insufficient. No consumer criterion is weakened by these Agent OS instructions. |
+| Owner approves or declines amendment | Approval must be recorded in the owning policy/TASK and independently assessed; a changed requirement is substantive, so establish a new acceptance candidate before closeout. Decline or ambiguous scope leaves the TASK incomplete and worktree retained, not an endless status/CI loop. |
+| B's required run is queued, unavailable, cancelled or infrastructure-failed | Retain B, draft and worktree; report delivery incomplete and retry the same head within authority. A's accepted checkpoint and tracked `done` do not claim B passed. Focused review may say `revise`/`Unverified` for delivery while preserving A's acceptance. Resume the final-delivery path, not initial draft intake; no status-only C. |
+| B's run demonstrates an actual implementation defect | Acceptance is invalidated; stop landing/cleanup and hand off to `work` to reopen/repair, verify and obtain independent review of a new candidate. No claim that an earlier green A excuses the defect. |
+| B changes requirements, instructions, dependencies or behavior | It is not administrative closeout. Stop for a new candidate and fresh review rather than borrowing A's completion claim. |
+| B's only evidence is A's green run, a skipped job or the wrong merge/source identity | Required B proof remains missing. Literal source-head requirements cannot be satisfied by a merge-candidate run; retain draft/resources. |
+| Accepted policy requires hosted proof for A but no final-head delivery check | Do not invent a B CI requirement; prove the administrative bridge and local gate, then use ordinary publication/cleanup rules. |
+| No hosted acceptance requirement exists | Local-first path is unchanged; optional absence cannot create a blocker, while a demonstrated defect and actual merge restrictions remain actionable. |
+
+These are direct instruction traces, not simulated hosting results, live Pi invocations, or independent approval.
+No runtime tests of instructions were added. Fresh revision checks and gate results are recorded in
+[TASK-00144](../../planning/tasks/00144-TASK.md); earlier receipts above remain historical.

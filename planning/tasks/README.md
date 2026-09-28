@@ -146,4 +146,5 @@
 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | done | — |
+| [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | done | — |
 <!-- /planning:records -->

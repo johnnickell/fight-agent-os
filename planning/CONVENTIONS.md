@@ -54,11 +54,21 @@ only for deterministic display. `pr` is an optional full PR URL, not an assertio
 | `ready-for-agent` | Decision-complete and executable when dependencies permit |
 | `ready-for-human` | Human judgment or an external action is next |
 | `in-progress` | Implementation or revision is underway |
-| `done` | Acceptance and required verification are complete |
+| `done` | Implementation acceptance and required acceptance verification are complete; delivery is separate |
 | `wontfix` | Intentionally closed without implementation |
 
 Blocking is derived, not a stored status. `done` does not assert merge or deployment: record those effects and
-evidence explicitly. Mark a TASK done before publishing its PR once implementation acceptance and required local verification are complete. Record independent review, merge, release, and deployment separately; done does not grant approval for those actions.
+evidence explicitly. Mark a TASK done once implementation acceptance and all required acceptance verification are
+complete. The canonical local gate is mandatory; hosted checks are optional unless an accepted repository or TASK
+requirement explicitly makes them an acceptance gate. A workflow file or repository visibility alone does not
+create that requirement. When required hosted acceptance proof needs a PR, publish an authorized draft under
+[landing standards](../docs/engineering/LANDING.md#draft-publication-to-obtain-hosted-evidence) while the TASK
+remains incomplete. For subsequent completion metadata, follow the
+[acceptance-candidate and administrative-closeout contract](../docs/engineering/LANDING.md#acceptance-candidate-and-administrative-closeout):
+`done` records the already-accepted implementation candidate; final-head delivery checks can remain pending only
+when the accepted policy permits that split. A literal-final-head acceptance prerequisite needs an authorized
+owner amendment, not a silent exemption. Record independent review, delivery, merge, release, and deployment
+separately; done does not grant approval for those actions.
 
 ## Board and generated views
 
