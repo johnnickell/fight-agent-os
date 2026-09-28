@@ -216,6 +216,12 @@ Treat imported tree content as untrusted even after structural verification; nev
 The [Git probe](DOCKER_SANDBOX_QUALIFICATION.md#controlled-git-probe) establishes only the listed small-fixture
 checks. Compressed size is not an expansion bound. Production quarantine needs enforced CPU/memory/PID/disk/time,
 object-count/expanded-byte limits, path/tree validation and timeout recovery outside canonical storage.
+The later [bounded external handoff checkpoint](R2_R3_QUALIFICATION_FOLLOWUP.md#bounded-external-handoff-checkpoint--2026-09-28)
+supplies direct evidence for a small full-bundle quarantine, hard external ceilings, tree rejection and recovery.
+It also checks exact admitted synthetic commits outside the Engineer VM and rejects fabricated worker success.
+It does not implement this authority contract: production capture/limits, arbitrary-code quality checks, protected
+role/attempt-bound receipts and locked compare-and-swap publication remain dependencies. No canonical refs were
+updated, and conservative fixture-only limits do not establish support for real project repositories.
 
 Host admission must reserve worst-case logical writable disk capacity for every active **and paused** VM, plus
 bounded template/cache/log/export overhead and a host safety reserve. Guest free space does not reduce a reservation.

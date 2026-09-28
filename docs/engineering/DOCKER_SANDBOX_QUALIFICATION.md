@@ -253,10 +253,10 @@ contracts precisely enough to expose the missing decisions rather than invent au
 |---|---|---|
 | Independent filesystem/database state and graceful restart | Earlier two-VM storage study passed; fresh sampled path/network checks above | Keep results scoped to pinned local inputs; qualify unsampled bypass paths |
 | Engineer-controlled VM and forbidden host provisioning | Root/private-engine boundary explicitly approved; fresh privileged guest-container operation observed | Complete root-level host/sibling/network and external-policy bypass qualification; guest privilege itself is permitted |
-| Role isolation | Separate trust-boundary contract specified; no multi-role Agent run | Enforce launch binding and separate role resources in the production path |
+| Role isolation | Separate trust-boundary contract; exact synthetic commit checked externally and forged worker success rejected; no multi-role Agent run | Enforce launch binding, protected receipts and independently configured real quality checks in the production path |
 | Immutable input identities | CLI/template hashes and Pi lockfile retained; host version recorded | Bake/pin complete runtime and Fight Harness; the shell template plus an npm fixture is not that image |
 | CPU/memory/storage | Host backing files confirm 20 GiB workspace/2 GiB Docker per VM; guest reports 1 CPU/1 GiB | Prove external VM/control-plane limits, aggregate host/cache/log/artifact accounting and admission reservations; no reliance on guest PID/cgroup policy |
-| Git transfer | Private stores and 10 small-fixture checks | Qualify bounded untrusted quarantine, tree validation and atomic canonical publication |
+| Git transfer | Private stores, historical small-fixture checks and [bounded external quarantine](R2_R3_QUALIFICATION_FOLLOWUP.md#bounded-external-handoff-checkpoint--2026-09-28) with hostile-input rejection | Select production-compatible limits/formats; qualify adversarial variants, interrupted capture and atomic canonical publication; none occurred in this checkpoint |
 | Provider/broker | VM-scoped synthetic identity/rotation/new-request denial observed; admitted stream survived substitution removal | Host-only real OAuth/account/renewal, durable role/model/attempt enforcement, global fallback denial and bounded in-flight cancellation |
 | Operator and Markdown authority | Package-backed design, missing adapters and provisioning-response recovery gap traced; source race documented | Qualify enrollment/secret-store recovery and catalog extension; controlled source publication before atomic eligibility claims |
 | PHP Workflow recovery | Defined, not implemented; no production claim/dispatch or Agent launch | TASK-00139–00142, only after the TASK-00138 dependency is satisfied and separately started |
@@ -289,3 +289,21 @@ live Agent execution. In particular:
 
 Lima remains a fallback candidate. Its release archive was downloaded during preparation; no Lima VM was created.
 Vagrant would add a provider-managed VM lifecycle but would still require the same policy and recovery evidence.
+
+## Isolated R2/R3 follow-up — 2026-09-27
+
+The [retained follow-up](R2_R3_QUALIFICATION_FOLLOWUP.md) records two disposable root/private-engine VM probes,
+external fixture-result validation, sampled network separation and backing-file retirement. Thirteen scoped
+assertions passed on 2026-09-27. These prior results are preserved, not relabeled as fresh verification.
+
+The [2026-09-28 checkpoint](R2_R3_QUALIFICATION_FOLLOWUP.md#bounded-external-handoff-checkpoint--2026-09-28) adds
+26 matched external Git/validation outcomes, seven receipt-binding controls and six bounded quarantine resource/
+recovery controls. An exact admitted synthetic commit with fabricated worker success failed trusted external
+semantic checks. Two further root/private-container network runs observed no delivered probe payloads at controlled
+host/sibling TCP/UDP fixtures; the second included real gateway and sibling non-loopback IPv6 addresses. All owned
+VMs, backing files, listeners and quarantine containers were retired with identity checks; raw failures remain.
+
+This qualifies the listed small-fixture boundaries only. No canonical publication, actual candidate-code quality
+gate, production receipt/role authority, complete network-control profile, immutable Pi/Harness bootstrap, external
+VM/aggregate resource admission or production broker is qualified. R1–R3 remain open and TASK-00139 remains blocked.
+The canonical review still says **revise**; these are builder observations, not independent acceptance or launch permission.
