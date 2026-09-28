@@ -27,7 +27,7 @@
 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
 | [TASK-00023](00023-TASK.md) | Compose direct package credential delivery | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
 | [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
-| [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | in-progress | [TICKET-00012](../tickets/00012-TICKET.md) |
+| [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | done | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00026](00026-TASK.md) | Establish the React and TypeScript application shell | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
