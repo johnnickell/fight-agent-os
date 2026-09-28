@@ -227,3 +227,44 @@ Fresh logs, file digests, environment/ownership observations and local-link veri
 [TASK completion notes](../../planning/tasks/00138-TASK.md#bounded-external-quarantine-and-independent-validation--2026-09-28-utc)
 for the acceptance/Standards mapping and exact changed paths. Repository verification does not alter the canonical
 review, accept the synthetic subjects into production or close the unresolved qualification requirements.
+
+## Local control-surface assessment — 2026-09-28
+
+Resumed against the canonical version-3 **revise** report for `3d8798b`, base `a39bfc3`, on the same isolated
+branch. The review found no new defect in that checkpoint; R1–R3 remain missing prerequisites/qualification.
+This assessment narrows the next R2/R3 work without repeating storage stress or constructing a second Runner.
+
+Fresh owning-tool inspection used the same SHA-256-pinned 0.45.1 executable on macOS 26.6.2 / ARM64. Captured
+command help and all **32 setting names/types/descriptions**, not arbitrary evaluated values, in
+`.runs/task-00138/control-surface-study/{inspect.py,result.json}`. `settings list --json` started the previously
+stopped daemon; after observing an empty sandbox inventory, the inspection stopped it and confirmed stopped state.
+No VM, server registration, policy override, credential, network probe or model request was created. This was not
+an offline-only command: daemon startup occurred. No vendor source audit or fresh signature verification was done.
+
+| Surface | Observed public contract | Qualification consequence |
+|---|---|---|
+| VM sizing | `create --help` exposes `--cpus` and `--memory`; omitted CPU uses all host CPUs, and omitted memory uses a host-derived default | A provisioner must select explicit values; help establishes neither enforcement under load nor aggregate admission |
+| Private-engine disk | `sandbox.disk.dockerVolume` describes `/var/lib/docker` sizing for new sandboxes only, including an environment override; existing volumes are not resized | Do not count a settings change as tightening existing allocations or bounding workspace/cache/log storage |
+| Aggregate/control-plane limits | No setting or flag for aggregate reservations, host-process ceilings, disk I/O throttling, shared-cache/log quotas or export byte quotas was identified in the captured create/exec/cp help and settings metadata | R2 still lacks an identified enforcing mechanism for these requirements. This is a surface-limited finding, not proof that no OS/vendor mechanism exists |
+| Export | `cp --help` exposes copy and source-symlink following, but no byte/deadline limit | The earlier known-fixture capture is not a bounded production ingress. A post-copy size check cannot prevent excess host allocation |
+| Host MCP execution | `mcp add --help` explicitly says `--command` executes with the host user's permissions; `--local` can run a registry OCI server through host Docker | Neither capability belongs to the Engineer's allowed private-engine authority; guest access to registration/loading still needs direct denial qualification |
+| MCP discovery | The same help describes manifest and OAuth-metadata SSRF checks as warning and proceeding, not blocking; `--skip-ssrf-check` suppresses those checks | Do not delegate untrusted endpoint registration to this command as the application's fail-closed SSRF boundary. No unsafe URL was fetched in this assessment |
+| MCP attachment | `create --static-mcp` selects a creation-time set; `mcp load` separately attaches registered servers to running sandboxes | An empty static set alone is not evidence that later loading or guest control-plane access is denied; no such access was attempted here |
+| Other host integrations | Metadata includes clipboard reads, remembered environment host commands, SSH auto-creation/forwarding and separate daemon/sandbox proxy exceptions | These are concrete profile inputs and denial surfaces to resolve. Their names do not establish current values, reachability or an exploitable bypass |
+
+**Next dependency:** identify a supported host-side enforcement mechanism for the missing resource classes before
+another VM stress run. Document its owner, scope (VM versus shared service), hard bounds and failure behavior;
+then qualify bounded load/recovery and aggregate active/paused accounting against it. A reservation spreadsheet,
+free-space polling or root-removable guest cgroups cannot fill that gap. No alternative backend, host configuration
+change or relaxation of the accepted limits is selected here. Docker Sandboxes remains a candidate, not an accepted
+production profile; absence of a demonstrated mechanism keeps admission unavailable.
+
+R3 additionally needs controlled denial of the concrete registration/loading/provisioning surfaces above, with
+safe positive controls. Help text identifies what to investigate, not proof that the Engineer can reach it or that
+the boundary is secure. The host-side gateway and application MCP endpoint are distinct authority boundaries.
+
+John separately authorized including the existing [MCP capability assessment](MCP_CAPABILITY_ASSESSMENT.md) in
+this checkpoint. Its September 27 source inspection and planning recommendations are preserved unchanged; current
+upstream source and the external protocol links were not reverified here. Inclusion is not approval of new upstream
+Resources/Skills scope, an Agent OS decomposition, Pi-client compatibility or a sandbox gateway qualification.
+R1, R2, R3 and AC-1/3/4 remain open; TASK-00139 and autonomous launch remain blocked.
