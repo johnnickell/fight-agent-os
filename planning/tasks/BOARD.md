@@ -124,7 +124,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream v0.4.0 authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | needs-info | [TASK-00036](00036-TASK.md) | — |
-| — | [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | [TICKET-00033 — Verify reviewed behavior with independent QA before landing](../tickets/00033-TICKET.md) | needs-info | — | [PR #38](https://github.com/johnnickell/fight-agent-os/pull/38) |
 
 ## Human Action
 
@@ -184,4 +183,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | — (standalone bug) | done | — | — |
 | — | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | — (standalone chore) | done | — | [PR #35](https://github.com/johnnickell/fight-agent-os/pull/35) |
 | — | [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | — (standalone bug) | done | — | [PR #36](https://github.com/johnnickell/fight-agent-os/pull/36) |
+| — | [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | [TICKET-00033 — Verify reviewed behavior with independent QA before landing](../tickets/00033-TICKET.md) | done | — | [PR #38](https://github.com/johnnickell/fight-agent-os/pull/38) |
 <!-- /planning:board -->
