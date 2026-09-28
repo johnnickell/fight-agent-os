@@ -132,7 +132,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 73 | [TASK-00076](00076-TASK.md) | Qualify supported local Planning operation | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-human | [TASK-00075](00075-TASK.md) | — |
 | 101 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-human | [TASK-00103](00103-TASK.md) | — |
 | 111 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-human | [TASK-00104](00104-TASK.md), [TASK-00113](00113-TASK.md) | — |
-| — | [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | — (standalone bug) | ready-for-human | — | — |
 
 ## Needs Triage
 
@@ -182,4 +181,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | — (standalone chore) | done | — | [PR #19](https://github.com/johnnickell/fight-agent-os/pull/19) |
 | — | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | — (standalone bug) | done | — | — |
 | — | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | — (standalone chore) | done | — | [PR #35](https://github.com/johnnickell/fight-agent-os/pull/35) |
+| — | [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | — (standalone bug) | done | — | — |
 <!-- /planning:board -->
