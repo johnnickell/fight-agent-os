@@ -17,10 +17,17 @@ FAIL routes to `work`; INCOMPLETE or missing required/requested QA routes to the
 or its named prerequisite, retaining resources. Never prefer an older PASS over the current report.
 For UI/TUI changes require post-review QA evidence
 and include the template's Before/After table; non-visual work can record N/A. For required hosted checks, establish the [acceptance-candidate and closeout contract](../../../docs/engineering/LANDING.md#acceptance-candidate-and-administrative-closeout) before recording completion; unresolved literal-final-head acceptance scope needs the requirement owner's decision. Record accepted review and finding dispositions in the TASK; run focused checks, planning validation, diff check and `./bin/build` on the reconciled implementation. Stage only owned files and inspect any commit. Push without force, create/update the PR against `develop` with a verified `TASK-NNNNN — <TASK title>` title and a truthful body based on the repository PR template; do not assume the body template controls the title. Record its URL and refresh planning views. Verify the final tree with focused checks, `./bin/planning-check`, `git diff --check` and `./bin/build` before the PR-metadata commit and final non-force push. Confirm the open PR's base, head and remote OID. Keep the PR draft and resources retained until any required final-head delivery checks and focused independent continuation pass; record that result outside tracked files so the certified head stays fixed.
-Verify required captures are sanitized and accessible to the PR audience using an available authorized publication
-mechanism. Local paths are not PR evidence. If upload/access is unavailable, report publication pending with an
-exact handoff and retain resources; do not claim complete landing. Keep canonical reports/captures outside disposable
-worktrees. QA of an already-open PR uses the same current-subject checks and does not imply merge approval.
+Publish sanitized image/video captures within existing publication authority using `gh pr create --attach` for a
+new PR or `gh pr edit <PR-URL> --attach` for an existing PR; check both commands' `--help` for support first.
+Repeat `--attach` for each file. Reference those same file paths in the Before/After table supplied via `--body-file`
+so gh rewrites them to uploaded asset URLs rather than merely appending captures. Use descriptive image alt text
+in the body, or `--attach './capture.png#Description'` for an appended image; videos do not accept alt text.
+On partial upload failure, gh may create/update the PR and print its URL despite a nonzero exit. Inspect that PR
+and its body, preserve successful uploads and retry only missing captures with `gh pr edit`; never blindly repeat
+creation. Verify the resulting references and access for the intended PR audience. Local paths are not PR evidence.
+If attachment support, upload or access is unavailable, report publication pending with an exact handoff and retain
+resources; do not claim complete landing. Keep canonical reports/captures outside disposable worktrees. QA of an
+already-open PR uses the same current-subject checks and does not imply merge approval.
 
 4. **Clean and hand off.** Recheck exact TASK resource ownership. Remove only proven disposable TASK resources and, if isolated, its clean registered worktree as the final tool operation from the base checkout. Keep the feature branch and review evidence. Return the clickable PR URL, review/provenance bridge, checks, warnings, cleanup results and remaining human actions.
 
