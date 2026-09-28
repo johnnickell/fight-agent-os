@@ -184,5 +184,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | — (standalone chore) | done | — | [PR #35](https://github.com/johnnickell/fight-agent-os/pull/35) |
 | — | [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | — (standalone bug) | done | — | [PR #36](https://github.com/johnnickell/fight-agent-os/pull/36) |
 | — | [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | [TICKET-00033 — Verify reviewed behavior with independent QA before landing](../tickets/00033-TICKET.md) | done | — | [PR #40](https://github.com/johnnickell/fight-agent-os/pull/40) |
-| — | [TASK-00147](00147-TASK.md) | Publish landing captures with GitHub CLI attachments | — (standalone chore) | done | — | — |
+| — | [TASK-00147](00147-TASK.md) | Publish landing captures with GitHub CLI attachments | — (standalone chore) | done | — | [PR #44](https://github.com/johnnickell/fight-agent-os/pull/44) |
 <!-- /planning:board -->
