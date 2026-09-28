@@ -49,8 +49,12 @@ The inherited root endpoint runs at http://localhost:18087. Override the port wi
 Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTTPS origin and
 `APP_CSRF_MAC_KEY` as an independent, external hex-encoded 32-byte-or-stronger random key
 (e.g. generate with `openssl rand -hex 32`); do not commit either secret or use the JWT/HMAC signing key.
-The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. The inherited local
-HTTP port is **not** an authenticated browser deployment; HTTPS/proxy enrollment is separate work.
+The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
+**https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
+`./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
+the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`
+for the separate HTTP listener. Neither local TLS nor the inherited HTTP port is a complete authenticated browser
+deployment; integrated security and production enrollment remain separate work.
 Development and test PostgreSQL identities are separate; override their local-only Compose defaults through the
 variables shown in `.env.example`. Destructive test operations require explicit test mode and a guarded `_test`
 database, role, and allowlisted host. PostgreSQL migrations live in `database/migrations/`; future database

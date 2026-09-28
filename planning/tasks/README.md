@@ -147,4 +147,5 @@
 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | done | — |
 | [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | done | — |
+| [TASK-00145](00145-TASK.md) | Enable opt-in trusted local HTTPS | done | [TICKET-00022](../tickets/00022-TICKET.md) |
 <!-- /planning:records -->
