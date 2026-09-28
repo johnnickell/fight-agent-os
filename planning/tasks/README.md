@@ -147,4 +147,5 @@
 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | done | — |
 | [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | done | — |
+| [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | in-progress | [TICKET-00033](../tickets/00033-TICKET.md) |
 <!-- /planning:records -->
