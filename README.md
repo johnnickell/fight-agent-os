@@ -10,8 +10,8 @@ Pi terminal, and understand the work through a companion dashboard.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
 API validation/error handling and local engineering skills are present. These pieces do not yet constitute the
-complete authenticated browser journey. React UI, managed Pi execution and database-authoritative Planning remain
-planned. See the [capability inventory](planning/FOUNDATION.md).
+complete authenticated browser journey. A non-product React shell is available at `/app`; product UI journeys,
+managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
 ## Start planning
 
@@ -45,7 +45,10 @@ Docker Compose is required. This is an application with committed Composer lockf
 ./bin/database migrate
 ```
 
-The inherited root endpoint runs at http://localhost:18087. Override the port with `FIGHT_AGENT_OS_PORT`.
+The inherited root endpoint runs at http://localhost:18087. Build the browser foundation with
+`./bin/client setup` then `./bin/client check` and open `/app`; see [client commands and boundaries](client/README.md).
+The current `./bin/build` gate remains additionally required; combined frontend-gate integration is deferred to
+TICKET-00013. Override the port with `FIGHT_AGENT_OS_PORT`.
 Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTTPS origin and
 `APP_CSRF_MAC_KEY` as an independent, external hex-encoded 32-byte-or-stronger random key
 (e.g. generate with `openssl rand -hex 32`); do not commit either secret or use the JWT/HMAC signing key.

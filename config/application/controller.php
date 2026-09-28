@@ -3,14 +3,23 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
+use App\Adapter\Http\Action\ClientShellAction;
 use App\Adapter\Http\Action\IndexAction;
 use App\Adapter\Http\Middleware\Api\Validation\ApiInputValidation;
 use App\Adapter\Http\Responder\Api\V1\Auth\CsrfBootstrapResponder;
+use App\Adapter\Http\Web\ClientAssetManifest;
+use App\Adapter\Http\Web\ClientShellResponder;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
+    $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {
+        return new ClientShellAction(
+            new ClientAssetManifest($container['app.public_dir'].'/build'),
+            new ClientShellResponder()
+        );
+    });
     $container->set(IndexAction::class, static function (): IndexAction {
         return new IndexAction();
     });

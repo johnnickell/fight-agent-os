@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Http\Action\ClientShellAction;
 use App\Adapter\Http\Action\IndexAction;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -17,3 +18,11 @@ $app->get(
         return $container->get(IndexAction::class)->handle($request, $response);
     }
 )->setName('app.index');
+
+// Limit browser fallback to /app: API and unrelated routing misses retain their contracts.
+$app->get(
+    '/app[/{path:.*}]',
+    function (ServerRequestInterface $request, ResponseInterface $response) use ($container): ResponseInterface {
+        return $container->get(ClientShellAction::class)->handle($request, $response);
+    }
+)->setName('app.shell');

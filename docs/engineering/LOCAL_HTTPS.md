@@ -1,7 +1,8 @@
 # Local HTTPS
 
 Use this opt-in development path for **https://localhost:18443**. It serves the existing root and
-`GET /api/v1/auth/csrf`; it does not implement login or complete the production security envelope.
+`GET /api/v1/auth/csrf`, plus the [non-product browser shell](../../client/README.md) at `/app` after
+`./bin/client setup` and `./bin/client build`; it does not implement login or complete the production security envelope.
 [TASK-00145](../../planning/tasks/00145-TASK.md) owns this transport slice;
 [TASK-00063](../../planning/tasks/00063-TASK.md) retains integrated security and production runtime policy.
 
@@ -54,9 +55,10 @@ The Nginx listener binds to `127.0.0.1:18443`. Use `localhost`, not `127.0.0.1`,
 `localhost:18443` is an accepted HTTP authority and only localhost is on the leaf certificate. FastCGI has
 **no host-published port**. The TLS server invokes only `/app/public/index.php` and supplies the HTTPS flag and
 canonical authority itself; it does not convert client forwarding headers into trusted scheme/host information.
-Hidden-file paths are rejected at Nginx; other paths go through the front controller. Static frontend asset
-serving is deferred to the actual UI slice.
-The repository is mounted read-only in the FPM service, and Nginx has no source-tree mount. This is a trusted
+Hidden-file paths are rejected at Nginx. Only content-hashed client JS/CSS/license files under `/build/` are
+served statically; manifests, maps and other build paths return 404. Other paths go through the front controller.
+The repository is mounted read-only in the FPM service; Nginx mounts only the generated `public/build/` directory,
+not the source tree. Client HTML has its own restrictive CSP and no-store policy; static hashes are immutable. This is a trusted
 local development stack, not an isolation boundary against other local Docker users or untrusted application code.
 
 Verify without `-k`/`--insecure`:
