@@ -124,6 +124,20 @@ Preview cleanup candidates before publication and recheck immediately before del
 
 Return the PR link, review provenance and any reconciliation bridge, final checks and warnings, cleanup result and remaining human actions. Publication, approval, merge, branch deletion, archive, release and deployment are distinct states.
 
+## QA report intake and publication
+
+Read the canonical `<base-worktree>/.runs/qa/<TASK-ID>/qa.md` for required or requested QA. Check current subject,
+independence, scenario coverage, artifact digests and any reconciliation bridge under [QA standards](QA.md).
+A current FAIL blocks accepted landing and routes to `work`; INCOMPLETE or missing required evidence routes to
+`qa` or its stated prerequisite. Do not select a historical PASS or treat requested QA as optional after it fails.
+Non-interactive work may have a justified N/A; do not force a browser run for documentation.
+
+Publish sanitized captures through an available mechanism within the existing publication authority and verify
+access for the intended PR audience. A local behavioral PASS may have publication pending. No working upload
+path means an explicit human handoff and incomplete delivery, not invented URLs or product-source screenshot
+commits. Keep reports/captures outside disposable worktrees; retain resources while required QA or artifact
+publication is pending. Already-open PRs can receive QA before merge; this does not itself authorize PR updates.
+
 ## Visual evidence
 
 For UI/TUI changes consume current post-review QA evidence under [QA standards](QA.md) and include the PR

@@ -14,6 +14,6 @@ Read [review standards](../../../docs/engineering/REVIEW.md) before starting and
 
 Return the verdict and absolute canonical report path. Stop before fixes, planning finalization, push, approval or merge.
 
-After technical acceptance, interactive changes route to post-review QA under [QA standards](../../../docs/engineering/QA.md)
+After technical acceptance, interactive changes route to the [qa skill](../qa/SKILL.md) under [QA standards](../../../docs/engineering/QA.md)
 before `land`. Do not claim screenshots were verified unless actually inspected. Mechanical Board/docs reconciliation
 uses the existing landing bridge; another review is not required merely because commit IDs changed.
