@@ -67,7 +67,6 @@ next-level records; parents with only terminal children remain listed until an e
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00033](tickets/00033-TICKET.md) | Verify reviewed behavior with independent QA before landing | [EPIC-00008](epics/00008-EPIC.md) | ready-for-agent |
 | [TICKET-00034](tickets/00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
 
 ### Parents ready for closeout review

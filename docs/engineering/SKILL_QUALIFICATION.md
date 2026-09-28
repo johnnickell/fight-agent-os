@@ -222,3 +222,51 @@ The revised [closeout contract](LANDING.md#acceptance-candidate-and-administrati
 These are direct instruction traces, not simulated hosting results, live Pi invocations, or independent approval.
 No runtime tests of instructions were added. Fresh revision checks and gate results are recorded in
 [TASK-00144](../../planning/tasks/00144-TASK.md); earlier receipts above remain historical.
+
+
+## QA skill: bounded qualification — 2026-09-28
+
+[TASK-00146](../../planning/tasks/00146-TASK.md) adds the [qa skill](../../.pi/skills/qa/SKILL.md), canonical report
+and work/review/next/land handoffs. This qualification covers instructions and available tools; it is not an
+independent TASK acceptance or an end-to-end model-driven QA run.
+
+An independently delegated session read the actual entrypoint, references and callers and walked five cases:
+
+| Case | Result of instruction walkthrough |
+|---|---|
+| Reviewed interactive TASK before land | Independent PASS requires known source/runtime, all required scenarios and durable evidence; publication remains separate |
+| Open PR moves during QA | Historical evidence cannot pass the current PR without a proven behavior-preserving bridge or affected rerun |
+| Confirmed defect plus unavailable scenario | Overall FAIL; stable repair finding and missing-prerequisite evidence both survive |
+| Documentation-only TASK | Criterion-specific N/A without invented runtime/screenshots or technical acceptance |
+| Rerun interrupted after earlier PASS | Initial canonical INCOMPLETE prevents fallback to historical PASS |
+
+No blocking instruction contradiction was found in those cases. The evaluator did not author the instructions,
+change implementation, run product scenarios, publish evidence or issue a formal review. Its report and evaluated
+file hashes are retained under ignored `.runs/notes/task-00146/forward-test.md`.
+
+Ruby YAML validation passed for all five affected skill entrypoints. Pi 0.87.1's actual local skill loader found
+exactly one `qa` entry and no diagnostics. This proves discovery, not a live skill invocation. The optional Skill
+Creator Python validator could not start because PyYAML was absent from both inspected Python runtimes; no
+package was installed. Local Markdown references and planning were checked directly.
+
+The owned isolated application responded with its readiness text, and container mount inspection established its
+source checkout. That is startup evidence only. The in-app browser rejected the local URL with
+`net::ERR_BLOCKED_BY_CLIENT`; Chrome was unavailable. No browser interaction or screenshot was captured, and live
+browser qualification remains unverified. No access restriction was bypassed.
+
+A real PTY launched the existing Pi extension with an isolated empty agent profile, offline mode, tools and
+sessions disabled. Its captured output contained the Fight Agent OS header; the process exited successfully.
+No model request was sent. The attempted header command produced no attested state transition, so the retained
+sanitized transcript proves startup/output capture only, not interactive scenario completion or visual layout.
+Pi warned that `fd` was unavailable and its download was skipped in offline mode. No terminal screenshot was made.
+
+Canonical report atomicity/concurrent writers, actual bug repair/review/rerun, live model-driven QA and PR artifact
+upload/access were not exercised. The instructions cover these boundaries but do not attest their runtime success.
+No tooling/prose tests or seeded defects were added to the product suite. Fresh full-gate results and exact tested
+file hashes are recorded in the TASK's ignored receipt. Global skills still resolve the main checkout; these
+instructions become available there after integration. Managed QA Agents and Workflow enforcement remain future work.
+
+A follow-up independent routing check found ambiguous wording that could send an unimplemented TASK to review.
+The final caller now explicitly routes unimplemented work/implementation findings to `work`, completed unreviewed
+implementation to `review`, and accepted work with missing required/requested evidence to `qa`. Accepted
+non-interactive work without required/requested QA can proceed to `land` without an invented report requirement.

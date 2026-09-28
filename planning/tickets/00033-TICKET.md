@@ -48,13 +48,14 @@ technical acceptance. New supporting QA artifacts alone do not. Capture publicat
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00146](../tasks/00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
 
-Approved planning amendment; runtime QA and skill implementation remain for decomposition. Existing local
-review/land skills reference this contract without claiming automated QA is already available.
+Approved planning amendment. [TASK-00146](../tasks/00146-TASK.md) delivers the separately authorized local
+QA skill, canonical report and work/review/land routing. Managed QA dispatch, PHP verification of reports and
+Workflow phase enforcement remain for separate decomposition; local instructions do not implement those capabilities.
 
 Technical and QA repairs share the Workflow revision-cycle allowance; QA cannot create an unbounded second loop.
 Only persisted blocking findings consume a repair cycle; mechanical evidence reconciliation does not.

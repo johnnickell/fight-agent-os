@@ -34,8 +34,13 @@ Apply the [local-first verification policy](../../../docs/engineering/REVIEW.md#
 A review whose only outstanding explicit requirement is hosted evidence routes to authorized draft publication under
 [landing standards](../../../docs/engineering/LANDING.md#draft-publication-to-obtain-hosted-evidence), or to
 independent `review` once that evidence is available. Read the selected skill before recommending it. State
-missing publication authority as human input; do not recommend `work` for an evidence-only blocker. An accepted
-TASK routes to `land`; implementation findings route to `work`. If a delivery continuation preserves accepted
+missing publication authority as human input; do not recommend `work` for an evidence-only blocker. Read the selected TASK's canonical QA report when present under [QA standards](../../../docs/engineering/QA.md).
+A current confirmed QA failure routes to `work` even when an older technical review says accept. Once technical acceptance is established, missing or
+incomplete required/requested QA routes to `qa` or its named prerequisite; read that skill before recommending it.
+Before acceptance, unimplemented TASKs and unresolved implementation findings route to `work`; completed
+implementation awaiting technical review routes to `review`. A missing QA report must not send unimplemented
+work directly into QA.
+An accepted TASK with applicable QA satisfied routes to `land`; implementation findings route to `work`. If a delivery continuation preserves accepted
 candidate A but awaits final-head proof for administrative closeout B, resume final delivery verification
 through `land` (or independent `review` when proof is available), without repeating initial draft intake or
 reopening implementation. An unresolved literal-final-head completion contract needs the requirement owner's

@@ -25,6 +25,11 @@ Read-only engineering skills are available locally: [audit](audit/SKILL.md) for 
 boundaries, and [adopt](adopt/SKILL.md) for project comparisons. [Fix](fix/SKILL.md) diagnoses bugs and prepares
 a tracking handoff; `work` owns repair. None substitutes for independent `review`.
 
+[QA](qa/SKILL.md) exercises reviewed TASKs or open PRs in an actual browser or terminal and writes canonical
+PASS/FAIL/INCOMPLETE/N/A evidence. Use `/skill:qa TASK-NNNNN` or `/skill:qa <PR URL>` in an independent session.
+Default flow is `work → review → qa → land → human merge`; `work` consumes QA failures and `land` publishes
+suitable evidence. This local skill does not provision managed QA Agents or enforce a hosted merge gate.
+
 [Release](release/SKILL.md) coordinates versioned package releases from their observed stage, using each target's
 own policy and certifier. It covers docs, branches, human signing scripts, publication, Packagist and merge-back.
 Use `/skill:release 0.4.0 status` for a read-only inventory or `/skill:release 0.5.0` to prepare and continue within

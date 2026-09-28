@@ -33,6 +33,19 @@ route to focused independent review; a confirmed implementation failure returns 
 candidate A already has administrative closeout B, resume [final delivery verification](LANDING.md#verify-and-publish)
 without repeating initial draft intake or toggling A's tracked completion checkpoint.
 
+## QA handoff intake
+
+Read `<base-worktree>/.runs/qa/<TASK-ID>/qa.md` when present using [QA standards](QA.md). Match its subject and
+requirements to current work, inspect linked evidence, and revalidate each confirmed finding before repairing.
+A current QA FAIL can invalidate an older technical accept; it does not require QA to rewrite the review first.
+Preserve QA finding IDs and record dispositions in implementation evidence. Reproduce confirmed bugs and add the
+required failing regression before repair where technically possible. Out-of-scope findings require a scope decision.
+
+INCOMPLETE is a prerequisite/evidence handoff unless it also contains a confirmed defect; do not manufacture source
+changes to fix missing browser access or unavailable test data. After material repairs, run the applicable gates,
+obtain independent technical review and repeat affected QA. The implementer neither edits QA verdicts nor marks its
+own repaired behavior independently passed. Mechanical changes may reuse evidence only through the existing bridge.
+
 ## Verification and evidence
 
 Use focused checks while iterating and run `./bin/build` as the complete local gate. Hosted CI is optional unless
