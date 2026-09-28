@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: etc/docker/cli/Dockerfile
-    command: php -S 0.0.0.0:8080 -t public
+    command: php -S 0.0.0.0:8080 -t public scripts/serve.php
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,6 +36,10 @@ services:
     depends_on: [https_php]
     ports: ["127.0.0.1:18443:8443"]
     volumes:
+      - type: bind
+        source: ./public/build
+        target: /app/public/build
+        read_only: true
       - type: bind
         source: ./etc/docker/https/default.conf
         target: /etc/nginx/conf.d/default.conf

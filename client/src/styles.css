@@ -1,0 +1,56 @@
+@import 'bootstrap/dist/css/bootstrap.css';
+
+/* Neutral foundation only. TASK-00050 owns preference bootstrap and theme controls. */
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+.shell-width {
+  max-width: 64rem;
+}
+
+:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.75rem;
+  background: white;
+  color: #052c65;
+  z-index: 10;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
