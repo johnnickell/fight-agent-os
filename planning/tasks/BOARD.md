@@ -37,7 +37,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 33 | [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | ready-for-agent | [TASK-00031](00031-TASK.md), [TASK-00032](00032-TASK.md) | — |
 | 34 | [TASK-00034](00034-TASK.md) | Explore the authentication and dashboard design language | [TICKET-00014 — Accept the authentication and dashboard design language](../tickets/00014-TICKET.md) | ready-for-agent | [TASK-00033](00033-TASK.md) | — |
 | 35 | [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | [TICKET-00014 — Accept the authentication and dashboard design language](../tickets/00014-TICKET.md) | ready-for-agent | [TASK-00034](00034-TASK.md) | — |
-| 36 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00033](00033-TASK.md) | — |
+| 36 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00033](00033-TASK.md), [TASK-00126](00126-TASK.md) | — |
 | 37 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00036](00036-TASK.md) | — |
 | 38 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00037](00037-TASK.md) | — |
 | 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00033](00033-TASK.md) | — |
@@ -123,7 +123,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream v0.4.0 authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | needs-info | [TASK-00036](00036-TASK.md) | — |
+| 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | needs-info | [TASK-00033](00033-TASK.md) | — |
 
 ## Human Action
 
