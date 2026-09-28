@@ -1,0 +1,70 @@
+#!/usr/bin/env sh
+set -eu
+
+cd "$(dirname "$0")/.."
+certs=.runs/https/certs
+origin=https://localhost:18443
+
+case "${1:-}" in
+  setup)
+    command -v mkcert >/dev/null 2>&1 || {
+      echo "Install mkcert v1.4.4, then rerun ./bin/https setup." >&2
+      exit 1
+    }
+    [ "$(mkcert -version)" = "v1.4.4" ] || {
+      echo "This local setup is qualified with mkcert v1.4.4." >&2
+      exit 1
+    }
+    python3 scripts/local_https.py preflight
+    echo "Enroll/reuse mkcert CA trust on this host; a system password prompt may appear."
+    echo "Only a localhost leaf is generated. The shared CA remains outside this repository."
+    mkcert -install
+    umask 077
+    mkdir -p "$certs"
+    chmod 700 .runs/https "$certs"
+    mkcert -cert-file "$certs/localhost.pem" -key-file "$certs/localhost-key.pem" localhost
+    chmod 600 "$certs/localhost.pem" "$certs/localhost-key.pem"
+    python3 scripts/local_https.py configure
+    echo "Ready. Start with ./bin/https up"
+    ;;
+  up)
+    python3 scripts/local_https.py check
+    [ -f vendor/autoload.php ] || {
+      echo "Install dependencies with ./bin/composer install first." >&2
+      exit 1
+    }
+    [ -s "$certs/localhost.pem" ] && [ -s "$certs/localhost-key.pem" ] || {
+      echo "Run ./bin/https setup before starting HTTPS." >&2
+      exit 1
+    }
+    openssl x509 -in "$certs/localhost.pem" -checkend 86400 -noout
+    docker compose --profile https up --detach --build --wait --wait-timeout 120 web https
+    # Reload leaf files after setup regenerates certificates on an existing service.
+    docker compose --profile https exec -T https nginx -t
+    docker compose --profile https exec -T https nginx -s reload
+    echo "$origin"
+    ;;
+  status)
+    python3 scripts/local_https.py check
+    openssl x509 -in "$certs/localhost.pem" -noout -subject -dates
+    docker compose --profile https ps https https_php
+    curl --fail --silent --show-error --connect-timeout 5 --max-time 15 \
+      --output /dev/null "$origin/"
+    curl --fail --silent --show-error --connect-timeout 5 --max-time 15 \
+      --output /dev/null "$origin/api/v1/auth/csrf"
+    echo "HTTPS root and CSRF bootstrap verified with the curl client's trust store: $origin"
+    ;;
+  down|remove)
+    docker compose --profile https stop https https_php
+    docker compose --profile https rm --force https https_php
+    if [ "$1" = "remove" ]; then
+      rm -f "$certs/localhost.pem" "$certs/localhost-key.pem"
+      echo "Removed local leaf files. Preserved .env, databases and shared mkcert CA trust."
+      echo "For explicit GLOBAL trust removal, review mkcert -uninstall; it affects other projects."
+    fi
+    ;;
+  *)
+    echo "Usage: ./bin/https {setup|up|status|down|remove}" >&2
+    exit 2
+    ;;
+esac

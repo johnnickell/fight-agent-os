@@ -1,7 +1,7 @@
 /vendor/
 /.idea/
 /var/
-/.env.local
+/.env
 /.runs/
 /node_modules/
 /client/node_modules/
