@@ -29,7 +29,20 @@ Read `planning/tasks/BOARD.md` and the complete record for every TASK considered
 - When neither section has an entry, report that no TASK is currently executable.
 - Report relevant **Needs Info** or **Human Action** entries as human input, separate from the TASK recommendation.
 
-Before describing the command, read `.pi/skills/work/SKILL.md`. For one selected TASK, provide:
+Before describing the command, read `.pi/skills/work/SKILL.md` and any canonical review for the selected TASK.
+Apply the [local-first verification policy](../../../docs/engineering/REVIEW.md#local-gate-and-optional-hosted-checks); an optional missing hosted run is not a new blocker. If a report incorrectly requires optional CI, route to independent reassessment rather than overriding its verdict.
+A review whose only outstanding explicit requirement is hosted evidence routes to authorized draft publication under
+[landing standards](../../../docs/engineering/LANDING.md#draft-publication-to-obtain-hosted-evidence), or to
+independent `review` once that evidence is available. Read the selected skill before recommending it. State
+missing publication authority as human input; do not recommend `work` for an evidence-only blocker. An accepted
+TASK routes to `land`; implementation findings route to `work`. If a delivery continuation preserves accepted
+candidate A but awaits final-head proof for administrative closeout B, resume final delivery verification
+through `land` (or independent `review` when proof is available), without repeating initial draft intake or
+reopening implementation. An unresolved literal-final-head completion contract needs the requirement owner's
+amendment decision under [closeout rules](../../../docs/engineering/LANDING.md#acceptance-candidate-and-administrative-closeout),
+not another status commit. Preserve the Board's TASK selection.
+
+For a TASK requiring implementation, provide:
 
 ```text
 TASK: TASK-NNNNN — Title
