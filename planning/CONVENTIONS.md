@@ -27,6 +27,16 @@ adapters, and UI according to dependencies. A substantial SUBTASK may have a sep
 TASK owns complete acceptance and records the PR dependencies. Small bugs and chores may be standalone TASKs
 with `kind: bug` or `kind: chore` and an empty `ticket` field. Do not reopen an archived parent for unrelated work.
 
+## Upstream capability qualification
+
+While Fight Access Control is pre-1.0, future consumer plans and UI dependencies name required capabilities,
+invariants and public contracts, not a prospective package version. At implementation, inspect available tagged
+releases, qualify the chosen release against those requirements and existing consumer integrations, and record
+its exact version, source commit and Composer lock reference. Commit the deliberate manifest/lock update so
+installation remains reproducible; capability-based planning does not mean a floating runtime dependency.
+A missing guarantee blocks dependent behavior, not permission to infer it from a version number. Preserve
+historical versioned evidence and current-lock facts as such; neither selects the next release to adopt.
+
 ## Metadata and lifecycle
 
 ```yaml
