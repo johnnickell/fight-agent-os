@@ -148,5 +148,5 @@
 | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | done | — |
 | [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | done | — |
 | [TASK-00145](00145-TASK.md) | Enable opt-in trusted local HTTPS | done | [TICKET-00022](../tickets/00022-TICKET.md) |
-| [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | in-progress | [TICKET-00033](../tickets/00033-TICKET.md) |
+| [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | done | [TICKET-00033](../tickets/00033-TICKET.md) |
 <!-- /planning:records -->

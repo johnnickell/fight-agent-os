@@ -48,7 +48,7 @@ technical acceptance. New supporting QA artifacts alone do not. Capture publicat
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00146](../tasks/00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | in-progress |
+| [TASK-00146](../tasks/00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
