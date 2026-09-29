@@ -82,9 +82,54 @@ build. Local static output and PHP must belong to the same release.
 
 Loading/errors are actual boot/import states, not pretend product routes or a permanent debug gallery.
 Malformed config never mounts routes; failed page imports show generic recovery. Initial entry-script/network
-failure cannot execute React recovery; the base document retains its loading/noscript fallback. No API calls,
-principal context, auth restoration, permissions, credential handling or browser persistence exist yet.
-Transport services and authority guards belong to TASK-00027/00028.
+failure cannot execute React recovery; the base document retains its loading/noscript fallback. The shell makes
+no API calls and has no principal context, auth restoration, permissions or browser persistence. The typed
+transport and CSRF service below are available for later feature composition; authority guards belong to TASK-00028.
+
+## Typed API and CSRF boundary
+
+- `src/api/ApiClient.ts` owns shared GET transport. Construct it with validated runtime configuration; inject
+  `fetch` for deterministic tests and an `AccessTokenProvider` from the future memory-only authentication owner
+  when protected operations exist. A provider is read on every explicitly `access: 'required'` call, never on
+  public bootstrap. Missing/unsafe credentials fail before dispatch; this is transport validation, not JWT authority.
+- Feature services own fixed paths and `ResponseDecoder<T>` codecs. Paths are root-relative **below** `/api/v1`,
+  restricted to nonempty alphanumeric/underscore/hyphen segments and 2,048 characters. Query, fragment, encoded,
+  dot, backslash and external-origin forms are unsupported. No arbitrary header/body pass-through is exposed.
+- Requests send `Accept: application/json` and a fresh 32-hex correlation ID, no GET body or `Content-Type`.
+  Fetch uses `same-origin` mode/credentials, `no-store`, `no-referrer` and redirect rejection. Browser-managed
+  cookies are neither read nor constructed. Production-like bootstrap requires the existing trusted HTTPS origin.
+- Shared decoding requires the documented exact `application/json` and `no-store` response headers, HTTP 200
+  with an exact success envelope, or recognized HTTP/JSend fail/error combinations. Unknown fields, inconsistent
+  status/message pairs and malformed values become `protocol`. Validation messages are checked for shape then
+  discarded, not displayed. Correlation is taken only from a single canonical 32-hex response header; absent or
+  invalid values become null. No raw Response, URL, headers, body, exception, cause or server message is returned
+  as diagnostics. `ApiResult` failures expose only their category and safe correlation.
+- `src/features/auth/CsrfProofService.ts` calls the actual `/auth/csrf` operation. Its exact codec maps `expires_at`
+  to UTC-second `expiresAt`, checks the proof format and matching expiry, and rejects extra fields including cookie
+  material. One instance per tab's future authentication coordinator owns the proof in private volatile state.
+  `bootstrap(signal?)` replaces pending work and clears the old proof; `current()` removes expired proof;
+  `clear()` invalidates pending work and memory on teardown or nonce changes. Local expiry is conservative and
+  depends on the browser clock; it never verifies the MAC or grants authority. The server still validates every
+  future mutation. No expiry timer, automatic bootstrap retry or refresh is introduced.
+- Abort resolves promptly as `cancelled`, including while reading a body or when fetch ignores its signal.
+  The CSRF service additionally fences generations so old success **and** failure cannot overwrite newer state.
+  Consumers must ignore cancelled outcomes rather than render them as errors; render only current feature-owned
+  state. Future principal/protected-data context fences belong to TASK-00028, not a transport response interceptor.
+
+The shared normalization matrix distinguishes validation (400/422 fail), authentication (401), authorization
+(403), conflict (409), not-found (404), bad-request (400 error), method-not-allowed (405), gone (410), rate-limited
+(429), generic system (5xx with the canonical message), protocol, network and cancellation. Non-bootstrap cases
+are transport tests against documented mapper contracts, **not implemented protected endpoints**. The service is
+not mounted into the non-product shell: no visible journey, `/me`, login, refresh, mutation API, retry loop, cache
+library, cross-tab channel or browser persistence is added. Future methods/codecs need their own accepted contract.
+
+Client tests use deterministic fetch/controlled-promise doubles, synthetic non-live values and the published
+CSRF shape. They prove strict decoding, safe outcomes, memory-token policy, abort and independent generation
+fences, expiry and absence of cookie/storage/history/console interactions; they do not prove browser HttpOnly
+behavior or a live client/server journey. Existing PHP functional contract tests separately exercise issuance,
+cookie attributes/reuse, server guards and OpenAPI response validation. No test-only endpoint is needed.
+
+## Presentation foundation
 
 A static light `data-bs-theme` marker and isolated stylesheet preserve the theme-bootstrap integration point.
 TASK-00050 owns the shared preference rules, pre-paint preference bootstrap, OS/storage listeners and selector;
