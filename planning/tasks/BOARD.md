@@ -8,12 +8,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | in-progress | — | — |
+| 21 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 21 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | — | — |
 | 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | — | — |
 | 29 | [TASK-00029](00029-TASK.md) | Establish the production component catalog and state evidence | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |

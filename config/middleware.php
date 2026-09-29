@@ -26,3 +26,6 @@ $app->add(new ApiFailureMiddleware(
     $container->get(JSendResponseFactory::class),
     $failureLog
 ));
+// Outermost fallback contains non-API misses without exposing or logging raw diagnostics.
+// API failures retain their correlated JSend handler above in every environment.
+$app->addErrorMiddleware(false, false, false);
