@@ -56,7 +56,7 @@ Authorization remains server-side and endpoint-specific; framework middleware ma
 | [TASK-00018](../tasks/00018-TASK.md) | Establish the versioned JSend API interaction boundary | done |
 | [TASK-00019](../tasks/00019-TASK.md) | Reject invalid API input before dispatch | done |
 | [TASK-00020](../tasks/00020-TASK.md) | Centralize correlated and sanitized API failures | done |
-| [TASK-00021](../tasks/00021-TASK.md) | Publish and restrict the representative OpenAPI contract | in-progress |
+| [TASK-00021](../tasks/00021-TASK.md) | Publish and restrict the representative OpenAPI contract | done |
 | [TASK-00117](../tasks/00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | ready-for-agent |
 <!-- /planning:children -->
 
