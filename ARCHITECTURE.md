@@ -7,7 +7,7 @@ Fight Agent OS starts with the Slim composition from `johnnickell/project-slim`.
 - `src/Adapter/`: HTTP Actions/Responders, persistence, external services, and runtime integrations
 - `client/`: React/strict TypeScript non-product shell at `/app`; Routes/Layouts/Pages/Components, typed public
   boot config, Docker-pinned tooling and typed API/CSRF service boundary; product journeys and authority guards
-  remain planned (TASK-00027's transport implementation awaits independent review)
+  remain planned (TASK-00027's non-rendered transport boundary has independent review and scoped QA acceptance)
 - `.pi/skills/`: local planning, engineering, Graphify and instruction-writing guidance; managed runtime execution remains planned
 - `harness/pi/`: installable terminal identity; future typed Workflow client capabilities remain separate
 

@@ -29,7 +29,7 @@
 | [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
 | [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | done | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00026](00026-TASK.md) | Establish the React and TypeScript application shell | done | [TICKET-00012](../tickets/00012-TICKET.md) |
-| [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | in-progress | [TICKET-00012](../tickets/00012-TICKET.md) |
+| [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | done | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00029](00029-TASK.md) | Establish the production component catalog and state evidence | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00030](00030-TASK.md) | Complete PHP style and static analysis | done | [TICKET-00013](../tickets/00013-TICKET.md) |
