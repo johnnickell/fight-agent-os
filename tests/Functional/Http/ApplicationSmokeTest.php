@@ -6,6 +6,7 @@ namespace Tests\Functional\Http;
 
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use Tests\Support\ApiContract;
 
 /**
  * Exercises public routes through the real kernel
@@ -35,6 +36,7 @@ final class ApplicationSmokeTest extends TestCase
         yield 'API prefix without route' => ['GET', '/api', 404, 'Not found.'];
         yield 'unknown API route' => ['GET', '/api/v1/not-an-agent-os-route', 404, 'Not found.'];
         yield 'unsupported method' => ['POST', '/api/v1/auth/csrf', 405, 'Method not allowed.'];
+        yield 'unsupported preflight' => ['OPTIONS', '/api/v1/auth/csrf', 405, 'Method not allowed.'];
     }
 
     /**
@@ -53,6 +55,7 @@ final class ApplicationSmokeTest extends TestCase
 
         $response = $app->handle($request);
 
+        ApiContract::assertRoutingFailure($response, $status, $status === 404 ? 'NotFound' : 'MethodNotAllowed');
         self::assertSame($status, $response->getStatusCode());
         self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));

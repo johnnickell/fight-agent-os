@@ -37,6 +37,8 @@
   },
   "require-dev": {
     "deptrac/deptrac": "^4.7",
+    "devizzent/cebe-php-openapi": "1.1.5",
+    "league/openapi-psr7-validator": "0.24",
     "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^10.5",
     "rector/rector": "^2.4",

@@ -74,6 +74,9 @@ schemas and fixtures belong alongside `migrations/` under `database/`.
 ./bin/down                    # Stop the development service
 ```
 
+Validate the repository-only [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi`.
+Swagger UI, spec-serving and diagnostic routes are disabled in every environment.
+
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots
 (such as `.runs/worktrees/`, never directly in `.runs/`). Runtime sandboxing remains planned, not implied by the development Compose stack.
