@@ -24,6 +24,18 @@ creating implementation work, installing skills globally or publishing anything.
    that the reader reaches the needed reference, knows when to stop, and cannot mistake a proposal for execution.
    Validate metadata and relative links directly; remove placeholders, duplication and unsupported tool commands.
 
+For skills with a useful continuation, make completion include a concrete `Next:` line under the [handoff
+rules](../../../docs/engineering/HANDOFFS.md). Use a supported command and actual target or name the pending
+human/prerequisite action; a recommendation must not silently dispatch the next skill or imply acceptance.
+
+For AGENTS.md and related instruction maintenance, follow the [instruction reconciliation rules](../../../docs/engineering/QUALITY.md#agent-instructions-and-policy-drift).
+Inspect affected responsibilities and linked authorities; consider additions, corrections and evidenced removals.
+Keep shared facts in one owner and narrower guidance at meaningful boundaries, verifying the active harness's
+discovery behavior before relying on nested files. Preserve accepted requirements when implementation disagrees;
+record the mismatch and decision owner instead of silently weakening policy. Explain substantive removals and
+leave historical decisions intact. Use the [prose guidance](../../../docs/engineering/QUALITY.md#human-facing-documentation)
+for human explanations while retaining exact commands, normative force and actionable agent boundaries.
+
 For Pi skills, use `.pi/skills/<name>/SKILL.md` with matching lowercase-hyphenated `name` and a concise
 `description` in YAML frontmatter. Add the entry to [the index](../_index.md). Design capabilities through
 [planning](../../../planning/CONVENTIONS.md); preserve EPIC → TICKET → TASK terminology. Use ordinary Markdown

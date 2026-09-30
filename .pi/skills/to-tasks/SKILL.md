@@ -10,6 +10,9 @@ This skill turns a TICKET into dependency-ordered implementation TASKs. A TASK i
 ## Process
 
 1. Read the TICKET, parent EPIC, relevant ADRs, and current Board.
+   If part of a Wayfinder handoff, inspect the map's remaining phases under [map-wide planning order](../../../planning/CONVENTIONS.md#map-wide-planning-order).
+   Favor accepted TICKET decompositions for all its EPICs before TASK decomposition. A direct request for this
+   TICKET is an explicit narrower choice; preserve it and record any remaining map work without reconfirming it.
 2. Inspect live and archived TASKs before allocating IDs.
 3. Draft vertical implementation slices:
    - Each TASK delivers an independently reviewable outcome.
@@ -26,3 +29,8 @@ This skill turns a TICKET into dependency-ordered implementation TASKs. A TASK i
 - Keep worktree choice explicit before implementation.
 - TASK completion requires recorded verification and evidence, not just code changes.
 - Bugs need a reproducing regression test before repair unless the TASK justifies why that is impossible.
+
+Finish with an explicit `Next:` under the [handoff rules](../../../docs/engineering/HANDOFFS.md). Continue with
+`to-tasks` for remaining accepted TICKETs in the selected map once earlier phases are complete; an explicit slice
+does not silently mark the rest of the map complete. When all planning phases are complete, recommend
+`/skill:next` for Board-based execution selection. Never start implementation as a decomposition side effect.

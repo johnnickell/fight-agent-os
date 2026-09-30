@@ -1,7 +1,7 @@
 # Agent team and workflow
 
 These are the accepted team responsibilities for the planned managed runtime. Local skills exist separately;
-this document does not assert that Agent provisioning, dispatch or browser QA is implemented.
+this document does not assert that managed Agent provisioning, dispatch or QA execution is implemented.
 Harness owns revisioned Agent profile templates, presented as **Team roles**. Templates request capabilities;
 Access Control grants actual Agents direct Permissions. A job title, prompt or Skill grants no authority.
 
@@ -10,9 +10,9 @@ Access Control grants actual Agents direct Permissions. A job title, prompt or S
 | Project Manager | Roadmap, requirements, Wayfinder and EPIC → TICKET → TASK planning | Human decisions govern scope and priorities; no implementation acceptance |
 | Explorer | Scout files, trace source, research and bounded disposable experiments | Prefer a validated faster/cheaper model; cite sources and uncertainty; no authoritative Planning or delivery writes |
 | Team Lead | Claim the approved TASK through PHP, prepare the initial execution plan, delegate, reconcile handoffs, route findings and bring decisions to John | Main human contact; no implementation, technical verdict or publication; never extend scope or limits silently |
-| Software Engineer | Design architecture/interfaces for humans, implement, test and revise | Own meaningful tests and coverage; cannot independently accept own work |
-| Senior Engineer | Independent technical review, architecture and security assessment | Fresh review session, no contribution to implementation or its submitted acceptance evidence; no repairs during review |
-| QA Engineer | After technical review, exercise browser/UI or TUI behavior, failure states and acceptance scenarios; capture evidence | Separate session and disposable test data; cannot repair the reviewed source or grant technical acceptance |
+| Software Engineer | Implement, test and revise the TASK using applicable standards and focused references | Own meaningful tests and outcome evidence without duplicating review's full checklist; cannot independently accept own work |
+| Senior Engineer | Own detailed independent architecture, code, test, documentation and security assessment; identify QA risks | Fresh review session, no contribution to implementation or its submitted acceptance evidence; no repairs during review |
+| QA Engineer | After technical review, challenge changed behavior through UI, API, CLI, implementation probes or executable instructions; capture visual evidence where applicable | Separate session, bounded probes and disposable data; cannot repair reviewed source or grant technical acceptance |
 | Release Manager | Run `land` for accepted TASKs; prepare and coordinate package release or application deployment runbooks with Team Lead | Separate grants for PR publication, merge, signed tags, release publication, deployment and cleanup; never handles passphrases in transcripts |
 | Hotfix Engineer | Senior-capability incident diagnosis, containment proposal and smallest repair | Explicit emergency scope, isolated execution and regression evidence; cannot self-approve or inherit deployment authority |
 
@@ -30,8 +30,9 @@ delegation requests through those operations; it does not improvise provisioning
 
 The first production slice remains **one TASK → Team Lead → Software Engineer → durable Awaiting review**.
 EPIC-00008 extends it to **Senior Engineer review → QA Engineer verification → Release Manager land → human PR
-handoff**. Documentation-only or otherwise non-interactive work records a reasoned QA-not-applicable disposition;
-it does not launch a browser just to satisfy ceremony. UI/TUI work requires relevant QA evidence.
+handoff**. Apply [QA applicability](QA.md#applicability) to changed behavior, including non-UI interfaces and
+executable instructions. Record criterion-specific N/A only when no behavioral exercise applies; absence of a UI
+does not justify skipping QA. Use suitable evidence without launching a browser for non-visual behavior.
 
 Blocking technical or QA findings return through Team Lead to Software Engineer. Material repairs receive a new
 technical review, then rerun affected QA scenarios; unchanged evidence can be referenced with explicit provenance.

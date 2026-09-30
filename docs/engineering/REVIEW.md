@@ -10,7 +10,7 @@ A review of a rebased branch challenges the new base and effective diff, not jus
 
 ## Two named passes
 
-Independently challenge the exact TASK, accepted decisions, exclusions, effective diff and claimed evidence in **Spec** and **Standards** passes. One independent reviewer may perform both passes; they are not two independent agents. A builder's two internal completeness checks are never independent approval. Preserve the criterion IDs below across revision rounds; map each TASK acceptance criterion to at least one applicable ID and cite the specific requirement and observed evidence. Do not substitute a green build for semantic review.
+Independently challenge the exact TASK, accepted decisions, exclusions, effective diff and claimed evidence in **Spec** and **Standards** passes. One independent reviewer may perform both passes; they are not two independent agents. Review owns this detailed assessment; work supplies TASK outcome evidence without duplicating the full matrix. Builder self-checks are never independent approval. Preserve the criterion IDs below across revision rounds; map each TASK acceptance criterion to at least one applicable ID and cite the specific requirement and observed evidence. Do not substitute a green build for semantic review.
 
 | Spec ID | Question to disprove |
 |---|---|
@@ -27,6 +27,17 @@ Independently challenge the exact TASK, accepted decisions, exclusions, effectiv
 | ST-03 | Are naming, PHP style, documentation and applicable local conventions followed? |
 | ST-04 | Do tests prove meaningful owned behavior and important integration contracts at proportionate seams without testing tooling? |
 | ST-05 | Are planning, delivery, verification, warnings, resource hygiene and review/merge boundaries accurate? |
+
+Use the scoped [quality checks](QUALITY.md) to challenge tests under ST-04/SP-05, instruction and human-documentation
+accuracy under ST-03, and code quality under the applicable ownership/behavior IDs. Test smells require contract
+counterchecks, including legitimate interactions and replacement coverage. A stale descriptive claim and a code
+violation of an accepted instruction require different corrections. These checks refine the existing IDs; they
+do not add a score, independent verdict, edit authority or automatic cleanup pass.
+
+Assess [QA applicability](QA.md#applicability) in the handoff after technical acceptance. Identify changed
+observable contracts and useful adversarial scenarios for independent QA, or give criterion-specific reasons
+that no behavioral exercise applies. No UI is not a reason to skip QA. Technical review and behavioral QA retain
+separate verdicts; QA need not repeat the structural quality assessment.
 
 For **each** ID record `Pass`, `Fail`, `Unverified`, or `N/A`, with an exact location, command/result or traceable evidence and any limitation. `N/A` needs a reason grounded in scope; silence or missing proof is not N/A. `Unverified` means necessary evidence is missing, not that a defect has been demonstrated. `Fail` needs a demonstrated violation. Account for all TASK criteria even when a checklist category contains several. A documentation-only change need not invent runtime paths or product tests; direct inspection, links, planning validation and the required gate can establish its claims.
 

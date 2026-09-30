@@ -226,6 +226,9 @@ No runtime tests of instructions were added. Fresh revision checks and gate resu
 
 ## QA skill: bounded qualification — 2026-09-28
 
+This is historical TASK-00146 qualification. TASK-00150's [follow-up below](#qa-and-review-responsibilities-follow-up--2026-09-30)
+supersedes the non-interactive skip rule; current [QA applicability](QA.md#applicability) governs new work.
+
 [TASK-00146](../../planning/tasks/00146-TASK.md) adds the [qa skill](../../.pi/skills/qa/SKILL.md), canonical report
 and work/review/next/land handoffs. This qualification covers instructions and available tools; it is not an
 independent TASK acceptance or an end-to-end model-driven QA run.
@@ -270,3 +273,43 @@ A follow-up independent routing check found ambiguous wording that could send an
 The final caller now explicitly routes unimplemented work/implementation findings to `work`, completed unreviewed
 implementation to `review`, and accepted work with missing required/requested evidence to `qa`. Accepted
 non-interactive work without required/requested QA can proceed to `land` without an invented report requirement.
+
+## QA and review responsibilities follow-up — 2026-09-30
+
+[TASK-00150](../../planning/tasks/00150-TASK.md) moves the detailed quality assessment to review and makes
+post-review QA depend on changed behavior, including non-UI contracts. Direct builder walkthroughs traced the
+actual work/review/qa/next/land/audit entrypoints, shared rules and report template:
+
+| Scenario | Instruction result and boundary |
+|---|---|
+| Small implementation with relevant architecture rule | Work loads the relevant section, writes contract-based tests and outcome evidence; review owns the full matrix. Applicable standards remain binding. |
+| Reviewed API/library/worker change with green unit tests | Route to QA; choose actual requests or a disposable public-contract driver and independently expected output/effects. No UI is not N/A and no new product route is needed. |
+| Invalid input, wrong owner, duplicate submission or partial failure | Choose relevant adversarial cases, assert rejected/absent effects, preserve reproducible findings for work; no seeded source defect or QA repair. |
+| Probe would reach shared data or require unavailable tooling | Stop the affected scenario with INCOMPLETE and a recovery action; no implicit install, destructive load, external effect or fabricated PASS. |
+| Changed screen with a new error state | Exercise actual interactions and capture readable comparable baseline/result states; inspect every sanitized image. Missing required captures stay INCOMPLETE. |
+| Library change has no images | Omit the visual table while retaining behavioral QA results, inputs, outputs and state evidence. |
+| Skill routing change versus spelling-only edit | Trace concrete requests through changed decisions for the skill; pure spelling can have criterion-specific N/A in the technical handoff or QA report. Do not claim a walkthrough is live agent execution. |
+| Missing applicability assessment on accepted TASK | Review hands off risks; next/land route missing assessment to QA. Unimplemented work still routes to work and completed unreviewed work to review. |
+| Current FAIL, interruption or source/PR-head drift | Preserve current FAIL/INCOMPLETE and provenance checks; do not use a historical PASS or rewrite technical review. |
+| Scoped audit encounters a non-UI QA skip | Report the evidence gap and propose suitable scenarios within the sample, without issuing QA PASS or launching unrequested probes. |
+
+These are instruction traces and builder qualification, not independent review/QA, empirical agent trials,
+executed API/fault-injection tests or screenshot evidence. This change does not claim new browser availability,
+managed QA enforcement or successful artifact publication. Earlier TASK-00146 runtime limitations remain historical;
+current validation counts and exact build receipts belong to TASK-00150's completion evidence.
+
+
+## Next-command handoffs and map-wide planning — 2026-09-30
+
+TASK-00150's final follow-up adds [explicit next-command handoffs](HANDOFFS.md) and the default
+[map-wide planning order](../../planning/CONVENTIONS.md#map-wide-planning-order). Sixteen additional builder
+walkthroughs trace work/review repair loops, non-UI QA, missing prerequisites, hosted-evidence continuation,
+publication/human merge, pending WF decisions, multi-EPIC and multi-TICKET phase order, closed-map handoffs,
+explicit narrower requests, uncertain approvals, unordered maps and Board-owned execution selection.
+
+The direct traces confirm that a recommendation uses the actual target and never invokes the next skill,
+waives an approval or claims an accepted record from a proposal. Grill remains one approved EPIC per invocation;
+Wayfinder owns interviews whose resolution boundary excludes EPIC creation. Existing live/archived planning and
+authoritative Board semantics remain intact. These are builder instruction checks, not independent acceptance,
+real planning mutations, automatic skill execution or empirical agent trials. The TASK and ignored final receipt
+record current metadata/link/planning checks, full-gate results and committed content identity.

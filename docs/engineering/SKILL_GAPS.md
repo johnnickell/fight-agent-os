@@ -73,7 +73,7 @@ TASK-00135 expands it without importing another project's authority.
 | Writing for Agents | Added locally now with exact upstream attribution/license; EPIC-00006 later distributes trusted revisioned resources |
 | Audit / fix / architecture / adopt | Implemented locally under TASK-00131–00134 in the approved skill batch; architecture includes human-first interfaces and namespace cohesion |
 | Security audit | Implemented locally under [TASK-00136](../../planning/tasks/00136-TASK.md); bounded threat/evidence assessment, no automatic repair |
-| QA | Local [qa](../../.pi/skills/qa/SKILL.md) and canonical behavioral handoff under [TASK-00146](../../planning/tasks/00146-TASK.md); managed QA remains with [TICKET-00033](../../planning/tickets/00033-TICKET.md) |
+| QA | Local [qa](../../.pi/skills/qa/SKILL.md) and canonical behavioral handoff under [TASK-00146](../../planning/tasks/00146-TASK.md); [TASK-00150](../../planning/tasks/00150-TASK.md) broadens adversarial non-UI exercises and visual evidence guidance; managed QA remains with [TICKET-00033](../../planning/tickets/00033-TICKET.md) |
 | Skill maintenance | Use Writing for Agents plus explicit inventory/provenance checks; add automation only after demonstrated need |
 | Domain modeling / testing / conflict resolution | Improve existing planning/work/review guidance; ordinary feature TDD is not required; meaningful 100% unit coverage is the goal |
 | Release / hotfix | Package [release](../../.pi/skills/release/SKILL.md) guidance added under [TASK-00143](../../planning/tasks/00143-TASK.md); target-owned certification, resumable stages and human signing. Hotfix, deployment and managed automation remain separate work under [Team roles](TEAM.md) |
@@ -104,8 +104,10 @@ Primary sources inspected on 2026-09-26; they supply ideas, not local authority:
 
 - Matt Pocock's [improve-codebase-architecture](https://github.com/mattpocock/skills/blob/c55ee46073ed923f86ce59a5eb3b6d895095d1b7/skills/engineering/improve-codebase-architecture/SKILL.md),
   commit `c55ee46073ed923f86ce59a5eb3b6d895095d1b7`, is the current source behind the earlier `improve-architecture`
-  shorthand. **Adapt** exploration of navigation friction and useful encapsulation into human-first ownership and
-  interface alternatives. **Reject** mandatory vocabulary, automatic subagents, HTML/CDN report, grilling and inline
+  shorthand. **Adapt** exploration of navigation friction and module deepening into small domain-facing interfaces
+  that hide useful complexity and reduce what callers must know. TASK-00150 makes the before/after caller comparison
+  explicit while preserving DDD ownership, aggregate invariants, bounded contexts, CQRS and accepted package
+  contracts; module depth is distinct from namespace depth. **Reject** mandatory vocabulary, automatic subagents, HTML/CDN report, grilling and inline
   domain-document mutation. Its repository MIT notice was verified and is retained in the local architecture skill.
 - Mathias Verraes, [DRY is about Knowledge](https://verraes.net/2014/08/dry-is-about-knowledge/), 2014-08-02:
   **adopt** reasons for change as a cohesion test; **reject** deduplication based only on similar syntax. This supports
@@ -128,3 +130,30 @@ Primary sources inspected on 2026-09-26; they supply ideas, not local authority:
 The [bounded qualification](SKILL_QUALIFICATION.md) records real source walkthroughs, a retrospective bug handoff,
 non-mutating project comparison and limits. These are builder qualification, not independent forward-testing or
 formal TASK review. Local skill discovery metadata is verified separately from any future managed Harness execution.
+
+## Test, code and documentation quality source decisions
+
+[TASK-00150](../../planning/tasks/00150-TASK.md) incorporates four ideas from
+[brandhaug/skills](https://github.com/brandhaug/skills/tree/9cb193614af39847d80ab687ef3a8de01841632e),
+inspected at commit `9cb193614af39847d80ab687ef3a8de01841632e` on 2026-09-30. The pinned tree contains no license
+file; no upstream skill text or agent prompts are vendored into tracked files. The local
+[quality guidance](QUALITY.md) is original writing with source attribution. The sources are comparison material,
+not installed skills or authority to execute their workflows.
+
+| Source | Local decision and integration |
+|---|---|
+| [remove-tautological-tests](https://github.com/brandhaug/skills/blob/9cb193614af39847d80ab687ef3a8de01841632e/remove-tautological-tests/SKILL.md) | **Adopt** examining contract, independent expectations and refactor fragility while writing tests. **Adapt** into work self-checks and independent review/audit questions. **Reject** automatic deletion based on pattern matches, blanket rejection of snapshots/internal sequencing, or loss of required coverage. Retain justified boundary ordering and independently reviewed fixtures; replace critical coverage in the same change. |
+| [deslop](https://github.com/brandhaug/skills/blob/9cb193614af39847d80ab687ef3a8de01841632e/deslop/SKILL.md) and [category prompts](https://github.com/brandhaug/skills/blob/9cb193614af39847d80ab687ef3a8de01841632e/deslop/AGENTS.md) | **Adapt** seven quality concerns into evidence-based questions, including PHP/TypeScript boundaries. Work uses the TASK scope, review independently challenges it, audit declares sampling, and architecture compares ownership options. **Reject** mandatory seven-agent/per-language fan-out, full-repository default, numeric confidence as proof, deletion bias, root scratch reports, cleanup branch/merge machinery and automatic remediation. |
+| [write-agents-md](https://github.com/brandhaug/skills/blob/9cb193614af39847d80ab687ef3a8de01841632e/write-agents-md/SKILL.md) | **Adopt** meaningful instruction boundaries, linked shared authority and considering additions/edits/removals. **Adapt** through writing-for-agents with affected-document checks in work/review/audit and impact proposals in architecture. **Reject** unverified auto-loading assumptions, code as policy authority, fixed word budgets, mandatory cuts/delegation, deleting discoverable facts regardless of instructional value, empty-diff fallback to unrelated commits and automatic merge/post-commit synchronization. Preserve accepted invariants, necessary rationale and historical decisions. |
+| [write-like-a-human](https://github.com/brandhaug/skills/blob/9cb193614af39847d80ab687ef3a8de01841632e/write-like-a-human/SKILL.md) | **Adopt** direct prose, reduced repetition and preservation of meaning/voice. **Adapt** to current README capability evidence, CHANGELOG conventions and architecture explanations. **Reject** mechanical word/punctuation bans, rewriting quoted/code/API content, weakening qualifications or restyling historical releases. Factual corrections need evidence separately from prose polish. |
+
+These checks extend existing ST-03/ST-04 and applicable Spec/Standards criteria; they add no score or acceptance
+authority. Direct skill walkthroughs and the canonical local gate qualify the implementation; another agent
+must independently review TASK-00150. No source code, product tests, consumer repository or global installation
+is changed by this integration.
+
+The maintainer's TASK-00150 follow-up assigns the detailed quality assessment to review. Work keeps immediate
+contract/test and affected-document guidance, consulting detail on demand instead of duplicating review's full
+matrix. The same follow-up broadens local QA to adversarial API, CLI, library/worker and executable-instruction
+scenarios, bounded disposable probes and inspected visual comparisons. These are local requirements, not claims
+that the four upstream skills supply a QA workflow. [QA standards](QA.md) own applicability and evidence.
