@@ -6,7 +6,8 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 const HomePage = lazy(() => import('@/pages/HomePage'));
 
 export function matchShellRoute(pathname: string) {
-  // Native same-origin links own navigation/history. No product routes or guards yet.
+  // Native same-origin links own navigation/history. This shell has only public routes;
+  // future protected registrations use GuardedRoute with the sole authority owner.
   return pathname === '/app' || pathname === '/app/'
     ? ({ name: 'home', access: 'public' } as const)
     : ({ name: 'not-found', access: 'public' } as const);
