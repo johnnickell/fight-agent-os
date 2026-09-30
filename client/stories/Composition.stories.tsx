@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from 'react';
+
+import { Button } from '@/components/Button';
+import { ContentPanel } from '@/components/ContentPanel';
+import { ContentState } from '@/components/ContentState';
+import { TextField } from '@/components/forms/TextField';
+import { Notice } from '@/components/Notice';
+
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Button } from '../src/components/Button';
-import { ContentPanel } from '../src/components/ContentPanel';
-import { ContentState } from '../src/components/ContentState';
-import { TextField } from '../src/components/forms/TextField';
-import { Notice } from '../src/components/Notice';
 
 function Examples() {
   return (
@@ -26,17 +28,9 @@ function Examples() {
         />
       </ContentPanel>
       <ContentPanel title="Loading example">
-        <ContentState
-          kind="loading"
-          title="Loading"
-          message="Waiting for example content…"
-        />
+        <ContentState kind="loading" title="Loading" message="Waiting for example content…" />
       </ContentPanel>
-      <ContentState
-        kind="empty"
-        title="No examples yet"
-        message="Nothing to display."
-      />
+      <ContentState kind="empty" title="No examples yet" message="Nothing to display." />
       <ContentState
         kind="error"
         title="Unable to load"
@@ -55,24 +49,24 @@ function Examples() {
 
 const meta = {
   title: 'Foundation/Composition',
-  component: Examples,
+  component: Examples
 } satisfies Meta<typeof Examples>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const NarrowLight: Story = {
-  globals: { viewport: { value: 'narrow', isRotated: false } },
+  globals: { viewport: { value: 'narrow', isRotated: false } }
 };
 export const WideLight: Story = {
-  globals: { viewport: { value: 'wide', isRotated: false } },
+  globals: { viewport: { value: 'wide', isRotated: false } }
 };
 export const NarrowDark: Story = {
   parameters: { mode: 'dark' },
-  globals: { viewport: { value: 'narrow', isRotated: false } },
+  globals: { viewport: { value: 'narrow', isRotated: false } }
 };
 export const WideDark: Story = {
   parameters: { mode: 'dark' },
-  globals: { viewport: { value: 'wide', isRotated: false } },
+  globals: { viewport: { value: 'wide', isRotated: false } }
 };
 
 // Only a catalog OS preview: no preference storage, bootstrap or runtime selector.

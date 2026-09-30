@@ -16,8 +16,8 @@ case "${1:-}" in
     storybook-test|storybook-capture)
         image="$browser_image"
         set -- npm run "$1" ;;
-    typecheck|lint|format-check|format|test|coverage|build|check|storybook-build) set -- npm run "$1" ;;
-    *) echo 'Usage: ./bin/client {setup|lock|versions|typecheck|lint|format-check|format|test|coverage|build|check|audit|storybook-setup|storybook-build|storybook-dev|storybook-test|storybook-capture}' >&2; exit 2 ;;
+    typecheck|lint|lint-fix|format-check|format|test|coverage|build|check|storybook-build) set -- npm run "$1" ;;
+    *) echo 'Usage: ./bin/client {setup|lock|versions|typecheck|lint|lint-fix|format-check|format|test|coverage|build|check|audit|storybook-setup|storybook-build|storybook-dev|storybook-test|storybook-capture}' >&2; exit 2 ;;
 esac
 
 mkdir -p public/build .runs/client

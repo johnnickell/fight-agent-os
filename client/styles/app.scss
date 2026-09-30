@@ -1,0 +1,12 @@
+// Shared production foundation; catalog-only presentation is composed separately.
+@use 'settings/bootstrap';
+@use 'base/tokens';
+@use 'base/document';
+@use 'layouts/shell';
+@use 'components/button';
+@use 'components/text-field';
+@use 'components/notice';
+@use 'components/content-state';
+@use 'components/content-panel';
+@use 'components/spinner';
+@use 'base/accessibility';

@@ -1,6 +1,7 @@
-import type { ApiClient } from '../../api/ApiClient';
-import { apiFailure, type ApiResult } from '../../api/ApiResult';
-import { hasExactKeys } from '../../api/decodeResponse';
+import { apiFailure, type ApiResult } from '@/api/ApiResult';
+import { hasExactKeys } from '@/api/decodeResponse';
+
+import type { ApiClient } from '@/api/ApiClient';
 
 /**
  * Holds a non-authoritative proof and its UTC Unix-second deadline in memory only
@@ -71,15 +72,14 @@ export class CsrfProofService {
     if (signal?.aborted) abort();
     else signal?.addEventListener('abort', abort, { once: true });
     const result = await this.#client.get('/auth/csrf', decodeCsrfProof, {
-      signal: controller.signal,
+      signal: controller.signal
     });
     signal?.removeEventListener('abort', abort);
     if (generation !== this.#generation) return apiFailure('cancelled');
     this.#pending = null;
     if (controller.signal.aborted) return apiFailure('cancelled');
     if (!result.ok) return result;
-    if (!this.#usable(result.value))
-      return apiFailure('protocol', result.correlationId);
+    if (!this.#usable(result.value)) return apiFailure('protocol', result.correlationId);
     this.#proof = result.value;
     return result;
   }

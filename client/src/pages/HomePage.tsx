@@ -1,4 +1,4 @@
-import { PageHeading } from '../components/PageHeading';
+import { PageHeading } from '@/components/PageHeading';
 
 export default function HomePage() {
   return (
@@ -6,8 +6,8 @@ export default function HomePage() {
       <PageHeading>Application foundation</PageHeading>
       <p>The browser shell is ready.</p>
       <p>
-        Planning, dashboard, and account journeys are not available in this
-        foundation. No application data is loaded here.
+        Planning, dashboard, and account journeys are not available in this foundation. No
+        application data is loaded here.
       </p>
     </>
   );

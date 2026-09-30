@@ -1,6 +1,7 @@
+import '../styles/app.scss';
+import './preview.scss';
+
 import type { Preview } from '@storybook/react-vite';
-import '../src/styles.css';
-import './preview.css';
 
 const preview: Preview = {
   parameters: {
@@ -10,14 +11,14 @@ const preview: Preview = {
       options: {
         narrow: {
           name: 'Narrow (320px)',
-          styles: { width: '320px', height: '900px' },
+          styles: { width: '320px', height: '900px' }
         },
         wide: {
           name: 'Wide (1280px)',
-          styles: { width: '1280px', height: '900px' },
-        },
-      },
-    },
+          styles: { width: '1280px', height: '900px' }
+        }
+      }
+    }
   },
   decorators: [
     (Story, { parameters }) => (
@@ -26,13 +27,11 @@ const preview: Preview = {
         data-bs-theme={parameters.mode === 'dark' ? 'dark' : 'light'}
       >
         <h1>Neutral component foundation</h1>
-        <p>
-          Invented local examples. Not final product design or authorization.
-        </p>
+        <p>Invented local examples. Not final product design or authorization.</p>
         <Story />
       </main>
-    ),
-  ],
+    )
+  ]
 };
 
 export default preview;

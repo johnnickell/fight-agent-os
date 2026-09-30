@@ -3,7 +3,8 @@
   "compilerOptions": { "types": ["node"] },
   "include": [
     "stories",
-    ".storybook",
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
     "vitest.storybook.config.ts",
     "src/assets.d.ts"
   ]

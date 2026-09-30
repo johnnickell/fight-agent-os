@@ -1,8 +1,10 @@
 import { createRef } from 'react';
+
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { TextField } from './TextField';
+
+import { TextField } from '@/components/forms/TextField';
 
 describe('TextField', () => {
   it('connects required labels, help, error text and the caller focus ref', async () => {
@@ -14,14 +16,12 @@ describe('TextField', () => {
         required
         description="Use local text."
         error="Enter a label."
-      />,
+      />
     );
     const field = screen.getByRole('textbox', { name: 'Example (required)' });
     expect(field).toBeRequired();
     expect(field).toHaveAttribute('aria-invalid', 'true');
-    expect(field).toHaveAccessibleDescription(
-      'Use local text. Error: Enter a label.',
-    );
+    expect(field).toHaveAccessibleDescription('Use local text. Error: Enter a label.');
     await userEvent.setup().click(screen.getByText('Example (required)'));
     expect(field).toHaveFocus();
     expect(ref.current).toBe(field);
@@ -31,7 +31,7 @@ describe('TextField', () => {
     const user = userEvent.setup();
     const change = vi.fn();
     const { rerender } = render(
-      <TextField label="Example" error="Enter a label." onChange={change} />,
+      <TextField label="Example" error="Enter a label." onChange={change} />
     );
     const field = screen.getByRole('textbox');
     expect(field).toHaveAccessibleDescription('Error: Enter a label.');
@@ -39,13 +39,7 @@ describe('TextField', () => {
     await user.type(field, 'Sample');
     expect(field).toHaveValue('Sample');
     expect(change).toHaveBeenCalledTimes(6);
-    rerender(
-      <TextField
-        label="Example"
-        description="Accepted locally."
-        onChange={change}
-      />,
-    );
+    rerender(<TextField label="Example" description="Accepted locally." onChange={change} />);
     expect(field).not.toHaveAttribute('aria-invalid');
     expect(field).toHaveAccessibleDescription('Accepted locally.');
     expect(screen.queryByText(/Error:/)).not.toBeInTheDocument();
@@ -56,7 +50,7 @@ describe('TextField', () => {
       <>
         <TextField label="Example" />
         <TextField label="Example" />
-      </>,
+      </>
     );
     const [first, second] = screen.getAllByRole('textbox', { name: 'Example' });
     expect(first?.id).not.toBe(second?.id);
@@ -71,7 +65,7 @@ describe('TextField', () => {
         type="email"
         disabled
         defaultValue="sample@example.invalid"
-      />,
+      />
     );
     const field = screen.getByRole('textbox');
     await userEvent.setup().type(field, 'changed');

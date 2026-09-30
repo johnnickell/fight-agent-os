@@ -1,0 +1,17 @@
+.catalog-notice {
+  --bs-alert-bg: var(--ui-surface);
+  --bs-alert-color: var(--ui-text);
+  --bs-alert-border-color: var(--ui-info);
+  border-inline-start-width: 0.25rem;
+  margin: 0;
+}
+
+.catalog-notice-success {
+  --bs-alert-border-color: var(--ui-success);
+}
+.catalog-notice-warning {
+  --bs-alert-border-color: var(--ui-warning);
+}
+.catalog-notice-danger {
+  --bs-alert-border-color: var(--ui-danger);
+}

@@ -1,12 +1,12 @@
-import { SystemErrorBoundary } from './components/SystemErrorBoundary';
-import { ShellLayout } from './layouts/ShellLayout';
-import { SystemErrorPage } from './pages/SystemErrorPage';
-import { ShellRoutes } from './routes/ShellRoutes';
-import { decodeRuntimeConfiguration } from './runtimeConfiguration';
+import { SystemErrorBoundary } from '@/components/SystemErrorBoundary';
+import { ShellLayout } from '@/layouts/ShellLayout';
+import { SystemErrorPage } from '@/pages/SystemErrorPage';
+import { ShellRoutes } from '@/routes/ShellRoutes';
+import { decodeRuntimeConfiguration } from '@/runtimeConfiguration';
 
 export function ShellApplication({
   configuration,
-  pathname,
+  pathname
 }: {
   configuration: string | null;
   pathname: string;
@@ -17,11 +17,7 @@ export function ShellApplication({
   return (
     <ShellLayout>
       <SystemErrorBoundary>
-        {runtime === null ? (
-          <SystemErrorPage />
-        ) : (
-          <ShellRoutes pathname={pathname} />
-        )}
+        {runtime === null ? <SystemErrorPage /> : <ShellRoutes pathname={pathname} />}
       </SystemErrorBoundary>
     </ShellLayout>
   );

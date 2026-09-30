@@ -1,0 +1,4 @@
+// Bootstrap 5.3.8 requires legacy imports internally. Keep that boundary here;
+// owned Sass uses modules. Retain upstream defaults for this appearance-preserving migration.
+// Future deliberate static Bootstrap overrides belong before this import.
+@import 'bootstrap/scss/bootstrap';

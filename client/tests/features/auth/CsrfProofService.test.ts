@@ -1,27 +1,26 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiClient, type ApiTransport } from '../../api/ApiClient';
-import { apiFailure, type ApiResult } from '../../api/ApiResult';
+
+import { ApiClient, type ApiTransport } from '@/api/ApiClient';
+import { apiFailure, type ApiResult } from '@/api/ApiResult';
 import {
-  CsrfProofService,
-  decodeCsrfProof,
   type CsrfProof,
-} from './CsrfProofService';
+  CsrfProofService,
+  decodeCsrfProof
+} from '@/features/auth/CsrfProofService';
+
 import {
   configuration,
   correlationId,
   csrfData,
   deferred,
   expiresAt,
-  jsonResponse,
-} from '../../../tests/apiFixtures';
+  jsonResponse
+} from '../../apiFixtures';
 
 const model = Object.freeze({ proof: csrfData.proof, expiresAt });
 const success: ApiResult<CsrfProof> = { ok: true, value: model, correlationId };
 
-function setup(
-  response = jsonResponse(),
-  now: () => number = () => (expiresAt - 900) * 1000,
-) {
+function setup(response = jsonResponse(), now: () => number = () => (expiresAt - 900) * 1000) {
   const fetch = vi.fn<ApiTransport>().mockResolvedValue(response);
   const client = new ApiClient(configuration, { fetch });
   const service = new CsrfProofService(client, now);
@@ -58,27 +57,14 @@ describe('CSRF bootstrap codec', () => {
       `0${expiresAt}.${'a'.repeat(64)}`,
       `${csrfData.proof}\n`,
       `${expiresAt + 1}.${'a'.repeat(64)}`,
-      `10000000000.${'a'.repeat(64)}`,
+      `10000000000.${'a'.repeat(64)}`
     ].map((proof) => ({ ...csrfData, proof })),
-    ...[
-      null,
-      [],
-      {},
-      true,
-      String(expiresAt),
-      0,
-      -1,
-      1.5,
-      NaN,
-      Infinity,
-      10000000000,
-    ].map((expires_at) => ({ ...csrfData, expires_at })),
-  ])(
-    'rejects invalid shapes, scalars, unknown fields and inconsistent proof expiry %#',
-    (data) => {
-      expect(decodeCsrfProof(data)).toBeNull();
-    },
-  );
+    ...[null, [], {}, true, String(expiresAt), 0, -1, 1.5, NaN, Infinity, 10000000000].map(
+      (expires_at) => ({ ...csrfData, expires_at })
+    )
+  ])('rejects invalid shapes, scalars, unknown fields and inconsistent proof expiry %#', (data) => {
+    expect(decodeCsrfProof(data)).toBeNull();
+  });
 });
 
 describe('volatile CSRF proof ownership', () => {
@@ -96,9 +82,7 @@ describe('volatile CSRF proof ownership', () => {
   it('uses the default clock and expires at the exact Unix-second deadline', async () => {
     const now = vi.spyOn(Date, 'now').mockReturnValue(expiresAt * 1000 - 1);
     const fetch = vi.fn<ApiTransport>().mockResolvedValue(jsonResponse());
-    const service = new CsrfProofService(
-      new ApiClient(configuration, { fetch }),
-    );
+    const service = new CsrfProofService(new ApiClient(configuration, { fetch }));
     expect((await service.bootstrap()).ok).toBe(true);
     expect(service.current()).toEqual(model);
     now.mockReturnValue(expiresAt * 1000);
@@ -111,11 +95,9 @@ describe('volatile CSRF proof ownership', () => {
     'rejects expired or unusable-clock receipt %#',
     async (now) => {
       const { service } = setup(undefined, () => now);
-      expect(await service.bootstrap()).toEqual(
-        apiFailure('protocol', correlationId),
-      );
+      expect(await service.bootstrap()).toEqual(apiFailure('protocol', correlationId));
       expect(service.current()).toBeNull();
-    },
+    }
   );
 
   it('removes an old proof immediately on replacement and propagates safe failure', async () => {
@@ -125,9 +107,7 @@ describe('volatile CSRF proof ownership', () => {
     fetch.mockReturnValue(pending.promise);
     const second = service.bootstrap();
     expect(service.current()).toBeNull();
-    pending.resolve(
-      jsonResponse({ status: 'error', message: 'Forbidden.' }, 403),
-    );
+    pending.resolve(jsonResponse({ status: 'error', message: 'Forbidden.' }, 403));
     expect(await second).toEqual(apiFailure('authorization', correlationId));
     expect(service.current()).toBeNull();
   });
@@ -138,9 +118,7 @@ describe('volatile CSRF proof ownership', () => {
       const first = deferred<Response>();
       const second = deferred<Response>();
       const { service, fetch } = setup();
-      fetch
-        .mockReturnValueOnce(first.promise)
-        .mockReturnValueOnce(second.promise);
+      fetch.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
       const old = service.bootstrap();
       const current = service.bootstrap();
       expect(fetch.mock.calls[0]![1].signal?.aborted).toBe(true);
@@ -150,7 +128,7 @@ describe('volatile CSRF proof ownership', () => {
       else first.reject(new Error('synthetic-secret'));
       expect(await old).toEqual(apiFailure('cancelled'));
       expect(service.current()).toEqual(model);
-    },
+    }
   );
 
   it.each([success, apiFailure('authentication', correlationId)])(
@@ -160,15 +138,13 @@ describe('volatile CSRF proof ownership', () => {
       const first = deferred<ApiResult<CsrfProof>>();
       // A client double deliberately ignores cancellation: the service's generation
       // fence, not transport cooperation, must protect its owned state.
-      vi.spyOn(client, 'get')
-        .mockReturnValueOnce(first.promise)
-        .mockResolvedValueOnce(success);
+      vi.spyOn(client, 'get').mockReturnValueOnce(first.promise).mockResolvedValueOnce(success);
       const old = service.bootstrap();
       expect(await service.bootstrap()).toEqual(success);
       first.resolve(obsolete);
       expect(await old).toEqual(apiFailure('cancelled'));
       expect(service.current()).toEqual(model);
-    },
+    }
   );
 
   it('does not repopulate after clear even if the client ignores abort', async () => {
@@ -185,9 +161,7 @@ describe('volatile CSRF proof ownership', () => {
   it('forwards external abort, removes its listener and permits an explicit later attempt', async () => {
     const { service, fetch } = setup();
     const pending = deferred<Response>();
-    fetch
-      .mockReturnValueOnce(pending.promise)
-      .mockResolvedValueOnce(jsonResponse());
+    fetch.mockReturnValueOnce(pending.promise).mockResolvedValueOnce(jsonResponse());
     const controller = new AbortController();
     const remove = vi.spyOn(controller.signal, 'removeEventListener');
     const result = service.bootstrap(controller.signal);
@@ -207,9 +181,7 @@ describe('volatile CSRF proof ownership', () => {
     await service.bootstrap();
     const controller = new AbortController();
     controller.abort();
-    expect(await service.bootstrap(controller.signal)).toEqual(
-      apiFailure('cancelled'),
-    );
+    expect(await service.bootstrap(controller.signal)).toEqual(apiFailure('cancelled'));
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(service.current()).toBeNull();
   });
@@ -217,13 +189,11 @@ describe('volatile CSRF proof ownership', () => {
   it('rejects cancellation between client completion and state publication', async () => {
     const { client, service } = setup();
     const controller = new AbortController();
-    vi.spyOn(client, 'get').mockImplementationOnce(async () => {
+    vi.spyOn(client, 'get').mockImplementationOnce(() => {
       controller.abort();
-      return success;
+      return Promise.resolve(success);
     });
-    expect(await service.bootstrap(controller.signal)).toEqual(
-      apiFailure('cancelled'),
-    );
+    expect(await service.bootstrap(controller.signal)).toEqual(apiFailure('cancelled'));
     expect(service.current()).toBeNull();
   });
 });
@@ -231,7 +201,7 @@ describe('volatile CSRF proof ownership', () => {
 describe('secret-safe boundary', () => {
   it('never reads cookies or writes credentials, response data or raw diagnostics to browser sinks', async () => {
     const logs = ['log', 'info', 'warn', 'error', 'debug'].map((method) =>
-      vi.spyOn(console, method as 'log').mockImplementation(() => undefined),
+      vi.spyOn(console, method as 'log').mockImplementation(() => undefined)
     );
     const getCookie = vi.spyOn(document, 'cookie', 'get');
     const setCookie = vi.spyOn(document, 'cookie', 'set');
@@ -248,37 +218,33 @@ describe('secret-safe boundary', () => {
         'Set-Cookie': `future-refresh=${cookie}; Secure; HttpOnly`,
         Authorization: `Bearer ${token}`,
         'X-CSRF-Proof': csrfData.proof,
-        'X-Correlation-ID': 'unsafe-secret-correlation',
-      },
+        'X-Correlation-ID': 'unsafe-secret-correlation'
+      }
     );
     const getHeader = vi.spyOn(response.headers, 'get');
     const fetch = vi
       .fn<ApiTransport>()
       .mockResolvedValueOnce(response)
       .mockRejectedValueOnce(
-        new Error(
-          `${token} ${cookie} ${csrfData.proof} https://secret.invalid?secret=canary`,
-        ),
+        new Error(`${token} ${cookie} ${csrfData.proof} https://secret.invalid?secret=canary`)
       )
       .mockResolvedValueOnce(jsonResponse());
     const client = new ApiClient(configuration, {
       fetch,
-      accessTokens: { getAccessToken: () => token },
+      accessTokens: { getAccessToken: () => token }
     });
     const service = new CsrfProofService(client, () => (expiresAt - 1) * 1000);
     expect(await service.bootstrap()).toEqual(apiFailure('protocol'));
-    expect(
-      await client.get('/auth/csrf', decodeCsrfProof, { access: 'required' }),
-    ).toEqual(apiFailure('network'));
+    expect(await client.get('/auth/csrf', decodeCsrfProof, { access: 'required' })).toEqual(
+      apiFailure('network')
+    );
     expect(await service.bootstrap()).toEqual(success);
     expect(getHeader.mock.calls.map(([name]) => name)).toEqual([
       'X-Correlation-ID',
       'Content-Type',
-      'Cache-Control',
+      'Cache-Control'
     ]);
-    expect(JSON.stringify({ client, service })).toBe(
-      '{"client":{},"service":{}}',
-    );
+    expect(JSON.stringify({ client, service })).toBe('{"client":{},"service":{}}');
     for (const sink of [
       ...logs,
       getCookie,
@@ -286,7 +252,7 @@ describe('secret-safe boundary', () => {
       getStorage,
       setStorage,
       pushHistory,
-      replaceHistory,
+      replaceHistory
     ]) {
       expect(sink).not.toHaveBeenCalled();
     }

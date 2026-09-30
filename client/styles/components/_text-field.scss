@@ -1,0 +1,25 @@
+.catalog-field .form-control {
+  min-height: 2.75rem;
+  background-color: var(--ui-surface);
+  color: var(--ui-text);
+}
+
+.catalog-field .form-control:disabled {
+  background-color: var(--ui-background);
+  color: var(--ui-muted);
+}
+
+.catalog-field .form-control:focus {
+  border-color: var(--ui-focus);
+  box-shadow: none;
+}
+
+.catalog-field .form-control.is-invalid {
+  /* Text feedback carries meaning; avoid Bootstrap's embedded decorative image. */
+  background-image: none;
+  padding-right: 0.75rem;
+}
+
+.catalog-field p {
+  margin-block: 0.5rem 0;
+}

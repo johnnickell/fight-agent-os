@@ -13,11 +13,7 @@ export function ShellLayout({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="container shell-width py-5"
-      >
+      <main id="main-content" tabIndex={-1} className="container shell-width py-5">
         {children}
       </main>
       <footer className="border-top py-3">

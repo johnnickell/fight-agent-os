@@ -1,17 +1,22 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { Button } from './Button';
+
+import { Button } from '@/components/Button';
+
+import type { ComponentProps } from 'react';
 
 describe('Button', () => {
   it('defaults to a non-submitting button and activates by keyboard', async () => {
     const user = userEvent.setup();
     const click = vi.fn();
-    const submit = vi.fn((event) => event.preventDefault());
+    const submit = vi.fn<NonNullable<ComponentProps<'form'>['onSubmit']>>((event) =>
+      event.preventDefault()
+    );
     render(
       <form onSubmit={submit}>
         <Button onClick={click}>Continue</Button>
-      </form>,
+      </form>
     );
     await user.tab();
     expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
@@ -22,7 +27,9 @@ describe('Button', () => {
 
   it('retains focus when becoming busy, suppresses submission, and resumes on completion', async () => {
     const user = userEvent.setup();
-    const submit = vi.fn((event) => event.preventDefault());
+    const submit = vi.fn<NonNullable<ComponentProps<'form'>['onSubmit']>>((event) =>
+      event.preventDefault()
+    );
     const click = vi.fn();
     const form = (busy: boolean) => (
       <form onSubmit={submit}>
@@ -60,7 +67,7 @@ describe('Button', () => {
           Unavailable
         </Button>
         <Button>Next</Button>
-      </>,
+      </>
     );
     await user.click(screen.getByRole('button', { name: 'Unavailable' }));
     await user.tab();
@@ -76,12 +83,12 @@ describe('Button', () => {
       render(
         <Button aria-disabled={disabled} onClick={click}>
           Unavailable
-        </Button>,
+        </Button>
       );
       await user.tab();
       await user.keyboard('{Enter} ');
       expect(click).not.toHaveBeenCalled();
-    },
+    }
   );
 
   it('supports a button without a callback and a default busy label', async () => {

@@ -1,4 +1,5 @@
 import { useId } from 'react';
+
 import type { ComponentPropsWithRef } from 'react';
 
 type TextFieldProps = Omit<
@@ -26,9 +27,7 @@ export function TextField({
   const id = useId();
   const helpId = `${id}-help`;
   const errorId = `${id}-error`;
-  const describedBy = [description ? helpId : '', error ? errorId : '']
-    .filter(Boolean)
-    .join(' ');
+  const describedBy = [description ? helpId : '', error ? errorId : ''].filter(Boolean).join(' ');
   return (
     <div className="catalog-field">
       <label className="form-label" htmlFor={id}>

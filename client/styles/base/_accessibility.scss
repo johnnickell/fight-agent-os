@@ -1,28 +1,3 @@
-@import 'bootstrap/dist/css/bootstrap.css';
-@import './tokens.css';
-
-/* TASK-00050 owns preference bootstrap and theme controls. */
-
-body {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-#app {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-main {
-  flex: 1;
-}
-
-.shell-width {
-  max-width: 64rem;
-}
-
 :focus-visible,
 .btn:focus-visible,
 .form-control:focus-visible {
@@ -46,6 +21,11 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :root,
+  [data-bs-theme] {
+    --ui-motion: 0ms;
+  }
+
   *,
   *::before,
   *::after {

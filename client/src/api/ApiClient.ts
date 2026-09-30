@@ -1,6 +1,7 @@
-import type { RuntimeConfiguration } from '../runtimeConfiguration';
-import { apiFailure, type ApiResult } from './ApiResult';
-import { decodeResponse, type ResponseDecoder } from './decodeResponse';
+import { apiFailure, type ApiResult } from '@/api/ApiResult';
+import { decodeResponse, type ResponseDecoder } from '@/api/decodeResponse';
+
+import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 
 /**
  * Reads the current access credential from its future volatile authentication owner
@@ -14,10 +15,7 @@ export type GetOptions = Readonly<{
   access?: 'required';
 }>;
 
-export type ApiTransport = (
-  url: string,
-  init: RequestInit,
-) => Promise<Response>;
+export type ApiTransport = (url: string, init: RequestInit) => Promise<Response>;
 
 /**
  * Owns same-origin GET transport without retries, persistence or authentication policy
@@ -32,12 +30,9 @@ export class ApiClient {
     dependencies: Readonly<{
       fetch?: ApiTransport;
       accessTokens?: AccessTokenProvider;
-    }> = {},
+    }> = {}
   ) {
-    if (
-      configuration.schemaVersion !== 1 ||
-      configuration.apiBasePath !== '/api/v1'
-    ) {
+    if (configuration.schemaVersion !== 1 || configuration.apiBasePath !== '/api/v1') {
       throw new Error('Invalid API configuration');
     }
     this.#basePath = configuration.apiBasePath;
@@ -51,7 +46,7 @@ export class ApiClient {
   get<T>(
     path: string,
     decode: ResponseDecoder<T>,
-    options: GetOptions = {},
+    options: GetOptions = {}
   ): Promise<ApiResult<T>> {
     const { signal } = options;
     if (signal?.aborted) return Promise.resolve(apiFailure('cancelled'));
@@ -65,23 +60,18 @@ export class ApiClient {
       };
       const abort = () => finish(apiFailure('cancelled'));
       signal?.addEventListener('abort', abort, { once: true });
-      void this.#request(path, decode, options).then(finish, () =>
-        finish(apiFailure('system')),
-      );
+      void this.#request(path, decode, options).then(finish, () => finish(apiFailure('system')));
     });
   }
 
   async #request<T>(
     path: string,
     decode: ResponseDecoder<T>,
-    options: GetOptions,
+    options: GetOptions
   ): Promise<ApiResult<T>> {
     // Paths belong to feature services, not user input. No query, fragment, encoding,
     // dot segments, backslash, authority or alternative origin is supported yet.
-    if (
-      path.length > 2048 ||
-      !/^\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+(?![\s\S])/.test(path)
-    ) {
+    if (path.length > 2048 || !/^\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+(?![\s\S])/.test(path)) {
       return apiFailure('protocol');
     }
     const headers = new Headers({ Accept: 'application/json' });
@@ -107,7 +97,7 @@ export class ApiClient {
         cache: 'no-store',
         redirect: 'error',
         referrerPolicy: 'no-referrer',
-        ...(options.signal ? { signal: options.signal } : {}),
+        ...(options.signal ? { signal: options.signal } : {})
       });
     } catch {
       return apiFailure('network');
@@ -115,9 +105,7 @@ export class ApiClient {
     if (options.signal?.aborted) return apiFailure('cancelled');
     const correlation = response.headers.get('X-Correlation-ID');
     const correlationId =
-      correlation !== null && /^[a-f0-9]{32}(?![\s\S])/.test(correlation)
-        ? correlation
-        : null;
+      correlation !== null && /^[a-f0-9]{32}(?![\s\S])/.test(correlation) ? correlation : null;
     if (
       response.redirected ||
       response.headers.get('Content-Type') !== 'application/json' ||

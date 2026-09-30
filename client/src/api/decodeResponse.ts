@@ -1,4 +1,4 @@
-import { apiFailure, type ApiFailureKind, type ApiResult } from './ApiResult';
+import { apiFailure, type ApiFailureKind, type ApiResult } from '@/api/ApiResult';
 
 export type ResponseDecoder<T> = (data: unknown) => T | null;
 
@@ -7,7 +7,7 @@ export type ResponseDecoder<T> = (data: unknown) => T | null;
  */
 export function hasExactKeys(
   value: unknown,
-  keys: readonly string[],
+  keys: readonly string[]
 ): value is Record<string, unknown> {
   return (
     typeof value === 'object' &&
@@ -26,7 +26,7 @@ const errors: Readonly<Record<number, readonly [ApiFailureKind, string]>> = {
   405: ['method-not-allowed', 'Method not allowed.'],
   409: ['conflict', 'Conflict.'],
   410: ['gone', 'Gone.'],
-  429: ['rate-limited', 'Too many requests.'],
+  429: ['rate-limited', 'Too many requests.']
 };
 
 /**
@@ -46,11 +46,8 @@ function isValidationData(data: unknown): boolean {
         /^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*(?![\s\S])/.test(field) &&
         Array.isArray(messages) &&
         messages.length > 0 &&
-        messages.every(
-          (message: unknown) =>
-            typeof message === 'string' && message.length > 0,
-        ) &&
-        new Set(messages).size === messages.length,
+        messages.every((message: unknown) => typeof message === 'string' && message.length > 0) &&
+        new Set(messages).size === messages.length
     )
   );
 }
@@ -62,7 +59,7 @@ export function decodeResponse<T>(
   status: number,
   envelope: unknown,
   decode: ResponseDecoder<T>,
-  correlationId: string | null,
+  correlationId: string | null
 ): ApiResult<T> {
   if (hasExactKeys(envelope, ['status', 'data'])) {
     if (status === 200 && envelope.status === 'success') {
@@ -79,10 +76,7 @@ export function decodeResponse<T>(
       return apiFailure('validation', correlationId);
     }
   }
-  if (
-    hasExactKeys(envelope, ['status', 'message']) &&
-    envelope.status === 'error'
-  ) {
+  if (hasExactKeys(envelope, ['status', 'message']) && envelope.status === 'error') {
     const expected =
       status >= 500 && status <= 599
         ? (['system', 'Internal server error.'] as const)
