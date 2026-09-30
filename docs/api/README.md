@@ -1,66 +1,137 @@
-# Representative API contract
+# Attribute-owned API contract
 
-[`openapi.yaml`](openapi.yaml) is the authoritative representative transport description, in OpenAPI 3.0.3
-YAML. It documents **only `GET /api/v1/auth/csrf`** as an operation. Reusable routing responses and existing
-failure-mapper schemas are not endpoints. The version labels this document, not an authentication release.
+PHP `OpenApi\Attributes` are the single authored OpenAPI **3.0.3** source. TASK-00153 replaces the former
+handwritten `docs/api/openapi.yaml`; no independently maintained YAML or tracked generated specification remains.
+TASK-00021's YAML receipts are historical evidence, not the current input. The document still describes **only
+`GET /api/v1/auth/csrf`**. Its `info.version: 0.1.0` labels the representative contract, not an authentication
+release; this source-format migration does not deliver new operations.
 
-## Validate locally
+## Export and validate
 
-After `./bin/composer install` and `./bin/up`:
+Install locked development tools explicitly and start Docker first:
 
 ```sh
-./bin/openapi
+./bin/composer install --no-interaction --prefer-dist --no-progress
+./bin/up
+./bin/openapi export
+./bin/openapi check  # also the default when no argument is supplied
 ./bin/build
 ```
 
-`bin/openapi` runs the Composer-pinned `devizzent/cebe-php-openapi` **1.1.5** structural/reference/schema
-validator, followed by focused application HTTP and failure-mapper tests. `league/openapi-psr7-validator`
-**0.24** compares real PSR-7 responses with the operation and reusable schemas. All transitive versions are
-locked in `composer.lock`. Both tools are development dependencies, never runtime middleware. YAML was chosen
-for readable review; OpenAPI 3.0.3 matches this validator's supported 3.0 family rather than claiming 3.1 support.
-References are document-local and validator meta-schemas ship with the locked package: no network is needed
-after installation. No generated spec or remotely fetched examples are involved.
+`export` generates and validates a complete JSON document, writes and checks identical temporary bytes, then
+atomically replaces **`.runs/openapi/openapi.json`**. The directory is ignored and outside `public/`; the file
+is mode 0600 and a newly created output directory is 0700. Source and artifact locations are fixed, symlinks
+are rejected, and the command accepts no arbitrary scan/output path. Export neither installs dependencies nor
+rewrites source, loads application configuration, connects to services, or enables an HTTP route.
 
-The drift tests exercise issuance, nonce reuse/replacement, body/content-type/cookie/query rejection,
-HTTPS/origin/Fetch Metadata rejection, preflight denial, routing misses and a failed dependency through the
-real bootstrap. They check exact content type, no-store, safe correlation and absent CORS separately from
-schema validation. Mapper-only output is checked at its existing unit boundary. Negative evidence is actual
-application rejection/failure, **not** deliberately corrupted specs or tests of the validator.
+`check` regenerates/validates in memory, requires byte-for-byte equality with the existing artifact, then runs
+focused real HTTP and failure-mapper tests. Missing/stale output fails with instructions to export; check never
+repairs it. Both modes print the content SHA-256 only on success. Export failure returns nonzero with a safe
+stage diagnostic, cleans its temporary output, and does not replace the old artifact. **A retained file is not
+proof of a successful current export.** Correct the reported stage and rerun export/check; never package a stale
+file after a failed invocation. These local mode bits are not a sandbox claim: the qualified Docker Desktop
+bind mount also allowed the container's `nobody` user to write. Protect the host checkout and Docker access;
+future HTTP authorization is a separate boundary.
 
-`./bin/build` already runs these behavioral tests through PHPUnit. Standalone document validation remains an
-explicit `./bin/openapi` requirement until TICKET-00013's complete-gate integration. Do not substitute one for
-the other. Tests of scripts, YAML prose, configuration text or the validator are intentionally absent.
+The JSON embeds `x-source-sha256`, computed from sorted relative source names and bytes, `composer.json`,
+`composer.lock`, and the generation scripts. Object keys are sorted; list order is preserved. There are no
+clocks, host paths or environment values in generated output. Preserve the successful command's content hash
+and source hash with release evidence outside tracked source. A clean regeneration of identical inputs produces
+identical bytes. Source changes during generation fail rather than certifying a mixed snapshot.
 
-## Exposure and diagnostics policy
+The owning implementation is `scripts/OpenApi/Document.php`, with CLI publication in `scripts/openapi.php`.
+It uses attribute-only reflection without copying PHP docblocks into the public description, fails on generator
+warnings, permits only document-local `$ref`s before resolution, and validates structure/references against the
+installed 3.0 meta-schema. It uses the validator library API in memory: the locked vendor CLI's STDIN path cannot
+resolve local references without an absolute base. Direct file validation remains available:
 
-The publication is the tracked repository document, **not an HTTP route**. No spec copy exists in `public/`;
-there is no Swagger dependency, CDN asset, UI route, enabling flag, authorization bypass or diagnostic route.
-Swagger UI is unavailable in **development, test and production**, including to authenticated callers. An
-optional hosted viewer was not needed for this representative slice; enabling one later requires an explicit
-environment allowlist and approved access control. Repository read access is the only documentation access
-policy today. Do not submit real tokens or cookies to an external viewer.
+```sh
+./bin/exec php -d allow_url_fopen=0 vendor/bin/php-openapi validate .runs/openapi/openapi.json
+```
 
-Unknown documentation/diagnostic URLs receive safe routing failures. Non-API exceptions use Slim's
-non-diagnostic fallback without raw exception logging; existing API failures keep their correlated sanitized
-JSend boundary. The public entry point suppresses PHP error display before application boot. This fixes an
-observed `/swagger` miss that previously emitted an uncaught stack and internal paths. It is not a new web
-logging/observability system or proof of deployment enrollment. CORS remains absent, with no approved
-cross-origin contract and no credentialed preflight.
+### Qualified dependencies
+
+Composer pins the generator and validators; all transitive versions are locked. Qualification used PHP 8.5.10
+in Docker with Composer's platform fixed to 8.5.4. The deliberate update adds three packages and upgrades none:
+
+| Package | Version | License | Source commit |
+|---|---|---|---|
+| `zircote/swagger-php` | 6.11.0 | Apache-2.0 | `f998f7e712658fba61f86fccbdcf8e301a982175` |
+| `radebatz/type-info-extras` | 1.0.9 | MIT | `2d9f01d60d642f890d9f170c0d8fde1f75ab17fb` |
+| `symfony/type-info` | 8.1.8 | MIT | `18e1d891f0b8776141f281f7b6f5e67e4df9d9cd` |
+| `devizzent/cebe-php-openapi` (unchanged) | 1.1.5 | MIT | `6e5fcc8810bfe8ad55d1b40764bff6417f485984` |
+| `league/openapi-psr7-validator` (unchanged) | 0.24 | MIT | `10675b6eb7eb100ebe99378206272a963ed764e7` |
+
+These are development tools, not request middleware. OpenAPI 3.1 is not adopted. No network, external `$ref`
+fetch, CDN validator or remote example is needed after installation. No Fight package contracts are duplicated.
+
+### Response checks and gate coordination
+
+`tests/Support/ApiContract.php` generates a fresh in-memory projection once per PHP test process using the same
+owning generator/validator, then the pinned PSR-7 validator compares actual responses with its operation/schemas.
+It never trusts a pre-existing artifact or writes one. Existing coverage includes issuance, nonce reuse/replacement,
+body/content-type/cookie/query rejection, HTTPS/origin/Fetch Metadata rejection, preflight denial, routing misses
+and a failed dependency through the real bootstrap. Exact content type, no-store, safe correlation and absent
+CORS are checked separately. Mapper-only output remains checked at its existing unit boundary.
+
+`./bin/build` already runs these behavioral tests through PHPUnit; it does not export/package an artifact.
+Standalone artifact freshness/validation remains an explicit `./bin/openapi check` requirement until
+[TASK-00033](../../planning/tasks/00033-TASK.md) integrates the owning command into the complete gate. Do not add
+another orchestrator or call export as an acceptance side effect. Direct tooling checks, not product tests of
+attributes, generated JSON, wrappers or deliberately corrupted validator fixtures, qualify generation.
+
+## Owning feature conventions
+
+When implementing an API operation:
+
+1. Put its operation attribute on the actual Action's `__invoke` under `src/Adapter/Http/Action/Api/`.
+   Give it an explicit stable operation ID, actual path/method, input/security and response contracts.
+2. Put endpoint response schemas with their Responder under `src/Adapter/Http/Responder/Api/`.
+   Shared safe failures, headers and document/security metadata live under `src/Adapter/Http/Api/OpenApi/`.
+   These three directories are the bounded scan scope, not vendor code or arbitrary filesystem input.
+3. Author descriptions explicitly in attributes. Use exact JSend/snake_case, status/header and sensitive-input
+   semantics; reuse shared local references. Never infer an endpoint from a response schema or publish a future
+   route as available. Synthetic examples must contain no credentials, personal data or private configuration.
+4. Preserve real response-to-contract checks and add the owning operation's behavior evidence. Run export,
+   check and the canonical build; review the operation inventory and hashes before handing off.
+
+Shared routing responses and mapper-only schemas are not operations. Public-safe validation metadata planned in
+TASK-00151 has a different security boundary from protected Swagger; when implemented, its owner must add the
+actual operation here, not introduce another specification. The migration makes object types inferred by the
+generator explicit in the output of existing `allOf` object constraints; their accepted real response shapes
+are unchanged.
+
+## Packaging and exposure
+
+For a future package/deployment that consumes this artifact, the build stage must install the locked dev tools,
+export, check and record source/content hashes from the exact source tree being packaged. Carry the private
+artifact and receipt together outside public assets. Do not install generation tools or reflect attributes per
+HTTP request. A runtime installed with `--no-dev` needs no generator to execute current Actions; PHP leaves their
+OpenAPI attributes uninstantiated. An independently copied old artifact never substitutes for current build proof.
+
+No Swagger UI assets, HTTP spec endpoint, static copy, alias or symlink are enabled in **any environment**,
+including `local`. Unknown documentation/diagnostic requests retain safe routing failures; public PHP error
+display stays disabled and CORS stays absent. Repository access and local filesystem access are the only current
+document access boundaries. Do not submit tokens or cookies to an external viewer.
+
+[TASK-00154](../../planning/tasks/00154-TASK.md) separately owns the themed viewer and guarded document reads:
+exact `APP_ENV=local` **and** current authoritative `READ_SWAGGER` are required. Neither a role claim, APP_DEBUG,
+public validation metadata nor this export command enables that future permission boundary.
 
 ## Current versus future security
 
 Bootstrap accepts no body, Content-Type or query. It creates/reuses an HttpOnly nonce cookie and returns a
-short-lived MAC proof, not authentication. Its Origin header is optional but exact when present; Fetch Metadata
-is optional but must be `same-origin` when present. These are current GET semantics, not mutation exemptions.
+short-lived MAC proof, not authentication. Origin is optional but exact when present; Fetch Metadata is optional
+but must be `same-origin` when present. These are current GET semantics, not mutation exemptions.
 
 The unused `FutureAccessBearer` scheme describes **memory-only access-token transport**. Opaque refresh
-credentials are instead browser-managed HttpOnly cookies; their eventual exact cookie name and operations are
-not invented here. `x-future-browser-security` records the accepted cookie and mutation semantics from
-[ADR 0003](../../planning/adr/0003-browser-authentication-security-profile.md). There is intentionally no cookie
-`apiKey` scheme inviting users to type refresh credentials. No credential examples are published.
+credentials are browser-managed HttpOnly cookies; their eventual exact cookie name and operations are not
+invented here. `x-future-browser-security` retains the accepted cookie/mutation policy from
+[ADR 0003](../../planning/adr/0003-browser-authentication-security-profile.md). No cookie `apiKey` scheme invites
+manual refresh credentials, and no credential examples are published.
 
-Dotted snake_case validation paths are supported by the existing DTO boundary and described in the generic
-`ValidationFail` dictionary; OpenAPI 3.0 cannot constrain dictionary key names. Bootstrap narrows this to `body`
-or `cookie`. No real body-bearing operation exists yet, so dotted-field HTTP matrices and authenticated
-401/409/422 journeys remain deferred to their owning tasks. Schema checks do not prove MAC correctness,
-server authorization or a complete authentication journey; existing focused security tests cover CSRF policy.
+The generic `ValidationFail` dictionary describes supported dotted snake_case paths, which OpenAPI 3.0 cannot
+constrain by key name. Bootstrap narrows this to `body` or `cookie`. No body-bearing operation exists yet, so
+HTTP dotted-field matrices and authenticated 401/409/422 journeys remain deferred to their owning TASKs.
+Schema checks do not prove MAC correctness, server authorization or a complete authentication journey;
+existing focused security tests cover CSRF policy.
