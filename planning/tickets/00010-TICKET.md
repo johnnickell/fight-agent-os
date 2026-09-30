@@ -143,7 +143,7 @@ rather than bypassing auth or leaking credentials to make the viewer appear comp
 | [TASK-00020](../tasks/00020-TASK.md) | Centralize correlated and sanitized API failures | done |
 | [TASK-00021](../tasks/00021-TASK.md) | Publish and restrict the representative OpenAPI contract | done |
 | [TASK-00117](../tasks/00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | ready-for-agent |
-| [TASK-00153](../tasks/00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | in-progress |
+| [TASK-00153](../tasks/00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done |
 | [TASK-00154](../tasks/00154-TASK.md) | Serve local-only permission-gated Swagger with shared credentials and themes | ready-for-agent |
 <!-- /planning:children -->
 
@@ -153,8 +153,9 @@ The human approved `READ_SWAGGER` as a managed `SUPER_ADMIN_ONLY` permission for
 with explicit managed-policy/authentication/theme prerequisites, safe APP_ENV/APP_DEBUG projection, shared
 memory credentials and initially collapsed tag groups/operations. Neither TASK-00021 nor TASK-00117 is marked
 as having delivered these new capabilities. TASK-00153 now implements the private attribute-owned export with
-local verification; independent review and QA remain pending. TASK-00154's viewer/serving boundary is still
-unimplemented, and no HTTP documentation exposure is enabled.
+local verification, independent technical acceptance and behavioral QA PASS for candidate `78a2c56`.
+TASK-00153 records the acceptance and separate landing checkpoint; PR publication does not imply merge.
+TASK-00154's viewer/serving boundary is still unimplemented, and no HTTP documentation exposure is enabled.
 
 Planning amendment verification on `feature/planning-swagger-permission`: `./bin/planning-check --write` and `./bin/planning-check` passed (192 records, 138 active; views current); `git diff --check` passed; `./bin/build` passed (7 terminal tests; Deptrac: 658 allowed, no violations/warnings/errors; PHPUnit: 182 tests, 1500 assertions). The HTTP failure test emitted a sanitized error log; no gate warnings or failures were reported. These checks verify planning consistency and the existing suite, not future Swagger authorization. Independent review is pending; publication and merge remain separate.
 

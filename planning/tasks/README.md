@@ -155,6 +155,6 @@
 | [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | done | — |
 | [TASK-00151](00151-TASK.md) | Export and serve public-safe form validation schemas | ready-for-agent | [TICKET-00036](../tickets/00036-TICKET.md) |
 | [TASK-00152](00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | ready-for-agent | [TICKET-00036](../tickets/00036-TICKET.md) |
-| [TASK-00153](00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | in-progress | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00153](00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00154](00154-TASK.md) | Serve local-only permission-gated Swagger with shared credentials and themes | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 <!-- /planning:records -->
