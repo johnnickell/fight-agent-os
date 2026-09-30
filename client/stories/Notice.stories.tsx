@@ -1,3 +1,5 @@
+import { expect, within } from 'storybook/test';
+
 import { Notice } from '@/components/Notice';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -14,7 +16,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Information: Story = {};
+export const Information: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('status')).toHaveAttribute('aria-atomic', 'true');
+    await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+  }
+};
 export const Warning: Story = {
   args: {
     tone: 'warning',
@@ -28,6 +36,11 @@ export const Failure: Story = {
     title: 'Error',
     children: 'The example could not be completed.',
     announce: 'assertive'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('alert')).toHaveAttribute('aria-atomic', 'true');
+    await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
   }
 };
 export const Success: Story = {

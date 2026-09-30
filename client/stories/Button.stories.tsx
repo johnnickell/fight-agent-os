@@ -17,6 +17,8 @@ export const Ready: Story = {
     const button = within(canvasElement).getByRole('button', {
       name: 'Continue'
     });
+    await expect(button.tagName).toBe('BUTTON');
+    await expect(button).toHaveAttribute('type', 'button');
     await userEvent.click(button);
     await expect(args.onClick).toHaveBeenCalledOnce();
   }
@@ -36,6 +38,9 @@ export const Busy: Story = {
     });
     await userEvent.click(button);
     await expect(button).toHaveAttribute('aria-busy', 'true');
+    await expect(button).toHaveAttribute('aria-disabled', 'true');
+    await expect(button).not.toBeDisabled();
+    await expect(button).toHaveFocus();
     await expect(args.onClick).not.toHaveBeenCalled();
   }
 };

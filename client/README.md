@@ -31,7 +31,8 @@ Selected from registry engine/peer contracts and qualified by clean installation
 - Node **24.21.0**, npm **11.19.0**, official Bookworm-slim image pinned by digest in `bin/client`.
   Node 24 is the [LTS line](https://github.com/nodejs/Release#release-schedule); npm is its bundled manager,
   avoiding a second bootstrap dependency. The manifest enforces exact engines and manager version.
-- React/React DOM **19.3.0**, TypeScript **6.0.3**, ESBuild **0.28.2**, Bootstrap **5.3.8**.
+- React/React DOM **19.3.0**, TypeScript **6.0.3**, ESBuild **0.28.2**, Bootstrap **5.3.8**,
+  React-Bootstrap **2.10.10** (see [control qualification](#standard-controls)).
 - Vitest/coverage-v8 **4.1.11**, RTL **16.3.3**, jest-dom **6.9.1**, jsdom **30.1.1**.
 - Storybook/react-vite/a11y/Vitest addon **10.4.6**, browser-playwright **4.1.11**,
   Playwright **1.61.0**, axe-core **4.13.0**. See [catalog qualification](#component-catalog).
@@ -73,6 +74,40 @@ integration and final quality thresholds. Run both gates for this shell.
   `./bin/client lint` and `format-check` do not fix or install anything; use `lint-fix` and `format` explicitly,
   review their diff, then run `check`. Dependency changes use explicit `lock`/`setup`, never acceptance checks.
 
+### Standard controls
+
+Prefer React-Bootstrap directly for standard buttons/forms, alerts/spinners, accordions/collapse,
+modals/offcanvas, dropdowns, tabs/navigation and tooltips/popovers. Import the supported component at its
+point of use, e.g. `import Accordion from 'react-bootstrap/Accordion'`; do not create a local library barrel,
+registry or a wrapper that merely renames/forwards its API. Use supported React props and controlled/uncontrolled
+state contracts, never Bootstrap's imperative JavaScript plugins or `data-bs-toggle` wiring. Bootstrap SCSS owns
+appearance; React-Bootstrap owns standard React UI mechanics. Add catalog examples and relevant keyboard,
+focus and state checks when an actual scoped use case adopts a control; do not build unused galleries.
+
+Keep an owned component when it adds application meaning, a repeated composition or additional behavior.
+The [catalog responsibility table](#component-catalog) describes the five retained contracts:
+`Button` adds focus-preserving busy labels and activation/submission suppression to the library button;
+`TextField` connects labels/help/errors and caller refs using FormLabel/FormControl/FormText/Feedback;
+`Notice` uses Alert without its transition so explicit status/alert/no-role and atomicity reach the native div;
+`ContentState` composes Notice/Button and a decorative library Spinner with caller-owned states/retry.
+`ContentPanel` retains its named section/header semantics unchanged: a Card/Container wrapper would add no
+useful mechanics. Shell recovery remains a native navigation link, not a library Button: the latter's anchor
+mode supplies button role/Space-key behavior, which would change the accepted link contract. Decorative spinners
+are hidden from accessibility APIs; adjacent text owns the meaning.
+Button and Notice select an empty library variant so the existing semantic custom-property styling remains
+in control, rather than layering an unrelated default primary variant. No new theme is selected.
+
+Qualified exact **2.10.10** against the locked stack above and Storybook **10.4.6**, using strict TypeScript
+and actual owned unit/browser interactions. Its [published peer contract](https://registry.npmjs.org/react-bootstrap/2.10.10)
+accepts React/React DOM >=16.14.0 and @types/react >=16.14.8; its
+[release-source compatibility table](https://github.com/react-bootstrap/react-bootstrap/blob/8b1cb721001cb1a47b068002d1bed12d12b8d88b/README.md#bootstrap-compatibility)
+pairs 2.x with Bootstrap 5.x. TypeScript and Storybook have no declared peer constraint in this package; strict
+compilation and production/catalog builds qualify our usage, not every library export. FormControl's optional
+props/value declarations are narrower than native input props: the adapter omits absent values, copies readonly
+array values and maps native numeric `size` to `htmlSize` without widening or casting the public contract.
+No forced peers, `skipLibCheck`, unrelated upgrades or new form/state libraries are used. Future control adoption
+still needs its own interaction qualification, especially overlay focus and transition behavior on React 19.
+
 ### Styles and customization boundary
 
 `styles/app.scss` is the shared public source entrypoint for production and Storybook. Its thin ordered
@@ -83,7 +118,8 @@ migration retains upstream defaults and does not load precompiled Bootstrap CSS 
 
 Owned dependencies use namespaced Sass modules. Keep styles in small responsibility-named partials under
 `styles/base/`, `styles/layouts/` and `styles/components/`; add page styles only for a real page. Shared spinner
-presentation has one owner because both busy buttons and loading states use it. Reusable styling uses shallow
+sizing/spacing has one owner because both busy buttons and loading states use the library Spinner; Bootstrap
+owns its border shape and animation through supported `--bs-spinner-*` custom properties. Reusable styling uses shallow
 class selectors; the stable singleton `#app` belongs to the shell layout. Never couple styling to React-generated
 accessibility IDs or add broad ID-descendant overrides. Reduced-motion `!important` rules are deliberate
 accessibility overrides. `.storybook/preview.scss` contains catalog-only layout and is loaded **after** the

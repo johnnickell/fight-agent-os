@@ -12,6 +12,8 @@ describe('Content presentation', () => {
       <ContentState kind="loading" title="Loading" message="Waiting for examples…" />
     );
     expect(screen.getByRole('status')).toHaveTextContent('LoadingWaiting for examples…');
+    expect(screen.getByRole('status')).toHaveAttribute('aria-atomic', 'true');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     rerender(<ContentState kind="empty" title="No examples" message="Nothing to display." />);
     expect(screen.getByText('No examples')).toBeVisible();
@@ -58,6 +60,18 @@ describe('Content presentation', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.getByText('Review this example.')).toBeVisible();
+    const notice = screen.getByText('Warning').parentElement;
+    expect(notice).not.toHaveAttribute('role');
+    expect(notice).not.toHaveAttribute('aria-atomic');
+    rerender(
+      <Notice tone="info" title="Information">
+        Updated example.
+      </Notice>
+    );
+    expect(screen.getByRole('status')).toBe(notice);
+    expect(notice).toHaveAttribute('aria-atomic', 'true');
+    expect(notice).toHaveTextContent('InformationUpdated example.');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('labels independent panels and exposes optional header actions as native controls', async () => {

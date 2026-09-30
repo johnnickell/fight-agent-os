@@ -1,3 +1,6 @@
+import BootstrapButton from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';
+
 import type { ComponentPropsWithoutRef } from 'react';
 
 type ButtonProps = ComponentPropsWithoutRef<'button'> & {
@@ -19,10 +22,12 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <BootstrapButton
       {...props}
+      as="button"
+      variant=""
       type={type}
-      className={`btn catalog-button ${className}`}
+      className={`catalog-button ${className}`}
       disabled={disabled}
       aria-disabled={busy || disabled || props['aria-disabled']}
       aria-busy={busy}
@@ -39,8 +44,8 @@ export function Button({
         onClick?.(event);
       }}
     >
-      {busy && <span className="catalog-spinner" aria-hidden="true" />}
+      {busy && <Spinner as="span" className="catalog-spinner" aria-hidden="true" />}
       {busy ? busyLabel : children}
-    </button>
+    </BootstrapButton>
   );
 }

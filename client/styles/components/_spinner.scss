@@ -1,17 +1,9 @@
-// Shared by busy buttons and loading content states; accompanying text carries meaning.
+// Shared decorative library spinner; accompanying button/status text carries meaning.
 .catalog-spinner {
-  display: inline-block;
-  width: 1em;
-  height: 1em;
+  --bs-spinner-width: 1em;
+  --bs-spinner-height: 1em;
+  --bs-spinner-border-width: 2px;
+  --bs-spinner-animation-speed: 1s;
   margin-inline-end: 0.5rem;
-  border: 2px solid currentColor;
-  border-inline-end-color: transparent;
-  border-radius: 50%;
-  animation: catalog-spin 1s linear infinite;
-}
-
-@keyframes catalog-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  vertical-align: baseline;
 }

@@ -6,6 +6,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { TextField } from '@/components/forms/TextField';
 
+import type { ChangeEventHandler } from 'react';
+
 describe('TextField', () => {
   it('connects required labels, help, error text and the caller focus ref', async () => {
     const ref = createRef<HTMLInputElement>();
@@ -56,6 +58,33 @@ describe('TextField', () => {
     expect(first?.id).not.toBe(second?.id);
     expect(first).not.toHaveAttribute('aria-describedby');
     expect(first).not.toBeRequired();
+  });
+
+  it('preserves native sizing, input event targets and controlled caller updates', async () => {
+    const user = userEvent.setup();
+    const change = vi.fn<ChangeEventHandler<HTMLInputElement>>();
+    const fieldProps = { label: 'Example', size: 24, name: 'example', onChange: change };
+    const { rerender } = render(<TextField {...fieldProps} value="Before" />);
+    const field = screen.getByRole('textbox');
+    expect(field.tagName).toBe('INPUT');
+    expect(field).toHaveAttribute('size', '24');
+    expect(field).toHaveAttribute('name', 'example');
+    await user.type(field, 'x');
+    expect(change).toHaveBeenCalledOnce();
+    expect(change.mock.calls[0]?.[0].target).toBe(field);
+    expect(field).toHaveValue('Before');
+    rerender(<TextField {...fieldProps} value="After" />);
+    expect(field).toHaveValue('After');
+  });
+
+  it.each([42, ['Sample'] as const])('preserves native read-only value %j', async (value) => {
+    const change = vi.fn();
+    render(<TextField label="Example" value={value} readOnly onChange={change} />);
+    const field = screen.getByRole('textbox');
+    expect(field).toHaveValue(String(value));
+    await userEvent.setup().type(field, 'changed');
+    expect(field).toHaveValue(String(value));
+    expect(change).not.toHaveBeenCalled();
   });
 
   it('uses native email and disabled semantics without accepting input', async () => {
