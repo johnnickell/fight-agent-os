@@ -3,31 +3,71 @@ set -eu
 
 cd "$(dirname "$0")/.."
 image='node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6'
-browser_image='mcr.microsoft.com/playwright@sha256:57b65fdc9ceabe0ef613124c7bbe2babcf9362c4d85e382fe3b03604e84b428a'
+browser_base='mcr.microsoft.com/playwright@sha256:57b65fdc9ceabe0ef613124c7bbe2babcf9362c4d85e382fe3b03604e84b428a'
+browser_image='fight-agent-os-client-browser:node24.21.0-playwright1.61.0'
 network=none
 port=''
+source_mode=readonly
+build_mode=readonly
+verify_install=yes
 case "${1:-}" in
-    setup) docker pull "$image"; network=bridge; set -- npm ci --ignore-scripts --no-fund --no-audit ;;
-    lock) network=bridge; set -- npm install --package-lock-only --ignore-scripts --no-fund --no-audit ;;
+    setup)
+        docker pull "$image"
+        network=bridge; source_mode=''; verify_install=no
+        set -- sh -c 'npm ci --ignore-scripts --no-fund --no-audit && node scripts/dependencies.mjs record' ;;
+    lock) network=bridge; source_mode=''; verify_install=no; set -- npm install --package-lock-only --ignore-scripts --no-fund --no-audit ;;
     audit) network=bridge; set -- npm audit ;;
     versions) set -- sh -c 'node --version; npm --version; npm ls --depth=0' ;;
-    storybook-setup) exec docker pull "$browser_image" ;;
+    storybook-setup)
+        docker pull "$image"
+        docker pull "$browser_base"
+        exec docker build --network=none --pull=false --build-arg "NODE_IMAGE=$image" \
+            --build-arg "BROWSER_IMAGE=$browser_base" --tag "$browser_image" - < etc/docker/client-browser/Dockerfile ;;
     storybook-dev) network=bridge; port='127.0.0.1:16006:6006'; set -- npm run storybook-dev ;;
     storybook-test|storybook-capture)
         image="$browser_image"
         set -- npm run "$1" ;;
-    typecheck|lint|lint-fix|format-check|format|test|coverage|build|check|storybook-build) set -- npm run "$1" ;;
-    *) echo 'Usage: ./bin/client {setup|lock|versions|typecheck|lint|lint-fix|format-check|format|test|coverage|build|check|audit|storybook-setup|storybook-build|storybook-dev|storybook-test|storybook-capture}' >&2; exit 2 ;;
+    check)
+        # Separate containers share the same installed lock/runtime, not a second toolchain.
+        started=$(date +%s)
+        for step in versions typecheck lint format-check coverage build-check storybook-build storybook-test storybook-capture; do
+            printf '\n== Frontend %s ==\n' "$step"
+            ./bin/client "$step"
+        done
+        printf '\nFrontend checks passed in %ss\n' "$(($(date +%s) - started))"
+        exit 0 ;;
+    lint-fix|format) source_mode=''; set -- npm run "$1" ;;
+    build) build_mode=''; set -- npm run build ;;
+    typecheck|lint|format-check|test|coverage|build-check|storybook-build) set -- npm run "$1" ;;
+    *) echo 'Usage: ./bin/client {setup|lock|versions|typecheck|lint|lint-fix|format-check|format|test|coverage|build|build-check|check|audit|storybook-setup|storybook-build|storybook-dev|storybook-test|storybook-capture}' >&2; exit 2 ;;
 esac
 
 mkdir -p public/build .runs/client
+if [ "$verify_install" = yes ]; then
+    if [ ! -f client/node_modules/.fight-install.json ]; then
+        echo 'Missing frontend install receipt; run ./bin/client setup explicitly' >&2
+        exit 1
+    fi
+    set -- sh -c 'node scripts/dependencies.mjs && exec "$@"' -- "$@"
+fi
+# Only explicit maintenance/fix commands can write source/dependencies. Vite and
+# Storybook need two writable cache mounts beneath the otherwise read-only install.
+if [ "$source_mode" = readonly ]; then
+    mkdir -p client/node_modules/.cache client/node_modules/.vite-temp \
+        .runs/client/dependency-cache .runs/client/vite-temp
+    set -- --mount "type=bind,source=$(pwd)/.runs/client/dependency-cache,target=/app/client/node_modules/.cache" \
+        --mount "type=bind,source=$(pwd)/.runs/client/vite-temp,target=/app/client/node_modules/.vite-temp" \
+        "$image" "$@"
+else
+    set -- "$image" "$@"
+fi
 # Only the interactive catalog publishes a port, restricted to host loopback.
 exec docker run --rm --pull=never --network="$network" ${port:+--publish "$port"} --read-only \
     --user "$(id -u):$(id -g)" --cap-drop=ALL --security-opt=no-new-privileges:true \
     --pids-limit=256 --memory=2g --cpus=2 --tmpfs /tmp:rw,nosuid,size=256m --shm-size=256m \
-    --env STORYBOOK_DISABLE_TELEMETRY=1 --env HOME=/tmp --env CI=1 \
+    --env STORYBOOK_DISABLE_TELEMETRY=1 --env HOME=/tmp --env CI=1 --env TZ=UTC \
     --env npm_config_cache=/app/.runs/client/npm --env npm_config_update_notifier=false \
-    --mount "type=bind,source=$(pwd)/client,target=/app/client" \
-    --mount "type=bind,source=$(pwd)/public/build,target=/app/public/build" \
+    --mount "type=bind,source=$(pwd)/client,target=/app/client${source_mode:+,$source_mode}" \
+    --mount "type=bind,source=$(pwd)/public/build,target=/app/public/build${build_mode:+,$build_mode}" \
     --mount "type=bind,source=$(pwd)/.runs/client,target=/app/.runs/client" \
-    --workdir /app/client "$image" "$@"
+    --workdir /app/client "$@"

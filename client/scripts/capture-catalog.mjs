@@ -1,6 +1,6 @@
 // Direct catalog evidence, not a visual-regression suite or a product acceptance verdict.
 /* global document, window, getComputedStyle -- Playwright browser evaluation callbacks */
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { extname, resolve } from 'node:path';
@@ -11,6 +11,7 @@ import { chromium } from 'playwright';
 const require = createRequire(import.meta.url);
 const root = resolve('../.runs/client/storybook');
 const output = resolve('../.runs/client/catalog-evidence');
+await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 const types = {
   '.html': 'text/html',
@@ -152,6 +153,16 @@ try {
   }
   // Observe the catalog-only system preview across live OS changes; never write preference storage.
   const page = await browser.newPage();
+  await page.route('**/*', (route) => {
+    if (new URL(route.request().url()).origin !== origin) {
+      receipt.externalRequests.push(route.request().url());
+      return route.abort();
+    }
+    return route.continue();
+  });
+  page.on('pageerror', (error) =>
+    receipt.pageErrors.push({ story: 'system-keyboard', message: error.message })
+  );
   await page.goto(`${origin}/iframe.html?id=foundation-composition--system-preview&viewMode=story`);
   const system = page.locator('.catalog-preview .catalog-preview');
   for (const colorScheme of ['dark', 'light']) {

@@ -176,30 +176,33 @@ describe('complete route guard', () => {
     expect(screen.queryByText('Protected report')).not.toBeInTheDocument();
   });
 
-  it('captures only eligible anonymous navigation and clears it on logout without recapture', async () => {
-    const loader = vi
-      .fn()
-      .mockResolvedValueOnce({ status: 'anonymous' })
-      .mockResolvedValue({ status: 'principal', principal });
-    const cache = new AuthorityCache(loader);
-    caches.push(cache);
-    const intent = new IntendedRoute(cache, () => [reportRoute], 'https://example.test');
-    await cache.load();
-    render(
-      <GuardedRoute
-        cache={cache}
-        route={reportRoute}
-        outlet={Outlet}
-        intent={intent}
-        location="/app/reports?page=2"
-      />
-    );
-    expect(screen.getByText('Sign in required')).toBeVisible();
-    await act(() => cache.beginAuthentication().acceptCredentials());
-    expect(intent.consume()).toBe('/app/reports?page=2');
-    await act(() => cache.signal('logout'));
-    await act(() => cache.beginAuthentication().acceptCredentials());
-    expect(intent.consume()).toBeNull();
-    intent.dispose();
-  });
+  it.each([undefined, '/app/reports?page=2'])(
+    'captures eligible anonymous navigation (%s), defaulting to the registered path, and clears it on logout',
+    async (location) => {
+      const loader = vi
+        .fn()
+        .mockResolvedValueOnce({ status: 'anonymous' })
+        .mockResolvedValue({ status: 'principal', principal });
+      const cache = new AuthorityCache(loader);
+      caches.push(cache);
+      const intent = new IntendedRoute(cache, () => [reportRoute], 'https://example.test');
+      await cache.load();
+      render(
+        <GuardedRoute
+          cache={cache}
+          route={reportRoute}
+          outlet={Outlet}
+          intent={intent}
+          {...(location === undefined ? {} : { location })}
+        />
+      );
+      expect(screen.getByText('Sign in required')).toBeVisible();
+      await act(() => cache.beginAuthentication().acceptCredentials());
+      expect(intent.consume()).toBe(location ?? '/app/reports');
+      await act(() => cache.signal('logout'));
+      await act(() => cache.beginAuthentication().acceptCredentials());
+      expect(intent.consume()).toBeNull();
+      intent.dispose();
+    }
+  );
 });
