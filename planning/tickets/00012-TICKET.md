@@ -58,4 +58,9 @@ Only explicit non-sensitive presentation preferences may use browser persistence
 
 ## Decisions and progress
 
+The approved follow-up [TICKET-00036](00036-TICKET.md) owns named public-safe PHP schema export/read and
+Formik integration with unified client/server errors, reset-on-change and stale-response protection. It reuses
+this TICKET's API/control/catalog foundations; their completion does not imply the follow-up is implemented.
+Existing product journeys retain end-to-end form adoption and server-security enforcement.
+
 Implements the client direction approved by [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md) and the client-authority gate selected by [WF-007](../wayfinder/tickets/WF-007-prepare-implementation-handoff.md). It follows [TICKET-00008](00008-TICKET.md) and integrates against [TICKET-00010](00010-TICKET.md)'s API contracts. Production visual work additionally depends on EPIC-00002 design capabilities.

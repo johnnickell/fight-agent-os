@@ -211,6 +211,36 @@ requirements are static presentation metadata in code, not injected user grants.
 renders a generic accessible boot failure without attempting auth, echoing raw values or falling back to a
 different API host. Theme fallback remains safe independently; no dynamic code evaluation is needed.
 
+### Local debug and documentation availability amendment
+
+On 2026-09-30 the maintainer approved local-only Swagger, typed APP_ENV/APP_DEBUG configuration and safe
+public runtime flags under [TICKET-00010](../tickets/00010-TICKET.md). This is an explicit additive schema
+revision owned by [TASK-00154](../tasks/00154-TASK.md), not a claim that TASK-00026's current version-1 decoder
+already accepts extra fields. Its original narrow schema and implementation evidence remain historical facts.
+
+Evolve producer and all consumers together to `schema_version: 2`, preserving `api_base_path: "/api/v1"` and
+adding exactly `app_debug: boolean` and `swagger_available: boolean`, mapped to immutable camelCase client
+fields. Strictly reject missing/extra/wrong-type or unsupported-version data; document deployment compatibility
+and avoid indefinite dual schema ownership. These are public presentation flags, never permission grants.
+
+`app_debug` is true only when the server's exact APP_ENV is `local` and strictly parsed APP_DEBUG is true;
+unset debug defaults false and malformed values fail safely. `swagger_available` describes local viewer
+availability only and is false outside local or while the feature is unavailable. Actual viewer/document
+requests independently check server environment and current READ_SWAGGER. Neither public value may authorize
+an API operation, bypass unknown/stale authority, turn on PHP exception display or weaken secret redaction.
+
+Deliver these values through the existing escaped inert JSON boot block with its same-origin/CSP/no-store
+protections, not an environment/configuration dump. No new public config endpoint, token-bearing hidden input
+or base64 container is necessary; encoding is not protection. Keep every credential/principal/private-state
+prohibition above. Even enabled local diagnostics must never log raw token/cookie/CSRF/password/grant material,
+form bodies, personal data or unrestricted response/error objects. Modifying a flag in browser tools changes
+only presentation/logging behavior, never server policy.
+
+Swagger consumes the existing memory-only credential provider and bounded restoration/refresh coordinator;
+this amendment grants no long-lived token or new persistence exception. Its light/dark presentation reuses the
+single theme preference below. Guarded UI entry must work without treating a direct browser navigation as an
+authenticated Bearer fetch; neither URLs nor base HTML may supply that credential workaround.
+
 ### Theme preference bootstrap
 
 The only initial application-managed persisted JavaScript state is the explicit theme preference, under one
@@ -265,6 +295,7 @@ round trips and loss of browser drafts/intended routes on reload are deliberate 
 | [TASK-00117](../tasks/00117-TASK.md), [TASK-00049](../tasks/00049-TASK.md) | Single production `/me` endpoint/service, strict safe no-store View, real cache integration, permission change and stale-response tests; no second authority source |
 | [TASK-00050](../tasks/00050-TASK.md), [TASK-00051](../tasks/00051-TASK.md) | Theme invalid/missing/denied storage and OS tracking, production accessible control, permission-aware frame and forbidden states |
 | [TICKET-00022](../tickets/00022-TICKET.md) | Integrated HTTPS/security, storage and secret-redaction evidence, critical browser/accessibility journeys; not a substitute for lower-level tests |
+| [TASK-00154](../tasks/00154-TASK.md) | Explicit version-2 safe local/debug flags, secret-free guarded diagnostics, local-only READ_SWAGGER viewer/document access and existing memory-credential/theme integration; no long-lived token exception |
 
 Implementers must test owned runtime behavior at its narrowest useful boundary: success, denial, malformed
 input, outage, out-of-order completion and cleanup. Verify configuration/tooling/artifact concerns directly,
