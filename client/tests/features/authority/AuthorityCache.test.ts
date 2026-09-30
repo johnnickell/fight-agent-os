@@ -262,6 +262,137 @@ describe('principal ownership and transitions', () => {
   });
 });
 
+describe('reentrant retirement barriers (R-01)', () => {
+  const endings = ['logout', 'terminal', 'dispose'] as const;
+  function end(cache: AuthorityCache, ending: (typeof endings)[number]) {
+    if (ending === 'dispose') cache.dispose();
+    else void cache.signal(ending);
+  }
+  function endedState(ending: (typeof endings)[number]) {
+    return ending === 'logout' ? { status: 'anonymous', reason: 'logout' } : { status: 'terminal' };
+  }
+
+  it.each(endings)('preserves %s reentered during identity adoption', async (ending) => {
+    const loader = vi
+      .fn<PrincipalLoader>()
+      .mockResolvedValueOnce(success)
+      .mockResolvedValue({
+        status: 'principal',
+        principal: { ...principal, userId: crypto.randomUUID() }
+      });
+    const cache = cacheWith(loader);
+    await cache.load();
+    const loading = cache.signal('credentials-changed');
+    const scope = cache.captureScope();
+    scope.signal.addEventListener('abort', () => end(cache, ending), { once: true });
+    await loading;
+    expect(cache.getSnapshot()).toEqual(endedState(ending));
+    expect(scope.isCurrent()).toBe(false);
+    expect(cache.captureScope().isCurrent()).toBe(false);
+    await cache.signal('credentials-changed');
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+
+  describe.each(endings)('when an abort callback invokes %s', (ending) => {
+    it.each([
+      'load',
+      'invalidation',
+      'attempt',
+      'resume',
+      'anonymous',
+      'logout',
+      'terminal'
+    ] as const)(
+      'does not let the interrupted %s transition overwrite the ended context',
+      async (operation) => {
+        const response = deferred<PrincipalLoadResult>();
+        const loader = vi.fn<PrincipalLoader>().mockResolvedValue(success);
+        const cache = cacheWith(loader);
+        if (operation !== 'load') await cache.load();
+        let loading = Promise.resolve();
+        if (operation === 'anonymous') {
+          loader.mockReturnValueOnce(response.promise);
+          loading = cache.signal('credentials-changed');
+          await Promise.resolve();
+        }
+        const scope = cache.captureScope();
+        scope.signal.addEventListener('abort', () => end(cache, ending), { once: true });
+        switch (operation) {
+          case 'load':
+            await cache.load();
+            break;
+          case 'invalidation':
+            await cache.signal('authority-changed');
+            break;
+          case 'attempt': {
+            const attempt = cache.beginAuthentication();
+            await attempt.acceptCredentials();
+            attempt.fail();
+            break;
+          }
+          case 'resume':
+            cache.resume();
+            break;
+          case 'anonymous':
+            response.resolve({ status: 'anonymous' });
+            await loading;
+            break;
+          default:
+            await cache.signal(operation);
+        }
+        expect(cache.getSnapshot()).toEqual(endedState(ending));
+        expect(scope.signal.aborted).toBe(true);
+        expect(cache.captureScope().isCurrent()).toBe(false);
+        await cache.load();
+        expect(loader).toHaveBeenCalledTimes(
+          operation === 'load' ? 0 : operation === 'anonymous' ? 2 : 1
+        );
+        if (ending !== 'dispose') {
+          await cache.beginAuthentication().acceptCredentials();
+          expect(cache.getSnapshot()).toEqual({ status: 'authenticated', principal });
+          expect(cache.captureScope().isCurrent()).toBe(true);
+        }
+      }
+    );
+  });
+
+  it('keeps nested retirement closed until both scope and request abort callbacks finish', async () => {
+    const response = deferred<PrincipalLoadResult>();
+    const loader = vi
+      .fn<PrincipalLoader>()
+      .mockReturnValueOnce(response.promise)
+      .mockResolvedValue(success);
+    const cache = cacheWith(loader);
+    const loading = cache.load();
+    await Promise.resolve();
+    const scope = cache.captureScope();
+    scope.signal.addEventListener(
+      'abort',
+      () => {
+        void cache.signal('terminal');
+        void cache.load();
+      },
+      { once: true }
+    );
+    loader.mock.calls[0]?.[0].addEventListener(
+      'abort',
+      () => {
+        void cache.load();
+        void cache.signal('terminal');
+      },
+      { once: true }
+    );
+    await cache.signal('credentials-changed');
+    response.resolve(success);
+    await loading;
+    expect(cache.getSnapshot()).toEqual({ status: 'terminal' });
+    expect(loader).toHaveBeenCalledOnce();
+    await cache.beginAuthentication().acceptCredentials();
+    expect(cache.captureScope().isCurrent()).toBe(true);
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('bounded freshness and tab lifecycle', () => {
   it('rejects a request started on an invalid clock even when the clock later recovers', async () => {
     let now = Number.NaN;

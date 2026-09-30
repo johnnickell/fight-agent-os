@@ -120,7 +120,7 @@ export class AuthorityCache {
       return Promise.resolve();
     }
     if (this.#pending) return this.#pending;
-    this.#retire();
+    if (!this.#retire()) return Promise.resolve();
     const context = this.#context;
     const generation = this.#generation;
     const request = new AbortController();
@@ -161,14 +161,14 @@ export class AuthorityCache {
       this.#barrier = true;
       this.#canLoad = false;
       this.#identity = null;
-      this.#retire();
+      if (!this.#retire()) return Promise.resolve();
       this.#publish(
         signal === 'logout' ? { status: 'anonymous', reason: 'logout' } : { status: 'terminal' }
       );
       return Promise.resolve();
     }
     if (this.#barrier) return Promise.resolve();
-    this.#retire();
+    if (!this.#retire()) return Promise.resolve();
     if (signal === 'refresh-started' || signal === 'refresh-failed') this.#canLoad = false;
     if (signal === 'credentials-changed') this.#canLoad = true;
     this.#publish({ status: signal === 'refresh-failed' ? 'refresh-failed' : 'stale' });
@@ -181,15 +181,15 @@ export class AuthorityCache {
    * Crosses a logout/terminal barrier only through an explicit new authentication attempt
    */
   beginAuthentication(): Readonly<{ acceptCredentials: () => Promise<void>; fail: () => void }> {
+    // Capture the attempt before retirement invokes consumer callbacks. A context
+    // ended by one of those callbacks cannot lend its generation to this attempt.
+    const context = this.#disposed ? this.#context : ++this.#context;
     if (!this.#disposed) {
-      this.#context++;
       this.#barrier = true;
       this.#canLoad = false;
       this.#identity = null;
-      this.#retire();
-      this.#publish({ status: 'unknown' });
+      if (this.#retire()) this.#publish({ status: 'unknown' });
     }
-    const context = this.#context;
     let completed = false;
     const current = () => !completed && !this.#disposed && context === this.#context;
     return Object.freeze({
@@ -214,12 +214,12 @@ export class AuthorityCache {
   resume = (): void => {
     const state = this.getSnapshot();
     if (state.status === 'authenticated' || state.status === 'loading') {
-      this.#retire();
-      this.#publish({ status: 'stale' });
+      if (this.#retire()) this.#publish({ status: 'stale' });
     }
   };
 
   dispose(): void {
+    if (this.#disposed) return;
     this.#disposed = true;
     this.#context++;
     this.#barrier = true;
@@ -241,8 +241,13 @@ export class AuthorityCache {
           return;
         }
         if (this.#identity !== null && this.#identity !== principal.userId) {
-          this.#context++;
+          const context = ++this.#context;
+          const generation = this.#generation;
           this.#renewScope();
+          // Identity replacement deliberately advances context, but consumer abort
+          // callbacks may advance it again or retire this result's request.
+          this.getSnapshot();
+          if (!this.#matches(context, generation)) return;
         }
         this.#identity = principal.userId;
         const remaining = 60_000 - (this.#now() - (this.#startedAt ?? 0));
@@ -259,8 +264,7 @@ export class AuthorityCache {
         this.#canLoad = false;
         this.#context++;
         this.#identity = null;
-        this.#retire();
-        this.#publish({ status: 'anonymous', reason: 'absent' });
+        if (this.#retire()) this.#publish({ status: 'anonymous', reason: 'absent' });
         return;
       case 'terminal':
         void this.signal('terminal');
@@ -299,26 +303,34 @@ export class AuthorityCache {
   }
 
   #renewScope(): void {
-    this.#scope.abort();
+    const previous = this.#scope;
     this.#scope = new AbortController();
     this.#scopeView = this.#makeScope();
+    previous.abort();
   }
 
-  #retire(): void {
-    // Abort listeners may synchronously read authority while clearing private data.
-    // Remove the projection before invoking any of those external callbacks.
+  /**
+   * Retires owned work and reports whether callbacks left this transition current
+   */
+  #retire(): boolean {
+    // Detach owned state before any external callback. Nested transitions own their
+    // replacements; this continuation may only abort its captured old request.
     this.#state = Object.freeze({ status: 'stale' });
-    this.#generation++;
+    const context = this.#context;
+    const generation = ++this.#generation;
+    const request = this.#request;
+    clearTimeout(this.#expiry);
+    this.#request = null;
+    this.#pending = null;
+    this.#startedAt = null;
+    const retiring = this.#retiring;
     this.#retiring = true;
     try {
-      clearTimeout(this.#expiry);
-      this.#request?.abort();
-      this.#request = null;
-      this.#pending = null;
-      this.#startedAt = null;
       this.#renewScope();
+      request?.abort();
+      return context === this.#context && generation === this.#generation;
     } finally {
-      this.#retiring = false;
+      this.#retiring = retiring;
     }
   }
 

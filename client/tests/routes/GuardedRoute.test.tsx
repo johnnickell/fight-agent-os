@@ -1,9 +1,10 @@
 import { lazy, Suspense, useEffect } from 'react';
 
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { PermissionButton } from '@/components/PermissionButton';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { GuardedRoute } from '@/routes/GuardedRoute';
 import { IntendedRoute } from '@/routes/IntendedRoute';
@@ -29,6 +30,57 @@ function Outlet() {
 }
 
 describe('complete route guard', () => {
+  it.each(['logout', 'terminal', 'dispose'] as const)(
+    'never restores protected content or actions after %s interrupts identity adoption (R-01)',
+    async (ending) => {
+      const response = deferred<PrincipalLoadResult>();
+      const loader = vi
+        .fn()
+        .mockResolvedValueOnce({ status: 'principal', principal })
+        .mockReturnValueOnce(response.promise);
+      const cache = new AuthorityCache(loader);
+      caches.push(cache);
+      await cache.load();
+      const action = vi.fn();
+      render(
+        <>
+          <GuardedRoute cache={cache} route={reportRoute} outlet={Outlet} />
+          <PermissionButton
+            cache={cache}
+            permissions={['EDIT_REPORTS']}
+            denied="disable"
+            onAction={action}
+          >
+            Edit
+          </PermissionButton>
+        </>
+      );
+      const button = screen.getByRole('button', { name: 'Edit' });
+      expect(screen.getByText('Protected report')).toBeVisible();
+      await act(async () => {
+        const loading = cache.signal('credentials-changed');
+        cache.captureScope().signal.addEventListener(
+          'abort',
+          () => {
+            if (ending === 'dispose') cache.dispose();
+            else void cache.signal(ending);
+            // Invoke the still-rendered button before React can process the ended state.
+            fireEvent.click(button);
+          },
+          { once: true }
+        );
+        response.resolve({
+          status: 'principal',
+          principal: { ...principal, userId: crypto.randomUUID() }
+        });
+        await loading;
+      });
+      expect(screen.queryByText('Protected report')).not.toBeInTheDocument();
+      expect(button).toBeDisabled();
+      fireEvent.click(button);
+      expect(action).not.toHaveBeenCalled();
+    }
+  );
   it('removes a mounted protected outlet at foreground expiry without another navigation', async () => {
     vi.useFakeTimers();
     let now = 0;
