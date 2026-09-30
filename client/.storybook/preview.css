@@ -1,0 +1,24 @@
+.catalog-preview {
+  min-height: 100vh;
+  padding: 1rem;
+  background: var(--ui-background);
+  color: var(--ui-text);
+  font-family: var(--ui-font);
+  overflow-wrap: anywhere;
+}
+
+.catalog-preview h1 {
+  font-size: 1.75rem;
+}
+
+.catalog-example-stack {
+  display: grid;
+  gap: 1rem;
+  max-width: 64rem;
+}
+
+.catalog-example-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+}
