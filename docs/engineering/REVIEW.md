@@ -28,6 +28,12 @@ Independently challenge the exact TASK, accepted decisions, exclusions, effectiv
 | ST-04 | Do tests prove meaningful owned behavior and important integration contracts at proportionate seams without testing tooling? |
 | ST-05 | Are planning, delivery, verification, warnings, resource hygiene and review/merge boundaries accurate? |
 
+Use the scoped [quality checks](QUALITY.md) to challenge tests under ST-04/SP-05, instruction and human-documentation
+accuracy under ST-03, and code quality under the applicable ownership/behavior IDs. Test smells require contract
+counterchecks, including legitimate interactions and replacement coverage. A stale descriptive claim and a code
+violation of an accepted instruction require different corrections. These checks refine the existing IDs; they
+do not add a score, independent verdict, edit authority or automatic cleanup pass.
+
 For **each** ID record `Pass`, `Fail`, `Unverified`, or `N/A`, with an exact location, command/result or traceable evidence and any limitation. `N/A` needs a reason grounded in scope; silence or missing proof is not N/A. `Unverified` means necessary evidence is missing, not that a defect has been demonstrated. `Fail` needs a demonstrated violation. Account for all TASK criteria even when a checklist category contains several. A documentation-only change need not invent runtime paths or product tests; direct inspection, links, planning validation and the required gate can establish its claims.
 
 Check server authority, secret handling, success/rejection/failure, persistence/transaction effects and protocol compatibility only where relevant, without inventing new policy or endpoints. Follow [engineering standards](STANDARDS.md) and the [ownership ADR](../../planning/adr/0001-application-ownership-and-orchestration.md); a passing dependency checker cannot prove package or business-policy ownership. Inspect actual diff and directly affected consumers, not unrelated debt. Challenge unsupported claims at the narrowest useful boundary; run the canonical gate when acceptance depends on it. Surface actual counts, warnings, skips and unverified areas. Do not fix implementation or change planning status while reviewing.

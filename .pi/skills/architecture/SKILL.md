@@ -30,6 +30,14 @@ caller relationships, interface/ownership changes, benefits, tradeoffs, migratio
 A small diagram helps when relationships are the issue; no HTML artifact or visual scaffold is mandatory.
 Do not combine similar-looking code unless it represents the same knowledge and changes for the same reason.
 
+Use the shared [quality checks](../../../docs/engineering/QUALITY.md) when test fragility, duplication, types or
+guidance drift bears on the question. Identify the observable contracts and independently justified expectations
+that would verify each option, preserving required side-effect ordering and compatibility. Explain affected
+instruction boundaries and README/CHANGELOG implications; distinguish descriptive drift from a violated policy.
+These are design and verification proposals, not permission to delete tests, refactor, or synchronize documents.
+Apply the [human-facing prose guidance](../../../docs/engineering/QUALITY.md#human-facing-documentation) to the
+explanation without weakening technical qualifications or inventing implemented guarantees.
+
 Label observed violations separately from taste or speculative improvements. Recommend an option with a concrete
 reason and identify the decision owner. An ADR conflict requires a visible proposed decision and consequences;
 do not silently override the ADR. External authors' vocabulary and examples do not replace Fight names or policy.

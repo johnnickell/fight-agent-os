@@ -2,6 +2,10 @@
 
 These are the minimum shared rules for application changes. `ARCHITECTURE.md`, accepted ADRs, and nearby owned code supply decisions that are specific to a use case.
 
+For changed tests, code and documentation, apply the scoped [quality checks](QUALITY.md). They make the rules
+below actionable during work, review, audit and architecture exploration without widening those workflows'
+authority. Use their instruction and human-documentation checks when AGENTS.md, README or CHANGELOG is affected.
+
 ## Architecture
 
 Design architecture, domain language and capability interfaces for human readers first. Ordinary feature work

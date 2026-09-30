@@ -25,6 +25,12 @@ Read-only engineering skills are available locally: [audit](audit/SKILL.md) for 
 boundaries, and [adopt](adopt/SKILL.md) for project comparisons. [Fix](fix/SKILL.md) diagnoses bugs and prepares
 a tracking handoff; `work` owns repair. None substitutes for independent `review`.
 
+[Shared quality checks](../../docs/engineering/QUALITY.md) help `work` catch weak tests while writing them and
+check code plus affected instructions, README and CHANGELOG before handoff. `review` independently challenges
+those claims; `audit` applies them to its declared sample; `architecture` identifies contract and documentation
+impacts. `writing-for-agents` handles authorized instruction reconciliation. These checks preserve each skill's
+scope and authority and do not install or automatically run an external cleanup workflow.
+
 [QA](qa/SKILL.md) exercises reviewed TASKs or open PRs in an actual browser or terminal and writes canonical
 PASS/FAIL/INCOMPLETE/N/A evidence. Use `/skill:qa TASK-NNNNN` or `/skill:qa <PR URL>` in an independent session.
 Default flow is `work → review → qa → land → human merge`; `work` consumes QA failures and `land` publishes

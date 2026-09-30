@@ -17,6 +17,18 @@ code edits. An accepted interactive implementation without applicable QA routes 
 3. **Implement and reconcile before review.** Design architecture and interfaces for human maintainers first;
 ordinary feature work is not required to follow TDD. Aim for meaningful 100% unit coverage, report gaps honestly,
 and preserve the regression-first rule for confirmed bugs. Follow the TASK's dependencies and [engineering standards](../../../docs/engineering/STANDARDS.md): identify package versus owned use cases, place Domain policy with its owner and transport mapping with its adapter, and keep server authority across entry paths. Add behavior and meaningful success/rejection/failure tests at the narrowest useful boundary; do not manufacture routes or tests of tools to satisfy a checklist. Internally check each TASK criterion against both the Spec and Standards IDs in [review standards](../../../docs/engineering/REVIEW.md), recording evidence and N/A reasons without issuing an independent verdict or formal scores. Integrate current `develop` when needed, regenerate planning views from authoritative records, inspect conflicts and effective changes, and preserve other TASKs' work. If a conflict changes behavior or scope, record it explicitly for review. Never force-update a published branch.
+
+   While writing new or materially changed tests, apply the [contract
+   checks](../../../docs/engineering/QUALITY.md#tests-that-protect-contracts): identify the protected behavior,
+   plausible defect and independent expectation before retaining the test. Investigate refactor-fragile
+   assertions; preserve justified boundary interactions and replace required coverage in the same change. Before
+   handoff, apply the [code quality checks](../../../docs/engineering/QUALITY.md#code-quality-with-evidence) to
+   the TASK diff and directly affected consumers. Reconcile affected [agent
+   instructions](../../../docs/engineering/QUALITY.md#agent-instructions-and-policy-drift) and [README/CHANGELOG
+   claims and prose](../../../docs/engineering/QUALITY.md#human-facing-documentation) within scope; use [Writing
+   for Agents](../writing-for-agents/SKILL.md) for instruction edits. Record unrelated debt or unresolved policy
+   decisions without expanding the cleanup.
+
 4. **Verify and record.** The local gate is mandatory; hosted CI is optional unless explicitly required by the target's accepted policy or TASK. Disclose unavailable optional checks without blocking completion on them. Run focused checks, `./bin/planning-check` when planning changed, `git diff --check`, and `./bin/build`. Inspect the final diff/status. Record actual results, counts, warnings, omissions, files changed and remaining risks in the TASK; keep review and PR status truthful.
 5. **Commit and hand off.** Stage only owned files, inspect staged changes, and commit. Return branch/head, scope, evidence, risks and unrelated work preserved; request independent review. Stop before push, PR, approval or merge without separate authority.
 
