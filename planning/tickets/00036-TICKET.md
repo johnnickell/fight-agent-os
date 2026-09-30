@@ -40,6 +40,16 @@ scanning at request time, client-side authority, remote uniqueness/credential/pa
 form-builder/rendering engine, frontend-generated server schemas, validation-library replacements beyond the
 approved Formik adoption, broad E2E, Swagger export/UI and changing domain password or security policy.
 
+### Explicit-source coordination
+
+[TICKET-00010's approved input contract](00010-TICKET.md#explicit-request-input-sources) makes `JsonBody` and
+`QueryString` source indicators without DTO references; `Validation` remains the field/rule authority for both.
+TASK-00155 owns runtime enforcement and checked request access. Export consumes actual named Validation fields,
+not constructor-reflected DTO shape or OpenAPI as a second rule source. A query source or named attribute does
+not opt its rules into this public catalog; the existing safe-publication allowlist remains mandatory. Preserve
+source-specific wire types and explicit normalization when qualifying PHP/client parity, rather than promising
+that all query strings become JSON-native values. No dependency on a populated product form is introduced.
+
 ### Public schema and generation contract
 
 - Explicit CLI generation runs through repository Docker tooling against installed locked packages. It does
