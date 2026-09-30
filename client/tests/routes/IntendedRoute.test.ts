@@ -108,6 +108,22 @@ describe('bounded volatile intended navigation', () => {
     }
   );
 
+  it.each([600_000, -1, Number.NaN])(
+    'rejects capture and clears previous intent after expiry or clock discontinuity (%s)',
+    async (elapsed) => {
+      let now = 1000;
+      const intent = intentWith(undefined, () => now);
+      expect(intent.capture('/app/reports?page=1')).toBe(true);
+      now += elapsed;
+      expect(intent.capture('/app/reports?page=2')).toBe(false);
+      now = 700_000;
+      await cache.beginAuthentication().acceptCredentials();
+      expect(intent.consume()).toBeNull();
+      expect(intent.capture('/app/reports?page=2')).toBe(true);
+      expect(intent.consume()).toBe('/app/reports?page=2');
+    }
+  );
+
   it('re-resolves current route metadata instead of replaying old permission requirements', async () => {
     let routes = [reportRoute];
     const intent = intentWith(() => routes);

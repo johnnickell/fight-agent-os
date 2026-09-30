@@ -46,7 +46,8 @@ Docker Compose is required. This is an application with committed Composer lockf
 ```
 
 The inherited root endpoint runs at http://localhost:18087. Build the browser foundation with
-`./bin/client setup` then `./bin/client check` and open `/app`; see [client commands and boundaries](client/README.md).
+`./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
+`/app`; see [client commands and boundaries](client/README.md).
 The current `./bin/build` gate remains additionally required; combined frontend-gate integration is deferred to
 TICKET-00013. Override the port with `FIGHT_AGENT_OS_PORT`.
 Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTTPS origin and

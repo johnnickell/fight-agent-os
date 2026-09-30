@@ -11,8 +11,10 @@ Use Docker and the repository wrapper; no host Node installation or global front
 
 ```sh
 ./bin/client setup        # Explicit pinned image pull and clean npm ci; requires registry access
+./bin/client storybook-setup # Explicit pinned browser image build, once per Docker host
 ./bin/client versions
-./bin/client check        # Typecheck, lint, format check, Vitest, ESBuild; no network or dependency changes
+./bin/client check        # Complete focused frontend checks; no network or dependency changes
+./bin/client build        # Publish inspected assets for the local /app (check uses scratch output)
 ./bin/client coverage     # Scoped client unit/component coverage under .runs/client/coverage/
 ./bin/client audit        # Optional live registry vulnerability report
 ./bin/up
@@ -20,11 +22,19 @@ Use Docker and the repository wrapper; no host Node installation or global front
 ./bin/build              # Current complete repository gate, additionally required
 ```
 
-Individual read-only acceptance commands: `typecheck`, `lint`, `format-check`, `test`, `build`.
+Individual read-only acceptance commands: `typecheck`, `lint`, `format-check`, `test`, `coverage`,
+`build-check`, `storybook-build`, `storybook-test`, `storybook-capture`. `build` additionally publishes assets
+under ignored `public/build/`, preserving old hashes.
 `format` explicitly rewrites formatting; `lint-fix` explicitly applies semantic/import autofixes. `lock` deliberately regenerates the lock after an authorized dependency change; routine checks
 never install or update packages. Commit `package.json` and `package-lock.json` together. Installation disables
 package lifecycle scripts; ESBuild uses its locked platform binary dependency. Caches/reports live in ignored
 `.runs/client/`, dependencies in ignored `client/node_modules/`, and assets in ignored `public/build/`.
+Setup records hashes of the manifest, committed lock and npm's installed lock in
+`node_modules/.fight-install.json`. Every tooling invocation verifies this receipt and exact Node/npm versions;
+a missing/stale receipt fails with an explicit setup instruction, never an automatic install. The receipt
+is local provenance/staleness evidence, not a tamper-proof integrity check of every installed byte.
+Acceptance containers mount source and dependencies read-only, with only ignored Vite/Storybook cache mounts
+writable beneath `node_modules`. Fix/install/lock commands are the explicit exceptions.
 
 Selected from registry engine/peer contracts and qualified by clean installation and checks:
 
@@ -47,7 +57,45 @@ compatible with the accessibility plugin's declared peer range but emits an unsu
 at installation. Retain this disclosed limitation until a compatible lint-stack upgrade; a clean audit does
 not establish ongoing upstream support. Exact remaining direct pins and transitive integrity hashes are in
 the manifest/lock. The current repository gate does **not** call `bin/client`; TICKET-00013 owns combined gate
-integration and final quality thresholds. Run both gates for this shell.
+integration. Run both gates for this shell; TASK-00033 owns that integration.
+
+### Focused frontend quality gate
+
+`./bin/client check` runs versions/installed dependency validation, both strict TypeScript projects, semantic
+and accessibility lint, non-mutating formatting, V8-instrumented Vitest/RTL, a clean ESBuild production build
+with artifact inspection, static Storybook build/inspection, Chromium story interactions/a11y, and static
+catalog captures/resource checks. Each stage fails fast. Only explicit setup/maintenance/dev commands have
+external networking; checks do not install, update or audit. `npm run check` is intentionally absent: the
+repository wrapper owns orchestration across the two pinned container environments. Both use Node 24.21.0
+and npm 11.19.0. There is no percentage-only frontend gate or seeded-failure/product test of these tools.
+
+Production check output is `.runs/client/production/`, rebuilt clean without pruning live `public/build/`.
+`production-metafile.json` and `production-artifacts.json` record the actual ESBuild/Sass input graph and
+output sizes/SHA-256 hashes. `build` applies the same inspection before publishing assets/manifest and writes
+`build-*` reports. The two-field manifest is published last; no extra private configuration is serialized.
+The current allowlist admits production `src` TypeScript, `styles` SCSS and locked non-dev runtime packages;
+it rejects test/story/fixture/prototype/cache inputs, development modules, external module imports and
+unexpected output types. Only hashed JS/CSS and external license notices are emitted. Source maps and
+source-map/sourceURL references are forbidden. The stylesheet may embed self-contained Bootstrap SVG controls,
+not external fonts/images/imports. New asset types or third-party resource contracts require a deliberate policy change.
+
+Artifact content inspection rejects known private environment names, process/import-meta environment access,
+private-key/JWT/AWS/GitHub credential signatures, literal credential properties, embedded UUID identities and
+unapproved remote JavaScript URL literals. XML namespace identifiers and React's diagnostic URL are narrowly
+allowed; they are not runtime resource loads. These are bounded graph/content checks, **not a general secret
+scanner or a proof against obfuscated/dynamically constructed values**. Human source review must still establish
+that credentials/private config/authority snapshots are not bundled. Production never receives host application
+secrets through the wrapper. Catalog tooling legitimately contains help URLs and example authority fixtures;
+it is isolated from production, has no source maps, and its static captures fail on external requests, render
+errors, accessibility violations or horizontal overflow. `storybook-artifacts.json` inventories its files/hashes.
+
+Coverage includes **all** `src/**/*.{ts,tsx}`, including unimported source. Exact exclusions are
+`src/**/*.d.ts` (declarations) and `src/main.tsx` (browser root/CSS/boot composition). Type-only modules have no
+executable denominator. Tests, stories, configuration, scripts, SCSS and dependencies are outside this owned
+TypeScript behavior measure, not secretly counted as covered. Reports (`text`, JSON summary, HTML) are under
+`.runs/client/coverage/`; read uncovered branches alongside their contracts. Unit/component coverage is not
+browser-story, backend or end-to-end coverage. Narrow checks remain available for iteration; the full repository
+`./bin/build` remains separately mandatory. Screenshot evidence is not visual approval or universal accessibility certification.
 
 ## Frontend conventions
 
@@ -353,14 +401,14 @@ OS/storage listeners and selector; the catalog is not a second production prefer
 
 ```sh
 ./bin/client setup              # Clean locked frontend install
-./bin/client storybook-setup    # Explicit pinned Playwright image pull, once per Docker host
+./bin/client storybook-setup    # Explicit pinned Playwright + Node image build, once per Docker host
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
 ./bin/client storybook-capture  # Built artifact: all 32 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
-./bin/build                    # Still additionally required; combined gate belongs to TASK-00032/00033
+./bin/build                    # Still additionally required; canonical integration belongs to TASK-00033
 ```
 
 Build/test/capture containers have no external network. The development server alone publishes a loopback port;
@@ -394,9 +442,14 @@ peer dependencies are used. jest-dom 6.9.1 aligns with Storybook's matcher imple
 registers its matchers and augments only `Assertion`: its convenience Vitest adapter also augments asymmetric
 matchers, which conflicts with Vitest 4 browser declarations. Existing application assertions remain exercised.
 
-The browser image is Playwright **1.61.0 Noble**, pinned by digest in `bin/client`, with Chromium **149.0.7827.0**
-and Node **24.16.0**. It only runs installed tooling; locked installation/build remains on Node **24.21.0** /
-npm **11.19.0**. Browser binaries come from the pinned image, never an install script or on-demand download.
-Builds disclose Storybook's >500 kB tool-chunk warnings (not production `/app` chunks). The inherited ESLint 9
-installation deprecation remains. Caches, static output, coverage, browser failure screenshots and captures are
-ignored under `.runs/client/` (Storybook also uses ignored `node_modules/.cache/`).
+The browser base is Playwright **1.61.0 Noble**, pinned by digest in `bin/client`, with Chromium **149.0.7827.0**.
+`storybook-setup` builds `etc/docker/client-browser/Dockerfile`, copying `/usr/local/` from the same pinned Node
+image used for installation/build: **24.21.0** / npm **11.19.0**, replacing the base's older Node runtime.
+The Dockerfile defaults retain the same digest pins for direct builds; update both locations deliberately.
+It runs only explicitly installed tooling. Browser binaries and system libraries come from the pinned
+Playwright base, never an install script or on-demand download.
+Builds disclose Storybook's >500 kB tool-chunk warnings (not production `/app` chunks), React-Bootstrap
+`use client` directive-preservation warnings in the browser-only catalog, and Rolldown plugin-timing warnings
+when emitted. None is suppressed. The inherited ESLint 9 installation deprecation remains. Caches, static output, coverage, browser failure screenshots and captures are
+ignored under `.runs/client/`. The otherwise read-only install's `node_modules/.cache/` and `.vite-temp/`
+mount `.runs/client/dependency-cache/` and `.runs/client/vite-temp/` respectively during checks.
