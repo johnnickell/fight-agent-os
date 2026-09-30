@@ -126,6 +126,40 @@ WF IDs, title, type, mode, current status, and dependency IDs. Data comes from d
 and decision summaries retain their meaning. A Closed map has no decision frontier and links to its implementation
 handoff. Wayfinder indexes derive state from maps. Do not invent a frontier when all maps are closed.
 
+## Map-wide planning order
+
+For a selected Wayfinder map, prefer finishing each planning phase across the whole accepted map scope before
+starting the next: resolve its decisions/grilling and write all resulting approved EPICs, then decompose all
+those EPICs into accepted TICKETs, then decompose all those TICKETs into TASKs. Do not descend from the first EPIC
+to TASKs while the same map still has unsettled destinations or unwritten EPICs. Respect decision dependencies,
+the authored frontier and any explicit human choice to work a narrower slice or different sequence; this is the
+default planning preference, not permission to bypass a blocker or invent a new dependency between records.
+
+Use the map's decision summaries and linked handoff to identify its approved destinations and resulting records.
+Distinguish decisions resolved, EPIC written/approved, TICKET decomposition accepted and TASK decomposition
+accepted; parent `done` is implementation closeout, not a planning-phase marker. An existing child table alone
+does not prove the full intended decomposition was accepted. Trace the agreed scope, exclusions and accepted
+records; reuse live/archived artifacts instead of allocating duplicates. If mapping or completion is uncertain,
+name that decision rather than claiming the phase finished. Record authorized planning outcomes in the existing
+map/handoff and owning records, without introducing a parallel queue or rewriting historical approvals.
+
+A Wayfinder decision can resolve to zero, one or several future EPIC destinations; closing a decision does not
+itself authorize creating an EPIC. A Wayfinder interview stays inside that decision's resolution boundary;
+a grill-mode label alone does not invoke the EPIC-producing grill skill.
+An EPIC-producing grill creates one approved EPIC per invocation, then recommends the next destination in the
+same map. Complete the map's remaining decisions and EPIC handoffs before recommending TICKET decomposition,
+unless the human explicitly selects an earlier slice. A Closed map may still have an unfinished linked EPIC
+handoff; it needs no new decision frontier or reopened interviews merely to finish that handoff.
+
+When all EPICs in that scope have accepted TICKET decompositions, recommend `to-tasks` for the next accepted
+TICKET. Continue across the map's remaining TICKETs before recommending implementation selection through `next`.
+Stop for each required human approval unless already provided; recommending the next phase never runs it.
+The TASK Board still owns execution order, including existing active work unrelated to this map. Standalone
+EPICs/TICKETs need not wait for unrelated maps, and multiple maps have no implicit global priority.
+
+Use the [skill handoff rules](../docs/engineering/HANDOFFS.md) to return an explicit, copyable `Next:` command for
+the selected target or the precise human/prerequisite action when no command is ready.
+
 ## Archive operation
 
 Archive only on an explicit request, never as a completion side effect. Use the owning tool rather than moving

@@ -30,3 +30,7 @@ Route changed behavior to the [qa skill](../qa/SKILL.md) before `land`, includin
 work and executable instructions. Technical acceptance does not claim QA PASS. Do not claim screenshots were
 verified unless actually inspected. Mechanical Board/docs reconciliation
 uses the existing landing bridge; another review is not required merely because commit IDs changed.
+
+Finish with an explicit, copyable `Next:` under the [handoff rules](../../../docs/engineering/HANDOFFS.md), using
+the actual TASK ID: implementation findings to `work`, acceptance to applicable `qa`, or satisfied QA to authorized
+`land`. Preserve evidence-only and human-prerequisite routes instead of always recommending implementation repair.

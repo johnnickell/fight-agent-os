@@ -35,3 +35,7 @@ already-open PR uses the same current-subject checks and does not imply merge ap
 4. **Clean and hand off.** Recheck exact TASK resource ownership. Remove only proven disposable TASK resources and, if isolated, its clean registered worktree as the final tool operation from the base checkout. Keep the feature branch and review evidence. Return the clickable PR URL, review/provenance bridge, checks, warnings, cleanup results and remaining human actions.
 
 A conflict that changes implementation, failed required check, inaccessible remote, or ambiguous cleanup blocks successful landing. Landing never approves, merges, force-pushes, deletes the remote branch, archives or deploys.
+
+Finish with an explicit `Next:` under the [handoff rules](../../../docs/engineering/HANDOFFS.md). Successful
+publication points to human review/merge of the actual PR. Draft evidence or delivery continuations identify the
+required proof and next `review`/`land` command; blockers name their real repair, QA or prerequisite route.

@@ -12,6 +12,12 @@ Design new capabilities through planning instead of copying the existing Factory
 exploration also follows the shared [design standards](../../docs/design/STANDARDS.md), and independent critique follows the
 [design-review standards](../../docs/design/REVIEW.md).
 
+Useful completions end with an explicit, copyable `Next:` command under the [handoff rules](../../docs/engineering/HANDOFFS.md).
+Engineering routes through work/review repair loops, QA and land according to actual evidence. For a selected
+Wayfinder map, favor finishing its decisions/grills and all approved EPICs, then all TICKET decompositions, then
+all TASK decompositions before implementation selection. Recommendations preserve human decisions and do not
+automatically invoke the next skill.
+
 Installing Pi, providers, third-party skills, and terminal extensions is a separate setup step. No account
 configuration or global skill installation is changed by this scaffold.
 

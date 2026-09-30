@@ -297,3 +297,19 @@ These are instruction traces and builder qualification, not independent review/Q
 executed API/fault-injection tests or screenshot evidence. This change does not claim new browser availability,
 managed QA enforcement or successful artifact publication. Earlier TASK-00146 runtime limitations remain historical;
 current validation counts and exact build receipts belong to TASK-00150's completion evidence.
+
+
+## Next-command handoffs and map-wide planning — 2026-09-30
+
+TASK-00150's final follow-up adds [explicit next-command handoffs](HANDOFFS.md) and the default
+[map-wide planning order](../../planning/CONVENTIONS.md#map-wide-planning-order). Sixteen additional builder
+walkthroughs trace work/review repair loops, non-UI QA, missing prerequisites, hosted-evidence continuation,
+publication/human merge, pending WF decisions, multi-EPIC and multi-TICKET phase order, closed-map handoffs,
+explicit narrower requests, uncertain approvals, unordered maps and Board-owned execution selection.
+
+The direct traces confirm that a recommendation uses the actual target and never invokes the next skill,
+waives an approval or claims an accepted record from a proposal. Grill remains one approved EPIC per invocation;
+Wayfinder owns interviews whose resolution boundary excludes EPIC creation. Existing live/archived planning and
+authoritative Board semantics remain intact. These are builder instruction checks, not independent acceptance,
+real planning mutations, automatic skill execution or empirical agent trials. The TASK and ignored final receipt
+record current metadata/link/planning checks, full-gate results and committed content identity.

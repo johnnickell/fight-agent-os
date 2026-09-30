@@ -48,3 +48,7 @@ scenario narrows investigation but cannot silently waive the TASK's remaining re
 Default flow: `work → review → qa → land → human merge`. An already-open PR may receive the same QA before
 merge. If technical acceptance is missing, record findings as diagnostic evidence but leave acceptance readiness
 INCOMPLETE; do not invent an independent review. A confirmed defect is still reported as FAIL.
+
+End with `Next:` using the actual target and [handoff rules](../../../docs/engineering/HANDOFFS.md): confirmed
+defect to `work`, missing technical acceptance to `review`, other INCOMPLETE to its named prerequisite and QA
+resume command, and satisfied QA to authorized `land`. Keep the report and evidence links above that line.

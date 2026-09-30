@@ -55,7 +55,7 @@ For a TASK requiring implementation, provide:
 ```text
 TASK: TASK-NNNNN — Title
 Why: Active work to continue | First executable Ready Frontier entry
-Run: /skill:work TASK-NNNNN
+Next: /skill:work TASK-NNNNN
 ```
 
 If multiple TASKs are active, list all of them and state that the Board provides no instruction to start another
@@ -66,8 +66,10 @@ and owning record.
 
 ## 3. Select Wayfinder decisions
 
-Read `planning/wayfinder/README.md`, then every live map listed there. Closed maps supply a no-work result only;
-inspect every map marked **Active**.
+Read `planning/wayfinder/README.md`, then every live map listed there. Inspect every **Active** map for decisions.
+Closed maps have no decision frontier, but inspect their linked planning handoffs for explicitly unfinished EPIC
+or decomposition work under [map-wide planning order](../../../planning/CONVENTIONS.md#map-wide-planning-order).
+Do not invent unfinished destinations or reopen settled maps; verify resulting live/archived records.
 
 For each active map:
 
@@ -86,17 +88,31 @@ WAYFINDER: WF-NNN — Decision title
 Map: Active map title
 Why: Authored frontier; all dependencies closed
 Mode: Ticket label and mode
-Run: /skill:wayfinder work WF-NNN
+Next: /skill:wayfinder work WF-NNN
 ```
 
 When one active map has one available frontier, return it as the next Wayfinder decision. When multiple active maps
 have available frontiers, return every map's available frontier and state that planning defines no global map
-priority; let the human choose. When no map is active, report `WAYFINDER: None — all maps are closed`.
+priority; let the human choose. When no map is active, report `WAYFINDER: None — all maps are closed`; this does
+not by itself establish that their linked EPIC/TICKET/TASK planning handoffs are complete.
 
 Wayfinder selection is complete when every active map has either one evidence-backed recommendation or one explicit
 reason it has none.
 
-## 4. Stop at the route
+## 4. Select the planning phase
 
-Return compact `TASK`, `WAYFINDER`, and optional `HUMAN INPUT` sections. Do not edit status, refresh generated
+For a selected map or each map with an explicit unfinished handoff, follow [map-wide planning order](../../../planning/CONVENTIONS.md#map-wide-planning-order)
+and the [handoff command shapes](../../../docs/engineering/HANDOFFS.md#planning-handoffs). Prefer remaining
+decisions/grills and approved unwritten EPICs, then accepted TICKET decomposition for all its EPICs, then TASK
+decomposition for all its TICKETs. Read the receiving skill before recommending its command. Show the actual
+target and evidence for its phase; a nonempty child table or parent status alone cannot prove full decomposition.
+Honor an explicit narrower choice, and show unresolved scope/approval as human input rather than a runnable
+next phase. Multiple maps remain independent choices without invented global priority. This recommendation does
+not override the authoritative TASK Board or automatically start any planning or implementation.
+
+## 5. Stop at the route
+
+Return compact `TASK`, `WAYFINDER`, and applicable `PLANNING` / `HUMAN INPUT` sections. Finish each actionable
+recommendation with a copyable `Next:` line under the [handoff rules](../../../docs/engineering/HANDOFFS.md), using
+the actual target. Do not edit status, refresh generated
 views, create branches or worktrees, or begin the recommended skill.

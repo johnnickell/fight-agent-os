@@ -36,3 +36,7 @@ report gaps honestly, and validate tooling with its owning tools rather than pro
 5. **Commit and hand off.** Stage only owned files, inspect staged changes, and commit. Return branch/head, scope, evidence, risks and unrelated work preserved; request independent review. Stop before push, PR, approval or merge without separate authority.
 
 A failing required check or unsupported criterion is incomplete work, not a green handoff.
+
+Finish with the explicit `Next:` line from the [handoff rules](../../../docs/engineering/HANDOFFS.md): after a
+verified committed implementation or repair, recommend `/skill:review TASK-NNNNN` using the actual TASK ID and
+name the independent-session requirement. For incomplete work, state its real continuation or prerequisite.

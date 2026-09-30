@@ -24,6 +24,10 @@ creating implementation work, installing skills globally or publishing anything.
    that the reader reaches the needed reference, knows when to stop, and cannot mistake a proposal for execution.
    Validate metadata and relative links directly; remove placeholders, duplication and unsupported tool commands.
 
+For skills with a useful continuation, make completion include a concrete `Next:` line under the [handoff
+rules](../../../docs/engineering/HANDOFFS.md). Use a supported command and actual target or name the pending
+human/prerequisite action; a recommendation must not silently dispatch the next skill or imply acceptance.
+
 For AGENTS.md and related instruction maintenance, follow the [instruction reconciliation rules](../../../docs/engineering/QUALITY.md#agent-instructions-and-policy-drift).
 Inspect affected responsibilities and linked authorities; consider additions, corrections and evidenced removals.
 Keep shared facts in one owner and narrower guidance at meaningful boundaries, verifying the active harness's

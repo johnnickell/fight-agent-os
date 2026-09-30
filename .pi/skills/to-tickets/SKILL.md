@@ -10,6 +10,9 @@ This skill turns an approved EPIC into one or more `planning/tickets/NNNNN-TICKE
 ## Process
 
 1. Read the EPIC, relevant ADRs, `planning/CONVENTIONS.md`, and existing live plus archived TICKETs before allocating IDs.
+   If it belongs to a Wayfinder handoff, inspect that map's phase under [map-wide planning order](../../../planning/CONVENTIONS.md#map-wide-planning-order).
+   Favor remaining decisions/grills and unwritten approved EPICs first. A direct user request to decompose this
+   EPIC is an explicit narrower choice; record the remaining map work without asking for that choice again.
 2. Identify cohesive requirement areas: user journeys, commands, queries, events, permissions, validation, and observable acceptance evidence.
 3. Draft a proposed decomposition for the user:
    - TICKET title
@@ -27,3 +30,8 @@ This skill turns an approved EPIC into one or more `planning/tickets/NNNNN-TICKE
 - Do not create TASK records here; use `to-tasks` after TICKET requirements are accepted.
 - Prefer domain language over file paths.
 - Explain non-applicable security, validation, event, command, and query concerns rather than omitting them.
+
+Finish with an explicit `Next:` under the [handoff rules](../../../docs/engineering/HANDOFFS.md). Default to
+`to-tickets` for the next undecomposed EPIC in the selected map before any `to-tasks`; if an explicit slice was
+chosen, account for the map's earlier unfinished phase in the recommendation. Use actual accepted records, not
+proposed IDs or merely nonempty child tables. Pending split approval remains a human action, not phase completion.
