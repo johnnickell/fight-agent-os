@@ -8,7 +8,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | in-progress | — | — |
-| — | [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -188,4 +187,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00147](00147-TASK.md) | Publish landing captures with GitHub CLI attachments | — (standalone chore) | done | — | [PR #44](https://github.com/johnnickell/fight-agent-os/pull/44) |
 | — | [TASK-00148](00148-TASK.md) | Adopt separated frontend tests and consistent import and style conventions | — (standalone chore) | done | — | [PR #49](https://github.com/johnnickell/fight-agent-os/pull/49) |
 | — | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | — (standalone chore) | done | — | [PR #50](https://github.com/johnnickell/fight-agent-os/pull/50) |
+| — | [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | — (standalone chore) | done | — | — |
 <!-- /planning:board -->

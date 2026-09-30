@@ -152,5 +152,5 @@
 | [TASK-00147](00147-TASK.md) | Publish landing captures with GitHub CLI attachments | done | — |
 | [TASK-00148](00148-TASK.md) | Adopt separated frontend tests and consistent import and style conventions | done | — |
 | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | done | — |
-| [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | in-progress | — |
+| [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | done | — |
 <!-- /planning:records -->
