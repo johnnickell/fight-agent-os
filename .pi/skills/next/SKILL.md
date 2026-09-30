@@ -31,7 +31,7 @@ Read `planning/tasks/BOARD.md` and the complete record for every TASK considered
 
 Before describing the command, read `.pi/skills/work/SKILL.md` and any canonical review for the selected TASK.
 Apply the [local-first verification policy](../../../docs/engineering/REVIEW.md#local-gate-and-optional-hosted-checks); an optional missing hosted run is not a new blocker. If a report incorrectly requires optional CI, route to independent reassessment rather than overriding its verdict.
-A review whose only outstanding explicit requirement is hosted evidence routes to authorized draft publication under
+Before initial acceptance, a review whose only outstanding explicit requirement is hosted evidence routes to authorized draft publication under
 [landing standards](../../../docs/engineering/LANDING.md#draft-publication-to-obtain-hosted-evidence), or to
 independent `review` once that evidence is available. Read the selected skill before recommending it. State
 missing publication authority as human input; do not recommend `work` for an evidence-only blocker. Read the selected TASK's canonical QA report when present under [QA standards](../../../docs/engineering/QA.md).
@@ -43,10 +43,12 @@ handoff or canonical QA report can satisfy that boundary for changes with no beh
 Before acceptance, unimplemented TASKs and unresolved implementation findings route to `work`; completed
 implementation awaiting technical review routes to `review`. A missing QA report must not send unimplemented
 work directly into QA.
-An accepted TASK with applicable QA satisfied routes to `land`; implementation findings route to `work`. If a delivery continuation preserves accepted
-candidate A but awaits final-head proof for administrative closeout B, resume final delivery verification
-through `land` (or independent `review` when proof is available), without repeating initial draft intake or
-reopening implementation. An unresolved literal-final-head completion contract needs the requirement owner's
+An accepted TASK with applicable QA satisfied routes to `land`; implementation findings route to `work`.
+For accepted candidate A with administrative closeout B, resume final delivery verification through `land`,
+including when required final-head proof becomes available. Apply the same route to an older delivery-only
+`revise` report that explicitly preserves accepted A under [landing intake](../../../docs/engineering/LANDING.md#intake-and-authority).
+Do not require another independent review, repeat initial draft intake or reopen implementation solely for delivery.
+An unresolved literal-final-head completion contract needs the requirement owner's
 amendment decision under [closeout rules](../../../docs/engineering/LANDING.md#acceptance-candidate-and-administrative-closeout),
 not another status commit. Preserve the Board's TASK selection.
 

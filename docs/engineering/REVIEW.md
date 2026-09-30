@@ -71,6 +71,9 @@ A blocking finding is a traceable acceptance, correctness, security, data-integr
 
 ## Missing hosted evidence and focused continuation
 
+This continuation establishes initial independent acceptance when required hosted proof was missing. It does
+not apply to administrative closeout after acceptance; land owns that delivery verification below.
+
 Distinguish an implementation correction from an external evidence action. When the only unresolved acceptance
 items are required hosted checks, record `revise`, keep those items `Unverified`, and state **Awaiting hosted
 verification; no implementation correction identified**. Identify the missing checks, the criteria they satisfy,
@@ -96,14 +99,14 @@ assessment. Only change to `accept` when all required evidence passes. A code fa
 missing, cancelled or infrastructure-failed run stays an evidence action, with its actual cause and next step.
 Do not repeatedly poll an unchanged external state or create empty commits to retrigger it.
 
-For administrative closeout after accepted candidate A, verify that the recorded policy permits the split and
-that B changes only permitted metadata/generated views. Keep A's acceptance provenance distinct from B's final
-hosted delivery proof; do not pretend A's report reviewed B. Pending delivery does not rescind A's acceptance by
-itself or require a tracked status toggle. A delivery continuation with missing required proof remains
-`revise`/`Unverified` for delivery readiness, explicitly preserving the accepted A checkpoint. Successful
-continuation records B and its exact runs, and can accept final delivery without another tracked status commit.
-An actual defect invalidates acceptance and routes to `work`; non-administrative changes require fresh review.
-No report waives the target's existing acceptance or final-head requirements.
+After accepted candidate A, route administrative closeout B to land's [final delivery verification](LANDING.md#verify-and-publish).
+Land verifies the administrative diff and required run provenance, records delivery results in its ignored
+receipt and PR body, and marks the PR ready when the publication requirements are satisfied. Pending delivery
+neither rescinds A's acceptance nor requires a delivery-only `revise` report. No additional independent review
+or canonical review update is required solely for administrative closeout, changed commit IDs or newly available
+delivery CI results. Preserve the distinction between A's independent acceptance and B's delivery evidence.
+Substantive changes, demonstrated defects or unproven integration still require independent review; defects
+first route to `work` for repair. These rules do not waive initial acceptance or required final-head checks.
 
 ## Durable handoff
 

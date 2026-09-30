@@ -25,12 +25,14 @@ not new acceptance or publication authority.
 | QA confirms a defect | `/skill:work TASK-NNNNN`; material repair then returns through review and affected QA |
 | QA is incomplete | Name the actual missing prerequisite, then `/skill:qa TASK-NNNNN` to resume; missing technical acceptance first routes to independent review |
 | QA passes or establishes justified N/A, with current technical acceptance | `/skill:land TASK-NNNNN` within publication authority |
-| Review's only missing proof is explicitly required hosted evidence | Authorized `/skill:land TASK-NNNNN` draft-evidence path; then `/skill:review TASK-NNNNN` once that evidence is available |
+| Initial independent acceptance lacks only explicitly required hosted evidence | Authorized `/skill:land TASK-NNNNN` draft-evidence path; then `/skill:review TASK-NNNNN` once that evidence is available |
+| Accepted candidate A has administrative closeout B, with final delivery proof pending or newly available | `/skill:land TASK-NNNNN` verifies closeout and required checks; no additional independent review or canonical review update solely for delivery |
 | Land publishes successfully | Human review/merge of the actual PR link; do not imply automatic merge or start another TASK |
 
 Failed required implementation checks keep work incomplete; recommend the same work skill only when continuing
 it can resolve the issue, otherwise name the prerequisite. A draft PR or pending final-head delivery proof is
-not successful landing: use the existing evidence-continuation route, not a false completion or repair loop.
+not successful landing. Distinguish missing initial acceptance from land-owned delivery verification after
+acceptance using the routes above; retain required evidence gates without a completion or repair loop.
 For an open-PR QA invocation, the observed PR URL can be the resume target; resolve its TASK for work/review/land.
 
 ## Planning handoffs
