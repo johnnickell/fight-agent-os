@@ -8,7 +8,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | in-progress | — | — |
-| 33 | [TASK-00155](00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -38,7 +37,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 38 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00037](00037-TASK.md) | — |
 | 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00033](00033-TASK.md) | — |
 | 40 | [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00038](00038-TASK.md) | — |
-| 41 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00040](00040-TASK.md), [TASK-00117](00117-TASK.md), [TASK-00155](00155-TASK.md) | — |
+| 41 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00040](00040-TASK.md), [TASK-00117](00117-TASK.md) | — |
 | 42 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00041](00041-TASK.md) | — |
 | 43 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00035](00035-TASK.md), [TASK-00039](00039-TASK.md), [TASK-00042](00042-TASK.md), [TASK-00152](00152-TASK.md) | — |
 | 44 | [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00036](00036-TASK.md) | — |
@@ -182,6 +181,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 30 | [TASK-00030](00030-TASK.md) | Complete PHP style and static analysis | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | done | — | [PR #25](https://github.com/johnnickell/fight-agent-os/pull/25) |
 | 32 | [TASK-00032](00032-TASK.md) | Enforce deterministic frontend quality checks | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | done | — | [PR #53](https://github.com/johnnickell/fight-agent-os/pull/53) |
 | 33 | [TASK-00153](00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #55](https://github.com/johnnickell/fight-agent-os/pull/55) |
+| 33 | [TASK-00155](00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | — |
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
 | — | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | — (standalone chore) | done | — | [PR #19](https://github.com/johnnickell/fight-agent-os/pull/19) |
