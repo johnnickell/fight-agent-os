@@ -39,6 +39,7 @@ export class AuthorityCache {
   readonly #loader: PrincipalLoader;
   readonly #now: () => number;
   readonly #listeners = new Set<() => void>();
+  readonly #logoutListeners = new Set<() => void>();
   #state: AuthorityState = Object.freeze({ status: 'unknown' });
   #context = 0;
   #generation = 0;
@@ -68,6 +69,16 @@ export class AuthorityCache {
       this.#listeners.delete(listener);
     };
   };
+
+  /**
+   * Observes explicit logout cleanup even when a newer transition replaces its snapshot
+   */
+  subscribeLogout(listener: () => void): () => void {
+    this.#logoutListeners.add(listener);
+    return () => {
+      this.#logoutListeners.delete(listener);
+    };
+  }
 
   /**
    * Checks freshness at render/action time even if the browser delayed its timer
@@ -157,11 +168,17 @@ export class AuthorityCache {
   signal(signal: AuthoritySignal): Promise<void> {
     if (this.#disposed) return Promise.resolve();
     if (signal === 'logout' || signal === 'terminal') {
-      this.#context++;
+      // Capture cleanup recipients before abort callbacks can dispose subscriptions.
+      const logoutListeners = signal === 'logout' ? [...this.#logoutListeners] : [];
+      const context = ++this.#context;
       this.#barrier = true;
       this.#canLoad = false;
       this.#identity = null;
-      if (!this.#retire()) return Promise.resolve();
+      const current = this.#retire();
+      // Cleanup is an effect of explicit logout, not a transient authority snapshot.
+      // Deliver even if retirement was superseded; cleanup callbacks may supersede it too.
+      for (const listener of logoutListeners) listener();
+      if (!current || context !== this.#context) return Promise.resolve();
       this.#publish(
         signal === 'logout' ? { status: 'anonymous', reason: 'logout' } : { status: 'terminal' }
       );
@@ -226,6 +243,7 @@ export class AuthorityCache {
     this.#retire();
     this.#publish({ status: 'terminal' });
     this.#listeners.clear();
+    this.#logoutListeners.clear();
   }
 
   #apply(result: PrincipalLoadResult): void {

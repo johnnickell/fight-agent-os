@@ -144,6 +144,50 @@ describe('bounded volatile intended navigation', () => {
     expect(intent.consume()).toBeNull();
   });
 
+  it.each(['scope-abort', 'subscriber', 'logout-listener'] as const)(
+    'R-02: discards logout intent when a %s callback supersedes logout with terminal',
+    async (callback) => {
+      await cache.beginAuthentication().acceptCredentials();
+      // Register first so the navigation owner cannot rely on observing logout's snapshot.
+      const unsubscribe =
+        callback === 'logout-listener'
+          ? cache.subscribeLogout(() => void cache.signal('terminal'))
+          : cache.subscribe(() => {
+              const state = cache.getSnapshot();
+              if (
+                callback === 'subscriber' &&
+                state.status === 'anonymous' &&
+                state.reason === 'logout'
+              )
+                void cache.signal('terminal');
+            });
+      try {
+        const intent = intentWith();
+        expect(intent.capture('/app/reports')).toBe(true);
+        if (callback === 'scope-abort') {
+          cache
+            .captureScope()
+            .signal.addEventListener('abort', () => void cache.signal('terminal'), {
+              once: true
+            });
+        }
+        await cache.signal('logout');
+        expect(cache.getSnapshot()).toEqual({ status: 'terminal' });
+        await cache.beginAuthentication().acceptCredentials();
+        expect(cache.getSnapshot().status).toBe('authenticated');
+        expect(intent.consume()).toBeNull();
+
+        // The cleanup must not permanently prevent a genuinely later navigation intent.
+        expect(intent.capture('/app/reports?page=2')).toBe(true);
+        await cache.signal('terminal');
+        await cache.beginAuthentication().acceptCredentials();
+        expect(intent.consume()).toBe('/app/reports?page=2');
+      } finally {
+        unsubscribe();
+      }
+    }
+  );
+
   it('fails closed if the route registry cannot resolve current metadata', async () => {
     let unavailable = false;
     const intent = intentWith(() => {

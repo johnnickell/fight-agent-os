@@ -30,10 +30,7 @@ export class IntendedRoute {
     this.#origin = origin;
     this.#now = now;
     this.#lastClock = now();
-    this.#unsubscribe = cache.subscribe(() => {
-      const state = cache.getSnapshot();
-      if (state.status === 'anonymous' && state.reason === 'logout') this.clear();
-    });
+    this.#unsubscribe = cache.subscribeLogout(() => this.clear());
   }
 
   capture(target: string): boolean {

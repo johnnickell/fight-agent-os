@@ -288,9 +288,13 @@ example loaders. TASK-00117/TASK-00049 still own the server projection and real 
   credentials, auth/grant paths, external/scheme/relative targets, controls, backslashes, ambiguous paths/encoding
   and oversized input are rejected. Fragments are discarded. Parameterized paths need a later classified contract.
   The guard captures eligible confirmed-anonymous navigation when given this owner and the current location.
-  Logout clears intent; repeated redirects do not replace it or renew its deadline. After fresh authentication,
-  `consume()` re-resolves current route requirements and consumes once. A null result leaves landing selection to
-  the future navigation owner: choose an authorized landing route or forbidden, never invent a Dashboard grant.
+  Logout clears intent through `AuthorityCache.subscribeLogout`, independently of snapshot subscriptions.
+  Cleanup recipients are captured at logout intake and notified after authority retirement even if an abort or
+  earlier subscriber replaces the logout snapshot with terminal; involuntary terminal expiry alone retains intent.
+  Dispose the navigation owner to unsubscribe. Repeated redirects do not replace intent or renew its deadline.
+  After fresh authentication, `consume()` re-resolves current route requirements and consumes once. A null result
+  leaves landing selection to the future navigation owner: choose an authorized landing route or forbidden,
+  never invent a Dashboard grant.
   No login return URL, history-state payload, form data, browser storage or cross-tab transfer is used.
 
 Authority tests cover controlled/out-of-order promises, context barriers, invalidation, freshness, loader

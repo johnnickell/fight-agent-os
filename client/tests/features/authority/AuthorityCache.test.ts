@@ -190,6 +190,52 @@ describe('principal ownership and transitions', () => {
     }
   );
 
+  it('delivers explicit logout cleanup after authority retirement, not for involuntary expiry', async () => {
+    const cache = cacheWith(() => Promise.resolve(success));
+    await cache.load();
+    const scope = cache.captureScope();
+    const observed: boolean[] = [];
+    const unsubscribe = cache.subscribeLogout(() => {
+      observed.push(scope.signal.aborted && !scope.isCurrent());
+    });
+    await cache.signal('logout');
+    expect(observed).toEqual([true]);
+    await cache.signal('terminal');
+    expect(observed).toEqual([true]);
+    await cache.signal('logout');
+    expect(observed).toEqual([true, true]);
+    unsubscribe();
+    await cache.signal('logout');
+    expect(observed).toEqual([true, true]);
+  });
+
+  it('delivers in-progress logout cleanup even if an abort callback disposes the owner', async () => {
+    const cache = cacheWith(() => Promise.resolve(success));
+    await cache.load();
+    const cleanup = vi.fn();
+    cache.subscribeLogout(cleanup);
+    cache.captureScope().signal.addEventListener('abort', () => cache.dispose(), { once: true });
+    await cache.signal('logout');
+    expect(cleanup).toHaveBeenCalledOnce();
+    expect(cache.getSnapshot()).toEqual({ status: 'terminal' });
+    await cache.signal('logout');
+    expect(cleanup).toHaveBeenCalledOnce();
+  });
+
+  it('does not overwrite a newer authentication attempt started by logout cleanup', async () => {
+    const cache = cacheWith(() => Promise.resolve(success));
+    await cache.load();
+    let attempt: ReturnType<AuthorityCache['beginAuthentication']> | undefined;
+    cache.subscribeLogout(() => {
+      attempt = cache.beginAuthentication();
+    });
+    await cache.signal('logout');
+    expect(cache.getSnapshot()).toEqual({ status: 'unknown' });
+    expect(attempt).toBeDefined();
+    await attempt?.acceptCredentials();
+    expect(cache.getSnapshot()).toEqual({ status: 'authenticated', principal });
+  });
+
   it.each(['success', 'terminal', 'throw'] as const)(
     'ignores old %s after a newer principal, even when abort is ignored',
     async (outcome) => {
