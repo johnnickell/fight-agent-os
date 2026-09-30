@@ -151,5 +151,5 @@
 | [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | done | [TICKET-00033](../tickets/00033-TICKET.md) |
 | [TASK-00147](00147-TASK.md) | Publish landing captures with GitHub CLI attachments | done | — |
 | [TASK-00148](00148-TASK.md) | Adopt separated frontend tests and consistent import and style conventions | done | — |
-| [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | ready-for-agent | — |
+| [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | done | — |
 <!-- /planning:records -->

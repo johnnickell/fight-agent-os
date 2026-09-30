@@ -16,7 +16,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | — | — |
 | 28 | [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | — (standalone chore) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -187,4 +186,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | [TICKET-00033 — Verify reviewed behavior with independent QA before landing](../tickets/00033-TICKET.md) | done | — | [PR #40](https://github.com/johnnickell/fight-agent-os/pull/40) |
 | — | [TASK-00147](00147-TASK.md) | Publish landing captures with GitHub CLI attachments | — (standalone chore) | done | — | [PR #44](https://github.com/johnnickell/fight-agent-os/pull/44) |
 | — | [TASK-00148](00148-TASK.md) | Adopt separated frontend tests and consistent import and style conventions | — (standalone chore) | done | — | [PR #49](https://github.com/johnnickell/fight-agent-os/pull/49) |
+| — | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | — (standalone chore) | done | — | [PR #50](https://github.com/johnnickell/fight-agent-os/pull/50) |
 <!-- /planning:board -->

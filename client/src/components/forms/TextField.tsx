@@ -1,4 +1,7 @@
 import { useId } from 'react';
+import FormControl from 'react-bootstrap/FormControl';
+import FormLabel from 'react-bootstrap/FormLabel';
+import FormText from 'react-bootstrap/FormText';
 
 import type { ComponentPropsWithRef } from 'react';
 
@@ -14,6 +17,9 @@ type TextFieldProps = Omit<
 
 /**
  * Connects native field semantics to visible help and caller-owned validation feedback
+ *
+ * Maps native size to htmlSize; omits absent library props and copies readonly values
+ * to preserve the native input API under the library's narrower optional/value types
  */
 export function TextField({
   label,
@@ -22,6 +28,11 @@ export function TextField({
   required,
   className = '',
   type = 'text',
+  size,
+  readOnly = false,
+  disabled = false,
+  value,
+  onChange,
   ...props
 }: TextFieldProps) {
   const id = useId();
@@ -30,28 +41,35 @@ export function TextField({
   const describedBy = [description ? helpId : '', error ? errorId : ''].filter(Boolean).join(' ');
   return (
     <div className="catalog-field">
-      <label className="form-label" htmlFor={id}>
+      <FormLabel htmlFor={id}>
         {label}
         {required ? ' (required)' : ''}
-      </label>
-      <input
+      </FormLabel>
+      <FormControl
+        as="input"
         {...props}
         id={id}
         type={type}
         required={required}
-        className={`form-control ${error ? 'is-invalid' : ''} ${className}`}
+        className={className}
+        isInvalid={Boolean(error)}
+        readOnly={readOnly}
+        disabled={disabled}
+        {...(size === undefined ? {} : { htmlSize: size })}
+        {...(value === undefined ? {} : { value: typeof value === 'object' ? [...value] : value })}
+        {...(onChange === undefined ? {} : { onChange })}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy || undefined}
       />
       {description && (
-        <p id={helpId} className="form-text">
+        <FormText as="p" id={helpId}>
           {description}
-        </p>
+        </FormText>
       )}
       {error && (
-        <p id={errorId} className="invalid-feedback">
+        <FormControl.Feedback as="p" id={errorId} type="invalid">
           Error: {error}
-        </p>
+        </FormControl.Feedback>
       )}
     </div>
   );

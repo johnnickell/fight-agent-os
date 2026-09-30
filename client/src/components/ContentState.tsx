@@ -1,3 +1,5 @@
+import Spinner from 'react-bootstrap/Spinner';
+
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
 
@@ -20,7 +22,7 @@ export function ContentState({ kind, title, message, onRetry }: ContentStateProp
         title={title}
         announce={kind === 'empty' ? 'off' : 'polite'}
       >
-        {kind === 'loading' && <span className="catalog-spinner" aria-hidden="true" />}
+        {kind === 'loading' && <Spinner as="span" className="catalog-spinner" aria-hidden="true" />}
         {message}
       </Notice>
       {kind === 'error' && onRetry && <Button onClick={onRetry}>Try again</Button>}

@@ -19,7 +19,10 @@ describe('Button', () => {
       </form>
     );
     await user.tab();
-    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
+    const button = screen.getByRole('button', { name: 'Continue' });
+    expect(button.tagName).toBe('BUTTON');
+    expect(button).toHaveAttribute('type', 'button');
+    expect(button).toHaveFocus();
     await user.keyboard('{Enter} ');
     expect(click).toHaveBeenCalledTimes(2);
     expect(submit).not.toHaveBeenCalled();
