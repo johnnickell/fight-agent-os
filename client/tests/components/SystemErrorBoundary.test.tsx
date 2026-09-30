@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { expect, it } from 'vitest';
-import { SystemErrorBoundary } from './SystemErrorBoundary';
+
+import { SystemErrorBoundary } from '@/components/SystemErrorBoundary';
 
 it('contains a render failure without exposing its message', () => {
   function BrokenPage(): never {
@@ -10,10 +11,8 @@ it('contains a render failure without exposing its message', () => {
     <SystemErrorBoundary>
       <BrokenPage />
     </SystemErrorBoundary>,
-    { onCaughtError: () => {} },
+    { onCaughtError: () => {} }
   );
-  expect(
-    screen.getByRole('heading', { name: 'Application unavailable' }),
-  ).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Application unavailable' })).toBeVisible();
   expect(document.body.textContent).not.toContain('private-render-failure');
 });

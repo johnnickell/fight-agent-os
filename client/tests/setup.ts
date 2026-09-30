@@ -1,7 +1,8 @@
 import * as matchers from '@testing-library/jest-dom/matchers';
-import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers';
 import { cleanup } from '@testing-library/react';
 import { afterEach, expect } from 'vitest';
+
+import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers';
 
 // The Vitest adapter's asymmetric matcher augmentation conflicts with Vitest's
 // browser types. Extend only the assertions used by this jsdom suite.

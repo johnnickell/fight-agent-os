@@ -1,9 +1,12 @@
 import { useRef, useState } from 'react';
-import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import { expect, userEvent, within } from 'storybook/test';
-import { TextField } from '../src/components/forms/TextField';
-import { Button } from '../src/components/Button';
-import { Notice } from '../src/components/Notice';
+
+import { Button } from '@/components/Button';
+import { TextField } from '@/components/forms/TextField';
+import { Notice } from '@/components/Notice';
+
+import type { Meta, StoryObj } from '@storybook/react-vite';
 
 const meta = {
   title: 'Foundation/Text field',
@@ -11,8 +14,8 @@ const meta = {
   args: {
     label: 'Example label',
     description: 'Invented local text only.',
-    required: true,
-  },
+    required: true
+  }
 } satisfies Meta<typeof TextField>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -20,7 +23,7 @@ type Story = StoryObj<typeof meta>;
 export const Ready: Story = {};
 export const Invalid: Story = { args: { error: 'Enter an example label.' } };
 export const Disabled: Story = {
-  args: { disabled: true, defaultValue: 'Unavailable example' },
+  args: { disabled: true, defaultValue: 'Unavailable example' }
 };
 
 // Disposable story composition, not a product form or a copied component implementation.
@@ -70,21 +73,15 @@ export const ValidationToSuccess: Story = {
   render: () => <LocalForm />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Validate example' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Validate example' }));
     const field = canvas.getByRole('textbox', {
-      name: 'Example label (required)',
+      name: 'Example label (required)'
     });
     await expect(field).toHaveFocus();
-    await expect(field).toHaveAccessibleDescription(
-      /Error: Enter an example label/,
-    );
+    await expect(field).toHaveAccessibleDescription(/Error: Enter an example label/);
     await userEvent.type(field, 'Sample label');
     await userEvent.keyboard('{Enter}');
-    await expect(canvas.getByRole('status')).toHaveTextContent(
-      'Example validated locally',
-    );
+    await expect(canvas.getByRole('status')).toHaveTextContent('Example validated locally');
     await expect(field).not.toHaveAttribute('aria-invalid');
-  },
+  }
 };

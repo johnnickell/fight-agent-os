@@ -38,6 +38,14 @@ Use Action–Domain–Responder for HTTP interactions:
 - Cross presentation boundaries with explicit safe Views, not raw entities. Keep PHP properties camelCase and map HTTP JSON and database fields to snake_case.
 - Enforce authorization on the server. Sanitize public errors and keep secrets out of diagnostics.
 
+## Frontend conventions
+
+For frontend changes, follow the [client conventions](../../client/README.md#frontend-conventions): mirrored
+`client/tests/`, application-root imports, semantic/import lint and explicit formatting, with default SCSS
+separate in `client/styles/`. That document owns composition order, theme-extension limits, supported tooling
+and read-only check versus explicit fix/install commands. Preserve runtime behavior and accessibility when
+changing organization or tooling; verify the production shell and catalog through their actual builds/browsers.
+
 ## PHP and naming
 
 Prefer `final` classes and readonly properties, with Doctrine entity exceptions; make value objects readonly. Use constructor injection, strict types, guard clauses, and Fight helpers where they improve clarity. Name commands, queries, and events with intent or fact (`RegisterUser`, `GetUserById`, `UserRegistered`) and name their handlers with `Handler`.

@@ -1,5 +1,6 @@
+import { Notice } from '@/components/Notice';
+
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Notice } from '../src/components/Notice';
 
 const meta = {
   title: 'Foundation/Notice',
@@ -7,8 +8,8 @@ const meta = {
   args: {
     tone: 'info',
     title: 'Information',
-    children: 'These are invented local examples.',
-  },
+    children: 'These are invented local examples.'
+  }
 } satisfies Meta<typeof Notice>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -18,21 +19,21 @@ export const Warning: Story = {
   args: {
     tone: 'warning',
     title: 'Warning',
-    children: 'Review the example before continuing.',
-  },
+    children: 'Review the example before continuing.'
+  }
 };
 export const Failure: Story = {
   args: {
     tone: 'danger',
     title: 'Error',
     children: 'The example could not be completed.',
-    announce: 'assertive',
-  },
+    announce: 'assertive'
+  }
 };
 export const Success: Story = {
   args: {
     tone: 'success',
     title: 'Success',
-    children: 'The example is complete.',
-  },
+    children: 'The example is complete.'
+  }
 };

@@ -20,8 +20,8 @@ Use Docker and the repository wrapper; no host Node installation or global front
 ./bin/build              # Current complete repository gate, additionally required
 ```
 
-Individual commands: `typecheck`, `lint`, `format-check`, `test`, `build`. Only `format` rewrites source
-formatting. `lock` deliberately regenerates the lock after an authorized dependency change; routine checks
+Individual read-only acceptance commands: `typecheck`, `lint`, `format-check`, `test`, `build`.
+`format` explicitly rewrites formatting; `lint-fix` explicitly applies semantic/import autofixes. `lock` deliberately regenerates the lock after an authorized dependency change; routine checks
 never install or update packages. Commit `package.json` and `package-lock.json` together. Installation disables
 package lifecycle scripts; ESBuild uses its locked platform binary dependency. Caches/reports live in ignored
 `.runs/client/`, dependencies in ignored `client/node_modules/`, and assets in ignored `public/build/`.
@@ -36,6 +36,9 @@ Selected from registry engine/peer contracts and qualified by clean installation
 - Storybook/react-vite/a11y/Vitest addon **10.4.6**, browser-playwright **4.1.11**,
   Playwright **1.61.0**, axe-core **4.13.0**. See [catalog qualification](#component-catalog).
 - ESLint **9.39.5**, typescript-eslint **8.71.0**, accessibility/hooks plugins, Prettier **3.9.9**.
+- eslint-plugin-simple-import-sort **14.0.0** (ESLint >=5 peer), Dart Sass **1.105.1** (Node >=20.19).
+  Existing dependency versions are unchanged. Sass uses ESBuild's native `onLoad` API in production and
+  Vite's built-in Sass support in the catalog; no additional resolver or Sass-loader package is needed.
 
 TypeScript 7 is outside typescript-eslint's current peer range; Vitest 5 conflicts with jest-dom's assertion
 type declarations. Neither is forced through with ignored peer dependencies or `skipLibCheck`. ESLint 9 is
@@ -45,10 +48,75 @@ not establish ongoing upstream support. Exact remaining direct pins and transiti
 the manifest/lock. The current repository gate does **not** call `bin/client`; TICKET-00013 owns combined gate
 integration and final quality thresholds. Run both gates for this shell.
 
+## Frontend conventions
+
+- `src/` contains production TypeScript, `tests/` contains all behavior tests and test-only support, and
+  `stories/` contains production-backed catalog examples. Mirror each source-relative path under `tests/`
+  using `.test.ts`/`.test.tsx`; shared setup and fixtures live directly under `tests/`. Do not colocate tests
+  or fixtures with production modules, create test barrels, or rename the production tree.
+- Use `@/` for application imports/re-exports, lazy imports and mock targets in production, tests and
+  stories: `import { Button } from '@/components/Button'`. `tsconfig.json` maps `@/*` to `src/*` for
+  TypeScript and ESBuild; `vite.resolve.ts` supplies the same single root to Vitest and Storybook dev,
+  static and browser-test builds. Relative paths remain for test-only support, tooling and assets/styles.
+  Tooling imports use explicit `.ts` extensions where native ESM requires them; no-emit TypeScript allows
+  these without relaxing type strictness.
+- ESLint enforces deterministic alphabetized groups: React-family (`react`, `react-*`) runtime imports, other built-in and
+  external imports, internal `@/` imports, permitted relative imports, then type-only imports. Side-effect
+  imports form a separate first group **in original order**, never alphabetized; keep production styles
+  before catalog-only styles. Existing inline `type` specifiers remain type-only. ESLint also enforces
+  application-root paths for static imports/re-exports and literal dynamic/mock targets; TypeScript and
+  builds validate actual resolution. Do not construct application module paths dynamically.
+- Supported TypeScript type-aware recommendations run against the production/test and separate catalog
+  projects, including `.storybook/` configuration. React Hooks, JSX accessibility, strict optional/index
+  checks and zero-warning lint remain enabled. JavaScript tooling retains ordinary semantic/import lint.
+- Prettier owns formatting: 100 columns, single quotes, semicolons, two spaces, no tabs or trailing commas.
+  `./bin/client lint` and `format-check` do not fix or install anything; use `lint-fix` and `format` explicitly,
+  review their diff, then run `check`. Dependency changes use explicit `lock`/`setup`, never acceptance checks.
+
+### Styles and customization boundary
+
+`styles/app.scss` is the shared public source entrypoint for production and Storybook. Its thin ordered
+`@use` composition loads Bootstrap, semantic tokens, document/layout styles, component styles, then focus
+and reduced-motion rules. `settings/_bootstrap.scss` is the **only** legacy Sass-import boundary; Bootstrap
+5.3.8 requires it. Deliberate future static Bootstrap variable overrides belong before that import. This
+migration retains upstream defaults and does not load precompiled Bootstrap CSS or its JavaScript plugins.
+
+Owned dependencies use namespaced Sass modules. Keep styles in small responsibility-named partials under
+`styles/base/`, `styles/layouts/` and `styles/components/`; add page styles only for a real page. Shared spinner
+presentation has one owner because both busy buttons and loading states use it. Reusable styling uses shallow
+class selectors; the stable singleton `#app` belongs to the shell layout. Never couple styling to React-generated
+accessibility IDs or add broad ID-descendant overrides. Reduced-motion `!important` rules are deliberate
+accessibility overrides. `.storybook/preview.scss` contains catalog-only layout and is loaded **after** the
+production foundation; it never enters the production bundle. No CSS Modules, mixin framework or empty taxonomy
+is required. Production emits one hashed default CSS asset; the catalog emits its own locally compiled preview.
+
+Sass 1.105.1 compiles Bootstrap 5.3.8 but reports `import`, `if-function`, `global-builtin` and `color-functions`
+deprecations (20 displayed plus 311 repetitive warnings summarized per foundation compilation). No warnings are
+silenced. Bootstrap's legacy Sass is not compatible indefinitely: qualify a separately authorized upgrade before
+adopting a compiler that removes these features. Keep the exact installed versions rather than forcing peers.
+
+Runtime semantic CSS custom properties remain the customization surface; Sass settings are build-time only.
+`base/_tokens.scss` defines colors at both `:root` and explicit `[data-bs-theme='light']`/`'dark'` regions, and
+font/spacing/radius/motion plus Bootstrap mappings at `:root, [data-bs-theme]`. A root-only override does **not**
+replace values redeclared in an explicit themed region. Theme authors should target the intended root and/or
+mode scopes and may override component classes directly, not just a palette. Preserve low specificity and the
+cascade: default foundation first, a deliberate theme stylesheet later, without modifying React components or
+rebuilding application Sass. Plain CSS is a valid future theme distribution format even though defaults use SCSS.
+
+This is an extension direction, **not an implemented theme loader**. A future single CSS file after the default
+in base HTML, or a deliberate theme style block, needs its own delivery design. Current `style-src 'self'` forbids
+inline style blocks; do not add `unsafe-inline`. Font-family overrides do not authorize remote fonts: assets need
+provenance, serving and font/CSP support. No loader, HTML hook, upload, selector, storage or policy change is added.
+
+Database-driven theme management remains a future Wayfinder topic: authoring/import, trusted versus untrusted
+CSS, assets/fonts, installation/user selection, preview, versioning/rollback, fallback, caching, pre-paint delivery
+and accessibility. Decide whether to store tokens, source CSS, asset references or a combination then; no schema
+or map is introduced here. Custom theme identity remains separate from TASK-00050's system/light/dark preference.
+
 ## Serving and deployment boundary
 
 `build` emits minified, content-hashed ESM/CSS and external license notices, plus a two-field asset manifest.
-ESBuild, not Vite, builds production; Vite is only Vitest's transform dependency. No source maps, dev server,
+ESBuild, not Vite, builds production; Vite serves tests and the development/static catalog. No source maps, dev server,
 environment serialization, CDN, or service worker is enabled. The target is modern ES2022 browsers with ESM.
 Bootstrap CSS and the neutral semantic-token mappings are included; no Bootstrap JavaScript plugins or
 final product theme are introduced.
@@ -136,7 +204,7 @@ cookie attributes/reuse, server guards and OpenAPI response validation. No test-
 
 A static light `data-bs-theme` marker and isolated stylesheet preserve the theme-bootstrap integration point.
 TASK-00050 owns the shared preference rules, pre-paint preference bootstrap, OS/storage listeners and selector;
-this shell does not read or write preferences. `src/tokens.css` maps neutral semantic colors, typography,
+this shell does not read or write preferences. `styles/base/_tokens.scss` maps neutral semantic colors, typography,
 spacing and motion to Bootstrap variables. Semantic landmarks, visible keyboard focus, reduced-motion overrides
 and wrapping establish only a foundation baseline, not accessibility certification.
 
@@ -165,7 +233,7 @@ it never sends or saves data. Fields and callbacks use invented local text only,
 provider records, random IDs, clocks or mutable external content. React `useId` associates fields/regions.
 Stories have no runtime authority, authentication or server-side permission semantics.
 
-`src/tokens.css` owns background/surface/text/muted/border/action/on-action/focus and info/success/warning/danger
+`styles/base/_tokens.scss` owns background/surface/text/muted/border/action/on-action/focus and info/success/warning/danger
 colors, one system-font stack, a spacing unit, radius and motion duration. It maps body/link/border/form and
 component-local button/alert Bootstrap variables deliberately. Components use text labels as well as borders,
 not color alone. Native controls have 44 CSS-pixel minimum targets, headers wrap, long text breaks, focus uses
@@ -191,7 +259,9 @@ OS/storage listeners and selector; the catalog is not a second production prefer
 ```
 
 Build/test/capture containers have no external network. The development server alone publishes a loopback port;
-serve it only for local engineering, never as a public product endpoint. The static build requires no CDN or
+its middleware-server HMR client uses the wrapper's host port 16006, not container port 6006. Browser story tests
+keep their own server/port. Check port ownership before starting the development server and stop only your instance.
+Serve it only for local engineering, never as a public product endpoint. The static build requires no CDN or
 runtime network. Tooling ships documentation/help/license URL strings; their presence is not a runtime fetch.
 Telemetry/crash reporting are disabled. Storybook emits `project.json.generatedAt` despite that setting;
 `finalize-catalog-build.mjs` removes only that non-runtime timestamp. Compare repeated output hashes directly,
@@ -199,6 +269,8 @@ not through product-suite tests. Static artifacts are ignored and are not deploy
 
 `storybook-capture` starts/closes its own loopback static server and Chromium inside the network-disabled
 container. It renders every story, blocks/records external requests, runs axe-core on the production preview,
+and sets the addon to manual only in each capture URL to prevent overlapping axe scans (browser story tests
+retain automatic addon checks),
 records violations/incomplete checks, geometry, native target sizes, focus outline, motion and actual heading
 font, and writes screenshots/`receipt.json` to `.runs/client/catalog-evidence/`. Captures use Linux Chromium,
 DPR 1, en-US/UTC, light OS preference and reduced motion; explicit dark stories override the OS. The receipt also

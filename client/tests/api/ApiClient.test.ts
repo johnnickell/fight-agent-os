@@ -1,15 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiClient, type ApiTransport } from './ApiClient';
-import { apiFailure } from './ApiResult';
-import { decodeCsrfProof } from '../features/auth/CsrfProofService';
+
+import { ApiClient, type ApiTransport } from '@/api/ApiClient';
+import { apiFailure } from '@/api/ApiResult';
+import { decodeCsrfProof } from '@/features/auth/CsrfProofService';
+
 import {
   configuration,
   correlationId,
   csrfData,
   deferred,
   expiresAt,
-  jsonResponse,
-} from '../../tests/apiFixtures';
+  jsonResponse
+} from '../apiFixtures';
 
 function setup(response = jsonResponse()) {
   const fetch = vi.fn<ApiTransport>().mockResolvedValue(response);
@@ -24,7 +26,7 @@ describe('shared API transport', () => {
     expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual({
       ok: true,
       value: { proof: csrfData.proof, expiresAt },
-      correlationId,
+      correlationId
     });
     expect(fetch).toHaveBeenCalledTimes(1);
     const [url, init] = fetch.mock.calls[0]!;
@@ -35,7 +37,7 @@ describe('shared API transport', () => {
       mode: 'same-origin',
       cache: 'no-store',
       redirect: 'error',
-      referrerPolicy: 'no-referrer',
+      referrerPolicy: 'no-referrer'
     });
     expect(init).not.toHaveProperty('body');
     const headers = new Headers(init.headers);
@@ -45,9 +47,7 @@ describe('shared API transport', () => {
   });
 
   it('uses browser fetch by default and snapshots its validated base configuration', async () => {
-    const fetch = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(jsonResponse());
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse());
     const config = { ...configuration };
     const client = new ApiClient(config);
     Object.assign(config, { apiBasePath: '//example.invalid' });
@@ -57,7 +57,7 @@ describe('shared API transport', () => {
 
   it.each([
     { schemaVersion: 2, apiBasePath: '/api/v1' },
-    { schemaVersion: 1, apiBasePath: 'https://example.invalid/secret' },
+    { schemaVersion: 1, apiBasePath: 'https://example.invalid/secret' }
   ])('rejects a bypassed configuration without echoing it %#', (config) => {
     const error = (() => {
       try {
@@ -84,27 +84,20 @@ describe('shared API transport', () => {
     '/auth/csrf\r',
     '/auth/csrf\0',
     '/auth//csrf',
-    `/${'x'.repeat(2048)}`,
-  ])(
-    'rejects unsafe or unsupported paths without dispatch %#',
-    async (path) => {
-      const { client, fetch } = setup();
-      expect(await client.get(path, decodeCsrfProof)).toEqual(
-        apiFailure('protocol'),
-      );
-      expect(fetch).not.toHaveBeenCalled();
-    },
-  );
+    `/${'x'.repeat(2048)}`
+  ])('rejects unsafe or unsupported paths without dispatch %#', async (path) => {
+    const { client, fetch } = setup();
+    expect(await client.get(path, decodeCsrfProof)).toEqual(apiFailure('protocol'));
+    expect(fetch).not.toHaveBeenCalled();
+  });
 
   it('reads current memory credentials only for explicitly protected operations', async () => {
     let token = 'synthetic.first';
     const getAccessToken = vi.fn(() => token);
-    const fetch = vi
-      .fn<ApiTransport>()
-      .mockImplementation(async () => jsonResponse());
+    const fetch = vi.fn<ApiTransport>().mockImplementation(() => Promise.resolve(jsonResponse()));
     const client = new ApiClient(configuration, {
       fetch,
-      accessTokens: { getAccessToken },
+      accessTokens: { getAccessToken }
     });
     await client.get('/auth/csrf', decodeCsrfProof);
     expect(getAccessToken).not.toHaveBeenCalled();
@@ -112,41 +105,31 @@ describe('shared API transport', () => {
     token = 'synthetic.second';
     await client.get('/auth/csrf', decodeCsrfProof, { access: 'required' });
     expect(
-      fetch.mock.calls.map(([, init]) =>
-        new Headers(init.headers).get('Authorization'),
-      ),
+      fetch.mock.calls.map(([, init]) => new Headers(init.headers).get('Authorization'))
     ).toEqual([null, 'Bearer synthetic.first', 'Bearer synthetic.second']);
     expect(JSON.stringify(client)).toBe('{}');
   });
 
-  it.each([
-    null,
-    '',
-    ' ',
-    'Bearer value',
-    'value\n',
-    'value\r\nCookie: canary',
-    'a'.repeat(8193),
-  ])(
+  it.each([null, '', ' ', 'Bearer value', 'value\n', 'value\r\nCookie: canary', 'a'.repeat(8193)])(
     'fails closed on missing or malformed memory access credentials %#',
     async (token) => {
       const fetch = vi.fn<ApiTransport>();
       const client = new ApiClient(configuration, {
         fetch,
-        accessTokens: { getAccessToken: () => token },
+        accessTokens: { getAccessToken: () => token }
       });
-      expect(
-        await client.get('/auth/csrf', decodeCsrfProof, { access: 'required' }),
-      ).toEqual(apiFailure('authentication'));
+      expect(await client.get('/auth/csrf', decodeCsrfProof, { access: 'required' })).toEqual(
+        apiFailure('authentication')
+      );
       expect(fetch).not.toHaveBeenCalled();
-    },
+    }
   );
 
   it('does not dispatch a protected request without a provider', async () => {
     const { client, fetch } = setup();
-    expect(
-      await client.get('/auth/csrf', decodeCsrfProof, { access: 'required' }),
-    ).toEqual(apiFailure('authentication'));
+    expect(await client.get('/auth/csrf', decodeCsrfProof, { access: 'required' })).toEqual(
+      apiFailure('authentication')
+    );
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -157,12 +140,12 @@ describe('shared API transport', () => {
       accessTokens: {
         getAccessToken: () => {
           throw new Error('synthetic-secret');
-        },
-      },
+        }
+      }
     });
-    expect(
-      await client.get('/auth/csrf', decodeCsrfProof, { access: 'required' }),
-    ).toEqual(apiFailure('system'));
+    expect(await client.get('/auth/csrf', decodeCsrfProof, { access: 'required' })).toEqual(
+      apiFailure('system')
+    );
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -176,19 +159,14 @@ describe('shared API transport', () => {
     [410, 'Gone.', 'gone'],
     [429, 'Too many requests.', 'rate-limited'],
     [500, 'Internal server error.', 'system'],
-    [503, 'Internal server error.', 'system'],
-  ] as const)(
-    'normalizes HTTP %s without returning server text',
-    async (status, message, kind) => {
-      const { client, fetch } = setup(
-        jsonResponse({ status: 'error', message }, status),
-      );
-      expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
-        apiFailure(kind, correlationId),
-      );
-      expect(fetch).toHaveBeenCalledTimes(1);
-    },
-  );
+    [503, 'Internal server error.', 'system']
+  ] as const)('normalizes HTTP %s without returning server text', async (status, message, kind) => {
+    const { client, fetch } = setup(jsonResponse({ status: 'error', message }, status));
+    expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
+      apiFailure(kind, correlationId)
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
 
   it.each([400, 422])(
     'normalizes validation %s while dropping all messages and field names',
@@ -199,17 +177,17 @@ describe('shared API transport', () => {
             status: 'fail',
             data: {
               fields: {
-                'body.profile_name': ['synthetic-secret', 'Invalid input.'],
-              },
-            },
+                'body.profile_name': ['synthetic-secret', 'Invalid input.']
+              }
+            }
           },
-          status,
-        ),
+          status
+        )
       );
       expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
-        apiFailure('validation', correlationId),
+        apiFailure('validation', correlationId)
       );
-    },
+    }
   );
 
   it.each<readonly [number, unknown]>([
@@ -226,10 +204,7 @@ describe('shared API transport', () => {
     [403, { status: 'success', data: csrfData }],
     [401, { status: 'error', message: 'Forbidden.' }],
     [500, { status: 'error', message: 'Internal path /secret' }],
-    [
-      500,
-      { status: 'error', message: 'Internal server error.', data: 'secret' },
-    ],
+    [500, { status: 'error', message: 'Internal server error.', data: 'secret' }],
     [418, { status: 'error', message: 'Internal server error.' }],
     [201, { status: 'success', data: csrfData }],
     [200, { status: 'fail', data: { fields: { body: ['Invalid input.'] } } }],
@@ -248,17 +223,14 @@ describe('shared API transport', () => {
       { fields: { body: 'x' } },
       { fields: { 'bad field': ['x'] } },
       { fields: { 'body\n': ['x'] } },
-      { fields: { body: ['x'] }, secret: 'canary' },
-    ].map((data) => [400, { status: 'fail', data }] as const),
-  ])(
-    'rejects malformed or contradictory envelopes %#',
-    async (status, body) => {
-      const { client } = setup(jsonResponse(body, status));
-      expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
-        apiFailure('protocol', correlationId),
-      );
-    },
-  );
+      { fields: { body: ['x'] }, secret: 'canary' }
+    ].map((data) => [400, { status: 'fail', data }] as const)
+  ])('rejects malformed or contradictory envelopes %#', async (status, body) => {
+    const { client } = setup(jsonResponse(body, status));
+    expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
+      apiFailure('protocol', correlationId)
+    );
+  });
 
   it.each(['{', '', '<html>synthetic-secret</html>'])(
     'rejects malformed JSON %#',
@@ -267,9 +239,9 @@ describe('shared API transport', () => {
       vi.spyOn(response, 'text').mockResolvedValue(source);
       const { client } = setup(response);
       expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
-        apiFailure('protocol', correlationId),
+        apiFailure('protocol', correlationId)
       );
-    },
+    }
   );
 
   it.each([
@@ -277,23 +249,20 @@ describe('shared API transport', () => {
     { 'Content-Type': 'application/problem+json' },
     { 'Content-Type': '' },
     { 'Cache-Control': 'public, max-age=300' },
-    { 'Cache-Control': '' },
-  ])(
-    'requires the documented JSON and no-store response headers %#',
-    async (headers) => {
-      const { client } = setup(jsonResponse(undefined, 200, headers));
-      expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
-        apiFailure('protocol', correlationId),
-      );
-    },
-  );
+    { 'Cache-Control': '' }
+  ])('requires the documented JSON and no-store response headers %#', async (headers) => {
+    const { client } = setup(jsonResponse(undefined, 200, headers));
+    expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
+      apiFailure('protocol', correlationId)
+    );
+  });
 
   it('rejects a followed redirect even from a custom transport', async () => {
     const response = jsonResponse();
     Object.defineProperty(response, 'redirected', { value: true });
     const { client } = setup(response);
     expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
-      apiFailure('protocol', correlationId),
+      apiFailure('protocol', correlationId)
     );
   });
 
@@ -302,7 +271,7 @@ describe('shared API transport', () => {
     'canary-secret',
     'a'.repeat(31),
     'A'.repeat(32),
-    `${correlationId},${correlationId}`,
+    `${correlationId},${correlationId}`
   ])('discards absent or unsafe correlation %#', async (header) => {
     const response = jsonResponse();
     if (header === null) response.headers.delete('X-Correlation-ID');
@@ -311,7 +280,7 @@ describe('shared API transport', () => {
     expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual({
       ok: true,
       value: { proof: csrfData.proof, expiresAt },
-      correlationId: null,
+      correlationId: null
     });
   });
 
@@ -320,7 +289,7 @@ describe('shared API transport', () => {
     expect(
       await client.get('/auth/csrf', () => {
         throw new Error('synthetic-secret');
-      }),
+      })
     ).toEqual(apiFailure('protocol', correlationId));
   });
 
@@ -329,9 +298,7 @@ describe('shared API transport', () => {
       .fn<ApiTransport>()
       .mockRejectedValue(new Error('https://secret.invalid?token=canary'));
     const client = new ApiClient(configuration, { fetch });
-    expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
-      apiFailure('network'),
-    );
+    expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(apiFailure('network'));
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
@@ -340,7 +307,7 @@ describe('shared API transport', () => {
     vi.spyOn(response, 'text').mockRejectedValue(new Error('synthetic-secret'));
     const { client } = setup(response);
     expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
-      apiFailure('network', correlationId),
+      apiFailure('network', correlationId)
     );
   });
 });
@@ -352,8 +319,8 @@ describe('cancellation', () => {
     controller.abort('synthetic-secret');
     expect(
       await client.get('/auth/csrf', decodeCsrfProof, {
-        signal: controller.signal,
-      }),
+        signal: controller.signal
+      })
     ).toEqual(apiFailure('cancelled'));
     expect(fetch).not.toHaveBeenCalled();
   });
@@ -368,7 +335,7 @@ describe('cancellation', () => {
       const remove = vi.spyOn(controller.signal, 'removeEventListener');
       const decode = vi.fn(decodeCsrfProof);
       const result = client.get('/auth/csrf', decode, {
-        signal: controller.signal,
+        signal: controller.signal
       });
       expect(fetch.mock.calls[0]![1].signal).toBe(controller.signal);
       controller.abort(new Error('synthetic-secret'));
@@ -379,7 +346,7 @@ describe('cancellation', () => {
       await pending.promise.catch(() => undefined);
       expect(decode).not.toHaveBeenCalled();
       expect(await result).toEqual(apiFailure('cancelled'));
-    },
+    }
   );
 
   it('settles during a pending body and never decodes its late result', async () => {
@@ -390,7 +357,7 @@ describe('cancellation', () => {
     const decode = vi.fn(decodeCsrfProof);
     const controller = new AbortController();
     const result = client.get('/auth/csrf', decode, {
-      signal: controller.signal,
+      signal: controller.signal
     });
     await Promise.resolve();
     expect(text).toHaveBeenCalledOnce();
@@ -408,9 +375,9 @@ describe('cancellation', () => {
     expect(
       (
         await client.get('/auth/csrf', decodeCsrfProof, {
-          signal: controller.signal,
+          signal: controller.signal
         })
-      ).ok,
+      ).ok
     ).toBe(true);
     expect(remove).toHaveBeenCalledWith('abort', expect.any(Function));
   });

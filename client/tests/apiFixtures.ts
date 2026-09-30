@@ -1,20 +1,20 @@
-import type { RuntimeConfiguration } from '../src/runtimeConfiguration';
+import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 
 export const configuration: RuntimeConfiguration = Object.freeze({
   schemaVersion: 1,
-  apiBasePath: '/api/v1',
+  apiBasePath: '/api/v1'
 });
 export const correlationId = crypto.randomUUID().replaceAll('-', '');
 export const expiresAt = 2000000000;
 export const csrfData = {
   proof: `${expiresAt}.${'a'.repeat(64)}`,
-  expires_at: expiresAt,
+  expires_at: expiresAt
 };
 
 export function jsonResponse(
   body: unknown = { status: 'success', data: csrfData },
   status = 200,
-  headers: Record<string, string> = {},
+  headers: Record<string, string> = {}
 ): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -22,8 +22,8 @@ export function jsonResponse(
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
       'X-Correlation-ID': correlationId,
-      ...headers,
-    },
+      ...headers
+    }
   });
 }
 

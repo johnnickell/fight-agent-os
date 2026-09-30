@@ -1,6 +1,7 @@
 import { build } from 'esbuild';
 import { rename, writeFile } from 'node:fs/promises';
-import { basename } from 'node:path';
+import { basename, dirname } from 'node:path';
+import { compileAsync } from 'sass';
 
 // Build only source imports, never serialize process.env or emit production maps.
 // Keep old hashed assets for pages still open during a deployment. Deployments
@@ -12,6 +13,17 @@ const result = await build({
   chunkNames: 'chunk-[hash]',
   assetNames: '[name]-[hash]',
   bundle: true,
+  plugins: [
+    {
+      name: 'sass',
+      setup(builder) {
+        builder.onLoad({ filter: /\.scss$/ }, async ({ path }) => {
+          const result = await compileAsync(path, { loadPaths: ['node_modules'] });
+          return { contents: result.css, loader: 'css', resolveDir: dirname(path) };
+        });
+      }
+    }
+  ],
   splitting: true,
   format: 'esm',
   platform: 'browser',
@@ -22,20 +34,17 @@ const result = await build({
   legalComments: 'external',
   define: { 'process.env.NODE_ENV': '"production"' },
   metafile: true,
-  logLevel: 'info',
+  logLevel: 'info'
 });
+await writeFile('../.runs/client/build-metafile.json', JSON.stringify(result.metafile, null, 2));
 const entry = Object.entries(result.metafile.outputs).find(
-  ([, output]) => output.entryPoint === 'src/main.tsx',
+  ([, output]) => output.entryPoint === 'src/main.tsx'
 );
-if (!entry || !entry[1].cssBundle)
-  throw new Error('Missing client entry assets');
+if (!entry || !entry[1].cssBundle) throw new Error('Missing client entry assets');
 const manifest = {
   script: `/build/${basename(entry[0])}`,
-  stylesheet: `/build/${basename(entry[1].cssBundle)}`,
+  stylesheet: `/build/${basename(entry[1].cssBundle)}`
 };
 await writeFile('../public/build/manifest.json.tmp', JSON.stringify(manifest));
-await rename(
-  '../public/build/manifest.json.tmp',
-  '../public/build/manifest.json',
-);
+await rename('../public/build/manifest.json.tmp', '../public/build/manifest.json');
 console.log(JSON.stringify(manifest));

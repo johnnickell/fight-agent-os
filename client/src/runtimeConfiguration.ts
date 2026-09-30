@@ -6,9 +6,7 @@ export type RuntimeConfiguration = Readonly<{
 /**
  * Decodes only ADR 0004's public fields without exposing rejected input
  */
-export function decodeRuntimeConfiguration(
-  source: string | null,
-): RuntimeConfiguration | null {
+export function decodeRuntimeConfiguration(source: string | null): RuntimeConfiguration | null {
   if (source === null) return null;
   try {
     const value: unknown = JSON.parse(source);

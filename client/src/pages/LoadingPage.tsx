@@ -1,4 +1,4 @@
-import { PageHeading } from '../components/PageHeading';
+import { PageHeading } from '@/components/PageHeading';
 
 export function LoadingPage() {
   return (
