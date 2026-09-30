@@ -3,20 +3,29 @@ set -eu
 
 cd "$(dirname "$0")/.."
 image='node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6'
+browser_image='mcr.microsoft.com/playwright@sha256:57b65fdc9ceabe0ef613124c7bbe2babcf9362c4d85e382fe3b03604e84b428a'
 network=none
+port=''
 case "${1:-}" in
     setup) docker pull "$image"; network=bridge; set -- npm ci --ignore-scripts --no-fund --no-audit ;;
     lock) network=bridge; set -- npm install --package-lock-only --ignore-scripts --no-fund --no-audit ;;
     audit) network=bridge; set -- npm audit ;;
     versions) set -- sh -c 'node --version; npm --version; npm ls --depth=0' ;;
-    typecheck|lint|format-check|format|test|coverage|build|check) set -- npm run "$1" ;;
-    *) echo 'Usage: ./bin/client {setup|lock|versions|typecheck|lint|format-check|format|test|coverage|build|check|audit}' >&2; exit 2 ;;
+    storybook-setup) exec docker pull "$browser_image" ;;
+    storybook-dev) network=bridge; port='127.0.0.1:16006:6006'; set -- npm run storybook-dev ;;
+    storybook-test|storybook-capture)
+        image="$browser_image"
+        set -- npm run "$1" ;;
+    typecheck|lint|format-check|format|test|coverage|build|check|storybook-build) set -- npm run "$1" ;;
+    *) echo 'Usage: ./bin/client {setup|lock|versions|typecheck|lint|format-check|format|test|coverage|build|check|audit|storybook-setup|storybook-build|storybook-dev|storybook-test|storybook-capture}' >&2; exit 2 ;;
 esac
 
 mkdir -p public/build .runs/client
-exec docker run --rm --pull=never --network="$network" --read-only \
+# Only the interactive catalog publishes a port, restricted to host loopback.
+exec docker run --rm --pull=never --network="$network" ${port:+--publish "$port"} --read-only \
     --user "$(id -u):$(id -g)" --cap-drop=ALL --security-opt=no-new-privileges:true \
-    --pids-limit=256 --memory=2g --cpus=2 --tmpfs /tmp:rw,nosuid,size=256m \
+    --pids-limit=256 --memory=2g --cpus=2 --tmpfs /tmp:rw,nosuid,size=256m --shm-size=256m \
+    --env STORYBOOK_DISABLE_TELEMETRY=1 --env HOME=/tmp --env CI=1 \
     --env npm_config_cache=/app/.runs/client/npm --env npm_config_update_notifier=false \
     --mount "type=bind,source=$(pwd)/client,target=/app/client" \
     --mount "type=bind,source=$(pwd)/public/build,target=/app/public/build" \

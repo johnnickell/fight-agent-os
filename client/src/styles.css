@@ -1,9 +1,7 @@
 @import 'bootstrap/dist/css/bootstrap.css';
+@import './tokens.css';
 
-/* Neutral foundation only. TASK-00050 owns preference bootstrap and theme controls. */
-:root {
-  color-scheme: light;
-}
+/* TASK-00050 owns preference bootstrap and theme controls. */
 
 body {
   margin: 0;
@@ -25,8 +23,10 @@ main {
   max-width: 64rem;
 }
 
-:focus-visible {
-  outline: 3px solid currentColor;
+:focus-visible,
+.btn:focus-visible,
+.form-control:focus-visible {
+  outline: 3px solid var(--ui-focus);
   outline-offset: 4px;
 }
 
@@ -35,8 +35,8 @@ main {
   top: 0.5rem;
   left: 0.5rem;
   padding: 0.75rem;
-  background: white;
-  color: #052c65;
+  background: var(--ui-surface);
+  color: var(--ui-action);
   z-index: 10;
   transform: translateY(-200%);
 }

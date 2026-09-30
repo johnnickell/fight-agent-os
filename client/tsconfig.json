@@ -14,7 +14,7 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["vitest/globals", "@testing-library/jest-dom/vitest", "node"]
+    "types": ["vitest/globals", "node"]
   },
   "include": ["src", "tests", "vitest.config.ts"]
 }
