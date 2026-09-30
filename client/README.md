@@ -181,6 +181,7 @@ build. Local static output and PHP must belong to the same release.
 - `src/runtimeConfiguration.ts`: strictly decode `{"schema_version":1,"api_base_path":"/api/v1"}` to immutable
   camelCase properties. Reject absent/malformed/extra fields or any other API location, with no raw-value echo.
 - `src/routes/`: match only the public foundation and unknown state; lazy-load the home Page with Suspense.
+  Reusable guarded outlets and a volatile intended-route owner are available for future protected routes.
   Navigation uses native same-origin links and browser history, not a second client router or state store.
 - `src/layouts/`: named navigation, skip link, focusable main outlet and footer.
 - `src/pages/`: home, not-found, pending page import, and generic boot/render/module failure.
@@ -190,8 +191,9 @@ build. Local static output and PHP must belong to the same release.
 Loading/errors are actual boot/import states, not pretend product routes or a permanent debug gallery.
 Malformed config never mounts routes; failed page imports show generic recovery. Initial entry-script/network
 failure cannot execute React recovery; the base document retains its loading/noscript fallback. The shell makes
-no API calls and has no principal context, auth restoration, permissions or browser persistence. The typed
-transport and CSRF service below are available for later feature composition; authority guards belong to TASK-00028.
+no API calls and mounts no principal owner, authentication restoration or protected routes. The transport,
+CSRF service and authority foundation below are available for later feature composition; no browser persistence
+or synthetic production principal is introduced.
 
 ## Typed API and CSRF boundary
 
@@ -221,7 +223,8 @@ transport and CSRF service below are available for later feature composition; au
 - Abort resolves promptly as `cancelled`, including while reading a body or when fetch ignores its signal.
   The CSRF service additionally fences generations so old success **and** failure cannot overwrite newer state.
   Consumers must ignore cancelled outcomes rather than render them as errors; render only current feature-owned
-  state. Future principal/protected-data context fences belong to TASK-00028, not a transport response interceptor.
+  state. The authority owner's scope below fences future protected-data results; transport interceptors do not
+  restore sessions, authorize operations or replay mutations.
 
 The shared normalization matrix distinguishes validation (400/422 fail), authentication (401), authorization
 (403), conflict (409), not-found (404), bad-request (400 error), method-not-allowed (405), gone (410), rate-limited
@@ -235,6 +238,65 @@ CSRF shape. They prove strict decoding, safe outcomes, memory-token policy, abor
 fences, expiry and absence of cookie/storage/history/console interactions; they do not prove browser HttpOnly
 behavior or a live client/server journey. Existing PHP functional contract tests separately exercise issuance,
 cookie attributes/reuse, server guards and OpenAPI response validation. No test-only endpoint is needed.
+
+## Client authority foundation
+
+TASK-00028 implements [ADR 0004](../planning/adr/0004-client-authority-and-runtime-state.md) as reusable
+in-process capabilities. The public shell deliberately does not construct them: **`/api/v1/me` is not
+implemented**, and there is no fake production authentication. Tests and the Authority catalog inject bounded
+example loaders. TASK-00117/TASK-00049 still own the server projection and real HTTP feature service.
+
+- `features/authority/CurrentPrincipal.ts` accepts exactly `userId`, canonical lowercase `email`, `roles` and
+  `permissions`; it atomically rejects malformed/incomplete/extra fields, duplicate names and sparse arrays.
+  UUID identity, bounded display email and bounded exact name lists are copied and frozen. The injected model
+  is camelCase, not a transport View; the future feature service must qualify its snake_case codec. No token,
+  session identifier, lifecycle state or credential belongs in this model.
+- `AuthorityCache` owns one immutable snapshot and subscriptions per tab context. `load()` coalesces demand;
+  decoded success alone authenticates. Network/protocol errors are distinct non-authoritative outcomes.
+  Neither cache reads nor errors extend the 60-second monotonic request-start budget. A one-shot foreground
+  timer removes mounted authority; every render/action read also checks freshness in case that timer was delayed.
+  `observeAuthorityResume` attaches once per owner and returns listener cleanup. Hidden-tab return/focus removes
+  authority; resumption/expiry does not start a polling loop. Navigation/feature demand or an explicit retry calls
+  `load()`; the guard itself does not initiate authentication or automatically retry a denied route.
+- The future credential coordinator calls `signal('refresh-started')` before refresh, `credentials-changed`
+  after accepting current credentials, and `refresh-failed` on recoverable failure. `authority-changed` retires
+  and refetches when loading is permitted. Logout/terminal signals clear authority immediately and establish a
+  context barrier. `beginAuthentication()` returns a single-use, context-fenced attempt; only its
+  `acceptCredentials()` can cross that barrier. Its `fail()` reports recoverable failure. These notifications
+  carry no credentials or principal; the credential owner must also clear its memory, fence its own login/refresh
+  results and implement ADR 0003's bounded restoration. Those integrations are not supplied here.
+- Request and context generations reject old successes **and** failures even if the injected loader ignores
+  abort. `captureScope()` supplies an abort signal and `isCurrent()` fence for protected data/actions. A future
+  private-data owner must clear retained data on abort and check this fence before adopting either success or
+  error, including after identity replacement. This is a tested seam, not an implemented private-data cache.
+  Dispose owners and detach lifecycle listeners at context teardown; no cache or snapshot is persisted.
+- `evaluateAccess` is the only permission evaluator. Route metadata is an explicit complete ordered list of
+  ancestor requirements followed by the leaf: `public`, `authenticated`, or nonempty `permissions.all`.
+  Every requirement must pass; even a public leaf cannot weaken its protected parent. Missing/malformed metadata
+  is unavailable, never implicitly public. Exact names grant; displayed role names never do. Forbidden is derived
+  presentation for a valid principal, not another stored principal state or a login/refresh loop.
+- `GuardedRoute` mounts a component outlet only after evaluation succeeds, so a denied lazy outlet is not imported
+  and its loaders do not run. Put protected loaders inside that outlet and honor its scope fence; do not prefetch
+  above the guard. `PermissionButton` has explicit hide/disable policy and re-evaluates at activation, suppressing
+  handlers if authority expired after render. `AuthorityStatus` renders safe pending/recovery/denial outcomes.
+  **Server authorization remains authoritative.** A server 403 remains the operation's forbidden result even after
+  a fresh projection; signal authority invalidation when appropriate, but never replay the operation automatically.
+- `routes/IntendedRoute` owns at most one in-memory intent, for 10 minutes and 2,048 input characters. Only exact
+  registered protected static paths under `/app/` can opt in via `intendedRoute` query metadata. Initially only
+  `page`, `sort` and `view` keys with enumerated non-sensitive 1–64-character alphanumeric/underscore/hyphen values
+  are supported; even those keys are rejected unless explicitly listed by that route. Duplicate/unknown keys,
+  credentials, auth/grant paths, external/scheme/relative targets, controls, backslashes, ambiguous paths/encoding
+  and oversized input are rejected. Fragments are discarded. Parameterized paths need a later classified contract.
+  The guard captures eligible confirmed-anonymous navigation when given this owner and the current location.
+  Logout clears intent; repeated redirects do not replace it or renew its deadline. After fresh authentication,
+  `consume()` re-resolves current route requirements and consumes once. A null result leaves landing selection to
+  the future navigation owner: choose an authorized landing route or forbidden, never invent a Dashboard grant.
+  No login return URL, history-state payload, form data, browser storage or cross-tab transfer is used.
+
+Authority tests cover controlled/out-of-order promises, context barriers, invalidation, freshness, loader
+rejection, safe navigation, exact nested permissions, protected mount/import and action suppression. Catalog
+examples exercise the actual components with injected fixtures, including session-end removal. They are not
+server integration, live authentication, cross-tab consistency, final visual design or independent QA evidence.
 
 ## Presentation foundation
 
@@ -252,8 +314,9 @@ wiring directly rather than testing tooling in the product suite. Builder browse
 
 ## Component catalog
 
-The catalog imports five reusable production components, rather than embedding implementations or promoting
-prototype code. They are available to future feature compositions; they do not add product routes to `/app`.
+The catalog's presentation core imports five reusable production components, rather than embedding
+implementations or promoting prototype code. Authority examples additionally compose the production cache,
+guard, status and permission-action components above. None adds product routes to `/app`.
 
 | Component         | Responsibility                                                                                                                                                                                                                                |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -263,11 +326,13 @@ prototype code. They are available to future feature compositions; they do not a
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **21** named examples across five story files: 4 Button, 4 TextField, 4 Notice, 4 ContentState
-and 5 Composition states. The form composition demonstrates rejection, focus correction and local success;
+`stories/` holds **32** named examples across six story files: 4 Button, 4 TextField, 4 Notice, 4 ContentState,
+5 Composition states and 11 Authority states/interactions. The form composition demonstrates rejection,
+focus correction and local success;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
-provider records, random IDs, clocks or mutable external content. React `useId` associates fields/regions.
-Stories have no runtime authority, authentication or server-side permission semantics.
+provider records or mutable external content. React `useId` associates fields/regions. Authority fixtures
+use a factory-generated UUID and deterministic injected outcomes; only the real cache freshness clock runs.
+Stories confer no runtime authority, real authentication or server-side permission semantics.
 
 `styles/base/_tokens.scss` owns background/surface/text/muted/border/action/on-action/focus and info/success/warning/danger
 colors, one system-font stack, a spacing unit, radius and motion duration. It maps body/link/border/form and
@@ -288,7 +353,7 @@ OS/storage listeners and selector; the catalog is not a second production prefer
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 21 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 32 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Still additionally required; combined gate belongs to TASK-00032/00033
