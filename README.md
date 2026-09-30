@@ -75,8 +75,9 @@ schemas and fixtures belong alongside `migrations/` under `database/`.
 ./bin/down                    # Stop the development service
 ```
 
-Validate the repository-only [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi`.
-Swagger UI, spec-serving and diagnostic routes are disabled in every environment.
+Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
+then validate freshness and real responses with `./bin/openapi check`. JSON stays under ignored `.runs/openapi/`,
+not public assets. Swagger UI, spec-serving and diagnostic routes are disabled in every environment.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots

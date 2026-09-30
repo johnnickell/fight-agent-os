@@ -20,8 +20,11 @@ final class DocumentationExposureTest extends TestCase
      */
     public static function unavailable_urls(): iterable
     {
-        foreach (['development', 'test', 'production'] as $environment) {
-            $paths = ['/swagger', '/openapi.yaml', '/docs/api/openapi.yaml', '/diagnostics', '/api/v1/diagnostics'];
+        foreach (['local', 'development', 'test', 'production'] as $environment) {
+            $paths = [
+                '/swagger', '/openapi.yaml', '/docs/api/openapi.yaml', '/openapi.json',
+                '/.runs/openapi/openapi.json', '/diagnostics', '/api/v1/diagnostics'
+            ];
             foreach ($paths as $path) {
                 yield $environment.$path => [$environment, $path];
             }

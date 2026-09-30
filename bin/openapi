@@ -7,5 +7,7 @@ if ! docker compose ps --status running --services | grep -Fxq web; then
     exit 1
 fi
 
-docker compose exec -T web php vendor/bin/php-openapi validate docs/api/openapi.yaml
-exec docker compose exec -T web php vendor/bin/phpunit tests/Functional/Http tests/Unit/Http/ApiFailureMapperTest.php
+docker compose exec -T web php scripts/openapi.php "$@"
+if [ "${1:-check}" = 'check' ]; then
+    exec docker compose exec -T web php vendor/bin/phpunit tests/Functional/Http tests/Unit/Http/ApiFailureMapperTest.php
+fi

@@ -12,6 +12,7 @@ use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use League\OpenAPIValidation\Schema\SchemaValidator;
 use PHPUnit\Framework\Assert;
 use Psr\Http\Message\ResponseInterface;
+use Tooling\OpenApi\Document;
 
 /**
  * Class ApiContract
@@ -84,7 +85,10 @@ final class ApiContract
      */
     private static function builder(): ValidatorBuilder
     {
-        return (new ValidatorBuilder())->fromYamlFile(dirname(__DIR__, 2).'/docs/api/openapi.yaml');
+        static $json = null;
+        $json ??= Document::generate();
+
+        return (new ValidatorBuilder())->fromJson($json);
     }
 
     /**
