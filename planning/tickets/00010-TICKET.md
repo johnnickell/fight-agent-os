@@ -209,7 +209,7 @@ rather than bypassing auth or leaking credentials to make the viewer appear comp
 | [TASK-00117](../tasks/00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | ready-for-agent |
 | [TASK-00153](../tasks/00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done |
 | [TASK-00154](../tasks/00154-TASK.md) | Serve local-only permission-gated Swagger with shared credentials and themes | ready-for-agent |
-| [TASK-00155](../tasks/00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | ready-for-agent |
+| [TASK-00155](../tasks/00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress

@@ -64,6 +64,12 @@ Use Action–Domain–Responder for HTTP interactions:
 - Cross presentation boundaries with explicit safe Views, not raw entities. Keep PHP properties camelCase and map HTTP JSON and database fields to snake_case.
 - Enforce authorization on the server. Sanitize public errors and keep secrets out of diagnostics.
 
+For API Action and Responder class/method declarations, group applicable attributes in source order:
+**OpenAPI → input source → Validation → access requirements → other applicable metadata**. Keep each
+attribute in its own block and on its supported target; Responders normally own only OpenAPI response
+metadata. Preserve deliberate order within repeatable groups. This is presentation, not middleware or
+permission execution order. See [API input sources and limits](../api/README.md#explicit-input-sources-task-00155).
+
 ## Frontend conventions
 
 For frontend changes, follow the [client conventions](../../client/README.md#frontend-conventions): mirrored
