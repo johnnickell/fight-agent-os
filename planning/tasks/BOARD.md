@@ -8,7 +8,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | in-progress | — | — |
-| — | [TASK-00148](00148-TASK.md) | Adopt separated frontend tests and consistent import and style conventions | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -17,6 +16,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | — | — |
 | 28 | [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | — (standalone chore) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -114,7 +114,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00124](00124-TASK.md) | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00125](00125-TASK.md), [TASK-00126](00126-TASK.md) | — |
 | 122 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00124](00124-TASK.md), [TASK-00125](00125-TASK.md), [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
-| — | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | — (standalone chore) | ready-for-agent | [TASK-00148](00148-TASK.md) | — |
 
 ## Needs Info
 
@@ -187,4 +186,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | — (standalone bug) | done | — | [PR #36](https://github.com/johnnickell/fight-agent-os/pull/36) |
 | — | [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | [TICKET-00033 — Verify reviewed behavior with independent QA before landing](../tickets/00033-TICKET.md) | done | — | [PR #40](https://github.com/johnnickell/fight-agent-os/pull/40) |
 | — | [TASK-00147](00147-TASK.md) | Publish landing captures with GitHub CLI attachments | — (standalone chore) | done | — | [PR #44](https://github.com/johnnickell/fight-agent-os/pull/44) |
+| — | [TASK-00148](00148-TASK.md) | Adopt separated frontend tests and consistent import and style conventions | — (standalone chore) | done | — | — |
 <!-- /planning:board -->
