@@ -26,14 +26,15 @@ Reject an unreadable, ambiguous or stale handoff and request a fresh review. A `
 input; after `accept`, satisfy [QA applicability](QA.md#applicability) before ordinary landing. Landing can
 reconcile a moving base under [landing standards](LANDING.md) without pretending the old report names new OIDs.
 
-A `revise` verdict does not always require source changes. If the only remaining findings are missing explicitly required hosted
+A `revise` verdict does not always require source changes. Before initial acceptance, if the only remaining findings are missing explicitly required hosted
 verification, preserve the implementation and report the evidence action. Where CI requires publication, route
 to [draft publication](LANDING.md#draft-publication-to-obtain-hosted-evidence) within existing user authority, or
 request only the missing publication authority. `work` does not push, create a PR, make empty commits, or repeat
 successful checks merely to turn an evidence-only finding into an implementation revision. When evidence arrives,
 route to focused independent review; a confirmed implementation failure returns here for repair. If accepted
 candidate A already has administrative closeout B, resume [final delivery verification](LANDING.md#verify-and-publish)
-without repeating initial draft intake or toggling A's tracked completion checkpoint.
+through `land`, including when the required proof arrives. Administrative closeout alone needs no independent
+review or canonical review update; do not repeat initial draft intake or toggle A's tracked completion checkpoint.
 
 ## QA handoff intake
 

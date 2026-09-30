@@ -197,6 +197,10 @@ reviews remain untouched. Temporary validation containers, network and owned vol
 
 ### R1 revision: final candidate and tracked completion
 
+Historical qualification: the independent delivery-continuation gate in this subsection was superseded by
+[land-owned administrative closeout](#land-owned-administrative-closeout) at the user's request. Its traces
+remain the record of that revision, not current routing instructions.
+
 The independent TASK-00144 review identified a second cycle. Before editing, the author traced its retained
 snapshot: hosted success and acceptance of A allowed completion metadata B, but B needed hosted success while
 TASK status had to remain incomplete. Recording `done` afterward created C and repeated the condition. This is
@@ -313,3 +317,32 @@ Wayfinder owns interviews whose resolution boundary excludes EPIC creation. Exis
 authoritative Board semantics remain intact. These are builder instruction checks, not independent acceptance,
 real planning mutations, automatic skill execution or empirical agent trials. The TASK and ignored final receipt
 record current metadata/link/planning checks, full-gate results and committed content identity.
+
+
+## Land-owned administrative closeout
+
+The user reported an already accepted TASK left draft after QA and final-head CI passed, solely for another
+independent delivery continuation. The previous land, landing and review instructions required that continuation
+and a canonical review update. The user explicitly removed this extra gate while retaining initial independent
+acceptance, required delivery checks and renewed review for substantive changes, defects or unproven integration.
+The correction assigns closeout verification to [land](LANDING.md#verify-and-publish) and aligns review, next,
+execution and handoff routing. The earlier R1 traces above remain historical.
+
+Direct author walkthroughs of the revised instructions:
+
+| Scenario | Resulting route and stopping boundary |
+|---|---|
+| A independently accepted; B administrative; QA and required final-head checks pass | Land verifies A → B and exact run provenance, records its ignored receipt and PR body, marks ready and performs ownership-proven cleanup. No further independent review, canonical review update or tracked commit solely for delivery. |
+| A accepted; B's required check pending, cancelled or infrastructure-failed | Retain B, draft and resources; disclose the missing proof and resume land when available. Acceptance remains intact; no status toggle or delivery-only review verdict. |
+| B has only A's green run, wrong source/merge identity or skipped required job | Land keeps delivery incomplete until the accepted final-head requirement is proven. |
+| An older canonical delivery-only revise report explicitly preserves accepted A | Land verifies the preserved independent acceptance and absence of unresolved acceptance findings, then owns the bridge and delivery proof without replacing the canonical report. Ambiguous or absent acceptance routes to independent review. |
+| Initial acceptance still lacks required hosted proof | Authorized draft publication obtains evidence; independent review assesses that evidence before acceptance. The correction does not grant land initial acceptance authority. |
+| A accepted; no hosted final-head check is required | Land verifies the administrative bridge and existing publication requirements. It does not invent a hosted check or another independent review. |
+| Commit IDs change through proven mechanical integration | Existing reconciliation rules preserve acceptance with a verified behavior-preserving bridge and required checks. A changed ID alone requires no independent review. |
+| B changes requirements, instructions, code, dependencies or behavior, or integration is unproven | Stop for fresh independent review of the affected target; required implementation repair first routes to work. Calling a change metadata does not make it administrative. |
+| A delivery run demonstrates an implementation defect, or current QA fails | Stop landing and cleanup, route to work for repair, then renewed independent review and affected QA. Earlier acceptance does not excuse a demonstrated defect. |
+| The accepted target requires literal-final-head success before tracked completion | The existing requirement-owner amendment boundary still applies; publication permission cannot silently redefine that criterion. |
+
+These are author instruction traces, not live hosted runs, independent acceptance or QA PASS. This correction
+changes executable instructions and therefore still needs its own initial independent review and applicable QA.
+No consumer PR, review report or TASK status was changed by this qualification.

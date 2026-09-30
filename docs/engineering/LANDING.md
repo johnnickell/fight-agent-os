@@ -12,12 +12,16 @@ gate, and require hosted acceptance evidence only when the target explicitly cal
 optional, its absence or unavailability does not block technical acceptance or ordinary publication; disclose
 its state and preserve actual merge restrictions separately.
 
-Ordinary landing requires `accept`. A `revise` report with only unresolved hosted checks can enter initial
-draft publication, or resume final delivery verification for an already-pushed administrative closeout B below.
-For B, verify that the canonical report preserves accepted A, the permitted closeout policy and the A → B bridge;
-resume at [final delivery verification](#verify-and-publish), without reopening A, repeating initial draft intake
-or making another metadata commit. An explicit `land TASK-NNNNN` or request to publish for CI authorizes these
-bounded evidence paths; a review report or `work` invocation alone does not.
+Ordinary landing requires independent `accept`. Before that acceptance, a `revise` report with only unresolved
+required hosted checks can enter initial draft publication. For already-pushed administrative closeout B,
+resume [final delivery verification](#verify-and-publish) whether required proof is pending or available.
+Verify accepted A in the canonical report and the permitted closeout policy; land establishes the A → B bridge
+in its ignored receipt. An older delivery-only `revise` report can use this route only if it explicitly preserves
+independent acceptance of A and has no substantive or unresolved acceptance findings. Preserve that report;
+no delivery-only canonical update is needed. Missing or ambiguous acceptance still requires independent review.
+Do not reopen A, repeat initial draft intake or make another metadata commit solely to resume delivery.
+An explicit `land TASK-NNNNN` or request to publish for CI authorizes these bounded evidence paths; a review
+report or `work` invocation alone does not.
 
 ## Acceptance candidate and administrative closeout
 
@@ -102,12 +106,21 @@ publication/checks are pending. Keep generated Board/indexes synchronized with a
 
 Run focused checks, `./bin/planning-check`, `git diff --check`, and `./bin/build` on the reconciled implementation before initial publication. Stage only owned planning or reconciliation files; inspect the staged diff and commit them if needed. Push the feature branch without force; create or update its PR against `develop`. For a TASK PR, set and verify the title `TASK-NNNNN — <TASK title>` (the body template cannot set a title), and use the editable [PR body template](../../.github/pull_request_template.md) for scope, behavior, verification, warnings, evidence, and outstanding review/merge status. Remove placeholder text and avoid implying a check passed if it was not run. Preserve an existing PR's identity when updating it; do not rename an unrelated or historical branch merely to match the new convention. Record the actual PR URL in the TASK and refresh generated views. Run focused checks, planning validation, diff check and the full gate on that final tree before committing/pushing the PR metadata. If a result changes, correct the evidence and rerun the affected checks. Avoid repeating gates for an unchanged tree merely to accumulate receipts.
 
-For required final-head delivery checks, retain the draft PR and worktree after pushing B. Obtain proof for B
-and a focused independent continuation that verifies the A → B administrative-only diff and required run provenance.
-Do not claim successful landing or perform cleanup while that proof is missing. `done` still describes accepted A;
-it does not assert success of B's pending delivery checks. On success, record B's certification in the canonical
-review, ignored receipt and PR body, then mark the PR ready and proceed to cleanup without another tracked commit.
-The tracked note remains a truthful checkpoint (accepted A, delivery pending at closeout), not a live run ledger.
+Land owns final delivery verification after independent acceptance. Verify the A → B diff contains only
+permitted administrative closeout and preserve any mechanical-reconciliation bridge. For required final-head
+delivery checks, retain the draft PR and worktree after pushing B until proof covers B. Record the run URL,
+event, source head/base, actual tested commit, required job conclusions and warnings. Distinguish source-head
+runs from merge-candidate runs and verify the tested head/base relationship against the accepted requirement;
+a stale run, wrong target or skipped required job is not proof.
+
+Record the accepted A checkpoint, B, the administrative diff assessment, any reconciliation bridge and delivery
+proof in the ignored receipt and PR body. Once applicable QA, publication and required delivery checks are
+satisfied, mark the PR ready and proceed to ownership-proven cleanup without another tracked commit. No additional
+independent review or canonical review update is required solely for administrative closeout, changed commit IDs
+or newly available delivery CI results. Preserve the canonical acceptance report; do not rewrite it to claim B
+was independently reviewed. The tracked note remains a truthful checkpoint (accepted A, delivery pending at
+closeout), not a live run ledger. Missing required delivery proof blocks successful landing and cleanup without
+rescinding A's acceptance or requiring another review.
 
 A queued, unavailable or infrastructure-failed final run leaves delivery incomplete: retain B, draft status and
 resources, disclose the cause, and retry the same head when authorized. Do not toggle `done` just to record run

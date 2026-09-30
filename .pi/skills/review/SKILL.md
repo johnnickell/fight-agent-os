@@ -19,7 +19,7 @@ Read [review standards](../../../docs/engineering/REVIEW.md) before starting and
    existing verdict rules, separate taste from defects, and report corrections without editing implementation or
    instructions.
 
-3. **Classify and route.** Apply the [hosted-evidence continuation](../../../docs/engineering/REVIEW.md#missing-hosted-evidence-and-focused-continuation) when explicitly required hosted CI is the only missing proof: retain `revise`/`Unverified`, identify the evidence action, and route to authorized draft publication rather than implementation repair. On return, review the new evidence and intervening changes without repeating unchanged checks. Give each actionable finding severity, affected pass/ID and TASK criterion, reproducible evidence, expected/observed behavior, and correction. Separate non-blocking findings and residual uncertainty. `accept` only when every applicable ID in both passes is Pass and all TASK criteria have sufficient evidence with no blockers; otherwise `revise`.
+3. **Classify and route.** Apply the [hosted-evidence continuation](../../../docs/engineering/REVIEW.md#missing-hosted-evidence-and-focused-continuation) when initial acceptance still lacks only explicitly required hosted CI: retain `revise`/`Unverified`, identify the evidence action, and route to authorized draft publication rather than implementation repair. On return, review the new evidence and intervening changes without repeating unchanged checks. Give each actionable finding severity, affected pass/ID and TASK criterion, reproducible evidence, expected/observed behavior, and correction. Separate non-blocking findings and residual uncertainty. `accept` only when every applicable ID in both passes is Pass and all TASK criteria have sufficient evidence with no blockers; otherwise `revise`.
 4. **Publish.** Write a complete version-3 report to the canonical path with the required identity, independence, findings, acceptance evidence, verification, limitations and verdict. Preserve any older numbered history and prior canonical report until the replacement is ready; atomically replace the canonical report and read it back. If publication fails, state the path and failure rather than giving a chat-only verdict.
 
 Return the verdict and absolute canonical report path. Stop before fixes, planning finalization, push, approval or merge.
@@ -29,7 +29,9 @@ affected behaviors, useful adversarial scenarios and any criterion-specific N/A 
 Route changed behavior to the [qa skill](../qa/SKILL.md) before `land`, including APIs, libraries, CLI/background
 work and executable instructions. Technical acceptance does not claim QA PASS. Do not claim screenshots were
 verified unless actually inspected. Mechanical Board/docs reconciliation
-uses the existing landing bridge; another review is not required merely because commit IDs changed.
+uses the existing landing bridge; another review is not required merely because commit IDs changed. After
+acceptance, administrative closeout and newly available delivery CI results route to `land`, without another
+independent review or canonical review update solely for delivery.
 
 Finish with an explicit, copyable `Next:` under the [handoff rules](../../../docs/engineering/HANDOFFS.md), using
 the actual TASK ID: implementation findings to `work`, acceptance to applicable `qa`, or satisfied QA to authorized
