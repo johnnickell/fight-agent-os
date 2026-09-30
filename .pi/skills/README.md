@@ -26,15 +26,18 @@ boundaries, and [adopt](adopt/SKILL.md) for project comparisons. [Fix](fix/SKILL
 a tracking handoff; `work` owns repair. None substitutes for independent `review`.
 
 [Shared quality checks](../../docs/engineering/QUALITY.md) help `work` catch weak tests while writing them and
-check code plus affected instructions, README and CHANGELOG before handoff. `review` independently challenges
-those claims; `audit` applies them to its declared sample; `architecture` identifies contract and documentation
+keep directly affected docs accurate with detail consulted on demand. `review` owns the detailed architecture,
+code, test, instruction and README/CHANGELOG assessment; `audit` applies it to its declared sample; `architecture` identifies contract and documentation
 impacts. `writing-for-agents` handles authorized instruction reconciliation. These checks preserve each skill's
 scope and authority and do not install or automatically run an external cleanup workflow.
 
-[QA](qa/SKILL.md) exercises reviewed TASKs or open PRs in an actual browser or terminal and writes canonical
+[QA](qa/SKILL.md) challenges reviewed TASKs or open PRs through actual UI, API, CLI, library/worker probes or
+executable-instruction scenarios and writes canonical
 PASS/FAIL/INCOMPLETE/N/A evidence. Use `/skill:qa TASK-NNNNN` or `/skill:qa <PR URL>` in an independent session.
 Default flow is `work → review → qa → land → human merge`; `work` consumes QA failures and `land` publishes
-suitable evidence. This local skill does not provision managed QA Agents or enforce a hosted merge gate.
+suitable evidence. Changed behavior requires applicable QA regardless of UI; pure non-behavioral edits can have
+reasoned N/A. Visual changes use inspected, comparable before/after captures; non-visual changes use appropriate
+request/output/state evidence. This local skill does not provision managed QA Agents or enforce a hosted merge gate.
 
 [Release](release/SKILL.md) coordinates versioned package releases from their observed stage, using each target's
 own policy and certifier. It covers docs, branches, human signing scripts, publication, Packagist and merge-back.

@@ -25,6 +25,11 @@ optional prose improvements. State which tests, code paths and documents were in
 unchecked. Recommend bounded replacements or corrections; do not delete tests, rewrite guidance, launch cleanup
 agents or expand to a repository-wide sweep as a side effect of this checklist.
 
+When the audit question includes verification or delivery guidance, assess [QA applicability](../../../docs/engineering/QA.md#applicability)
+and evidence in that sample: absence of UI is not a sufficient N/A reason, and a green build or screenshot alone
+does not prove behavior. Recommend concrete adversarial scenarios for missing proof; an audit does not issue a QA
+PASS or start runtime probes without an authorized QA scope.
+
 For each candidate finding, check the strongest counterexample: alternate entry paths, package ownership,
 accepted exceptions, transaction guarantees and existing tests. Use the severity meanings in
 [review standards](../../../docs/engineering/REVIEW.md), without turning this assessment into independent TASK

@@ -20,6 +20,12 @@
 | `git diff --check` | Not yet recorded |
 | `./bin/build` | Not yet recorded |
 
+<!-- Record independent post-review behavioral QA separately from technical review/build results. Include
+selected scenarios, disposition, subject and accessible evidence (requests, outputs, state checks or captures).
+Non-UI changes still need applicable behavioral QA. For no behavioral consequence, give specific N/A reasons. -->
+
+- Behavioral QA disposition, scenarios and evidence:
+
 ## Visual changes
 
 <!-- For UI/TUI changes use actual comparable baseline/result captures after technical review and before land.

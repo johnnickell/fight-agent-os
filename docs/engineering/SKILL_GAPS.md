@@ -73,7 +73,7 @@ TASK-00135 expands it without importing another project's authority.
 | Writing for Agents | Added locally now with exact upstream attribution/license; EPIC-00006 later distributes trusted revisioned resources |
 | Audit / fix / architecture / adopt | Implemented locally under TASK-00131–00134 in the approved skill batch; architecture includes human-first interfaces and namespace cohesion |
 | Security audit | Implemented locally under [TASK-00136](../../planning/tasks/00136-TASK.md); bounded threat/evidence assessment, no automatic repair |
-| QA | Local [qa](../../.pi/skills/qa/SKILL.md) and canonical behavioral handoff under [TASK-00146](../../planning/tasks/00146-TASK.md); managed QA remains with [TICKET-00033](../../planning/tickets/00033-TICKET.md) |
+| QA | Local [qa](../../.pi/skills/qa/SKILL.md) and canonical behavioral handoff under [TASK-00146](../../planning/tasks/00146-TASK.md); [TASK-00150](../../planning/tasks/00150-TASK.md) broadens adversarial non-UI exercises and visual evidence guidance; managed QA remains with [TICKET-00033](../../planning/tickets/00033-TICKET.md) |
 | Skill maintenance | Use Writing for Agents plus explicit inventory/provenance checks; add automation only after demonstrated need |
 | Domain modeling / testing / conflict resolution | Improve existing planning/work/review guidance; ordinary feature TDD is not required; meaningful 100% unit coverage is the goal |
 | Release / hotfix | Package [release](../../.pi/skills/release/SKILL.md) guidance added under [TASK-00143](../../planning/tasks/00143-TASK.md); target-owned certification, resumable stages and human signing. Hotfix, deployment and managed automation remain separate work under [Team roles](TEAM.md) |
@@ -151,3 +151,9 @@ These checks extend existing ST-03/ST-04 and applicable Spec/Standards criteria;
 authority. Direct skill walkthroughs and the canonical local gate qualify the implementation; another agent
 must independently review TASK-00150. No source code, product tests, consumer repository or global installation
 is changed by this integration.
+
+The maintainer's TASK-00150 follow-up assigns the detailed quality assessment to review. Work keeps immediate
+contract/test and affected-document guidance, consulting detail on demand instead of duplicating review's full
+matrix. The same follow-up broadens local QA to adversarial API, CLI, library/worker and executable-instruction
+scenarios, bounded disposable probes and inspected visual comparisons. These are local requirements, not claims
+that the four upstream skills supply a QA workflow. [QA standards](QA.md) own applicability and evidence.

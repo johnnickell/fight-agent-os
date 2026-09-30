@@ -57,7 +57,7 @@ findings, an ambiguous report or a changed target without a valid provenance bri
 2. Push the reviewed feature branch without force and create a draft PR against the intended base, or reuse the
    existing TASK PR. Mark final acceptance and hosted verification pending in the PR body. Preserve its identity;
    if an existing PR is ready, return it to draft within this publication authority. Use the ordinary TASK title
-   and PR template without claiming completion. A draft can disclose pending post-review visual QA; the normal
+   and PR template without claiming completion. A draft can disclose pending post-review behavioral QA; the normal
    QA requirement still applies before accepted landing.
 3. Capture the run URL, event, source head/base, actual tested commit and required job results. Determine whether
    CI tests the source head or a merge candidate, and establish its relationship to the reviewed change. Follow
@@ -69,7 +69,7 @@ findings, an ambiguous report or a changed target without a valid provenance bri
    commit during this phase merely to record the URL and thereby move the candidate awaiting CI.
 5. Return the PR link and evidence for focused independent review of acceptance candidate A. Pending or
    infrastructure-failed checks remain evidence work; confirmed implementation failures route to `work`.
-   Tracked completion, visual QA where applicable and closeout B follow the accepted landing path below.
+   Tracked completion, applicable behavioral QA and closeout B follow the accepted landing path below.
    Required final-head delivery checks must cover B, including metadata commits; A's run cannot substitute.
    Do not waive required CI because a change was mechanical.
 
@@ -126,11 +126,15 @@ Return the PR link, review provenance and any reconciliation bridge, final check
 
 ## QA report intake and publication
 
-Read the canonical `<base-worktree>/.runs/qa/<TASK-ID>/qa.md` for required or requested QA. Check current subject,
+Apply [QA applicability](QA.md#applicability) to the reviewed scope. Changed behavior requires QA even without a
+UI; verify criterion-specific N/A reasons in the technical handoff or canonical QA report for changes without
+behavioral consequences. Missing assessment routes to `qa`. Read the canonical
+`<base-worktree>/.runs/qa/<TASK-ID>/qa.md` for required or requested QA. Check current subject,
 independence, scenario coverage, artifact digests and any reconciliation bridge under [QA standards](QA.md).
 A current FAIL blocks accepted landing and routes to `work`; INCOMPLETE or missing required evidence routes to
 `qa` or its stated prerequisite. Do not select a historical PASS or treat requested QA as optional after it fails.
-Non-interactive work may have a justified N/A; do not force a browser run for documentation.
+Non-visual evidence can use real requests, command/driver outputs, state checks or instruction walkthroughs as
+appropriate. No screenshot requirement does not imply overall QA N/A.
 
 Publish sanitized captures through an available mechanism within the existing publication authority and verify
 access for the intended PR audience. A local behavioral PASS may have publication pending. No working upload
@@ -141,5 +145,6 @@ publication is pending. Already-open PRs can receive QA before merge; this does 
 ## Visual evidence
 
 For UI/TUI changes consume current post-review QA evidence under [QA standards](QA.md) and include the PR
-Before/After table with accessible real captures. Non-visual work records N/A or omits that section. Do not run
+Before/After table with accessible real captures. Non-visual work records visual N/A or omits that section while
+retaining its behavioral QA results and relevant evidence in the PR verification summary. Do not run
 unnecessary screenshot steps on documentation-only changes. Missing required evidence remains visible.

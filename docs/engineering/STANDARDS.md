@@ -2,9 +2,10 @@
 
 These are the minimum shared rules for application changes. `ARCHITECTURE.md`, accepted ADRs, and nearby owned code supply decisions that are specific to a use case.
 
-For changed tests, code and documentation, apply the scoped [quality checks](QUALITY.md). They make the rules
-below actionable during work, review, audit and architecture exploration without widening those workflows'
-authority. Use their instruction and human-documentation checks when AGENTS.md, README or CHANGELOG is affected.
+Review owns the detailed [quality checks](QUALITY.md) for changed code, tests and documentation. Work follows
+applicable standards and consults relevant detail when making an implementation decision; it need not load every
+checklist or duplicate review's assessment. Audit and architecture apply the checks within their declared scope.
+Use the instruction/documentation sections when maintaining AGENTS.md, README or CHANGELOG.
 
 ## Architecture
 

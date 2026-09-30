@@ -22,7 +22,9 @@ For first implementation, a missing report is normal. For revision, read the can
 
 Version 3 is the current format; version-2 canonical reports remain usable if their identity and recorded snapshot match. If the branch has moved, trace the intervening changes rather than guessing that findings still apply.
 
-Reject an unreadable, ambiguous or stale handoff and request a fresh review. A `revise` report supplies correction input; an `accept` report routes to landing, which can reconcile a moving base under [landing standards](LANDING.md) without pretending the old report names new OIDs.
+Reject an unreadable, ambiguous or stale handoff and request a fresh review. A `revise` report supplies correction
+input; after `accept`, satisfy [QA applicability](QA.md#applicability) before ordinary landing. Landing can
+reconcile a moving base under [landing standards](LANDING.md) without pretending the old report names new OIDs.
 
 A `revise` verdict does not always require source changes. If the only remaining findings are missing explicitly required hosted
 verification, preserve the implementation and report the evidence action. Where CI requires publication, route

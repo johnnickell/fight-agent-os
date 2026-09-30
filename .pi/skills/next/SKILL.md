@@ -37,6 +37,9 @@ independent `review` once that evidence is available. Read the selected skill be
 missing publication authority as human input; do not recommend `work` for an evidence-only blocker. Read the selected TASK's canonical QA report when present under [QA standards](../../../docs/engineering/QA.md).
 A current confirmed QA failure routes to `work` even when an older technical review says accept. Once technical acceptance is established, missing or
 incomplete required/requested QA routes to `qa` or its named prerequisite; read that skill before recommending it.
+Use [QA applicability](../../../docs/engineering/QA.md#applicability) for all behavior-affecting changes, including
+non-UI work. An absent applicability assessment also routes accepted work to `qa`; a reasoned N/A in the technical
+handoff or canonical QA report can satisfy that boundary for changes with no behavioral consequence.
 Before acceptance, unimplemented TASKs and unresolved implementation findings route to `work`; completed
 implementation awaiting technical review routes to `review`. A missing QA report must not send unimplemented
 work directly into QA.

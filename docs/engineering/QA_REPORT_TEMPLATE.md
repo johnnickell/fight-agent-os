@@ -16,14 +16,17 @@
 ## Runtime and scope
 
 - Requested scope; affected TASK criteria; required scenarios and justified exclusions:
+- Selected modes and risk rationale; overall QA applicability and visual-evidence applicability separately:
 - Checkout/build/process or image provenance proving the served revision:
 - Owned services/ports and disposable test data; startup commands and outcomes (no secrets):
 - Browser/terminal tools, dimensions, dependency/build context and capture limitations:
+- API/CLI/driver commands, test identities and resource/time/request bounds where applicable (no credentials):
+- For instruction-only scenarios: entrypoints/references, concrete requests and walkthrough limits; runtime N/A reason:
 - End-of-run source/runtime/PR-head recheck:
 
 ## Scenarios
 
-| ID / TASK criterion | Steps and inputs | Expected | Observed | PASS / FAIL / INCOMPLETE / N/A | Evidence |
+| ID / TASK criterion / failure hypothesis | Steps and inputs | Expected and contract source | Observed output and effects | PASS / FAIL / INCOMPLETE / N/A | Evidence |
 |---|---|---|---|---|---|
 | Replace with actual scenarios | | | | | |
 
@@ -41,7 +44,9 @@ product defect or an environment/evidence limitation; identify scope decisions t
 |---|---|---|---|---|---|---|
 | Replace with actual artifact references | | | | | | |
 
-Record "Not present before" or transcript-only limitations where applicable. Keep local links valid from both
+Include retained probe scripts/invocations, inputs/fixture sources, randomized seeds, output/exit status and state
+evidence where used. For images, record comparable scenario/data, dimensions/theme/zoom and baseline/result
+captions, with final visual inspection. Record "Not present before" or transcript-only limitations where applicable. Keep local links valid from both
 the canonical and retained run report (absolute paths are acceptable locally); never publish private local paths.
 
 ## Reuse and limitations

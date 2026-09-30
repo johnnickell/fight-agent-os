@@ -9,11 +9,12 @@ match or a green suite alone does not establish a defect or correctness.
 
 | Workflow | When and how to apply these checks |
 |---|---|
-| Work | Check tests while writing them; inspect the TASK diff and directly affected contracts/docs before handoff. Repair only within authorized scope. |
-| Review | Independently challenge the changed scope and evidence; use existing review IDs and report corrections without applying them. |
+| Work | Keep tests tied to contracts and expectations, update directly affected docs, and record TASK outcome evidence. Consult relevant detail on demand; do not repeat the review checklist. |
+| Review | Own the detailed architecture, code, test and documentation assessment of the changed scope and directly affected contracts. Use existing review IDs and report corrections without applying them. |
 | Audit | Apply relevant checks to the named boundary, including its tests and instructions/docs; report sampled files, paths and unchecked areas. No automatic whole-repository sweep. |
 | Architecture | Use contract, duplication and instruction questions to compare design options and their verification/documentation impact. Stop at the proposal. |
 | Writing for Agents | Reconcile instructions within the authorized document scope; preserve policy authority and route unresolved decisions. |
+| QA | After review, challenge observable behavior through the applicable modes in [QA standards](QA.md). Use contract-based expectations; hand confirmed defects to work without repairing source. |
 
 Inspect directly related consumers when necessary to validate a finding; that inspection does not expand edit
 scope. Record unrelated debt separately. No check adds automatic delegation, tools, branches, approval gates or
@@ -121,8 +122,9 @@ without issuing a TASK verdict. Do not introduce a separate score or duplicate f
 
 Name the contract/rule, exact location, practical consequence, counterevidence and a bounded correction for each
 finding. Distinguish confirmed defects, uncertainty and optional improvements. Report the inspected scope,
-retained exceptions, meaningful coverage removed/replaced and remaining gaps. Work records self-check results;
-review independently evaluates them. The canonical gate remains required and does not replace these judgments.
+retained exceptions, meaningful coverage removed/replaced and remaining gaps. Work records outcome evidence;
+review performs the detailed assessment independently. Work remains responsible for applicable rules and known
+defects, without having to load this entire checklist. The canonical gate does not replace these judgments.
 
 The [source comparison](SKILL_GAPS.md#test-code-and-documentation-quality-source-decisions) records the four
 upstream inspirations and the local adaptations; this reference is original Agent OS guidance.
