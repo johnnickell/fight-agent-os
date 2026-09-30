@@ -76,5 +76,6 @@ next-level records; parents with only terminal children remain listed until an e
 | TICKET | [TICKET-00007](tickets/00007-TICKET.md) | Stabilize application dependencies and smoke baseline | ready-for-agent | 2/2 terminal |
 | TICKET | [TICKET-00008](tickets/00008-TICKET.md) | Establish application ownership and orchestration boundaries | ready-for-agent | 2/2 terminal |
 | TICKET | [TICKET-00009](tickets/00009-TICKET.md) | Establish authoritative PostgreSQL persistence | ready-for-agent | 6/6 terminal |
+| TICKET | [TICKET-00012](tickets/00012-TICKET.md) | Establish the React and component-catalog foundation | ready-for-agent | 5/5 terminal |
 | TICKET | [TICKET-00033](tickets/00033-TICKET.md) | Verify reviewed behavior with independent QA before landing | ready-for-agent | 1/1 terminal |
 <!-- /planning:frontier -->
