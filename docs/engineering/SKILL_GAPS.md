@@ -104,8 +104,10 @@ Primary sources inspected on 2026-09-26; they supply ideas, not local authority:
 
 - Matt Pocock's [improve-codebase-architecture](https://github.com/mattpocock/skills/blob/c55ee46073ed923f86ce59a5eb3b6d895095d1b7/skills/engineering/improve-codebase-architecture/SKILL.md),
   commit `c55ee46073ed923f86ce59a5eb3b6d895095d1b7`, is the current source behind the earlier `improve-architecture`
-  shorthand. **Adapt** exploration of navigation friction and useful encapsulation into human-first ownership and
-  interface alternatives. **Reject** mandatory vocabulary, automatic subagents, HTML/CDN report, grilling and inline
+  shorthand. **Adapt** exploration of navigation friction and module deepening into small domain-facing interfaces
+  that hide useful complexity and reduce what callers must know. TASK-00150 makes the before/after caller comparison
+  explicit while preserving DDD ownership, aggregate invariants, bounded contexts, CQRS and accepted package
+  contracts; module depth is distinct from namespace depth. **Reject** mandatory vocabulary, automatic subagents, HTML/CDN report, grilling and inline
   domain-document mutation. Its repository MIT notice was verified and is retained in the local architecture skill.
 - Mathias Verraes, [DRY is about Knowledge](https://verraes.net/2014/08/dry-is-about-knowledge/), 2014-08-02:
   **adopt** reasons for change as a cohesion test; **reject** deduplication based only on similar syntax. This supports

@@ -30,6 +30,27 @@ not a numeric limit. Prefer meaningful depth over flat miscellaneous buckets; av
 created only to satisfy a diagram. `Adapter/Persistence` is a candidate for this assessment (repositories, grant
 transitions, hydration, locking and infrastructure), not authorization to move it during unrelated work.
 
+### Module depth and interface simplicity
+
+Prefer a small, coherent domain-facing interface that hides substantial implementation complexity. A module's
+depth is how much useful work it encapsulates relative to what callers must understand; it is not namespace
+depth, class size or method count. An interface includes inputs, outputs, errors, configuration and required call
+ordering, not only method signatures. Keep necessary domain choices, failure contracts and effect guarantees
+explicit while hiding internal coordination and mechanisms.
+
+Challenge wide interfaces, mode flags, implementation-shaped parameters, caller-managed setup sequences and
+forwarding layers that leave callers carrying the complexity. Compare actual caller code before and after a
+proposal. Prefer fewer concepts and decisions for the same use case; one generic method with an opaque options
+bag is not simpler. Do not preserve an unwieldy interface merely because it already exists: propose a smaller
+contract with an explicit compatibility/migration path and affected consumers.
+
+Deepening must preserve DDD ownership, domain language, aggregate invariants and bounded-context/package
+boundaries, alongside inward dependencies and CQRS command/query/event semantics. Consolidate only cohesive
+responsibilities with the same owner and reason to change. Do not merge unrelated use cases into a broad service,
+move Domain policy into Application/Adapter, blur reads with mutations, or hide authorization, transaction and
+external-effect obligations. Honor accepted package contracts directly under ADR 0001; improvements to an owned
+interface or an upstream proposal do not authorize consumer aliases or speculative wrappers.
+
 ## CQRS and HTTP
 
 Commands express intent and may change state. Queries return data without business mutation. Events report facts that already happened. Messages carry use-case context, not transport details, and handlers do not reconstruct Domain policy from exposed state.

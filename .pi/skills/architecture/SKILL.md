@@ -20,6 +20,11 @@ Trace the real caller, input contract, policy owner and outcome before proposing
   recovery. Separate demonstrated guarantees from planned ones; do not claim exactly-once external effects.
 - Human understanding: does an interface express the domain use case, hide useful complexity and leave changes
   near their owning concept? Design architecture/interfaces first; tests verify those contracts afterward.
+- Module depth: apply [interface simplicity](../../../docs/engineering/STANDARDS.md#module-depth-and-interface-simplicity).
+  Find where callers must understand internal sequencing, configuration or multiple shallow forwarding layers.
+  Seek a small domain-facing contract that contains the useful complexity with its owner. Compare caller
+  concepts, choices and obligations before and after; fewer methods or deeper folders alone do not show progress.
+  Check DDD ownership, aggregate invariants, bounded contexts and CQRS semantics for every deepening proposal.
 - Namespace cohesion: unrelated classes in one directory can justify deeper capability subnamespaces. Trace
   callers and reasons to change; distinguish a reusable persistence mechanism from an activation/session concern.
   Class count is a signal, never a threshold. Avoid one-class folder inflation and extracting abstractions solely
@@ -27,6 +32,11 @@ Trace the real caller, input contract, policy owner and outcome before proposing
 
 Compare proportionate options, including retaining the current design when warranted. Show affected files and
 caller relationships, interface/ownership changes, benefits, tradeoffs, migration/test impact and uncertainty.
+For interface changes, show a concrete before/after caller example and explain which complexity becomes internal
+and which domain choices, failures and effects remain explicit. Challenge an existing large interface rather than
+carrying it forward by default; identify affected consumers and a compatible transition or a proposed breaking
+change for the decision owner. Reject a simpler-looking facade that merely moves complexity into flags/options,
+crosses ownership boundaries, or adds a prohibited wrapper around an existing package use case.
 A small diagram helps when relationships are the issue; no HTML artifact or visual scaffold is mandatory.
 Do not combine similar-looking code unless it represents the same knowledge and changes for the same reason.
 
