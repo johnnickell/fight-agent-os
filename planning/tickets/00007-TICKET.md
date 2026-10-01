@@ -2,7 +2,7 @@
 id: TICKET-00007
 epic: EPIC-00003
 title: Stabilize application dependencies and smoke baseline
-status: ready-for-agent
+status: done
 ---
 
 # Stabilize application dependencies and smoke baseline

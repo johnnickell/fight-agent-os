@@ -9,12 +9,12 @@
 | [TICKET-00004](00004-TICKET.md) | Establish controlled landing and human handoff | done | [EPIC-00002](../epics/00002-EPIC.md) |
 | [TICKET-00005](00005-TICKET.md) | Establish disposable product-design exploration | done | [EPIC-00002](../epics/00002-EPIC.md) |
 | [TICKET-00006](00006-TICKET.md) | Establish independent design review | done | [EPIC-00002](../epics/00002-EPIC.md) |
-| [TICKET-00007](00007-TICKET.md) | Stabilize application dependencies and smoke baseline | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
-| [TICKET-00008](00008-TICKET.md) | Establish application ownership and orchestration boundaries | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
-| [TICKET-00009](00009-TICKET.md) | Establish authoritative PostgreSQL persistence | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
+| [TICKET-00007](00007-TICKET.md) | Stabilize application dependencies and smoke baseline | done | [EPIC-00003](../epics/00003-EPIC.md) |
+| [TICKET-00008](00008-TICKET.md) | Establish application ownership and orchestration boundaries | done | [EPIC-00003](../epics/00003-EPIC.md) |
+| [TICKET-00009](00009-TICKET.md) | Establish authoritative PostgreSQL persistence | done | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00010](00010-TICKET.md) | Establish safe versioned HTTP API delivery | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00011](00011-TICKET.md) | Establish recoverable external-effect delivery | needs-info | [EPIC-00003](../epics/00003-EPIC.md) |
-| [TICKET-00012](00012-TICKET.md) | Establish the React and component-catalog foundation | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
+| [TICKET-00012](00012-TICKET.md) | Establish the React and component-catalog foundation | done | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00013](00013-TICKET.md) | Complete the owned-code quality gate | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00014](00014-TICKET.md) | Accept the authentication and dashboard design language | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00015](00015-TICKET.md) | Establish managed authority and guarded bootstrap | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
@@ -35,7 +35,7 @@
 | [TICKET-00030](00030-TICKET.md) | Administer installation users and cross-user sessions | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00031](00031-TICKET.md) | Read authority catalogs and administer custom roles | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00032](00032-TICKET.md) | Start and recover TASK execution in an isolated local workspace | ready-for-agent | [EPIC-00007](../epics/00007-EPIC.md) |
-| [TICKET-00033](00033-TICKET.md) | Verify reviewed behavior with independent QA before landing | ready-for-agent | [EPIC-00008](../epics/00008-EPIC.md) |
+| [TICKET-00033](00033-TICKET.md) | Verify reviewed behavior with independent QA before landing | done | [EPIC-00008](../epics/00008-EPIC.md) |
 | [TICKET-00034](00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00035](00035-TICKET.md) | Install the approved Fight terminal identity in Pi | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00036](00036-TICKET.md) | Share server-owned form validation with the browser | ready-for-agent | [EPIC-00003](../epics/00003-EPIC.md) |

@@ -66,3 +66,7 @@ required acceptance verification, including hosted proof when required; it does 
 PR publication, merge, deployment, or release. Required final-head delivery checks remain separate only under the
 accepted [closeout contract](LANDING.md#acceptance-candidate-and-administrative-closeout); do not reinterpret an
 existing literal-head acceptance requirement without an authorized owner amendment.
+
+Whenever an authorized operation closes a TASK, apply [automatic parent completion](../../planning/CONVENTIONS.md#automatic-parent-completion)
+in the same change. Run `./bin/planning-check --write` so eligible TICKETs and EPICs close and views refresh;
+do not stop at “ready for closeout” or ask the user to run another skill. This does not grant work the independent acceptance needed to close a TASK.

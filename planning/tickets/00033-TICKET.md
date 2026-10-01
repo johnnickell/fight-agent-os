@@ -2,7 +2,7 @@
 id: TICKET-00033
 epic: EPIC-00008
 title: Verify reviewed behavior with independent QA before landing
-status: ready-for-agent
+status: done
 ---
 
 # Verify reviewed behavior with independent QA before landing

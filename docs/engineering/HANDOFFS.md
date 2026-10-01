@@ -27,6 +27,7 @@ not new acceptance or publication authority.
 | QA passes or establishes justified N/A, with current technical acceptance | `/skill:land TASK-NNNNN` within publication authority |
 | Initial independent acceptance lacks only explicitly required hosted evidence | Authorized `/skill:land TASK-NNNNN` draft-evidence path; then `/skill:review TASK-NNNNN` once that evidence is available |
 | Accepted candidate A has administrative closeout B, with final delivery proof pending or newly available | `/skill:land TASK-NNNNN` verifies closeout and required checks; no additional independent review or canonical review update solely for delivery |
+| TASK closes | Close eligible TICKET/EPIC ancestors and refresh views in the same operation under [automatic parent completion](../../planning/CONVENTIONS.md#automatic-parent-completion); no separate parent-closeout handoff |
 | Land publishes successfully | Human review/merge of the actual PR link; do not imply automatic merge or start another TASK |
 
 Failed required implementation checks keep work incomplete; recommend the same work skill only when continuing

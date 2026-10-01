@@ -102,7 +102,10 @@ proof, fresh checks with counts/warnings, risks, and publication state. `done` m
 all required acceptance verification, including hosted proof when required, not successful delivery, PR approval
 or merge. For required hosted checks, first establish the [closeout contract](#acceptance-candidate-and-administrative-closeout).
 Record `done` in B only after A is independently accepted and required QA is complete; say explicitly that final
-publication/checks are pending. Keep generated Board/indexes synchronized with authored planning changes.
+publication/checks are pending. Close eligible TICKET and EPIC ancestors in this same administrative closeout
+under [automatic parent completion](../../planning/CONVENTIONS.md#automatic-parent-completion). Run
+`./bin/planning-check --write` and include the parent statuses and generated views in the same commit. No separate
+parent review, approval or closeout handoff is required.
 
 Run focused checks, `./bin/planning-check`, `git diff --check`, and `./bin/build` on the reconciled implementation before initial publication. Stage only owned planning or reconciliation files; inspect the staged diff and commit them if needed. Push the feature branch without force; create or update its PR against `develop`. For a TASK PR, set and verify the title `TASK-NNNNN — <TASK title>` (the body template cannot set a title), and use the editable [PR body template](../../.github/pull_request_template.md) for scope, behavior, verification, warnings, evidence, and outstanding review/merge status. Remove placeholder text and avoid implying a check passed if it was not run. Preserve an existing PR's identity when updating it; do not rename an unrelated or historical branch merely to match the new convention. Record the actual PR URL in the TASK and refresh generated views. Run focused checks, planning validation, diff check and the full gate on that final tree before committing/pushing the PR metadata. If a result changes, correct the evidence and rerun the affected checks. Avoid repeating gates for an unchanged tree merely to accumulate receipts.
 
