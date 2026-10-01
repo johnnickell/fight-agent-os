@@ -16,6 +16,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | — | — |
 | 34 | [TASK-00152](00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | [TICKET-00036 — Share server-owned form validation with the browser](../tickets/00036-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | — (standalone chore) | ready-for-agent | — | — |
 
 ## Waiting
 
