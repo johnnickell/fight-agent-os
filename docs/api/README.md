@@ -80,6 +80,44 @@ Standalone artifact freshness/validation remains an explicit `./bin/openapi chec
 another orchestrator or call export as an acceptance side effect. Direct tooling checks, not product tests of
 attributes, generated JSON, wrappers or deliberately corrupted validator fixtures, qualify generation.
 
+## Explicit input sources (TASK-00155)
+
+On an Action's `__invoke`, use argument-free `#[JsonBody]` for POST/PUT/PATCH JSON objects or
+`#[QueryString]` for GET query fields, followed by Fight Common `#[Validation(rules: [...])]`.
+Each rule's `field` is the **snake_case wire key** and the sole field allowlist; no DTO constructor,
+reflection hydration, fallback source, implicit default, type cast or form-schema publication is involved.
+A source without Validation, duplicate/conflicting markers, unsupported method or invalid rule declaration
+fails as a server error. A no-source Action accepts neither body nor Content-Type; ordinary no-source
+Actions also reject query. CSRF bootstrap retains its separate query guard and cookie/origin policy.
+
+After successful validation the Action reads `$request->getAttribute(JsonBody::class)` or
+`$request->getAttribute(QueryString::class)` as a checked field map. This is an adapter request attribute,
+not an authority grant; map to the actual package/use-case message explicitly, and never reread
+`getParsedBody()`/`getQueryParams()` to dispatch. JSON requires Content-Type `application/json` (optional
+UTF-8 charset), a nonempty unique-key object within 65,536 bytes and scalar/null fields. JSON retains
+native types. The query string has a 4,096-byte maximum, at most 32 `&`-separated flat fields, zero
+bracket/nesting depth, valid percent-encoding/UTF-8 and unique decoded lowercase snake_case names. When
+available, the original server `REQUEST_URI` query is checked before PSR URI normalization can hide bad
+percent triplets; later real-route owners must verify that server-provided target with HTTP requests. Values
+are strings (including `"false"`); empty string is not missing, and query has no null representation.
+An `&` separates fields; each field has zero or one `=`, and `+` decodes as a space. Unknown,
+repeated, malformed, oversized or wrong-source input receives sanitized `400` JSend field errors
+under `body`/`body.<declared_field>` or `query`/`query.<declared_field>`, never arbitrary submitted keys.
+Only declared endpoint rules can allow pagination, ordering, filters or boolean literals; they never
+confer permission to see deleted records or choose raw database expressions. Nested/list shapes and
+implicit conversions are deferred until a concrete endpoint qualifies them.
+
+The locked `johnnickell/fight-common` **v1.2.0** source at `a2cd615d9b5064c9c30e994655536176249cd73b`
+provides `Validation`, `RulesParser` and `ValidationService`. Qualification through the installed service
+confirmed `required` distinguishes missing from present null, other single-field rules skip absent fields,
+`type[int]` accepts JSON integers but rejects query numeric strings, `type[bool]` accepts JSON booleans but
+rejects `"false"`, and `in_list[true,false]` accepts the exact query literals without truthy casting.
+`digits|min_number[1]|max_number[100]` validates bounded positive query-number strings; the Action must
+still map them deliberately. `type[?string]` can allow JSON null; adding non-null rules can reject it.
+Rules such as comparison and enum must be qualified with a real consumer's representations before use;
+there is no global conversion or duplicate rule implementation. Direct middleware checks are foundation
+seam evidence, **not** a delivered product route or HTTP proof of future list/authentication operations.
+
 ## Owning feature conventions
 
 When implementing an API operation:
@@ -92,7 +130,11 @@ When implementing an API operation:
 3. Author descriptions explicitly in attributes. Use exact JSend/snake_case, status/header and sensitive-input
    semantics; reuse shared local references. Never infer an endpoint from a response schema or publish a future
    route as available. Synthetic examples must contain no credentials, personal data or private configuration.
-4. Preserve real response-to-contract checks and add the owning operation's behavior evidence. Run export,
+4. At each Action or Responder class/method site order applicable attribute groups **OpenAPI → input source
+   → Validation → access requirements → other metadata**. Keep one attribute per block, related groups together,
+   deliberate repeatable order intact and attributes on their supported targets. Responders normally have only
+   OpenAPI schema/response metadata. This is presentation order, not middleware execution or permission order.
+5. Preserve real response-to-contract checks and add the owning operation's behavior evidence. Run export,
    check and the canonical build; review the operation inventory and hashes before handing off.
 
 Shared routing responses and mapper-only schemas are not operations. Public-safe validation metadata planned in

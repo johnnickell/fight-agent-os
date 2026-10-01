@@ -24,9 +24,9 @@ use OpenApi\Attributes as OA;
                     property: 'fields',
                     description: <<<'TEXT'
                         Field paths map to unique nonempty message lists. Bootstrap uses body
-                        or cookie. The existing DTO mapper supports dotted snake_case paths
-                        such as body.profile_name; no body-bearing HTTP operation exists yet.
-                        OpenAPI 3.0 cannot constrain these dictionary key names.
+                        or cookie. Declared input sources support dotted snake_case paths
+                        such as body.profile_name and query.page; no body- or query-bearing
+                        HTTP operation exists yet. OpenAPI 3.0 cannot constrain these keys.
                         TEXT,
                     minProperties: 1,
                     type: 'object',
