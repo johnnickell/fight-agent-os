@@ -51,9 +51,10 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 
 ## Planning Frontier
 
-This generated view keeps requirement decomposition and parent closeout visible without changing executable TASK
-priority on the [TASK Board](tasks/BOARD.md). Non-terminal EPICs and TICKETs remain listed until they receive their
-next-level records; parents with only terminal children remain listed until an explicit closeout.
+This generated view keeps requirement decomposition visible without changing executable TASK priority on the
+[TASK Board](tasks/BOARD.md). Non-terminal EPICs and TICKETs remain listed until they receive their next-level
+records. [Automatic parent completion](CONVENTIONS.md#automatic-parent-completion) closes eligible parents in
+the same operation that completes their children.
 
 <!-- planning:frontier -->
 ### EPICs without TICKETs
