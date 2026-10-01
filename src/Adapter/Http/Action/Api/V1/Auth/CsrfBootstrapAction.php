@@ -114,7 +114,7 @@ final readonly class CsrfBootstrapAction
             new OA\Response(ref: '#/components/responses/InternalError', response: 500)
         ]
     )]
-    public function __invoke(ServerRequestInterface $request): ResponseInterface
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $nonce = null;
         $cookies = $request->getHeader('Cookie');

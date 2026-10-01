@@ -41,7 +41,7 @@ final class CsrfBootstrapActionTest extends TestCase
         $request = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf')
             ->withHeader('Cookie', '__Secure-agent_os_csrf='.$nonce);
 
-        ($this->action($bus))($request);
+        $this->action($bus)->handle($request);
 
         self::assertSame($nonce, $dispatched instanceof GetCsrfProof ? $dispatched->nonce : null);
     }
@@ -61,7 +61,7 @@ final class CsrfBootstrapActionTest extends TestCase
         $request = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf')
             ->withHeader('Cookie', '__Secure-agent_os_csrf=unsafe');
 
-        ($this->action($bus))($request);
+        $this->action($bus)->handle($request);
 
         self::assertNull($dispatched instanceof GetCsrfProof ? $dispatched->nonce : 'unexpected query');
     }
@@ -77,7 +77,7 @@ final class CsrfBootstrapActionTest extends TestCase
             ->withHeader('Cookie', '__Secure-agent_os_csrf=x; __Secure-agent_os_csrf=y');
         $this->expectException(HttpBadRequestException::class);
 
-        ($this->action($bus))($request);
+        $this->action($bus)->handle($request);
     }
 
     /**
@@ -90,7 +90,7 @@ final class CsrfBootstrapActionTest extends TestCase
         $request = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf');
         $this->expectException(\UnexpectedValueException::class);
 
-        ($this->action($bus))($request);
+        $this->action($bus)->handle($request);
     }
 
     /**

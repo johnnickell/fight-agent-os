@@ -64,7 +64,7 @@ final readonly class ReadValidationAction
             new OA\Response(ref: '#/components/responses/InternalError', response: 500)
         ]
     )]
-    public function __invoke(
+    public function handle(
         ServerRequestInterface $request,
         ResponseInterface $response,
         array $args

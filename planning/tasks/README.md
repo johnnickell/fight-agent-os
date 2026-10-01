@@ -158,5 +158,5 @@
 | [TASK-00153](00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00154](00154-TASK.md) | Serve local-only permission-gated Swagger with shared credentials and themes | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00155](00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | ready-for-agent | — |
+| [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | done | — |
 <!-- /planning:records -->

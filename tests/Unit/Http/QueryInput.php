@@ -22,7 +22,7 @@ final class QueryInput
         ['field' => 'page', 'label' => 'Page', 'rules' => 'required|digits|min_number[1]|max_number[100]'],
         ['field' => 'enabled', 'label' => 'Enabled', 'rules' => 'in_list[true,false]']
     ])]
-    public function __invoke(): void
+    public function handle(): void
     {
     }
 }

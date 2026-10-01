@@ -14,7 +14,7 @@ final class PublicForms
     /**
      * Lists real operations explicitly opted into public metadata
      *
-     * A future operation supplies its Action class, __invoke method and wire-field map.
+     * A future operation supplies its Action class, handle method and wire-field map.
      * Each selected rule identifies its zero-based position in the parsed PHP field rules
      * and its exact public error text. Unselected rules remain server-only.
      *

@@ -22,7 +22,7 @@ final class JsonInput
         ['field' => 'page', 'label' => 'Page', 'rules' => 'required|type[int]|min_number[1]'],
         ['field' => 'enabled', 'label' => 'Enabled', 'rules' => 'type[bool]']
     ])]
-    public function __invoke(): void
+    public function handle(): void
     {
     }
 }

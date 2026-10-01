@@ -17,7 +17,7 @@ final class MissingValidation
      * Handles input
      */
     #[JsonBody]
-    public function __invoke(): void
+    public function handle(): void
     {
     }
 }

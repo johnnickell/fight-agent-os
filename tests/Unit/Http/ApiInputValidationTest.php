@@ -241,7 +241,7 @@ final class ApiInputValidationTest extends TestCase
     public function test_that_malformed_original_query_cannot_dispatch(): void
     {
         $route = $this->createStub(RouteInterface::class);
-        $route->method('getCallable')->willReturn(QueryInput::class);
+        $route->method('getCallable')->willReturn(QueryInput::class.':handle');
         $request = (new ServerRequestFactory())->createServerRequest(
             'GET',
             'https://agent-os.test/api/v1/auth/csrf?page=%GG',
@@ -288,6 +288,37 @@ final class ApiInputValidationTest extends TestCase
     }
 
     /**
+     * Rejects unsupported route callables before dispatch
+     *
+     * @param mixed $callable
+     */
+    #[DataProvider('unsupported_callables')]
+    public function test_that_unsupported_route_callable_cannot_bypass_validation(mixed $callable): void
+    {
+        $route = $this->createStub(RouteInterface::class);
+        $route->method('getCallable')->willReturn($callable);
+        $request = $this->request()->withAttribute(RouteContext::ROUTE, $route);
+        $next = $this->createMock(RequestHandlerInterface::class);
+        $next->expects(self::never())->method('handle');
+
+        $this->expectException(LogicException::class);
+        $this->validation()->process($request, $next);
+    }
+
+    /**
+     * Lists route forms that cannot identify the declared Action method
+     *
+     * @return iterable<string, array{mixed}>
+     */
+    public static function unsupported_callables(): iterable
+    {
+        yield 'implicit invocation' => [JsonInput::class];
+        yield 'wrong method' => [JsonInput::class.':__invoke'];
+        yield 'missing handle' => [self::class.':handle'];
+        yield 'array callable' => [[JsonInput::class, 'handle']];
+    }
+
+    /**
      * Supplies route metadata exactly as Slim does after routing
      *
      * @param class-string $action
@@ -297,7 +328,7 @@ final class ApiInputValidationTest extends TestCase
         string $method = 'GET'
     ): ServerRequestInterface {
         $route = $this->createStub(RouteInterface::class);
-        $route->method('getCallable')->willReturn($action);
+        $route->method('getCallable')->willReturn($action.':handle');
 
         return (new ServerRequestFactory())->createServerRequest($method, 'https://agent-os.test/api/v1/auth/csrf')
             ->withAttribute(RouteContext::ROUTE, $route)

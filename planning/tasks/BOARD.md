@@ -16,7 +16,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 22 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | ready-for-agent | — | — |
 | 34 | [TASK-00152](00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | [TICKET-00036 — Share server-owned form validation with the browser](../tickets/00036-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | — (standalone chore) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -194,4 +193,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00148](00148-TASK.md) | Adopt separated frontend tests and consistent import and style conventions | — (standalone chore) | done | — | [PR #49](https://github.com/johnnickell/fight-agent-os/pull/49) |
 | — | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | — (standalone chore) | done | — | [PR #50](https://github.com/johnnickell/fight-agent-os/pull/50) |
 | — | [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | — (standalone chore) | done | — | [PR #51](https://github.com/johnnickell/fight-agent-os/pull/51) |
+| — | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | — (standalone chore) | done | — | [PR #62](https://github.com/johnnickell/fight-agent-os/pull/62) |
 <!-- /planning:board -->

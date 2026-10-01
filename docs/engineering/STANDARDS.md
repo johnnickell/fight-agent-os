@@ -56,7 +56,9 @@ interface or an upstream proposal do not authorize consumer aliases or speculati
 
 Commands express intent and may change state. Queries return data without business mutation. Events report facts that already happened. Messages carry use-case context, not transport details, and handlers do not reconstruct Domain policy from exposed state.
 
-Use Action–Domain–Responder for HTTP interactions:
+Use Action–Domain–Responder for HTTP interactions. Actions expose `handle()` as their sole entry point;
+Responders present through `respond()`. Register API Actions with Slim's `Class:handle` callable so
+post-routing validation examines the executed method; web routes call the injected Action's `handle()`.
 
 - One Action handles one interaction, maps validated transport input and authenticated actor/target context, dispatches one package or owned use case, and delegates presentation. Do not put business policy or transaction control in an Action.
 - Authentication middleware and transport permission checks provide an early server-side gate, not the sole authority: package or justified Agent OS Application policy must enforce target, ownership and permission decisions against authoritative state on every entry path, including non-HTTP callers. Do not infer authorization from role names, UI reachability or a request attribute. Do not duplicate package-owned invariants in handlers or adapters.
