@@ -193,5 +193,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00148](00148-TASK.md) | Adopt separated frontend tests and consistent import and style conventions | — (standalone chore) | done | — | [PR #49](https://github.com/johnnickell/fight-agent-os/pull/49) |
 | — | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | — (standalone chore) | done | — | [PR #50](https://github.com/johnnickell/fight-agent-os/pull/50) |
 | — | [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | — (standalone chore) | done | — | [PR #51](https://github.com/johnnickell/fight-agent-os/pull/51) |
-| — | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | — (standalone chore) | done | — | — |
+| — | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | — (standalone chore) | done | — | [PR #62](https://github.com/johnnickell/fight-agent-os/pull/62) |
 <!-- /planning:board -->
