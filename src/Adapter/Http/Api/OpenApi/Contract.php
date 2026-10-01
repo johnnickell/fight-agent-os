@@ -51,7 +51,9 @@ use OpenApi\Attributes as OA;
     version: '0.1.0',
     title: 'Fight Agent OS representative API',
     description: <<<'TEXT'
-        Only GET /api/v1/auth/csrf is implemented here. This document is repository-only;
+        Only GET /api/v1/auth/csrf and GET /api/v1/validations/{form_name} are
+        implemented here. Both reads are public; the validation catalog is explicitly
+        allowlisted and does not authorize any form operation. This document is repository-only;
         no OpenAPI, Swagger UI or diagnostic route is enabled in any environment.
         JSON responses use exactly application/json, JSend and snake_case data fields.
         Safe correlation is exposed only in X-Correlation-ID, not in the JSON envelope.

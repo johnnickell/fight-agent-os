@@ -124,6 +124,18 @@ use OpenApi\Attributes as OA;
     ])
 )]
 #[OA\Response(
+    response: 'PublicValidationBadRequest',
+    description: 'Invalid form name, forbidden body, Content-Type or query input',
+    headers: [
+        new OA\Header(ref: '#/components/headers/NoStore', header: 'Cache-Control'),
+        new OA\Header(ref: '#/components/headers/CorrelationId', header: 'X-Correlation-ID')
+    ],
+    content: new OA\JsonContent(oneOf: [
+        new OA\Schema(ref: '#/components/schemas/ValidationFail'),
+        new OA\Schema(ref: '#/components/schemas/BadRequestError')
+    ])
+)]
+#[OA\Response(
     response: 'Forbidden',
     description: 'HTTPS/origin/Fetch Metadata/preflight rejection',
     headers: [
