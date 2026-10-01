@@ -37,8 +37,9 @@ Authorization remains server-side and endpoint-specific; framework middleware ma
 
 ### Explicit request-input sources
 
-The maintainer approved this follow-up on 2026-09-30; [TASK-00155](../tasks/00155-TASK.md) owns implementation.
-`#[JsonBody]` and `#[QueryString]` are argument-free source indicators on the Action's `__invoke`, not DTO or
+The maintainer approved this follow-up on 2026-09-30; [TASK-00155](../tasks/00155-TASK.md) owns input implementation.
+[TASK-00156](../tasks/00156-TASK.md) moves the method location to `handle` without changing the accepted input policy.
+`#[JsonBody]` and `#[QueryString]` are argument-free source indicators on the Action's `handle`, not DTO or
 schema-class references. Fight Common's `#[Validation]` owns the expected field names/JSON keys and their
 constraints. Actions read the checked values from the request and explicitly map them to the owning use case;
 no input-only DTO construction, constructor reflection or parallel field/type registry is required. This does
@@ -88,7 +89,7 @@ For each applicable **class or method declaration**, order attribute groups top-
 Use one attribute per declaration block and keep each family's related metadata together. Preserve deliberate
 order within repeatable attributes; this rule does not reorder nested OpenAPI arguments. Apply only groups that
 belong at that site: the current OpenAPI operation and planned source/validation attributes belong on Action
-`__invoke`; future security attributes retain their owning TASK's supported class/method target. Do not move an
+`handle`; future security attributes retain their owning TASK's supported class/method target. Do not move an
 attribute between targets to make one visual stack. Responders normally contain OpenAPI response/schema metadata
 only; do not add input validation or permission policy to a Responder. Docblocks precede attributes.
 

@@ -19,7 +19,7 @@ final class InvalidRulesInput
      */
     #[QueryString]
     #[Validation(rules: [['field' => 'page', 'label' => 'Page', 'rules' => 'unknown_rule']])]
-    public function __invoke(): void
+    public function handle(): void
     {
     }
 }

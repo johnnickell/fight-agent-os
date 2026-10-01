@@ -83,7 +83,7 @@ attributes, generated JSON, wrappers or deliberately corrupted validator fixture
 
 ## Explicit input sources (TASK-00155)
 
-On an Action's `__invoke`, use argument-free `#[JsonBody]` for POST/PUT/PATCH JSON objects or
+On an Action's `handle`, use argument-free `#[JsonBody]` for POST/PUT/PATCH JSON objects or
 `#[QueryString]` for GET query fields, followed by Fight Common `#[Validation(rules: [...])]`.
 Each rule's `field` is the **snake_case wire key** and the sole field allowlist; no DTO constructor,
 reflection hydration, fallback source, implicit default, type cast or form-schema publication is involved.
@@ -123,7 +123,7 @@ seam evidence, **not** a delivered product route or HTTP proof of future list/au
 
 When implementing an API operation:
 
-1. Put its operation attribute on the actual Action's `__invoke` under `src/Adapter/Http/Action/Api/`.
+1. Put its operation attribute on the actual Action's `handle` under `src/Adapter/Http/Action/Api/`.
    Give it an explicit stable operation ID, actual path/method, input/security and response contracts.
 2. Put endpoint response schemas with their Responder under `src/Adapter/Http/Responder/Api/`.
    Shared safe failures, headers and document/security metadata live under `src/Adapter/Http/Api/OpenApi/`.

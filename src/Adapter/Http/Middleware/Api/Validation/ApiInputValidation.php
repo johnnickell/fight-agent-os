@@ -46,11 +46,17 @@ final readonly class ApiInputValidation implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $action = RouteContext::fromRequest($request)->getRoute()?->getCallable();
-        if (!is_string($action) || !class_exists($action)) {
-            throw new LogicException('An API route requires a declared Action.');
+        if (!is_string($action) || !str_ends_with($action, ':handle')) {
+            throw new LogicException('An API route requires a declared Action handle method.');
         }
-
-        $method = new ReflectionMethod($action, '__invoke');
+        $class = substr($action, 0, -strlen(':handle'));
+        if (!class_exists($class) || !method_exists($class, 'handle')) {
+            throw new LogicException('An API route requires a declared Action handle method.');
+        }
+        $method = new ReflectionMethod($class, 'handle');
+        if (!$method->isPublic()) {
+            throw new LogicException('An API route requires a public Action handle method.');
+        }
         $body = $method->getAttributes(JsonBody::class);
         $query = $method->getAttributes(QueryString::class);
         $declarations = $method->getAttributes(Validation::class);
@@ -140,13 +146,13 @@ final readonly class ApiInputValidation implements MiddlewareInterface
         }
         if (
             $source !== QueryString::class && $request->getUri()->getQuery() !== ''
-            && $action !== CsrfBootstrapAction::class
+            && $class !== CsrfBootstrapAction::class
         ) {
             return $this->reject(['query' => ['Query is not allowed.']]);
         }
 
         if ($source === null) {
-            if ($action === CsrfBootstrapAction::class) {
+            if ($class === CsrfBootstrapAction::class) {
                 $cookies = $request->getHeader('Cookie');
                 if (count($cookies) > 1 || strlen($cookies[0] ?? '') > 4096) {
                     return $this->reject(['cookie' => ['Invalid cookie.']]);

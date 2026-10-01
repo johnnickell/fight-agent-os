@@ -35,7 +35,7 @@ final class SchemaProjection
             if (!Catalog::identifier($name) || isset($forms[$name])) {
                 throw new RuntimeException('Invalid or duplicate public form name.');
             }
-            $method = new ReflectionMethod($registration['action'], '__invoke');
+            $method = new ReflectionMethod($registration['action'], 'handle');
             $attributes = $method->getAttributes(Validation::class);
             if (count($attributes) !== 1) {
                 throw new RuntimeException('A public form needs one Validation declaration.');

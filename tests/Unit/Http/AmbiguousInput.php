@@ -21,7 +21,7 @@ final class AmbiguousInput
     #[JsonBody]
     #[QueryString]
     #[Validation(rules: [])]
-    public function __invoke(): void
+    public function handle(): void
     {
     }
 }
