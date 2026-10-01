@@ -34,6 +34,18 @@ final class ApiContract
     }
 
     /**
+     * Checks the real public validation read against its documented response
+     */
+    public static function assertValidation(ResponseInterface $response, int $status): void
+    {
+        self::assertTransport($response, $status);
+        self::builder()->getResponseValidator()->validate(
+            new OperationAddress('/api/v1/validations/{form_name}', 'get'),
+            $response
+        );
+    }
+
+    /**
      * Checks an API routing failure without inventing a documented operation
      */
     public static function assertRoutingFailure(ResponseInterface $response, int $status, string $component): void

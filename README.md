@@ -9,8 +9,8 @@ A personal AI operating system, starting with software engineering: plan in the 
 Pi terminal, and understand the work through a companion dashboard.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
-API validation/error handling and local engineering skills are present. These pieces do not yet constitute the
-complete authenticated browser journey. A non-product React shell is available at `/app`; product UI journeys,
+API validation/error handling, an empty public-safe form metadata catalog and local engineering skills are
+present. These pieces do not yet constitute the complete authenticated browser journey. A non-product React shell is available at `/app`; product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
 ## Start planning
@@ -76,8 +76,10 @@ schemas and fixtures belong alongside `migrations/` under `database/`.
 ```
 
 Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
-then validate freshness and real responses with `./bin/openapi check`. JSON stays under ignored `.runs/openapi/`,
-not public assets. Swagger UI, spec-serving and diagnostic routes are disabled in every environment.
+then validate freshness and real responses with `./bin/openapi check`. Generate the initially empty public-safe
+form catalog with `./bin/validations export` and verify it with `./bin/validations check`; see
+[validation metadata](docs/api/VALIDATIONS.md). Generated JSON stays under ignored `.runs/openapi/` and
+`.runs/validations/`, not public assets. Swagger UI, spec-serving and diagnostic routes are disabled in every environment.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots

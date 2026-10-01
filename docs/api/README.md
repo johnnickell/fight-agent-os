@@ -2,9 +2,10 @@
 
 PHP `OpenApi\Attributes` are the single authored OpenAPI **3.0.3** source. TASK-00153 replaces the former
 handwritten `docs/api/openapi.yaml`; no independently maintained YAML or tracked generated specification remains.
-TASK-00021's YAML receipts are historical evidence, not the current input. The document still describes **only
-`GET /api/v1/auth/csrf`**. Its `info.version: 0.1.0` labels the representative contract, not an authentication
-release; this source-format migration does not deliver new operations.
+TASK-00021's YAML receipts are historical evidence, not the current input. The document describes **only
+`GET /api/v1/auth/csrf` and the public-safe `GET /api/v1/validations/{form_name}`**. See
+[validation metadata](VALIDATIONS.md) for its explicit private-artifact export, read and future form-registration
+contract. Its `info.version: 0.1.0` labels the representative contract, not an authentication release.
 
 ## Export and validate
 
@@ -137,9 +138,9 @@ When implementing an API operation:
 5. Preserve real response-to-contract checks and add the owning operation's behavior evidence. Run export,
    check and the canonical build; review the operation inventory and hashes before handing off.
 
-Shared routing responses and mapper-only schemas are not operations. Public-safe validation metadata planned in
-TASK-00151 has a different security boundary from protected Swagger; when implemented, its owner must add the
-actual operation here, not introduce another specification. The migration makes object types inferred by the
+Shared routing responses and mapper-only schemas are not operations. The public-safe validation read has a
+separate security boundary from protected Swagger. It is the second actual operation in this contract; no
+separate specification is introduced. The migration makes object types inferred by the
 generator explicit in the output of existing `allOf` object constraints; their accepted real response shapes
 are unchanged.
 
