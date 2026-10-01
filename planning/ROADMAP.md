@@ -44,7 +44,7 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 | [EPIC-00005](epics/00005-EPIC.md) | Deliver the registered Planning workspace | registered-planning-workspace | ready-for-agent |
 | [EPIC-00006](epics/00006-EPIC.md) | Deliver browser Planning Agents and the trusted Harness | browser-planning-agents-harness | ready-for-agent |
 | [EPIC-00007](epics/00007-EPIC.md) | Coordinate one TASK through implementation | coordinator-builder-awaiting-review | ready-for-agent |
-| [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | review-publish-pr-handoff | ready-for-agent |
+| [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | review-publish-pr-handoff | done |
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | deterministic-project-creation | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | repository-instruction-editing | ready-for-agent |
 <!-- /planning:epics -->
@@ -68,14 +68,4 @@ next-level records; parents with only terminal children remain listed until an e
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
 | [TICKET-00034](tickets/00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-
-### Parents ready for closeout review
-
-| Type | ID | Title | Status | Children |
-|---|---|---|---|---|
-| TICKET | [TICKET-00007](tickets/00007-TICKET.md) | Stabilize application dependencies and smoke baseline | ready-for-agent | 2/2 terminal |
-| TICKET | [TICKET-00008](tickets/00008-TICKET.md) | Establish application ownership and orchestration boundaries | ready-for-agent | 2/2 terminal |
-| TICKET | [TICKET-00009](tickets/00009-TICKET.md) | Establish authoritative PostgreSQL persistence | ready-for-agent | 6/6 terminal |
-| TICKET | [TICKET-00012](tickets/00012-TICKET.md) | Establish the React and component-catalog foundation | ready-for-agent | 5/5 terminal |
-| TICKET | [TICKET-00033](tickets/00033-TICKET.md) | Verify reviewed behavior with independent QA before landing | ready-for-agent | 1/1 terminal |
 <!-- /planning:frontier -->

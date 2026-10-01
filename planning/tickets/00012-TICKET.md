@@ -2,7 +2,7 @@
 id: TICKET-00012
 epic: EPIC-00003
 title: Establish the React and component-catalog foundation
-status: ready-for-agent
+status: done
 ---
 
 # Establish the React and component-catalog foundation

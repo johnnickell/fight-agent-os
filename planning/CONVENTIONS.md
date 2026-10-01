@@ -80,6 +80,27 @@ when the accepted policy permits that split. A literal-final-head acceptance pre
 owner amendment, not a silent exemption. Record independent review, delivery, merge, release, and deployment
 separately; done does not grant approval for those actions.
 
+## Automatic parent completion
+
+Closing a TASK includes closing its eligible ancestors in the same operation. When a TICKET has at least one
+TASK and every child is `done` or `wontfix`, close the TICKET; apply the same rule from TICKETs to their EPIC.
+Use `done` when any child is `done`, and `wontfix` when every child is `wontfix`. Preserve the children's recorded
+outcomes and exclusions; a mixed result does not claim that declined work was implemented. Include live and
+archived children, using their `ticket`/`epic` metadata rather than a stale generated table. Empty parents and
+parents with unfinished children remain open. Already-terminal parents and archived records are not rewritten.
+
+This rollup is part of TASK closure, not a separate review, approval, QA, skill invocation or user handoff.
+`./bin/planning-check --write` performs it before refreshing views, including eligible parents left open by older
+workflows. Include those parent status changes and generated views in the same change as the TASK closure.
+The read-only check reports unsynchronized parent status with that same repair command; it never asks for a
+closeout review. Child evidence supplies the parent completion record; no duplicate evidence ceremony is needed.
+Requirements that need implementation or validation belong in TASKs before the final child closes, not in a
+second parent-acceptance gate.
+
+This rule supersedes the separate parent-closeout procedure in WF-010. It does not alter TASK acceptance or
+Won't Fix decisions, and does not archive, merge, release or deploy anything. Wayfinder decision/map closure
+retains its own rules.
+
 ## Board and generated views
 
 `tasks/BOARD.md` shows Active Work, Ready Frontier, Waiting, Needs Info, Human Action, Needs Triage, and Recently
@@ -94,10 +115,9 @@ is no executable work, say so. Execution priority is authored in record metadata
 appear on the Board without inventing an EPIC. Live EPICs and TICKETs have generated child tables. Archived
 progress prose remains historical completion evidence, not a live status source.
 
-`ROADMAP.md` also generates a Planning Frontier for every non-terminal EPIC without TICKETs, every non-terminal
-TICKET without TASKs, and every non-terminal parent whose children are all terminal and therefore needs explicit
-closeout review. This keeps decomposition and closeout visible without turning planning operations into executable
-TASK Board rows.
+`ROADMAP.md` also generates a Planning Frontier for every non-terminal EPIC without TICKETs and every
+non-terminal TICKET without TASKs. Completed children close their parents automatically; there is no separate
+parent-closeout queue.
 
 Generated sections use `<!-- planning:NAME -->` and `<!-- /planning:NAME -->`. After editing source records:
 
@@ -106,7 +126,7 @@ Generated sections use `<!-- planning:NAME -->` and `<!-- /planning:NAME -->`. A
 ./bin/planning-check
 ```
 
-The first command validates records and links, then refreshes marked sections. The second is read-only and fails
+The first command validates records and links, closes eligible parents, then refreshes marked sections. The second is read-only and fails
 on stale views, invalid identifiers/parents, missing links, and dependency cycles. `./bin/build` already runs
 the read-only check and must not rewrite planning as a side effect. Verify documentation and tooling directly;
 do not add tests of Markdown, wrappers, configuration text, or planning tooling to the product suite.

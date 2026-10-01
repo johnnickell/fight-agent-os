@@ -2,7 +2,7 @@
 id: TICKET-00009
 epic: EPIC-00003
 title: Establish authoritative PostgreSQL persistence
-status: ready-for-agent
+status: done
 ---
 
 # Establish authoritative PostgreSQL persistence

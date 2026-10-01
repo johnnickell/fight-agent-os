@@ -36,6 +36,8 @@ report gaps honestly, and validate tooling with its owning tools rather than pro
 5. **Commit and hand off.** Stage only owned files, inspect staged changes, and commit. Return branch/head, scope, evidence, risks and unrelated work preserved; request independent review. Stop before push, PR, approval or merge without separate authority.
 
 A failing required check or unsupported criterion is incomplete work, not a green handoff.
+Any authorized TASK closure includes [automatic parent completion](../../../planning/CONVENTIONS.md#automatic-parent-completion)
+and refreshed planning views in the same change; never send the user to a separate TICKET/EPIC closeout step.
 
 Finish with the explicit `Next:` line from the [handoff rules](../../../docs/engineering/HANDOFFS.md): after a
 verified committed implementation or repair, recommend `/skill:review TASK-NNNNN` using the actual TASK ID and

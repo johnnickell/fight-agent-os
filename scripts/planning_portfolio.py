@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate planning records and refresh their Markdown views with --write."""
+"""Validate planning records; --write closes eligible parents and refreshes Markdown views."""
 
 from __future__ import annotations
 
@@ -140,6 +140,25 @@ def load_records() -> tuple[dict, list[str]]:
     return records, errors
 
 
+def complete_parents(records: dict) -> dict[Path, str]:
+    """Plan bottom-up parent closure from all live and archived child records."""
+    pending = {}
+    for kind, parent_key in (("TICKET-", "ticket"), ("EPIC-", "epic")):
+        for identifier, (path, data) in sorted(records.items()):
+            if not identifier.startswith(kind) or "archive" in path.parts or data["status"] in TERMINAL:
+                continue
+            children = [child for _, child in records.values() if child.get(parent_key) == identifier]
+            if not children or any(child["status"] not in TERMINAL for child in children):
+                continue
+            status = "wontfix" if all(child["status"] == "wontfix" for child in children) else "done"
+            text = path.read_text()
+            header, body = text[4:].split("\n---\n", 1)
+            header = re.sub(r"^status:[^\n]*$", f"status: {status}", header, count=1, flags=re.MULTILINE)
+            pending[path] = f"---\n{header}\n---\n{body}"
+            data["status"] = status
+    return pending
+
+
 def projections(records: dict) -> dict[tuple[Path, str], str]:
     views = {}
     board = PLANNING / "tasks/BOARD.md"
@@ -190,13 +209,12 @@ def projections(records: dict) -> dict[tuple[Path, str], str]:
         parent_key = "epic" if identifier.startswith("EPIC-") else "ticket"
         return [
             (child_id, child_path, child_data)
-            for child_id, (child_path, child_data) in live_records.items()
+            for child_id, (child_path, child_data) in records.items()
             if child_data.get(parent_key) == identifier
         ]
 
     epics_without_tickets = []
     tickets_without_tasks = []
-    closeout_candidates = []
     for identifier, (path, data) in sorted(live_records.items()):
         if data["status"] in TERMINAL or identifier.startswith("TASK-"):
             continue
@@ -212,12 +230,6 @@ def projections(records: dict) -> dict[tuple[Path, str], str]:
                     linked(roadmap, path, identifier), cell(data["title"]),
                     linked(roadmap, records[parent][0], parent), cell(data["status"]),
                 ])
-        elif all(child_data["status"] in TERMINAL for _, _, child_data in children):
-            closeout_candidates.append([
-                "EPIC" if identifier.startswith("EPIC-") else "TICKET",
-                linked(roadmap, path, identifier), cell(data["title"]), cell(data["status"]),
-                f"{len(children)}/{len(children)} terminal",
-            ])
 
     views[roadmap, "frontier"] = "\n\n".join([
         "### EPICs without TICKETs\n\n" + table(
@@ -225,9 +237,6 @@ def projections(records: dict) -> dict[tuple[Path, str], str]:
         ),
         "### TICKETs without TASKs\n\n" + table(
             ["TICKET ID", "Title", "Parent EPIC", "Status"], tickets_without_tasks
-        ),
-        "### Parents ready for closeout review\n\n" + table(
-            ["Type", "ID", "Title", "Status", "Children"], closeout_candidates
         ),
     ])
 
@@ -267,7 +276,7 @@ def projections(records: dict) -> dict[tuple[Path, str], str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--write", action="store_true", help="refresh generated views after validating records")
+    parser.add_argument("--write", action="store_true", help="close eligible parents and refresh generated views after validating records")
     args = parser.parse_args()
     records, errors = load_records()
     for path in PLANNING.rglob("*.md"):
@@ -282,12 +291,16 @@ def main() -> int:
     if ignored.returncode:
         errors.append(".runs/ must be gitignored")
     if not errors:
-        pending = {}
+        closures = complete_parents(records)
+        pending = dict(closures) if args.write else {}
+        if not args.write:
+            for path in closures:
+                errors.append(f"{path.relative_to(ROOT)}: parent completion out of sync; run ./bin/planning-check --write")
         for (path, name), content in projections(records).items():
             if not path.is_file():
                 errors.append(f"missing view: {path.relative_to(ROOT)}")
                 continue
-            text = path.read_text()
+            text = pending.get(path, path.read_text())
             matches = [match for match in BLOCK.finditer(text) if match[1] == name]
             if len(matches) != 1:
                 errors.append(f"{path.relative_to(ROOT)}: requires one planning:{name} block")
@@ -301,6 +314,8 @@ def main() -> int:
         if not errors:
             for path, text in pending.items():
                 path.write_text(text)
+            for path in closures:
+                print(f"Closed parent: {path.relative_to(ROOT)}")
     if errors:
         print("Planning validation failed:")
         for error in errors:

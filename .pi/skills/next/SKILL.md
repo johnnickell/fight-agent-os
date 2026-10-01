@@ -14,7 +14,9 @@ another skill or changing planning.
 1. Read `planning/CONVENTIONS.md` as the authority for status, priority, blocking, and Wayfinder frontier semantics.
 2. Run `./bin/planning-check` without `--write`.
 3. If validation fails, report that planning is stale or invalid, include the failing command result, and stop without
-   recommending work.
+   recommending work. If the failure is unsynchronized parent completion, name `./bin/planning-check --write`
+   as the mechanical repair under [automatic parent completion](../../../planning/CONVENTIONS.md#automatic-parent-completion),
+   not a parent review or approval. This read-only skill does not perform the repair.
 
 Validation is complete only when the generated Board and Wayfinder indexes are current.
 
