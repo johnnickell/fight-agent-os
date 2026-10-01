@@ -68,10 +68,13 @@ final readonly class Catalog
      */
     public function find(string $name): ?array
     {
-        if (!self::identifier($name) || !in_array($name, $this->allowedNames, true)) {
+        if (!self::identifier($name)) {
             return null;
         }
         $catalog = $this->load();
+        if (!in_array($name, $this->allowedNames, true)) {
+            return null;
+        }
         /** @var stdClass $forms */
         $forms = $catalog->forms;
         if (!property_exists($forms, $name)) {

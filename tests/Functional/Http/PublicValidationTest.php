@@ -106,6 +106,36 @@ final class PublicValidationTest extends TestCase
     }
 
     /**
+     * Distinguishes a complete empty catalog from an unavailable one even for unapproved names
+     */
+    public function test_that_unknown_names_require_a_complete_catalog_with_no_registered_forms(): void
+    {
+        $name = '/api/v1/validations/sample_form';
+        $missing = $this->request('GET', $name, '', [], []);
+        ApiContract::assertValidation($missing, 500);
+        self::assertSame('Internal server error.', json_decode((string) $missing->getBody(), true)['message']);
+
+        file_put_contents($this->directory.'/catalog.json', '{"schema_version":1,"forms":{}}');
+        $invalid = $this->request('GET', $name, '', [], []);
+        ApiContract::assertValidation($invalid, 500);
+        self::assertSame('Internal server error.', json_decode((string) $invalid->getBody(), true)['message']);
+        self::assertFalse($invalid->hasHeader('Set-Cookie'));
+
+        file_put_contents($this->directory.'/catalog.json', Catalog::generation([]));
+        $complete = $this->request('GET', $name, '', [], []);
+        ApiContract::assertValidation($complete, 404);
+    }
+
+    /**
+     * Requires complete output for unknown names even when another form is approved
+     */
+    public function test_that_an_unknown_name_does_not_mask_a_missing_catalog(): void
+    {
+        $response = $this->request('GET', '/api/v1/validations/unlisted');
+        ApiContract::assertValidation($response, 500);
+    }
+
+    /**
      * Never serves a structurally valid catalog whose published bytes no longer match its revision
      */
     public function test_that_a_changed_public_message_without_a_matching_revision_is_unavailable(): void
@@ -173,16 +203,18 @@ final class PublicValidationTest extends TestCase
      * @param string                $path
      * @param string                $body
      * @param array<string, string> $headers
+     * @param array<int, string>    $allowedNames
      */
     private function request(
         string $method,
         string $path,
         string $body = '',
-        array $headers = []
+        array $headers = [],
+        array $allowedNames = ['sample_form']
     ): \Psr\Http\Message\ResponseInterface {
         $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
         $file = $this->directory.'/catalog.json';
-        $app->getContainer()?->set(Catalog::class, static fn (): Catalog => new Catalog($file, ['sample_form']));
+        $app->getContainer()?->set(Catalog::class, static fn (): Catalog => new Catalog($file, $allowedNames));
         $request = (new ServerRequestFactory())->createServerRequest($method, 'https://agent-os.test'.$path)
             ->withBody((new StreamFactory())->createStream($body));
         foreach ($headers as $name => $value) {
