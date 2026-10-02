@@ -2,7 +2,7 @@
 id: TICKET-00011
 epic: EPIC-00003
 title: Establish recoverable external-effect delivery
-status: needs-info
+status: ready-for-agent
 ---
 
 # Establish recoverable external-effect delivery
@@ -50,15 +50,16 @@ The runner may dispatch only registered direct package handlers for valid discov
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00022](../tasks/00022-TASK.md) | Establish secret-safe credential provider adapters | done |
-| [TASK-00023](../tasks/00023-TASK.md) | Compose direct package credential delivery | ready-for-agent |
+| [TASK-00023](../tasks/00023-TASK.md) | Compose direct package credential delivery | in-progress |
 | [TASK-00024](../tasks/00024-TASK.md) | Recover and observe package credential delivery | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
 
-This TICKET is `needs-info`: Fight Access Control `v0.2.0` lacks due-work discovery, committed leases, and out-of-
-transaction provider orchestration. Accepted upstream EPIC-00006/WF-009/WF-010 select package grant delivery state
-as the sole queue for proposed `v0.3.0`. Implementation, qualification, a tagged stable release, and an Agent OS lock
-update are required before composition may begin. Consumer outbox or retry-policy work must not bypass that gate.
+The former upstream information gate is resolved: Fight Access Control `v0.3.0` is locked at
+`22ffab6452b2278b82df9b147e8949630b97355f` in `composer.lock`. TASK-00016 established package-compatible
+persistence and TASK-00022 supplied deterministic provider adapters. TASK-00023 composes the direct invitation/reset
+handlers and post-commit subscribers; TASK-00024 still owns due-work scheduling and recovery. No real provider is
+enrolled. Consumer outbox or retry-policy work must not bypass the package queue.
 
 Implements the durable external-effect direction approved by [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md). It depends on the transaction and durable-intent contract in [TICKET-00009](00009-TICKET.md) and gates EPIC-00004 invitation/recovery delivery.
