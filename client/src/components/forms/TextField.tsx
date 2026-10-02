@@ -12,6 +12,7 @@ type TextFieldProps = Omit<
   label: string;
   description?: string;
   error?: string;
+  errors?: readonly string[];
   type?: 'text' | 'email' | 'password' | 'search' | 'url' | 'tel';
 };
 
@@ -25,6 +26,7 @@ export function TextField({
   label,
   description,
   error,
+  errors,
   required,
   className = '',
   type = 'text',
@@ -35,10 +37,13 @@ export function TextField({
   onChange,
   ...props
 }: TextFieldProps) {
+  const messages = [...new Set([...(error ? [error] : []), ...(errors ?? [])])];
   const id = useId();
   const helpId = `${id}-help`;
   const errorId = `${id}-error`;
-  const describedBy = [description ? helpId : '', error ? errorId : ''].filter(Boolean).join(' ');
+  const describedBy = [description ? helpId : '', messages.length ? errorId : '']
+    .filter(Boolean)
+    .join(' ');
   return (
     <div className="catalog-field">
       <FormLabel htmlFor={id}>
@@ -52,13 +57,13 @@ export function TextField({
         type={type}
         required={required}
         className={className}
-        isInvalid={Boolean(error)}
+        isInvalid={messages.length > 0}
         readOnly={readOnly}
         disabled={disabled}
         {...(size === undefined ? {} : { htmlSize: size })}
         {...(value === undefined ? {} : { value: typeof value === 'object' ? [...value] : value })}
         {...(onChange === undefined ? {} : { onChange })}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={messages.length ? true : undefined}
         aria-describedby={describedBy || undefined}
       />
       {description && (
@@ -66,9 +71,19 @@ export function TextField({
           {description}
         </FormText>
       )}
-      {error && (
+      {messages.length === 1 && (
         <FormControl.Feedback as="p" id={errorId} type="invalid">
-          Error: {error}
+          Error: {messages[0]}
+        </FormControl.Feedback>
+      )}
+      {messages.length > 1 && (
+        <FormControl.Feedback as="div" id={errorId} type="invalid">
+          <span>Errors:</span>
+          <ul>
+            {messages.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
         </FormControl.Feedback>
       )}
     </div>

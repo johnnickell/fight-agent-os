@@ -30,26 +30,39 @@ const errors: Readonly<Record<number, readonly [ApiFailureKind, string]>> = {
 };
 
 /**
- * Validates the common failure shape without returning arbitrary field messages
+ * Retains only bounded structured validation detail for explicit feature-level safe mapping
  */
-function isValidationData(data: unknown): boolean {
-  if (!hasExactKeys(data, ['fields'])) return false;
-  const fields = data.fields;
+function validationFields(data: unknown): Readonly<Record<string, readonly string[]>> | null {
+  if (!hasExactKeys(data, ['fields'])) return null;
+  const fields: unknown = data.fields;
   if (typeof fields !== 'object' || fields === null || Array.isArray(fields)) {
-    return false;
+    return null;
   }
-  const entries = Object.entries(fields);
-  return (
-    entries.length > 0 &&
-    entries.every(
-      ([field, messages]) =>
-        /^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*(?![\s\S])/.test(field) &&
-        Array.isArray(messages) &&
-        messages.length > 0 &&
-        messages.every((message: unknown) => typeof message === 'string' && message.length > 0) &&
-        new Set(messages).size === messages.length
+  const entries = Object.entries(fields as Record<string, unknown>);
+  if (entries.length === 0 || entries.length > 64) return null;
+  const safe: Record<string, readonly string[]> = {};
+  for (const [field, messages] of entries) {
+    if (
+      field.length > 196 ||
+      !/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$/.test(field) ||
+      !Array.isArray(messages) ||
+      messages.length === 0 ||
+      messages.length > 16 ||
+      !messages.every(
+        (message: unknown) =>
+          typeof message === 'string' &&
+          message.length > 0 &&
+          message.length <= 256 &&
+          ![...message].some(
+            (char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127 || '<>'.includes(char)
+          )
+      ) ||
+      new Set(messages).size !== messages.length
     )
-  );
+      return null;
+    safe[field] = Object.freeze([...(messages as string[])]);
+  }
+  return Object.freeze(safe);
 }
 
 /**
@@ -68,12 +81,9 @@ export function decodeResponse<T>(
         ? apiFailure('protocol', correlationId)
         : Object.freeze({ ok: true, value, correlationId });
     }
-    if (
-      (status === 400 || status === 422) &&
-      envelope.status === 'fail' &&
-      isValidationData(envelope.data)
-    ) {
-      return apiFailure('validation', correlationId);
+    if ((status === 400 || status === 422) && envelope.status === 'fail') {
+      const fields = validationFields(envelope.data);
+      if (fields) return apiFailure('validation', correlationId, fields);
     }
   }
   if (hasExactKeys(envelope, ['status', 'message']) && envelope.status === 'error') {

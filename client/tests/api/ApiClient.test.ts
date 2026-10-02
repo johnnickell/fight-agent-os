@@ -169,7 +169,7 @@ describe('shared API transport', () => {
   });
 
   it.each([400, 422])(
-    'normalizes validation %s while dropping all messages and field names',
+    'retains only bounded structured validation %s detail for feature-owned safe mapping',
     async (status) => {
       const { client } = setup(
         jsonResponse(
@@ -185,7 +185,9 @@ describe('shared API transport', () => {
         )
       );
       expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
-        apiFailure('validation', correlationId)
+        apiFailure('validation', correlationId, {
+          'body.profile_name': ['synthetic-secret', 'Invalid input.']
+        })
       );
     }
   );

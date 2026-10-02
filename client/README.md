@@ -42,7 +42,8 @@ Selected from registry engine/peer contracts and qualified by clean installation
   Node 24 is the [LTS line](https://github.com/nodejs/Release#release-schedule); npm is its bundled manager,
   avoiding a second bootstrap dependency. The manifest enforces exact engines and manager version.
 - React/React DOM **19.3.0**, TypeScript **6.0.3**, ESBuild **0.28.2**, Bootstrap **5.3.8**,
-  React-Bootstrap **2.10.10** (see [control qualification](#standard-controls)).
+  React-Bootstrap **2.10.10** (see [control qualification](#standard-controls)) and Formik **2.4.9**.
+  Formik declares React >=16.8; the exact locked combination was clean-installed and checked without peer overrides.
 - Vitest/coverage-v8 **4.1.11**, RTL **16.3.3**, jest-dom **6.9.1**, jsdom **30.1.1**.
 - Storybook/react-vite/a11y/Vitest addon **10.4.6**, browser-playwright **4.1.11**,
   Playwright **1.61.0**, axe-core **4.13.0**. See [catalog qualification](#component-catalog).
@@ -257,8 +258,9 @@ or synthetic production principal is introduced.
   cookies are neither read nor constructed. Production-like bootstrap requires the existing trusted HTTPS origin.
 - Shared decoding requires the documented exact `application/json` and `no-store` response headers, HTTP 200
   with an exact success envelope, or recognized HTTP/JSend fail/error combinations. Unknown fields, inconsistent
-  status/message pairs and malformed values become `protocol`. Validation messages are checked for shape then
-  discarded, not displayed. Correlation is taken only from a single canonical 32-hex response header; absent or
+  status/message pairs and malformed values become `protocol`. Validation field/message lists are bounded and
+  retained only for explicit feature-level mapping against approved public schema messages; generic failures
+  still expose no server prose. Correlation is taken only from a single canonical 32-hex response header; absent or
   invalid values become null. No raw Response, URL, headers, body, exception, cause or server message is returned
   as diagnostics. `ApiResult` failures expose only their category and safe correlation.
 - `src/features/auth/CsrfProofService.ts` calls the actual `/auth/csrf` operation. Its exact codec maps `expires_at`
@@ -286,6 +288,34 @@ CSRF shape. They prove strict decoding, safe outcomes, memory-token policy, abor
 fences, expiry and absence of cookie/storage/history/console interactions; they do not prove browser HttpOnly
 behavior or a live client/server journey. Existing PHP functional contract tests separately exercise issuance,
 cookie attributes/reuse, server guards and OpenAPI response validation. No test-only endpoint is needed.
+
+## Shared form validation boundary
+
+`features/validation/PublicSchemaService` reads only the anonymous named validation metadata through the
+existing GET transport. It strictly decodes schema version 1, the 64-hex whole-catalog revision, explicit
+snake_case → camelCase field mappings, and the currently published `Required`, `Type[string]`,
+`MinLength`, `MaxLength`, `Same` rules. Unknown or malformed rules fail closed; missing/unavailable schemas
+must be shown and retried explicitly by the owning form, never treated as valid. The service caches at most
+eight safe schemas in memory, invalidates its cache on a changed revision and can be cleared at teardown or
+deployment change. Callers abort pending reads on unmount/supersession. No form values or credentials are cached.
+
+`validatePublicSchema` reproduces the published PHP rule subset on source-compatible primitive values:
+`Required` checks presence (not nonempty); `Type[string]` checks string type; length counts Unicode codepoints
+(`mb_strlen` equivalent for the published subset), with PHP-compatible primitive casting; and `Same` compares
+two present values strictly. This is usability feedback, never server validation or credential policy.
+`usePublicForm` is a narrow Formik adapter: form components bind registered field props, present multiple
+plain-text messages with the production `TextField`, and submit through a feature-owned function. Typed/pasted
+and adapter-mediated programmatic changes increment field and dependency generations; local/server errors for
+affected fields are invalidated without erasing unrelated errors. Reset, schema replacement and unmount fence
+late failures. A current successful submission resets owned values when unchanged; an edit after dispatch is
+left intact. A real server success still reaches the owning callback even after an edit/reset, since a client
+cancel cannot undo a mutation. Independent unchanged fields may receive current errors from a late response;
+unknown server field/dependency provenance is discarded after any intervening edit. Only published safe messages
+on explicit `body.<wire_field>` paths are shown; other failures stay generic/form-level. No arbitrary server path
+is used as a Formik setter. The owning journey controls loading/retry, form-level status, completion/cleanup and
+server success; it must not persist or log credential values. Real activation/login/reset/change forms and their
+nonempty PHP registrations are still owned by their journey TASKs. The catalog examples are synthetic local
+interactions, not endpoints or authentication E2E evidence.
 
 ## Client authority foundation
 
@@ -378,9 +408,10 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **32** named examples across six story files: 4 Button, 4 TextField, 4 Notice, 4 ContentState,
+`stories/` holds **37** named examples across six story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
 5 Composition states and 11 Authority states/interactions. The form composition demonstrates rejection,
-focus correction and local success;
+focus correction and local success; the shared Formik examples use synthetic local responses to exercise
+multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
 provider records or mutable external content. React `useId` associates fields/regions. Authority fixtures
 use a factory-generated UUID and deterministic injected outcomes; only the real cache freshness clock runs.
@@ -405,7 +436,7 @@ OS/storage listeners and selector; the catalog is not a second production prefer
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 32 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 37 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Still additionally required; canonical integration belongs to TASK-00033
