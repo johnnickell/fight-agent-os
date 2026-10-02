@@ -29,6 +29,16 @@ describe('TextField', () => {
     expect(ref.current).toBe(field);
   });
 
+  it('announces distinct messages as plain text in one described list', () => {
+    render(
+      <TextField label="Example" description="Help." errors={['First.', 'Second.', 'First.']} />
+    );
+    const field = screen.getByRole('textbox');
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(field).toHaveAccessibleDescription('Help. Errors: First. Second.');
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  });
+
   it('removes stale validation feedback when the caller accepts the value', async () => {
     const user = userEvent.setup();
     const change = vi.fn();

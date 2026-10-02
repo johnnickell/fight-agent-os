@@ -9,6 +9,8 @@ use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
 use App\Adapter\Http\Api\Validation\InputFailures;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\QueryString;
+use App\Adapter\Validation\PublicForms;
+use App\Adapter\Validation\SchemaProjection;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Attribute\Validation;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
@@ -34,10 +36,22 @@ use Throwable;
 final readonly class ApiInputValidation implements MiddlewareInterface
 {
     /**
-     * Constructs ApiInputValidation
+     * @var list<array{name: string, action: class-string,
+     *     fields: array<string, array{client_field: string, rules: list<array{index: int, message: string}>}>
+     * }>
      */
-    public function __construct(private JSendResponseFactory $responses)
+    private array $publicForms;
+
+    /**
+     * Constructs ApiInputValidation
+     *
+     * @param list<array{name: string, action: class-string, fields: array<string, array{
+     *     client_field: string, rules: list<array{index: int, message: string}>
+     * }>}>|null $publicForms
+     */
+    public function __construct(private JSendResponseFactory $responses, ?array $publicForms = null)
     {
+        $this->publicForms = $publicForms ?? PublicForms::registrations();
     }
 
     /**
@@ -228,11 +242,31 @@ final readonly class ApiInputValidation implements MiddlewareInterface
         try {
             (new ValidationService())->validate($input, $rules);
         } catch (ValidationException $exception) {
+            $public = [];
+            foreach ($this->publicForms as $registration) {
+                if ($registration['action'] === $class && $registration['name'] === $validation->formName()) {
+                    $public = SchemaProjection::project([$registration])[$registration['name']]['fields'];
+                    break;
+                }
+            }
             $failures = [];
             foreach ($exception->getErrors() as $field => $messages) {
-                if (isset($allowed[$field])) {
-                    $failures[$location.'.'.$field] = array_fill(0, min(count($messages), 8), 'Invalid value.');
+                if (!isset($allowed[$field])) {
+                    continue;
                 }
+                $approved = array_column($public[$field]['rules'] ?? [], 'message');
+                // The package returns text, not rule identities. A private rule with identical
+                // text is ambiguous, so never publish that text as a selected rule's failure.
+                $counts = array_count_values(array_column($parsed[$field], 'error'));
+                $safe = [];
+                foreach (array_slice($messages, 0, 8) as $message) {
+                    if (in_array($message, $approved, true) && $counts[$message] === 1) {
+                        $safe[] = $message;
+                    } else {
+                        $safe[] = 'Invalid value.';
+                    }
+                }
+                $failures[$location.'.'.$field] = $safe;
             }
 
             return $this->reject($failures === [] ? [$location => ['Invalid input.']] : $failures);
