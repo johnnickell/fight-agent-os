@@ -2,7 +2,7 @@
 id: TICKET-00036
 epic: EPIC-00003
 title: Share server-owned form validation with the browser
-status: ready-for-agent
+status: done
 ---
 
 # Share server-owned form validation with the browser
@@ -154,7 +154,7 @@ safe validation detail through a deliberately qualified contract extension, neve
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00151](../tasks/00151-TASK.md) | Export and serve public-safe form validation schemas | done |
-| [TASK-00152](../tasks/00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | in-progress |
+| [TASK-00152](../tasks/00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
