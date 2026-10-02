@@ -311,9 +311,10 @@ affected fields are invalidated without erasing unrelated errors. Reset, schema 
 late failures. A current successful submission resets owned values when unchanged; an edit after dispatch is
 left intact. A real server success still reaches the owning callback even after an edit/reset, since a client
 cancel cannot undo a mutation. Independent unchanged fields may receive current errors from a late response;
-unknown server field/dependency provenance is discarded after any intervening edit. Locally invalid resubmission
-preserves current server feedback on unchanged, unrelated fields. Only published safe messages on explicit
-`body.<wire_field>` paths are shown; mixed published/private failures show approved field messages and generic
+unknown server field/dependency provenance is discarded after any intervening edit. A rejection containing only
+superseded field feedback does not become a generic form error; current unclassified failures retain generic
+feedback. Locally invalid resubmission preserves current server feedback on unchanged, unrelated fields. Only
+published safe messages on explicit `body.<wire_field>` paths are shown; mixed published/private failures show approved field messages and generic
 form-level feedback without rendering private text. No arbitrary server path
 is used as a Formik setter. The owning journey controls loading/retry, form-level status, completion/cleanup and
 server success; it must not persist or log credential values. Real activation/login/reset/change forms and their

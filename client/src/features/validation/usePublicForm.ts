@@ -96,6 +96,7 @@ export function usePublicForm<T>(
         ...validatePublicSchema(selected, values.current)
       };
       let uncertain = false;
+      let discardedStale = false;
       for (const [path, messages] of Object.entries(result.error.fields)) {
         const wire = /^body\.([a-z][a-z0-9_]*)$/.exec(path)?.[1];
         const field = wire ? selected.fields[wire] : undefined;
@@ -109,8 +110,10 @@ export function usePublicForm<T>(
         }
         if (!approved.length) continue;
         const related = [field.clientField, ...approved.flatMap((rule) => rule.dependsOn)];
-        if (related.some((name) => (snapshot[name] ?? 0) !== (generations.current[name] ?? 0)))
+        if (related.some((name) => (snapshot[name] ?? 0) !== (generations.current[name] ?? 0))) {
+          discardedStale = true;
           continue;
+        }
         mapped[field.clientField] = [
           ...new Set([
             ...(mapped[field.clientField] ?? []),
@@ -124,7 +127,9 @@ export function usePublicForm<T>(
       );
       if (uncertain && edited) return;
       setErrors(mapped);
-      if (uncertain || Object.keys(mapped).length === 0) {
+      // A rejection made solely of superseded field feedback is not a current form failure.
+      // A genuinely empty or unclassified current rejection still needs generic feedback.
+      if (uncertain || (Object.keys(mapped).length === 0 && !discardedStale)) {
         setFormError('Please check the form and try again.');
       }
       if (Object.keys(mapped).length && !edited) focusFirst(mapped, selected);

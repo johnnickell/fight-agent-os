@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -12,6 +12,10 @@ import { deferred } from '../../apiFixtures';
 import { fixture } from './fixtures';
 
 const schema = decodePublicSchema(fixture)!;
+const singleFieldSchema = decodePublicSchema({
+  ...fixture,
+  fields: { display_name: fixture.fields.display_name }
+})!;
 const initialValues = { displayName: '', confirmation: '' };
 function Example({
   submit,
@@ -26,7 +30,9 @@ function Example({
   return (
     <form onSubmit={form.handleSubmit} noValidate>
       {activeSchema && <TextField label="Name" {...form.field('displayName')} />}
-      {activeSchema && <TextField label="Confirm" {...form.field('confirmation')} />}
+      {activeSchema?.fields.confirmation && (
+        <TextField label="Confirm" {...form.field('confirmation')} />
+      )}
       {form.formError && <p role="status">{form.formError}</p>}
       <button type="submit" disabled={form.busy}>
         Submit
@@ -125,6 +131,27 @@ describe('Formik shared error lifecycle', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled());
     expect(screen.queryByText('Use two characters.')).not.toBeInTheDocument();
     expect(success).not.toHaveBeenCalled();
+  });
+
+  it('does not turn a wholly stale field rejection into a form-level error', async () => {
+    const user = userEvent.setup();
+    const pending = deferred<ApiResult<string>>();
+    render(<Example submit={() => pending.promise} activeSchema={singleFieldSchema} />);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    await user.type(name, 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.clear(name);
+    await user.type(name, 'Other');
+    const reset = screen.getByRole('button', { name: 'Reset' });
+    reset.focus();
+    await act(async () => {
+      pending.resolve(rejection(['Use two characters.']));
+      await pending.promise;
+    });
+    expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled();
+    expect(name).not.toHaveAttribute('aria-invalid');
+    expect(reset).toHaveFocus();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('rejects superseded failures and reset responses without moving focus', async () => {
