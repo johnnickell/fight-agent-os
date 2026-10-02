@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { apiFailure, type ApiResult } from '@/api/ApiResult';
+import { decodeResponse } from '@/api/decodeResponse';
 import { TextField } from '@/components/forms/TextField';
 import { decodePublicSchema } from '@/features/validation/PublicSchema';
 import { usePublicForm } from '@/features/validation/usePublicForm';
@@ -62,6 +63,51 @@ describe('Formik shared error lifecycle', () => {
     expect(submit).toHaveBeenCalledOnce();
     await user.click(screen.getByRole('button', { name: 'Change value' }));
     expect(name).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('retains an unchanged server error on locally invalid resubmission', async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn().mockResolvedValue(rejection(['Use two characters.']));
+    render(<Example submit={submit} />);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    const confirm = screen.getByRole('textbox', { name: 'Confirm' });
+    await user.type(name, 'Valid');
+    await user.type(confirm, 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(name).toHaveAccessibleDescription('Error: Use two characters.'));
+    await user.clear(confirm);
+    await user.type(confirm, 'Other');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(submit).toHaveBeenCalledOnce();
+    expect(name).toHaveAccessibleDescription('Error: Use two characters.');
+    expect(confirm).toHaveAccessibleDescription('Error: Values must match.');
+    expect(name).toHaveFocus();
+  });
+
+  it('renders an approved PHP validation envelope through the shared decoder', async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn().mockResolvedValue(
+      decodeResponse(
+        400,
+        {
+          status: 'fail',
+          data: { fields: { 'body.display_name': ['Use two characters.', 'Invalid value.'] } }
+        },
+        () => null,
+        null
+      )
+    );
+    render(<Example submit={submit} />);
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Valid');
+    await user.type(screen.getByRole('textbox', { name: 'Confirm' }), 'Valid');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Name' })).toHaveAccessibleDescription(
+        'Error: Use two characters.'
+      )
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Please check the form');
+    expect(screen.queryByText('Invalid value.')).not.toBeInTheDocument();
   });
 
   it('ignores old A to B to A responses while still reporting real success', async () => {

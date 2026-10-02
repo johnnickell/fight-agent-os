@@ -260,6 +260,45 @@ final class ApiInputValidationTest extends TestCase
     }
 
     /**
+     * Publishes only explicitly selected PHP rule failures on a named Action
+     */
+    public function test_that_named_input_rejection_exposes_public_messages_and_sanitizes_private_rules(): void
+    {
+        $registrations = [[
+            'name' => 'sample_form',
+            'action' => PublishedInput::class,
+            'fields' => [
+                'display_name' => [
+                    'client_field' => 'displayName',
+                    'rules' => [['index' => 0, 'message' => 'Use two characters.']]
+                ]
+            ]
+        ]];
+        $validation = new ApiInputValidation(
+            new JSendResponseFactory(new ResponseFactory(), new StreamFactory()),
+            $registrations
+        );
+        $next = $this->createMock(RequestHandlerInterface::class);
+        $next->expects(self::never())->method('handle');
+        $request = $this->request(PublishedInput::class, 'POST')->withHeader('Content-Type', 'application/json')
+            ->withBody((new StreamFactory())->createStream('{"display_name":"x"}'));
+        $response = $validation->process($request, $next);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertSame(
+            ['body.display_name' => ['Use two characters.', 'Invalid value.']],
+            json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)['data']['fields']
+        );
+        self::assertStringNotContainsString('Private rule secret.', (string) $response->getBody());
+
+        $request = $request->withBody((new StreamFactory())->createStream('{"display_name":"Z"}'));
+        self::assertSame(
+            ['body.display_name' => ['Use two characters.']],
+            json_decode((string) $validation->process($request, $next)->getBody(), true, 512, JSON_THROW_ON_ERROR)
+                ['data']['fields']
+        );
+    }
+
+    /**
      * Fails closed on malformed declarations instead of accepting user input
      *
      * @param class-string $action

@@ -36,6 +36,32 @@ describe('schema read boundary', () => {
     expect(fetch).toHaveBeenCalledTimes(3);
   });
 
+  it('does not let a late older read replace a newer revision or refill after clear', async () => {
+    const older = deferred<Response>();
+    const newer = deferred<Response>();
+    const fetch = vi
+      .fn<ApiTransport>()
+      .mockReturnValueOnce(older.promise)
+      .mockReturnValueOnce(newer.promise)
+      .mockResolvedValue(response(fixture));
+    const service = new PublicSchemaService(new ApiClient(configuration, { fetch }));
+    const first = service.load('example_form');
+    const second = service.load('other_form');
+    newer.resolve(response({ ...fixture, form_name: 'other_form', revision: 'b'.repeat(64) }));
+    expect((await second).ok).toBe(true);
+    older.resolve(response(fixture));
+    expect(await first).toEqual({ ok: false, reason: 'cancelled' });
+    expect((await service.load('other_form')).ok).toBe(true);
+    expect(fetch).toHaveBeenCalledTimes(2);
+
+    service.clear();
+    const pending = service.load('example_form');
+    service.clear();
+    expect(await pending).toEqual({ ok: false, reason: 'cancelled' });
+    await service.load('example_form');
+    expect(fetch).toHaveBeenCalledTimes(4);
+  });
+
   it('rejects a late abort-ignoring fetch result without filling the cache', async () => {
     const pending = deferred<Response>();
     const fetch = vi

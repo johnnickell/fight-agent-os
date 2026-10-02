@@ -50,8 +50,10 @@ export function usePublicForm<T>(
       }
       const local = validatePublicSchema(selected, submittedValues);
       if (Object.keys(local).length) {
-        setErrors(local);
-        focusFirst(local, selected);
+        // Only locally invalid fields are replaced; unrelated current server feedback
+        // remains owned by its unchanged field until an edit or a newer response.
+        setErrors((prior) => ({ ...prior, ...local }));
+        focusFirst({ ...errors, ...local }, selected);
         return;
       }
       const id = ++request.current;
@@ -102,15 +104,18 @@ export function usePublicForm<T>(
           continue;
         }
         const approved = field.rules.filter((rule) => messages.includes(rule.message));
-        if (approved.length !== messages.length) {
+        if (messages.some((message) => !approved.some((rule) => rule.message === message))) {
           uncertain = true;
-          continue;
         }
+        if (!approved.length) continue;
         const related = [field.clientField, ...approved.flatMap((rule) => rule.dependsOn)];
         if (related.some((name) => (snapshot[name] ?? 0) !== (generations.current[name] ?? 0)))
           continue;
         mapped[field.clientField] = [
-          ...new Set([...(mapped[field.clientField] ?? []), ...messages])
+          ...new Set([
+            ...(mapped[field.clientField] ?? []),
+            ...approved.map((rule) => rule.message)
+          ])
         ];
       }
       // An unclassified cross-field error has no reliable dependency provenance.

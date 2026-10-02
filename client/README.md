@@ -297,7 +297,8 @@ snake_case → camelCase field mappings, and the currently published `Required`,
 `MinLength`, `MaxLength`, `Same` rules. Unknown or malformed rules fail closed; missing/unavailable schemas
 must be shown and retried explicitly by the owning form, never treated as valid. The service caches at most
 eight safe schemas in memory, invalidates its cache on a changed revision and can be cleared at teardown or
-deployment change. Callers abort pending reads on unmount/supersession. No form values or credentials are cached.
+deployment change. Later-started reads that establish a different revision fence earlier outstanding responses;
+`clear()` also invalidates pending results. Callers abort pending reads on unmount/supersession. No form values or credentials are cached.
 
 `validatePublicSchema` reproduces the published PHP rule subset on source-compatible primitive values:
 `Required` checks presence (not nonempty); `Type[string]` checks string type; length counts Unicode codepoints
@@ -310,8 +311,10 @@ affected fields are invalidated without erasing unrelated errors. Reset, schema 
 late failures. A current successful submission resets owned values when unchanged; an edit after dispatch is
 left intact. A real server success still reaches the owning callback even after an edit/reset, since a client
 cancel cannot undo a mutation. Independent unchanged fields may receive current errors from a late response;
-unknown server field/dependency provenance is discarded after any intervening edit. Only published safe messages
-on explicit `body.<wire_field>` paths are shown; other failures stay generic/form-level. No arbitrary server path
+unknown server field/dependency provenance is discarded after any intervening edit. Locally invalid resubmission
+preserves current server feedback on unchanged, unrelated fields. Only published safe messages on explicit
+`body.<wire_field>` paths are shown; mixed published/private failures show approved field messages and generic
+form-level feedback without rendering private text. No arbitrary server path
 is used as a Formik setter. The owning journey controls loading/retry, form-level status, completion/cleanup and
 server success; it must not persist or log credential values. Real activation/login/reset/change forms and their
 nonempty PHP registrations are still owned by their journey TASKs. The catalog examples are synthetic local

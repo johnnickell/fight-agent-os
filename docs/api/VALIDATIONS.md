@@ -23,4 +23,13 @@ The success envelope is `{"status":"success","data":{"schema_version":1,"revisio
 
 Registration is a list rather than a name-keyed map so duplicate names can be rejected. Each entry names a real Action with a single `handle` Validation attribute, exact `formName`, selected source fields and public `client_field`. For each field, select zero-based parsed rule indexes and spell out each *exact* parser-produced safe message. Unselected fields/rules stay private. The projection rejects duplicates, unmapped comparison peers, unsupported selected rules, ambiguous fields or messages that do not match parsed output; it never publishes a named attribute just because it exists. Current qualified rule subset: `Required` tests presence only (present null is not missing); `Type[string]` tests PHP string type; `MinLength`/`MaxLength` use Fight Common UTF-8 `mb_strlen` on string-castable values with bounded decimal argument 0–9999; `Same` compares two present fields with PHP strict equality and skips when either is absent. Client consumers must apply the same source-specific wire types and Unicode-codepoint length semantics; this metadata is not a security validator. Other type/format rules (including email), regex, uniqueness, database, credential and password policy are **not** qualified for public projection. Unsupported selections fail export rather than claiming JavaScript parity. Future real journey owners must qualify and register their needed safe subset, prove nonempty PHP→export→read→client/server behavior, and keep operation authorization independent.
 
-The repository OpenAPI contract describes only the implemented GET and safe responses. No authentication form, body-bearing endpoint, Swagger route, secret or client integration is implied; Formik adoption belongs to TASK-00152.
+For a named registered Action, the input-validation middleware matches real Fight Common failures to the
+explicitly selected, safe parsed rule messages for that Action and field. It emits those messages only when the
+parsed error text identifies one rule unambiguously; unselected, ambiguous and unregistered failures remain
+`Invalid value.`. The response may contain both published messages and that generic fallback on one field.
+Structural input failures remain generic. Clients must still check exact registered field paths and published
+messages against the loaded schema; a generic/private error is form-level feedback, not public rule metadata.
+A future owning journey must verify its registered POST response against its actual published catalog.
+
+The repository OpenAPI contract describes only the implemented GET and safe responses. No authentication form,
+body-bearing endpoint or Swagger route is implied; the Formik integration is available for future owning journeys.
