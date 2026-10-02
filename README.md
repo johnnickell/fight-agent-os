@@ -63,6 +63,11 @@ Development and test PostgreSQL identities are separate; override their local-on
 variables shown in `.env.example`. Destructive test operations require explicit test mode and a guarded `_test`
 database, role, and allowlisted host. PostgreSQL migrations live in `database/migrations/`; future database
 schemas and fixtures belong alongside `migrations/` under `database/`.
+Direct Fight Access Control invitation/reset delivery handlers now require an independent
+`APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
+for recoverable encrypted material. Keep it external to source control and preserve it while work is outstanding.
+Local/test delivery defaults to a retryable null provider; an in-memory provider is opt-in. There is no
+production provider, worker or recovery schedule yet, so this does not enable sending credentials.
 
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services
