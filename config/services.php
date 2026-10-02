@@ -20,6 +20,7 @@ foreach (
     'common/communication.php',
     'common/presentation.php',
     'application/csrf.php',
+    'application/credential_delivery.php',
     'application/controller.php'
     ] as $manifestEntry
 ) {
