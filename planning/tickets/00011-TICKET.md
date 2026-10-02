@@ -50,7 +50,7 @@ The runner may dispatch only registered direct package handlers for valid discov
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00022](../tasks/00022-TASK.md) | Establish secret-safe credential provider adapters | done |
-| [TASK-00023](../tasks/00023-TASK.md) | Compose direct package credential delivery | in-progress |
+| [TASK-00023](../tasks/00023-TASK.md) | Compose direct package credential delivery | done |
 | [TASK-00024](../tasks/00024-TASK.md) | Recover and observe package credential delivery | ready-for-agent |
 <!-- /planning:children -->
 
