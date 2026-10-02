@@ -34,6 +34,7 @@ use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Exception\Creden
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\DeliverPasswordReset;
+use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Exception\PasswordResetDeliveryException;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrant;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
@@ -46,6 +47,7 @@ use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -213,6 +215,119 @@ final class DirectCredentialDeliveryTest extends TestCase
         } finally {
             self::assertSame(1, $calls);
         }
+    }
+
+    /**
+     * Rejects a retry before its due time without changing the committed failure
+     */
+    #[DataProvider('purposes')]
+    public function testPrematureRetryCannotInvokeProvider(string $purpose): void
+    {
+        $this->seed($purpose);
+        $calls = 0;
+        $this->provider(function () use (&$calls): CredentialDeliveryOutcome {
+            $calls++;
+
+            return CredentialDeliveryOutcome::RETRYABLE_FAILURE;
+        });
+        $this->dispatch($purpose);
+        $before = $this->row($purpose);
+        self::assertSame('retry_pending', $before['delivery_status']);
+        self::assertSame(1, (int) $before['delivery_attempt_count']);
+        self::assertSame([], $this->queries()->fetch(new FindDueCredentialDeliveries($this->now, 10)));
+        $this->expectException(CredentialDeliveryTransitionException::class);
+        try {
+            $this->dispatch($purpose);
+        } finally {
+            self::assertSame(1, $calls);
+            self::assertSame($before, $this->row($purpose));
+            self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        }
+    }
+
+    /**
+     * Rejects duplicate delivery after a committed success without another provider call
+     */
+    #[DataProvider('purposes')]
+    public function testDeliveredDuplicateCannotInvokeProvider(string $purpose): void
+    {
+        $this->seed($purpose);
+        $calls = 0;
+        $this->provider(function () use (&$calls): CredentialDeliveryOutcome {
+            $calls++;
+
+            return CredentialDeliveryOutcome::DELIVERED;
+        });
+        $this->dispatch($purpose);
+        $before = $this->row($purpose);
+        self::assertSame('delivered', $before['delivery_status']);
+        self::assertNull($before['delivery_ciphertext']);
+        $this->expectException(CredentialDeliveryTransitionException::class);
+        try {
+            $this->dispatch($purpose);
+        } finally {
+            self::assertSame(1, $calls);
+            self::assertSame($before, $this->row($purpose));
+            self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        }
+    }
+
+    /**
+     * Rejects the old delivery ID after a newer grant generation is committed
+     */
+    #[DataProvider('purposes')]
+    public function testReplacedGenerationCannotInvokeProvider(string $purpose): void
+    {
+        $old = $this->seed($purpose);
+        $new = $this->issue($purpose);
+        if ($purpose === 'activation') {
+            $repo = $this->container->get(ActivationGrantRepository::class);
+        } else {
+            $repo = $this->container->get(PasswordResetGrantRepository::class);
+        }
+        $terminal = $old->revoke($this->now);
+        self::assertTrue($this->container->get(TransactionalUnitOfWork::class)->commitTransactional(
+            fn(): bool => $repo->replaceWithSuccessor($old, $terminal, $new)
+        ));
+        $oldId = $old->getDelivery()->getId()->toString();
+        $newId = $new->getDelivery()->getId()->toString();
+        $oldRow = $this->rowForDelivery($purpose, $oldId);
+        $newRow = $this->rowForDelivery($purpose, $newId);
+        self::assertSame('invalidated', $oldRow['delivery_status']);
+        self::assertNull($oldRow['delivery_ciphertext']);
+        self::assertSame('pending', $newRow['delivery_status']);
+        self::assertSame(0, (int) $newRow['delivery_attempt_count']);
+        $auditCount = (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence');
+        $calls = 0;
+        $this->provider(function () use (&$calls): CredentialDeliveryOutcome {
+            $calls++;
+
+            return CredentialDeliveryOutcome::DELIVERED;
+        });
+        $exception = match ($purpose) {
+            'activation' => ActivationDeliveryNotRetryableException::class,
+            default => PasswordResetDeliveryException::class
+        };
+        $this->expectException($exception);
+        try {
+            $this->dispatchGrant($old);
+        } finally {
+            self::assertSame(0, $calls);
+            self::assertSame($oldRow, $this->rowForDelivery($purpose, $oldId));
+            self::assertSame($newRow, $this->rowForDelivery($purpose, $newId));
+            self::assertSame($auditCount, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        }
+    }
+
+    /**
+     * Supplies the two directly registered package delivery families
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function purposes(): iterable
+    {
+        yield 'invitation' => ['activation'];
+        yield 'password reset' => ['password_reset'];
     }
 
     /**
@@ -483,6 +598,23 @@ final class DirectCredentialDeliveryTest extends TestCase
      */
     private function seed(string $purpose): ActivationGrant|PasswordResetGrant
     {
+        $grant = $this->issue($purpose);
+        $repository = match ($purpose) {
+            'activation' => ActivationGrantRepository::class,
+            default => PasswordResetGrantRepository::class
+        };
+        $this->container->get(TransactionalUnitOfWork::class)->commitTransactional(
+            fn(): bool => $this->container->get($repository)->add($grant)
+        );
+
+        return $grant;
+    }
+
+    /**
+     * Issues one new package generation with encrypted recoverable material
+     */
+    private function issue(string $purpose): ActivationGrant|PasswordResetGrant
+    {
         $raw = bin2hex(random_bytes(32));
         if ($purpose === 'activation') {
             $grant = ActivationGrant::issue(
@@ -493,7 +625,6 @@ final class DirectCredentialDeliveryTest extends TestCase
                 EmailAddress::fromString('delivery@example.test'),
                 $this->activationCipher->encrypt($raw)
             );
-            $repository = ActivationGrantRepository::class;
         } else {
             $grant = PasswordResetGrant::issue(
                 $this->userId,
@@ -503,11 +634,7 @@ final class DirectCredentialDeliveryTest extends TestCase
                 EmailAddress::fromString('delivery@example.test'),
                 $this->resetCipher->encrypt($raw)
             );
-            $repository = PasswordResetGrantRepository::class;
         }
-        $this->container->get(TransactionalUnitOfWork::class)->commitTransactional(
-            fn(): bool => $this->container->get($repository)->add($grant)
-        );
 
         return $grant;
     }
@@ -517,15 +644,27 @@ final class DirectCredentialDeliveryTest extends TestCase
      */
     private function dispatch(string $purpose): void
     {
-        if ($purpose === 'activation') {
-            $grant = $this->container->get(ActivationGrantRepository::class)->getLatestByUserId($this->userId);
+        $repository = match ($purpose) {
+            'activation' => ActivationGrantRepository::class,
+            default => PasswordResetGrantRepository::class
+        };
+        $grant = $this->container->get($repository)->getLatestByUserId($this->userId);
+        self::assertNotNull($grant);
+        $this->dispatchGrant($grant);
+    }
+
+    /**
+     * Invokes the package command for an exact generation, even after replacement
+     */
+    private function dispatchGrant(ActivationGrant|PasswordResetGrant $grant): void
+    {
+        if ($grant instanceof ActivationGrant) {
             $command = new DeliverUserInvitation(
                 $this->userId->toString(),
                 $this->userId,
                 $grant->getDelivery()->getId()
             );
         } else {
-            $grant = $this->container->get(PasswordResetGrantRepository::class)->getLatestByUserId($this->userId);
             $command = new DeliverPasswordReset('anonymous', $this->userId, $grant->getDelivery()->getId());
         }
         $this->container->get(CommandBus::class)->execute($command);
@@ -550,6 +689,20 @@ final class DirectCredentialDeliveryTest extends TestCase
         $row = $this->connection->fetchAssociative('SELECT * FROM '.$table.' WHERE user_id = ?', [
             $this->userId->toString()
         ]);
+        self::assertIsArray($row);
+
+        return $row;
+    }
+
+    /**
+     * Reads one exact persisted generation after a replacement
+     *
+     * @return array<string, mixed>
+     */
+    private function rowForDelivery(string $purpose, string $deliveryId): array
+    {
+        $table = $purpose === 'activation' ? 'activation_grants' : 'password_reset_grants';
+        $row = $this->connection->fetchAssociative('SELECT * FROM '.$table.' WHERE delivery_id = ?', [$deliveryId]);
         self::assertIsArray($row);
 
         return $row;
