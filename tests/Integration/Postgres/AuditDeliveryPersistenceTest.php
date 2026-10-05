@@ -171,6 +171,12 @@ SQL
         $secretActor = AuditEvidence::record('Bearer '.bin2hex(random_bytes(32)), 'user.invited', $this->userId);
         $this->assertAuditRejected($secretActor);
         $this->assertAuditRejected(AuditEvidence::record('anonymous', 'user.invited', $this->userId));
+        $this->assertAuditRejected(AuditEvidence::record('credential-recovery', 'user.invited', $this->userId));
+        $this->assertAuditRejected(AuditEvidence::record(
+            'credential-recovery',
+            'user.password_reset_requested',
+            $this->userId
+        ));
         self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
         $this->commit(fn() => $this->audit->add(AuditEvidence::record(
             'anonymous',

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\CredentialDelivery\InMemoryCredentialDeliveryProvider;
+use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
+use App\Application\CredentialDelivery\RecoverCredentialDeliveryPage;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -560,6 +563,311 @@ final class DirectCredentialDeliveryTest extends TestCase
         } finally {
             self::assertSame(0, $calls);
         }
+    }
+
+    /**
+     * Proves originating rollback leaves no discoverable recovery effect
+     */
+    #[DataProvider('purposes')]
+    public function testRecoveryAfterOriginatingRollback(string $purpose): void
+    {
+        $grant = $this->issue($purpose);
+        $repository = match ($purpose) {
+            'activation' => ActivationGrantRepository::class,
+            default => PasswordResetGrantRepository::class
+        };
+        $this->connection->beginTransaction();
+        self::assertTrue($this->container->get($repository)->add($grant));
+        $this->connection->rollBack();
+        $provider = new InMemoryCredentialDeliveryProvider();
+        $worker = $this->freshWorker($provider);
+        self::assertSame(0, $this->recover($worker)->run(10, 10)['discovered']);
+        self::assertSame([], $provider->attempts());
+    }
+
+    /**
+     * Proves a restarted bounded worker recovers committed generations without originating events
+     */
+    public function testRestartRecoversLostImmediateDispatchInBoundedOrder(): void
+    {
+        $activation = $this->seed('activation');
+        $reset = $this->seed('password_reset');
+        $ids = [$activation->getDelivery()->getId()->toString(), $reset->getDelivery()->getId()->toString()];
+        sort($ids, SORT_STRING);
+        $provider = new InMemoryCredentialDeliveryProvider([
+            'activation'     => CredentialDeliveryOutcome::DELIVERED,
+            'password_reset' => CredentialDeliveryOutcome::DELIVERED
+        ]);
+        // Each invocation owns a distinct connection and manager, not the originating event dispatcher.
+        self::assertSame(1, $this->recover($this->freshWorker($provider))->run(10, 1)['dispatched']);
+        self::assertSame([$ids[0]], array_column($provider->attempts(), 'idempotency_id'));
+        self::assertSame(1, $this->recover($this->freshWorker($provider))->run(1, 10)['dispatched']);
+        self::assertSame($ids, array_column($provider->attempts(), 'idempotency_id'));
+        self::assertSame(0, $this->recover($this->freshWorker($provider))->run(10, 10)['discovered']);
+    }
+
+    /**
+     * Proves a process lost after claim commit is recoverable after the fixed package lease
+     */
+    #[DataProvider('purposes')]
+    public function testRecoveryAfterClaimCommitCrash(string $purpose): void
+    {
+        $grant = $this->seed($purpose);
+        $provider = new InMemoryCredentialDeliveryProvider([$purpose => CredentialDeliveryOutcome::DELIVERED]);
+        $worker = $this->freshWorker($provider);
+        $real = $worker->get(TransactionalUnitOfWork::class);
+        $crashProbe = new class ($real) implements TransactionalUnitOfWork {
+            /**
+             * Constructs the post-commit crash probe
+             */
+            public function __construct(private readonly TransactionalUnitOfWork $real)
+            {
+            }
+
+            /**
+             * @inheritDoc
+             */
+            public function commitTransactional(callable $operation): mixed
+            {
+                $this->real->commitTransactional($operation);
+                throw new \RuntimeException('Controlled loss after claim commit.');
+            }
+
+            /**
+             * @inheritDoc
+             */
+            public function isClosed(): bool
+            {
+                return $this->real->isClosed();
+            }
+        };
+        $worker->set(TransactionalUnitOfWork::class, static fn(): TransactionalUnitOfWork => $crashProbe);
+        try {
+            $this->recover($worker)->run(1, 1);
+            self::fail('Claim commit crash must stop this worker.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('Controlled loss after claim commit.', $exception->getMessage());
+        }
+        self::assertSame([], $provider->attempts());
+        self::assertSame('claimed', $this->row($purpose)['delivery_status']);
+        self::assertSame(1, (int) $this->row($purpose)['delivery_attempt_count']);
+        self::assertSame(0, $this->recover($this->freshWorker($provider))->run(1, 1)['discovered']);
+        $this->container->get(Clock::class)->time = $this->now->modify('+5 minutes');
+        self::assertSame(1, $this->recover($this->freshWorker($provider))->run(1, 1)['dispatched']);
+        self::assertSame(
+            [$grant->getDelivery()->getId()->toString()],
+            array_column($provider->attempts(), 'idempotency_id')
+        );
+        self::assertSame('delivered', $this->row($purpose)['delivery_status']);
+        self::assertSame(2, (int) $this->row($purpose)['delivery_attempt_count']);
+    }
+
+    /**
+     * Proves provider acceptance followed by outcome rollback restarts with stable duplicate identity
+     */
+    #[DataProvider('purposes')]
+    public function testRecoveryAfterProviderSuccessOutcomeCommitCrash(string $purpose): void
+    {
+        $grant = $this->seed($purpose);
+        $memory = new InMemoryCredentialDeliveryProvider([$purpose => CredentialDeliveryOutcome::DELIVERED]);
+        $sensitive = [];
+        $this->provider(function (CredentialDeliveryInvocation $invocation) use (
+            $memory,
+            &$sensitive
+        ): CredentialDeliveryOutcome {
+            self::assertFalse($this->connection->isTransactionActive());
+            $sensitive[] = $invocation->getCredential();
+            $outcome = $memory->deliver($invocation);
+            $this->connection->executeStatement(
+                'ALTER TABLE audit_evidence ADD CONSTRAINT delivery_test_abort CHECK (false) NOT VALID'
+            );
+
+            return $outcome;
+        });
+        try {
+            $this->recover($this->container)->run(1, 1);
+            self::fail('Outcome commit must fail after accepted effect.');
+        } catch (DriverException) {
+            self::assertSame('claimed', $this->row($purpose)['delivery_status']);
+            self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        } finally {
+            $this->connection->executeStatement('ALTER TABLE audit_evidence DROP CONSTRAINT delivery_test_abort');
+        }
+        $this->container->get(Clock::class)->time = $this->now->modify('+5 minutes');
+        $worker = $this->freshWorker($memory);
+        self::assertSame(1, $this->recover($worker)->run(1, 1)['dispatched']);
+        self::assertSame(
+            array_fill(0, 2, $grant->getDelivery()->getId()->toString()),
+            array_column($memory->attempts(), 'idempotency_id')
+        );
+        $view = $worker->get(QueryBus::class)->fetch(new FindCredentialDeliveryStatus(
+            $purpose,
+            $grant->getDelivery()->getId()->toString()
+        ));
+        self::assertSame('delivered', $view->toArray()['status']);
+        self::assertSame(2, $view->getAttemptCount());
+        self::assertNull($this->row($purpose)['delivery_ciphertext']);
+        $safe = json_encode([$view->toArray(), $memory->attempts()], JSON_THROW_ON_ERROR);
+        foreach ($sensitive as $credential) {
+            self::assertStringNotContainsString($credential, $safe);
+        }
+        foreach (['delivery@example.test', 'ciphertext', 'claim_token', 'password_hash', 'https://'] as $forbidden) {
+            self::assertStringNotContainsString($forbidden, $safe);
+        }
+    }
+
+    /**
+     * Proves competing discovery snapshots cannot duplicate a live claim or overwrite its successor
+     */
+    #[DataProvider('purposes')]
+    public function testRecoveryWorkersFenceLiveAndStaleOutcomes(string $purpose): void
+    {
+        $grant = $this->seed($purpose);
+        $snapshot = $this->queries()->fetch(new FindDueCredentialDeliveries($this->now, 1));
+        $memory = new InMemoryCredentialDeliveryProvider([$purpose => CredentialDeliveryOutcome::DELIVERED]);
+        $competing = $this->freshWorker($memory);
+        $pausedQueries = $this->createMock(QueryBus::class);
+        $pausedQueries->method('fetch')->willReturn($snapshot);
+        $observations = [];
+        $this->provider(function (CredentialDeliveryInvocation $invocation) use (
+            $competing,
+            $pausedQueries,
+            $memory,
+            &$observations
+        ): CredentialDeliveryOutcome {
+            $observations['transaction_active'] = $this->connection->isTransactionActive();
+            // Worker B discovered before A claimed but resumes only after A's claim commits.
+            $runner = new RecoverCredentialDeliveryPage(
+                $pausedQueries,
+                $competing->get(CommandBus::class),
+                $competing->get(Clock::class)
+            );
+            $observations['competing'] = $runner->run(1, 1)['contended'];
+            $observations['attempts_before'] = $memory->attempts();
+            $memory->deliver($invocation);
+            // Worker C reclaims A's lease and records its outcome before A resumes.
+            $this->container->get(Clock::class)->time = $this->now->modify('+5 minutes');
+            $observations['reclaimed'] = $this->recover($this->freshWorker($memory))->run(1, 1)['dispatched'];
+
+            return CredentialDeliveryOutcome::DELIVERED;
+        });
+        $result = $this->recover($this->container)->run(1, 1);
+        // Assertions stay outside provider callbacks because package invocation catches all Throwables.
+        self::assertFalse($observations['transaction_active']);
+        self::assertSame(1, $observations['competing']);
+        self::assertSame([], $observations['attempts_before']);
+        self::assertSame(1, $observations['reclaimed']);
+        self::assertSame(1, $result['contended']);
+        self::assertTrue($result['stopped']);
+        self::assertSame('delivered', $this->row($purpose)['delivery_status']);
+        self::assertSame(2, (int) $this->row($purpose)['delivery_attempt_count']);
+        self::assertSame(
+            array_fill(0, 2, $grant->getDelivery()->getId()->toString()),
+            array_column($memory->attempts(), 'idempotency_id')
+        );
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+    }
+
+    /**
+     * Proves deterministic null-provider recovery follows package backoff until terminal expiry
+     */
+    #[DataProvider('purposes')]
+    public function testRecoveryRetriesUntilPackageExpiry(string $purpose): void
+    {
+        $this->seed($purpose);
+        $starts = [0, 60, 180, 420, 900, 1860];
+        foreach ($starts as $index => $seconds) {
+            $this->container->get(Clock::class)->time = $this->now->modify('+'.$seconds.' seconds');
+            $worker = $this->freshWorker(new NullCredentialDeliveryProvider());
+            self::assertSame(1, $this->recover($worker)->run(1, 1)['dispatched']);
+            $row = $this->row($purpose);
+            self::assertSame($index + 1, (int) $row['delivery_attempt_count']);
+            if ($index < 5) {
+                self::assertSame('retry_pending', $row['delivery_status']);
+                self::assertEquals(
+                    $this->now->modify('+'.$starts[$index + 1].' seconds'),
+                    new DateTimeImmutable($row['delivery_due_at'])
+                );
+                self::assertSame(0, $this->recover($worker)->run(1, 1)['discovered']);
+            }
+        }
+        self::assertSame('expired', $this->row($purpose)['delivery_status']);
+        self::assertNull($this->row($purpose)['delivery_ciphertext']);
+        $runner = $this->recover($this->freshWorker(new NullCredentialDeliveryProvider()));
+        self::assertSame(0, $runner->run(1, 1)['discovered']);
+    }
+
+    /**
+     * Proves recovery respects cancellation, replacement and permanent provider terminal state
+     */
+    #[DataProvider('purposes')]
+    public function testRecoveryHonorsReplacementAndPermanentFailure(string $purpose): void
+    {
+        $old = $this->seed($purpose);
+        $repository = match ($purpose) {
+            'activation' => $this->container->get(ActivationGrantRepository::class),
+            default => $this->container->get(PasswordResetGrantRepository::class)
+        };
+        $cancelled = $old->revoke($this->now);
+        self::assertTrue($this->container->get(TransactionalUnitOfWork::class)->commitTransactional(
+            fn(): bool => $repository->replace($old, $cancelled)
+        ));
+        $provider = new InMemoryCredentialDeliveryProvider([$purpose => CredentialDeliveryOutcome::PERMANENT_FAILURE]);
+        self::assertSame(0, $this->recover($this->freshWorker($provider))->run(10, 10)['discovered']);
+        self::assertSame([], $provider->attempts());
+        $new = $this->issue($purpose);
+        self::assertTrue($this->container->get(TransactionalUnitOfWork::class)->commitTransactional(
+            fn(): bool => match ($purpose) {
+                'activation' => $repository->addSuccessor($new),
+                default => $repository->appendAfterTerminal($cancelled, $new)
+            }
+        ));
+        $worker = $this->freshWorker($provider);
+        self::assertSame(1, $this->recover($worker)->run(10, 10)['dispatched']);
+        self::assertSame(
+            [$new->getDelivery()->getId()->toString()],
+            array_column($provider->attempts(), 'idempotency_id')
+        );
+        foreach ([$old, $new] as $grant) {
+            $status = $worker->get(QueryBus::class)->fetch(new FindCredentialDeliveryStatus(
+                $purpose,
+                $grant->getDelivery()->getId()->toString()
+            ));
+            self::assertSame($grant === $old ? 'invalidated' : 'permanent_failure', $status->toArray()['status']);
+            $row = $this->rowForDelivery($purpose, $grant->getDelivery()->getId()->toString());
+            self::assertNull($row['delivery_ciphertext']);
+        }
+        self::assertSame(0, $this->recover($worker)->run(10, 10)['discovered']);
+        self::assertCount(1, $provider->attempts());
+        self::assertSame('credential-recovery', $this->connection->fetchOne('SELECT actor_id FROM audit_evidence'));
+    }
+
+    /**
+     * Opens a restarted worker on a separate PostgreSQL connection
+     */
+    private function freshWorker(CredentialDeliveryProvider $provider): Container
+    {
+        $connection = DriverManager::getConnection($this->connection->getParams());
+        $worker = require dirname(__DIR__, 3).'/config/services.php';
+        $worker->set(Connection::class, static fn(): Connection => $connection);
+        $worker->set(Clock::class, fn(): Clock => $this->container->get(Clock::class));
+        $worker->set(InvitationDeliveryCipher::class, fn(): InvitationDeliveryCipher => $this->activationCipher);
+        $worker->set(PasswordResetDeliveryCipher::class, fn(): PasswordResetDeliveryCipher => $this->resetCipher);
+        $worker->set(CredentialDeliveryProvider::class, static fn(): CredentialDeliveryProvider => $provider);
+
+        return $worker;
+    }
+
+    /**
+     * Creates the actual bounded application runner using a worker's direct package buses
+     */
+    private function recover(Container $worker): RecoverCredentialDeliveryPage
+    {
+        return new RecoverCredentialDeliveryPage(
+            $worker->get(QueryBus::class),
+            $worker->get(CommandBus::class),
+            $worker->get(Clock::class)
+        );
     }
 
     /**
