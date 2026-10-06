@@ -224,14 +224,84 @@ full fixed-gate support are also untouched: these always-unsuccessful stop recei
 completeness. AC-3/5's previously accepted bounded file/handoff evidence was not rerun. No product tests, package
 adoption, live Agent/provider, production credentials, native-Linux qualification or managed launch participated.
 
+## Service lifecycle and serialized launch follow-up — 2026-10-06 UTC
+
+This **R2 / AC-4** continuation qualifies a temporary macOS `launchd` user job as a local supervisor-restart
+primitive. It does not install a production service or adopt the disposable Python instrument as application code.
+The job was bootstrapped into the current GUI session from an ignored `.runs/` plist, not installed in a LaunchAgents
+search directory. `KeepAlive=true` requests restart; `ThrottleInterval=3` bounds restart frequency, not recovery
+latency. The local `launchd.plist(5)` manual describes both settings and default process-group cleanup. No root,
+login/logout, host reboot or Docker daemon restart was involved.
+
+The fixture moves start and stop into one supervisor, unlike the preceding collector-start experiment:
+
+- A singleton `flock` denies a concurrent supervisor. A separate state lock serializes request/cancel intent with
+  the supervisor's final eligibility check and Docker call. Clients queue an exact subject and expected epoch;
+  they do not start containers. Cancellation is terminal for that subject. The fixture driver still creates the
+  containers; this is not qualification of the complete create/admission protocol.
+- Each startup increments the epoch, keeps readiness closed, scans its exact owner-label inventory, and reconciles
+  both recorded subjects and previously unregistered containers. It cancels and stops rather than replaying old
+  launches. Readiness opens only after all recorded subjects have a confirmed quiescent observation. Identity or
+  engine uncertainty is unsuccessful and retains the reservation flag.
+- The trusted client requires readiness, the current epoch and a heartbeat no older than 0.4 seconds. A fresh
+  heartbeat is not a lease or proof that the process cannot die immediately afterward: queued work still needs
+  the supervisor's final check. Startup invalidates that old epoch before new requests can execute.
+- State files are outside candidate mounts, atomically replaced after file `fsync`; locks and file replacement
+  are local experiment mechanisms, **not PostgreSQL authority or power-loss-safe storage qualification**. Boot
+  identity is captured; old work is cancelled unconditionally on startup, not resumed using old deadlines.
+
+Fresh evidence: `.runs/tasks/TASK-00138/check-lifecycle/run-f28f14d0-c3d1-41b2-899d-4b5bf4d509d5/`,
+06:51:26–06:51:34 UTC. The exact `instrument.py`, generated plist, initial/restarted/final state snapshots,
+`launchctl print` records and `result.json` retain **25 passing scoped observations**:
+
+| Probe | Observed result |
+|---|---|
+| Kill the launchd-owned supervisor after its successful start | Launchd, not the driver, created a new PID/epoch; startup stopped the same running container and adopted the unregistered owned container without launching it |
+| Request during the observed restart gap | `unavailable`; no candidate start. Recovery/readiness was observed 3.419 seconds after SIGKILL, including polling/inspection overhead, not a cancellation SLA |
+| Attempt a second supervisor | Singleton lock denied entry; epoch unchanged. Its expected nonzero exit/traceback is retained separately; managed-service stderr was empty |
+| Cancel queued work behind a controlled pre-launch barrier, then release it | Subject remained in Docker `created` state; delayed launch request returned `cancelled` |
+| Use a prior epoch on a fresh subject | `stale-epoch`; no start. Current-epoch request subsequently started it, and cancellation yielded externally confirmed stop |
+| Replay cancelled work; unload the service | No cancelled subject restarted; after heartbeat expiry the unloaded-service request returned `unavailable` |
+| Preserve and retire resources | Controlled sibling stayed running with the same start time; Agent OS service starts were unchanged. Exact-owner cleanup removed all five containers; both owner inventories and the launchd target were absent |
+
+The five containers used the preceding immutable image, no mounts, non-root/read-only/network-none profile,
+0.25 CPU, 128 MiB memory/no swap, 16 PIDs, 1 MiB shared memory and disabled Docker logging. At most the sleeping
+sibling and one workload ran concurrently (0.5 CPU / 256 MiB configured memory); stopped/created metadata remained
+until retirement. Workloads had a finite 60-second sleep; requested execution had a 20-second deadline, and the
+fixture's service loop had a 90-second end. Those fallback paths were not the exercised recovery mechanism. No
+candidate output, application checks, Agent/provider calls or real credentials participated. No failed experiment
+attempt occurred; the deliberate duplicate-process denial is an expected negative observation.
+
+### Remaining service and fencing limits
+
+Select installation-owned, service-managed supervision for the local macOS direction, with one serialized launch/
+stop owner and cancel-on-takeover reconciliation. **Do not enable check readiness from this sample.** The selected
+primitive is tied to a GUI login session; supported enrollment, logout behavior, restart-loop handling, protected
+service configuration, health monitoring and bounded diagnostics still require a lifecycle decision/qualification.
+No service remains enrolled. Linux/system-service operation is unqualified.
+
+The experiment killed the supervisor **after** Docker start returned. It did not interrupt an in-flight create,
+start or stop. A client timeout or dead Docker CLI does not fence a request already accepted by the daemon;
+`flock` release on process death alone cannot rule out a late start after a replacement's stop observation.
+Before R2 closes, qualify that uncertain-effect ordering and how reconciliation retains admission/reservations
+until quiescence is established. The controlled pre-launch barrier is one cancellation ordering, not concurrent
+stress or a distributed fence. Missing inventory, wrong ownership, engine outage, suspend/reboot and service
+restart failure were not fault-injected here. Previous ownership-denial evidence remains historical.
+
+Aggregate admission, repeated-request/retained-byte exhaustion, shared image/engine overhead and durable cleanup
+accounting remain open. The reservation booleans are still disposition flags, not a ledger. The local state file,
+service stdout/stderr, captured snapshots and engine metadata have no qualified aggregate storage quota. R1 and
+R3 are unchanged. TASK-00140 owns production PHP/service composition and TASK-00142 its integrated recovery proof;
+TASK-00138 still owes the remaining minimum-mechanism qualification before independent full-TASK acceptance.
+
 ## Qualification disposition and next owners
 
 - **R1 / AC-1:** see [current authority decisions](TERMINAL_AUTHORITY.md#current-authority-decisions--2026-10-06).
   Package release/adoption, catalog acceptance and protected sink selection remain prerequisites. This experiment
   uses no package authority and supplies none of that proof.
-- **R2 / AC-4:** local bounded execution, private services and controller-loss stop are measured. Host
-  retention/aggregate admission, supervisor lifecycle/launch fencing, complete required-check policy and
-  supply-chain qualification remain open.
+- **R2 / AC-4:** local bounded execution, private services, controller-loss stop and a service-managed restart/
+  serialized-launch sample are measured. Host retention/aggregate admission, supported service lifecycle,
+  uncertain in-flight launch fencing, complete required-check policy and supply-chain qualification remain open.
 - **R3 / AC-3/4/5:** protected mounts and externally collected process outcomes are measured, not full file-tool race
   resistance, managed role identities, adversarial semantic check completeness or production source-publication proof.
   The prior file/handoff prototype remains historical evidence and was not rerun.
