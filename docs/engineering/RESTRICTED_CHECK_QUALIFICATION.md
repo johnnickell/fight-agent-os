@@ -297,8 +297,9 @@ TASK-00138 still owes the remaining minimum-mechanism qualification before indep
 ## Qualification disposition and next owners
 
 - **R1 / AC-1:** see [current authority decisions](TERMINAL_AUTHORITY.md#current-authority-decisions--2026-10-06).
-  Package release/adoption, catalog acceptance and protected sink selection remain prerequisites. This experiment
-  uses no package authority and supplies none of that proof.
+  The catalog and explicit `SUPER_ADMIN` seed are now owner-approved; package release/adoption, concrete managed
+  assignments and protected sink selection/qualification remain prerequisites. These experiments use no package
+  authority and supply none of that proof.
 - **R2 / AC-4:** local bounded execution, private services, controller-loss stop and a service-managed restart/
   serialized-launch sample are measured. Host retention/aggregate admission, supported service lifecycle,
   uncertain in-flight launch fencing, complete required-check policy and supply-chain qualification remain open.

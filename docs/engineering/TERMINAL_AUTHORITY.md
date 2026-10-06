@@ -49,17 +49,17 @@ implemented interface is not evidence of this composition. Release availability 
 
 ### Permission catalog and operator confirmation
 
-Execution uses a separately versioned **extension proposal**, not an implicit edit to the foundation's exact
-21-permission catalog in TASK-00036. These are the intended checks; catalog-owner acceptance, stable package-factory
-generated IDs, package managed-policy references and explicit initial User assignments are prerequisites to
-implementation enablement. No role automatically gains them, including Super Admin. The foundation work remains
-unchanged; do not install a second managed reconciler that removes its definitions.
+John approved this separately versioned **execution extension** on October 6, including the amended start/control
+tiers and explicit `SUPER_ADMIN` seed below. It is not an implicit edit to the foundation's exact 21-permission
+catalog in TASK-00036. Stable package-factory generated IDs, package managed-policy references and implemented
+assignments remain prerequisites to enablement. Coordinate the extension with the foundation's managed reconciler;
+do not install a competing reconciler that removes its definitions. This is accepted policy, not installed grants.
 
-| Proposed Permission | Tier / permitted subject | Narrowing policy in addition to Permission |
+| Permission | Tier / permitted subject | Narrowing policy in addition to Permission |
 |---|---|---|
 | `MANAGE_EXECUTION_ENROLLMENT` | SUPER_ADMIN_ONLY / User | Enroll/revoke approved repositories, roots, profiles and delegated recovery destinations; never self-enroll an unauthenticated operator |
-| `START_TASK_EXECUTION` | SUPER_ADMIN_ONLY / User | Confirm exact source/context, bounded grant and role assignments; one active repository/TASK claim |
-| `CONTROL_TASK_EXECUTION` | SUPER_ADMIN_ONLY / User | Pause/cancel/resume/takeover only an enrolled, authorized Workflow and expected revision |
+| `START_TASK_EXECUTION` | ADMIN_SAFE / User | Require administration authority over the target repository or workspace; confirm exact source/context, bounded grant and role assignments; one active repository/TASK claim |
+| `CONTROL_TASK_EXECUTION` | ADMIN_SAFE / User | Require administration authority over the target repository or workspace; pause/cancel/resume/takeover only an enrolled, authorized Workflow and expected revision |
 | `READ_TASK_EXECUTION` | ADMIN_SAFE / User or bound Agent | Assigned repository/Workflow only; no credentials or unrelated ownership disclosure |
 | `READ_EXECUTION_FILES` | ADMIN_SAFE / bound Lead or Engineer | Exact role roots and TASK-only Review/QA, current generation and size/revision limits |
 | `WRITE_EXECUTION_SOURCE` | ADMIN_SAFE / bound Engineer | Assigned source/local scratch only, unfrozen expected revision |
@@ -68,6 +68,18 @@ unchanged; do not install a second managed reconciler that removes its definitio
 | `REQUEST_EXECUTION_CHECK` | ADMIN_SAFE / bound Lead | Fixed qualified check ID, frozen subject, current grant and available reservation |
 | `SUBMIT_EXECUTION_HANDOFF` | ADMIN_SAFE / bound Engineer | Exact assignment/generation/source; submission is a proposal, not completion |
 | `COORDINATE_EXECUTION_HANDOFF` | ADMIN_SAFE / bound Lead | Required protected results and constrained commit; no formal acceptance/publication |
+
+Seed the managed `SUPER_ADMIN` User role with exactly these four execution Permissions:
+`MANAGE_EXECUTION_ENROLLMENT`, `START_TASK_EXECUTION`, `CONTROL_TASK_EXECUTION` and `READ_TASK_EXECUTION`.
+These explicit managed assignments are approved; role-name-based authorization bypasses and implicit grants of
+future Permissions are not. This seed does not replace the role's foundation Permissions or waive target policy.
+Agent-facing Permissions remain explicit direct assignments to the appropriate Agent identities.
+
+`ADMIN_SAFE` permits delegation; it does not itself confer repository/workspace administration authority.
+Start/control remain User-only, even if a package tier permits direct Agent assignment. Future human repository
+or workspace administrators may receive them without becoming Super Admin. Their scope resolution and grants
+must be implemented and verified before use; this decision creates neither those roles nor a global User grant.
+Unavailable target authority denies the operation. Enrollment management remains `SUPER_ADMIN_ONLY` / User.
 
 ADMIN_SAFE makes direct Agent assignment possible under the current package contract; it does **not** waive
 Workflow/role/target checks. A User holding an Agent-facing Permission does not gain a launched role identity.
@@ -148,8 +160,10 @@ history and prove a newer reconciled generation before use. These are production
 
 ### Remaining authority decisions and proof
 
-R1 is advanced, **not closed**: the catalog extension needs owner acceptance and concrete identities; a released
-recoverable package must be adopted; the protected sink/key adapter needs selection and qualification. The selected
+R1 is advanced, **not closed**: the catalog extension and four-permission `SUPER_ADMIN` seed are owner-approved;
+concrete identities and managed assignments remain downstream prerequisites. A released recoverable package must
+be adopted; the protected sink/key adapter still needs selection and qualification. The catalog approval does not
+approve the proposed PostgreSQL sink/Keychain candidate or authorize real credential enrollment. The selected
 immutable-publication/claim protocol needs actual writer exclusion and PostgreSQL race/recovery proof. These are
 not waived to permit file-only experimentation or restricted-check qualification. The latter can proceed with
 public fixture inputs and no managed authority, but cannot enable a Workflow. The
