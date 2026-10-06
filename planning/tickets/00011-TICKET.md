@@ -2,7 +2,7 @@
 id: TICKET-00011
 epic: EPIC-00003
 title: Establish recoverable external-effect delivery
-status: ready-for-agent
+status: done
 ---
 
 # Establish recoverable external-effect delivery
@@ -51,7 +51,7 @@ The runner may dispatch only registered direct package handlers for valid discov
 |---|---|---|
 | [TASK-00022](../tasks/00022-TASK.md) | Establish secret-safe credential provider adapters | done |
 | [TASK-00023](../tasks/00023-TASK.md) | Compose direct package credential delivery | done |
-| [TASK-00024](../tasks/00024-TASK.md) | Recover and observe package credential delivery | in-progress |
+| [TASK-00024](../tasks/00024-TASK.md) | Recover and observe package credential delivery | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -61,7 +61,8 @@ Historical initial adoption: Fight Access Control `v0.3.0` was locked at
 persistence and TASK-00022 supplied deterministic provider adapters. TASK-00023 composes the direct invitation/reset
 handlers and post-commit subscribers. John subsequently authorized TASK-00024 to adopt Access Control v0.5.0 and
 Common v1.3.0, including minimum Permission-tier and email-grant compatibility changes. TASK-00024 now implements
-bounded expiry cleanup and due-work recovery; its current record owns verification and pending independent review.
+bounded expiry cleanup and due-work recovery; its current record owns independent technical acceptance, behavioral QA
+PASS and landing verification. All three child TASKs are accepted; publication and human merge remain separate.
 Scheduling and real-provider enrollment remain excluded. TASK-00126 retains broader authorization qualification. Consumer outbox or retry-policy work must not bypass the package queue.
 
 Implements the durable external-effect direction approved by [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md). It depends on the transaction and durable-intent contract in [TICKET-00009](00009-TICKET.md) and gates EPIC-00004 invitation/recovery delivery.

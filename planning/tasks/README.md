@@ -26,7 +26,7 @@
 | [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | done | [TICKET-00011](../tickets/00011-TICKET.md) |
 | [TASK-00023](00023-TASK.md) | Compose direct package credential delivery | done | [TICKET-00011](../tickets/00011-TICKET.md) |
-| [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | in-progress | [TICKET-00011](../tickets/00011-TICKET.md) |
+| [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | done | [TICKET-00011](../tickets/00011-TICKET.md) |
 | [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | done | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00026](00026-TASK.md) | Establish the React and TypeScript application shell | done | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | done | [TICKET-00012](../tickets/00012-TICKET.md) |
