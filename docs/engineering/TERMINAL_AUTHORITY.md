@@ -95,19 +95,33 @@ No active authorized User or unavailable complete token validation means stop, n
 
 ### Protected credentials and activation
 
-John approved **encrypted PostgreSQL-backed ordered delivery storage with macOS Keychain key custody** for
-qualification on October 6. Use immutable, encrypted, delivery-ID-addressed staging outside all Agent roots and
-check mounts, with separate keys for authentication envelopes and recoverable delivery. Keychain custody of
-wrapping/refresh keys is **not** an implementation of the ordered package sink. No generic Keychain put,
-current-file pointer, environment variable or Pi login can substitute. This approves a candidate, not a working
-adapter, real credential enrollment or activation.
+John approved **encrypted PostgreSQL-backed ordered delivery storage with protected local key files and
+broker-held signing** for qualification on October 6, replacing the earlier Keychain/user-session candidate.
+Use immutable, encrypted, delivery-ID-addressed staging outside all Agent roots and check mounts, with separate
+keys for authentication envelopes and recoverable delivery. File custody is **not** an ordered package sink.
+No current-file pointer, environment variable or Pi login can substitute for the delivery/activation contract.
+This approves a candidate, not a working adapter, real credential enrollment or activation.
 
-The [storage qualification](PROTECTED_STORAGE_QUALIFICATION.md) records an initial noninteractive data-protection
-Keychain failure: the ad-hoc helper's synthetic add returned `errSecMissingEntitlement`. A supported caller identity,
-signing/access-group configuration and unattended lifecycle still need qualification, as do PostgreSQL ordering,
-receipt/tombstone behavior, encryption and independent restoration evidence. The Linux PHP container needs a
-protected host integration; keys must not be exported through environment variables or Agent tools. Unavailable
-custody denies work without fallback. These are activation prerequisites, not permission to relax package guarantees.
+The [storage qualification](PROTECTED_STORAGE_QUALIFICATION.md#accepted-trust-boundary-and-file-contract) owns the
+accepted host-trusting boundary: installation-owned key files outside repositories/workspaces, dedicated service
+identity, private directory, restrictive files/effective ACLs, runtime read-only access and explicit recovery.
+Host/root/Docker-administrator or broker/controller compromise is outside this profile's protection. Same-user
+permissions alone are not Agent isolation; file-tool restrictions, no untrusted runtime loading and candidate
+mount/process separation remain mandatory. Keys never enter Agent tools, environment variables or check containers.
+Unavailable or unsafe custody denies work without fallback, replacement-key generation or automatic reissue.
+
+The broker retains Agent HMAC credentials; it authenticates and binds the requesting runtime to current
+Workflow/role/attempt, then constructs/signs/sends only typed permitted operations to registered destinations.
+Neither model nor harness receives an HMAC secret or arbitrary-signing capability. The receiver independently
+checks package authentication, nonce/replay protection and live permission/resource authority. A claimed Agent ID
+or a successful signature alone never grants scope. Existing package ownership and activation/use fences remain.
+
+The same document retains the failed Keychain preflight and records new bounded Linux-container file, crypto,
+restart/recreation and explicit recovery observations. It does not qualify an actual broker channel, native host
+ACLs, PostgreSQL ordering/tombstones, rotation, independent restoration or automatic boot/logout/engine lifecycle.
+The target is unattended operation once the host, unlocked storage and runtime are available, not execution while
+a laptop sleeps. Keychain provisioning and Redis are not required by this candidate. Actual service installation,
+backup protection and always-on runtime support remain prerequisites, not claims established by a local key file.
 
 The sink must atomically retain exact original issuance/bytes, verified receipts, permanent delivery tombstones and
 nondecreasing per-slot order across cleanup/rebinding. Entries are inert. Activation requires confirmed delivery,
@@ -170,8 +184,9 @@ history and prove a newer reconciled generation before use. These are production
 
 R1 is advanced, **not closed**: the catalog extension and four-permission `SUPER_ADMIN` seed are owner-approved;
 concrete identities and managed assignments remain downstream prerequisites. A released recoverable package must
-be adopted. The PostgreSQL sink/Keychain candidate is now separately approved for qualification; its first custody
-preflight failed and the actual adapters remain unqualified. No real credential enrollment is authorized. The selected
+be adopted. The PostgreSQL sink/protected-file candidate supersedes Keychain and has bounded custody primitive
+proof; ordered storage, actual broker/adapter composition and supported unattended lifecycle remain unqualified.
+No real credential enrollment is authorized. The selected
 immutable-publication/claim protocol needs actual writer exclusion and PostgreSQL race/recovery proof. These are
 not waived to permit file-only experimentation or restricted-check qualification. The latter can proceed with
 public fixture inputs and no managed authority, but cannot enable a Workflow. The

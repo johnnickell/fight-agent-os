@@ -298,9 +298,11 @@ TASK-00138 still owes the remaining minimum-mechanism qualification before indep
 
 - **R1 / AC-1:** see [current authority decisions](TERMINAL_AUTHORITY.md#current-authority-decisions--2026-10-06).
   The catalog, explicit `SUPER_ADMIN` seed and storage qualification candidate are now owner-approved. Package
-  release/adoption, concrete managed assignments and protected sink/key qualification remain prerequisites; the
-  [initial custody preflight](PROTECTED_STORAGE_QUALIFICATION.md) failed. These check experiments use no package
-  authority and supply none of that proof.
+  release/adoption, concrete managed assignments and protected sink/key qualification remain prerequisites.
+  [Protected-file custody](PROTECTED_STORAGE_QUALIFICATION.md) supersedes the failed Keychain candidate and has
+  separate bounded access/restart/recovery evidence, retaining broker-held signing. That evidence does not qualify
+  ordered storage, actual broker authority or always-on host/runtime support. These check experiments use no
+  package authority and supply none of that proof.
 - **R2 / AC-4:** local bounded execution, private services, controller-loss stop and a service-managed restart/
   serialized-launch sample are measured. Host retention/aggregate admission, supported service lifecycle,
   uncertain in-flight launch fencing, complete required-check policy and supply-chain qualification remain open.
