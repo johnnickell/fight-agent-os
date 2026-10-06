@@ -152,19 +152,86 @@ for **execution** writes, not a claim that host source/evidence retention is alr
 remaining metadata/snapshots still count until verified retirement. Keep diagnostic evidence under explicit bounded
 retention without erasing active authority/deduplication history.
 
-Required next proof includes simultaneous admission contention, controller loss during output/deadline handling,
-restart inventory reconciliation, repeated-check/retention exhaustion and owned stop without harming a sibling.
+Required next proof includes simultaneous admission contention, restart inventory reconciliation and
+repeated-check/retention exhaustion. The follow-up below measures controller loss during output/deadline handling
+and owned stop without harming a sibling, but not supervisor availability or complete admission.
 TASK-00138 must settle minimum accounting/watchdog mechanisms; TASK-00140 implements durable reservations and
 supervision, and TASK-00142 qualifies the composed parallel/recovery behavior. A failed controller cannot promise
-timely cancellation from this Python `finally` block.
+timely cancellation from the original experiment's Python `finally` block.
+
+## Controller-loss supervision follow-up — 2026-10-06 UTC
+
+Continue **R2 / AC-4** with a controller-independent stop mechanism, not a production Runner or a full checker.
+A separate trusted host process holds the exact container ID, owner label and a fixed deadline outside candidate
+mounts. It verifies identity before arming and again before stop. Missing heartbeat, output excess or deadline
+causes external `SIGKILL`; a subsequent engine observation must show stopped. Identity/engine uncertainty is
+`EffectUncertain`, never success or permission to release the reservation. Stopped container metadata and retained
+artifacts still count until independently verified retirement. The receipt flags demonstrate this disposition,
+not a durable accounting ledger.
+
+The supervisor and collector run in separate OS sessions; killing the collector's process group includes its
+Docker attach client but not the supervisor. No socket or host mounts enter the candidate. The fixture uses the
+same immutable PHP/Python image above, UID/GID 65534, read-only root, network none, dropped capabilities,
+no-new-privileges, 0.25 CPU, 128 MiB memory/no swap, 16 PIDs, 64 file descriptors, 1 MiB shared memory and disabled
+Docker logging. There is no writable bind mount or additional tmpfs. One sleeping sibling plus one candidate are
+active at a time: 0.5 CPU quota and 256 MiB configured memory. This is a fixture inventory bound, not global
+reservation. Candidate output is capped at 4,096 retained bytes; finite producers emit at most about 50 KiB/s.
+Heartbeat timeout is 0.8 seconds, poll interval 0.05 seconds, and each Docker request has a five-second client
+timeout. Observed stop latency is a sample, not a guaranteed sum of these bounds under engine failure.
+
+Evidence in this worktree's `.runs/tasks/TASK-00138/check-supervision/`:
+
+- Successful run `run-86bb1be0-f7ab-4354-ad59-aeca7b7fe853`, 06:27:11–06:27:23 UTC: **33 scoped observations**;
+  six containers total, all retired after exact ID/owner checks; successful inventory reported none remaining.
+  `instrument.py`, `result.json`, per-case subjects, heartbeats, supervisor receipts and capped output retain the
+  experiment. Five cases cover deadline, quiet collector death, collector death during output, output excess and
+  supervisor death followed by explicit reconciliation; a sixth denies a mismatched owner targeting the sibling.
+- Quiet and output-producing candidates stopped **0.871 and 0.879 seconds** after collector-group `SIGKILL`.
+  Deadline and output-excess stops also yielded unsuccessful receipts, not candidate-declared success. The sibling
+  stayed running with an unchanged start time throughout. No candidate completed a repository quality gate here.
+- Killing both supervisor and collector left the candidate **running beyond its two-second deadline**. A new
+  supervisor read the same owned subject/deadline and stopped it without creating a replacement. This is evidence
+  of restart reconciliation **and a supervision-availability gap**, not crash-surviving autonomous recovery. No
+  success receipt existed during the gap. The experiment driver triggered recovery; an OS service manager did not.
+- Initial run `run-afc72f53-1d47-47a6-bccb-6c62f761b2f3` failed the controller-loss elapsed-time assertion.
+  On this host Python 3.9.6, `time.monotonic()` has process-relative origins: persisted deadlines/heartbeats could
+  not be compared across these processes. The corrected instrument uses `clock_gettime(CLOCK_MONOTONIC)` and
+  first brackets a child-process sample between parent samples. The full experiment then repeated. Both exact
+  instruments and the failed result remain; all three first-attempt containers were retired. Never transfer
+  this clock receipt to another runtime or boot without qualification.
+- An unrelated `omphalos-semantic-worker` start time changed during the successful sample. Its identity was only
+  inspected, never operated on; this is neither a claimed effect nor controlled isolation evidence. Agent OS
+  service starts did not change. Shared host/engine overhead and retained evidence were not quota-qualified.
+
+### Selected direction and remaining qualification
+
+Use controller-independent, installation-owned supervision rather than the requesting controller's cleanup
+handler. **Do not enable it yet.** TASK-00140's implementation must put launch and stop under the same fenced
+supervision authority: arming a watcher is not permission for a delayed collector to start after stop. This
+fixture's collector performs start; it does not qualify the create/start/cancel race or admission protocol.
+Candidate processes cannot access host PIDs/heartbeat files, but same-user host compromise remains out of scope.
+
+Before R2 can close, TASK-00138 still needs a supported service-lifecycle mechanism for supervisor loss, startup
+inventory reconciliation, bounded retained/aggregate accounting and uncertainty handling. Qualify how admission
+closes when supervision disappears and how an independent service recovers owned work; do not advertise an
+unmeasured stop guarantee during supervisor/engine/host failure. Absolute monotonic deadlines cannot be reused
+after reboot; boot identity, suspended-host behavior and durable recovery require their own proof. A failed
+Docker operation retains uncertainty and reservations; this experiment did not inject daemon failure or prove
+stop after it. Container stop alone does not release source/output/image/metadata retention.
+
+R1 catalog/storage decisions are untouched. R3 required-phase selection, forged/omitted success resistance and
+full fixed-gate support are also untouched: these always-unsuccessful stop receipts establish no semantic check
+completeness. AC-3/5's previously accepted bounded file/handoff evidence was not rerun. No product tests, package
+adoption, live Agent/provider, production credentials, native-Linux qualification or managed launch participated.
 
 ## Qualification disposition and next owners
 
 - **R1 / AC-1:** see [current authority decisions](TERMINAL_AUTHORITY.md#current-authority-decisions--2026-10-06).
   Package release/adoption, catalog acceptance and protected sink selection remain prerequisites. This experiment
   uses no package authority and supplies none of that proof.
-- **R2 / AC-4:** local bounded execution and private service mechanisms are measured. Host retention/aggregate
-  admission, independent supervision, complete required-check policy and supply-chain qualification remain open.
+- **R2 / AC-4:** local bounded execution, private services and controller-loss stop are measured. Host
+  retention/aggregate admission, supervisor lifecycle/launch fencing, complete required-check policy and
+  supply-chain qualification remain open.
 - **R3 / AC-3/4/5:** protected mounts and externally collected process outcomes are measured, not full file-tool race
   resistance, managed role identities, adversarial semantic check completeness or production source-publication proof.
   The prior file/handoff prototype remains historical evidence and was not rerun.
