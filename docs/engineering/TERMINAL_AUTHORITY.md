@@ -95,11 +95,19 @@ No active authorized User or unavailable complete token validation means stop, n
 
 ### Protected credentials and activation
 
-Select immutable, encrypted, delivery-ID-addressed staging outside all Agent roots and check mounts, with separate
-keys for authentication envelopes and recoverable delivery. macOS Keychain is a candidate custody mechanism for
-wrapping/refresh keys, **not** an implementation of the ordered package sink. The storage adapter remains unselected
-and unqualified. No generic Keychain put, current-file pointer, environment variable or Pi login can substitute.
-This unresolved adapter is an explicit activation prerequisite, not permission to design around package guarantees.
+John approved **encrypted PostgreSQL-backed ordered delivery storage with macOS Keychain key custody** for
+qualification on October 6. Use immutable, encrypted, delivery-ID-addressed staging outside all Agent roots and
+check mounts, with separate keys for authentication envelopes and recoverable delivery. Keychain custody of
+wrapping/refresh keys is **not** an implementation of the ordered package sink. No generic Keychain put,
+current-file pointer, environment variable or Pi login can substitute. This approves a candidate, not a working
+adapter, real credential enrollment or activation.
+
+The [storage qualification](PROTECTED_STORAGE_QUALIFICATION.md) records an initial noninteractive data-protection
+Keychain failure: the ad-hoc helper's synthetic add returned `errSecMissingEntitlement`. A supported caller identity,
+signing/access-group configuration and unattended lifecycle still need qualification, as do PostgreSQL ordering,
+receipt/tombstone behavior, encryption and independent restoration evidence. The Linux PHP container needs a
+protected host integration; keys must not be exported through environment variables or Agent tools. Unavailable
+custody denies work without fallback. These are activation prerequisites, not permission to relax package guarantees.
 
 The sink must atomically retain exact original issuance/bytes, verified receipts, permanent delivery tombstones and
 nondecreasing per-slot order across cleanup/rebinding. Entries are inert. Activation requires confirmed delivery,
@@ -162,8 +170,8 @@ history and prove a newer reconciled generation before use. These are production
 
 R1 is advanced, **not closed**: the catalog extension and four-permission `SUPER_ADMIN` seed are owner-approved;
 concrete identities and managed assignments remain downstream prerequisites. A released recoverable package must
-be adopted; the protected sink/key adapter still needs selection and qualification. The catalog approval does not
-approve the proposed PostgreSQL sink/Keychain candidate or authorize real credential enrollment. The selected
+be adopted. The PostgreSQL sink/Keychain candidate is now separately approved for qualification; its first custody
+preflight failed and the actual adapters remain unqualified. No real credential enrollment is authorized. The selected
 immutable-publication/claim protocol needs actual writer exclusion and PostgreSQL race/recovery proof. These are
 not waived to permit file-only experimentation or restricted-check qualification. The latter can proceed with
 public fixture inputs and no managed authority, but cannot enable a Workflow. The
