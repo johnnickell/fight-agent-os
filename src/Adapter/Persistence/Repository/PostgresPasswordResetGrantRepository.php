@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\Repository;
 
+use App\Adapter\Persistence\ExpiredCredentialDeliveryRecords;
 use App\Adapter\Persistence\PasswordResetGrantRecords;
 use App\Adapter\Persistence\PostgresAtomicOperation;
 use DateTimeImmutable;
@@ -84,6 +85,14 @@ SQL,
     /**
      * @inheritDoc
      */
+    public function findExpired(DateTimeImmutable $at, int $limit): array
+    {
+        return ExpiredCredentialDeliveryRecords::find($this->connection, 'password_reset', $at, $limit);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getById(PasswordResetGrantId $passwordResetGrantId): ?PasswordResetGrant
     {
         $row = $this->connection->fetchAssociative(
@@ -144,7 +153,7 @@ SQL,
         $row = $this->latestRow($terminalPredecessor->getUserId(), true);
         if (
             $row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $terminalPredecessor)
-            || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->isRecoverable()
+            || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->hasRecoverableMaterial()
             || !$this->successorValid($terminalPredecessor, $successor)
         ) {
             return false;
@@ -184,7 +193,7 @@ SQL,
         $row = $this->latestRow($predecessor->getUserId(), true);
         if (
             $row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $predecessor)
-            || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->isRecoverable()
+            || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->hasRecoverableMaterial()
             || !$this->allowedReplacement($predecessor, $terminalPredecessor)
             || !$this->successorValid($predecessor, $successor)
         ) {
@@ -372,15 +381,7 @@ SQL,
                         $delivery->getClaimToken(),
                         $next->getLastOutcomeAt()
                     ),
-                    CredentialDeliveryStatus::EXPIRED => match (true) {
-                        $delivery->getStatus() === CredentialDeliveryStatus::CLAIMED
-                            && $next->getLastOutcomeAt() !== null && $next->getLastFailure() !== null
-                            => $before->failDelivery(
-                                $delivery->getClaimToken(),
-                                $next->getLastOutcomeAt(), $next->getLastFailure()
-                            ),
-                        default => $before->expireDeliveryAt($next->getExpiresAt())
-                    },
+                    CredentialDeliveryStatus::EXPIRED => $this->expectedExpiry($before, $after),
                     CredentialDeliveryStatus::INVALIDATED => $before->invalidateDelivery(),
                 };
             } elseif ($before->isIssued() && ($after->isConsumed() xor $after->isRevoked())) {
@@ -394,6 +395,31 @@ SQL,
         }
 
         return $this->sameState($expected, $after);
+    }
+
+    /**
+     * Checks direct expiry before replaying a terminal retry outcome
+     */
+    private function expectedExpiry(PasswordResetGrant $before, PasswordResetGrant $after): PasswordResetGrant
+    {
+        $next = $after->getDelivery();
+        $expired = $before->expireDeliveryAt($next->getExpiresAt());
+        if ($this->sameState($expired, $after)) {
+            return $expired;
+        }
+        $delivery = $before->getDelivery();
+        if (
+            $delivery->getStatus() === CredentialDeliveryStatus::CLAIMED
+            && $next->getLastOutcomeAt() !== null && $next->getLastFailure() !== null
+        ) {
+            return $before->failDelivery(
+                $delivery->getClaimToken(),
+                $next->getLastOutcomeAt(),
+                $next->getLastFailure()
+            );
+        }
+
+        return $expired;
     }
 
     /**

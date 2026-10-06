@@ -26,11 +26,27 @@ final class PersistedEmailChangeGrant extends EmailChangeGrant
         string $digest,
         DateTimeImmutable $expiresAt,
         EmailChangeDelivery $delivery,
+        int $emailChangeReservationRevision,
         ?DateTimeImmutable $consumedAt,
         ?DateTimeImmutable $revokedAt,
         ?DateTimeImmutable $expiredAt,
         int $revision
     ): EmailChangeGrant {
-        return new self($id, $userId, $digest, $expiresAt, $delivery, $consumedAt, $revokedAt, $expiredAt, $revision);
+        if ($emailChangeReservationRevision < 1) {
+            throw new \UnexpectedValueException('Invalid persisted email reservation binding.');
+        }
+
+        return new self(
+            $id,
+            $userId,
+            $digest,
+            $expiresAt,
+            $delivery,
+            $emailChangeReservationRevision,
+            $consumedAt,
+            $revokedAt,
+            $expiredAt,
+            $revision
+        );
     }
 }

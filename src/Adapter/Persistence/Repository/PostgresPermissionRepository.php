@@ -18,6 +18,7 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
 use Fight\Common\Domain\Collection\ArrayList;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Repository\ResultSet;
+use UnexpectedValueException;
 
 /**
  * Class PostgresPermissionRepository
@@ -135,15 +136,40 @@ SQL,
     /**
      * @inheritDoc
      */
+    public function hasFeatureReference(PermissionId $id): bool
+    {
+        // No Feature persistence or writers exist here; Feature adoption must extend this reference fence.
+        return false;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function replace(Permission $expected, Permission $replacement): bool
     {
         if (
             !$expected->getId()->equals($replacement->getId())
+            || $expected->isManaged() !== $replacement->isManaged()
             || $expected->getCreatedAt() != $replacement->getCreatedAt()
         ) {
             return false;
         }
 
+        $this->referenceFences->holdPermissionReferences();
+        if (
+            $replacement->getTier() === PermissionTier::SUPER_ADMIN_ONLY
+            && $this->connection->fetchOne(
+                <<<'SQL'
+SELECT 1 FROM role_permissions rp JOIN roles r ON r.id = rp.role_id
+WHERE rp.permission_id = ? AND (NOT r.managed OR r.name <> 'ROLE_SUPER_ADMIN') LIMIT 1
+SQL,
+                [$expected->getId()->toString()]
+            ) !== false
+        ) {
+            return false;
+        }
+
+        // Agent authority is not persisted or exposed in this installation.
         return PostgresUniqueConstraintRace::execute(
             $this->connection,
             'uq_permissions_name',
@@ -167,12 +193,12 @@ SQL
                 ->setParameters([
                     'id'                     => $expected->getId()->toString(),
                     'expected_name'          => $expected->getName()->toString(),
-                    'expected_tier'          => $expected->getTier()?->value,
+                    'expected_tier'          => $expected->getTier()->value,
                     'expected_managed'       => $expected->isManaged(),
                     'expected_created_at'    => $this->date($expected->getCreatedAt()),
                     'expected_updated_at'    => $this->date($expected->getUpdatedAt()),
                     'replacement_name'       => $replacement->getName()->toString(),
-                    'replacement_tier'       => $replacement->getTier()?->value,
+                    'replacement_tier'       => $replacement->getTier()->value,
                     'replacement_managed'    => $replacement->isManaged(),
                     'replacement_updated_at' => $this->date($replacement->getUpdatedAt())
                 ], [
@@ -202,7 +228,7 @@ SQL
             ->setParameters([
                 'id'         => $permission->getId()->toString(),
                 'name'       => $permission->getName()->toString(),
-                'tier'       => $permission->getTier()?->value,
+                'tier'       => $permission->getTier()->value,
                 'managed'    => $permission->isManaged(),
                 'created_at' => $this->date($permission->getCreatedAt()),
                 'updated_at' => $this->date($permission->getUpdatedAt())
@@ -236,8 +262,8 @@ SQL
         $name = PermissionName::fromString((string) $row['name']);
         $createdAt = new DateTimeImmutable((string) $row['created_at']);
 
+        $tier = PermissionTier::from((string) $row['tier']);
         if ($this->boolean($row['managed'])) {
-            $tier = PermissionTier::from((string) $row['tier']);
             $permission = Permission::defineManaged($id, $name, $tier, $createdAt);
 
             if ($permission->getUpdatedAt() != new DateTimeImmutable((string) $row['updated_at'])) {
@@ -249,6 +275,10 @@ SQL
             }
 
             return $permission;
+        }
+
+        if ($tier !== PermissionTier::ADMIN_SAFE) {
+            throw new UnexpectedValueException('Invalid persisted custom permission tier.');
         }
 
         return Permission::define($id, $name, $createdAt);
@@ -264,7 +294,7 @@ SQL
         return [
             'id'         => $permission->getId()->toString(),
             'name'       => $permission->getName()->toString(),
-            'tier'       => $permission->getTier()?->value,
+            'tier'       => $permission->getTier()->value,
             'managed'    => $permission->isManaged(),
             'created_at' => $this->date($permission->getCreatedAt()),
             'updated_at' => $this->date($permission->getUpdatedAt())

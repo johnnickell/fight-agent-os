@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8102e638092a3970801c02ea4281c622",
+    "content-hash": "efd016b49649df257fdfaa42157866b7",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -1315,20 +1315,20 @@
         },
         {
             "name": "johnnickell/fight-access-control",
-            "version": "v0.3.0",
+            "version": "v0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/johnnickell/fight-access-control",
-                "reference": "22ffab6452b2278b82df9b147e8949630b97355f"
+                "reference": "46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/johnnickell/fight-access-control/zipball/22ffab6452b2278b82df9b147e8949630b97355f",
-                "reference": "22ffab6452b2278b82df9b147e8949630b97355f",
+                "url": "https://api.github.com/repos/johnnickell/fight-access-control/zipball/46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0",
+                "reference": "46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0",
                 "shasum": ""
             },
             "require": {
-                "johnnickell/fight-common": "^1.2",
+                "johnnickell/fight-common": "^1.3",
                 "php": ">=8.5"
             },
             "require-dev": {
@@ -1360,20 +1360,20 @@
                 "MIT"
             ],
             "description": "Framework-neutral identity, credential, session, authorization, and account-lifecycle contracts",
-            "time": "2026-09-25T21:29:24+00:00"
+            "time": "2026-10-06T21:14:17+00:00"
         },
         {
             "name": "johnnickell/fight-common",
-            "version": "v1.2.0",
+            "version": "v1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/johnnickell/fight-common",
-                "reference": "a2cd615d9b5064c9c30e994655536176249cd73b"
+                "reference": "7de6cad6e8a9752973ad9f8e27e285b0c1510582"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/johnnickell/fight-common/zipball/a2cd615d9b5064c9c30e994655536176249cd73b",
-                "reference": "a2cd615d9b5064c9c30e994655536176249cd73b",
+                "url": "https://api.github.com/repos/johnnickell/fight-common/zipball/7de6cad6e8a9752973ad9f8e27e285b0c1510582",
+                "reference": "7de6cad6e8a9752973ad9f8e27e285b0c1510582",
                 "shasum": ""
             },
             "require": {
@@ -1421,6 +1421,7 @@
                 "symfony/messenger": "^8.1",
                 "symfony/process": "^8.1",
                 "symfony/routing": "^8.1",
+                "symfony/yaml": "^8.1",
                 "twig/twig": "^3.0",
                 "twilio/sdk": "^8.0",
                 "yiisoft/db": "^2.0",
@@ -1439,6 +1440,7 @@
                 "doctrine/dbal": "Required by the custom doctrine data types",
                 "doctrine/orm": "Required by the canonical Doctrine transactional unit of work, legacy 1.x unit of work, audit repository, and base repository",
                 "dragonmantank/cron-expression": "Required by the Scheduler for cron expression parsing",
+                "ext-sodium": "Required by the optional Sodium MCP ordinary interaction state protector",
                 "guzzlehttp/guzzle": "Required by the guzzle http client adapter",
                 "guzzlehttp/promises": "Required by the guzzle http client adapter",
                 "guzzlehttp/psr7": "Required by the guzzle http client adapter",
@@ -1460,6 +1462,7 @@
                 "symfony/messenger": "Required by the async messenger command bus and event dispatcher",
                 "symfony/process": "Required by the Symfony process runner adapter",
                 "symfony/routing": "Required for the URL generator",
+                "symfony/yaml": "Required by the optional bounded MCP Skill frontmatter parser (8.1 or later)",
                 "twig/twig": "Required by the Twig template engine adapter",
                 "twilio/sdk": "Required by the Twilio SMS transport adapter",
                 "yiisoft/db": "Required by the Yii DB transactional unit of work adapter",
@@ -1491,7 +1494,7 @@
                 "MIT"
             ],
             "description": "A shared PHP library for Hexagonal Architecture, CQRS, and reusable domain primitives",
-            "time": "2026-09-13T00:57:20+00:00"
+            "time": "2026-10-04T05:36:45+00:00"
         },
         {
             "name": "lcobucci/jwt",

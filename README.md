@@ -66,8 +66,11 @@ schemas and fixtures belong alongside `migrations/` under `database/`.
 Direct Fight Access Control invitation/reset delivery handlers now require an independent
 `APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
 for recoverable encrypted material. Keep it external to source control and preserve it while work is outstanding.
-Local/test delivery defaults to a retryable null provider; an in-memory provider is opt-in. There is no
-production provider, worker or recovery schedule yet, so this does not enable sending credentials.
+Local/test delivery defaults to a retryable null provider; an in-memory provider is opt-in. A bounded internal
+`./bin/credential-delivery run --internal` runner, key-free `expire --internal` cleanup and safe generation status
+command are available. See [credential recovery](docs/engineering/CREDENTIAL_RECOVERY.md) for the v0.5.0 adoption
+migration, data guards, bounded downtime-expiry cleanup and exit codes. There is no production provider or enrolled recovery schedule, so this does not
+enable sending credentials or establish complete production recovery.
 
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services

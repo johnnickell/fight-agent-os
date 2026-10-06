@@ -2,7 +2,7 @@
 id: TICKET-00011
 epic: EPIC-00003
 title: Establish recoverable external-effect delivery
-status: ready-for-agent
+status: done
 ---
 
 # Establish recoverable external-effect delivery
@@ -13,7 +13,7 @@ Invitation, password-reset, and later email-change credential effects must not d
 
 ## Solution and boundaries
 
-After qualified Fight Access Control `v0.3.0` is tagged and locked, compose its package-owned credential-delivery queue. Persist exact package grant/delivery contracts on the shared connection, dispatch direct package handlers only after committed claims, and schedule package due-work discovery for restart recovery. Package policy owns leases, retry-until-expiry, terminal outcomes, stale-claim fencing, and credential materialization; Agent OS owns repository/provider adapters, scheduling capacity, and composition.
+Compose the qualified, deliberately locked Fight Access Control package-owned credential-delivery queue. Persist exact package grant/delivery contracts on the shared connection, dispatch direct package handlers only after committed claims, and schedule package due-work discovery for restart recovery. Package policy owns leases, retry-until-expiry, terminal outcomes, stale-claim fencing, and credential materialization; Agent OS owns repository/provider adapters, scheduling capacity, and composition.
 
 Establish secret-safe credential provider adapters with deterministic null/in-memory test implementations. Prove the commit/dispatch crash window, provider-success/outcome-commit crash, duplicate processing, package retry policy, competing workers, terminal ciphertext destruction, and credential redaction before EPIC-00004 relies on delivery.
 
@@ -51,15 +51,18 @@ The runner may dispatch only registered direct package handlers for valid discov
 |---|---|---|
 | [TASK-00022](../tasks/00022-TASK.md) | Establish secret-safe credential provider adapters | done |
 | [TASK-00023](../tasks/00023-TASK.md) | Compose direct package credential delivery | done |
-| [TASK-00024](../tasks/00024-TASK.md) | Recover and observe package credential delivery | ready-for-agent |
+| [TASK-00024](../tasks/00024-TASK.md) | Recover and observe package credential delivery | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
 
-The former upstream information gate is resolved: Fight Access Control `v0.3.0` is locked at
+Historical initial adoption: Fight Access Control `v0.3.0` was locked at
 `22ffab6452b2278b82df9b147e8949630b97355f` in `composer.lock`. TASK-00016 established package-compatible
 persistence and TASK-00022 supplied deterministic provider adapters. TASK-00023 composes the direct invitation/reset
-handlers and post-commit subscribers; TASK-00024 still owns due-work scheduling and recovery. No real provider is
-enrolled. Consumer outbox or retry-policy work must not bypass the package queue.
+handlers and post-commit subscribers. John subsequently authorized TASK-00024 to adopt Access Control v0.5.0 and
+Common v1.3.0, including minimum Permission-tier and email-grant compatibility changes. TASK-00024 now implements
+bounded expiry cleanup and due-work recovery; its current record owns independent technical acceptance, behavioral QA
+PASS and landing verification. All three child TASKs are accepted; publication and human merge remain separate.
+Scheduling and real-provider enrollment remain excluded. TASK-00126 retains broader authorization qualification. Consumer outbox or retry-policy work must not bypass the package queue.
 
 Implements the durable external-effect direction approved by [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md). It depends on the transaction and durable-intent contract in [TICKET-00009](00009-TICKET.md) and gates EPIC-00004 invitation/recovery delivery.
