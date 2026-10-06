@@ -26,6 +26,8 @@ use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDelive
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Exception\CredentialDeliveryTransitionException;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindExpiredCredentialDeliveries;
+use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\Command\ExpireEmailChange;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeCredential;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrant;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
@@ -34,9 +36,13 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\SessionRevocationReason;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Messaging\Query\QueryMessage;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -365,7 +371,8 @@ SQL
             $this->now,
             $this->now->modify('+1 hour'),
             EmailAddress::fromString('new@example.test'),
-            'encrypted-email-change'
+            'encrypted-email-change',
+            1
         );
         self::assertFalse($this->commit(fn(): bool => $this->changes->appendAfterTerminal($terminal, $reused)));
         self::assertTrue($this->commit(fn(): bool => $this->changes->appendAfterTerminal($terminal, $successor)));
@@ -506,6 +513,171 @@ SQL
     }
 
     /**
+     * Expires email authority even after terminal delivery or account-state changes without changing security state
+     */
+    #[DataProvider('emailExpiryStates')]
+    public function testEmailExpiryRetainsDeliveryHistoryAndAccountState(string $state, string $deliveryState): void
+    {
+        [$grant] = $this->grant();
+        $this->seedReservation($state, 1);
+        self::assertTrue($this->commit(fn(): bool => $this->changes->add($grant)));
+        if ($deliveryState !== 'pending') {
+            $claim = $grant->claimDelivery(
+                CredentialDeliveryClaimToken::generate(),
+                $this->now,
+                $this->now->modify('+5 minutes')
+            );
+            self::assertTrue($this->commit(fn(): bool => $this->changes->replace($grant, $claim)));
+            $terminal = match ($deliveryState) {
+                'delivered' => $claim->confirmDelivery($claim->getDelivery()->getClaimToken(), $this->now),
+                'permanent_failure' => $claim->failDeliveryPermanently(
+                    $claim->getDelivery()->getClaimToken(),
+                    $this->now
+                ),
+                'expired' => $claim->expireDeliveryAt($this->now->modify('+1 hour')),
+                default => throw new InvalidArgumentException('Unsupported fixture state.')
+            };
+            self::assertTrue($this->commit(fn(): bool => $this->changes->replace($claim, $terminal)));
+        }
+        $before = $this->connection->fetchAssociative('SELECT * FROM users WHERE id = ?', [$this->userId->toString()]);
+        self::assertIsArray($before);
+        $stored = $this->changes->getLatestByUserId($this->userId);
+        self::assertSame(1, $stored->getEmailChangeReservationRevision());
+        $container = $this->expiryContainer();
+        $at = $this->now->modify('+1 hour');
+        $query = new FindExpiredCredentialDeliveries($at, 1);
+        $work = $container->get(QueryBus::class)->fetch($query);
+        self::assertCount(1, $work);
+        self::assertSame($grant->getId()->toString(), $work[0]->getEmailChangeGrantId()->toString());
+        $command = new ExpireEmailChange('credential-recovery', $this->userId, $grant->getId(), $at);
+        $container->get(CommandBus::class)->execute($command);
+        $after = $this->connection->fetchAssociative('SELECT * FROM users WHERE id = ?', [$this->userId->toString()]);
+        self::assertIsArray($after);
+        self::assertNull($after['pending_email_change']);
+        self::assertSame(2, (int) $after['email_change_reservation_revision']);
+        foreach ($before as $field => $value) {
+            if (!in_array($field, ['pending_email_change', 'email_change_reservation_revision', 'updated_at'], true)) {
+                self::assertSame($value, $after[$field], $field);
+            }
+        }
+        self::assertSame(0, (int) $this->connection->fetchOne(
+            "SELECT count(*) FROM user_email_claims WHERE claim_type = 'reservation'"
+        ));
+        $expired = $this->changes->getLatestByUserId($this->userId);
+        self::assertTrue($expired->isExpired());
+        self::assertNull($expired->getDelivery()->getEncryptedMaterial());
+        self::assertSame(
+            $deliveryState === 'pending' ? 'invalidated' : $deliveryState,
+            $expired->getDelivery()->getStatus()->value
+        );
+        self::assertSame($stored->getDelivery()->getAttemptCount(), $expired->getDelivery()->getAttemptCount());
+        self::assertEquals($stored->getDelivery()->getLastOutcomeAt(), $expired->getDelivery()->getLastOutcomeAt());
+        self::assertSame([], $container->get(QueryBus::class)->fetch($query));
+        $container->get(CommandBus::class)->execute($command);
+        self::assertSame($expired->getRevision(), $this->changes->getLatestByUserId($this->userId)->getRevision());
+    }
+
+    /**
+     * Covers reachable account and material-free delivery combinations
+     *
+     * @return iterable<array{string, string}>
+     */
+    public static function emailExpiryStates(): iterable
+    {
+        yield ['active', 'pending'];
+        yield ['disabled', 'delivered'];
+        yield ['deleted', 'permanent_failure'];
+        yield ['pending_activation', 'expired'];
+    }
+
+    /**
+     * Refuses a same-email newer reservation rather than clearing unrelated authority
+     */
+    public function testEmailExpiryRejectsReservationAba(): void
+    {
+        [$grant] = $this->grant();
+        $this->seedReservation('active', 2);
+        self::assertTrue($this->commit(fn(): bool => $this->changes->add($grant)));
+        $container = $this->expiryContainer();
+        try {
+            $container->get(CommandBus::class)->execute(new ExpireEmailChange(
+                'credential-recovery',
+                $this->userId,
+                $grant->getId(),
+                $this->now->modify('+1 hour')
+            ));
+            self::fail('A newer reservation cannot be cleared by the old grant.');
+        } catch (\LogicException) {
+            self::assertSame(0, $this->changes->getLatestByUserId($this->userId)->getRevision());
+            self::assertSame('new@example.test', $this->connection->fetchOne('SELECT pending_email_change FROM users'));
+            self::assertCount(1, $this->changes->findExpired($this->now->modify('+1 hour'), 1));
+        }
+    }
+
+    /**
+     * Rolls back reservation clearing if the coupled grant expiry cannot commit
+     */
+    public function testEmailExpiryRollsBackBothSidesAfterGrantWriteFailure(): void
+    {
+        [$grant] = $this->grant();
+        $this->seedReservation('active', 1);
+        self::assertTrue($this->commit(fn(): bool => $this->changes->add($grant)));
+        $container = $this->expiryContainer();
+        $this->connection->executeStatement(<<<'SQL'
+ALTER TABLE email_change_grants ADD CONSTRAINT expiry_test_abort CHECK (expired_at IS NULL) NOT VALID
+SQL);
+        $command = new ExpireEmailChange(
+            'credential-recovery',
+            $this->userId,
+            $grant->getId(),
+            $this->now->modify('+1 hour')
+        );
+        try {
+            $container->get(CommandBus::class)->execute($command);
+            self::fail('The grant failure must roll back the reservation write.');
+        } catch (DriverException) {
+            self::assertSame('new@example.test', $this->connection->fetchOne('SELECT pending_email_change FROM users'));
+            self::assertSame(1, (int) $this->connection->fetchOne(
+                "SELECT count(*) FROM user_email_claims WHERE claim_type = 'reservation'"
+            ));
+            self::assertSame(0, $this->changes->getLatestByUserId($this->userId)->getRevision());
+        } finally {
+            $this->connection->executeStatement('ALTER TABLE email_change_grants DROP CONSTRAINT expiry_test_abort');
+        }
+        $this->expiryContainer()->get(CommandBus::class)->execute($command);
+        self::assertTrue($this->changes->getLatestByUserId($this->userId)->isExpired());
+        self::assertNull($this->connection->fetchOne('SELECT pending_email_change FROM users'));
+    }
+
+    /**
+     * Seeds a bound reservation in a reachable account state
+     */
+    private function seedReservation(string $state, int $revision): void
+    {
+        $hash = $state === 'pending_activation' ? null : password_hash('fixture-only', PASSWORD_ARGON2ID);
+        $this->connection->update('users', [
+            'state'                             => $state,
+            'password_hash'                     => $hash,
+            'pending_email_change'              => 'new@example.test',
+            'email_change_reservation_revision' => $revision
+        ], ['id' => $this->userId->toString()]);
+        $this->connection->insert('user_email_claims', [
+            'user_id' => $this->userId->toString(), 'claim_type' => 'reservation', 'email' => 'new@example.test'
+        ]);
+    }
+
+    /**
+     * Opens cleanup composition on the same connection without providers or ciphers
+     */
+    private function expiryContainer(): Container
+    {
+        $container = require dirname(__DIR__, 3).'/config/services.php';
+        $container->set(Connection::class, fn(): Connection => $this->connection);
+
+        return $container;
+    }
+
+    /**
      * @phpstan-return array{EmailChangeGrant, EmailChangeCredential}
      */
     private function grant(): array
@@ -518,7 +690,8 @@ SQL
             $this->now,
             $this->now->modify('+1 hour'),
             EmailAddress::fromString('new@example.test'),
-            'encrypted-email-change'
+            'encrypted-email-change',
+            1
         ), $credential];
     }
 

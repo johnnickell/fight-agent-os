@@ -29,6 +29,10 @@ final readonly class AuthorizationReferenceFences
     public function holdPermissionReferences(): void
     {
         $this->hold(self::PERMISSION_REFERENCES);
+        // A pre-lock repeatable-read snapshot can miss a newly committed grant or tier promotion.
+        if ($this->connection->fetchOne('SHOW transaction_isolation') !== 'read committed') {
+            throw new LogicException('Permission reference writes require READ COMMITTED isolation.');
+        }
     }
 
     /**

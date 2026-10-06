@@ -113,8 +113,12 @@ final class AuthorityRepositoryTest extends TestCase
             $current->getUpdatedAt()->modify('+1 second')
         );
 
-        self::assertTrue($this->permissions->replace($current, $replacement));
-        self::assertFalse($this->permissions->replace($current, $replacement));
+        self::assertTrue($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->permissions->replace($current, $replacement)
+        ));
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->permissions->replace($current, $replacement)
+        ));
         self::assertPermissionEquals($replacement, $this->permissions->getById($current->getId()));
     }
 
@@ -151,7 +155,7 @@ final class AuthorityRepositoryTest extends TestCase
         $this->permissions->add($second);
         $role = Role::defineManaged(
             RoleId::generate(),
-            RoleName::fromString('ROLE_ADMIN'),
+            RoleName::fromString('ROLE_SUPER_ADMIN'),
             [$second->getId(), $first->getId()],
             new DateTimeImmutable('2026-10-01T13:00:00+00:00')
         );
@@ -252,8 +256,6 @@ final class AuthorityRepositoryTest extends TestCase
 
         $this->connection->beginTransaction();
         $competingConnection->beginTransaction();
-        $competingConnection->executeStatement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-
         try {
             self::assertNotNull($competingRepository->getById($loser->getId()));
             self::assertTrue($this->permissions->replace($winner, $winnerReplacement));
@@ -312,8 +314,6 @@ final class AuthorityRepositoryTest extends TestCase
 
         $this->connection->beginTransaction();
         $competingConnection->beginTransaction();
-        $competingConnection->executeStatement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-
         try {
             self::assertNotNull($competingRepository->getById($loser->getId()));
             self::assertTrue($this->roles->replace($winner, $winnerReplacement));
@@ -420,6 +420,141 @@ final class AuthorityRepositoryTest extends TestCase
     {
         $this->expectException(LogicException::class);
         $this->roles->validatePermissionReference(PermissionId::generate());
+    }
+
+    /**
+     * Rejects taking ownership of a custom Permission through a fabricated managed successor
+     */
+    public function testPermissionReplacementCannotClaimCustomOwnership(): void
+    {
+        $custom = $this->customPermission('VIEW_USERS');
+        $this->permissions->add($custom);
+        $claimed = Permission::defineManaged(
+            $custom->getId(),
+            $custom->getName(),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $custom->getCreatedAt()
+        );
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->permissions->replace($custom, $claimed)
+        ));
+        self::assertFalse($this->permissions->getById($custom->getId())->isManaged());
+    }
+
+    /**
+     * Rejects taking ownership of a custom Role through a fabricated managed successor
+     */
+    public function testRoleReplacementCannotClaimCustomOwnership(): void
+    {
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
+        $custom = Role::define(RoleId::generate(), RoleName::fromString('ROLE_EDITOR'), [], $at);
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($custom));
+        $claimed = Role::defineManaged($custom->getId(), $custom->getName(), [], $at);
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->roles->replace($custom, $claimed)
+        ));
+        self::assertFalse($this->roles->getById($custom->getId())->isManaged());
+    }
+
+    /**
+     * Rejects tier writes from an isolation level whose old snapshot can miss committed membership
+     */
+    public function testTierFencesRejectStaleSnapshotIsolation(): void
+    {
+        $permission = $this->customPermission('VIEW_USERS');
+        $this->permissions->add($permission);
+        $this->connection->beginTransaction();
+        $this->connection->executeStatement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+        try {
+            $this->expectException(LogicException::class);
+            $this->roles->validateCustomPermissionGrant($permission);
+        } finally {
+            $this->connection->rollBack();
+        }
+    }
+
+    /**
+     * Serializes grant and protected promotion in both winner orders including unchanged membership validation
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('tierWinners')]
+    public function testGrantAndPromotionCannotBothCommit(bool $grantWins): void
+    {
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
+        $permission = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('MANAGE_USERS'),
+            PermissionTier::ADMIN_SAFE,
+            $at
+        );
+        $promoted = $permission->reconcileManaged(
+            $permission->getName(),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at->modify('+1 second')
+        );
+        $this->permissions->add($permission);
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_EDITOR'), [], $at);
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
+        $granted = $role->grantPermissionToCustom($permission->getId(), $at->modify('+1 second'));
+        $second = $this->connection();
+        $secondPermissions = new PostgresPermissionRepository($second, new AuthorizationReferenceFences($second));
+        $secondRoles = new PostgresRoleRepository($second, new AuthorizationReferenceFences($second));
+        $this->connection->beginTransaction();
+        $second->beginTransaction();
+        $second->executeStatement("SET LOCAL lock_timeout = '100ms'");
+        try {
+            if ($grantWins) {
+                self::assertTrue($this->roles->validateCustomPermissionGrant($permission));
+                self::assertTrue($this->roles->replace($role, $granted));
+                // Already-granted validation must hold the same fence through commit.
+                self::assertTrue($this->roles->validateCustomPermissionGrant($permission));
+            } else {
+                self::assertTrue($this->permissions->replace($permission, $promoted));
+            }
+            $compete = match ($grantWins) {
+                true => fn(): bool => $secondPermissions->replace($permission, $promoted),
+                false => fn(): bool => $secondRoles->validateCustomPermissionGrant($permission)
+            };
+            try {
+                $compete();
+                self::fail('The competing tier operation must wait.');
+            } catch (DriverException $failure) {
+                self::assertSame('55P03', $failure->getSQLState());
+            }
+            $second->rollBack();
+            $this->connection->commit();
+            $second->beginTransaction();
+            if ($grantWins) {
+                self::assertFalse($secondPermissions->replace($permission, $promoted));
+                self::assertSame(
+                    PermissionTier::ADMIN_SAFE,
+                    $secondPermissions->getById($permission->getId())->getTier()
+                );
+            } else {
+                self::assertFalse($secondRoles->validateCustomPermissionGrant($permission));
+                self::assertFalse($secondRoles->replace($role, $granted));
+                self::assertSame([], $secondRoles->getById($role->getId())->getPermissionIds());
+            }
+            $second->commit();
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($second->isTransactionActive()) {
+                $second->rollBack();
+            }
+            $second->close();
+        }
+    }
+
+    /**
+     * Supplies both tier writer orders
+     *
+     * @return iterable<array{bool}>
+     */
+    public static function tierWinners(): iterable
+    {
+        yield [true];
+        yield [false];
     }
 
     /**

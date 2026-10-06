@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Application\CredentialDelivery\ExpireCredentialDeliveryPages;
 use App\Application\CredentialDelivery\RecoverCredentialDeliveryPage;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
@@ -12,6 +13,7 @@ use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCreden
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId;
 use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 
 require dirname(__DIR__).'/vendor/autoload.php';
@@ -23,7 +25,7 @@ $stage = 'arguments';
 try {
     $arguments = array_slice($_SERVER['argv'], 1);
     $operation = array_shift($arguments);
-    if (!in_array($operation, ['run', 'status'], true) || !in_array('--internal', $arguments, true)) {
+    if (!in_array($operation, ['run', 'expire', 'status'], true) || !in_array('--internal', $arguments, true)) {
         throw new InvalidArgumentException('Explicit internal operation is required.');
     }
     $options = [];
@@ -34,8 +36,17 @@ try {
                 throw new InvalidArgumentException('Repeated authority option.');
             }
             $options['internal'] = true;
-        } elseif (preg_match('/^--(page-size|capacity|lease-seconds)=([0-9]+)$/D', $argument, $matches) === 1) {
-            if ($operation !== 'run' || isset($options[$matches[1]])) {
+        } elseif (
+            preg_match(
+                '/^--(page-size|capacity|lease-seconds|expiry-page-size|expiry-pages)=([0-9]+)$/D',
+                $argument,
+                $matches
+            ) === 1
+        ) {
+            if (
+                $operation === 'status' || isset($options[$matches[1]])
+                || ($operation === 'expire' && !str_starts_with($matches[1], 'expiry-'))
+            ) {
                 throw new InvalidArgumentException('Invalid operational option.');
             }
             $number = filter_var($matches[2], FILTER_VALIDATE_INT);
@@ -52,7 +63,10 @@ try {
     if (($options['lease-seconds'] ?? 300) !== 300) {
         throw new InvalidArgumentException('The qualified package does not allow lease overrides.');
     }
-    if (($operation === 'run' && $positional !== []) || ($operation === 'status' && count($positional) !== 2)) {
+    if (($options['expiry-page-size'] ?? 50) > 100 || ($options['expiry-pages'] ?? 10) > 10) {
+        throw new InvalidArgumentException('Invalid expiry bound.');
+    }
+    if (($operation !== 'status' && $positional !== []) || ($operation === 'status' && count($positional) !== 2)) {
         throw new InvalidArgumentException('Invalid operation arguments.');
     }
     $statusQuery = $operation === 'status' ? new FindCredentialDeliveryStatus(...$positional) : null;
@@ -72,17 +86,28 @@ try {
         $result = ['found' => $status !== null, 'delivery' => $status?->toArray()];
         $exit = $status === null ? 3 : 0;
     } else {
-        // Fail closed even with an empty queue: never silently simulate production delivery.
-        $container->get(CredentialDeliveryProvider::class);
-        $container->get(InvitationDeliveryCipher::class);
-        $container->get(PasswordResetDeliveryCipher::class);
-        $runner = new RecoverCredentialDeliveryPage(
+        if ($operation === 'run') {
+            // Fail closed before mutating state; cleanup-only operation needs none of these capabilities.
+            $container->get(CredentialDeliveryProvider::class);
+            $container->get(InvitationDeliveryCipher::class);
+            $container->get(PasswordResetDeliveryCipher::class);
+        }
+        $cleanup = new ExpireCredentialDeliveryPages(
             $queries,
-            $container->get(CommandBus::class),
+            $container->get(SynchronousCommandBus::class),
             $container->get(Clock::class)
         );
-        $result = $runner->run($options['page-size'] ?? 100, $options['capacity'] ?? 100);
-        $exit = $result['unsupported'] > 0 ? 1 : 0;
+        $result = ['expiry' => $cleanup->run($options['expiry-page-size'] ?? 50, $options['expiry-pages'] ?? 10)];
+        $exit = $result['expiry']['stalled'] ? 1 : 0;
+        if ($operation === 'run' && !$result['expiry']['stalled']) {
+            $runner = new RecoverCredentialDeliveryPage(
+                $queries,
+                $container->get(CommandBus::class),
+                $container->get(Clock::class)
+            );
+            $result['delivery'] = $runner->run($options['page-size'] ?? 100, $options['capacity'] ?? 100);
+            $exit = $result['delivery']['unsupported'] > 0 ? 1 : 0;
+        }
     }
     fwrite(STDOUT, json_encode($result, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)."\n");
     exit($exit);
@@ -91,6 +116,8 @@ try {
     if ($stage === 'arguments') {
         $message = "Invalid arguments. Usage: ./bin/credential-delivery run --internal\n";
         $message .= "       [--page-size=N] [--capacity=N] [--lease-seconds=300]\n";
+        $message .= "       [--expiry-page-size=1..100] [--expiry-pages=1..10]\n";
+        $message .= "       ./bin/credential-delivery expire --internal [--expiry-page-size=N] [--expiry-pages=N]\n";
         $message .= "       ./bin/credential-delivery status PURPOSE DELIVERY_ID --internal\n";
     }
     fwrite(STDERR, $message);

@@ -8,6 +8,7 @@ use App\Adapter\CredentialDelivery\InMemoryCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
+use App\Application\CredentialDelivery\ExpireCredentialDeliveryPages;
 use App\Application\CredentialDelivery\RecoverCredentialDeliveryPage;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -36,6 +37,7 @@ use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDelive
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Exception\CredentialDeliveryTransitionException;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindExpiredCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\DeliverPasswordReset;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Exception\PasswordResetDeliveryException;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
@@ -45,6 +47,7 @@ use Fight\AccessControl\Domain\AccessControl\User\Event\UserInvited;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
 use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
@@ -839,7 +842,216 @@ final class DirectCredentialDeliveryTest extends TestCase
         }
         self::assertSame(0, $this->recover($worker)->run(10, 10)['discovered']);
         self::assertCount(1, $provider->attempts());
+        self::assertSame([], $worker->get(QueryBus::class)->fetch(
+            new FindExpiredCredentialDeliveries($this->now->modify('+2 hours'), 1)
+        ));
         self::assertSame('credential-recovery', $this->connection->fetchOne('SELECT actor_id FROM audit_evidence'));
+    }
+
+    /**
+     * Proves downtime cleanup destroys bytes and claim state without inventing another provider outcome
+     */
+    #[DataProvider('expiredStates')]
+    public function testDowntimeExpiryPreservesHistoryAndDestroysMaterial(string $purpose, string $state): void
+    {
+        $grant = $this->seed($purpose);
+        $repositoryType = match ($purpose) {
+            'activation' => ActivationGrantRepository::class,
+            default => PasswordResetGrantRepository::class
+        };
+        $repository = $this->container->get($repositoryType);
+        $this->provider(static fn(): CredentialDeliveryOutcome => CredentialDeliveryOutcome::RETRYABLE_FAILURE);
+        if (in_array($state, ['retry_pending', 'reclaimed'], true)) {
+            $this->dispatch($purpose);
+            $grant = $repository->getLatestByUserId($this->userId);
+        }
+        if (in_array($state, ['claimed', 'reclaimed'], true)) {
+            $at = $this->now->modify('+2 minutes');
+            $claimed = $grant->claimDelivery(CredentialDeliveryClaimToken::generate(), $at, $at->modify('+5 minutes'));
+            self::assertTrue($this->container->get(TransactionalUnitOfWork::class)->commitTransactional(
+                fn(): bool => $repository->replace($grant, $claimed)
+            ));
+        }
+        $before = $this->row($purpose);
+        $expiry = $this->now->modify('+1 hour');
+        self::assertSame([], $this->queries()->fetch(
+            new FindExpiredCredentialDeliveries($expiry->modify('-1 microsecond'), 1)
+        ));
+        $work = $this->queries()->fetch(new FindExpiredCredentialDeliveries($expiry, 1));
+        self::assertCount(1, $work);
+        self::assertSame($grant->getDelivery()->getId()->toString(), $work[0]->getDeliveryId()->toString());
+        self::assertSame([], $this->queries()->fetch(new FindDueCredentialDeliveries($expiry, 1)));
+        $this->container->get(Clock::class)->time = $expiry;
+        $provider = new InMemoryCredentialDeliveryProvider();
+        $worker = $this->freshWorker($provider);
+        $cleanup = new ExpireCredentialDeliveryPages(
+            $worker->get(QueryBus::class),
+            $worker->get(SynchronousCommandBus::class),
+            $worker->get(Clock::class)
+        );
+        self::assertSame([
+            'pages' => 1, 'dispatched' => 1, 'remaining' => 0, 'stalled' => false, 'budget_exhausted' => false
+        ], $cleanup->run(1, 1));
+        $after = $this->row($purpose);
+        self::assertSame('expired', $after['delivery_status']);
+        $cleared = ['delivery_ciphertext', 'delivery_claim_token', 'delivery_claimed_at', 'delivery_lease_until'];
+        foreach ($cleared as $field) {
+            self::assertNull($after[$field]);
+        }
+        $retained = [
+            'delivery_attempt_count', 'delivery_last_attempt_at', 'delivery_last_outcome_at', 'delivery_last_failure'
+        ];
+        foreach ($retained as $field) {
+            self::assertSame($before[$field], $after[$field]);
+        }
+        self::assertSame((int) $before['revision'] + 1, (int) $after['revision']);
+        self::assertSame(0, $cleanup->run()['dispatched']);
+        self::assertSame([], $provider->attempts());
+        self::assertSame($after, $this->row($purpose));
+    }
+
+    /**
+     * Recovers rolled-back cleanup from a fresh connection and tolerates an already committed competing cleanup
+     */
+    #[DataProvider('purposes')]
+    public function testExpiryRollbackRestartAndDuplicateSnapshots(string $purpose): void
+    {
+        $grant = $this->seed($purpose);
+        $before = $this->row($purpose);
+        $this->container->get(Clock::class)->time = $this->now->modify('+1 hour');
+        $table = $purpose === 'activation' ? 'activation_grants' : 'password_reset_grants';
+        $this->connection->executeStatement(<<<SQL
+ALTER TABLE {$table} ADD CONSTRAINT expiry_test_abort CHECK (delivery_status <> 'expired') NOT VALID
+SQL);
+
+        try {
+            $this->expire($this->container)->run();
+            self::fail('An expiry write failure must abort cleanup.');
+        } catch (DriverException) {
+            self::assertSame($before, $this->row($purpose));
+        } finally {
+            $this->connection->executeStatement('ALTER TABLE '.$table.' DROP CONSTRAINT expiry_test_abort');
+        }
+        $worker = $this->freshWorker(new InMemoryCredentialDeliveryProvider());
+        $snapshot = $worker->get(QueryBus::class)->fetch(
+            new FindExpiredCredentialDeliveries($this->now->modify('+1 hour'), 1)
+        );
+        self::assertCount(1, $snapshot);
+        self::assertSame($grant->getDelivery()->getId()->toString(), $snapshot[0]->getDeliveryId()->toString());
+        self::assertSame(1, $this->expire($worker)->run()['dispatched']);
+        $after = $this->row($purpose);
+        $other = $this->freshWorker(new InMemoryCredentialDeliveryProvider());
+        $paused = $this->createMock(QueryBus::class);
+        $paused->expects(self::exactly(2))->method('fetch')->willReturnOnConsecutiveCalls($snapshot, []);
+        $runner = new ExpireCredentialDeliveryPages(
+            $paused,
+            $other->get(SynchronousCommandBus::class),
+            $other->get(Clock::class)
+        );
+        self::assertSame(0, $runner->run()['remaining']);
+        self::assertSame($after, $this->row($purpose));
+        self::assertNull($after['delivery_ciphertext']);
+    }
+
+    /**
+     * Fences an outside-transaction provider result when another worker expires its claim
+     */
+    #[DataProvider('purposes')]
+    public function testExpiryCannotBeOverwrittenByAStaleProviderOutcome(string $purpose): void
+    {
+        $this->seed($purpose);
+        $cleanup = null;
+        $this->provider(function () use (&$cleanup): CredentialDeliveryOutcome {
+            $this->container->get(Clock::class)->time = $this->now->modify('+1 hour');
+            $cleanup = $this->expire($this->freshWorker(new InMemoryCredentialDeliveryProvider()))->run();
+
+            return CredentialDeliveryOutcome::DELIVERED;
+        });
+        $delivery = $this->recover($this->container)->run(1, 1);
+        self::assertNotNull($cleanup);
+        self::assertSame(0, $cleanup['remaining']);
+        self::assertSame(1, $delivery['contended']);
+        self::assertSame('expired', $this->row($purpose)['delivery_status']);
+        self::assertNull($this->row($purpose)['delivery_ciphertext']);
+        self::assertSame(1, (int) $this->row($purpose)['delivery_attempt_count']);
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+    }
+
+    /**
+     * Preserves global expiry order and finite dispatch bounds across restarts
+     */
+    public function testExpiryDiscoveryAndRestartPageOrder(): void
+    {
+        $invitation = $this->seed('activation');
+        $reset = $this->seed('password_reset');
+        $at = $this->now->modify('+1 hour');
+        $this->container->get(Clock::class)->time = $at;
+        $ids = [$invitation->getDelivery()->getId()->toString(), $reset->getDelivery()->getId()->toString()];
+        sort($ids);
+        $work = $this->queries()->fetch(new FindExpiredCredentialDeliveries($at, 1));
+        self::assertCount(1, $work);
+        self::assertSame($ids[0], $work[0]->getDeliveryId()->toString());
+        self::assertSame(
+            ['purpose', 'delivery_id', 'user_id', 'email_change_grant_id', 'expires_at', 'revision', 'status'],
+            array_keys($work[0]->toArray())
+        );
+        $first = $this->expire($this->container)->run(1, 1);
+        self::assertTrue($first['budget_exhausted']);
+        self::assertSame(1, $first['remaining']);
+        $work = $this->queries()->fetch(new FindExpiredCredentialDeliveries($at, 1));
+        self::assertSame($ids[1], $work[0]->getDeliveryId()->toString());
+        $second = $this->expire($this->freshWorker(new InMemoryCredentialDeliveryProvider()))->run(1, 1);
+        self::assertSame(0, $second['remaining']);
+        self::assertFalse($second['budget_exhausted']);
+    }
+
+    /**
+     * Filters material-free terminal rows before the SQL page limit
+     */
+    #[DataProvider('purposes')]
+    public function testExpiredDiscoverySkipsTerminalHistoryBeforeLimiting(string $purpose): void
+    {
+        $this->seed($purpose);
+        $this->provider(static fn(): CredentialDeliveryOutcome => CredentialDeliveryOutcome::DELIVERED);
+        $this->dispatch($purpose);
+        $user = $this->connection->fetchAssociative('SELECT * FROM users WHERE id = ?', [$this->userId->toString()]);
+        self::assertIsArray($user);
+        $this->userId = UserId::generate();
+        $user['id'] = $this->userId->toString();
+        $user['email'] = 'next-delivery@example.test';
+        $this->connection->insert('users', $user);
+        $this->now = $this->now->modify('+1 minute');
+        $eligible = $this->seed($purpose);
+        $work = $this->queries()->fetch(new FindExpiredCredentialDeliveries($this->now->modify('+2 hours'), 1));
+        self::assertCount(1, $work);
+        self::assertSame($eligible->getDelivery()->getId()->toString(), $work[0]->getDeliveryId()->toString());
+        self::assertSame($this->userId->toString(), $work[0]->getUserId()->toString());
+    }
+
+    /**
+     * Creates cleanup without resolving any provider or cipher
+     */
+    private function expire(Container $worker): ExpireCredentialDeliveryPages
+    {
+        return new ExpireCredentialDeliveryPages(
+            $worker->get(QueryBus::class),
+            $worker->get(SynchronousCommandBus::class),
+            $worker->get(Clock::class)
+        );
+    }
+
+    /**
+     * Supplies live states stranded by downtime for both delivery families
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function expiredStates(): iterable
+    {
+        foreach (['activation', 'password_reset'] as $purpose) {
+            foreach (['pending', 'retry_pending', 'claimed', 'reclaimed'] as $state) {
+                yield $purpose.' '.$state => [$purpose, $state];
+            }
+        }
     }
 
     /**

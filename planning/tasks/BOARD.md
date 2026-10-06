@@ -8,6 +8,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | in-progress | — | — |
+| 24 | [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -114,7 +115,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 24 | [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | [TICKET-00011 — Establish recoverable external-effect delivery](../tickets/00011-TICKET.md) | needs-info | — | — |
 | 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | needs-info | [TASK-00033](00033-TASK.md) | [PR #41](https://github.com/johnnickell/fight-agent-os/pull/41) |
 
 ## Human Action

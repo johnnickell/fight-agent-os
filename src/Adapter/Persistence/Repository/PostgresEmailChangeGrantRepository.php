@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Adapter\Persistence\Repository;
 
 use App\Adapter\Persistence\EmailChangeGrantRecords;
+use App\Adapter\Persistence\ExpiredCredentialDeliveryRecords;
 use App\Adapter\Persistence\PostgresAtomicOperation;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -76,6 +77,14 @@ SQL,
     /**
      * @inheritDoc
      */
+    public function findExpired(DateTimeImmutable $at, int $limit): array
+    {
+        return ExpiredCredentialDeliveryRecords::find($this->connection, 'email_change', $at, $limit);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getByDeliveryId(EmailChangeDeliveryId $emailChangeDeliveryId): ?EmailChangeGrant
     {
         $row = $this->connection->fetchAssociative(
@@ -123,7 +132,7 @@ SQL,
         $row = $this->latestRow($terminalPredecessor->getUserId(), true);
         if (
             $row === false || !$this->sameState(EmailChangeGrantRecords::hydrate($row), $terminalPredecessor)
-            || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->isRecoverable()
+            || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->hasRecoverableMaterial()
             || !$this->successorValid($terminalPredecessor, $successor)
         ) {
             return false;
@@ -151,6 +160,7 @@ SQL,
             $fields['id'],
             $fields['user_id'],
             $fields['credential_digest'],
+            $fields['email_change_reservation_revision'],
             $fields['expires_at'],
             $fields['delivery_id'],
             $fields['delivery_email'],
@@ -255,6 +265,7 @@ SQL,
             && $left->getRevokedAt() == $right->getRevokedAt()
             && $left->getExpiredAt() == $right->getExpiredAt()
             && $left->getRevision() === $right->getRevision()
+            && $left->getEmailChangeReservationRevision() === $right->getEmailChangeReservationRevision()
             && $left->getDelivery()->sameStateAs($right->getDelivery());
     }
 
@@ -267,6 +278,7 @@ SQL,
             !$before->getId()->equals($after->getId()) || !$before->getUserId()->equals($after->getUserId())
             || $before->getCredentialHash() !== $after->getCredentialHash()
             || $before->getExpiresAt() != $after->getExpiresAt()
+            || $before->getEmailChangeReservationRevision() !== $after->getEmailChangeReservationRevision()
             || !$before->getDelivery()->getId()->equals($after->getDelivery()->getId())
             || !$before->getDelivery()->getUserId()->equals($after->getDelivery()->getUserId())
             || $before->getDelivery()->getEmail()->canonical() !== $after->getDelivery()->getEmail()->canonical()
