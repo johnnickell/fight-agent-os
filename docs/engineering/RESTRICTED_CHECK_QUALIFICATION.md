@@ -283,9 +283,10 @@ No service remains enrolled. Linux/system-service operation is unqualified.
 The experiment killed the supervisor **after** Docker start returned. It did not interrupt an in-flight create,
 start or stop. A client timeout or dead Docker CLI does not fence a request already accepted by the daemon;
 `flock` release on process death alone cannot rule out a late start after a replacement's stop observation.
-Before R2 closes, qualify that uncertain-effect ordering and how reconciliation retains admission/reservations
-until quiescence is established. The controlled pre-launch barrier is one cancellation ordering, not concurrent
-stress or a distributed fence. Missing inventory, wrong ownership, engine outage, suspend/reboot and service
+The [terminal-removal follow-up](#terminal-removal-and-late-effect-follow-up--2026-10-06-utc) below advances known-ID
+start/removal ordering. Unknown create outcomes and how reconciliation retains admission/reservations until
+quiescence is established remain open. The controlled pre-launch barrier is one cancellation ordering, not
+concurrent stress or a distributed fence. Missing inventory, wrong ownership, engine outage, suspend/reboot and service
 restart failure were not fault-injected here. Previous ownership-denial evidence remains historical.
 
 Aggregate admission, repeated-request/retained-byte exhaustion, shared image/engine overhead and durable cleanup
@@ -293,6 +294,66 @@ accounting remain open. The reservation booleans are still disposition flags, no
 service stdout/stderr, captured snapshots and engine metadata have no qualified aggregate storage quota. R1 and
 R3 are unchanged. TASK-00140 owns production PHP/service composition and TASK-00142 its integrated recovery proof;
 TASK-00138 still owes the remaining minimum-mechanism qualification before independent full-TASK acceptance.
+
+## Terminal removal and late-effect follow-up — 2026-10-06 UTC
+
+This **R2 / AC-4** continuation measures a terminal primitive for a **known immutable container ID**. A stopped
+container can restart; neither a released host lock nor a stopped-state observation fences a late Engine request.
+For authorized cancellation/retirement of disposable check runtimes, select ownership-checked terminal removal,
+then exact-ID absence confirmation, rather than treating stop alone as terminal. Persist the cancellation intent,
+subject and retained diagnostic evidence outside the runtime first. Never address start/stop/removal by a reusable
+name or ID prefix. This is a mechanism direction for TASK-00140, not an implemented durable cancellation protocol.
+Pause, evidence retention and worktree/database retirement remain separate operations; this selection does not
+authorize automatic deletion of failed evidence or retained application data.
+
+Direct Engine API 1.55 probes used Docker Desktop 4.86.0 / Engine 29.7.2, LinuxKit 6.12.76 arm64. The immutable
+image was `sha256:e4e87bae623511ed0ad325774c701cf2902f01d4d906cfd2dcf74da32fb7e1fe`. Each fixture was configured
+with a finite 120-second sleep, UID/GID 65534, read-only root, no mounts, network none, all capabilities dropped,
+no-new-privileges, 0.25 CPU, 128 MiB memory/no extra swap, 16 PIDs, 1 MiB shared memory, 64 file descriptors,
+zero core limit and logging disabled. At most a sleeping sibling and one subject ran concurrently: 0.5 CPU quota
+and 256 MiB configured memory. The trusted instrument used the host Engine socket; no candidate received it.
+Requests had ten-second client timeouts and 64 KiB response limits. Timeout would be uncertainty, not success.
+
+Evidence is in `.runs/tasks/TASK-00138/effect-fencing/` in the authorized isolated worktree. Each run retains its
+exact `instrument.py`, bounded request/response transcript, initial profiles and `result.json`:
+
+| Probe | Observation and limit |
+|---|---|
+| Stop positive control | After acknowledged SIGKILL and observed non-running state, a late start returned 204 and the same container ran again. Stop alone demonstrably fails terminality. |
+| Known-ID removal | Ownership-checked `DELETE ...?force=true&v=false` returned 204, inspect returned 404 and subsequent full-ID start returned 404. No anonymous volumes or durable candidate artifacts existed. |
+| Simultaneous start/removal | First run `4f515530-5ee4-4921-82fb-a441430e0661` (08:31:41–08:31:46 UTC): all eight starts returned 409 while all removals returned 204. This samples removal-winning scheduling only. |
+| Varied ordering | Follow-up `aa4c44e3-1801-477d-9b60-cd46765a127b` (08:33:32–08:33:37 UTC) delayed removal by 0, 0, 1, 5, 50, 150, 300 and 600 ms. Four starts returned 409; four returned 204. Every removal returned 204 and every post-removal inspect/start returned 404. Offsets vary ordering; they do not prove a specific internal daemon overlap. |
+| Unobserved start response | Four cases per run sent the start request then closed the connection without reading a response. Successful removal and exact-ID absence/retry followed. Local send completion is **not** proof of daemon acceptance; these cases deliberately retain that uncertainty about the start. |
+| Reused-name countercheck | After removing an original container, a replacement received a different ID under the same name. Old-ID start returned 404 without starting the replacement; name-addressed start returned 204 and started it. Production operations must not substitute a name after losing an ID. |
+| Delayed create countercheck | A name was absent at inspection, then an explicitly delayed create produced an owned container in `created` state. An empty scan cannot certify that a pending create will never arrive. This is controlled client delay, not an injected accepted-but-pending daemon create. |
+| Preservation and cleanup | Sibling remained running with the same start time. Both runs removed all 17 owned containers by exact ID/owner and ended with empty owner inventories. Existing Agent OS service starts, unrelated main-checkout files and canonical review bytes were unchanged. |
+
+The first run passed 50 scoped observations; the ordering sweep passed 51. Both successful runs are retained,
+not a failed attempt silently replaced. Their repeated checks are not 101 independent security properties or
+product tests. No service was installed, engine restarted, host exhausted, production credential used, candidate
+quality gate executed or autonomous Agent launched. All 34 fixture containers were retired; no volumes/networks
+were created. Retained scratch/Engine metadata overhead has no qualified aggregate quota.
+
+### Admission and remaining uncertainty
+
+An acknowledged terminal removal plus absence is stronger evidence for a known ID than an isolated 404 or stopped
+state. Preserve that exact effect/subject tombstone and never recreate or restart a cancelled subject. A new attempt
+requires a new authorized identity and reservation. Unknown create outcomes are a different problem: reserve before
+create, persist a unique intent/owner selector, keep create separate from start, and let only the fenced supervisor
+start an exactly registered current subject. Late-created cancelled resources must stay inert and be reconciled by
+ownership. Do not turn an empty inventory, client timeout or arbitrary quiet interval into proof of settled creation.
+
+Keep admission/claims and the uncertain-effect reservation closed/held until outstanding creators are causally
+settled or a separately qualified engine/service fence rules out their future effects. This checkpoint does **not**
+qualify that fence, a finite settling deadline, a durable intent/tombstone ledger or cross-process takeover. Failure
+to remove/inspect remains `EffectUncertain`. Even successful runtime removal does not release retained source,
+outputs, receipts, dependency/image storage or shared Engine overhead; account for those separately.
+
+Finite API sampling does not prove every Engine interleaving, cancellation latency, daemon crash/restart or restored
+Engine metadata behavior. The client-side response-loss cases did not inject a known accepted request stuck inside
+the daemon. Supported service lifecycle, unknown-create reconciliation and aggregate/retention bounds remain R2
+obligations; R1 storage/recovery and R3 independently authoritative checks are unchanged. TASK-00140 owns production
+composition and TASK-00142 integrated interruption/recovery proof. Check readiness remains disabled.
 
 ## Qualification disposition and next owners
 
@@ -303,9 +364,10 @@ TASK-00138 still owes the remaining minimum-mechanism qualification before indep
   separate bounded access/restart/recovery evidence, retaining broker-held signing. That evidence does not qualify
   ordered storage, actual broker authority or always-on host/runtime support. These check experiments use no
   package authority and supply none of that proof.
-- **R2 / AC-4:** local bounded execution, private services, controller-loss stop and a service-managed restart/
-  serialized-launch sample are measured. Host retention/aggregate admission, supported service lifecycle,
-  uncertain in-flight launch fencing, complete required-check policy and supply-chain qualification remain open.
+- **R2 / AC-4:** local bounded execution, private services, controller-loss stop, service-managed restart/serialized
+  launch and known-ID terminal removal/start ordering are measured. Host retention/aggregate admission, supported
+  service lifecycle, unknown-create/engine-failure fencing, complete required-check policy and supply-chain
+  qualification remain open. Known-ID samples do not establish a complete uncertain-effect admission protocol.
 - **R3 / AC-3/4/5:** protected mounts and externally collected process outcomes are measured, not full file-tool race
   resistance, managed role identities, adversarial semantic check completeness or production source-publication proof.
   The prior file/handoff prototype remains historical evidence and was not rerun.
