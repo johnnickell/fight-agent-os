@@ -6,6 +6,156 @@ Contract design for [TASK-00138](../../planning/tasks/00138-TASK.md), consumed b
 an enrollment, a permission grant, a working broker or permission to start TASK-00139. **Production remains not
 launchable**; the explicitly approved file-only prototype is scoped evidence, not an exception for real TASK execution.
 
+## Current authority decisions — 2026-10-06
+
+This section selects the design for the tool-mediated profile. It is not a deployed permission policy, a package
+adoption or a readiness assertion. The September findings below remain historical. TASK-00139 owns start/inspect
+and authority composition; TASK-00140 owns protected storage/file/check effects; TASK-00141 owns role/provider
+composition. Each must demonstrate its actual boundaries before activation. No disposable experiment supplies
+production credentials or bypasses an unavailable capability.
+
+### Package dependency and recovery
+
+Fresh read-only inspection found released Access Control **v0.4.0**, source
+`380b134b35c722e6416787b13f5c20c64bd05388`, as the newest remote tag on October 6. Its provisioning still takes
+`(actorId, agentName)` and its lifecycle service still returns rotation material without a retained operation key.
+It does not satisfy recoverable managed enrollment. This branch remains locked to v0.3.0
+`22ffab6452b2278b82df9b147e8949630b97355f`, Common v1.2.0
+`a2cd615d9b5064c9c30e994655536176249cd73b`; no manifest, lock or vendor change is selected here.
+
+The committed upstream candidate `614c34b189fd1ab73a10ace173e206ce010bb2e3` now implements public recoverable
+provision/rotation, delivery/status/scheduled recovery, maintenance and cohort/restoration contracts. Its
+[registered integration guide](https://github.com/johnnickell/fight-access-control/blob/614c34b189fd1ab73a10ace173e206ce010bb2e3/docs/agent-integration.md)
+and [current contract](https://github.com/johnnickell/fight-access-control/blob/614c34b189fd1ab73a10ace173e206ce010bb2e3/docs/agent-current-contract.md)
+explicitly describe an **unreleased** target and unqualified consumer adapters. Inspection used a Git archive of
+that commit, excluding concurrent upstream working changes. Source tracing is not package test or release evidence.
+The earlier claim that upstream recovery is only a proposal is no longer current; the proposal remains history.
+A qualifying tagged release and deliberate consumer adoption are still required, not a dependency on a guessed
+version or local develop. Do not transplant the candidate into vendor or implement a substitute lifecycle.
+
+Use the package's retained `AgentOperationKey` and exact request, persisted **before** invocation. Recover a lost
+response using that same key/request and fresh authorization; never generate a replacement key, correlate by name
+or infer rollback from a missing event/status. The candidate's `AgentProvisioningService` and
+`AgentCredentialRotationService` own issuance transactions; `AgentOperationAuthorization` participates on their
+connection. Consumer intent creation commits separately before invocation; it must not wrap a package service in
+another transaction. Bind original operation to enrollment, role identity and fixed sink slot. An indeterminate
+outcome leaves enrollment disabled. Scheduled package recovery, not event delivery alone, discovers pending work.
+
+Adopt the candidate's **single current contract**, not the September proposal's historical-reader/migration scheme.
+Do not manufacture legacy Agents, reset consumer data or invent recovery correlation. Consumer adoption must bind
+real PostgreSQL repositories, all authority writers, independent restoration witness, ciphers, ordered sink and
+activation/use to the package conformance suites and real cross-process races. An equal cohort generation or
+implemented interface is not evidence of this composition. Release availability alone cannot enable enrollment.
+
+### Permission catalog and operator confirmation
+
+Execution uses a separately versioned **extension proposal**, not an implicit edit to the foundation's exact
+21-permission catalog in TASK-00036. These are the intended checks; catalog-owner acceptance, stable package-factory
+generated IDs, package managed-policy references and explicit initial User assignments are prerequisites to
+implementation enablement. No role automatically gains them, including Super Admin. The foundation work remains
+unchanged; do not install a second managed reconciler that removes its definitions.
+
+| Proposed Permission | Tier / permitted subject | Narrowing policy in addition to Permission |
+|---|---|---|
+| `MANAGE_EXECUTION_ENROLLMENT` | SUPER_ADMIN_ONLY / User | Enroll/revoke approved repositories, roots, profiles and delegated recovery destinations; never self-enroll an unauthenticated operator |
+| `START_TASK_EXECUTION` | SUPER_ADMIN_ONLY / User | Confirm exact source/context, bounded grant and role assignments; one active repository/TASK claim |
+| `CONTROL_TASK_EXECUTION` | SUPER_ADMIN_ONLY / User | Pause/cancel/resume/takeover only an enrolled, authorized Workflow and expected revision |
+| `READ_TASK_EXECUTION` | ADMIN_SAFE / User or bound Agent | Assigned repository/Workflow only; no credentials or unrelated ownership disclosure |
+| `READ_EXECUTION_FILES` | ADMIN_SAFE / bound Lead or Engineer | Exact role roots and TASK-only Review/QA, current generation and size/revision limits |
+| `WRITE_EXECUTION_SOURCE` | ADMIN_SAFE / bound Engineer | Assigned source/local scratch only, unfrozen expected revision |
+| `WRITE_EXECUTION_NOTES` | ADMIN_SAFE / bound Lead or Engineer | Own allocated notes; Lead alone writes assignments; never controller receipts |
+| `DELEGATE_TASK_EXECUTION` | ADMIN_SAFE / bound Lead | Existing Workflow grant, bounded SUBTASK and registered Engineer; cannot provision another Agent |
+| `REQUEST_EXECUTION_CHECK` | ADMIN_SAFE / bound Lead | Fixed qualified check ID, frozen subject, current grant and available reservation |
+| `SUBMIT_EXECUTION_HANDOFF` | ADMIN_SAFE / bound Engineer | Exact assignment/generation/source; submission is a proposal, not completion |
+| `COORDINATE_EXECUTION_HANDOFF` | ADMIN_SAFE / bound Lead | Required protected results and constrained commit; no formal acceptance/publication |
+
+ADMIN_SAFE makes direct Agent assignment possible under the current package contract; it does **not** waive
+Workflow/role/target checks. A User holding an Agent-facing Permission does not gain a launched role identity.
+Agents receive only their explicit direct subset, never User role inheritance or a generic administration grant.
+Provisioning/rotation/recovery policy derives authenticated User or delegated worker scope from trusted context;
+actor IDs remain provenance, not authorization. Deterministic Runner effects consume exact committed intents;
+there is no model-callable provisioning, signature, SQL, Git-command or container-flags endpoint.
+
+The operator first uses complete package-backed authentication and active enrollment, then confirms a secret-free
+manifest/grant digest. Record confirmation identity, time, expiry and policy revision. A second prompt is not
+required for each already-permitted read/edit/check; widening roots, role, model or ceilings requires a new grant.
+No active authorized User or unavailable complete token validation means stop, not bootstrap through shell access.
+
+### Protected credentials and activation
+
+Select immutable, encrypted, delivery-ID-addressed staging outside all Agent roots and check mounts, with separate
+keys for authentication envelopes and recoverable delivery. macOS Keychain is a candidate custody mechanism for
+wrapping/refresh keys, **not** an implementation of the ordered package sink. The storage adapter remains unselected
+and unqualified. No generic Keychain put, current-file pointer, environment variable or Pi login can substitute.
+This unresolved adapter is an explicit activation prerequisite, not permission to design around package guarantees.
+
+The sink must atomically retain exact original issuance/bytes, verified receipts, permanent delivery tombstones and
+nondecreasing per-slot order across cleanup/rebinding. Entries are inert. Activation requires confirmed delivery,
+fresh enrollment/package authority and an exact credential/destination match under the same authority fences.
+Every later broker/tool use repeats live role/attempt/credential/grant checks; receipt possession is not permission.
+Lower-order late delivery cannot overwrite or select newer material. Storage loss means reconciliation, not secret
+retrieval from the authentication envelope or automatic rotation. Retention/capacity exhaustion denies new work;
+never delete deduplication history to recover space. Keys, receipts and independent restore evidence need separately
+qualified retention, backup and restore; a restored database cannot attest its own freshness.
+
+### Controlled Markdown publication
+
+Support only an **installation-controlled immutable Markdown publication**, not arbitrary live human checkouts.
+Registration names an approved repository and protected object store. Humans propose a source commit; trusted
+publication validates and retains its immutable objects/manifest before making it selectable. PostgreSQL records
+only the registered publication locator/revision/digest and Workflow references. Markdown bytes still own Planning
+requirements/status/dependencies; this is source selection metadata, not the Planning database cutover.
+
+1. Persist a bounded import/pin intent under the repository's source gate. Import only the approved objects through
+   controlled Git; never run hooks, filters or repository scripts. Unknown Git outcomes reconcile by intent.
+2. Verify all manifest paths, parents/dependencies/context and pin reachability before publication. Source objects
+   must survive a crash and garbage collection for every retained grant. Failed/uncertain pinning is not selectable.
+3. Under one PostgreSQL transaction fence current publisher authority, then lock the repository source gate and
+   compare the expected publication revision before advancing its pointer to the verified immutable manifest. An out-of-band
+   branch move has no authority. Audit and command result commit together; an unpublished pin is inert retention.
+4. Start fences current authority before taking the same source gate, resolves that exact published manifest,
+   checks confirmation, and commits claim/grant/dispatch intent atomically. Publication or revocation wins one fenced order;
+   stale consent returns `RevisionChanged`. A later publication never rewrites an existing grant.
+5. Writes to the registered object store or its administration outside this protocol invalidate source readiness.
+   Registration must exclude such writers; a mutex they need not obey is insufficient. Human worktrees stay
+   untouched and unenrolled. Candidate edits, notes and reports never publish Planning authority automatically.
+
+Keep pins until all grants, check receipts and retention obligations release them. A mutable checkout import,
+unavailable source gate, missing object or uncertain writer exclusion returns `SourceUnavailable`. No pre/post
+hash workaround claims atomic latest-Markdown eligibility. Qualify competing publication/start, interrupted pin,
+missing-object recovery and unauthorized writer exclusion in TASK-00139/00140 before enabling this source kind.
+
+### Claims, fences and external effects
+
+Use one shared PostgreSQL connection for live command authorization fences, expected Workflow append, active-claim
+uniqueness, idempotent command result, audit and dispatch intent. The uniqueness key is installation/repository/TASK;
+actor/command identity plus canonical digest distinguishes retry from conflicting reuse. Leases do not replace
+claims. Bind every effect/message/check to Workflow, role, attempt, monotonically increasing generation, grant,
+source and profile. A retry reuses the committed effect identity; unknown resources retain both reservation and claim.
+
+Package cohort/authority fences precede execution source/Workflow/claim/resource locks; all participating writers
+must use one documented order on the shared connection, including permission removal, enrollment revoke/regrant,
+source publication and takeover. Revalidate expiry using server time before commit/admission. Authentication's
+request-scoped cached principal is not the final transaction fence. If the exact package integration cannot fence
+that writer, the command is unavailable rather than trusting a previous allow result.
+
+Pause/cancel first close admission and advance the generation, then commit stop intent. A stale queued dispatch,
+file write, provider request or check result rejects. Resume cannot launch until old effects are reconciled and
+quiescent. Claim/reservation release requires externally observed process/service stop and owned-resource
+retirement (or explicitly retained accounting); lease expiry, a worker note and client disconnection prove none.
+Restore invalidates admission outside the restored dataset before replacement; preserve operation/receipt/source
+history and prove a newer reconciled generation before use. These are production obligations, not probe outcomes.
+
+### Remaining authority decisions and proof
+
+R1 is advanced, **not closed**: the catalog extension needs owner acceptance and concrete identities; a released
+recoverable package must be adopted; the protected sink/key adapter needs selection and qualification. The selected
+immutable-publication/claim protocol needs actual writer exclusion and PostgreSQL race/recovery proof. These are
+not waived to permit file-only experimentation or restricted-check qualification. The latter can proceed with
+public fixture inputs and no managed authority, but cannot enable a Workflow. The
+[restricted-check qualification](RESTRICTED_CHECK_QUALIFICATION.md) records that separate bounded experiment. TASK-00139 remains blocked by this
+TASK's independent acceptance; activation additionally waits for its actual composition and downstream readiness.
+
 ## Operator enrollment and package ownership
 
 Use an existing active Fight Access Control User, not a UNIX account, Git author, Docker login or model-provider

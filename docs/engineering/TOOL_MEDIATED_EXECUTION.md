@@ -57,6 +57,9 @@ Retain ADR 0001: Domain owns grants, claims, role/phase eligibility and resource
 approved operations and durable intents; Adapter owns file/Git/container/Pi mechanisms. Use Fight Access Control
 public identity/authorization contracts directly. MCP is a transport exposing capabilities, not permission policy.
 No second Python/TypeScript production Runner or new authorization model is adopted from disposable prototypes.
+The [current authority decisions](TERMINAL_AUTHORITY.md#current-authority-decisions--2026-10-06) select controlled
+immutable Markdown publication and retained package-operation recovery, propose the explicit permission extension,
+and name unresolved release/adoption and protected-storage prerequisites. No catalog or launch grant is installed.
 
 Useful operations are scoped file reads/edits, bounded delegation/handoff, fixed check requests and constrained
 commit preparation. They accept source identity and expected revisions, not shell commands, arbitrary container
@@ -95,6 +98,12 @@ isolation or immunity to same-user host/controller compromise. It still requires
 honest limits for the actual checker/profile; unqualified execution stays unavailable. macOS VM-control-plane
 hard caps investigated for the abandoned root-VM strategy are not prerequisites for a read/write-only experiment.
 Do not carry those old blockers forward unchanged or silently claim container execution is qualified by this move.
+
+The [restricted-check qualification](RESTRICTED_CHECK_QUALIFICATION.md) selects fixed non-root containers with
+loopback-only private PostgreSQL and records fresh bounded execution of the existing PHP suite. It distinguishes
+external process receipts from semantic check attestation: hostile candidate code shares the PHP process, so even
+read-only PHPUnit/configuration does not make test counts or exit zero authoritative. Required-check policy,
+aggregate/retained-resource accounting and independent supervision remain incomplete; check readiness is not enabled.
 
 ## Git, messages and recovery
 
@@ -143,7 +152,8 @@ Local evidence (ignored, not shipped with a clone):
 | TASK-00141 | Implement separate Pi roles, bounded messages/correction, automatic permitted check requests and exact-commit handoff through the production path; one real TASK reaches Awaiting review only with required evidence. |
 | TASK-00142 | Qualify parallel production Workflows, cross-task/role denial, stale messages/snapshots, interruption, cancellation and retained-resource recovery. |
 
-Canonical review remains `revise` for af1fdbc; this amendment does not edit or independently close its findings:
+The amendment-only canonical review at `edd03cf` supports the revised boundary but retains `revise` for the full
+TASK. The subsequent authority/check checkpoint does not edit that verdict or independently close its findings:
 
 - **R1 retained:** package-backed operator/Agent recovery, permission catalog, protected credentials and source
   authority remain required. Recheck released capabilities at adoption; historical package findings are not a
