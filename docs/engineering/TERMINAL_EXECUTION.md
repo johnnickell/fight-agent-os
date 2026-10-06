@@ -1,8 +1,9 @@
 # Terminal-first execution contract
 
 Implementation handoff for [TICKET-00032](../../planning/tickets/00032-TICKET.md) and
-[TASK-00138](../../planning/tasks/00138-TASK.md). The sequence is approved; the backend below is a candidate under
-qualification, not an enabled Agent sandbox. No autonomous TASK execution is available yet.
+[TASK-00138](../../planning/tasks/00138-TASK.md). The sequence is approved; the October 6
+[tool-mediated boundary](TOOL_MEDIATED_EXECUTION.md) replaces the first Engineer-root VM strategy. Its file-only
+prototype is demonstrated, not a production Workflow. Managed TASK execution and candidate checks remain unavailable.
 
 ## Ownership and entry points
 
@@ -12,13 +13,13 @@ own claims, grants, process fencing, sandbox policy or the authoritative transit
 | Owner | Responsibility |
 |---|---|
 | Domain / Execution / Workflow | Grant, TASK claim, phase eligibility, attempts and terminal state |
-| Domain / Execution / Sandbox | Resource ownership and accepted isolation profile identity |
+| Domain / Execution / Sandbox | Resource ownership and accepted file/check profile identity |
 | Application / Execution | Start, inspect, reconcile, pause, cancel and accept implementation handoff |
 | Adapter / Console / Execution | Explicit operator input and safe status/error presentation |
 | Adapter / Persistence / Execution | PostgreSQL transactions, event-store integration, dispatch and projections |
-| Adapter / Runner / Provisioning | Constrained Git/container operations and observed ownership/readiness |
+| Adapter / Runner / Provisioning | Scoped files, constrained Git/check-container operations and observed ownership/readiness |
 | Adapter / Runner / Pi | Distinct role sessions, brokered capabilities and process/session lineage |
-| Harness / Pi | Presentation and typed client integration; no host Docker/VM authority; Engineer may use its private guest engine |
+| Harness / Pi | Presentation and typed scoped-file/application tools; no shell, Docker/VM authority or dynamic tool loading |
 
 These are responsibility boundaries to guide implementation, not instructions to create empty classes. Keep
 capabilities such as TaskEligibility, SandboxProvisioner and AgentLauncher small and use-case driven. Design the
@@ -38,17 +39,16 @@ policy. The console authenticates that enrollment; possession of a shell or a ro
 Agents use separate package-owned identities and bounded credentials. The exact enrollment/credential protocol
 must be accepted and implemented before managed work can launch. TASK-00139 has not been started.
 
-## Approved Engineer VM boundary
+## Approved tool-mediated boundary
 
-John explicitly amended the parent contract on 2026-09-27: permit Engineer sudo/root and private Docker-engine
-access inside its dedicated mountless VM and treat the entire guest as Engineer-controlled. Private Git and
-application/test containers stay inside it; human checkouts, canonical Git administration, host engine, sibling
-state and real credentials stay outside. Guest runtime/checks/cgroups are not authority. External VM/resource and
-network limits, broker authorization, separate Team Lead/reviewer boundaries and independent validation of worker
-check results remain mandatory. Bootstrap digests describe supplied inputs, not continuing guest integrity.
+John's October 6 amendment replaces the September 27 Engineer-root VM profile for the first slice. The
+[current contract](TOOL_MEDIATED_EXECUTION.md) owns file/message grants, task notes, read-only Review/QA access,
+trusted Git administration, restricted-check execution, automatic preauthorized requests and the accepted limits.
+Agents get no shell/private engine. Their prompts, shared notes and code inspections do not authorize execution.
+File/handoff readiness is separate from check readiness; missing tests prevent a complete Awaiting review handoff.
 
-This resolves the guest-privilege policy choice only. The [qualification criteria](DOCKER_SANDBOX_QUALIFICATION.md)
-now target the external VM boundary; this amendment does not supply missing evidence or authorize execution.
+The [VM qualification](DOCKER_SANDBOX_QUALIFICATION.md) is historical evidence for the prior strategy, not the
+current launch checklist. Scope revision does not erase incomplete authority, containment or recovery requirements.
 
 ## Recoverable lifecycle
 
@@ -57,28 +57,29 @@ and dispatch intent. The Runner resolves the configured base to an exact OID, pr
 requests an immutable provisioner profile. Each external effect follows persisted intent → effect → observed
 identity → authoritative completion. A name alone is never proof of ownership or success.
 
-Verified readiness precedes Agent launch. Every attempt has a fencing generation; stale processes cannot report
-completion after takeover. An ambiguous live process pauses reconciliation rather than starting a second Agent.
+Verified role/file/provider readiness precedes managed Agent launch; check execution has its own readiness gate.
+Every attempt has a fencing generation; stale processes cannot report completion after takeover. An ambiguous live process pauses reconciliation rather than starting a second Agent.
 Pause preserves resources. Cancellation proves workload stop. Cleanup checks durable ownership and policy and
 preserves required evidence; it does not reset, stash, rebase or delete a human checkout.
 
 Team Lead is the human contact and delegates the bounded implementation to Software Engineer. Their credentials,
-tools and sessions are separate. The Engineer submits an exact-commit handoff with required check exits and
-evidence. PHP validates it and transitions to Awaiting review. Senior Engineer, QA and Release Manager later
-extend this same Workflow. They are not silently activated by installing the branding package.
+tools and sessions are separate. The Lead may inspect source and request a scoped correction, not issue a formal
+review verdict. The application freezes source, performs authorized restricted checks and prepares the implementation
+commit. Engineer submits an exact-commit handoff with independently collected required results and evidence. PHP
+validates it and transitions to Awaiting review. Senior Engineer, QA and Release Manager later extend this same Workflow. They are not silently activated by installing the branding package.
 
 ## Provisioner and model broker handoff
 
-Implement these capabilities through the existing PHP ownership boundaries, after TASK-00138 settles enrollment
-contracts and required external-profile qualification. The synthetic Pi fixture establishes transport feasibility;
-it supplies no production grant, authenticated operator or recoverable Runner. Capability names below describe cohesive
+Implement these capabilities through the existing PHP ownership boundaries, after TASK-00138 settles the amended
+authority/file/message/check contracts and minimum mechanism qualification. The historical synthetic Pi fixture
+establishes transport feasibility; it supplies no production grant, authenticated operator or recoverable Runner. Capability names below describe cohesive
 contracts, not a requirement to introduce speculative classes before their use cases.
 
 | Capability | Trusted input | Result and uncertainty handling |
 |---|---|---|
 | TaskEligibility | Enrolled operator, selected TASK/dependency/context revisions and requested grant | An immutable eligible snapshot or a specific denial; revalidate when claiming, never accept client-authored eligibility. |
-| SandboxProvisioner | Persisted effect ID, Workflow/role ownership, exact source OID and server-selected immutable profile | Observed runtime identity and resource inventory. After timeout, reconcile the original effect; never blindly create a second VM. |
-| SandboxReadiness | Persisted ownership and observed VM, source, services, network, credentials and limits | Evidence bound to profile and attempt generation, or an actionable failure. VM start alone does not mean database, broker or source readiness. |
+| SandboxProvisioner | Persisted effect ID, Workflow/role ownership, exact source and server-selected file/check profile | Observed workspace, tool/runtime and check-resource identities. After timeout, reconcile the original effect; never blindly create another resource. |
+| SandboxReadiness | Persisted ownership and observed file grants, runtime, source, services, network, credentials and limits | Separate file/handoff and check readiness bound to profile/attempt, or an actionable failure. A directory/container name alone proves neither. |
 | AgentLauncher | Current fenced attempt, verified readiness, pinned Harness/Pi inputs and bounded role grant | Process/session identity persisted before accepting progress. Unknown liveness requires reconciliation; worker reports cannot establish their own authority. |
 | ModelRequestAuthorizer | Broker-authenticated launch binding, current Workflow/Agent/profile/PiSession/attempt and requested operation | One permitted request with provider/model/reasoning/budget limits, or denial before upstream dispatch. Public placeholders and worker-supplied account/role headers are never authority. |
 
@@ -91,8 +92,9 @@ credentials or another model/provider is permitted when scoped readiness fails.
 
 The inspected Pi 0.87.1 native Codex path expects OAuth-shaped storage and parses an account claim before sending
 a request. Its successful fixture used a synthetic record and explicit SSE, not actual OAuth or refresh.
-Production must qualify a broker-managed credential adapter and renewal protocol that never stores real tokens
-inside the worker; it must not turn the fixture's artificial expiry into a long-lived authorization mechanism.
+That VM transport remains historical. The current profile must qualify protected controller authentication and
+renewal outside Agent file grants and check execution; it need not reproduce VM placeholder substitution or turn
+the fixture's artificial expiry into a long-lived authorization mechanism.
 See the [measured credential result](DOCKER_SANDBOX_QUALIFICATION.md#pi-transport-and-credential-substitution-result)
 before choosing the adapter. Host authentication readiness and worker grant readiness are separate checks.
 
@@ -101,6 +103,10 @@ TASK-00141. Direct infrastructure probes remain qualification evidence; do not t
 into a second production runner or add tests that merely inspect their configuration text.
 
 ## Historical restricted-container candidate and measured evidence
+
+The rest of this document preserves September observations and recommendations under their original profiles.
+They are not current requirements where superseded by [tool-mediated execution](TOOL_MEDIATED_EXECUTION.md).
+No old result is promoted to qualification of the newly composed file/check runtime.
 
 On 2026-09-26, Docker Desktop on linux/aarch64 reported built-in seccomp and cgroup namespaces, but did not report
 rootless mode. A bounded experiment created two concurrent fixture environments, each with a separate source
@@ -126,6 +132,9 @@ the Agent must not receive installation provider credentials or unrestricted hos
 and qualification are required before accepting the profile.
 
 ## Remaining launch blockers
+
+Historical September VM-profile blockers. Current R1–R3 disposition and TASK exits are defined in
+[the amended contract](TOOL_MEDIATED_EXECUTION.md#task-ownership-and-review-trace).
 
 1. Accept and enforce the complete storage profile. The Docker Sandboxes follow-up below observed bounded
    VM-local disks and successful reclamation; configurable workspace limits and aggregate host storage remain

@@ -1,7 +1,12 @@
 # TASK-00138 R2/R3 qualification follow-up
 
-Started: 2026-09-27; continued 2026-09-28 UTC. Status: partial qualification; R2/R3 remain open.
-This is implementation evidence, not an independent review verdict. No autonomous Agent, real credential, provider request or TASK-00139 work occurred.
+Historical September 27–28 qualification: partial; R2/R3 remain open. This is builder evidence, not an independent
+verdict. No autonomous Agent, real credential, provider request or TASK-00139 work occurred in these dated probes.
+
+The October 6 [tool-mediated amendment](TOOL_MEDIATED_EXECUTION.md) replaces the first root-VM strategy and remaps
+R2/R3 without closing them. The remaining-work tables and next-VM-probe directions below are retained historical
+requirements, not instructions to resume that strategy. The later explicitly approved file-only two-session
+prototype has separate evidence in the current contract; its live provider use is not retroactive September proof.
 
 ## Baseline and scope
 

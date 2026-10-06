@@ -1,8 +1,10 @@
 # Terminal execution authority handoff
 
 Contract design for [TASK-00138](../../planning/tasks/00138-TASK.md), consumed by the
-[terminal execution lifecycle](TERMINAL_EXECUTION.md). This is not an enrollment, a permission grant, a working
-broker or permission to start TASK-00139. The qualification decision remains **not launchable**.
+[terminal execution lifecycle](TERMINAL_EXECUTION.md). The October 6
+[tool-mediated strategy](TOOL_MEDIATED_EXECUTION.md) now owns the selected profile and R1–R3 remapping. This is not
+an enrollment, a permission grant, a working broker or permission to start TASK-00139. **Production remains not
+launchable**; the explicitly approved file-only prototype is scoped evidence, not an exception for real TASK execution.
 
 ## Operator enrollment and package ownership
 
@@ -36,12 +38,15 @@ it is not itself evidence that the caller may provision. Owned enrollment policy
 before calling it. Do not wrap its internally transactional operation in another Unit of Work. Persist a recoverable
 enrollment intent, reconcile the resulting package identity, and keep incomplete enrollment disabled.
 
-Agent HMAC secrets stay in the protected broker, not a Pi VM. That broker signs only typed, permitted application
-operations after binding the request to the launched role/attempt; it is not an arbitrary-signature service. Package
+Agent HMAC secrets stay in trusted protected infrastructure, not Agent-readable files or candidate-check containers.
+That broker signs only typed, permitted application operations after binding the request to the launched role/attempt; it is not an arbitrary-signature service. Package
 nonce consumption/revision validation remains mandatory. Agent persistence, nonce storage and these adapters are
 still missing; do not fabricate a local principal or replace package authentication to skip them.
 
 ### Enrollment qualification findings
+
+Historical package inspection; recheck released contracts at adoption. These results retain their original date
+and do not assert the current upstream implementation is unchanged.
 
 Read-only tracing on 2026-09-27 used locked Access Control v0.3.0 (`22ffab6452b2278b82df9b147e8949630b97355f`)
 and Common v1.2.0 (`a2cd615d9b5064c9c30e994655536176249cd73b`), not live operator credentials:
@@ -73,6 +78,10 @@ store and concurrent revocation. These are future owned behavior/integration che
 No User, Agent, grant or provider credential was created by this inspection.
 
 ### R1 upstream operation-recovery dependency
+
+The following is the retained September proposal history. The current dependency is the required recoverable
+public capability plus consumer qualification, not this proposal's unreleased API or a guessed package version.
+The tool-mediated strategy does not waive operator authentication, permission/sink integration or source authority.
 
 On 2026-09-27 John approved preparing a separately scoped upstream contract before implementation. The
 [Agent operation-recovery proposal](ACCESS_CONTROL_AGENT_OPERATIONS_PROPOSAL.md) records the current upstream
@@ -136,7 +145,7 @@ must be revalidated/fenced within it without nesting package transactions.
 |---|---|---|
 | Start coordinated work | Current operator/enrollment; command ID and canonical request digest; confirmed eligibility/grant; qualified server-selected profile | In one shared PostgreSQL transaction: Workflow initial event, immutable grant/snapshot references, exclusive repository/TASK claim, command result and dispatch intent. Same actor/command/digest returns the same Workflow; different digest is an idempotency conflict. |
 | Inspect execution | Current actor and repository/Workflow read authorization | Authoritative status, phase, owner, attempt generation, remaining limits, readiness/checkpoint age, wait reason and permitted recovery choices. No state mutation. |
-| Reconcile preparation | Runner identity, committed effect ID, expected Workflow revision and current lease/fence | Observe/reuse only the exact owned resources/profile. Record verified effects or Needs Human; never create a replacement while an earlier effect is ambiguous. |
+| Reconcile preparation | Runner identity, committed effect ID, expected Workflow revision and current lease/fence | Observe/reuse only exact owned workspace/tool/check resources. Record distinct file/check readiness or Needs Human; never create a replacement while an earlier effect is ambiguous. |
 | Pause / cancel | Authorized actor, expected revision, reason, exact Workflow | Revoke new broker admission and persist stop intent. Pause retains claim/resources. Cancellation becomes terminal and releases claim only after complete owned-workload quiescence is verified. |
 | Resume / takeover | Current authority, same Workflow, expected revision, checkpoint/profile/context and remaining budget | Advance fence, reconcile old effects/processes, then authorize at most one launch. Lease expiry alone neither releases the claim nor proves death. |
 | Submit implementation | Current Engineer role/attempt, expected revision, full base/head OIDs, immutable artifact manifest and check results | Validate subject, ancestry, completeness and required evidence. A report is input, not authority; the PHP-owned transition to Awaiting review requires the current authorized coordinator operation. No approval/publication follows. |
@@ -154,6 +163,14 @@ fails closed. An unsupported profile rejects start without dispatch; temporary R
 qualified start queued. Neither case permits unsandboxed work.
 
 ## Provisioner and role isolation
+
+**Current profile:** the [tool-mediated contract](TOOL_MEDIATED_EXECUTION.md#role-and-file-contract) defines two
+Engineer write locations, TASK-only Review/QA reads, protected tool loading, separate role grants and a trusted
+controller. The provisioner resolves file roots and restricted-check profiles server-side; no Agent receives
+shell, Docker/VM administration or arbitrary execution parameters. Shared Git metadata remains outside Agent
+file access and check-container mounts. The actual composed capabilities, credentials and limits must be qualified.
+
+The following September VM-specific design is retained as history, **superseded for the first execution slice**:
 
 The installation-owned provisioner alone holds host sandbox/engine authority. Its input is a persisted effect ID,
 Workflow/role owner, generation, approved source digest and profile ID. It resolves limits, images, paths and network
@@ -176,6 +193,14 @@ check receipts and acceptance remain outside the Engineer boundary under the app
 Worker check output is untrusted evidence until the appropriate independent phase validates it.
 
 ## Broker authority and cancellation
+
+For the current tool-mediated profile, authenticate the controller's bound Workflow/role/attempt on every protected
+request. Keep provider and HMAC material outside both roles' file grants and candidate execution. Scope provider,
+model, usage and cancellation in trusted infrastructure; no model-supplied URL, identity or global fallback. The
+prototype used the existing Pi login in the controller, which does not implement managed enrollment/broker authority.
+
+The VM-placeholder paragraphs below are historical transport-specific requirements, not a requirement to recreate
+VM secret substitution. Their live authorization, budget, revocation and bounded-stream principles still apply.
 
 Public Pi placeholders are compatibility input, never credentials. The host proxy/broker must authenticate an
 unforgeable launch binding established by the provisioner, not worker-supplied Workflow/role/account headers. Any
@@ -204,6 +229,14 @@ own stream explicitly; this is not measured production cancellation. VM-scoped c
 placeholders from two VMs, but durable role/attempt/Agent authorization and real-provider renewal remain unqualified.
 
 ## Git and resource admission
+
+Current Git/check ownership and admission are defined by
+[the tool-mediated contract](TOOL_MEDIATED_EXECUTION.md#git-messages-and-recovery). The trusted application may
+manage linked worktrees while denying Agent access to Git administration; it freezes snapshots, controls check
+selection/containers and prepares constrained commits. Resource accounting must cover the actual retained
+workspaces, check services/output and controller/provider surface, not the retired profile's fixed VM disk sizes.
+
+The following private-VM Git export and host-VM reservation design is historical, superseded for this first profile:
 
 Keep one private Git store per Workflow, seeded from approved immutable objects. Export one named handoff ref plus
 exact base/head and byte digest. The trusted importer first enforces regular-file containment and byte limits, then
@@ -245,9 +278,9 @@ cannot prove it. No process/fork bomb or host-capacity exhaustion is authorized 
 
 ## Required closeout
 
-The [qualification decision table](DOCKER_SANDBOX_QUALIFICATION.md#qualification-closeout) is the authoritative
-summary of observed versus missing proof for this TASK. The Engineer-controlled VM choice is approved, but before
-implementation begins resolve enrollment/catalog/secret-store integration and controlled Markdown publication. Before any
-live launch, also qualify real-provider host-only OAuth/renewal/cancellation, complete resource accounting, denied
-network/provisioning paths and the production PHP lifecycle. Native Linux is unqualified and must be unavailable;
-this local macOS evaluation cannot certify it. No product tests or PHP startup implementation were added here.
+The [current TASK ownership and review trace](TOOL_MEDIATED_EXECUTION.md#task-ownership-and-review-trace) governs
+closeout. TASK-00138 settles authority/file/message/check contracts and qualifies minimum mechanisms; TASK-00139–00142
+own production composition and its verification. Required capability readiness gates activation, and incomplete
+checks cannot advance Awaiting review. The old VM decision table remains historical, not this profile's checklist.
+No prototype, strategy amendment or repository gate implements enrollment, durable recovery, protected check
+results or supported-platform certification. Independently review the amended criteria; R1–R3 remain open.

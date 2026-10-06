@@ -140,7 +140,7 @@
 | [TASK-00135](00135-TASK.md) | Reconcile execution planning and add priority Pi skills | done | — |
 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | done | — |
 | [TASK-00137](00137-TASK.md) | Package and install the Fight Pi terminal identity | done | [TICKET-00035](../tickets/00035-TICKET.md) |
-| [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | in-progress | [TICKET-00032](../tickets/00032-TICKET.md) |
+| [TASK-00138](00138-TASK.md) | Define and qualify tool-mediated execution boundaries | in-progress | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |

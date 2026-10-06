@@ -1,8 +1,10 @@
 # Docker Sandboxes qualification
 
-Candidate evaluation for [TASK-00138](../../planning/tasks/00138-TASK.md), following the
-[terminal execution contract](TERMINAL_EXECUTION.md). This document guides the provisioner implementation and
-its direct tooling qualification. It does not authorize live Agent execution or declare a supported profile.
+Historical candidate evaluation for [TASK-00138](../../planning/tasks/00138-TASK.md). The October 6
+[tool-mediated amendment](TOOL_MEDIATED_EXECUTION.md) supersedes this Engineer-root VM profile for the first slice.
+All requirements, decisions and no-launch statements below retain their original September scope. This document
+preserves observations/failures; it is not the current implementation checklist, a claim that the old profile passed,
+or qualification of the new file/check capabilities.
 
 ## Approved boundary, qualification pending
 

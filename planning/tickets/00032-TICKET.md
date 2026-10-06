@@ -9,97 +9,100 @@ status: ready-for-agent
 
 ## Problem statement
 
-John needs the Agent to work autonomously inside a verified local boundary without risking human checkouts,
-parallel TASKs or installation secrets. A separate worktree or Compose project name alone is insufficient.
+John needs useful autonomous delegation and code editing without giving the Engineer general host execution
+powers or requiring a human click for each permitted operation. Worktrees and separate conversations alone do
+not restrict files or establish safe execution of candidate code.
 
 ## Solution and boundaries
 
-Deterministic PHP owns the following recoverable sequence; Agents never generate its host-privileged commands.
-The approved Engineer profile uses a dedicated, mountless VM; the entire guest is Engineer-controlled:
+The [October 6 tool-mediated strategy](../../docs/engineering/TOOL_MEDIATED_EXECUTION.md) supersedes the earlier
+Engineer-root/private-engine VM profile for this slice. Deterministic PHP owns authorization, filesystem/Git
+capabilities, effect recovery and check execution. Team Lead delegates; Engineer reads/edits only assigned code
+and scratch, exchanges bounded notes, and reads its TASK's canonical Review/QA reports without write permission.
+Neither Agent receives bash, sudo, Docker administration, arbitrary network/command tools or mutable tool loading.
 
-1. Authorize the TASK revision, grant, dependencies and Runner capabilities; atomically claim and persist dispatch.
-2. Resolve an exact base commit, create an owned branch/worktree under an approved root and persist identity.
-3. Ask a constrained installation-owned provisioner for a role-specific VM, external limits/network policy and
-   approved immutable inputs. Engineer-owned application/database/cache containers and private volumes live inside
-   its VM; its private engine cannot provision host or sibling resources.
-4. Verify actual ownership, mounts, filesystem/process/network boundaries, service endpoints, credentials and
-   resource limits. Persist the effective isolation profile and results before marking the environment ready.
-5. Launch the authorized Pi role with immutable context/Harness versions and container-native build/test commands.
-6. Reconcile interrupted provisioning and attempts; pause preserves state; retire only owned resources after
-   authorized cancellation/publication policy and proved quiescence. Never delete failed evidence silently.
+1. Authorize the TASK revision, grant, dependencies and required capabilities; atomically claim and persist dispatch.
+2. Resolve an exact base, create an owned branch/worktree, register contained role-specific code/notes roots and
+   protect shared Git administration. Do not repurpose a human checkout or expose sibling metadata.
+3. Prepare pinned trusted Pi/tool infrastructure with separate role identities, conversations, file grants,
+   provider bindings and budgets. Models do not select host paths, credentials, container policy or new tools.
+4. Establish file/handoff readiness independently of check readiness. Missing test execution permits only honest
+   checkpoints, never a claim of green checks, TASK completion or the production Awaiting review handoff.
+5. For an authorized check request, freeze the exact source snapshot and use the installation-owned restricted
+   container profile/private services. Keep candidate code, credentials, controller state and canonical Git apart.
+   Collect protected results, prepare the constrained implementation commit and validate the current handoff.
+6. Reconcile interrupted effects and attempts. Pause preserves state; cancellation proves quiescence; retirement
+   touches only owned resources under explicit retention policy. Never silently delete failed evidence.
 
-Use proven VM mechanisms before custom enforcement. PHP owns policy and lifecycle adapters, not a new kernel
-sandbox. Qualify macOS/ARM64 locally and native Linux separately; unsupported hosts/profiles remain unavailable
-with no unsandboxed fallback. A VM boundary is not a claim of resistance to every hostile workload or hypervisor bug.
+The complete MCP suite is not a gate for this sequence. Narrow capabilities can be integrated directly first;
+MCP later exposes the same application authorization. The Team Lead may automatically request a fixed test
+operation within an approved grant, but cannot run arbitrary commands or declare code safe to execute because it
+read the diff. Formal independent review/QA/publication remain separate from coordination and correction.
 
-The Engineer may use sudo/root, writable guest runtime and its private Docker engine, including privileged guest
-containers. Guest users, cgroups, mounts, Docker policy and checks are not trusted boundaries against the Engineer.
-No installation Docker socket/engine credentials, host home, human checkout/Git administration, sibling VM/worktree,
-installation database or broad host network is available. The host provisioner accepts only server-selected immutable
-VM profiles and canonical contained transfer paths; it rejects arbitrary host mounts/images/privilege flags, symlink
-escapes and worktree-authored host policy. Repository Compose/Dockerfile edits may affect the private guest only.
+Use explicitly approved roots for isolated source/local scratch and the Engineer's per-spoke shared notes in the
+main worktree. Main source, Lead state, assignments, controller receipts, other TASKs, credential files and Git
+administration are not Engineer-writable. Only the assigned TASK's canonical Review/QA directories are additionally
+readable. Links in notes or reports do not expand access. Deny traversal, escaping links, unsafe file types,
+excess content, stale revisions/generations and runtime-loading changes through the actual capability boundary.
 
-Keep provider/source-host/storage and Agent HMAC credentials in the external protected broker. Only short-lived,
-VM-local test-service credentials may enter the guest. Bind broker capabilities to the actual VM/Workflow/role/attempt,
-not guest-reported identity. Enforce default-deny egress and
-explicit package traffic policy outside the guest. CPU, memory, disk/aggregate host storage, I/O/output and host-side
-process/service limits must be externally enforced and accounted for; guest PID limits cannot protect host authority.
-Do not require a guest PID ceiling that guest root can remove or present it as isolation evidence. Bound the VM and
-its host control-plane impact instead. No mutable cache crosses role/Workflow boundaries without explicit policy.
+Check containers execute untrusted candidate code. Qualify fixed images/entrypoints, independently selected checks,
+CPU/memory/PID/time/storage/output/egress bounds, private databases/caches, retained-resource accounting and
+ownership-checked stop/recovery. No host socket, privileged mode, home/credential mounts or canonical Git metadata.
+Containers share their host kernel; this is not hostile multi-tenant isolation or protection from trusted-controller
+compromise. Unsupported check profiles fail closed; no host-shell fallback or Agent-editable check authority.
 
-Team Lead and independent reviewer run in separate trust boundaries with separate broker bindings; neither
-credentials nor authoritative evidence reside in the Engineer VM. Worker-generated checks, Git objects and reports
-remain untrusted until independently validated. Pinned bootstrap/Harness digests identify supplied inputs, not
-continuous guest integrity; root can modify them, so policy must not depend on an untampered Pi process.
-
-Keep one private Git store and worktree inside the Engineer VM. Trusted PHP seeds the approved base and validates
-bounded exports in quarantine before any canonical ref publication. No shared canonical Git administration or
-sibling metadata enters the VM. Exact ancestry/ref checks do not establish that exported content is safe to execute.
-
-Persist intent → idempotent effect → observed result → authoritative completion for each step. Resource names and
-labels derive from persisted Workflow/sandbox identities. Retried dispatch reconciles actual resources and verifies
-ownership/profile before reuse. Fence stale consumers, serialize short Git administration and never launch a second
-agent while the first may remain active. A worktree without containers is partial preparation, not running work.
+Provider and Agent HMAC credentials stay in trusted infrastructure outside Agent file grants and candidate execution.
+Bind every tool/provider operation to current Workflow, role, attempt and permissions, with bounded usage and
+cancellation. Preserve package-owned enrollment/recovery, durable intent, source-publication coordination and
+independent receipt authority. A prompt, copied role name, note or exit code alone grants nothing.
 
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Start approved work | Start coordinated work; prepare isolated execution | Eligibility, grant, capabilities, resource inventory | Preparation requested/verified or failed | Claimed TASK, owned worktree and sandbox, then one bounded process |
-| Resume interrupted preparation | Reconcile isolated execution | Persisted intents, resource/process ownership, checkpoints | Reconciliation/continuation recorded | Reuse verified resources or pause uncertainty |
-| Pause/cancel/retire | Existing explicit lifecycle operations | Quiescence, ownership, retention | Paused/cancelled/retired facts | Stop owned processes; preserve or remove only authorized resources |
+| Start approved work | Start coordinated work; prepare scoped workspace | Eligibility, grant, file/check capabilities | Preparation requested/verified or failed | Claimed TASK, owned worktree/notes and scoped role processes |
+| Delegate and revise | Assign bounded SUBTASK; submit handoff | Current assignment, exact source snapshot, role notes | Authorized phase facts after validation | Scoped source/notes changes, fenced handoff and controlled correction |
+| Run permitted checks | Request approved project checks | Check readiness, subject and protected results | Check requested/completed or failed | Restricted disposable execution, bounded logs/services and receipts |
+| Resume interrupted preparation | Reconcile owned execution | Persisted intents, resource/process ownership, checkpoints | Reconciliation/continuation recorded | Reuse verified resources or pause uncertainty |
+| Pause/cancel/retire | Explicit lifecycle operations | Quiescence, ownership, retention | Paused/cancelled/retired facts | Stop owned processes; preserve or remove only authorized resources |
 
-Names above describe semantic operations; exact PHP classes and storage schemas belong to TASK decomposition.
+Names describe semantic operations; exact PHP classes and schemas belong to implementation, not speculative scaffolding.
 
 ## Validation and permissions
 
-Domain owns grants, claim/transition invariants and resource ownership. Application coordinates typed capabilities;
-Adapter implements Git, processes and the constrained provisioner. Persist redacted evidence. Preparation and
-host cleanup are not model tools granting arbitrary host container/VM access. Engineer private-engine access is
-confined to its VM. This TICKET does not itself authorize live provisioning or autonomous execution.
+Domain owns grants, claims, transitions and resource ownership. Application coordinates typed capabilities;
+Adapter implements filesystem, Git, processes, check containers and Pi integration. All protected entry paths
+share application policy regardless of MCP exposure. Record redacted evidence; source snapshots and permission
+checks must survive correction, retries and takeover without stale writes or stale check-result acceptance.
+
+This TICKET does not authorize a production launch or claim that the prototype implements managed identities.
+The explicitly approved disposable experiment is limited evidence, not a second production Runner.
 
 ## Acceptance and evidence
 
-- Two concurrent TASKs cannot change each other's source, database, cache, temporary files or artifacts.
-- Qualify from guest root and privileged private-engine containers: host/sibling filesystem and network isolation,
-  credential/broker exposure, external policy bypass and forbidden host provisioning. Private-engine access itself
-  is permitted. Use owning tools in disposable environments, not configuration-text product tests.
-- Prove externally imposed VM/resource ceilings, aggregate host admission/accounting and bounded control-plane,
-  cache/log/export growth. Guest settings or resource reports alone are insufficient.
-- Prove separate role/broker bindings and independently validate Engineer-generated results outside its VM.
-- Owned application tests prove authorization, idempotency, stale-owner fencing, state transitions and recovery.
-- Interrupt after claim, worktree creation, container creation, readiness, process spawn and completion; reconcile
-  each point without duplicate effects, lost claims or fabricated success.
-- Unsupported sandbox profiles and failed readiness prevent launch; cancellation proves complete workload stop.
-- Evidence identifies exact base/worktree, image/profile versions, mounts, service identities, limits and results.
-- Preserve the first real one-TASK production proof through Awaiting review; no disposable alternate runner path.
+- Scoped file tools permit assigned source/scratch/shared notes and TASK-only Review/QA reads; deny protected,
+  unrelated and cross-role access, unsafe paths/links and runtime configuration/tool-loading bypasses.
+- Separate role sessions exchange bounded assignments, questions and handoffs; Lead state and controller receipts
+  are not writable by Engineer. Exact source snapshots, generations and command identities reject stale delivery.
+- Two concurrent TASKs cannot change each other's source, notes, database, cache, temporary files or artifacts;
+  qualify actual file grants and restricted execution boundaries, not merely directory names or prompts.
+- Fixed check operations enforce current grants, source identity, resource/egress limits and protected collection.
+  Routine preauthorized testing is automatic; code review cannot substitute for containment or missing evidence.
+- Application tests prove authorization, idempotency, stale-owner fencing, state transitions and recovery. Owning
+  tools directly qualify file/process/container mechanisms; no product-suite tests of configuration or wrappers.
+- Interrupt after claim, worktree/notes creation, check-container creation, readiness, role spawn and handoff;
+  reconcile without duplicate effects, lost claims or fabricated success. Cancellation proves owned-workload stop.
+- Unsupported capabilities stay disabled; candidate checks unavailable means no complete implementation handoff.
+  Evidence binds exact source/base/head, role/attempt, runtime/check profile, required results and artifacts.
+- One real TASK reaches Awaiting review through the production path with all required checks; disposable notes,
+  scripted transport or a prototype's passing outcomes cannot satisfy this production proof.
 
 ## TASKs
 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00138](../tasks/00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | in-progress |
+| [TASK-00138](../tasks/00138-TASK.md) | Define and qualify tool-mediated execution boundaries | in-progress |
 | [TASK-00139](../tasks/00139-TASK.md) | Start and inspect an authorized TASK from the terminal | ready-for-agent |
 | [TASK-00140](../tasks/00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | ready-for-agent |
 | [TASK-00141](../tasks/00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | ready-for-agent |
@@ -108,18 +111,14 @@ confined to its VM. This TICKET does not itself authorize live provisioning or a
 
 ## Decisions and progress
 
-Approved amendment to WF-016/WF-023. John authorized terminal-first decomposition and implementation on 2026-09-26;
-TASK-00138–00142 now own the ordered path. Necessary authorization, durability and isolation stay mandatory. Primary evaluation references:
-[Docker security](https://docs.docker.com/engine/security/),
-[rootless mode](https://docs.docker.com/engine/security/rootless/), and
-[bubblewrap's policy responsibility](https://github.com/containers/bubblewrap#sandbox-security).
-These are candidates, not proof of this application's isolation.
+John authorized terminal-first decomposition on September 26 and Engineer-root/private-engine VM qualification
+on September 27. Those historical decisions and [VM findings](../../docs/engineering/DOCKER_SANDBOX_QUALIFICATION.md)
+remain intact. October 6 replaces that first-profile choice after unresolved host-enforcement limitations; it does
+not claim the old profile passed or erase missing authority/independent-evidence proof.
 
-The [Docker Sandboxes follow-up](../../docs/engineering/DOCKER_SANDBOX_QUALIFICATION.md) passed scoped two-VM
-storage and persistence checks. On 2026-09-27 John explicitly amended this contract to permit Engineer sudo/root
-and private Docker-engine access in its dedicated mountless VM, treating the entire VM as Engineer-controlled.
-This supersedes the former non-root/read-only/no-private-socket requirements for this profile only; host/sibling
-isolation, private Git, external broker/credential authority, externally enforced limits and separate role boundaries
-remain mandatory. Worker checks require independent validation. Approval of the boundary is not its qualification.
-Pinned Pi passed a synthetic Codex transport/substitution/revocation fixture. Real OAuth, refresh, account mapping,
-broker-enforced grants, enrollment and aggregate resource accounting remain unqualified; the fixture is not a Workflow.
+The approved file-only prototype demonstrated two live role conversations, notes, revision and frozen source
+identity without executing candidate code. Its evidence, limitations, R1–R3 remapping and exact ownership across
+TASK-00138–00142 are in the [current contract](../../docs/engineering/TOOL_MEDIATED_EXECUTION.md).
+The full suite of MCP tools is not required before the first safe capability, and the terminal path still does
+not depend on browser delivery or database Planning cutover. TASK-00138 remains incomplete; production start,
+recovery, check execution and delegation are not implemented or accepted by this amendment.

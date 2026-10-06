@@ -1,6 +1,6 @@
 # Foundation and capability inventory
 
-Snapshot: 2026-09-26 foundation inventory, with the sandbox boundary updated during TASK-00138 on 2026-09-27.
+Snapshot: 2026-09-26 foundation inventory, with the execution strategy amended during TASK-00138 on 2026-10-06.
 A completed component is not proof of an end-to-end journey. The [Roadmap](ROADMAP.md) owns sequence; the [Board](tasks/BOARD.md) owns
 executable priority. Historical gate receipts remain historical.
 
@@ -13,7 +13,7 @@ executable priority. Historical gate receipts remain historical.
 | Browser experience | Requirements/design exploration in planning | Production React application and complete browser Planning/observability remain planned |
 | Registered Planning | EPIC-00005 and TICKETs | Registered repository/checkout authority, verified import and database cutover remain planned; Markdown is authoritative now |
 | Managed Harness and SDLC team | EPIC-00006, team-template requirements; installable `harness/pi` terminal identity | Presentation does not imply managed Agent execution |
-| Isolated TASK execution | EPIC-00007, TICKET-00032 and TASK-00138 [local VM qualification](../docs/engineering/DOCKER_SANDBOX_QUALIFICATION.md); Engineer-root/private-engine boundary approved 2026-09-27 | Synthetic storage/Pi and two-VM scoped substitution checks observed; admitted streams survive secret removal. External isolation/limits, real-provider broker, enrollment recovery and host accounting remain unqualified; production PHP start/recovery is unimplemented |
+| Isolated TASK execution | October 6 [tool-mediated strategy](../docs/engineering/TOOL_MEDIATED_EXECUTION.md) replaces the first root-VM profile; bounded two-session file/notes/correction prototype demonstrated, no candidate execution | Production authorization, file/message capabilities, restricted checks/protected results, accounting and recovery remain unimplemented/unqualified; historical VM receipts do not certify the new profile |
 | Independent review, QA and delivery | Local review/land guidance; EPIC-00008 and TICKET-00033 | Managed review/QA/publication phases remain planned; release/deployment need separate runbooks and implementation |
 | Verification | Current `scripts/build.php`: Composer validation, planning validation, Deptrac and PHPUnit | This is not proof of 100% unit coverage or browser acceptance; report each lane and unavailable coverage honestly |
 
@@ -29,12 +29,13 @@ Awaiting review. The next slice adds Senior Engineer, QA Engineer and Release Ma
 for bounded research; Project Manager owns planning; Hotfix Engineer has a narrowly authorized emergency path.
 See [Team roles](../docs/engineering/TEAM.md).
 
-The Runner is deterministic PHP infrastructure. It prepares private worktrees and role-isolated VM environments
-through a constrained provisioner and verifies isolation before any Agent starts. The Engineer may control its
-whole mountless VM as root with a private Docker engine; host/sibling isolation, credentials/broker authority,
-resource limits and independent verification stay external. A prompt, Compose project name or separate directory
-alone is not a security boundary. Qualify the configured policy on supported hosts; report residual risks without
-promising zero blast radius.
+The Runner remains deterministic PHP infrastructure. The selected first profile gives Engineer scoped source/
+scratch writes and TASK-only Review/QA reads, with no shell/private engine. Trusted infrastructure owns Git,
+permissions, provider access and fixed restricted-container check operations; the Team Lead may request routine
+checks automatically within a preapproved grant. File/handoff readiness is separate from candidate-check readiness.
+The disposable two-session prototype is partial tool/context evidence, not production authorization or OS isolation.
+A prompt, worktree or Compose name alone is not a security boundary. Qualify actual capabilities and preserve
+independent results, limits and recovery rather than promising zero blast radius.
 
 ## Working material and authority
 
