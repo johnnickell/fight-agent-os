@@ -81,6 +81,12 @@ source stability and hashes of final owning-tool summaries. A failed or interrup
 retain failed evidence rather than accepting a previous report. Abrupt termination/engine loss cannot guarantee
 cleanup: reconcile remaining processes before retry, then the guarded phase resets its own test state.
 
+The build report parent and each new run directory use `0755`; only their selected top-level JSON snapshots,
+receipt and phase logs use `0644`, independent of the writer's umask. This lets a non-root Linux host collect
+success/failure evidence from the root-running web service. Tool `home/` stays private (`0700`); no recursive
+permission change or upload includes it or unrelated scratch. Existing historical run permissions are unchanged.
+These diagnostics must remain free of secrets; host readability is not permission to publish arbitrary logs.
+
 Coverage/count/exclusion details remain in `.runs/backend-coverage/` and `.runs/client/coverage/`. Production check
 assets remain in `.runs/client/production/`, never replacing live `public/build/`; catalog output and captures stay
 under `.runs/client/`. Ignored reports/caches are intentionally retained for review, not automatically archived.

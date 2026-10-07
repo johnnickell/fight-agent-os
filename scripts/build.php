@@ -9,8 +9,12 @@ require dirname(__DIR__).'/vendor/autoload.php';
 
 $root = dirname(__DIR__);
 $directory = $root.'/.runs/build';
-if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
+if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
     throw new RuntimeException('Cannot create the ignored build report directory.');
+}
+// Host CI consumes only top-level JSON/log evidence, never the private tool HOME.
+if (!chmod($directory, 0755)) {
+    throw new RuntimeException('Cannot make the build report directory traversable by its host consumer.');
 }
 $lock = fopen($directory.'/gate.lock', 'c');
 if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
@@ -18,9 +22,19 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
     exit(1);
 }
 $run = $directory.'/'.gmdate('Ymd\THis\Z').'-'.getmypid();
-if (!mkdir($run, 0700) || !mkdir($run.'/home', 0700)) {
+if (!mkdir($run, 0755) || !chmod($run, 0755) || !mkdir($run.'/home', 0700)) {
     throw new RuntimeException('Cannot create the build execution directory.');
 }
+
+/**
+ * Writes selected host-readable evidence independently of the writer's umask
+ */
+$writeEvidence = static function (string $path, array $data): void {
+    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)."\n";
+    if (file_put_contents($path, $json) === false || !chmod($path, 0644)) {
+        throw new RuntimeException('Cannot retain host-readable build evidence.');
+    }
+};
 $started = microtime(true);
 $receipt = [
     'schema_version' => 1,
@@ -50,9 +64,14 @@ $execute = static function (
     $run
 ): int {
     fwrite(STDOUT, sprintf("\n==> %s\n", $name));
-    $log = fopen($run.'/'.sprintf('%02d', count($receipt['phases']) + 1).'.log', 'w');
+    $path = $run.'/'.sprintf('%02d', count($receipt['phases']) + 1).'.log';
+    $log = fopen($path, 'w');
     if ($log === false) {
         throw new RuntimeException('Cannot open phase evidence.');
+    }
+    if (!chmod($path, 0644)) {
+        fclose($log);
+        throw new RuntimeException('Cannot make phase evidence readable by its host consumer.');
     }
     $environment += [
         'HOME'          => $run.'/home',
@@ -130,10 +149,7 @@ $exitCode = 1;
 $before = null;
 try {
     $before = $snapshot();
-    $json = json_encode($before, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)."\n";
-    if (file_put_contents($run.'/before.json', $json) === false) {
-        throw new RuntimeException('Cannot retain the starting source snapshot.');
-    }
+    $writeEvidence($run.'/before.json', $before);
     // The service must be rebuilt explicitly after tooling-image changes, never by this command.
     $imageSource = '/usr/local/share/fight-build/Dockerfile';
     $expectedImage = hash_file('sha256', $root.'/etc/docker/cli/Dockerfile');
@@ -228,10 +244,7 @@ try {
 } finally {
     try {
         $after = $snapshot();
-        $json = json_encode($after, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)."\n";
-        if (file_put_contents($run.'/after.json', $json) === false) {
-            throw new RuntimeException('Cannot retain the final source snapshot.');
-        }
+        $writeEvidence($run.'/after.json', $after);
         $receipt['source_unchanged'] = $before !== null && $before === $after;
         if (!$receipt['source_unchanged']) {
             fwrite(STDERR, "Build failed: source state changed or is unverified. No automatic restoration.\n");
@@ -239,10 +252,7 @@ try {
             $exitCode = 1;
         }
         $receipt['seconds'] = round(microtime(true) - $started, 3);
-        $json = json_encode($receipt, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)."\n";
-        if (file_put_contents($run.'/receipt.json', $json) === false) {
-            throw new RuntimeException('Cannot retain the build receipt.');
-        }
+        $writeEvidence($run.'/receipt.json', $receipt);
     } catch (Throwable) {
         fwrite(STDERR, "Build evidence is incomplete.\n");
         $exitCode = 1;
