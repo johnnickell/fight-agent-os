@@ -32,8 +32,13 @@ The CLI image includes Node 24.21.0/npm 11.19.0 from the same digest as `bin/cli
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
 at image setup, not downloaded at runtime. The PHP image is larger; the focused frontend wrapper retains its
 separate Node/browser environments and requires `./bin/client storybook-setup` before focused browser checks.
-No Docker CLI or daemon socket is added to PHP. Composer maintenance explicitly mounts source writable and runs
-as the calling host UID/GID. Set `FIGHT_AGENT_OS_USER` to that same `UID:GID` before clean setup so the web service
+No Docker CLI or daemon socket is added to PHP. `./bin/composer` explicitly runs the maintenance-profile
+`composer` service as the calling host UID/GID, reusing the project's explicitly built web image. It inherits
+web's root protection, dropped capabilities, resource limits and ignored cache mounts, but resolves `/app`
+as a writable bind mount and publishes no port.
+The profile excludes it from ordinary startup; only explicit maintenance may change source/dependencies.
+A command-line `--volume ...:/app:rw` is not a substitute: Compose can retain the inherited read-only flag.
+Set `FIGHT_AGENT_OS_USER` to that same `UID:GID` before clean setup so the web service
 can write host-owned ignored caches/reports on Linux without DAC-bypass capabilities. Keep this setting in the
 shell environment for subsequent Compose commands, including `./bin/build`; it is part of service identity.
 CI records it for both setup and later steps. Unset preserves the existing default-root service identity for

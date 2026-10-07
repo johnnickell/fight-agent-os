@@ -37,6 +37,20 @@ services:
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
 
+  # Explicit dependency maintenance inherits web limits, not its read-only source mount.
+  composer:
+    profiles: [maintenance]
+    extends:
+      service: web
+    image: ${COMPOSE_PROJECT_NAME:-fight-agent-os}-web
+    command: composer
+    ports: !reset []
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+        read_only: false
+
   https_php:
     profiles: [https]
     build:
