@@ -33,7 +33,7 @@
 | [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | done | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00029](00029-TASK.md) | Establish the production component catalog and state evidence | done | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00030](00030-TASK.md) | Complete PHP style and static analysis | done | [TICKET-00013](../tickets/00013-TICKET.md) |
-| [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
+| [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | in-progress | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00032](00032-TASK.md) | Enforce deterministic frontend quality checks | done | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00034](00034-TASK.md) | Explore the authentication and dashboard design language | ready-for-agent | [TICKET-00014](../tickets/00014-TICKET.md) |

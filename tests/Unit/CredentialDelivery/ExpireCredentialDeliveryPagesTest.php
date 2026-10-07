@@ -88,7 +88,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
      */
     public function testUnchangedWorkStopsWithoutBusySpin(): void
     {
-        $at = new DateTimeImmutable();
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
         $queries = $this->createMock(QueryBus::class);
         $queries->expects(self::exactly(2))->method('fetch')->willReturn([$this->item('activation', $at)]);
         $commands = $this->createMock(SynchronousCommandBus::class);
@@ -104,7 +104,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
      */
     public function testBudgetExhaustionIsNotAnEmptyQueue(): void
     {
-        $at = new DateTimeImmutable();
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
         $queries = $this->createMock(QueryBus::class);
         $queries->expects(self::exactly(2))->method('fetch')->willReturnOnConsecutiveCalls(
             [$this->item('activation', $at)],
@@ -127,7 +127,11 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
         $queries->expects(self::once())->method('fetch')->willReturn([]);
         $commands = $this->createMock(SynchronousCommandBus::class);
         $commands->expects(self::never())->method('execute');
-        $runner = new ExpireCredentialDeliveryPages($queries, $commands, $this->clock(new DateTimeImmutable()));
+        $runner = new ExpireCredentialDeliveryPages(
+            $queries,
+            $commands,
+            $this->clock(new DateTimeImmutable('2026-10-01T12:00:00Z'))
+        );
         self::assertSame(0, $runner->run()['dispatched']);
     }
 
@@ -136,7 +140,7 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
      */
     public function testFailurePropagatesBeforeAnotherDispatch(): void
     {
-        $at = new DateTimeImmutable();
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
         $queries = $this->createMock(QueryBus::class);
         $queries->expects(self::once())->method('fetch')->willReturn([
             $this->item('activation', $at), $this->item('password_reset', $at)
@@ -158,7 +162,11 @@ final class ExpireCredentialDeliveryPagesTest extends TestCase
         $commands = $this->createMock(SynchronousCommandBus::class);
         $commands->expects(self::never())->method('execute');
         $this->expectException(InvalidArgumentException::class);
-        $runner = new ExpireCredentialDeliveryPages($queries, $commands, $this->clock(new DateTimeImmutable()));
+        $runner = new ExpireCredentialDeliveryPages(
+            $queries,
+            $commands,
+            $this->clock(new DateTimeImmutable('2026-10-01T12:00:00Z'))
+        );
         $runner->run($size, $pages);
     }
 

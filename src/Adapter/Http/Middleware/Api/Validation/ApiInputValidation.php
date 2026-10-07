@@ -106,6 +106,8 @@ final readonly class ApiInputValidation implements MiddlewareInterface
 
         $allowed = [];
         $rules = [];
+        $parsed = [];
+        $validation = null;
         if ($declarations !== []) {
             try {
                 /** @var Validation $validation */
@@ -244,7 +246,7 @@ final readonly class ApiInputValidation implements MiddlewareInterface
         } catch (ValidationException $exception) {
             $public = [];
             foreach ($this->publicForms as $registration) {
-                if ($registration['action'] === $class && $registration['name'] === $validation->formName()) {
+                if ($registration['action'] === $class && $registration['name'] === $validation?->formName()) {
                     $public = SchemaProjection::project([$registration])[$registration['name']]['fields'];
                     break;
                 }

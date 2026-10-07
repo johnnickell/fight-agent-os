@@ -100,7 +100,11 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
         $queries->expects(self::never())->method('fetch');
         $commands = $this->createMock(CommandBus::class);
         $commands->expects(self::never())->method('execute');
-        $runner = new RecoverCredentialDeliveryPage($queries, $commands, $this->clock(new DateTimeImmutable()));
+        $runner = new RecoverCredentialDeliveryPage(
+            $queries,
+            $commands,
+            $this->clock(new DateTimeImmutable('2026-10-01T12:00:00Z'))
+        );
         $this->expectException(InvalidArgumentException::class);
         $runner->run($pageSize, $capacity);
     }
@@ -123,7 +127,7 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
      */
     public function testEmptyAndUnsupportedPages(): void
     {
-        $at = new DateTimeImmutable();
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
         $queries = $this->createMock(QueryBus::class);
         $queries->method('fetch')->willReturnOnConsecutiveCalls([], [$this->work('email_change', $at)]);
         $commands = $this->createMock(CommandBus::class);
@@ -148,7 +152,7 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
     #[DataProvider('contentions')]
     public function testContentionStopsPage(string $exception): void
     {
-        $at = new DateTimeImmutable();
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
         $queries = $this->createMock(QueryBus::class);
         $queries->method('fetch')->willReturn([$this->work('activation', $at), $this->work('password_reset', $at)]);
         $commands = $this->createMock(CommandBus::class);
@@ -181,7 +185,7 @@ final class RecoverCredentialDeliveryPageTest extends TestCase
      */
     public function testUnexpectedFailureStopsDispatch(): void
     {
-        $at = new DateTimeImmutable();
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
         $queries = $this->createMock(QueryBus::class);
         $queries->method('fetch')->willReturn([$this->work('activation', $at), $this->work('password_reset', $at)]);
         $commands = $this->createMock(CommandBus::class);

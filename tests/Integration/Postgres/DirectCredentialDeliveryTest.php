@@ -62,6 +62,8 @@ use PHPUnit\Framework\TestCase;
 final class DirectCredentialDeliveryTest extends TestCase
 {
     private Connection $connection;
+    /** @var list<Connection> */
+    private array $workerConnections = [];
     private Container $container;
     private UserId $userId;
     private DateTimeImmutable $now;
@@ -133,6 +135,20 @@ final class DirectCredentialDeliveryTest extends TestCase
                 return $this->time;
             }
         });
+    }
+
+    /**
+     * Releases owned database sessions even when container closures retain the fixture
+     */
+    protected function tearDown(): void
+    {
+        foreach ($this->workerConnections as $connection) {
+            $connection->close();
+        }
+        $this->workerConnections = [];
+        if (isset($this->connection)) {
+            $this->connection->close();
+        }
     }
 
     /**
@@ -1060,6 +1076,7 @@ SQL);
     private function freshWorker(CredentialDeliveryProvider $provider): Container
     {
         $connection = DriverManager::getConnection($this->connection->getParams());
+        $this->workerConnections[] = $connection;
         $worker = require dirname(__DIR__, 3).'/config/services.php';
         $worker->set(Connection::class, static fn(): Connection => $connection);
         $worker->set(Clock::class, fn(): Clock => $this->container->get(Clock::class));

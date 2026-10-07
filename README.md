@@ -49,7 +49,9 @@ The inherited root endpoint runs at http://localhost:18087. Build the browser fo
 `./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
 `/app`; see [client commands and boundaries](client/README.md).
 The current `./bin/build` gate remains additionally required; combined frontend-gate integration is deferred to
-TICKET-00013. Override the port with `FIGHT_AGENT_OS_PORT`.
+TICKET-00013. Backend coverage is available through `./bin/backend-tests`; see its
+[guarded lifecycle, reports and integration boundary](docs/engineering/BACKEND_TESTS.md). TASK-00033 will
+integrate that phase into the build without duplicate test executions. Override the port with `FIGHT_AGENT_OS_PORT`.
 Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTTPS origin and
 `APP_CSRF_MAC_KEY` as an independent, external hex-encoded 32-byte-or-stronger random key
 (e.g. generate with `openssl rand -hex 32`); do not commit either secret or use the JWT/HMAC signing key.
@@ -77,6 +79,7 @@ enable sending credentials or establish complete production recovery.
 ./bin/database status      # Inspect development migration status
 ./bin/database test-reset  # Guard, reset, and migrate only the dedicated test database
 ./bin/database test        # Run focused PostgreSQL repository tests
+./bin/backend-tests        # Reset guarded test DB, run all backend suites once with coverage
 ./bin/planning-check --write  # Refresh planning views
 ./bin/planning-check          # Validate planning
 ./bin/build                   # Complete gate in the running web service

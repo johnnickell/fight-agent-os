@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Functional\Http;
 
 use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
+use App\Application\Security\Csrf\Clock\CsrfClock;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Domain\Messaging\Query\Query;
 use Fight\Common\Domain\Messaging\Query\QueryMessage;
@@ -25,18 +26,19 @@ final class CsrfContractTest extends TestCase
     public function test_that_issuance_and_reuse_match_the_contract(): void
     {
         $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+        $clock = $this->createStub(CsrfClock::class);
+        $clock->method('now')->willReturn(1800000000);
+        $app->getContainer()?->set(CsrfClock::class, static fn(): CsrfClock => $clock);
         $request = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf')
             ->withHeader('Origin', 'https://agent-os.test')
             ->withHeader('Sec-Fetch-Site', 'same-origin');
-        $before = time();
         $response = $app->handle($request);
         ApiContract::assertBootstrap($response, 200);
         self::assertCount(1, $response->getHeader('Set-Cookie'));
         $cookie = explode(';', $response->getHeaderLine('Set-Cookie'))[0];
         $nonce = explode('=', $cookie, 2)[1];
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        self::assertGreaterThanOrEqual($before + 900, $body['data']['expires_at']);
-        self::assertLessThanOrEqual(time() + 900, $body['data']['expires_at']);
+        self::assertSame(1800000900, $body['data']['expires_at']);
         self::assertStringStartsWith($body['data']['expires_at'].'.', $body['data']['proof']);
         self::assertStringNotContainsString($nonce, (string) $response->getBody());
 

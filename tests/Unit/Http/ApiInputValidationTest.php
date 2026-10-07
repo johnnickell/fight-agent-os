@@ -207,6 +207,11 @@ final class ApiInputValidationTest extends TestCase
     public static function invalid_inputs(): iterable
     {
         yield 'unknown JSON' => [JsonInput::class, 'POST', '', '{"secret":"secret"}', 'body'];
+        yield 'malformed JSON' => [JsonInput::class, 'POST', '', '{', 'body'];
+        yield 'array root' => [JsonInput::class, 'POST', '', '[1]', 'body'];
+        yield 'escaped duplicate key' => [JsonInput::class, 'POST', '', '{"page":1,"\\u0070age":2}', 'body'];
+        yield 'spaced key' => [JsonInput::class, 'POST', '', '{"page" : "bad"}', 'body.page'];
+        yield 'escaped value' => [JsonInput::class, 'POST', '', '{"page":"a\\"b"}', 'body.page'];
         yield 'duplicate JSON' => [JsonInput::class, 'POST', '', '{"page":1,"page":2}', 'body'];
         yield 'wrong JSON type' => [JsonInput::class, 'POST', '', '{"page":"2"}', 'body.page'];
         yield 'missing JSON' => [JsonInput::class, 'POST', '', '{}', 'body.page'];
@@ -214,6 +219,11 @@ final class ApiInputValidationTest extends TestCase
         yield 'range JSON' => [JsonInput::class, 'POST', '', '{"page":0}', 'body.page'];
         yield 'container JSON' => [JsonInput::class, 'POST', '', '{"page":[1]}', 'body.page'];
         yield 'wrong source' => [JsonInput::class, 'POST', 'page=1', '{"page":1}', 'query'];
+        yield 'empty query' => [QueryInput::class, 'GET', '', '', 'query.page'];
+        yield 'empty query part' => [QueryInput::class, 'GET', 'page=1&', '', 'query'];
+        yield 'multiple equals' => [QueryInput::class, 'GET', 'page=1=2', '', 'query'];
+        yield 'NUL query value' => [QueryInput::class, 'GET', 'page=%00', '', 'query'];
+        yield 'invalid UTF8' => [QueryInput::class, 'GET', 'page=%FF', '', 'query'];
         yield 'duplicate query' => [QueryInput::class, 'GET', 'page=1&%70age=2', '', 'query'];
         yield 'encoded bracket' => [QueryInput::class, 'GET', 'page%5B0%5D=1', '', 'query'];
         yield 'invalid encoding' => [QueryInput::class, 'GET', 'page=%GG', '', 'query'];
@@ -233,6 +243,93 @@ final class ApiInputValidationTest extends TestCase
         yield 'too large JSON' => [
             JsonInput::class, 'POST', '', '{"page":1,"enabled":"'.str_repeat('x', 65536).'"}', 'body'
         ];
+    }
+
+    /**
+     * Rejects unsupported media types even when the bytes happen to be valid JSON
+     */
+    #[DataProvider('unsupportedMediaTypes')]
+    public function testUnsupportedMediaTypeCannotDispatch(string $type): void
+    {
+        $request = $this->request(JsonInput::class, 'POST')
+            ->withHeader('Content-Type', $type)
+            ->withBody((new StreamFactory())->createStream('{"page":1}'));
+        $next = $this->createMock(RequestHandlerInterface::class);
+        $next->expects(self::never())->method('handle');
+        $response = $this->validation()->process($request, $next);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertSame(
+            ['body' => ['Expected JSON content type.']],
+            json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)['data']['fields']
+        );
+    }
+
+    /**
+     * Supplies unsupported content types at the documented JSON boundary
+     *
+     * @return iterable<array{string}>
+     */
+    public static function unsupportedMediaTypes(): iterable
+    {
+        yield [''];
+        yield ['text/plain'];
+        yield ['application/json; charset=iso-8859-1'];
+        yield ['application/json, application/json'];
+    }
+
+    /**
+     * Requires JSON bytes even when a content type is supplied
+     */
+    public function testEmptyJsonBodyIsNotAnEmptyObject(): void
+    {
+        $request = $this->request(JsonInput::class, 'POST')->withHeader('Content-Type', 'application/json');
+        $next = $this->createMock(RequestHandlerInterface::class);
+        $next->expects(self::never())->method('handle');
+        $response = $this->validation()->process($request, $next);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertSame(
+            ['body' => ['Body is required.']],
+            json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)['data']['fields']
+        );
+    }
+
+    /**
+     * Bounds unknown-size streams before invoking an Action
+     */
+    public function testUnknownSizeBodyCannotBypassLimit(): void
+    {
+        $stream = $this->createMock(\Psr\Http\Message\StreamInterface::class);
+        $stream->method('getSize')->willReturn(null);
+        $stream->method('isSeekable')->willReturn(false);
+        $stream->method('eof')->willReturn(false);
+        $stream->expects(self::once())->method('read')->with(65537)->willReturn(str_repeat('x', 65537));
+        $request = $this->request(JsonInput::class, 'POST')->withBody($stream);
+        $next = $this->createMock(RequestHandlerInterface::class);
+        $next->expects(self::never())->method('handle');
+        $response = $this->validation()->process($request, $next);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertSame(
+            ['body' => ['Body is too large.']],
+            json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)['data']['fields']
+        );
+    }
+
+    /**
+     * Stops reading a temporarily empty stream rather than spinning indefinitely
+     */
+    public function testEmptyReadStopsAtTheTransportBoundary(): void
+    {
+        $stream = $this->createMock(\Psr\Http\Message\StreamInterface::class);
+        $stream->method('getSize')->willReturn(null);
+        $stream->method('eof')->willReturn(false);
+        $stream->expects(self::once())->method('read')->willReturn('');
+        $request = $this->request(JsonInput::class, 'POST')->withHeader('Content-Type', 'application/json')
+            ->withBody($stream);
+        $next = $this->createMock(RequestHandlerInterface::class);
+        $next->expects(self::never())->method('handle');
+        $response = $this->validation()->process($request, $next);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertStringContainsString('Body is required.', (string) $response->getBody());
     }
 
     /**
@@ -265,12 +362,12 @@ final class ApiInputValidationTest extends TestCase
     public function test_that_named_input_rejection_exposes_public_messages_and_sanitizes_private_rules(): void
     {
         $registrations = [[
-            'name' => 'sample_form',
+            'name'   => 'sample_form',
             'action' => PublishedInput::class,
             'fields' => [
                 'display_name' => [
                     'client_field' => 'displayName',
-                    'rules' => [['index' => 0, 'message' => 'Use two characters.']]
+                    'rules'        => [['index' => 0, 'message' => 'Use two characters.']]
                 ]
             ]
         ]];

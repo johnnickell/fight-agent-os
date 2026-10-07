@@ -97,6 +97,43 @@ final class GetCsrfProofHandlerTest extends TestCase
     }
 
     /**
+     * Propagates signing failure instead of returning an unsigned proof or replacing a valid nonce
+     */
+    public function testSigningFailureCannotProduceAView(): void
+    {
+        $nonce = str_repeat('a', 64);
+        $generator = $this->createMock(CsrfNonceGenerator::class);
+        $generator->expects(self::never())->method('generate');
+        $clock = $this->createStub(CsrfClock::class);
+        $clock->method('now')->willReturn(100);
+        $proofs = $this->createMock(CsrfProofs::class);
+        $proofs->expects(self::once())->method('sign')->with($nonce, 1000)
+            ->willThrowException(new \RuntimeException('Signer unavailable.'));
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Signer unavailable.');
+        (new GetCsrfProofHandler($generator, $clock, $proofs))->handle(
+            QueryMessage::create(new GetCsrfProof($nonce))
+        );
+    }
+
+    /**
+     * Stops before signing when nonce generation fails
+     */
+    public function testNonceFailureDoesNotIssueAProof(): void
+    {
+        $generator = $this->createMock(CsrfNonceGenerator::class);
+        $generator->expects(self::once())->method('generate')
+            ->willThrowException(new \RuntimeException('Entropy unavailable.'));
+        $clock = $this->createMock(CsrfClock::class);
+        $clock->expects(self::never())->method('now');
+        $proofs = $this->createMock(CsrfProofs::class);
+        $proofs->expects(self::never())->method('sign');
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Entropy unavailable.');
+        (new GetCsrfProofHandler($generator, $clock, $proofs))->handle(QueryMessage::create(new GetCsrfProof(null)));
+    }
+
+    /**
      * Provides deterministic collaborators to isolate query coordination
      */
     private function handler(int $now): GetCsrfProofHandler
