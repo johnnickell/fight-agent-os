@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v5
       - name: Explicit locked tooling and dependency setup
         run: |
+          export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
+          printf 'FIGHT_AGENT_OS_USER=%s\n' "$FIGHT_AGENT_OS_USER" >> "$GITHUB_ENV"
           docker compose build web
           ./bin/composer install --no-interaction --prefer-dist --no-progress
           ./bin/client setup

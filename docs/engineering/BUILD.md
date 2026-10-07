@@ -9,6 +9,7 @@ Docker Compose, locked Composer dependencies, the pinned frontend installation a
 already exist. Setup may contact registries; acceptance never installs, updates, audits, exports or formats:
 
 ```sh
+export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 docker compose build web
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/client setup
@@ -21,15 +22,25 @@ docker compose build web
 `./bin/up` prepares ignored cache mounts and builds/starts services explicitly. After changing only the CLI image
 or web service configuration, `docker compose build web` followed by `docker compose up -d --no-deps web` refreshes
 just that service, preserving the other services and development database. Never silently refresh a service inside
-acceptance. Missing/stale Compose configuration or tooling-image identity fails with an explicit setup instruction.
+acceptance. Before reinstalling frontend dependencies in an already-running project, stop only `web`
+(`docker compose stop web`), then run setup and `./bin/up`; npm ci replaces nested cache-mount directories.
+Do not replace dependencies beneath a live gate. Missing/stale Compose configuration or tooling-image identity
+fails with an explicit setup instruction.
 Export OpenAPI/validation metadata again after their source contracts change; checks only compare freshness.
 
 The CLI image includes Node 24.21.0/npm 11.19.0 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
 at image setup, not downloaded at runtime. The PHP image is larger; the focused frontend wrapper retains its
 separate Node/browser environments and requires `./bin/client storybook-setup` before focused browser checks.
-No Docker CLI or daemon socket is added to PHP. Composer maintenance explicitly mounts source writable; ordinary
-web execution mounts source, locks and dependencies read-only. Host-side edits remain visible during development.
+No Docker CLI or daemon socket is added to PHP. Composer maintenance explicitly mounts source writable and runs
+as the calling host UID/GID. Set `FIGHT_AGENT_OS_USER` to that same `UID:GID` before clean setup so the web service
+can write host-owned ignored caches/reports on Linux without DAC-bypass capabilities. Keep this setting in the
+shell environment for subsequent Compose commands, including `./bin/build`; it is part of service identity.
+CI records it for both setup and later steps. Unset preserves the existing default-root service identity for
+prepared environments; it does not make root-with-dropped-capabilities able to write another Linux user's
+`0755` directories. Do not switch identities over existing private/root-owned caches without explicitly
+reconciling their ownership; setup never recursively changes historical reports or permissions. Ordinary web
+execution still mounts source, locks and dependencies read-only. Host-side edits remain visible during development.
 
 ## One PHP-owned phase graph
 
@@ -52,6 +63,8 @@ Each mandatory command executes once; the orchestrator does not call focused wra
 The complete frontend policy/exclusions remain in [client guidance](../../client/README.md#focused-frontend-quality-gate).
 No percentage-only frontend threshold is invented. Backend Domain/Application line coverage requires 100%; Adapter
 coverage remains a practical target with counted gaps, not a hidden exclusion baseline or a claimed 100% result.
+Canonical and focused PHPStan use an explicit `512M` PHP memory allowance for cold-cache analysis; the web
+container retains its `2 GiB` memory ceiling. Analysis level, paths and exclusions are unchanged.
 
 The gate fails fast and propagates the failing exit status. It checks source stability on failure as well as success;
 missing snapshots/evidence or a source/index/status change fails without restoring or discarding anyone's work.
@@ -83,7 +96,8 @@ cleanup: reconcile remaining processes before retry, then the guarded phase rese
 
 The build report parent and each new run directory use `0755`; only their selected top-level JSON snapshots,
 receipt and phase logs use `0644`, independent of the writer's umask. This lets a non-root Linux host collect
-success/failure evidence from the root-running web service. Tool `home/` stays private (`0700`); no recursive
+success/failure evidence even from an existing root-running web service. With an explicit web UID/GID,
+new evidence is owned by that selected user. Tool `home/` stays private (`0700`); no recursive
 permission change or upload includes it or unrelated scratch. Existing historical run permissions are unchanged.
 These diagnostics must remain free of secrets; host readability is not permission to publish arbitrary logs.
 

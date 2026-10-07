@@ -40,6 +40,7 @@ enable managed TASK execution or sandbox access.
 Docker Compose is required. This is an application with committed Composer lockfiles:
 
 ```sh
+export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/up
 ./bin/database migrate

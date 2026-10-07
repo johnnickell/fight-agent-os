@@ -11,7 +11,7 @@ fi
 case "${1:-}" in
     syntax)   exec docker compose exec -T web php scripts/php_syntax.php ;;
     style)    exec docker compose exec -T web php vendor/bin/phpcs -s ;;
-    static)   exec docker compose exec -T web php vendor/bin/phpstan analyse --no-progress ;;
+    static)   exec docker compose exec -T web php vendor/bin/phpstan analyse --no-progress --memory-limit=512M ;;
     rector)   exec docker compose exec -T web php vendor/bin/rector process --dry-run --no-progress-bar ;;
     *)        echo 'Usage: ./bin/backend-analysis {syntax|style|static|rector}' >&2; exit 2 ;;
 esac

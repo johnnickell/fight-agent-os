@@ -2,7 +2,7 @@
 id: TICKET-00013
 epic: EPIC-00003
 title: Complete the owned-code quality gate
-status: done
+status: in-progress
 ---
 
 # Complete the owned-code quality gate
@@ -52,9 +52,13 @@ No runtime permission model applies. Tool configuration changes require approved
 | [TASK-00030](../tasks/00030-TASK.md) | Complete PHP style and static analysis | done |
 | [TASK-00031](../tasks/00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | done |
 | [TASK-00032](../tasks/00032-TASK.md) | Enforce deterministic frontend quality checks | done |
-| [TASK-00033](../tasks/00033-TASK.md) | Make bin build the complete read-only application gate | done |
+| [TASK-00033](../tasks/00033-TASK.md) | Make bin build the complete read-only application gate | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Reopened with TASK-00033 for confirmed LAND-01 clean Linux setup permissions and cold-cache static
+allocation repair. Historical prepared-environment acceptance is retained; new independent review and
+affected tooling/CLI QA are pending. Other completed children remain done.
 
 Implements the quality direction approved by [WF-003](../wayfinder/tickets/WF-003-qualify-dependency-baseline.md), [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md), and [WF-007](../wayfinder/tickets/WF-007-prepare-implementation-handoff.md). Tool adoption may begin after [TICKET-00007](00007-TICKET.md), but final thresholds and acceptance follow representative backend, persistence, HTTP, and frontend code from TICKET-00008 through TICKET-00012.

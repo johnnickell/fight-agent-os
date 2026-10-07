@@ -168,7 +168,7 @@ try {
         'Planning (read-only)'   => ['./bin/planning-check'],
         'PHP syntax/namespaces'  => ['php', 'scripts/php_syntax.php'],
         'PHP style'              => ['php', 'vendor/bin/phpcs', '-s'],
-        'PHP types'              => ['php', 'vendor/bin/phpstan', 'analyse', '--no-progress'],
+        'PHP types'              => ['php', 'vendor/bin/phpstan', 'analyse', '--no-progress', '--memory-limit=512M'],
         'PHP dependencies'       => [
             'php', 'vendor/bin/deptrac', 'analyse', '--config-file=deptrac.php', '--formatter=table',
             '--no-progress', '--report-uncovered', '--fail-on-uncovered'

@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: etc/docker/cli/Dockerfile
     command: php -S 0.0.0.0:8080 -t public scripts/serve.php
+    # Explicit setup selects the checkout owner; unset preserves existing service identity.
+    user: "${FIGHT_AGENT_OS_USER:-}"
     depends_on:
       postgres:
         condition: service_healthy
