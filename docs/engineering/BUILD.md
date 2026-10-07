@@ -19,10 +19,11 @@ docker compose build web
 ./bin/build
 ```
 
-`./bin/up` prepares ignored cache mounts and builds/starts services explicitly. After changing only the CLI image
-or web service configuration, `docker compose build web` followed by `docker compose up -d --no-deps web` refreshes
-just that service, preserving the other services and development database. Never silently refresh a service inside
-acceptance. Before reinstalling frontend dependencies in an already-running project, stop only `web`
+`./bin/up` prepares ignored cache mounts and builds/starts services explicitly. After changing only web service
+configuration, run `docker compose up -d --no-deps --no-build --pull never web` to recreate just that service,
+preserving the other services and development database. For CLI image changes, first run
+`docker compose build web`, then that same web-only refresh. Never silently refresh a service inside acceptance.
+Before reinstalling frontend dependencies in an already-running project, stop only `web`
 (`docker compose stop web`), then run setup and `./bin/up`; npm ci replaces nested cache-mount directories.
 Do not replace dependencies beneath a live gate. Missing/stale Compose configuration or tooling-image identity
 fails with an explicit setup instruction.
@@ -81,8 +82,13 @@ same test database, and do not run focused frontend commands concurrently agains
 ## Runtime boundaries and outputs
 
 The web service has a read-only root, dropped capabilities, no-new-privileges, 2 CPU/2 GiB/256 PID ceilings,
-256 MiB temporary storage and 256 MiB shared memory. Only ignored `.runs/`, `var/` and two frontend dependency-cache
-mounts are writable. The dedicated guarded PostgreSQL test service is disposable; development data is not migrated
+256 MiB temporary storage and 256 MiB shared memory. Compose's `init: true` puts the engine-provided init at
+PID 1 to reap orphaned Node/build/browser children after normal checks, rather than accumulating zombies across
+repeated gate runs. The maintenance service inherits this boundary. Enabling init on an existing service requires
+the explicit web-only refresh above; restarting the old container alone does not apply changed configuration.
+No PID ceiling is raised, and acceptance never restarts the service to recover its budget.
+Only ignored `.runs/`, `var/` and two frontend dependency-cache mounts are writable. The dedicated guarded
+PostgreSQL test service is disposable; development data is not migrated
 or reset. Normal backend completion/failure after a successful reset cleans the guarded test schema again. Focused
 PostgreSQL iteration therefore needs `./bin/database test-reset` after coverage cleanup.
 

@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: etc/docker/cli/Dockerfile
+    # Reap orphaned tool/browser children across repeated checks in this persistent service.
+    init: true
     command: php -S 0.0.0.0:8080 -t public scripts/serve.php
     # Explicit setup selects the checkout owner; unset preserves existing service identity.
     user: "${FIGHT_AGENT_OS_USER:-}"
