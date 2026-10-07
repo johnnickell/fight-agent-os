@@ -2,7 +2,7 @@
 id: TICKET-00013
 epic: EPIC-00003
 title: Complete the owned-code quality gate
-status: ready-for-agent
+status: done
 ---
 
 # Complete the owned-code quality gate
@@ -52,7 +52,7 @@ No runtime permission model applies. Tool configuration changes require approved
 | [TASK-00030](../tasks/00030-TASK.md) | Complete PHP style and static analysis | done |
 | [TASK-00031](../tasks/00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | done |
 | [TASK-00032](../tasks/00032-TASK.md) | Enforce deterministic frontend quality checks | done |
-| [TASK-00033](../tasks/00033-TASK.md) | Make bin build the complete read-only application gate | in-progress |
+| [TASK-00033](../tasks/00033-TASK.md) | Make bin build the complete read-only application gate | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
