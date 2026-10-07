@@ -15,7 +15,6 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDel
 use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use InvalidArgumentException;
-use LogicException;
 
 /**
  * Class ExpireCredentialDeliveryPages
@@ -71,7 +70,10 @@ final readonly class ExpireCredentialDeliveryPages
             $previous = $snapshot;
             foreach ($work as $item) {
                 $id = $item->getDeliveryId()->toString();
-                $command = match ($item->getPurpose()) {
+                // The final package value rejects other purposes during construction and deserialization.
+                /** @var 'activation'|'password_reset'|'email_change' $purpose */
+                $purpose = $item->getPurpose();
+                $command = match ($purpose) {
                     'activation' => new ExpireInvitationDelivery(
                         'credential-recovery',
                         $item->getUserId(), ActivationDeliveryId::fromString($id), $at
@@ -85,8 +87,7 @@ final readonly class ExpireCredentialDeliveryPages
                         $item->getUserId(),
                         $item->getEmailChangeGrantId(),
                         $at
-                    ),
-                    default => throw new LogicException('Unsupported expiry purpose.')
+                    )
                 };
                 $this->commands->execute($command);
                 $report['dispatched']++;

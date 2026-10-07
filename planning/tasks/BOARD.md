@@ -14,7 +14,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | ready-for-agent | — | — |
-| 31 | [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | ready-for-agent | — | — |
+| 33 | [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
@@ -25,7 +25,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md) | — |
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
-| 33 | [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | ready-for-agent | [TASK-00031](00031-TASK.md) | — |
 | 34 | [TASK-00034](00034-TASK.md) | Explore the authentication and dashboard design language | [TICKET-00014 — Accept the authentication and dashboard design language](../tickets/00014-TICKET.md) | ready-for-agent | [TASK-00033](00033-TASK.md) | — |
 | 35 | [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | [TICKET-00014 — Accept the authentication and dashboard design language](../tickets/00014-TICKET.md) | ready-for-agent | [TASK-00034](00034-TASK.md) | — |
 | 36 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00033](00033-TASK.md), [TASK-00126](00126-TASK.md) | — |
@@ -178,6 +177,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 28 | [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | done | — | [PR #52](https://github.com/johnnickell/fight-agent-os/pull/52) |
 | 29 | [TASK-00029](00029-TASK.md) | Establish the production component catalog and state evidence | [TICKET-00012 — Establish the React and component-catalog foundation](../tickets/00012-TICKET.md) | done | — | [PR #48](https://github.com/johnnickell/fight-agent-os/pull/48) |
 | 30 | [TASK-00030](00030-TASK.md) | Complete PHP style and static analysis | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | done | — | [PR #25](https://github.com/johnnickell/fight-agent-os/pull/25) |
+| 31 | [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | done | — | [PR #68](https://github.com/johnnickell/fight-agent-os/pull/68) |
 | 32 | [TASK-00032](00032-TASK.md) | Enforce deterministic frontend quality checks | [TICKET-00013 — Complete the owned-code quality gate](../tickets/00013-TICKET.md) | done | — | [PR #53](https://github.com/johnnickell/fight-agent-os/pull/53) |
 | 33 | [TASK-00151](00151-TASK.md) | Export and serve public-safe form validation schemas | [TICKET-00036 — Share server-owned form validation with the browser](../tickets/00036-TICKET.md) | done | — | [PR #59](https://github.com/johnnickell/fight-agent-os/pull/59) |
 | 33 | [TASK-00153](00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #55](https://github.com/johnnickell/fight-agent-os/pull/55) |

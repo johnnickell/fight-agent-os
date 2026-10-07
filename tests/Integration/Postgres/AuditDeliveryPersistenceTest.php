@@ -103,6 +103,16 @@ SQL
     }
 
     /**
+     * Releases the fixture connection independently of garbage collection
+     */
+    protected function tearDown(): void
+    {
+        if (isset($this->connection)) {
+            $this->connection->close();
+        }
+    }
+
+    /**
      * Verifies audit round trips typed subjects and rolls back with originating work
      */
     public function testAuditRoundTripsTypedSubjectsAndRollsBackWithOriginatingWork(): void
@@ -467,6 +477,8 @@ SQL
         self::assertTrue($this->commit(fn(): bool => $this->changes->add($grant)));
         self::assertFalse($this->commit(fn(): bool => $this->changes->add($grant)));
         self::assertSame([], $this->changes->findDue($this->now, 0));
+        [$otherGeneration] = $this->grant();
+        self::assertFalse($this->commit(fn(): bool => $this->changes->replace($grant, $otherGeneration)));
         $forged = $grant->claimDelivery(
             CredentialDeliveryClaimToken::generate(),
             $this->now,
@@ -510,6 +522,86 @@ SQL
         );
         self::assertIsArray($row);
         self::assertNotContains($raw->toString(), array_values($row));
+        $consumed = $failed->consume($this->now->modify('+7 minutes'));
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($failed, $consumed)));
+        self::assertTrue($this->changes->getLatestByUserId($this->userId)?->isConsumed());
+        self::assertFalse($this->changes->getLatestByUserId($this->userId)->getDelivery()->hasRecoverableMaterial());
+    }
+
+    /**
+     * Persists revoked email authority and destroys delivery material without accepting stale writes
+     */
+    public function testEmailChangeRevocationRoundTripsAndRejectsStalePredecessor(): void
+    {
+        [$grant] = $this->grant();
+        self::assertTrue($this->commit(fn(): bool => $this->changes->add($grant)));
+        self::assertSame('encrypted-email-change', $this->connection->fetchOne(
+            'SELECT delivery_ciphertext FROM email_change_grants WHERE id = ?',
+            [$grant->getId()->toString()]
+        ));
+
+        $revokedAt = $this->now->modify('+2 minutes');
+        $revoked = $grant->revoke($revokedAt);
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($grant, $revoked)));
+        $stored = $this->changes->getLatestByUserId($this->userId);
+        self::assertNotNull($stored);
+        self::assertSame($grant->getId()->toString(), $stored->getId()->toString());
+        self::assertSame($this->userId->toString(), $stored->getUserId()->toString());
+        self::assertTrue($stored->isRevoked());
+        self::assertFalse($stored->isIssued());
+        self::assertEquals($revokedAt, $stored->getRevokedAt());
+        self::assertNull($stored->getConsumedAt());
+        self::assertNull($stored->getExpiredAt());
+        self::assertSame(1, $stored->getRevision());
+        self::assertSame(1, $stored->getEmailChangeReservationRevision());
+        self::assertSame(CredentialDeliveryStatus::INVALIDATED, $stored->getDelivery()->getStatus());
+        self::assertFalse($stored->getDelivery()->hasRecoverableMaterial());
+        self::assertNull($stored->getDelivery()->getEncryptedMaterial());
+        self::assertSame([], $this->changes->findDue($revokedAt, 10));
+        self::assertSame([], $this->changes->findExpired($grant->getExpiresAt(), 10));
+        $row = $this->connection->fetchAssociative(
+            'SELECT * FROM email_change_grants WHERE id = ?',
+            [$grant->getId()->toString()]
+        );
+        self::assertIsArray($row);
+        self::assertNull($row['delivery_ciphertext']);
+
+        $staleClaim = $grant->claimDelivery(
+            CredentialDeliveryClaimToken::generate(),
+            $revokedAt,
+            $revokedAt->modify('+5 minutes')
+        );
+        self::assertFalse($this->commit(fn(): bool => $this->changes->replace($grant, $staleClaim)));
+        self::assertSame($row, $this->connection->fetchAssociative(
+            'SELECT * FROM email_change_grants WHERE id = ?',
+            [$grant->getId()->toString()]
+        ));
+        self::assertEquals($stored, $this->changes->getByDeliveryId($grant->getDelivery()->getId()));
+    }
+
+    /**
+     * Stores delivery-only expiry from provider backoff without losing its terminal failure history
+     */
+    public function testEmailDeliveryBackoffCrossingExpiryRoundTrips(): void
+    {
+        [$grant] = $this->grant();
+        $at = $grant->getExpiresAt()->modify('-1 second');
+        $token = CredentialDeliveryClaimToken::generate();
+        $claimed = $grant->claimDelivery($token, $at, $grant->getExpiresAt());
+        self::assertFalse($this->commit(fn(): bool => $this->changes->add($claimed)));
+        self::assertTrue($this->commit(fn(): bool => $this->changes->add($grant)));
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($grant, $claimed)));
+        $expired = $claimed->failDelivery($token, $at, CredentialDeliveryFailure::RETRYABLE_PROVIDER);
+        self::assertTrue($this->commit(fn(): bool => $this->changes->replace($claimed, $expired)));
+        $stored = $this->changes->getByDeliveryId($grant->getDelivery()->getId());
+        self::assertNotNull($stored);
+        self::assertSame(CredentialDeliveryStatus::EXPIRED, $stored->getDelivery()->getStatus());
+        self::assertSame(CredentialDeliveryFailure::RETRYABLE_PROVIDER, $stored->getDelivery()->getLastFailure());
+        self::assertEquals($at, $stored->getDelivery()->getLastOutcomeAt());
+        self::assertFalse($stored->getDelivery()->hasRecoverableMaterial());
+        self::assertTrue($stored->isIssued());
+        $this->expectException(\LogicException::class);
+        $this->changes->replace($claimed, $expired);
     }
 
     /**

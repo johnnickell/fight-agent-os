@@ -115,6 +115,22 @@ final class CredentialDeliveryProviderTest extends TestCase
     }
 
     /**
+     * Rejects unsupported simulated outcomes rather than acknowledging an undefined effect
+     */
+    public function testRejectsUnsupportedOutcomes(): void
+    {
+        $outcomes = ['activation' => 'DELIVERED', 'email_change' => CredentialDeliveryOutcome::DELIVERED];
+        foreach ($outcomes as $purpose => $outcome) {
+            try {
+                new InMemoryCredentialDeliveryProvider([$purpose => $outcome]);
+                self::fail('An unsupported outcome must not be accepted.');
+            } catch (InvalidArgumentException $exception) {
+                self::assertSame('Unsupported credential delivery outcome configuration.', $exception->getMessage());
+            }
+        }
+    }
+
+    /**
      * Builds package invocation material for one synthetic provider call
      */
     private function invocation(

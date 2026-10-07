@@ -56,6 +56,16 @@ final class AuthorityRepositoryTest extends TestCase
     }
 
     /**
+     * Releases the fixture connection independently of garbage collection
+     */
+    protected function tearDown(): void
+    {
+        if (isset($this->connection)) {
+            $this->connection->close();
+        }
+    }
+
+    /**
      * Verifies permission contract round trips managed and custom state
      */
     public function testPermissionContractRoundTripsManagedAndCustomState(): void
@@ -179,6 +189,40 @@ final class AuthorityRepositoryTest extends TestCase
                 $this->roles->getByIds([$role->getId(), RoleId::generate(), $role->getId()])
             )
         );
+    }
+
+    /**
+     * Preserves managed role reconciliation and safely rejects duplicate role identity
+     */
+    public function testManagedRoleReconciliationAndDuplicateIdentity(): void
+    {
+        $permission = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('MANAGE_USERS'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            new DateTimeImmutable('2026-10-01T12:00:00Z')
+        );
+        $this->permissions->add($permission);
+        $role = Role::defineManaged(
+            RoleId::generate(),
+            RoleName::fromString('ROLE_SUPER_ADMIN'),
+            [],
+            new DateTimeImmutable('2026-10-01T13:00:00Z')
+        );
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
+        $updated = $role->reconcileManaged(
+            $role->getName(),
+            [$permission->getId()],
+            new DateTimeImmutable('2026-10-01T13:01:00Z')
+        );
+        self::assertTrue($this->unitOfWork->commitTransactional(fn(): bool => $this->roles->replace($role, $updated)));
+        self::assertRoleEquals($updated, $this->roles->getById($role->getId()));
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->roles->validateCustomPermissionGrant($permission)
+        ));
+        $this->expectException(PersistenceConflict::class);
+        $this->expectExceptionMessage('The role identity or name is already in use.');
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
     }
 
     /**

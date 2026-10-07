@@ -55,6 +55,17 @@ final class SodiumCredentialDeliveryCipherTest extends TestCase
     }
 
     /**
+     * Refuses to persist an empty credential as recoverable material
+     */
+    public function testRejectsEmptyCredential(): void
+    {
+        $cipher = new SodiumCredentialDeliveryCipher(str_repeat('ab', 32), 'activation');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Credential material must not be empty.');
+        $cipher->encrypt('');
+    }
+
+    /**
      * Rejects missing keys and redacts secrets in ordinary diagnostics
      */
     public function testRequiresIndependentKeyAndRedactsDiagnostics(): void

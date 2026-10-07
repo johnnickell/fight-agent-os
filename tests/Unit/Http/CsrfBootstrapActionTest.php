@@ -81,6 +81,19 @@ final class CsrfBootstrapActionTest extends TestCase
     }
 
     /**
+     * Refuses multiple cookie header lines before issuing a proof
+     */
+    public function testRejectsMultipleCookieHeaders(): void
+    {
+        $bus = $this->createMock(QueryBus::class);
+        $bus->expects(self::never())->method('fetch');
+        $request = (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/api/v1/auth/csrf')
+            ->withHeader('Cookie', ['a=b', 'c=d']);
+        $this->expectException(HttpBadRequestException::class);
+        $this->action($bus)->handle($request);
+    }
+
+    /**
      * Rejects an unexpected query bus result without presenting it
      */
     public function test_that_unexpected_query_result_is_rejected(): void
