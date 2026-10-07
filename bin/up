@@ -5,5 +5,9 @@ if [ ! -f vendor/autoload.php ]; then
     exit 1
 fi
 
+# Prepare only ignored writable cache/report mounts before Compose starts the service.
+mkdir -p .runs/client/dependency-cache .runs/client/vite-temp var \
+    client/node_modules/.cache client/node_modules/.vite-temp
+
 docker compose up --detach --build
 docker compose port web 8080

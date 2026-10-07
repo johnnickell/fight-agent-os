@@ -19,7 +19,7 @@ Use Docker and the repository wrapper; no host Node installation or global front
 ./bin/client audit        # Optional live registry vulnerability report
 ./bin/up
 # Open http://localhost:18087/app, or use the existing opt-in HTTPS setup below
-./bin/build              # Current complete repository gate, additionally required
+./bin/build              # Complete canonical gate, including this frontend sequence
 ```
 
 Individual read-only acceptance commands: `typecheck`, `lint`, `format-check`, `test`, `coverage`,
@@ -57,8 +57,9 @@ type declarations. Neither is forced through with ignored peer dependencies or `
 compatible with the accessibility plugin's declared peer range but emits an unsupported-version deprecation
 at installation. Retain this disclosed limitation until a compatible lint-stack upgrade; a clean audit does
 not establish ongoing upstream support. Exact remaining direct pins and transitive integrity hashes are in
-the manifest/lock. The current repository gate does **not** call `bin/client`; TICKET-00013 owns combined gate
-integration. Run both gates for this shell; TASK-00033 owns that integration.
+the manifest/lock. The [canonical repository gate](../docs/engineering/BUILD.md) runs these checks directly
+from its PHP orchestrator in the prepared web service, using the same Node/browser binary pins and installed lock.
+It does not call `bin/client check` or rerun its phases; the wrapper remains a focused iteration entrypoint.
 
 ### Focused frontend quality gate
 
@@ -67,7 +68,8 @@ and accessibility lint, non-mutating formatting, V8-instrumented Vitest/RTL, a c
 with artifact inspection, static Storybook build/inspection, Chromium story interactions/a11y, and static
 catalog captures/resource checks. Each stage fails fast. Only explicit setup/maintenance/dev commands have
 external networking; checks do not install, update or audit. `npm run check` is intentionally absent: the
-repository wrapper owns orchestration across the two pinned container environments. Both use Node 24.21.0
+focused repository wrapper owns orchestration across the two pinned container environments; PHP owns the
+canonical gate. Both use Node 24.21.0
 and npm 11.19.0. There is no percentage-only frontend gate or seeded-failure/product test of these tools.
 
 Production check output is `.runs/client/production/`, rebuilt clean without pruning live `public/build/`.
@@ -96,7 +98,7 @@ executable denominator. Tests, stories, configuration, scripts, SCSS and depende
 TypeScript behavior measure, not secretly counted as covered. Reports (`text`, JSON summary, HTML) are under
 `.runs/client/coverage/`; read uncovered branches alongside their contracts. Unit/component coverage is not
 browser-story, backend or end-to-end coverage. Narrow checks remain available for iteration; the full repository
-`./bin/build` remains separately mandatory. Screenshot evidence is not visual approval or universal accessibility certification.
+`./bin/build` remains mandatory and already includes this sequence. Screenshot evidence is not visual approval or universal accessibility certification.
 
 ## Frontend conventions
 
@@ -443,7 +445,7 @@ OS/storage listeners and selector; the catalog is not a second production prefer
 ./bin/client storybook-capture  # Built artifact: all 37 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
-./bin/build                    # Still additionally required; canonical integration belongs to TASK-00033
+./bin/build                    # Sole canonical gate; includes frontend and backend phases
 ```
 
 Build/test/capture containers have no external network. The development server alone publishes a loopback port;

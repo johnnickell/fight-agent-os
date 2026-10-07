@@ -1,3 +1,10 @@
 #!/usr/bin/env sh
 set -eu
-docker compose run --rm web composer "$@"
+cd "$(dirname "$0")/.."
+mkdir -p .runs/client/dependency-cache .runs/client/vite-temp var \
+    client/node_modules/.cache client/node_modules/.vite-temp
+# Dependency maintenance is explicit; the ordinary service mounts source read-only.
+exec docker compose run --rm --volume "$(pwd):/app" \
+    -e COMPOSER_ROOT_VERSION=dev-develop \
+    -e COMPOSER_HOME=/app/.runs/composer \
+    -e COMPOSER_CACHE_DIR=/app/.runs/composer/cache web composer "$@"

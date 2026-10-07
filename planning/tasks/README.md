@@ -35,7 +35,7 @@
 | [TASK-00030](00030-TASK.md) | Complete PHP style and static analysis | done | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | done | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00032](00032-TASK.md) | Enforce deterministic frontend quality checks | done | [TICKET-00013](../tickets/00013-TICKET.md) |
-| [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
+| [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | in-progress | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00034](00034-TASK.md) | Explore the authentication and dashboard design language | ready-for-agent | [TICKET-00014](../tickets/00014-TICKET.md) |
 | [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | ready-for-agent | [TICKET-00014](../tickets/00014-TICKET.md) |
 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | ready-for-agent | [TICKET-00015](../tickets/00015-TICKET.md) |
