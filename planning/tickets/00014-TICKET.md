@@ -2,7 +2,7 @@
 id: TICKET-00014
 epic: EPIC-00004
 title: Accept the authentication and dashboard design language
-status: ready-for-agent
+status: done
 ---
 
 # Accept the authentication and dashboard design language
@@ -48,7 +48,7 @@ Use fake/sanitized data only and record source provenance/licenses. No runtime p
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00034](../tasks/00034-TASK.md) | Explore the authentication and dashboard design language | done |
-| [TASK-00035](../tasks/00035-TASK.md) | Independently accept the authentication and dashboard production handoff | in-progress |
+| [TASK-00035](../tasks/00035-TASK.md) | Independently accept the authentication and dashboard production handoff | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
