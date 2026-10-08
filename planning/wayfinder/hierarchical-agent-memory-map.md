@@ -29,6 +29,11 @@ decomposition remain separate operations.
 - [SDLC intake triage](sdlc-intake-triage-map.md) is a related, separately decidable capability. Neither map
   automatically blocks or changes the approved first Team Lead → Software Engineer execution slice.
 
+The [incremental Harness amendment](../epics/00006-EPIC.md#approved-incremental-harness-protection-and-retrieval--2026-10-07)
+now owns early repository-file relevance screening and subsequent session compaction support. WF-026 records the
+connection to later memory retrieval. That independent milestone does not settle this map's ownership, lifecycle
+or promotion decisions, change its frontier, or require a new map.
+
 ## Decisions so far
 
 1. **[WF-024 — Define memory ownership and scope authority](tickets/WF-024-define-memory-ownership-and-scope-authority.md)
@@ -39,7 +44,8 @@ decomposition remain separate operations.
    a broader scope after WF-024.
 3. **[WF-026 — Define sandbox memory retrieval and MCP access](tickets/WF-026-define-sandbox-memory-retrieval-and-mcp-access.md)
    is open.** Decide bounded retrieval, external service authority and the Resource/Tool boundary after ownership
-   and lifecycle are settled.
+   and lifecycle are settled. Its proposed Jev use case ranks already-authorized entries, with separate disclosure
+   checks and memory-specific qualification; it does not ingest, promote or grant access to memory.
 
 ## Tickets
 
@@ -68,7 +74,8 @@ visibility, and TASK memory spanning multiple Workflows.
 - First useful delivery slice and sequencing relative to Harness and managed execution.
 - Human inspection, correction, sharing and promotion-review experience.
 - Whether a MemorySpace needs its own lifecycle and aggregate boundary alongside individual memory entries.
-- Retrieval ranking, semantic search, summarization strategy and measurable usefulness; no vector database is selected.
+- Retrieval ranking, semantic search, summarization strategy and measurable usefulness; WF-026 now records Jev
+  ranking as a proposal to evaluate. No vector database or memory-specific relevance threshold is selected.
 - Whether Director or CTO is the eventual template name, and its responsibilities beyond memory stewardship.
 
 ## Out of scope

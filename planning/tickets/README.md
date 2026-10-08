@@ -39,4 +39,7 @@
 | [TICKET-00034](00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00035](00035-TICKET.md) | Install the approved Fight terminal identity in Pi | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00036](00036-TICKET.md) | Share server-owned form validation with the browser | done | [EPIC-00003](../epics/00003-EPIC.md) |
+| [TICKET-00037](00037-TICKET.md) | Configure and qualify Jev access for the Harness | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00038](00038-TICKET.md) | Guard Pi tool execution with deterministic restrictions and Jev | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00039](00039-TICKET.md) | Require relevance screening before loading file contents | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 <!-- /planning:records -->

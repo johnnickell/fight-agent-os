@@ -20,6 +20,24 @@ operations that consume them. Markdown remains authoritative before cutover; a r
 the same eligibility/claim operations, not a second Workflow engine. The console must not infer an operator's
 business authority merely from access to a terminal. Exact enrollment and grant contracts are settled before launch.
 
+John approved the [incremental Harness protection and retrieval milestone](epics/00006-EPIC.md#approved-incremental-harness-protection-and-retrieval--2026-10-07)
+on 2026-10-07 for existing human-operated Pi sessions. Prioritize deterministic controls plus Jev screening and
+required file relevance screening at an initial 0.70 positive-read threshold. This bounded Harness slice can
+proceed before full managed sandbox/browser/database delivery. Accepted [Jev access](tickets/00037-TICKET.md),
+[tool guard](tickets/00038-TICKET.md) and [file screening](tickets/00039-TICKET.md) requirements now own it;
+access is decomposed into approved [protected setup](tasks/00184-TASK.md) and dependent
+[typed judgments](tasks/00159-TASK.md). The guard is decomposed into independent
+[deterministic restrictions](tasks/00160-TASK.md) and [semantic screening](tasks/00161-TASK.md), which depends on
+those restrictions and the shared judgments. File screening is decomposed into
+[single-file screening and instructions](tasks/00162-TASK.md), dependent on shared judgments, followed by
+[bounded file sets and caching](tasks/00163-TASK.md). It proceeds independently of guard implementation.
+The selected three-TICKET milestone now has approved TASK decompositions; broader EPIC/map planning remains open.
+Compaction and context retention follow through [WF-029](wayfinder/tickets/WF-029-define-compaction-timing-and-notifications.md)
+and [WF-030](wayfinder/tickets/WF-030-define-context-retention-and-resume-contract.md); general-purpose judgments
+through [WF-031](wayfinder/tickets/WF-031-define-general-purpose-bounded-judgments.md). Broader routing retains its
+separate triage-map decisions. TASK-00138 retains its qualification requirements, and the Board's
+current executable ordering is unchanged by this planning amendment.
+
 The next execution TASKs are [sandbox boundary](tasks/00138-TASK.md), [authorized console start](tasks/00139-TASK.md),
 [recoverable preparation](tasks/00140-TASK.md), [Pi delegation](tasks/00141-TASK.md), and
 [parallel/recovery qualification](tasks/00142-TASK.md). They are incremental delivery slices, not a promise that

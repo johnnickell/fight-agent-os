@@ -1,7 +1,7 @@
 # Wayfinder Map: Complete Fight Agent OS vision
 
 **Label:** `wayfinder:map`
-**Status:** Closed
+**Status:** Active
 
 > This map is an **index, not a store**. Each material decision lives in exactly one linked ticket under
 > `tickets/`; this map only summarizes the linked resolutions and shows the next decision frontier.
@@ -18,6 +18,17 @@ Register repository → Wayfinder → grill EPIC → TICKETs → TASKs → next 
 ```
 
 **Done** = every linked decision is closed; newly exposed uncertainty is either resolved, excluded, or delegated without overlap to a named follow-on map; repository identity and planning authority are settled before dependent agent behavior; a smallest useful end-to-end proof and sequencing brief are approved; and the map has a clear handoff to one or more future grill sessions that may write EPICs. Done does not mean an EPIC, TICKET, TASK, database migration, or production implementation has been created by this map.
+
+## Follow-on scope added — 2026-10-07
+
+The original vision decisions and EPIC handoff were completed and remain accepted. John subsequently requested
+three new Harness decision tickets for compaction timing, context retention and general-purpose Jev judgments.
+This existing map is reopened only for that new scope; no new map is created and none of WF-008 through WF-023
+is reopened. Earlier capability observations below are historical evidence, not a fresh runtime inventory.
+
+The follow-on done condition is resolution or explicit exclusion of WF-029 through WF-031 with an approved
+handoff into [EPIC-00006](../epics/00006-EPIC.md). The six approved first-milestone TASKs and current Board priority
+are unchanged. Memory and triage maps retain their own frontiers and policy ownership.
 
 ## Notes
 
@@ -67,6 +78,17 @@ No focused child map is required at this handoff. The accepted repository/Planni
 15. **[Define browser instruction inspection and assisted editing](tickets/WF-022-define-browser-instruction-inspection-and-assisted-editing.md) is closed.** Edit only Pi-native root context files through one designated checkout; keep Runner reads and expected-digest writes deterministic; let a browser Agent use a versioned writing Skill only to fill a human-submitted form; separate PR publication and safe default-branch synchronization; and provide no general repository editor.
 16. **[Define local runtime and shared ingress topology](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) is closed.** Use an installation-owned Compose stack with `nginx-proxy` shared ingress, explicit private shared-resource networks, canonical HTTPS with `.localhost` or operator-approved custom names, a complete bounded application/runner/Mailpit runtime, private SeaweedFS Artifact storage, container-native PHP commands, deliberate upgrades and host mutations, and no speculative observability or preview services.
 
+### Open follow-on decisions
+
+- **[WF-030 — Define context retention and resume contract](tickets/WF-030-define-context-retention-and-resume-contract.md)**
+  defines mandatory checkpoint facts, bounded optional selection and safe continuation; it is the current frontier.
+- **[WF-029 — Define compaction timing and notifications](tickets/WF-029-define-compaction-timing-and-notifications.md)**
+  consumes WF-030's checkpoint contract to decide timing, notifications, automation authority and failures.
+- **[WF-031 — Define general-purpose bounded judgments](tickets/WF-031-define-general-purpose-bounded-judgments.md)**
+  defines an independently decidable tool contract and comparison with exact/structural/graph retrieval.
+  It now includes advisory change-quality scores for simplicity, naming, understandability and semantic conventions;
+  rubric qualification and any future gate policy remain unresolved.
+
 ## Tickets
 
 <!-- planning:decisions -->
@@ -88,9 +110,16 @@ No focused child map is required at this handoff. The accepted repository/Planni
 | [WF-021](tickets/WF-021-define-new-project-creation-and-registration.md) | Define new project creation and registration | wayfinder:grill | HITL | Closed | [WF-009](tickets/WF-009-define-repository-context-and-policy-precedence.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md), [WF-023](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) |
 | [WF-022](tickets/WF-022-define-browser-instruction-inspection-and-assisted-editing.md) | Define browser instruction inspection and assisted editing | wayfinder:grill | HITL | Closed | [WF-009](tickets/WF-009-define-repository-context-and-policy-precedence.md), [WF-012](tickets/WF-012-define-browser-planning-and-conversation-ownership.md), [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md) |
 | [WF-023](tickets/WF-023-define-local-runtime-and-shared-ingress-topology.md) | Define local runtime and shared ingress topology | wayfinder:grill | HITL | Closed | [WF-016](tickets/WF-016-define-runner-dispatch-and-recovery.md), [WF-017](tickets/WF-017-define-execution-history-and-event-authority.md) |
+| [WF-029](tickets/WF-029-define-compaction-timing-and-notifications.md) | Define compaction timing and notifications | wayfinder:grill | HITL | Open | [WF-030](tickets/WF-030-define-context-retention-and-resume-contract.md) |
+| [WF-030](tickets/WF-030-define-context-retention-and-resume-contract.md) | Define context retention and resume contract | wayfinder:grill | HITL | Open | — |
+| [WF-031](tickets/WF-031-define-general-purpose-bounded-judgments.md) | Define general-purpose bounded judgments | wayfinder:grill | HITL | Open | — |
 <!-- /planning:decisions -->
 
 ## Blocking relationships
+
+Follow-on planning: WF-030 retention/resume → WF-029 timing/notifications → EPIC-00006 handoff.
+WF-031 general-purpose judgments → EPIC-00006 handoff independently. These are decision dependencies, not new
+blockers on the accepted implementation TASKs. The original resolved relationships remain below for provenance.
 
 ```text
 WF-008 repository identity
@@ -110,7 +139,13 @@ WF-011 + WF-014 + WF-015 + WF-016 + WF-017 + WF-018 + WF-020 + WF-021 + WF-022 +
 
 ## Frontier
 
-This map is complete. Its first separately approved grill handoff is [EPIC-00005 — Deliver the registered Planning workspace](../epics/00005-EPIC.md): guided local operation, repository and checkout registration, context resolution, explicit Markdown-to-PostgreSQL Planning cutover, and a minimal authoritative browser Planning surface. The EPIC consumes rather than repeats settled Wayfinder decisions; no EPIC was created by this map itself.
+[WF-030 — Define context retention and resume contract](tickets/WF-030-define-context-retention-and-resume-contract.md)
+is next: establish the mandatory continuation contract before deciding when to compact. WF-031 is independently
+unblocked and may be explicitly selected. This frontier does not reopen the original accepted decisions.
+
+### Original completed handoff
+
+The original vision scope was complete. Its first separately approved grill handoff is [EPIC-00005 — Deliver the registered Planning workspace](../epics/00005-EPIC.md): guided local operation, repository and checkout registration, context resolution, explicit Markdown-to-PostgreSQL Planning cutover, and a minimal authoritative browser Planning surface. The EPIC consumes rather than repeats settled Wayfinder decisions; no EPIC was created by this map itself.
 
 ## Delegated implementation detail and later scope
 
@@ -128,7 +163,8 @@ This map is complete. Its first separately approved grill handoff is [EPIC-00005
 ## Out of scope
 
 - Implementing production code, installing packages, changing global or personal configuration, registering a live runner, starting agents, migrating data, or switching planning authority during this map session.
-- Writing an EPIC, requirement TICKET, implementation TASK, ADR, or production schema before this map reaches its approved handoff.
+- Writing new follow-on EPIC amendments, requirement TICKETs, implementation TASKs, ADRs or production schemas
+  before their approved handoff; existing accepted implementation work remains independently authorized.
 - Replacing, reinterpreting, or bulk importing the accepted EPIC-00002 through EPIC-00004 plans.
 - Importing Factory workflows, plans, approvals, runtime code, or SQLite authority wholesale.
 - Removing or archiving current Markdown planning automatically, even after a future database cutover.
