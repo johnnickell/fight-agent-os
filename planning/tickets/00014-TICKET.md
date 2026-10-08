@@ -47,7 +47,7 @@ Use fake/sanitized data only and record source provenance/licenses. No runtime p
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00034](../tasks/00034-TASK.md) | Explore the authentication and dashboard design language | in-progress |
+| [TASK-00034](../tasks/00034-TASK.md) | Explore the authentication and dashboard design language | done |
 | [TASK-00035](../tasks/00035-TASK.md) | Independently accept the authentication and dashboard production handoff | ready-for-agent |
 <!-- /planning:children -->
 
