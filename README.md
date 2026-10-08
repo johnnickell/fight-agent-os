@@ -40,6 +40,7 @@ enable managed TASK execution or sandbox access.
 Docker Compose is required. This is an application with committed Composer lockfiles:
 
 ```sh
+export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/up
 ./bin/database migrate
@@ -48,10 +49,10 @@ Docker Compose is required. This is an application with committed Composer lockf
 The inherited root endpoint runs at http://localhost:18087. Build the browser foundation with
 `./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
 `/app`; see [client commands and boundaries](client/README.md).
-The current `./bin/build` gate remains additionally required; combined frontend-gate integration is deferred to
-TICKET-00013. Backend coverage is available through `./bin/backend-tests`; see its
-[guarded lifecycle, reports and integration boundary](docs/engineering/BACKEND_TESTS.md). TASK-00033 will
-integrate that phase into the build without duplicate test executions. Override the port with `FIGHT_AGENT_OS_PORT`.
+`./bin/build` is the [complete read-only gate](docs/engineering/BUILD.md), including backend coverage and
+frontend/browser checks without duplicate test executions. Dependencies and private OpenAPI/validation exports
+need explicit setup first; acceptance never installs or exports. `./bin/backend-tests` remains a focused command;
+see its [guarded lifecycle and reports](docs/engineering/BACKEND_TESTS.md). Override the port with `FIGHT_AGENT_OS_PORT`.
 Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTTPS origin and
 `APP_CSRF_MAC_KEY` as an independent, external hex-encoded 32-byte-or-stronger random key
 (e.g. generate with `openssl rand -hex 32`); do not commit either secret or use the JWT/HMAC signing key.
@@ -82,7 +83,7 @@ enable sending credentials or establish complete production recovery.
 ./bin/backend-tests        # Reset guarded test DB, run all backend suites once with coverage
 ./bin/planning-check --write  # Refresh planning views
 ./bin/planning-check          # Validate planning
-./bin/build                   # Complete gate in the running web service
+./bin/build                   # Complete gate: backend coverage + frontend/catalog in running web service
 ./bin/down                    # Stop the development service
 ```
 

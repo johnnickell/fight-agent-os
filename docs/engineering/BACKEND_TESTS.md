@@ -6,7 +6,10 @@ the phase does not install packages or contact providers. Xdebug is off for ordi
 
 The phase requires the running Compose `web` service and explicit test mode. It rejects unsafe PostgreSQL
 targets before connection, verifies the connected identity, resets only the guarded test schema, runs its
-migrations, then invokes PHPUnit **once**, without a suite filter. `phpunit.xml` partitions all tests into:
+migrations, then invokes PHPUnit **once**, without a suite filter. A shared local phase lock rejects overlapping
+coverage runs. Normal completion or failure after a successful reset performs a fresh guarded test-schema cleanup;
+interruption/engine failure requires process reconciliation before retry. Reinitialize with `./bin/database test-reset`
+before subsequent focused PostgreSQL tests. `phpunit.xml` partitions all tests into:
 
 - **Unit:** isolated application and adapter behavior.
 - **Integration:** runtime filesystem/HTTP adapter contracts, excluding PostgreSQL.
@@ -64,7 +67,7 @@ outside it. Validate those with their owning tools, not product-suite tests or s
 ./bin/build                          # Still mandatory as the repository gate
 ```
 
-Focused commands are not additional canonical backend phases. Until TASK-00033 integrates this phase into
-`./bin/build`, run both commands for TASK verification; the current build retains its existing all-suite test
-step. TASK-00033 must **replace** that step with this backend phase, not prepend Unit/coverage runs or rerun
-suites solely for coverage. Neither `scripts/build.php` nor hosted CI orchestration changes in TASK-00031.
+Focused commands are not additional canonical backend phases. The [complete gate](BUILD.md) calls
+`scripts/backend_tests.php` once with explicit test/coverage environment, replacing the old PHPUnit build step.
+It does not prepend Unit/coverage passes or rerun any suite. Run `./bin/build` for final TASK verification;
+`./bin/backend-tests` remains useful for backend-only iteration. Hosted CI uses the same complete gate.

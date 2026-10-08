@@ -2,7 +2,7 @@
 id: TICKET-00013
 epic: EPIC-00003
 title: Complete the owned-code quality gate
-status: ready-for-agent
+status: done
 ---
 
 # Complete the owned-code quality gate
@@ -52,9 +52,18 @@ No runtime permission model applies. Tool configuration changes require approved
 | [TASK-00030](../tasks/00030-TASK.md) | Complete PHP style and static analysis | done |
 | [TASK-00031](../tasks/00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | done |
 | [TASK-00032](../tasks/00032-TASK.md) | Enforce deterministic frontend quality checks | done |
-| [TASK-00033](../tasks/00033-TASK.md) | Make bin build the complete read-only application gate | ready-for-agent |
+| [TASK-00033](../tasks/00033-TASK.md) | Make bin build the complete read-only application gate | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+TASK-00033's current independent technical **accept** and post-review tooling/CLI QA **PASS** cover
+candidate `36d9a9cd4c56d823dd5b298fe68aa6e4289e6a35`, resolving LAND-01 and R1/R2/R3.
+Seven QA scenarios include actual clean native Linux wrapper install/write, mount/identity boundaries,
+cold-cache analysis, repeated gate reaping, receipt access/privacy, development preservation/guarded
+cleanup and unavailable prerequisites. Fresh landing full-gate verification and current evidence are
+recorded in [TASK-00033](../tasks/00033-TASK.md), not inferred from historical prepared-runtime acceptance.
+All four children are done; automatic parent rollup closes this TICKET in the same administrative closeout.
+Publication/final remote verification remain pending at this checkpoint; merge is a separate human action.
 
 Implements the quality direction approved by [WF-003](../wayfinder/tickets/WF-003-qualify-dependency-baseline.md), [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md), and [WF-007](../wayfinder/tickets/WF-007-prepare-implementation-handoff.md). Tool adoption may begin after [TICKET-00007](00007-TICKET.md), but final thresholds and acceptance follow representative backend, persistence, HTTP, and frontend code from TICKET-00008 through TICKET-00012.

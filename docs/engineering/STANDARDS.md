@@ -96,7 +96,7 @@ Aim for 100% unit-test coverage of meaningful owned unit-testable behavior where
 separately from integration/functional coverage, with denominator, driver availability and justified gaps; a combined
 suite percentage is not a unit-coverage result. The [backend coverage phase](BACKEND_TESTS.md) enforces 100%
 meaningful Domain/Application line coverage across one all-suite execution and reports unit attribution separately;
-TASK-00033 still owns its integration into `./bin/build`. Adapter 100% remains a practical target, with gaps visible.
+the [canonical gate](BUILD.md) includes it once. Adapter 100% remains a practical target, with gaps visible.
 Coverage remains a completeness aid, including Adapter behavior where practical. Report actual configured coverage and omissions without claiming that a percentage establishes correctness or protocol conformance. A covered line does not justify a test by itself: tests must assert an observable contract, outcome, or side effect. Exclude non-behavioral composition and generated code rather than manufacturing tests for percentages.
 
 For a bug, reproduce the behavior and make one regression test fail before repair when technically possible. Record why when it is not possible. Focused checks shorten the loop; only the repository canonical gate establishes complete local verification.

@@ -3,7 +3,11 @@ services:
     build:
       context: .
       dockerfile: etc/docker/cli/Dockerfile
+    # Reap orphaned tool/browser children across repeated checks in this persistent service.
+    init: true
     command: php -S 0.0.0.0:8080 -t public scripts/serve.php
+    # Explicit setup selects the checkout owner; unset preserves existing service identity.
+    user: "${FIGHT_AGENT_OS_USER:-}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -19,7 +23,35 @@ services:
       TEST_DATABASE_ALLOWED_HOST: postgres_test
       TEST_DATABASE_URL: postgresql://${POSTGRES_TEST_USER:-agent_os_test}:${POSTGRES_TEST_PASSWORD:-agent_os_test_local}@postgres_test:5432/${POSTGRES_TEST_DB:-agent_os_test}
     ports: ["127.0.0.1:${FIGHT_AGENT_OS_PORT:-18087}:8080"]
-    volumes: [".:/app"]
+    # Checks can write only ignored reports/caches; source, locks and installed tools stay read-only.
+    volumes:
+      - .:/app:ro
+      - ./.runs:/app/.runs
+      - ./var:/app/var
+      - ./.runs/client/dependency-cache:/app/client/node_modules/.cache
+      - ./.runs/client/vite-temp:/app/client/node_modules/.vite-temp
+    shm_size: 256mb
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,size=256m"]
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 256
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  # Explicit dependency maintenance inherits web limits, not its read-only source mount.
+  composer:
+    profiles: [maintenance]
+    extends:
+      service: web
+    image: ${COMPOSE_PROJECT_NAME:-fight-agent-os}-web
+    command: composer
+    ports: !reset []
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+        read_only: false
 
   https_php:
     profiles: [https]
