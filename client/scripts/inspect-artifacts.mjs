@@ -99,7 +99,7 @@ export async function inspectArtifacts(metafile, files, styleInputs) {
   const outputs = [];
   for (const file of files) {
     const name = basename(file.path);
-    if (!/^(?:main|chunk)-[A-Z0-9]{8}\.(?:js|css)(?:\.LEGAL\.txt)?$/.test(name)) {
+    if (!/^(?:main|chunk|prepaint)-[A-Z0-9]{8}\.(?:js|css)(?:\.LEGAL\.txt)?$/.test(name)) {
       reject(`unexpected output ${name}`);
     }
     const text = file.text;

@@ -23,7 +23,7 @@ final class ClientAssetManifest
     /**
      * Returns available same-origin assets or an unavailable deployment
      *
-     * @return array{script: string, stylesheet: string}|null
+     * @return array{prepaint: string, script: string, stylesheet: string}|null
      */
     public function read(): ?array
     {
@@ -43,21 +43,26 @@ final class ClientAssetManifest
             return null;
         }
 
-        if (!is_array($manifest) || count($manifest) !== 2) {
+        if (!is_array($manifest) || count($manifest) !== 3) {
             return null;
         }
 
-        foreach (['script' => 'js', 'stylesheet' => 'css'] as $key => $extension) {
+        foreach (['prepaint' => 'js', 'script' => 'js', 'stylesheet' => 'css'] as $key => $extension) {
             $asset = $manifest[$key] ?? null;
+            $prefix = $key === 'prepaint' ? 'prepaint' : 'main';
             if (
                 !is_string($asset)
-                || preg_match('~\A/build/main-[A-Z0-9]{8}\.'.$extension.'\z~', $asset) !== 1
+                || preg_match('~\A/build/'.$prefix.'-[A-Z0-9]{8}\.'.$extension.'\z~', $asset) !== 1
                 || !is_file($this->buildDirectory.'/'.basename($asset))
             ) {
                 return null;
             }
         }
 
-        return ['script' => $manifest['script'], 'stylesheet' => $manifest['stylesheet']];
+        return [
+            'prepaint'   => $manifest['prepaint'],
+            'script'     => $manifest['script'],
+            'stylesheet' => $manifest['stylesheet']
+        ];
     }
 }

@@ -17,7 +17,7 @@ final class ClientShellResponder
      * Renders the shell or a safe deployment failure
      *
      * @param ResponseInterface $response
-     * @param array{script: string, stylesheet: string}|null $assets
+     * @param array{prepaint: string, script: string, stylesheet: string}|null $assets
      */
     public function respond(ResponseInterface $response, ?array $assets): ResponseInterface
     {
@@ -25,9 +25,11 @@ final class ClientShellResponder
         $body = '<main><h1>Application unavailable</h1><p>Please contact the installation operator.</p></main>';
         $title = 'Application unavailable';
         if ($assets !== null) {
+            $prepaint = htmlspecialchars($assets['prepaint'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $script = htmlspecialchars($assets['script'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $stylesheet = htmlspecialchars($assets['stylesheet'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $head = '<link rel="stylesheet" href="'.$stylesheet.'">';
+            $head = '<script src="'.$prepaint.'"></script>';
+            $head .= '<link rel="stylesheet" href="'.$stylesheet.'">';
             $head .= '<script type="module" src="'.$script.'"></script>';
             // Fixed ADR 0004 allowlist, never an environment/configuration-object dump.
             $config = '{"schema_version":1,"api_base_path":"/api/v1"}';
@@ -40,7 +42,7 @@ final class ClientShellResponder
         }
 
         $response->getBody()->write(<<<HTML
-            <!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8">
+            <!doctype html><html lang="en"><head><meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>{$title} — Fight Agent OS</title>{$head}</head><body>{$body}</body></html>
             HTML);

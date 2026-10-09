@@ -1,7 +1,8 @@
 # Browser foundation
 
 The production React shell is available at `/app` and `/app/`. It is deliberately not a dashboard,
-login, Planning workspace, or final visual design. `/` retains the PHP smoke response; `/api/v1` retains
+login or Planning workspace. The semantic theme and three-state appearance selector are present; the
+rest of the authenticated application frame remains planned. `/` retains the PHP smoke response; `/api/v1` retains
 its independent API contract. Unknown `/app/...` paths render the shell's not-found page (HTTP 200),
 not an API response. Paths outside `/app` never fall back to React.
 
@@ -75,7 +76,7 @@ and npm 11.19.0. There is no percentage-only frontend gate or seeded-failure/pro
 Production check output is `.runs/client/production/`, rebuilt clean without pruning live `public/build/`.
 `production-metafile.json` and `production-artifacts.json` record the actual ESBuild/Sass input graph and
 output sizes/SHA-256 hashes. `build` applies the same inspection before publishing assets/manifest and writes
-`build-*` reports. The two-field manifest is published last; no extra private configuration is serialized.
+`build-*` reports. The three-field manifest is published last; no extra private configuration is serialized.
 The current allowlist admits production `src` TypeScript, `styles` SCSS and locked non-dev runtime packages;
 it rejects test/story/fixture/prototype/cache inputs, development modules, external module imports and
 unexpected output types. Only hashed JS/CSS and external license notices are emitted. Source maps and
@@ -146,7 +147,8 @@ useful mechanics. Shell recovery remains a native navigation link, not a library
 mode supplies button role/Space-key behavior, which would change the accepted link contract. Decorative spinners
 are hidden from accessibility APIs; adjacent text owns the meaning.
 Button and Notice select an empty library variant so the existing semantic custom-property styling remains
-in control, rather than layering an unrelated default primary variant. No new theme is selected.
+in control, rather than layering an unrelated default primary variant. TASK-00050 now supplies the accepted
+semantic light/dark palette without changing that library-control contract.
 
 Qualified exact **2.10.10** against the locked stack above and Storybook **10.4.6**, using strict TypeScript
 and actual owned unit/browser interactions. Its [published peer contract](https://registry.npmjs.org/react-bootstrap/2.10.10)
@@ -202,11 +204,11 @@ or map is introduced here. Custom theme identity remains separate from TASK-0005
 
 ## Serving and deployment boundary
 
-`build` emits minified, content-hashed ESM/CSS and external license notices, plus a two-field asset manifest.
+`build` emits minified, content-hashed ESM/CSS and external license notices, plus a three-field asset manifest and a small classic, content-hashed prepaint JS entry.
 ESBuild, not Vite, builds production; Vite serves tests and the development/static catalog. No source maps, dev server,
 environment serialization, CDN, or service worker is enabled. The target is modern ES2022 browsers with ESM.
-Bootstrap CSS and the neutral semantic-token mappings are included; no Bootstrap JavaScript plugins or
-final product theme are introduced.
+Bootstrap CSS and the accepted C/round-4 semantic mappings are included; no Bootstrap JavaScript plugins,
+custom-theme loader or complete product UI are introduced.
 
 Slim's `ClientShellAction` serves base HTML through `ClientShellResponder`; `ClientAssetManifest` accepts only
 existing hashed entry assets. Absent/invalid manifest or entry files produce generic no-store HTTP 503 without
@@ -218,7 +220,9 @@ For production-like local HTTPS, follow [local HTTPS setup](../docs/engineering/
 `./bin/https up` after building assets to refresh the gateway configuration. Open **https://localhost:18443/app**.
 The gateway mounts only `public/build/` for static delivery, with immutable caching of hashed assets. HTML is
 no-store with a restrictive self-only script/style CSP, no inline executable code/eval, no-referrer and nosniff.
-The inert config JSON is not executable. This shell policy is not the integrated production security certification.
+The inert config JSON is not executable. A blocking, self-hosted prepaint script runs before the stylesheet
+and deferred React ESM, sharing its preference mapping source with the runtime. This shell policy is not the
+integrated production security certification.
 
 Deploy the PHP release together with its complete `public/build/` output. Assets are **not committed**.
 The build publishes the manifest last by rename and retains old hashes for already-open documents. A real
@@ -388,11 +392,15 @@ server integration, live authentication, cross-tab consistency, final visual des
 
 ## Presentation foundation
 
-A static light `data-bs-theme` marker and isolated stylesheet preserve the theme-bootstrap integration point.
-TASK-00050 owns the shared preference rules, pre-paint preference bootstrap, OS/storage listeners and selector;
-this shell does not read or write preferences. `styles/base/_tokens.scss` maps neutral semantic colors, typography,
-spacing and motion to Bootstrap variables. Semantic landmarks, visible keyboard focus, reduced-motion overrides
-and wrapping establish only a foundation baseline, not accessibility certification.
+A blocking CSP-compatible same-origin script applies root `data-bs-theme` and `color-scheme` before styles and
+ordinary React rendering. The browser reads only `fight-agent-os.theme.v1`: absent, malformed or unreadable
+values mean System; Light/Dark persist exact enum values; System removes the key. React follows OS changes in
+System mode, listens for cross-tab storage updates, and releases listeners on unmount. Denied storage or media
+does not prevent rendering. This is presentation, not authority or an account preference; no remote sync or
+custom-theme loader exists. `styles/base/_tokens.scss` recreates TASK-00035's C/round-4 colors and Bootstrap
+mappings without prototype code or assets. Ubuntu is a local-font preference with system fallback, not a bundled
+font; non-Latin glyphs and official brand assets require separate qualification. Semantic landmarks, visible
+focus, reduced-motion overrides and wrapping do not establish universal accessibility certification.
 
 Tests prove observable route/landmark/title/keyboard behavior, controlled pending/failed imports, render failures
 and strict config decoding. V8 coverage measures client unit/component behavior, excludes declarations and the
@@ -414,8 +422,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **37** named examples across six story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-5 Composition states and 11 Authority states/interactions. The form composition demonstrates rejection,
+`stories/` holds **39** named examples across six story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states and 11 Authority states/interactions. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -424,17 +432,17 @@ use a factory-generated UUID and deterministic injected outcomes; only the real 
 Stories confer no runtime authority, real authentication or server-side permission semantics.
 
 `styles/base/_tokens.scss` owns background/surface/text/muted/border/action/on-action/focus and info/success/warning/danger
-colors, one system-font stack, a spacing unit, radius and motion duration. It maps body/link/border/form and
+colors, a local Ubuntu-first fallback font stack, a spacing unit, radius and motion duration. It maps body/link/border/form and
 component-local button/alert Bootstrap variables deliberately. Components use text labels as well as borders,
-not color alone. Native controls have 44 CSS-pixel minimum targets, headers wrap, long text breaks, focus uses
+not color alone. Native button/field controls and selector labels have 44 CSS-pixel minimum targets, headers wrap, long text breaks, focus uses
 an offset 3px outline, and reduced motion removes animation/transitions while retaining loading/busy text.
-No external fonts or imagery are used. Tokens are neutral placeholders, **not EPIC-00004 visual acceptance**.
-TICKET-00014 may refine them; no runtime theme selector is authorized here.
+No external fonts or imagery are used. Accepted C/round-4 tokens supply a production visual baseline, not
+an acceptance of unbuilt authentication/dashboard journeys.
+TASK-00050 supplies the public local appearance selector; this does not authorize arbitrary themes.
 
-Explicit light/dark examples use `data-bs-theme` only. The isolated SystemPreview story subscribes to the browser's
-color-scheme media query and cleans up on unmount; it does not read/write storage or perform a pre-paint bootstrap.
-Production remains statically light. TASK-00050 owns ADR 0004's persisted enum, unavailable-media/storage fallbacks,
-OS/storage listeners and selector; the catalog is not a second production preference owner.
+Composition's SystemPreview, ThemeLight and ThemeDark render the production selector and components with
+isolated in-memory storage. SystemPreview follows live OS changes and releases listeners on unmount. Stories
+do not write real browser preferences or perform production prepaint.
 
 ```sh
 ./bin/client setup              # Clean locked frontend install
@@ -442,7 +450,7 @@ OS/storage listeners and selector; the catalog is not a second production prefer
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 37 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 39 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases

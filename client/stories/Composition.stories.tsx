@@ -1,10 +1,14 @@
-import { useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore } from 'react';
+
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from '@/components/Button';
 import { ContentPanel } from '@/components/ContentPanel';
 import { ContentState } from '@/components/ContentState';
 import { TextField } from '@/components/forms/TextField';
 import { Notice } from '@/components/Notice';
+import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
+import { ThemeSelector } from '@/features/theme/ThemeSelector';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
@@ -69,19 +73,50 @@ export const WideDark: Story = {
   globals: { viewport: { value: 'wide', isRotated: false } }
 };
 
-// Only a catalog OS preview: no preference storage, bootstrap or runtime selector.
-const media = () => window.matchMedia('(prefers-color-scheme: dark)');
-const subscribe = (notify: () => void) => {
-  const query = media();
-  query.addEventListener('change', notify);
-  return () => query.removeEventListener('change', notify);
-};
-function SystemExample() {
-  const dark = useSyncExternalStore(subscribe, () => media().matches);
+// Catalog-owned environment; the production preference owner and selector are exercised
+// without modifying a visitor's real preference or treating examples as authorization.
+function ThemeExample({ initial }: { initial: 'system' | 'light' | 'dark' }) {
+  const [theme] = useState(() => {
+    const values = new Map<string, string>();
+    if (initial !== 'system') values.set('fight-agent-os.theme.v1', initial);
+    const root = document.createElement('div');
+    return new ThemePreferenceStore({
+      root,
+      storage: {
+        getItem: (key) => values.get(key) ?? null,
+        setItem: (key, value) => {
+          values.set(key, value);
+        },
+        removeItem: (key) => {
+          values.delete(key);
+        }
+      },
+      media: () => window.matchMedia('(prefers-color-scheme: dark)'),
+      subscribeStorage: () => () => {}
+    });
+  });
+  const snapshot = useSyncExternalStore(theme.subscribe, theme.getSnapshot);
   return (
-    <div className="catalog-preview" data-bs-theme={dark ? 'dark' : 'light'}>
+    <div className="catalog-preview" data-bs-theme={snapshot.effective}>
+      <ThemeSelector theme={theme} />
       <Examples />
     </div>
   );
 }
-export const SystemPreview: Story = { render: () => <SystemExample /> };
+export const SystemPreview: Story = { render: () => <ThemeExample initial="system" /> };
+export const ThemeLight: Story = {
+  render: () => <ThemeExample initial="light" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = canvas.getByRole('group', { name: 'Appearance' });
+    await expect(group).toBeVisible();
+    await expect(canvas.getByRole('radio', { name: 'Light' })).toBeChecked();
+    const dark = canvas.getByRole('radio', { name: 'Dark' });
+    await userEvent.click(dark);
+    await expect(dark).toBeChecked();
+    await expect(canvas.getByText('Showing dark mode')).toBeVisible();
+    await userEvent.click(canvas.getByRole('radio', { name: 'Light' }));
+    await expect(canvas.getByText('Showing light mode')).toBeVisible();
+  }
+};
+export const ThemeDark: Story = { render: () => <ThemeExample initial="dark" /> };

@@ -1,6 +1,15 @@
+import { ThemeSelector } from '@/features/theme/ThemeSelector';
+
+import type { ThemePreferenceStore } from '@/features/theme/ThemePreference';
 import type { ReactNode } from 'react';
 
-export function ShellLayout({ children }: { children: ReactNode }) {
+export function ShellLayout({
+  children,
+  theme
+}: {
+  children: ReactNode;
+  theme?: ThemePreferenceStore | undefined;
+}) {
   return (
     <>
       <a className="skip-link" href="#main-content">
@@ -11,6 +20,7 @@ export function ShellLayout({ children }: { children: ReactNode }) {
           <nav aria-label="Foundation">
             <a href="/app">Fight Agent OS</a>
           </nav>
+          {theme && <ThemeSelector theme={theme} />}
         </div>
       </header>
       <main id="main-content" tabIndex={-1} className="container shell-width py-5">

@@ -10,7 +10,7 @@ Pi terminal, and understand the work through a companion dashboard.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
 API validation/error handling, an empty public-safe form metadata catalog and local engineering skills are
-present. These pieces do not yet constitute the complete authenticated browser journey. A non-product React shell is available at `/app`; product UI journeys,
+present. These pieces do not yet constitute the complete authenticated browser journey. A non-product React shell with local system/light/dark appearance is available at `/app`; product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
 ## Start planning

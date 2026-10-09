@@ -52,7 +52,7 @@
 | [TASK-00047](00047-TASK.md) | Deliver rotating refresh and current-session logout | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
-| [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
+| [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | in-progress | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |

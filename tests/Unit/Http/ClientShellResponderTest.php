@@ -19,6 +19,7 @@ final class ClientShellResponderTest extends TestCase
     public function test_that_shell_contains_only_the_approved_runtime_configuration(): void
     {
         $response = (new ClientShellResponder())->respond((new ResponseFactory())->createResponse(), [
+            'prepaint'   => '/build/prepaint-CCCCCCCC.js',
             'script'     => '/build/main-AAAAAAAA.js',
             'stylesheet' => '/build/main-BBBBBBBB.css'
         ]);
@@ -33,6 +34,12 @@ final class ClientShellResponderTest extends TestCase
         self::assertStringNotContainsString('unsafe-inline', $response->getHeaderLine('Content-Security-Policy'));
         self::assertSame('', $response->getHeaderLine('Set-Cookie'));
         self::assertStringContainsString('<script type="module" src="/build/main-AAAAAAAA.js"></script>', $html);
+        self::assertStringContainsString('<script src="/build/prepaint-CCCCCCCC.js"></script>', $html);
+        self::assertLessThan(
+            strpos($html, '<link rel="stylesheet"'),
+            strpos($html, '<script src="/build/prepaint-CCCCCCCC.js"></script>')
+        );
+        self::assertStringNotContainsString('data-bs-theme="light"', $html);
         self::assertStringContainsString('<link rel="stylesheet" href="/build/main-BBBBBBBB.css">', $html);
         self::assertSame(
             1,
@@ -54,10 +61,12 @@ final class ClientShellResponderTest extends TestCase
     public function test_that_asset_attributes_are_escaped(): void
     {
         $response = (new ClientShellResponder())->respond((new ResponseFactory())->createResponse(), [
+            'prepaint'   => '/build/"<prepaint>',
             'script'     => '/build/"<script>',
             'stylesheet' => '/build/"<style>'
         ]);
 
+        self::assertStringContainsString('src="/build/&quot;&lt;prepaint&gt;"', (string) $response->getBody());
         self::assertStringContainsString('src="/build/&quot;&lt;script&gt;"', (string) $response->getBody());
         self::assertStringContainsString('href="/build/&quot;&lt;style&gt;"', (string) $response->getBody());
     }
