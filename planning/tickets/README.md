@@ -39,4 +39,13 @@
 | [TICKET-00034](00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00035](00035-TICKET.md) | Install the approved Fight terminal identity in Pi | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00036](00036-TICKET.md) | Share server-owned form validation with the browser | done | [EPIC-00003](../epics/00003-EPIC.md) |
+| [TICKET-00037](00037-TICKET.md) | Configure and qualify Jev access for the Harness | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00038](00038-TICKET.md) | Guard Pi tool execution with deterministic restrictions and Jev | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00039](00039-TICKET.md) | Require relevance screening before loading file contents | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00040](00040-TICKET.md) | Preserve context through verified compaction and resume | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00041](00041-TICKET.md) | Schedule and observe safe session compaction | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00042](00042-TICKET.md) | Answer typed questions across bounded evidence | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00043](00043-TICKET.md) | Gather judgment evidence through authorized tools and analysis | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00044](00044-TICKET.md) | Assess change quality before review handoff | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00045](00045-TICKET.md) | Assess PHPUnit test usefulness | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 <!-- /planning:records -->

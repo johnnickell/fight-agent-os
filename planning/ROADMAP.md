@@ -20,6 +20,40 @@ operations that consume them. Markdown remains authoritative before cutover; a r
 the same eligibility/claim operations, not a second Workflow engine. The console must not infer an operator's
 business authority merely from access to a terminal. Exact enrollment and grant contracts are settled before launch.
 
+John approved the [incremental Harness protection and retrieval milestone](epics/00006-EPIC.md#approved-incremental-harness-protection-and-retrieval--2026-10-07)
+on 2026-10-07 for existing human-operated Pi sessions. Prioritize deterministic controls plus Jev screening and
+required file relevance screening at an initial 0.70 positive-read threshold. This bounded Harness slice can
+proceed before full managed sandbox/browser/database delivery. Accepted [Jev access](tickets/00037-TICKET.md),
+[tool guard](tickets/00038-TICKET.md) and [file screening](tickets/00039-TICKET.md) requirements now own it;
+access is decomposed into approved [protected setup](tasks/00184-TASK.md) and dependent
+[typed judgments](tasks/00159-TASK.md). The guard is decomposed into independent
+[deterministic restrictions](tasks/00160-TASK.md) and [semantic screening](tasks/00161-TASK.md), which depends on
+those restrictions and the shared judgments. File screening is decomposed into
+[single-file screening and instructions](tasks/00162-TASK.md), dependent on shared judgments, followed by
+[bounded file sets and caching](tasks/00163-TASK.md). It proceeds independently of guard implementation.
+The selected three-TICKET milestone now has approved TASK decompositions; broader EPIC/map planning remains open.
+The accepted Jev follow-on now has requirements for [checkpoint/resume](tickets/00040-TICKET.md),
+[compaction timing and observability](tickets/00041-TICKET.md), [general judgments](tickets/00042-TICKET.md),
+[authorized analysis](tickets/00043-TICKET.md), [change quality](tickets/00044-TICKET.md) and
+[PHPUnit usefulness](tickets/00045-TICKET.md), consuming closed WF-029 through WF-031. Checkpoint/resume now has
+approved [required checkpoint](tasks/00164-TASK.md), [optional selection](tasks/00165-TASK.md),
+[selective repair](tasks/00166-TASK.md) and [retention/holds](tasks/00167-TASK.md) TASKs targeting Pi 1.1.0.
+Timing/observability now has approved [deterministic safe compaction](tasks/00168-TASK.md),
+[every-turn Jev evaluation](tasks/00169-TASK.md) and [history/incident inspection](tasks/00170-TASK.md) TASKs on Pi 1.1.0.
+General judgments now has approved [authenticated typed MCP judgments](tasks/00171-TASK.md),
+[many-file resumable stages](tasks/00172-TASK.md) and [qualified answer reuse](tasks/00173-TASK.md) TASKs on Pi 1.1.0.
+Authorized evidence now has approved [MCP composition](tasks/00174-TASK.md),
+[repository analysis](tasks/00175-TASK.md), [application inspection](tasks/00176-TASK.md) and
+[constrained SQL](tasks/00177-TASK.md) TASKs on Pi 1.1.0; analysis routes independently consume composition.
+Change quality now has approved [automatic pre-handoff assessment](tasks/00178-TASK.md),
+[qualified refresh/reuse](tasks/00179-TASK.md) and [independent reviewer follow-ups](tasks/00180-TASK.md) TASKs on
+Pi 1.1.0. PHPUnit usefulness now has approved [changed-case assessment](tasks/00181-TASK.md),
+[scoped whole-suite assessment](tasks/00182-TASK.md) and [context-sensitive refresh](tasks/00183-TASK.md) TASKs.
+All 20 follow-on TASKs target Pi 1.1.0 and remain unranked with explicit capability blockers. TASK decomposition
+is complete for the selected TICKET-00040 through TICKET-00045 scope; implementation and qualification remain pending.
+Older browser/Harness planning is not implicitly complete. Broader routing retains its separate triage-map decisions. TASK-00138 retains its qualification requirements, and the Board's
+current executable ordering is unchanged by this planning amendment.
+
 The next execution TASKs are [sandbox boundary](tasks/00138-TASK.md), [authorized console start](tasks/00139-TASK.md),
 [recoverable preparation](tasks/00140-TASK.md), [Pi delegation](tasks/00141-TASK.md), and
 [parallel/recovery qualification](tasks/00142-TASK.md). They are incremental delivery slices, not a promise that

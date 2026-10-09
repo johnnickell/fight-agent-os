@@ -17,6 +17,48 @@ Use MCP Resources for entry revisions and bounded summaries, with Tools for sear
 promotion proposals. The Harness supplies compact starting context and allows explicit deeper retrieval. This is
 a design candidate requiring qualification against the selected MCP/Pi implementation, not a claim of support.
 
+## Related approved Harness direction — 2026-10-07
+
+The [incremental Harness amendment](../../epics/00006-EPIC.md#approved-incremental-harness-protection-and-retrieval--2026-10-07)
+owns the first `jev_read_file` tool, required screening convention and initial 0.70 positive-read policy, including
+uncertainty, required-evidence exceptions and provider/data boundaries. Deliver that repository-file capability
+without waiting for this map's full memory design. This decision later determines how it applies to authorized
+memory entries; it does not authorize reading or sending private memory as part of a repository glob.
+
+Preserve source revisions, permission checks, coverage and cache invalidation when composing metadata, structural
+search, Jev judgments and exact-source retrieval. Session compaction checkpoints do not promote memory or erase
+provenance. WF-024/WF-025 remain prerequisites for the memory-specific contract, and this decision remains open.
+
+## Proposed Jev use case — authorized memory ranking — 2026-10-07
+
+Use the shared bounded judgment capability from [TICKET-00037](../../tickets/00037-TICKET.md) to assess which
+already-authorized memory entries are relevant to a stated information need. Candidate generation may use scope,
+metadata, structural/graph search or another qualified retrieval method before Jev reranking; compare combinations
+rather than assuming model screening replaces an index. Reuse request budgets, typed failures, evaluator/rubric
+identity and redacted receipts. This is a proposal for this open decision, not authorization to ingest or disclose
+memory and not an extension of the first repository-file delivery.
+
+- **Candidate interaction:** given a bounded authorized entry/revision set and a question, return per-entry relevance
+  or a declared category, supporting source identities and explicit coverage/unknown outcomes. Retrieve exact
+  permitted entry content only as needed; a relevance judgment is not a quotation or evidence of completeness.
+- **Authority:** WF-024/WF-025 settle ownership, lifecycle and promotion first. Apply current access before exposing
+  any entry title, metadata or content, and independently qualify permission for disclosure to the Jev provider.
+  A score cannot promote an entry, broaden scope or override revocation. Recheck authorization on cache reuse.
+- **Must decide here:** memory-specific questions/rubrics, useful candidate representations, positive-read/ranking
+  thresholds, conflict/staleness treatment, result and spend limits, cache scope, and evaluator-outage behavior.
+  Do not inherit the file tool's 0.70 threshold or command guard's 0.95 threshold without memory-specific evidence.
+- **Qualification:** compare authorized baseline retrieval with Jev-assisted retrieval for useful recall, missed
+  entries, stale/conflicting evidence, private-scope isolation, total context/cost/latency and unavailable service.
+  Include revocation and changed-entry cache cases; record unavailable cost and incomplete coverage honestly.
+
+Session compaction timing and checkpoint-content selection belong to
+[WF-029](WF-029-define-compaction-timing-and-notifications.md) and
+[WF-030](WF-030-define-context-retention-and-resume-contract.md); the general judgment tool belongs to
+[WF-031](WF-031-define-general-purpose-bounded-judgments.md), all Harness follow-ons in
+[EPIC-00006](../../epics/00006-EPIC.md#follow-on-jev-decision-coverage--2026-10-07). This decision owns retrieval of
+permitted memory, not compaction orchestration or a general-purpose judgment tool. It remains Open with unchanged
+dependencies; no provider, embedding store, MCP contract or runtime is qualified by adding this proposal.
+
 ## Must decide
 
 - Service ownership and application boundaries; durable memory outside the sandbox, with local scratch/cache

@@ -28,12 +28,19 @@ is a separate operation; this map does not insert a new gate into current execut
 - [Hierarchical memory](hierarchical-agent-memory-map.md) may support later triage learning. Triage semantics can
   be decided independently; this map does not depend on a memory implementation.
 
+The Jev proposals added on 2026-10-07 are recorded in WF-027 and WF-028, using the shared capability planned in
+[TICKET-00037](../tickets/00037-TICKET.md). This records candidate use cases without resolving either decision,
+changing the frontier or making triage a prerequisite of the approved first Harness milestone. See the
+[follow-on coverage handoff](../epics/00006-EPIC.md#follow-on-jev-decision-coverage--2026-10-07) for uses outside this map.
+
 ## Decisions so far
 
 1. **[WF-027 — Define TASK triage readiness and classification](tickets/WF-027-define-task-triage-readiness-and-classification.md)
    is open.** Define intake, readiness evidence, work classification, human-decision outcomes and routing proposals.
+   Proposed Jev questions now cover semantic readiness, work type and separate urgency/risk dimensions.
 2. **[WF-028 — Define triage dispatch and hotfix role boundaries](tickets/WF-028-define-triage-dispatch-and-hotfix-role-boundaries.md)
    is open.** Define enforceable handoffs and reconcile direct senior hotfix implementation with independent review.
+   Proposed Jev route selection is limited to semantic ambiguity; deterministic dispatch validation stays authoritative.
 
 ## Tickets
 
@@ -60,7 +67,8 @@ is the next decision: what makes a candidate ready, which facts Triage may decid
 - Explicit invocation versus automatic intake service, trigger timing and bounded operating cost.
 - First delivery slice and whether/when it becomes mandatory for existing execution paths.
 - Human presentation of blocked readiness, classification conflicts and routing explanations.
-- Template naming, skills and measured model suitability; no model or runtime is selected.
+- Template naming, skills and measured model suitability. Jev is proposed for bounded decisions; the Triage Agent
+  main model and runtime remain unselected, and neither Jev policy nor integration is qualified by this map.
 
 ## Out of scope
 

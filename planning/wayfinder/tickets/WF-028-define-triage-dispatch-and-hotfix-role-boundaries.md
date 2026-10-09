@@ -22,6 +22,35 @@ Whichever template is selected, an Agent that implements or contributes acceptan
 review that same change. A fresh session alone does not remove its prior contribution. Urgency never grants release
 or deployment authority or permits self-approval.
 
+## Proposed Jev use case — workflow and team recommendation — 2026-10-07
+
+Consider Jev for semantic route selection only where the accepted WF-027 disposition and approved route catalog
+leave a real ambiguity. If deterministic rules already map the disposition to one route, use those rules without
+an extra model call. Reuse [TICKET-00037](../../tickets/00037-TICKET.md)'s bounded judgment capability; do not build
+an independent router with its own eligibility or authority rules.
+
+- **Candidate interaction:** provide the accepted disposition and exact TASK/context revisions with a bounded,
+  permission-filtered catalog of eligible inner Workflows and responsible team templates. Ask which declared route
+  fits, or return unknown/needs-human. Examples include a feature through Team Lead and a direct senior-capability
+  hotfix route, whose exact template and reviewer independence remain unresolved here.
+- **Authority:** Jev recommends a catalog identifier; it cannot invent a route, grant a role, select an unauthorized
+  Agent, claim a TASK or start execution. PHP must revalidate current eligibility, grants, assignment scope, budgets,
+  catalog/context revisions, availability and contributor/reviewer separation before dispatch.
+- **Must decide here:** which choices are deterministic, when an additional judgment is justified, input/output
+  contract, acceptance threshold, human resolution, unsupported/no-route behavior, outage policy and dispatch owner.
+  Neither first-milestone threshold is a default for routing, and urgency is not permission to bypass checks.
+- **Binding and recovery:** retain disposition and recommendation identity plus rubric/evaluator/catalog revisions;
+  reject stale recommendations, consume an authorized dispatch once, and handle concurrent triggers, cancellation,
+  crash/retry and rerouting through the owning Workflow contracts. A model retry cannot start another Workflow or
+  silently replace an accepted route. Claim/grant timing is still a decision to resolve, not implemented here.
+- **Qualification:** demonstrate a straightforward deterministic route, a genuinely ambiguous choice, no eligible
+  route, unauthorized/stale catalog entries, unavailable evaluator, changed grants and duplicate triggers. Prove
+  that a proposed implementer cannot become its own independent reviewer. Compare routing quality/cost/latency
+  against deterministic classification-to-route mapping before making extra Jev calls mandatory.
+
+These are proposed decision inputs. WF-028 stays Open and depends on WF-027; this amendment does not reconcile the
+Senior Engineer/Hotfix Engineer templates, alter existing execution planning or authorize any actual dispatch.
+
 ## Must decide
 
 - Versioned routes and exact handoff inputs/outputs: feature through Team Lead, direct senior hotfix path, and

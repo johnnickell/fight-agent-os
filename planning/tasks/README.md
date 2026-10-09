@@ -161,4 +161,30 @@
 | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | done | — |
 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | done | — |
 | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | ready-for-agent | — |
+| [TASK-00159](00159-TASK.md) | Evaluate bounded typed questions with usage receipts | ready-for-agent | [TICKET-00037](../tickets/00037-TICKET.md) |
+| [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
+| [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
+| [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | ready-for-agent | [TICKET-00039](../tickets/00039-TICKET.md) |
+| [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | ready-for-agent | [TICKET-00039](../tickets/00039-TICKET.md) |
+| [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00168](00168-TASK.md) | Enforce staged compaction at safe session boundaries | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00169](00169-TASK.md) | Evaluate compaction timing with Jev after each eligible turn | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00170](00170-TASK.md) | Inspect compaction history and annotate recovery incidents | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00171](00171-TASK.md) | Expose authenticated typed judgments through MCP | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
+| [TASK-00172](00172-TASK.md) | Investigate large evidence sets through resumable stages | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
+| [TASK-00173](00173-TASK.md) | Reuse judgments when evidence and authority still match | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
+| [TASK-00174](00174-TASK.md) | Gather MCP evidence under the invoking principal | ready-for-agent | [TICKET-00043](../tickets/00043-TICKET.md) |
+| [TASK-00175](00175-TASK.md) | Run qualified repository analysis for judgments | ready-for-agent | [TICKET-00043](../tickets/00043-TICKET.md) |
+| [TASK-00176](00176-TASK.md) | Inspect running applications for fresh judgments | ready-for-agent | [TICKET-00043](../tickets/00043-TICKET.md) |
+| [TASK-00177](00177-TASK.md) | Analyze data through constrained SQL access | ready-for-agent | [TICKET-00043](../tickets/00043-TICKET.md) |
+| [TASK-00178](00178-TASK.md) | Assess change quality automatically before Engineer handoff | ready-for-agent | [TICKET-00044](../tickets/00044-TICKET.md) |
+| [TASK-00179](00179-TASK.md) | Refresh assessments after changes with qualified reuse | ready-for-agent | [TICKET-00044](../tickets/00044-TICKET.md) |
+| [TASK-00180](00180-TASK.md) | Support independent reviewer follow-up judgments | ready-for-agent | [TICKET-00044](../tickets/00044-TICKET.md) |
+| [TASK-00181](00181-TASK.md) | Assess changed PHPUnit cases before Engineer handoff | ready-for-agent | [TICKET-00045](../tickets/00045-TICKET.md) |
+| [TASK-00182](00182-TASK.md) | Assess the owned PHPUnit suite during architectural review | ready-for-agent | [TICKET-00045](../tickets/00045-TICKET.md) |
+| [TASK-00183](00183-TASK.md) | Refresh test assessments when cases or contracts change | ready-for-agent | [TICKET-00045](../tickets/00045-TICKET.md) |
+| [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | ready-for-agent | [TICKET-00037](../tickets/00037-TICKET.md) |
 <!-- /planning:records -->
