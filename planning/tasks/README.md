@@ -159,6 +159,6 @@
 | [TASK-00154](00154-TASK.md) | Serve local-only permission-gated Swagger with shared credentials and themes | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00155](00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | done | — |
-| [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | ready-for-agent | — |
+| [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | in-progress | — |
 | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | ready-for-agent | — |
 <!-- /planning:records -->
