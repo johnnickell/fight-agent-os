@@ -32,10 +32,26 @@ those restrictions and the shared judgments. File screening is decomposed into
 [single-file screening and instructions](tasks/00162-TASK.md), dependent on shared judgments, followed by
 [bounded file sets and caching](tasks/00163-TASK.md). It proceeds independently of guard implementation.
 The selected three-TICKET milestone now has approved TASK decompositions; broader EPIC/map planning remains open.
-Compaction and context retention follow through [WF-029](wayfinder/tickets/WF-029-define-compaction-timing-and-notifications.md)
-and [WF-030](wayfinder/tickets/WF-030-define-context-retention-and-resume-contract.md); general-purpose judgments
-through [WF-031](wayfinder/tickets/WF-031-define-general-purpose-bounded-judgments.md). Broader routing retains its
-separate triage-map decisions. TASK-00138 retains its qualification requirements, and the Board's
+The accepted Jev follow-on now has requirements for [checkpoint/resume](tickets/00040-TICKET.md),
+[compaction timing and observability](tickets/00041-TICKET.md), [general judgments](tickets/00042-TICKET.md),
+[authorized analysis](tickets/00043-TICKET.md), [change quality](tickets/00044-TICKET.md) and
+[PHPUnit usefulness](tickets/00045-TICKET.md), consuming closed WF-029 through WF-031. Checkpoint/resume now has
+approved [required checkpoint](tasks/00164-TASK.md), [optional selection](tasks/00165-TASK.md),
+[selective repair](tasks/00166-TASK.md) and [retention/holds](tasks/00167-TASK.md) TASKs targeting Pi 1.1.0.
+Timing/observability now has approved [deterministic safe compaction](tasks/00168-TASK.md),
+[every-turn Jev evaluation](tasks/00169-TASK.md) and [history/incident inspection](tasks/00170-TASK.md) TASKs on Pi 1.1.0.
+General judgments now has approved [authenticated typed MCP judgments](tasks/00171-TASK.md),
+[many-file resumable stages](tasks/00172-TASK.md) and [qualified answer reuse](tasks/00173-TASK.md) TASKs on Pi 1.1.0.
+Authorized evidence now has approved [MCP composition](tasks/00174-TASK.md),
+[repository analysis](tasks/00175-TASK.md), [application inspection](tasks/00176-TASK.md) and
+[constrained SQL](tasks/00177-TASK.md) TASKs on Pi 1.1.0; analysis routes independently consume composition.
+Change quality now has approved [automatic pre-handoff assessment](tasks/00178-TASK.md),
+[qualified refresh/reuse](tasks/00179-TASK.md) and [independent reviewer follow-ups](tasks/00180-TASK.md) TASKs on
+Pi 1.1.0. PHPUnit usefulness now has approved [changed-case assessment](tasks/00181-TASK.md),
+[scoped whole-suite assessment](tasks/00182-TASK.md) and [context-sensitive refresh](tasks/00183-TASK.md) TASKs.
+All 20 follow-on TASKs target Pi 1.1.0 and remain unranked with explicit capability blockers. TASK decomposition
+is complete for the selected TICKET-00040 through TICKET-00045 scope; implementation and qualification remain pending.
+Older browser/Harness planning is not implicitly complete. Broader routing retains its separate triage-map decisions. TASK-00138 retains its qualification requirements, and the Board's
 current executable ordering is unchanged by this planning amendment.
 
 The next execution TASKs are [sandbox boundary](tasks/00138-TASK.md), [authorized console start](tasks/00139-TASK.md),
