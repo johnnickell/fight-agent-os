@@ -6,7 +6,7 @@ These rules govern implementation of one approved TASK.
 
 The TASK and its accepted parents authorize the change. Resolve ambiguous acceptance, blockers, repository identity, destructive operations, and file ownership before writing. Planning decomposition and product-scope expansion require a separate handoff.
 
-Treat pre-existing modifications as unrelated until ownership is proved. Preserve them in place and exclude them from TASK diffs and commits. Put notes, logs, generated evidence, and other scratch beneath a TASK-owned `.runs/` directory; put isolated worktrees beneath `.runs/worktrees/`.
+Treat pre-existing modifications as unrelated until ownership is proved. Preserve them in place and exclude them from TASK diffs and commits. Put notes, logs, generated evidence, and other scratch under the [ignored scratch layout](SCRATCH.md); put isolated worktrees beneath `.runs/worktrees/`. Do not reorganize another owner's evidence to make a checkout tidy.
 
 ## Branches and commits
 

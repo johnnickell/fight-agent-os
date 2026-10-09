@@ -76,6 +76,8 @@ and its limits. Do not edit the implementation or seed a defect merely to demons
 | Library / Domain / worker | Use an existing entrypoint or a disposable driver through the real public contract and owned dependency setup. Check returned values, errors, state, retries and effects; no invented HTTP endpoint or production wrapper solely for QA. |
 | Tooling / executable documentation | Run the affected owning tool or documented command safely in isolation. For skill/workflow decisions, trace concrete normal and adversarial requests through actual entrypoints and references, recording route, stop boundary and evidence. Label instruction walkthroughs explicitly; they do not prove live agent/tool execution. |
 
+For planning-path changes, independently exercise the full planning-reference audit across live and archived records, Wayfinder notes, templates and generated views. Resolve Markdown links/anchors, code-span/plain-text local artifact paths and absolute checkout paths to their *intended* targets, checking the [scratch relocation manifest](SCRATCH.md) and actual destinations. Classify historical transcripts, templates and external links; disclose missing evidence and report incorrect/stale paths as QA findings. Do not repair Planning or alter Review/QA receipts; a passing planning validator or the builder's own audit is not behavioral QA proof.
+
 For dependency behavior that cannot safely be exercised, use a supported isolated substitute only when it proves
 the scoped contract, disclose the substitution, and leave required real-integration behavior INCOMPLETE. Existing
 tests may help set up or reproduce a case; merely rerunning the build is not the entire QA investigation.

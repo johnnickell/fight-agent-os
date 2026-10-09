@@ -157,8 +157,7 @@ Each feature or foundation TASK should remove unused direct packages/configurati
 - [`composer.json`](../../../composer.json)
 - [`composer.lock`](../../../composer.lock)
 - [`bin/build`](../../../bin/build)
-- [`scripts/validate-composer-candidate.sh`](../../../scripts/validate-composer-candidate.sh)
-- [`scripts/public-contract-check.php`](../../../scripts/public-contract-check.php)
+- Historical [`scripts/validate-composer-candidate.sh`](https://github.com/johnnickell/fight-agent-os/blob/3e3e2505e32de227cd26a84d13dde588d5a9036d/scripts/validate-composer-candidate.sh) and [`scripts/public-contract-check.php`](https://github.com/johnnickell/fight-agent-os/blob/3e3e2505e32de227cd26a84d13dde588d5a9036d/scripts/public-contract-check.php) at the inspected source commit; both have since been removed from the current checkout
 - [`tests/`](../../../tests/)
 - [Scaffold origin](../../../docs/ORIGIN.md)
 
