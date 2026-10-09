@@ -203,7 +203,7 @@ hyphenated slug); never commit directly to `develop` or `main`. Preserve establi
 or rewriting them to comply retroactively. TASK PR titles use `TASK-NNNNN — <TASK title>`; the repository's
 `.github/pull_request_template.md` supplies an editable body, not the title. Choose the main checkout or an
 isolated worktree with the user. Ignored `.runs/worktrees/`, `.runs/notes/`, `.runs/handoffs/`, and
-`.runs/archive/` hold local execution material. Durable requirements and outcomes belong in planning records.
+`.runs/archive/` hold local execution material; use the [ignored scratch layout](../docs/engineering/SCRATCH.md) for new runs and retention exceptions. Durable requirements and outcomes belong in planning records.
 
 Before a commit or PR, record verified acceptance and outstanding review honestly, update the PR link if known,
 refresh views, and run the full canonical `./bin/build`. Use focused checks during iteration. Surface warnings,
