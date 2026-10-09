@@ -8,7 +8,7 @@ if (
     is_string($path)
     && (
         $path === '/favicon.svg'
-        || preg_match('~\A/build/(?:main|chunk)-[A-Z0-9]{8}\.(?:js|css)(?:\.LEGAL\.txt)?\z~', $path) === 1
+        || preg_match('~\A/build/(?:main|chunk|prepaint)-[A-Z0-9]{8}\.(?:js|css)(?:\.LEGAL\.txt)?\z~', $path) === 1
     )
     && is_file(dirname(__DIR__).'/public'.$path)
 ) {

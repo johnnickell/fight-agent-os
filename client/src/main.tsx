@@ -2,7 +2,10 @@ import '../styles/app.scss';
 
 import { createRoot } from 'react-dom/client';
 
+import { browserThemeEnvironment, ThemePreferenceStore } from '@/features/theme/ThemePreference';
 import { ShellApplication } from '@/ShellApplication';
+
+const theme = new ThemePreferenceStore(browserThemeEnvironment());
 
 const element = document.getElementById('app');
 if (element) {
@@ -17,6 +20,7 @@ if (element) {
     <ShellApplication
       configuration={document.getElementById('runtime-config')?.textContent ?? null}
       pathname={window.location.pathname}
+      theme={theme}
     />
   );
 } else {

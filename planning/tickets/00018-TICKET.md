@@ -50,7 +50,7 @@ Theme controls need accessible names, keyboard operation, visible current state,
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00049](../tasks/00049-TASK.md) | Deliver the authoritative current-principal projection | ready-for-agent |
-| [TASK-00050](../tasks/00050-TASK.md) | Deliver the accessible production theme preference | ready-for-agent |
+| [TASK-00050](../tasks/00050-TASK.md) | Deliver the accessible production theme preference | done |
 | [TASK-00051](../tasks/00051-TASK.md) | Deliver the responsive authoritative application frame | ready-for-agent |
 | [TASK-00052](../tasks/00052-TASK.md) | Deliver the honest permission-aware dashboard | ready-for-agent |
 <!-- /planning:children -->

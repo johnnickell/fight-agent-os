@@ -26,6 +26,7 @@ final class ClientShellTest extends TestCase
     {
         $this->directory = dirname(__DIR__, 3).'/.runs/test-client-assets/'.bin2hex(random_bytes(8));
         mkdir($this->directory, 0700, true);
+        file_put_contents($this->directory.'/prepaint-CCCCCCCC.js', '');
         file_put_contents($this->directory.'/main-AAAAAAAA.js', '');
         file_put_contents($this->directory.'/main-BBBBBBBB.css', '');
     }
@@ -48,7 +49,11 @@ final class ClientShellTest extends TestCase
     {
         file_put_contents(
             $this->directory.'/manifest.json',
-            '{"script":"/build/main-AAAAAAAA.js","stylesheet":"/build/main-BBBBBBBB.css"}'
+            json_encode([
+                'prepaint'   => '/build/prepaint-CCCCCCCC.js',
+                'script'     => '/build/main-AAAAAAAA.js',
+                'stylesheet' => '/build/main-BBBBBBBB.css'
+            ], JSON_THROW_ON_ERROR)
         );
         $action = new ClientShellAction(new ClientAssetManifest($this->directory), new ClientShellResponder());
         $response = $action->handle(
@@ -56,6 +61,10 @@ final class ClientShellTest extends TestCase
             (new ResponseFactory())->createResponse()
         );
         self::assertSame(200, $response->getStatusCode());
+        self::assertStringContainsString(
+            '<script src="/build/prepaint-CCCCCCCC.js"></script>',
+            (string) $response->getBody()
+        );
         self::assertStringContainsString('src="/build/main-AAAAAAAA.js"', (string) $response->getBody());
         self::assertStringContainsString('href="/build/main-BBBBBBBB.css"', (string) $response->getBody());
     }
@@ -93,6 +102,10 @@ final class ClientShellTest extends TestCase
         yield 'non-string' => ['{"script":1,"stylesheet":"/build/main-BBBBBBBB.css"}'];
         yield 'foreign origin' => ['{"script":"https://evil.test/x.js","stylesheet":"/build/main-BBBBBBBB.css"}'];
         yield 'traversal' => ['{"script":"/build/../x.js","stylesheet":"/build/main-BBBBBBBB.css"}'];
-        yield 'missing asset' => ['{"script":"/build/main-CCCCCCCC.js","stylesheet":"/build/main-BBBBBBBB.css"}'];
+        yield 'missing asset' => [json_encode([
+            'prepaint'   => '/build/prepaint-DDDDDDDD.js',
+            'script'     => '/build/main-AAAAAAAA.js',
+            'stylesheet' => '/build/main-BBBBBBBB.css'
+        ], JSON_THROW_ON_ERROR)];
     }
 }

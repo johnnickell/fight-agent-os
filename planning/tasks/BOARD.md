@@ -15,7 +15,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | ready-for-agent | — | — |
 | 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | — | — |
-| 50 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
@@ -40,7 +39,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 48 | [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00047](00047-TASK.md) | — |
 | 49 | [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00048](00048-TASK.md), [TASK-00117](00117-TASK.md) | — |
 | 49 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00044](00044-TASK.md) | — |
-| 51 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00049](00049-TASK.md), [TASK-00050](00050-TASK.md) | — |
+| 51 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00049](00049-TASK.md) | — |
 | 52 | [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00051](00051-TASK.md) | — |
 | 53 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | ready-for-agent | [TASK-00040](00040-TASK.md) | — |
 | 53 | [TASK-00154](00154-TASK.md) | Serve local-only permission-gated Swagger with shared credentials and themes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00036](00036-TASK.md), [TASK-00117](00117-TASK.md), [TASK-00051](00051-TASK.md) | — |
@@ -183,6 +182,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 34 | [TASK-00034](00034-TASK.md) | Explore the authentication and dashboard design language | [TICKET-00014 — Accept the authentication and dashboard design language](../tickets/00014-TICKET.md) | done | — | [PR #71](https://github.com/johnnickell/fight-agent-os/pull/71) |
 | 34 | [TASK-00152](00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | [TICKET-00036 — Share server-owned form validation with the browser](../tickets/00036-TICKET.md) | done | — | [PR #63](https://github.com/johnnickell/fight-agent-os/pull/63) |
 | 35 | [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | [TICKET-00014 — Accept the authentication and dashboard design language](../tickets/00014-TICKET.md) | done | — | [PR #72](https://github.com/johnnickell/fight-agent-os/pull/72) |
+| 50 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | done | — | [PR #73](https://github.com/johnnickell/fight-agent-os/pull/73) |
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
 | — | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | — (standalone chore) | done | — | [PR #19](https://github.com/johnnickell/fight-agent-os/pull/19) |

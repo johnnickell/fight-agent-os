@@ -2,7 +2,11 @@
 .btn:focus-visible,
 .form-control:focus-visible {
   outline: 3px solid var(--ui-focus);
-  outline-offset: 4px;
+  outline-offset: 3px;
+}
+
+.form-control:focus-visible {
+  outline-color: var(--ui-form-focus);
 }
 
 .skip-link {

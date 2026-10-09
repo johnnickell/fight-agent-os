@@ -50,22 +50,51 @@ const result = await build({
   metafile: true,
   logLevel: 'info'
 });
-const report = await inspectArtifacts(result.metafile, result.outputFiles, styleInputs);
+// A blocking classic script runs in <head> before CSS or deferred application ESM.
+// It bundles the very same preference mapping imported by the React owner.
+const prepaint = await build({
+  entryPoints: ['src/features/theme/prepaint.ts'],
+  outdir,
+  write: false,
+  entryNames: 'prepaint-[hash]',
+  bundle: true,
+  format: 'iife',
+  platform: 'browser',
+  target: ['es2022'],
+  minify: true,
+  sourcemap: false,
+  legalComments: 'external',
+  metafile: true
+});
+const report = await inspectArtifacts(
+  {
+    inputs: { ...result.metafile.inputs, ...prepaint.metafile.inputs },
+    outputs: { ...result.metafile.outputs, ...prepaint.metafile.outputs }
+  },
+  [...result.outputFiles, ...prepaint.outputFiles],
+  styleInputs
+);
 const reportPrefix = checking ? 'production' : 'build';
 await writeFile(
   `../.runs/client/${reportPrefix}-metafile.json`,
-  JSON.stringify(result.metafile, null, 2)
+  JSON.stringify({ application: result.metafile, prepaint: prepaint.metafile }, null, 2)
 );
 await writeFile(`../.runs/client/${reportPrefix}-artifacts.json`, JSON.stringify(report, null, 2));
 const entry = Object.entries(result.metafile.outputs).find(
   ([, output]) => output.entryPoint === 'src/main.tsx'
 );
 if (!entry || !entry[1].cssBundle) throw new Error('Missing client entry assets');
+const prepaintEntry = Object.entries(prepaint.metafile.outputs).find(
+  ([, output]) => output.entryPoint === 'src/features/theme/prepaint.ts'
+);
+if (!prepaintEntry) throw new Error('Missing theme prepaint asset');
 const manifest = {
+  prepaint: `/build/${basename(prepaintEntry[0])}`,
   script: `/build/${basename(entry[0])}`,
   stylesheet: `/build/${basename(entry[1].cssBundle)}`
 };
-for (const file of result.outputFiles) await writeFile(file.path, file.contents);
+for (const file of [...result.outputFiles, ...prepaint.outputFiles])
+  await writeFile(file.path, file.contents);
 await writeFile(`${outdir}/manifest.json.tmp`, JSON.stringify(manifest));
 await rename(`${outdir}/manifest.json.tmp`, `${outdir}/manifest.json`);
 console.log(JSON.stringify(manifest));
