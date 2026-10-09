@@ -179,8 +179,10 @@ no dependency was installed. These checks establish instruction structure, not r
 The canonical build passed in the isolated `fight-agent-os-task00144` Compose project: 7 Pi tests, 147 PHP tests /
 1,133 assertions; Deptrac 651 allowed with zero violations, uncovered dependencies, warnings or errors. The build
 reported no skips. Test database setup emitted two normal migration notices and completed six migrations.
-Receipts, logs and tested-file hashes are under ignored `.runs/notes/task-00144/`. Only completion/qualification
-records and generated planning views changed after that build and were revalidated directly.
+Receipts, logs and tested-file hashes originally lived under ignored `.runs/notes/task-00144/` in the retired
+worktree; their current main-checkout locator is
+`.runs/notes/task-00144-land/retained-worktree-runs/notes/task-00144/`. Only completion/qualification records and
+generated planning views changed after that build and were revalidated directly.
 
 Global Pi settings were inspected read-only and still reference the main checkout. These worktree instructions
 are not globally active until integrated there. No hosted publication or independent formal review was performed.
@@ -249,7 +251,9 @@ An independently delegated session read the actual entrypoint, references and ca
 
 No blocking instruction contradiction was found in those cases. The evaluator did not author the instructions,
 change implementation, run product scenarios, publish evidence or issue a formal review. Its report and evaluated
-file hashes are retained under ignored `.runs/notes/task-00146/forward-test.md`.
+file hashes originally lived under ignored `.runs/notes/task-00146/forward-test.md` in the retired worktree;
+the current main-checkout locator is
+`.runs/notes/task-00146-cleanup/retained-worktree/.runs/notes/task-00146/forward-test.md`.
 
 Ruby YAML validation passed for all five affected skill entrypoints. Pi 0.87.1's actual local skill loader found
 exactly one `qa` entry and no diagnostics. This proves discovery, not a live skill invocation. The optional Skill
