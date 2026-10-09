@@ -2,7 +2,7 @@
 id: TICKET-00014
 epic: EPIC-00004
 title: Accept the authentication and dashboard design language
-status: ready-for-agent
+status: done
 ---
 
 # Accept the authentication and dashboard design language
@@ -48,9 +48,18 @@ Use fake/sanitized data only and record source provenance/licenses. No runtime p
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00034](../tasks/00034-TASK.md) | Explore the authentication and dashboard design language | done |
-| [TASK-00035](../tasks/00035-TASK.md) | Independently accept the authentication and dashboard production handoff | ready-for-agent |
+| [TASK-00035](../tasks/00035-TASK.md) | Independently accept the authentication and dashboard production handoff | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
 
 Implements the visual destination from [WF-005](../wayfinder/tickets/WF-005-design-authentication-and-authorization-journeys.md). It depends on [TICKET-00005](00005-TICKET.md) and [TICKET-00006](00006-TICKET.md), may run alongside backend bootstrap work, and gates production journey UI.
+
+The owner rejected TASK-00034's Quiet console aesthetic (retaining its functional evidence) and selected C round 4
+as visual direction. A separate designer expanded the complete candidate and repaired DR35-01/02/03/04 across two
+revisions; independent `design-review` accepted the frozen revision-2 design with no blocking findings. The
+[durable production recreation handoff](../tasks/00035-TASK.md#accepted-production-recreation-handoff--2026-10-08)
+records selected/rejected composition, semantic values/Bootstrap mappings, routes/states/copy, permissions,
+responsive/keyboard/theme behavior, provenance and limitations without depending on ignored prototype source.
+This is design acceptance evidence, not production React, API, font/logo shipping approval or implementation
+review. TICKET completion awaits TASK-00035 acceptance and automatic rollup; other EPIC-00004 journeys remain open.

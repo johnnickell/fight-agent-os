@@ -37,7 +37,7 @@
 | [TASK-00032](00032-TASK.md) | Enforce deterministic frontend quality checks | done | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | done | [TICKET-00013](../tickets/00013-TICKET.md) |
 | [TASK-00034](00034-TASK.md) | Explore the authentication and dashboard design language | done | [TICKET-00014](../tickets/00014-TICKET.md) |
-| [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | ready-for-agent | [TICKET-00014](../tickets/00014-TICKET.md) |
+| [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | done | [TICKET-00014](../tickets/00014-TICKET.md) |
 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | ready-for-agent | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | ready-for-agent | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | ready-for-agent | [TICKET-00015](../tickets/00015-TICKET.md) |
