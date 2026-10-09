@@ -58,3 +58,15 @@ Theme controls need accessible names, keyboard operation, visible current state,
 ## Decisions and progress
 
 Depends on authentication [TICKET-00017](00017-TICKET.md), client/API foundations [TICKET-00012](00012-TICKET.md) and [TICKET-00010](00010-TICKET.md), and accepted design [TICKET-00014](00014-TICKET.md).
+
+### Owner typography amendment — 2026-10-09
+
+For production, use **Ubuntu for headings** and **Open Sans for body text**, including forms and controls.
+The owner's new choice supersedes the earlier Ubuntu-first body-stack assumption in TASK-00035's accepted
+historical design handoff; it does not revoke the accepted color, layout, interaction or accessibility direction.
+The owner's offered delivery options were Google Fonts at runtime or downloaded/self-hosted fonts. Choose
+**pinned, licensed, self-hosted assets** for both faces so actual fonts load under the same-origin CSP without
+runtime requests to a mutable external provider. Validate weights, glyph fallback, rights, reflow and the
+production browser delivery before claiming the visual change is implemented. The standalone
+[TASK-00158](../tasks/00158-TASK.md) owns that implementation alongside the file-backed Twig shell; this
+planning decision does not mean the current application has shipped either font or template.
