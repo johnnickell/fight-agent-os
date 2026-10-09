@@ -18,8 +18,8 @@ decomposition remain separate operations.
 
 ## Notes
 
-- Charted on 2026-09-28 at John's request from the shared memory discussion. The agreed direction is recorded
-  in WF-024; unresolved product choices remain open rather than being inferred from agreement with the direction.
+- Charted on 2026-09-28 at John's request from the shared memory discussion. The ownership and authority
+  boundary was approved in WF-024 on 2026-10-09; lifecycle/promotion and retrieval choices remain open.
 - [Harness and browser Agents](../epics/00006-EPIC.md) already cover profile templates, trusted first-party MCP
   access and conversation continuity. Those capabilities do not define memory ownership or promotion.
 - Preserve [repository identity](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md),
@@ -37,8 +37,12 @@ or promotion decisions, change its frontier, or require a new map.
 ## Decisions so far
 
 1. **[WF-024 — Define memory ownership and scope authority](tickets/WF-024-define-memory-ownership-and-scope-authority.md)
-   is open.** Broad reads and narrow writes, with separate promotion authority, are the agreed basis; precise
-   ownership, visibility and continuity rules remain to be settled.
+   is closed.** Project memory uses `RepositoryId`; a stable Agent has a small Workspace-private general bank and
+   repository/assignment-scoped working memory. Team Lead owns shared Workflow memory and explicit role handoffs;
+   TASK memory spans separately authorized Workflows. Shared entries preserve attributed history, while an Agent
+   may correct its own private working memory in place. Private reads for audit/improvement use the exact
+   `READ_PRIVATE_AGENT_MEMORIES` Permission and current target authority, with an explicit audit TASK additionally
+   required for audit Agents. Memory is intended to be database-backed, not a copy of Pi conversations.
 2. **[WF-025 — Define memory lifecycle and promotion](tickets/WF-025-define-memory-lifecycle-and-promotion.md)
    is open.** Decide entry invariants, revision and retention behavior, and the evidence required to publish at
    a broader scope after WF-024.
@@ -52,7 +56,7 @@ or promotion decisions, change its frontier, or require a new map.
 <!-- planning:decisions -->
 | Decision ID | Title | Type | Mode | Status | Depends on |
 |---|---|---|---|---|---|
-| [WF-024](tickets/WF-024-define-memory-ownership-and-scope-authority.md) | Define memory ownership and scope authority | wayfinder:grill | HITL | Open | — |
+| [WF-024](tickets/WF-024-define-memory-ownership-and-scope-authority.md) | Define memory ownership and scope authority | wayfinder:grill | HITL | Closed | — |
 | [WF-025](tickets/WF-025-define-memory-lifecycle-and-promotion.md) | Define memory lifecycle and promotion | wayfinder:grill | HITL | Open | [WF-024](tickets/WF-024-define-memory-ownership-and-scope-authority.md) |
 | [WF-026](tickets/WF-026-define-sandbox-memory-retrieval-and-mcp-access.md) | Define sandbox memory retrieval and MCP access | wayfinder:grill | HITL | Open | [WF-024](tickets/WF-024-define-memory-ownership-and-scope-authority.md), [WF-025](tickets/WF-025-define-memory-lifecycle-and-promotion.md) |
 <!-- /planning:decisions -->
@@ -65,14 +69,14 @@ WF-024 scope and ownership → WF-025 lifecycle and promotion → WF-026 retriev
 
 ## Frontier
 
-[WF-024 — Define memory ownership and scope authority](tickets/WF-024-define-memory-ownership-and-scope-authority.md)
-is the next decision: establish the exact scope/ownership matrix, especially agent continuity, shared phase
-visibility, and TASK memory spanning multiple Workflows.
+[WF-025 — Define memory lifecycle and promotion](tickets/WF-025-define-memory-lifecycle-and-promotion.md)
+is the next decision: settle entry revision and retention (including prior private values), promotion authority,
+source evidence and correction/retraction behavior under WF-024's accepted ownership and access rules.
 
 ## Not yet specified (fog)
 
 - First useful delivery slice and sequencing relative to Harness and managed execution.
-- Human inspection, correction, sharing and promotion-review experience.
+- Human inspection, correction, sharing and promotion-review experience beyond WF-024's access boundary.
 - Whether a MemorySpace needs its own lifecycle and aggregate boundary alongside individual memory entries.
 - Retrieval ranking, semantic search, summarization strategy and measurable usefulness; WF-026 now records Jev
   ranking as a proposal to evaluate. No vector database or memory-specific relevance threshold is selected.
