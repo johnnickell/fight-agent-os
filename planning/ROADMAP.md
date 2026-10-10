@@ -98,11 +98,15 @@ the same operation that completes their children.
 |---|---|---|
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | ready-for-agent |
-| [EPIC-00011](epics/00011-EPIC.md) | Deliver durable scoped Agent memory | ready-for-agent |
 
 ### TICKETs without TASKs
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
 | [TICKET-00034](tickets/00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00046](tickets/00046-TICKET.md) | Keep scoped private Agent memory | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
+| [TICKET-00047](tickets/00047-TICKET.md) | Share attributed Workflow and TASK learning | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
+| [TICKET-00048](tickets/00048-TICKET.md) | Review and publish broader memory lessons | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
+| [TICKET-00049](tickets/00049-TICKET.md) | Retrieve scoped memory selectively with Jev | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
+| [TICKET-00050](tickets/00050-TICKET.md) | Inspect memory and remove prohibited content safely | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
 <!-- /planning:frontier -->

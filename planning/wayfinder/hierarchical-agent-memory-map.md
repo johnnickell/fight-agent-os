@@ -82,7 +82,8 @@ WF-024 scope and ownership → WF-025 lifecycle and promotion → WF-026 retriev
 No open Wayfinder decision remains. The approved
 [Durable scoped Agent memory](#approved-epic-handoff--2026-10-10) destination produced
 [EPIC-00011 — Deliver durable scoped Agent memory](../epics/00011-EPIC.md) through its separate grill. This map
-is Closed. The next planning phase is that EPIC's separate requirement TICKET decomposition, not TASK work.
+is Closed. John approved that EPIC's five requirement TICKETs on 2026-10-10; its TICKET phase is complete.
+The next separate planning phase is TASK decomposition, not implementation selection.
 
 ## Approved EPIC handoff — 2026-10-10
 
@@ -96,12 +97,19 @@ The resulting EPIC states its full staged delivery and dependencies; no memory c
 or incremental Jev integration is claimed implemented by approving this handoff. Prefer a distinct memory EPIC
 rather than silently expanding the approved first Harness or Team Lead → Engineer execution milestone.
 
+The approved requirement split is [TICKET-00046 — Private Agent memory](../tickets/00046-TICKET.md),
+[TICKET-00047 — Shared Workflow/TASK learning](../tickets/00047-TICKET.md),
+[TICKET-00048 — Broader publication](../tickets/00048-TICKET.md),
+[TICKET-00049 — Jev memory lookup](../tickets/00049-TICKET.md), and
+[TICKET-00050 — Human oversight and safety removal](../tickets/00050-TICKET.md).
+No TASK decomposition or runtime acceptance follows merely from approving these requirements.
+
 **Delegated questions and exclusions:**
 
-- Let the EPIC grill choose a bounded first useful delivery and sequencing against Harness, database authority
-  and managed execution. Later TICKETs can refine human inspection, correction, sharing and promotion-review
-  experience within the accepted access rules, and decide whether MemorySpace needs an aggregate alongside
-  entries. Do not assume a new aggregate is already approved.
+- The EPIC grill chose staged full-capability delivery against Harness, database authority and managed
+  execution. The accepted TICKETs own human inspection, correction, sharing and promotion-review requirements;
+  implementation planning may qualify whether a MemorySpace aggregate is necessary alongside entries. Do not
+  assume a new aggregate is already approved.
 - Qualify retrieval usefulness, memory-specific Jev questions/thresholds and source coverage during downstream
   requirements and implementation. Semantic search and vector storage remain optional technology questions;
   WF-026 accepts typed judgments and exact reads, not an embedding provider.
