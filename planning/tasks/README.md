@@ -189,4 +189,7 @@
 | [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | ready-for-agent | [TICKET-00037](../tickets/00037-TICKET.md) |
 | [TASK-00185](00185-TASK.md) | Remember and curate an Agent's scoped private memory | ready-for-agent | [TICKET-00046](../tickets/00046-TICKET.md) |
 | [TASK-00186](00186-TASK.md) | Inspect private memory under scoped oversight | needs-info | [TICKET-00046](../tickets/00046-TICKET.md) |
+| [TASK-00187](00187-TASK.md) | Curate attributed lessons within a Workflow | ready-for-agent | [TICKET-00047](../tickets/00047-TICKET.md) |
+| [TASK-00188](00188-TASK.md) | Carry TASK summaries across Workflow attempts | ready-for-agent | [TICKET-00047](../tickets/00047-TICKET.md) |
+| [TASK-00189](00189-TASK.md) | Inspect retained lessons under historical authority | needs-info | [TICKET-00047](../tickets/00047-TICKET.md) |
 <!-- /planning:records -->

@@ -76,7 +76,9 @@ Protect prohibited content through TICKET-00050, not an ordinary retraction that
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00187](../tasks/00187-TASK.md) | Curate attributed lessons within a Workflow | ready-for-agent |
+| [TASK-00188](../tasks/00188-TASK.md) | Carry TASK summaries across Workflow attempts | ready-for-agent |
+| [TASK-00189](../tasks/00189-TASK.md) | Inspect retained lessons under historical authority | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -86,3 +88,14 @@ Approved under [EPIC-00011](../epics/00011-EPIC.md), [WF-024](../wayfinder/ticke
 [WF-026](../wayfinder/tickets/WF-026-define-sandbox-memory-retrieval-and-mcp-access.md). Reuse the actual
 coordinated Workflow/phase contracts from EPIC-00007 and EPIC-00008 when available; this TICKET does not
 advance their Board priority, create a Workflow or publish live memory. TASK decomposition is separate.
+
+### Approved TASK decomposition — 2026-10-10
+
+John approved three vertical, independently reviewable outcomes:
+[TASK-00187 — Curate attributed lessons within a Workflow](../tasks/00187-TASK.md),
+[TASK-00188 — Carry TASK summaries across Workflow attempts](../tasks/00188-TASK.md), and
+[TASK-00189 — Inspect retained lessons under historical authority](../tasks/00189-TASK.md). The last remains
+`needs-info` until actual Project Manager/Repository and scoped audit-TASK authority paths can be identified;
+templates, title-only roles, private oversight or test fixtures do not supply those paths. All three remain
+unranked, and live memory ingestion remains gated on TICKET-00050's safety-removal capability. TICKET-00048
+through TICKET-00050 still need separate TASK decomposition; this approval does not start implementation.
