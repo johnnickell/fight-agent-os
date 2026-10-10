@@ -82,7 +82,9 @@ atomic database transaction erases provider-held bytes.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00196](../tasks/00196-TASK.md) | Contain and remove prohibited private and shared memory | ready-for-agent |
+| [TASK-00197](../tasks/00197-TASK.md) | Remove prohibited content across published lineage | ready-for-agent |
+| [TASK-00198](../tasks/00198-TASK.md) | Inspect and correct authorized memory in the browser | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -91,3 +93,16 @@ Approved under [EPIC-00011](../epics/00011-EPIC.md), [WF-024](../wayfinder/ticke
 and [WF-025](../wayfinder/tickets/WF-025-define-memory-lifecycle-and-promotion.md). Basic human oversight
 was explicitly included during the EPIC grill; no live human operation, Agent access grant, deletion, backup
 change or provider call occurred through this planning TICKET. TASK decomposition is separate.
+
+### Approved TASK decomposition — 2026-10-10
+
+John approved three independently reviewable safety-first outcomes:
+[TASK-00196 — Contain and remove prohibited private and shared memory](../tasks/00196-TASK.md),
+[TASK-00197 — Remove prohibited content across published lineage](../tasks/00197-TASK.md), and
+[TASK-00198 — Inspect and correct authorized memory in the browser](../tasks/00198-TASK.md).
+The initial private/shared safety operation does not depend on publication; the published extension follows
+actual target-entry lineage, and the basic human path follows qualified private/historical access,
+authenticated browser authority and the full safety operation. All three remain unranked. Real
+backup/export and provider retention require direct qualification before claiming safe live ingestion or
+complete removal; neither a planning approval nor a fixture proves external erasure. This closes the
+map's TASK-decomposition phase, not any implementation, review, activation or merge.

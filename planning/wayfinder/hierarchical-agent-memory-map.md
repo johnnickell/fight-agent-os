@@ -84,9 +84,9 @@ No open Wayfinder decision remains. The approved
 [EPIC-00011 — Deliver durable scoped Agent memory](../epics/00011-EPIC.md) through its separate grill. This map
 is Closed. John approved that EPIC's five requirement TICKETs on 2026-10-10; its TICKET phase is complete.
 TASK decomposition has begun: TICKET-00046's TASK-00185/00186, TICKET-00047's TASK-00187/00188/00189,
-TICKET-00048's TASK-00190/00191/00192 and TICKET-00049's TASK-00193/00194/00195 were approved on
-2026-10-10. TICKET-00050 still needs TASK decomposition; it is the next planning target, not
-implementation selection.
+TICKET-00048's TASK-00190/00191/00192, TICKET-00049's TASK-00193/00194/00195 and TICKET-00050's
+TASK-00196/00197/00198 were approved on 2026-10-10. All linked EPIC/TICKET/TASK planning phases are now
+complete; that does not change the Board's implementation priority or resolve TASK-level `needs-info`.
 
 ## Approved EPIC handoff — 2026-10-10
 
@@ -118,8 +118,12 @@ real Repository and Workspace steward authority. TICKET-00049 now has
 [TASK-00193 — One-entry typed question](../tasks/00193-TASK.md),
 [TASK-00194 — Current-scope ID selection](../tasks/00194-TASK.md), and
 [TASK-00195 — Published/historical selection](../tasks/00195-TASK.md); the last retains explicit blockers
-on the separately qualified oversight, historical and publication paths. TICKET-00050 has no accepted TASK
-decomposition or runtime acceptance.
+on the separately qualified oversight, historical and publication paths. TICKET-00050 now has
+[TASK-00196 — Initial safety removal](../tasks/00196-TASK.md),
+[TASK-00197 — Published-lineage removal](../tasks/00197-TASK.md), and
+[TASK-00198 — Basic human oversight](../tasks/00198-TASK.md). All five requirement TICKETs now have
+approved TASK decompositions. No runtime memory, live access, verified external erasure, Permission,
+Agent or provider use follows from this planning handoff.
 
 **Delegated questions and exclusions:**
 

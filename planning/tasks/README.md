@@ -198,4 +198,7 @@
 | [TASK-00193](00193-TASK.md) | Ask typed questions about one permitted memory entry | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
 | [TASK-00194](00194-TASK.md) | Narrow a current memory scope to matching entry IDs | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
 | [TASK-00195](00195-TASK.md) | Extend selective lookup to published and historical scopes | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
+| [TASK-00196](00196-TASK.md) | Contain and remove prohibited private and shared memory | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
+| [TASK-00197](00197-TASK.md) | Remove prohibited content across published lineage | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
+| [TASK-00198](00198-TASK.md) | Inspect and correct authorized memory in the browser | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
 <!-- /planning:records -->

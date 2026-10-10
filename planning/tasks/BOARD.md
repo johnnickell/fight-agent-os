@@ -139,6 +139,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00193](00193-TASK.md) | Ask typed questions about one permitted memory entry | [TICKET-00049 — Retrieve scoped memory selectively with Jev](../tickets/00049-TICKET.md) | ready-for-agent | [TASK-00188](00188-TASK.md) | — |
 | — | [TASK-00194](00194-TASK.md) | Narrow a current memory scope to matching entry IDs | [TICKET-00049 — Retrieve scoped memory selectively with Jev](../tickets/00049-TICKET.md) | ready-for-agent | [TASK-00193](00193-TASK.md) | — |
 | — | [TASK-00195](00195-TASK.md) | Extend selective lookup to published and historical scopes | [TICKET-00049 — Retrieve scoped memory selectively with Jev](../tickets/00049-TICKET.md) | ready-for-agent | [TASK-00186](00186-TASK.md), [TASK-00189](00189-TASK.md), [TASK-00191](00191-TASK.md), [TASK-00194](00194-TASK.md) | — |
+| — | [TASK-00196](00196-TASK.md) | Contain and remove prohibited private and shared memory | [TICKET-00050 — Inspect memory and remove prohibited content safely](../tickets/00050-TICKET.md) | ready-for-agent | [TASK-00188](00188-TASK.md) | — |
+| — | [TASK-00197](00197-TASK.md) | Remove prohibited content across published lineage | [TICKET-00050 — Inspect memory and remove prohibited content safely](../tickets/00050-TICKET.md) | ready-for-agent | [TASK-00191](00191-TASK.md), [TASK-00196](00196-TASK.md) | — |
+| — | [TASK-00198](00198-TASK.md) | Inspect and correct authorized memory in the browser | [TICKET-00050 — Inspect memory and remove prohibited content safely](../tickets/00050-TICKET.md) | ready-for-agent | [TASK-00051](00051-TASK.md), [TASK-00186](00186-TASK.md), [TASK-00189](00189-TASK.md), [TASK-00197](00197-TASK.md) | — |
 
 ## Needs Info
 
