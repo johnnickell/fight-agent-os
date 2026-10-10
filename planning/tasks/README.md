@@ -192,4 +192,7 @@
 | [TASK-00187](00187-TASK.md) | Curate attributed lessons within a Workflow | ready-for-agent | [TICKET-00047](../tickets/00047-TICKET.md) |
 | [TASK-00188](00188-TASK.md) | Carry TASK summaries across Workflow attempts | ready-for-agent | [TICKET-00047](../tickets/00047-TICKET.md) |
 | [TASK-00189](00189-TASK.md) | Inspect retained lessons under historical authority | needs-info | [TICKET-00047](../tickets/00047-TICKET.md) |
+| [TASK-00190](00190-TASK.md) | Propose broader guidance from permitted memory | ready-for-agent | [TICKET-00048](../tickets/00048-TICKET.md) |
+| [TASK-00191](00191-TASK.md) | Review and publish guidance at an authorized target | needs-info | [TICKET-00048](../tickets/00048-TICKET.md) |
+| [TASK-00192](00192-TASK.md) | Reassess published guidance when a source changes | ready-for-agent | [TICKET-00048](../tickets/00048-TICKET.md) |
 <!-- /planning:records -->

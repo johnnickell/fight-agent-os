@@ -76,7 +76,9 @@ source contains prohibited material.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00190](../tasks/00190-TASK.md) | Propose broader guidance from permitted memory | ready-for-agent |
+| [TASK-00191](../tasks/00191-TASK.md) | Review and publish guidance at an authorized target | needs-info |
+| [TASK-00192](../tasks/00192-TASK.md) | Reassess published guidance when a source changes | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -85,3 +87,14 @@ Approved under [EPIC-00011](../epics/00011-EPIC.md), [WF-024](../wayfinder/ticke
 and [WF-025](../wayfinder/tickets/WF-025-define-memory-lifecycle-and-promotion.md). No promotion, Agent,
 Permission, target entry or live human review was performed by accepting this TICKET. TASK decomposition is
 separate.
+
+### Approved TASK decomposition — 2026-10-10
+
+John approved three independently reviewable outcomes:
+[TASK-00190 — Propose broader guidance from permitted memory](../tasks/00190-TASK.md),
+[TASK-00191 — Review and publish guidance at an authorized target](../tasks/00191-TASK.md), and
+[TASK-00192 — Reassess published guidance when a source changes](../tasks/00192-TASK.md).
+TASK-00191 remains `needs-info` until the real Repository and Workspace steward/target-write authority
+paths are identified; a title or TASK-00189's historical-read path is not publication authority. The
+records remain unranked. TICKET-00049 and TICKET-00050 still require separate TASK decomposition; this
+approval does not activate live ingestion, publish memory or change the Board's execution priority.
