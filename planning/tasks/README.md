@@ -195,4 +195,7 @@
 | [TASK-00190](00190-TASK.md) | Propose broader guidance from permitted memory | ready-for-agent | [TICKET-00048](../tickets/00048-TICKET.md) |
 | [TASK-00191](00191-TASK.md) | Review and publish guidance at an authorized target | needs-info | [TICKET-00048](../tickets/00048-TICKET.md) |
 | [TASK-00192](00192-TASK.md) | Reassess published guidance when a source changes | ready-for-agent | [TICKET-00048](../tickets/00048-TICKET.md) |
+| [TASK-00193](00193-TASK.md) | Ask typed questions about one permitted memory entry | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
+| [TASK-00194](00194-TASK.md) | Narrow a current memory scope to matching entry IDs | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
+| [TASK-00195](00195-TASK.md) | Extend selective lookup to published and historical scopes | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
 <!-- /planning:records -->

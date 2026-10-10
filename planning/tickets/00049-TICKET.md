@@ -85,7 +85,9 @@ a distinct later exact read is its own authorized operation.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00193](../tasks/00193-TASK.md) | Ask typed questions about one permitted memory entry | ready-for-agent |
+| [TASK-00194](../tasks/00194-TASK.md) | Narrow a current memory scope to matching entry IDs | ready-for-agent |
+| [TASK-00195](../tasks/00195-TASK.md) | Extend selective lookup to published and historical scopes | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -96,3 +98,15 @@ Approved under [EPIC-00011](../epics/00011-EPIC.md) and
 Qualified file, SQL and generic Jev tools are upstream capabilities, not proof that memory lookup is already
 available. No provider request, MCP tool enrollment or live retrieval was performed by accepting this TICKET.
 TASK decomposition is separate.
+
+### Approved TASK decomposition — 2026-10-10
+
+John approved three independently reviewable outcomes:
+[TASK-00193 — Ask typed questions about one permitted memory entry](../tasks/00193-TASK.md),
+[TASK-00194 — Narrow a current memory scope to matching entry IDs](../tasks/00194-TASK.md), and
+[TASK-00195 — Extend selective lookup to published and historical scopes](../tasks/00195-TASK.md).
+TASK-00195 explicitly depends on TASK-00186/00189/00191 for their separately qualified private,
+shared-history and published target authorities; their existing `needs-info` gaps are not resolved by Jev.
+The records are unranked. No provider credential, live request, memory ingestion or Board priority changes
+follow from this approval. TICKET-00050 still needs its own TASK decomposition before map-wide TASK
+planning is complete.

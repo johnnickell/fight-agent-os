@@ -104,6 +104,5 @@ the same operation that completes their children.
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
 | [TICKET-00034](tickets/00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00049](tickets/00049-TICKET.md) | Retrieve scoped memory selectively with Jev | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
 | [TICKET-00050](tickets/00050-TICKET.md) | Inspect memory and remove prohibited content safely | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
 <!-- /planning:frontier -->

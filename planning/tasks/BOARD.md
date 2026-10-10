@@ -136,6 +136,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00188](00188-TASK.md) | Carry TASK summaries across Workflow attempts | [TICKET-00047 — Share attributed Workflow and TASK learning](../tickets/00047-TICKET.md) | ready-for-agent | [TASK-00187](00187-TASK.md) | — |
 | — | [TASK-00190](00190-TASK.md) | Propose broader guidance from permitted memory | [TICKET-00048 — Review and publish broader memory lessons](../tickets/00048-TICKET.md) | ready-for-agent | [TASK-00188](00188-TASK.md) | — |
 | — | [TASK-00192](00192-TASK.md) | Reassess published guidance when a source changes | [TICKET-00048 — Review and publish broader memory lessons](../tickets/00048-TICKET.md) | ready-for-agent | [TASK-00191](00191-TASK.md) | — |
+| — | [TASK-00193](00193-TASK.md) | Ask typed questions about one permitted memory entry | [TICKET-00049 — Retrieve scoped memory selectively with Jev](../tickets/00049-TICKET.md) | ready-for-agent | [TASK-00188](00188-TASK.md) | — |
+| — | [TASK-00194](00194-TASK.md) | Narrow a current memory scope to matching entry IDs | [TICKET-00049 — Retrieve scoped memory selectively with Jev](../tickets/00049-TICKET.md) | ready-for-agent | [TASK-00193](00193-TASK.md) | — |
+| — | [TASK-00195](00195-TASK.md) | Extend selective lookup to published and historical scopes | [TICKET-00049 — Retrieve scoped memory selectively with Jev](../tickets/00049-TICKET.md) | ready-for-agent | [TASK-00186](00186-TASK.md), [TASK-00189](00189-TASK.md), [TASK-00191](00191-TASK.md), [TASK-00194](00194-TASK.md) | — |
 
 ## Needs Info
 

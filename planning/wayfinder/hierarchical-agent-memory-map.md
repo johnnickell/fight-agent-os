@@ -84,8 +84,9 @@ No open Wayfinder decision remains. The approved
 [EPIC-00011 — Deliver durable scoped Agent memory](../epics/00011-EPIC.md) through its separate grill. This map
 is Closed. John approved that EPIC's five requirement TICKETs on 2026-10-10; its TICKET phase is complete.
 TASK decomposition has begun: TICKET-00046's TASK-00185/00186, TICKET-00047's TASK-00187/00188/00189,
-and TICKET-00048's TASK-00190/00191/00192 were approved on 2026-10-10. TICKET-00049 and TICKET-00050
-still need TASK decomposition; TICKET-00049 is the next planning target, not implementation selection.
+TICKET-00048's TASK-00190/00191/00192 and TICKET-00049's TASK-00193/00194/00195 were approved on
+2026-10-10. TICKET-00050 still needs TASK decomposition; it is the next planning target, not
+implementation selection.
 
 ## Approved EPIC handoff — 2026-10-10
 
@@ -113,7 +114,11 @@ Project Manager and audit-TASK authority. TICKET-00048 now has
 [TASK-00190 — Scoped proposals](../tasks/00190-TASK.md),
 [TASK-00191 — Target review/publication](../tasks/00191-TASK.md), and
 [TASK-00192 — Derived-owner reassessment](../tasks/00192-TASK.md), with TASK-00191 still `needs-info` for
-real Repository and Workspace steward authority. TICKET-00049 and TICKET-00050 have no accepted TASK
+real Repository and Workspace steward authority. TICKET-00049 now has
+[TASK-00193 — One-entry typed question](../tasks/00193-TASK.md),
+[TASK-00194 — Current-scope ID selection](../tasks/00194-TASK.md), and
+[TASK-00195 — Published/historical selection](../tasks/00195-TASK.md); the last retains explicit blockers
+on the separately qualified oversight, historical and publication paths. TICKET-00050 has no accepted TASK
 decomposition or runtime acceptance.
 
 **Delegated questions and exclusions:**
