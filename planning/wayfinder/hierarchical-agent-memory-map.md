@@ -1,7 +1,7 @@
 # Wayfinder Map: Hierarchical agent memory
 
 **Label:** `wayfinder:map`
-**Status:** Active
+**Status:** Closed
 
 > This map is an **index, not a store**. Each material decision lives in exactly one linked ticket under
 > `tickets/`; this map summarizes the linked decisions and shows the next decision frontier.
@@ -20,7 +20,8 @@ decomposition remain separate operations.
 
 - Charted on 2026-09-28 at John's request from the shared memory discussion. The ownership and authority
   boundary was approved in WF-024 on 2026-10-09, lifecycle/promotion in WF-025 on the same date, and
-  retrieval/MCP access in WF-026 on 2026-10-10. The EPIC handoff and remaining fog are not yet approved.
+  retrieval/MCP access in WF-026 on 2026-10-10. John approved the bounded memory EPIC handoff and
+  delegation of remaining fog on 2026-10-10; the EPIC itself has not been written.
 - [Harness and browser Agents](../epics/00006-EPIC.md) already cover profile templates, trusted first-party MCP
   access and conversation continuity. Those capabilities do not define memory ownership or promotion.
 - Preserve [repository identity](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md),
@@ -78,21 +79,38 @@ WF-024 scope and ownership → WF-025 lifecycle and promotion → WF-026 retriev
 
 ## Frontier
 
-No open Wayfinder decision remains. The next step is a human-approved handoff: identify the bounded memory EPIC
-destination or justified amendments to existing planning, and resolve or explicitly delegate the remaining fog.
-Do not infer an approved EPIC or close the map from WF-026's decision closeout alone.
+No open Wayfinder decision remains. John approved the [Durable scoped Agent memory](#approved-epic-handoff--2026-10-10)
+EPIC destination; the next separate operation is its grill. This map is Closed; approval of a destination does
+not create its EPIC or authorize TICKET/TASK decomposition.
 
-## Not yet specified (fog)
+## Approved EPIC handoff — 2026-10-10
 
-- First useful delivery slice and sequencing relative to Harness and managed execution.
-- Human inspection, correction, sharing and promotion-review experience beyond WF-024's access boundary.
-- Whether a MemorySpace needs its own lifecycle and aggregate boundary alongside individual memory entries.
-- Deterministic routine archival and removal policy, if later needed; completion and age do not trigger it.
-- Friendly generated names for multiple Agent instantiations of a template; display names are not identities or
-  authority, and each stable Agent identity has at most one active session.
-- Retrieval qualification, semantic search implementation and measurable usefulness under WF-026's accepted Jev
-  question and selective-read contract. No vector database or memory-specific relevance threshold is selected.
-- Whether Director or CTO is the eventual template name, and its responsibilities beyond memory stewardship.
+**Destination:** Durable scoped Agent memory. Grill one EPIC for database-backed private and shared Agent memory,
+including scope-aware MCP read/write operations, controlled promotion, retained learning from completed work,
+and Jev typed questions over authorized memory. Consume WF-024, WF-025 and WF-026 without re-deciding their
+ownership, lifecycle, execution-access or provider boundaries. Keep mandatory Workflow handoffs, authoritative
+Planning and source code, Harness session continuity and repository-file screening under their existing owners.
+The resulting EPIC should state its own smallest useful delivery slice and dependencies; no memory capability
+or incremental Jev integration is claimed implemented by approving this handoff. Prefer a distinct memory EPIC
+rather than silently expanding the approved first Harness or Team Lead → Engineer execution milestone.
+
+**Delegated questions and exclusions:**
+
+- Let the EPIC grill choose a bounded first useful delivery and sequencing against Harness, database authority
+  and managed execution. Later TICKETs can refine human inspection, correction, sharing and promotion-review
+  experience within the accepted access rules, and decide whether MemorySpace needs an aggregate alongside
+  entries. Do not assume a new aggregate is already approved.
+- Qualify retrieval usefulness, memory-specific Jev questions/thresholds and source coverage during downstream
+  requirements and implementation. Semantic search and vector storage remain optional technology questions;
+  WF-026 accepts typed judgments and exact reads, not an embedding provider.
+- Deterministic routine archival and removal remain a **separate future lifecycle decision**, not a hidden
+  delivery requirement. Workflow/TASK completion and age do not trigger deletion; retain authorized historical
+  learning under WF-025. Exceptional prohibited-content removal remains required.
+- Friendly generated names for multiple Agent instantiations, and choosing Director versus CTO as a template
+  name or broader role, belong to future Harness/team-profile planning. Display names do not grant identity or
+  authority; one stable Agent identity has at most one active session. Neither topic blocks this memory EPIC.
+
+No EPIC, TICKET, TASK, schema, Agent, credential or live memory entry was created or changed by closing the map.
 
 ## Out of scope
 
