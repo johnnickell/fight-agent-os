@@ -19,8 +19,8 @@ decomposition remain separate operations.
 ## Notes
 
 - Charted on 2026-09-28 at John's request from the shared memory discussion. The ownership and authority
-  boundary was approved in WF-024 on 2026-10-09, and lifecycle/promotion in WF-025 on the same date;
-  retrieval choices remain open.
+  boundary was approved in WF-024 on 2026-10-09, lifecycle/promotion in WF-025 on the same date, and
+  retrieval/MCP access in WF-026 on 2026-10-10. The EPIC handoff and remaining fog are not yet approved.
 - [Harness and browser Agents](../epics/00006-EPIC.md) already cover profile templates, trusted first-party MCP
   access and conversation continuity. Those capabilities do not define memory ownership or promotion.
 - Preserve [repository identity](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md),
@@ -53,10 +53,12 @@ or promotion decisions, change its frontier, or require a new map.
    prohibited content requires exceptional removal. Source code establishes current behavior; published Planning
    establishes approved intent, and neither is displaced by memory.
 3. **[WF-026 — Define sandbox memory retrieval and MCP access](tickets/WF-026-define-sandbox-memory-retrieval-and-mcp-access.md)
-   is open.** Decide bounded retrieval, external service authority and the Resource/Tool boundary under the
-   accepted ownership and lifecycle rules. Its proposed Jev use case ranks already-authorized entries, with
-   separate disclosure checks and memory-specific qualification; it does not ingest, promote or grant access to
-   memory.
+   is closed.** An Agent starts with instructions and an authoritative handoff, then explicitly uses
+   scope-authorized MCP tools for exact reads, writes and Jev typed questions over memory or a permitted scope.
+   Jev can narrow entries to IDs without loading source text into Agent context; it is not an Agent identity or
+   a summarizer. Ordinary execution reads close with the relevant Workflow/TASK, while permitted Project
+   Manager, audit and human historical reads remain. No memory-specific cache or offline database fallback is
+   approved. File/SQL access and concrete Jev thresholds stay with their own qualified use cases.
 
 ## Tickets
 
@@ -65,7 +67,7 @@ or promotion decisions, change its frontier, or require a new map.
 |---|---|---|---|---|---|
 | [WF-024](tickets/WF-024-define-memory-ownership-and-scope-authority.md) | Define memory ownership and scope authority | wayfinder:grill | HITL | Closed | — |
 | [WF-025](tickets/WF-025-define-memory-lifecycle-and-promotion.md) | Define memory lifecycle and promotion | wayfinder:grill | HITL | Closed | [WF-024](tickets/WF-024-define-memory-ownership-and-scope-authority.md) |
-| [WF-026](tickets/WF-026-define-sandbox-memory-retrieval-and-mcp-access.md) | Define sandbox memory retrieval and MCP access | wayfinder:grill | HITL | Open | [WF-024](tickets/WF-024-define-memory-ownership-and-scope-authority.md), [WF-025](tickets/WF-025-define-memory-lifecycle-and-promotion.md) |
+| [WF-026](tickets/WF-026-define-sandbox-memory-retrieval-and-mcp-access.md) | Define sandbox memory retrieval and MCP access | wayfinder:grill | HITL | Closed | [WF-024](tickets/WF-024-define-memory-ownership-and-scope-authority.md), [WF-025](tickets/WF-025-define-memory-lifecycle-and-promotion.md) |
 <!-- /planning:decisions -->
 
 ## Blocking relationships
@@ -76,9 +78,9 @@ WF-024 scope and ownership → WF-025 lifecycle and promotion → WF-026 retriev
 
 ## Frontier
 
-[WF-026 — Define sandbox memory retrieval and MCP access](tickets/WF-026-define-sandbox-memory-retrieval-and-mcp-access.md)
-is the next decision: settle authorized bounded retrieval and MCP delivery under WF-024/WF-025's accepted scope,
-retention, proposal and safety boundaries, including memory-specific Jev qualification.
+No open Wayfinder decision remains. The next step is a human-approved handoff: identify the bounded memory EPIC
+destination or justified amendments to existing planning, and resolve or explicitly delegate the remaining fog.
+Do not infer an approved EPIC or close the map from WF-026's decision closeout alone.
 
 ## Not yet specified (fog)
 
@@ -88,8 +90,8 @@ retention, proposal and safety boundaries, including memory-specific Jev qualifi
 - Deterministic routine archival and removal policy, if later needed; completion and age do not trigger it.
 - Friendly generated names for multiple Agent instantiations of a template; display names are not identities or
   authority, and each stable Agent identity has at most one active session.
-- Retrieval ranking, semantic search, summarization strategy and measurable usefulness; WF-026 now records Jev
-  ranking as a proposal to evaluate. No vector database or memory-specific relevance threshold is selected.
+- Retrieval qualification, semantic search implementation and measurable usefulness under WF-026's accepted Jev
+  question and selective-read contract. No vector database or memory-specific relevance threshold is selected.
 - Whether Director or CTO is the eventual template name, and its responsibilities beyond memory stewardship.
 
 ## Out of scope
