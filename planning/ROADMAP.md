@@ -104,7 +104,6 @@ the same operation that completes their children.
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
 | [TICKET-00034](tickets/00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00046](tickets/00046-TICKET.md) | Keep scoped private Agent memory | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
 | [TICKET-00047](tickets/00047-TICKET.md) | Share attributed Workflow and TASK learning | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
 | [TICKET-00048](tickets/00048-TICKET.md) | Review and publish broader memory lessons | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |
 | [TICKET-00049](tickets/00049-TICKET.md) | Retrieve scoped memory selectively with Jev | [EPIC-00011](epics/00011-EPIC.md) | ready-for-agent |

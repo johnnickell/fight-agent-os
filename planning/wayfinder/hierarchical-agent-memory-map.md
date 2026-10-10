@@ -83,7 +83,9 @@ No open Wayfinder decision remains. The approved
 [Durable scoped Agent memory](#approved-epic-handoff--2026-10-10) destination produced
 [EPIC-00011 — Deliver durable scoped Agent memory](../epics/00011-EPIC.md) through its separate grill. This map
 is Closed. John approved that EPIC's five requirement TICKETs on 2026-10-10; its TICKET phase is complete.
-The next separate planning phase is TASK decomposition, not implementation selection.
+TASK decomposition has begun for TICKET-00046, with TASK-00185 and TASK-00186 approved on 2026-10-10; the
+remaining TICKET-00047 through TICKET-00050 TASK decompositions are still outstanding. TICKET-00047 is the
+next selected planning target, not implementation selection.
 
 ## Approved EPIC handoff — 2026-10-10
 
@@ -102,7 +104,9 @@ The approved requirement split is [TICKET-00046 — Private Agent memory](../tic
 [TICKET-00048 — Broader publication](../tickets/00048-TICKET.md),
 [TICKET-00049 — Jev memory lookup](../tickets/00049-TICKET.md), and
 [TICKET-00050 — Human oversight and safety removal](../tickets/00050-TICKET.md).
-No TASK decomposition or runtime acceptance follows merely from approving these requirements.
+TICKET-00046 now has [TASK-00185 — Own private curation](../tasks/00185-TASK.md) and
+[TASK-00186 — Scoped oversight](../tasks/00186-TASK.md), the latter still `needs-info` for a real audit-TASK
+binding. The remaining TICKETs have no accepted TASK decomposition or runtime acceptance.
 
 **Delegated questions and exclusions:**
 

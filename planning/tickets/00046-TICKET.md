@@ -53,7 +53,7 @@ its prohibited-content path must be available before live memory ingestion is cl
 | Remember private learning | Record private entry in currently assigned or permitted general scope | Resolve Agent, assignment, scope and source references | Private entry recorded | Durable attributed current text in the correct partition; retry does not duplicate |
 | Correct or clear own belief | Replace or clear own current private entry | Read current entry and applicable ownership/lifecycle | Private entry corrected or cleared | Only the current text changes; safe metadata remains, prior private value is not reloaded |
 | Recall own private context | N/A — read-only | Read exact authorized entry/own scoped entries | N/A — read does not change memory | Permitted current text and provenance only, not another Agent's working memory |
-| Inspect for authorized oversight | N/A — read-only | Read target private history under `READ_PRIVATE_AGENT_MEMORIES` and current target authority | Attributed access audit observation | No publication or peer disclosure; missing audit TASK denies an audit Agent |
+| Inspect for authorized oversight | Audited private-memory inspection | Read target private history under `READ_PRIVATE_AGENT_MEMORIES` and current target authority | Safe attributed access audit on successful disclosure | No publication or peer disclosure; missing audit TASK denies an audit Agent |
 
 Semantic names are not final transport DTOs, Permission catalogs beyond the accepted exact oversight name,
 Doctrine mappings or a requirement to event-source entries.
@@ -84,7 +84,8 @@ owns Domain/Application/Adapter policy placement; ADR 0002 owns guarded PostgreS
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00185](../tasks/00185-TASK.md) | Remember and curate an Agent's scoped private memory | ready-for-agent |
+| [TASK-00186](../tasks/00186-TASK.md) | Inspect private memory under scoped oversight | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -94,3 +95,14 @@ Approved under [EPIC-00011](../epics/00011-EPIC.md), [WF-024](../wayfinder/ticke
 [WF-026](../wayfinder/tickets/WF-026-define-sandbox-memory-retrieval-and-mcp-access.md). This TICKET owns the
 private-memory use case, not Agent provisioning, Harness package work, live data ingestion or implementation
 acceptance. TASK decomposition is separate.
+
+### Approved TASK decomposition — 2026-10-10
+
+John approved [TASK-00185 — Remember and curate an Agent's scoped private memory](../tasks/00185-TASK.md)
+and [TASK-00186 — Inspect private memory under scoped oversight](../tasks/00186-TASK.md) as two complete,
+independently reviewable outcomes, not schema/MCP layers or a formal test for every note. TASK-00185 follows
+the accepted Repository identity, assigned-Agent and authenticated MCP caller capabilities. TASK-00186
+follows TASK-00185 and the managed-policy baseline, but remains `needs-info` until a real explicit audit-TASK
+assignment and target authority path is identified and qualified; Super Admin-only evidence cannot complete it.
+Both remain unranked. No live memory ingestion is authorized before TICKET-00050's safety-removal path is ready;
+implementation, checks, independent review, PR publication and current Board priority are unchanged.
