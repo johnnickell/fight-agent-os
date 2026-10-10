@@ -81,6 +81,7 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 | [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | review-publish-pr-handoff | done |
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | deterministic-project-creation | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | repository-instruction-editing | ready-for-agent |
+| [EPIC-00011](epics/00011-EPIC.md) | Deliver durable scoped Agent memory | durable-agent-memory | ready-for-agent |
 <!-- /planning:epics -->
 
 ## Planning Frontier
@@ -97,6 +98,7 @@ the same operation that completes their children.
 |---|---|---|
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | ready-for-agent |
+| [EPIC-00011](epics/00011-EPIC.md) | Deliver durable scoped Agent memory | ready-for-agent |
 
 ### TICKETs without TASKs
 

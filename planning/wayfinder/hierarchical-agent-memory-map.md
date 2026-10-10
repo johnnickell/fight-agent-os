@@ -21,7 +21,7 @@ decomposition remain separate operations.
 - Charted on 2026-09-28 at John's request from the shared memory discussion. The ownership and authority
   boundary was approved in WF-024 on 2026-10-09, lifecycle/promotion in WF-025 on the same date, and
   retrieval/MCP access in WF-026 on 2026-10-10. John approved the bounded memory EPIC handoff and
-  delegation of remaining fog on 2026-10-10; the EPIC itself has not been written.
+  delegation of remaining fog on 2026-10-10; the EPIC was written in a separate approved grill.
 - [Harness and browser Agents](../epics/00006-EPIC.md) already cover profile templates, trusted first-party MCP
   access and conversation continuity. Those capabilities do not define memory ownership or promotion.
 - Preserve [repository identity](tickets/WF-008-establish-repository-identity-and-registration-boundaries.md),
@@ -79,18 +79,20 @@ WF-024 scope and ownership → WF-025 lifecycle and promotion → WF-026 retriev
 
 ## Frontier
 
-No open Wayfinder decision remains. John approved the [Durable scoped Agent memory](#approved-epic-handoff--2026-10-10)
-EPIC destination; the next separate operation is its grill. This map is Closed; approval of a destination does
-not create its EPIC or authorize TICKET/TASK decomposition.
+No open Wayfinder decision remains. The approved
+[Durable scoped Agent memory](#approved-epic-handoff--2026-10-10) destination produced
+[EPIC-00011 — Deliver durable scoped Agent memory](../epics/00011-EPIC.md) through its separate grill. This map
+is Closed. The next planning phase is that EPIC's separate requirement TICKET decomposition, not TASK work.
 
 ## Approved EPIC handoff — 2026-10-10
 
-**Destination:** Durable scoped Agent memory. Grill one EPIC for database-backed private and shared Agent memory,
-including scope-aware MCP read/write operations, controlled promotion, retained learning from completed work,
+**Destination:** [EPIC-00011 — Deliver durable scoped Agent memory](../epics/00011-EPIC.md), written in a
+separate approved grill on 2026-10-10. The handoff specified one EPIC for database-backed private and shared
+Agent memory, including scope-aware MCP read/write operations, controlled promotion, retained learning from completed work,
 and Jev typed questions over authorized memory. Consume WF-024, WF-025 and WF-026 without re-deciding their
 ownership, lifecycle, execution-access or provider boundaries. Keep mandatory Workflow handoffs, authoritative
 Planning and source code, Harness session continuity and repository-file screening under their existing owners.
-The resulting EPIC should state its own smallest useful delivery slice and dependencies; no memory capability
+The resulting EPIC states its full staged delivery and dependencies; no memory capability
 or incremental Jev integration is claimed implemented by approving this handoff. Prefer a distinct memory EPIC
 rather than silently expanding the approved first Harness or Team Lead → Engineer execution milestone.
 
