@@ -8,7 +8,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | in-progress | — | — |
-| — | [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -237,4 +236,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | — (standalone chore) | done | — | [PR #50](https://github.com/johnnickell/fight-agent-os/pull/50) |
 | — | [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | — (standalone chore) | done | — | [PR #51](https://github.com/johnnickell/fight-agent-os/pull/51) |
 | — | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | — (standalone chore) | done | — | [PR #62](https://github.com/johnnickell/fight-agent-os/pull/62) |
+| — | [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | — (standalone bug) | done | — | — |
 <!-- /planning:board -->
