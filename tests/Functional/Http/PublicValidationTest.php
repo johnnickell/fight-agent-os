@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Functional\Http;
 
 use App\Adapter\Validation\Catalog;
+use Monolog\Handler\TestHandler;
+use Monolog\Level;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ServerRequestFactory;
@@ -17,6 +19,7 @@ use Tests\Support\ApiContract;
 final class PublicValidationTest extends TestCase
 {
     private string $directory;
+    private TestHandler $failureRecords;
 
     /**
      * Creates an isolated private runtime-catalog fixture
@@ -149,6 +152,15 @@ final class PublicValidationTest extends TestCase
         $response = $this->request('GET', '/api/v1/validations/sample_form');
         ApiContract::assertValidation($response, 500);
         self::assertStringNotContainsString('Private detail.', (string) $response->getBody());
+        self::assertCount(1, $this->failureRecords->getRecords());
+        self::assertSame([
+            'correlation_id'     => $response->getHeaderLine('X-Correlation-ID'),
+            'correlation_source' => 'generated',
+            'request_method'     => 'GET',
+            'exception_type'     => \RuntimeException::class
+        ], $this->failureRecords->getRecords()[0]->context);
+        self::assertSame(Level::Error, $this->failureRecords->getRecords()[0]->level);
+        self::assertStringNotContainsString('Private detail.', $this->failureRecords->getRecords()[0]->message);
     }
 
     /**
@@ -213,6 +225,8 @@ final class PublicValidationTest extends TestCase
         array $allowedNames = ['sample_form']
     ): \Psr\Http\Message\ResponseInterface {
         $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+        $this->failureRecords = new TestHandler(Level::Error);
+        $app->getContainer()?->get('http.failure.logger')->setHandlers([$this->failureRecords]);
         $file = $this->directory.'/catalog.json';
         $app->getContainer()?->set(Catalog::class, static fn (): Catalog => new Catalog($file, $allowedNames));
         $request = (new ServerRequestFactory())->createServerRequest($method, 'https://agent-os.test'.$path)
