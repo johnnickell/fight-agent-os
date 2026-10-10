@@ -13,4 +13,5 @@
 | [EPIC-00008](00008-EPIC.md) | Complete independent review and PR publication | done | — |
 | [EPIC-00009](00009-EPIC.md) | Create and register new projects | ready-for-agent | — |
 | [EPIC-00010](00010-EPIC.md) | Edit repository instructions safely | ready-for-agent | — |
+| [EPIC-00011](00011-EPIC.md) | Deliver durable scoped Agent memory | ready-for-agent | — |
 <!-- /planning:records -->

@@ -187,4 +187,18 @@
 | [TASK-00182](00182-TASK.md) | Assess the owned PHPUnit suite during architectural review | ready-for-agent | [TICKET-00045](../tickets/00045-TICKET.md) |
 | [TASK-00183](00183-TASK.md) | Refresh test assessments when cases or contracts change | ready-for-agent | [TICKET-00045](../tickets/00045-TICKET.md) |
 | [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | ready-for-agent | [TICKET-00037](../tickets/00037-TICKET.md) |
+| [TASK-00185](00185-TASK.md) | Remember and curate an Agent's scoped private memory | ready-for-agent | [TICKET-00046](../tickets/00046-TICKET.md) |
+| [TASK-00186](00186-TASK.md) | Inspect private memory under scoped oversight | needs-info | [TICKET-00046](../tickets/00046-TICKET.md) |
+| [TASK-00187](00187-TASK.md) | Curate attributed lessons within a Workflow | ready-for-agent | [TICKET-00047](../tickets/00047-TICKET.md) |
+| [TASK-00188](00188-TASK.md) | Carry TASK summaries across Workflow attempts | ready-for-agent | [TICKET-00047](../tickets/00047-TICKET.md) |
+| [TASK-00189](00189-TASK.md) | Inspect retained lessons under historical authority | needs-info | [TICKET-00047](../tickets/00047-TICKET.md) |
+| [TASK-00190](00190-TASK.md) | Propose broader guidance from permitted memory | ready-for-agent | [TICKET-00048](../tickets/00048-TICKET.md) |
+| [TASK-00191](00191-TASK.md) | Review and publish guidance at an authorized target | needs-info | [TICKET-00048](../tickets/00048-TICKET.md) |
+| [TASK-00192](00192-TASK.md) | Reassess published guidance when a source changes | ready-for-agent | [TICKET-00048](../tickets/00048-TICKET.md) |
+| [TASK-00193](00193-TASK.md) | Ask typed questions about one permitted memory entry | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
+| [TASK-00194](00194-TASK.md) | Narrow a current memory scope to matching entry IDs | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
+| [TASK-00195](00195-TASK.md) | Extend selective lookup to published and historical scopes | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
+| [TASK-00196](00196-TASK.md) | Contain and remove prohibited private and shared memory | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
+| [TASK-00197](00197-TASK.md) | Remove prohibited content across published lineage | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
+| [TASK-00198](00198-TASK.md) | Inspect and correct authorized memory in the browser | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
 <!-- /planning:records -->

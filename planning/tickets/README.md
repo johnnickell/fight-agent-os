@@ -48,4 +48,9 @@
 | [TICKET-00043](00043-TICKET.md) | Gather judgment evidence through authorized tools and analysis | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00044](00044-TICKET.md) | Assess change quality before review handoff | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00045](00045-TICKET.md) | Assess PHPUnit test usefulness | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00046](00046-TICKET.md) | Keep scoped private Agent memory | ready-for-agent | [EPIC-00011](../epics/00011-EPIC.md) |
+| [TICKET-00047](00047-TICKET.md) | Share attributed Workflow and TASK learning | ready-for-agent | [EPIC-00011](../epics/00011-EPIC.md) |
+| [TICKET-00048](00048-TICKET.md) | Review and publish broader memory lessons | ready-for-agent | [EPIC-00011](../epics/00011-EPIC.md) |
+| [TICKET-00049](00049-TICKET.md) | Retrieve scoped memory selectively with Jev | ready-for-agent | [EPIC-00011](../epics/00011-EPIC.md) |
+| [TICKET-00050](00050-TICKET.md) | Inspect memory and remove prohibited content safely | ready-for-agent | [EPIC-00011](../epics/00011-EPIC.md) |
 <!-- /planning:records -->
