@@ -9,6 +9,8 @@ use App\Application\Security\Csrf\Clock\CsrfClock;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Domain\Messaging\Query\Query;
 use Fight\Common\Domain\Messaging\Query\QueryMessage;
+use Monolog\Handler\TestHandler;
+use Monolog\Level;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ServerRequestFactory;
@@ -152,6 +154,8 @@ final class CsrfContractTest extends TestCase
     public function test_that_unexpected_failure_matches_the_generic_contract(): void
     {
         $app = require dirname(__DIR__, 3).'/bootstrap/app.php';
+        $records = new TestHandler(Level::Error);
+        $app->getContainer()?->get('http.failure.logger')->setHandlers([$records]);
         $bus = new class implements QueryBus {
             /**
              * @inheritDoc
@@ -175,10 +179,20 @@ final class CsrfContractTest extends TestCase
         $response = $app->handle($request);
 
         ApiContract::assertBootstrap($response, 500);
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
         self::assertSame(str_repeat('b', 32), $response->getHeaderLine('X-Correlation-ID'));
         self::assertSame(
             ['status' => 'error', 'message' => 'Internal server error.'],
             json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)
         );
+        self::assertCount(1, $records->getRecords());
+        self::assertSame([
+            'correlation_id'     => str_repeat('b', 32),
+            'correlation_source' => 'client',
+            'request_method'     => 'GET',
+            'exception_type'     => \RuntimeException::class
+        ], $records->getRecords()[0]->context);
+        self::assertSame(Level::Error, $records->getRecords()[0]->level);
+        self::assertStringNotContainsString('Synthetic private dependency detail', $records->getRecords()[0]->message);
     }
 }

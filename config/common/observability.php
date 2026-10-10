@@ -9,7 +9,10 @@ use Fight\Common\Application\Observability\AuditLog;
 use Fight\Common\Application\Observability\HealthAggregator;
 use Fight\Common\Application\Observability\MetricsCollector;
 use Fight\Common\Application\Service\Container;
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
+use Monolog\Handler\StreamHandler;
+use Monolog\Level;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
@@ -19,6 +22,12 @@ return static function (Container $container): void {
         $logger->pushHandler(new NullHandler());
 
         return $logger;
+    });
+    $container->set('http.failure.logger', static function (): Logger {
+        $handler = new StreamHandler('php://stderr', Level::Error);
+        $handler->setFormatter(new JsonFormatter());
+
+        return new Logger('http-failure', [$handler]);
     });
     $container->set(HealthAggregator::class, static function (): HealthAggregator {
         return new HealthReporter();

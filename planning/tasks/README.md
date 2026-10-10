@@ -201,4 +201,5 @@
 | [TASK-00196](00196-TASK.md) | Contain and remove prohibited private and shared memory | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
 | [TASK-00197](00197-TASK.md) | Remove prohibited content across published lineage | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
 | [TASK-00198](00198-TASK.md) | Inspect and correct authorized memory in the browser | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
+| [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | in-progress | — |
 <!-- /planning:records -->
