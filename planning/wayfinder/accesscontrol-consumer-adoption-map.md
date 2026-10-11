@@ -87,14 +87,26 @@ first full coordinated Workflow: one default Team per Repository, alternate elig
 administration Permissions are initially granted only to Super Admin; future scoped admins require separate
 approval, not title-based authority. WF-032 approved **two other new linked EPICs** for human email change and
 Feature Flags lifecycle after EPIC-00004's foundation, without rewriting its historical deferral or
-TICKET-00030/00031. WF-034 still owns the evidence-based starter handoff. Do not grill any EPIC before WF-034
-finishes or descend to TICKET/TASK planning.
+TICKET-00030/00031. WF-034 has accepted a **separate linked Agent OS reference-consumer handoff EPIC**:
+the maintainer **superseded staged external guidance** with one post-qualification v0.5.0 journey snapshot,
+including suitable UI, backend references, working protected Swagger/OpenAPI and optional React suggestions for
+the five starter maintainers; starters may adapt freely. Every supported public v0.5.0 use case must be
+accounted for: in-scope capabilities need appropriate authorized UI **or** qualified protected non-UI treatment,
+with approved exclusions explicit and no unassigned gaps. The already planned [TASK-00154](../tasks/00154-TASK.md) viewer is a prerequisite but is not implemented.
+The maintainer explicitly expanded that TASK rather than creating a separate follow-up. Its original local-only
+scope was explicitly aligned in ADR 0004, EPIC-00003, TICKET-00010, TICKET-00022 and TASK-00063. This project's
+initial exact Swagger allowed set is `["local"]`; deliberate deployments can choose empty or other exact named
+environments, including production and `test`, without weakening current `READ_SWAGGER` or endpoint checks.
+APP_DEBUG is an independent strict boolean, intended true locally and false in staging/production here;
+sanitized optional diagnostics can be enabled outside local, but never turn on Swagger or PHP error display.
+Exact `APP_ENV=prod`/`production` with `APP_DEBUG=true` fails startup safely. Test database isolation is
+unchanged. This is an explicit planning amendment, not live Swagger or deployed non-local exposure. Do not grill any EPIC before WF-034 finishes or descend to TICKET/TASK planning.
 
 ## Decisions so far
 
 1. **[WF-032 — Reconcile AccessControl coverage with accepted Agent OS scope](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) is closed.** Self-service and Super Admin cross-user email-change request/cancel with mailbox confirmation, distinct protected management Permission, and Super Admin Feature Flags management (immutable-name creation, testing Permission, OFF/PREVIEW/ON, guarded removal) with initially Super Admin-granted `ADMIN_SAFE` management Permission are approved. Two separate linked new EPIC destinations explicitly extend EPIC-00004's deferred scope; sensitive operational paths are protected non-UI, unsupported features are not invented.
 2. **[WF-033 — Define live Agent operation adoption and safe surfaces](tickets/WF-033-define-agent-operation-adoption-boundary.md) is closed.** A new linked Agent lifecycle/management EPIC supplies the real credential boundary and first working Explorer; a separate later linked EPIC owns AI-assisted, human-approved custom-template authoring. Agents/templates can be incrementally dogfooded before full Workflows; actual current-contract consumer security qualification accompanies owned implementation, not a separate per-template harness.
-3. **[WF-034 — Set the Agent OS reference-consumer and starter handoff contract](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md) is open.** Decide versioned evidence and Agent OS-only starter handoff after coverage and Agent criteria are settled.
+3. **[WF-034 — Set the Agent OS reference-consumer and starter handoff contract](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md) is open.** A separate Agent OS-owned EPIC supplies one **post-qualification** v0.5.0 consumer/UI snapshot with backend references, actually working protected Swagger/OpenAPI documentation/requests and adaptable React suggestions. The earlier staged unqualified external handoff proposal is superseded. UI is for appropriate human actions; sensitive operational paths stay protected non-UI and all supported public v0.5.0 use cases need an approved disposition. Starter implementation/certification/release is not Agent OS acceptance. Expand TASK-00154 for exact configurable allowed environments, initially `["local"]` here; debug remains a separate value. Safe non-local debug is approved independently of Swagger; exact `prod`/`production` plus APP_DEBUG=true must fail startup. `test` is Swagger-ineligible unless explicitly listed. The existing TASK/parents/ADR are now explicitly aligned as planning, not implemented; settle snapshot revision/evidence.
 4. **[WF-035 — Define project-linked Teams and available Agent selection](tickets/WF-035-define-project-teams-and-agent-selection.md) is closed.** Teams serve Repositories, one Team per Agent; MVP Triage can hand a *whole* independent TASK to an idle Lead on another associated Team, but all subsequent delegation stays within the chosen Team. A human-selected Pending start is unclaimed until revalidated admission; dependent TASKs require verified base inclusion. Team/Agent/template administration uses distinct current managed Permissions initially granted only to Super Admin; future scoped admins need separate authority planning. A linked Team/assignment EPIC is an MVP supplier to EPIC-00007; autonomous TASK selection is v2, not part of this MVP.
 
 ## Tickets
@@ -120,12 +132,22 @@ WF-032 + WF-033 + WF-034 + WF-035 → approved bounded EPIC handoff(s)
 ## Frontier
 
 [WF-034 — Set the Agent OS reference-consumer and starter handoff contract](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md)
-is the next decision. **Recommendation:** deliver a versioned Agent OS-owned capability/evidence handoff to the
-five managed starter maintainers, with exact package and consumer revisions, reproducible integration guidance,
-limits and independently attributable real consumer evidence. Do not edit/certify/release starters here, require
-all five to release together, or confuse each starter's stable SemVer `>=1.0.0` eligibility with an AccessControl
-release decision. WF-035 is closed; its future autonomous TASK-selection and scoped-admin roles remain excluded
-from this MVP, not unowned MVP implementation.
+is the current decision interview. **Accepted:** one separate linked Agent OS-owned reference handoff EPIC,
+with a single snapshot **after** the entire approved v0.5.0 consumer journey including UI is implemented and
+qualified, not staged unqualified starter publication. Give five maintainers adaptable backend references, actual
+Swagger/OpenAPI documentation with a working protected Try it out viewer, and React suggestions. Their adoption
+and release are not Agent OS acceptance gates; EPIC-00009's per-starter stable SemVer `>=1.0.0` eligibility is
+independent. The private export currently covers only two public-safe operations; TASK-00154's configured
+`SUPER_ADMIN_ONLY` viewer is planned, not live, and must precede handoff. **Accepted:** all supported public
+v0.5.0 consumer use cases need a truthful qualified or approved excluded disposition; appropriate human UI is
+required, but secret/operational paths remain protected non-UI. The maintainer explicitly chose to expand
+TASK-00154 for configurable allowed environments rather than a separate successor. Its TASK, parents,
+ADR 0004 and security-envelope TASK-00063 have been **explicitly aligned as planning**; none is implemented.
+This project's initial exact Swagger set is `["local"]`; other environment opt-ins may differ by deployment
+or starter. APP_DEBUG is independently configured, intended true locally and false in staging/production here;
+sanitized debug can be enabled non-locally, while exact `prod`/`production` with APP_DEBUG=true fails startup.
+`test` is ineligible unless expressly listed, with test database isolation intact. **Next:** settle the
+final handoff snapshot revision and attributable evidence, without weakening qualified consumer scope.
 
 ## Not yet specified (fog)
 

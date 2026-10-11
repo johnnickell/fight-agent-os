@@ -112,14 +112,20 @@ This public metadata decision does not make Swagger or its OpenAPI document publ
 
 When the Swagger frontend is implemented, protect both the UI route and its OpenAPI document endpoint with server-side checks of current authoritative `READ_SWAGGER`. This is a managed `SUPER_ADMIN_ONLY` permission, granted only to managed `ROLE_SUPER_ADMIN` by [TICKET-00015](00015-TICKET.md) / [TASK-00036](../tasks/00036-TASK.md), and unavailable for custom-role or direct-Agent delegation. A role name, JWT role claim, or client-side navigation guard is not authorization. Direct document requests must not bypass the UI's permission boundary.
 
-Environment eligibility and permission are independent gates: **only exact `APP_ENV=local` is eligible**.
-Legacy `development`, `test`, staging, production, missing and unknown values do not enable Swagger, even for a
-permitted caller or with APP_DEBUG=true. The maintainer narrowed the former development/test possibility to
-local-only on 2026-09-30. [TASK-00063](../tasks/00063-TASK.md) must preserve this stricter rule. Automated tests
-may boot an isolated local application to exercise allowed cases; APP_ENV=test itself grants no exposure.
-This planning decision does not enable any route in the current implementation.
+Environment eligibility and permission are independent gates. Under the maintainer's subsequent
+[WF-034 amendment](../wayfinder/tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md),
+[TASK-00154](../tasks/00154-TASK.md) accepts an **explicit exact allowed-environments set**. This project's
+initial configuration is `["local"]`; an explicitly empty set disables Swagger, and another named environment
+(including `test`, staging, `prod` or `production`) can be opted in without implicit production exposure.
+Absent/malformed configuration, an unset/invalid or unlisted APP_ENV and wildcard matches fail closed; exact
+representation belongs to TASK-00154. `APP_ENV=test` alone grants no access and never weakens test-database
+guards. Both viewer/bootstrap and direct private document reads still require current `READ_SWAGGER`; every
+Try it out uses its endpoint's current authority. `APP_DEBUG` never enables Swagger. On 2026-09-30 the maintainer
+had narrowed eligibility to exact local; this explicit later choice supersedes that limit and is **not** a claim
+that any route or non-local deployment is currently enabled. [TASK-00063](../tasks/00063-TASK.md) verifies the
+chosen environment policy without broadening unrelated development tools.
 
-### Attribute-owned OpenAPI export and local viewer
+### Attribute-owned OpenAPI export and restricted viewer
 
 The maintainer approved two implementation TASKs on 2026-09-30:
 [TASK-00153](../tasks/00153-TASK.md) transitions the repository-only hand-authored YAML contract to one PHP
@@ -143,18 +149,20 @@ TASK-00154 removes the pending-wiring caveat after actual integration. Group exa
 comment section identifiers with one definition per variable; this does not plan an environment-update script.
 Preserve distinct APP_ENV=test guarded-database semantics and existing production protections.
 
-Strictly parse APP_DEBUG as a boolean; absent means false and malformed configuration fails safely. Optional
-browser diagnostics are enabled only when local and explicitly debug-enabled. Non-local debugging stays off;
-APP_DEBUG never enables Swagger, authorization, PHP error display or sensitive diagnostics. Even local console
-output must exclude credentials, cookies, CSRF/grants, passwords, form bodies, personal data and arbitrary raw
-response/error objects. Provide a small shared safe logging seam/convention, not a new telemetry framework.
+Strictly parse APP_DEBUG as an **independent** boolean; absent means false and malformed configuration fails
+safely. Effective sanitized optional browser diagnostics follow deliberate APP_DEBUG=true even outside local,
+**except** exact `APP_ENV=prod` or `production` with APP_DEBUG=true **fails startup** with a non-sensitive
+configuration error. Configure it true locally and false in staging/production for this project; it never
+enables Swagger, authorization, PHP error display or sensitive diagnostics. All console output must exclude
+credentials, cookies, CSRF/grants, passwords, form bodies, personal data and arbitrary raw response/error
+objects. Provide a small shared safe logging seam/convention, not a new telemetry framework.
 
 Extend the existing allowlisted, versioned inert JSON boot configuration under
 [ADR 0004](../adr/0004-client-authority-and-runtime-state.md#local-debug-and-documentation-availability-amendment)
 with safe `app_debug` and `swagger_available` booleans. The latter is environment availability, never a user
 permission. Prefer this existing channel over a new configuration API or hidden input; base64 is encoding only
 and does not make secrets safe. No environment-object dump or credential/authority hydration. The server checks
-local eligibility and current permissions independently of any client-modifiable boot values.
+configured environment eligibility and current permissions independently of any client-modifiable boot values.
 
 ### Swagger request credentials and effects
 
@@ -183,16 +191,18 @@ rather than bypassing auth or leaking credentials to make the viewer appear comp
 - Unknown failures have correlated secret-safe logs and generic client responses.
 - OpenAPI describes the implemented CSRF bootstrap and actual failure schemas; it does not invent a protected resource or a request-body operation. Swagger UI and its OpenAPI document endpoint remain disabled until separately implemented under the accepted access policy.
 - Future Swagger implementation proves both viewer/bootstrap and direct OpenAPI document access: allowed only
-  in exact APP_ENV=local with current authoritative READ_SWAGGER; anonymous, insufficient/revoked permission,
-  unavailable authority and every non-local environment disclose neither viewer payload nor document.
-  Client-only checks or a public static document are not acceptable substitutes.
+  in explicitly configured exact environments with current authoritative READ_SWAGGER; anonymous,
+  insufficient/revoked permission, unavailable authority, missing/malformed/empty or unlisted allowed sets
+  disclose neither viewer payload nor document. Explicit opt-in for `test`/staging/production retains the
+  independent permission, HTTPS/origin, secret and endpoint controls; no client-only check or public static spec.
 - Attribute export preserves actual operation/response contracts, supplies deterministic safe private JSON
   and one authored source, and never exposes a document merely by running generation.
 - The viewer follows shared system/light/dark themes, initially collapses all tags/operations and uses only
   current memory credentials through shared request/refresh/security boundaries, with no long-lived credential
   exception, secret-bearing snippets or automatic mutation replay.
-- Strict local/debug configuration and versioned safe booleans support guarded sanitized console output without
-  exposing environment objects, credentials, authority or debug privileges in non-local environments.
+- Strict independent APP_DEBUG and versioned safe booleans support guarded sanitized console output even in an
+  explicitly debug-enabled non-local environment, without exposing environment objects, credentials or authority;
+  `prod`/`production` with APP_DEBUG=true fails startup without a sensitive diagnostic.
 - A separately owned, JWT-by-default API-v1 guard reads matched FQCN Action attributes without eager Action instantiation. Protected routes fail closed on missing/invalid metadata, authenticate from current authority, and enforce conjunctive permissions before dispatch while application/package target policies remain authoritative.
 - Functional tests prove boot, unknown route, invalid bootstrap body/shape and reachable errors without a fabricated POST; first real body/query consumers prove their declared fields, normalization and constraints without input-only DTOs, while the mapper is checked at its own boundary.
 - Focused HTTP/OpenAPI tests and `./bin/build` pass with fresh evidence and warnings.
@@ -209,7 +219,7 @@ rather than bypassing auth or leaking credentials to make the viewer appear comp
 | [TASK-00021](../tasks/00021-TASK.md) | Publish and restrict the representative OpenAPI contract | done |
 | [TASK-00117](../tasks/00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | ready-for-agent |
 | [TASK-00153](../tasks/00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done |
-| [TASK-00154](../tasks/00154-TASK.md) | Serve local-only permission-gated Swagger with shared credentials and themes | ready-for-agent |
+| [TASK-00154](../tasks/00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | ready-for-agent |
 | [TASK-00155](../tasks/00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done |
 <!-- /planning:children -->
 
@@ -236,5 +246,12 @@ TASK-00153 records the acceptance and separate landing checkpoint; PR publicatio
 TASK-00154's viewer/serving boundary is still unimplemented, and no HTTP documentation exposure is enabled.
 
 Planning amendment verification on `feature/planning-swagger-permission`: `./bin/planning-check --write` and `./bin/planning-check` passed (192 records, 138 active; views current); `git diff --check` passed; `./bin/build` passed (7 terminal tests; Deptrac: 658 allowed, no violations/warnings/errors; PHPUnit: 182 tests, 1500 assertions). The HTTP failure test emitted a sanitized error log; no gate warnings or failures were reported. These checks verify planning consistency and the existing suite, not future Swagger authorization. Independent review is pending; publication and merge remain separate.
+
+**Subsequent explicit WF-034 amendment:** the maintainer chose to expand the existing TASK-00154 rather than
+create a successor for Swagger's allowed-environments configuration. Agent OS starts with `["local"]`; another
+environment, including `test` or production, requires a deliberate exact-list opt-in and current permission;
+APP_DEBUG is independent and true in `prod`/`production` fails startup. The earlier local-only acceptance and
+verification remain historical, not proof of this changed behavior. The [ADR 0004](../adr/0004-client-authority-and-runtime-state.md)
+and [TASK-00063](../tasks/00063-TASK.md) requirements are aligned with this explicit owner decision.
 
 Implements the HTTP direction approved by [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md) and records the browser-security gate required by [WF-007](../wayfinder/tickets/WF-007-prepare-implementation-handoff.md). It depends on [TICKET-00008](00008-TICKET.md) and may proceed alongside PostgreSQL work once shared contracts are stable.
