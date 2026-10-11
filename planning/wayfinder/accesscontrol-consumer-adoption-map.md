@@ -61,25 +61,33 @@ AccessControl adoption, actual Agent qualification, starter certification, produ
 
 ### Proposed routing and EPIC handoff (subject to decisions)
 
-Human browser surfaces: authorized user/role/session/invitation management as planned; consider own-email
-change and safe Feature/Agent management only with explicit approval. Operational console/worker surfaces:
-bootstrap, managed-policy preview/reconcile where necessary, Agent credentials, sink/receipt/recovery/maintenance,
-key/cohort/restore operations and Feature declaration/provisioning. Explicit non-UI: raw material, claim/lease,
-nonce, key destruction, background expiry/cleanup and other privileged worker internals. Every path needs fresh
-server-side actor/target/delegation and exact Permission authority, safe projections, bounded effects and
-transaction/recovery evidence; neither a UI nor an HMAC signature grants ongoing authorization.
+Human browser surfaces: authorized user/role/session/invitation management as planned; **approved in WF-032**:
+self-service and authorized cross-user email-change request/cancel with mailbox confirmation and a Super Admin
+Feature Flags screen for safe listing, immutable-name creation, testing Permission selection/rebinding, OFF/PREVIEW/ON
+and guarded removal. Feature management has a separate `ADMIN_SAFE` Permission initially granted only to
+`ROLE_SUPER_ADMIN`; cross-user email management has a distinct `SUPER_ADMIN_ONLY` Permission. Operational
+console/worker surfaces: bootstrap, managed-policy preview/reconcile where necessary, Agent credentials,
+sink/receipt/recovery/maintenance, key/cohort/restore operations and Feature discovery/provisioning/preparation.
+Explicit non-UI: raw material, claim/lease, nonce, key destruction, background expiry/cleanup and other privileged
+worker internals. Every path needs fresh server-side actor/target/delegation and exact Permission authority, safe
+projections, bounded effects and transaction/recovery evidence; neither a UI nor an HMAC signature grants ongoing
+authorization. Registered checks, current-code retirement evidence and separate action authorization must qualify
+Feature activation and removal; no fake Feature is needed to render the screen.
 
 **Next bounded EPIC destination after decisions:** qualify one *real* AccessControl Agent credential and operation
 journey for a managed Harness Agent through issuance → protected delivery → authenticated use → rotation/revocation
 → restart/restore recovery, with safe admin intents/status and direct Permission policy. Recommend a separate
 linked EPIC rather than silently enlarging EPIC-00006's accepted Planning/terminal scope; record an EPIC-00006
-owner-approved amendment/cross-reference if needed. Later approved destinations for deferred human email,
-Feature management and evidence-backed starter handoff should remain separate unless WF-032/WF-034 explicitly
-approve a bounded combination. Do not grill an EPIC before these decisions or descend to TICKET/TASK planning.
+owner-approved amendment/cross-reference if needed. WF-032 approved **two other separate new EPIC destinations**:
+a deferred human email-change journey and a Feature Flags management/runtime lifecycle, both linked to
+EPIC-00004's authentication/authorization foundation.
+They explicitly extend its historical deferral without rewriting EPIC-00004 or TICKET-00030/00031. WF-034 still
+owns whether evidence-backed starter handoff needs another separate destination. Do not grill an EPIC before
+WF-033/WF-034 finish or descend to TICKET/TASK planning.
 
 ## Decisions so far
 
-1. **[WF-032 — Reconcile AccessControl coverage with accepted Agent OS scope](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) is open.** Decide human/Feature coverage and explicit exclusions, and who owns EPIC-00004 deferral changes versus new EPICs.
+1. **[WF-032 — Reconcile AccessControl coverage with accepted Agent OS scope](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) is closed.** Self-service and Super Admin cross-user email-change request/cancel with mailbox confirmation, distinct protected management Permission, and Super Admin Feature Flags management (immutable-name creation, testing Permission, OFF/PREVIEW/ON, guarded removal) with initially Super Admin-granted `ADMIN_SAFE` management Permission are approved. Two separate linked new EPIC destinations explicitly extend EPIC-00004's deferred scope; sensitive operational paths are protected non-UI, unsupported features are not invented.
 2. **[WF-033 — Define live Agent operation adoption and safe surfaces](tickets/WF-033-define-agent-operation-adoption-boundary.md) is open.** Decide one qualified managed Agent use proof, surface split and EPIC-00006 ownership after WF-032.
 3. **[WF-034 — Set the Agent OS reference-consumer and starter handoff contract](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md) is open.** Decide versioned evidence and Agent OS-only starter handoff after coverage and Agent criteria are settled.
 
@@ -88,7 +96,7 @@ approve a bounded combination. Do not grill an EPIC before these decisions or de
 <!-- planning:decisions -->
 | Decision ID | Title | Type | Mode | Status | Depends on |
 |---|---|---|---|---|---|
-| [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) | Reconcile AccessControl coverage with accepted Agent OS scope | wayfinder:grill | HITL | Open | — |
+| [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) | Reconcile AccessControl coverage with accepted Agent OS scope | wayfinder:grill | HITL | Closed | — |
 | [WF-033](tickets/WF-033-define-agent-operation-adoption-boundary.md) | Define live Agent operation adoption and safe surfaces | wayfinder:grill | HITL | Open | [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) |
 | [WF-034](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md) | Set the Agent OS reference-consumer and starter handoff contract | wayfinder:grill | HITL | Open | [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md), [WF-033](tickets/WF-033-define-agent-operation-adoption-boundary.md) |
 <!-- /planning:decisions -->
@@ -103,15 +111,16 @@ WF-032 + WF-033 + WF-034 → approved bounded EPIC handoff(s)
 
 ## Frontier
 
-[WF-032 — Reconcile AccessControl coverage with accepted Agent OS scope](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md)
-is the next decision interview. **Recommendation:** include own-email change in a separately approved new
-journey; require a real Feature to justify enabling its UI/lifecycle; retain protected non-UI treatments; preserve
-current EPIC-00004/TICKET-00030/00031 approvals and ask the owner to approve any conflicting amendment.
+[WF-033 — Define live Agent operation adoption and safe surfaces](tickets/WF-033-define-agent-operation-adoption-boundary.md)
+is the next unblocked decision. **Recommendation:** qualify one real managed Agent issuance → protected delivery →
+authenticated use → rotation/revocation → recovery journey on the full v0.5.0 operation/cohort contract before
+live enablement, and decide whether to link a new Agent EPIC or explicitly extend EPIC-00006. WF-032 is closed;
+WF-034 remains blocked on WF-033.
 
 ## Not yet specified (fog)
 
-- Which real Agent OS Feature declaration/runtime use warrants enablement, if any; do not mint a fake Feature or
-  Permission merely to declare complete package adoption.
+- Which real Agent OS Feature declaration/runtime use warrants enablement; the approved screen may have an empty
+  state or create OFF definitions without inventing a fake Feature or activating an unregistered runtime check.
 - Exact existing/deployed Agent or Feature data outside this repository and the actual protection/restore tools;
   owner inventory and runtime evidence are required before enabling effects, not assumptions from empty local data.
 - Exact UI routes, permission IDs, PostgreSQL schema, sink implementation, worker topology and conformance run
@@ -122,5 +131,6 @@ current EPIC-00004/TICKET-00030/00031 approvals and ask the owner to approve any
 
 No upstream AccessControl API edits, package release/major-version decision, startup migration or credential
 issuance; no starter source edits/tests/certification/tags/releases, all-five eligibility gate, product endpoints,
-Feature toggling or deployment; no automatic rewriting of EPIC-00004/00006/00009, ADR 0001/0002, the closed
-vision map or pre-existing TASKs. No TICKET/TASK decomposition in this map-creation pass.
+Feature toggling or deployment in this Wayfinder decision; no automatic rewriting of EPIC-00004/00006/00009,
+ADR 0001/0002, the closed vision map or pre-existing TASKs. No EPIC creation or TICKET/TASK decomposition in
+this decision-resolution pass.

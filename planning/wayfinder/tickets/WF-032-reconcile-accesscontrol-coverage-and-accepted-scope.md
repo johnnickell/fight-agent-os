@@ -2,7 +2,7 @@
 
 **Labels:** `wayfinder:grill`
 **Mode:** HITL
-**Status:** Open
+**Status:** Closed
 **Map:** [Complete AccessControl consumer adoption](../accesscontrol-consumer-adoption-map.md)
 **Depends on:** —
 
@@ -43,4 +43,11 @@ continue to govern their accepted parts.
 
 ## Resolution
 
-Pending maintainer interview and approval.
+Approved in the WF-032 interview:
+
+- **Email change is in scope:** include self-service request/cancel/confirmation and Super Admin request/cancel for another user, with new-mailbox confirmation and no direct administrator override. The package calls `EmailChangeAdministrationAuthorization` for actor != target; Agent OS currently denies via `UnavailableEmailChangeAdministration`. Replace that denial only under a distinct managed `SUPER_ADMIN_ONLY` Permission initially granted to `ROLE_SUPER_ADMIN`, with current actor/target checks on every entry path, secret-safe provider delivery/recovery and audit. The role name alone does not authorize the action. The current denial is a consumer policy, not a missing upstream feature or an external approval gate.
+- **Feature Flags UI is in scope:** a Super Admin can safely list/read Features, create one with an immutable name, select/change its testing Permission, switch among the package's `OFF`, `PREVIEW`, and `ON` states, and remove a Feature after confirmation only when complete CURRENT-code discovery shows it is unreferenced. Referenced, stale or incomplete-discovery removal fails safely; no force-delete. Use a distinct managed `ADMIN_SAFE` Feature-management Permission, initially granted **only** to `ROLE_SUPER_ADMIN`. Later eligible delegation is possible under the tier but not automatically granted to custom Roles or Agents. The testing Permission gates PREVIEW for eligible principals; it is not management authority. Validate expected revisions, complete candidate preparation, registered runtime checks and separate action authorization before enablement; do not seed a fake Feature to justify the screen.
+- **Ownership and accepted-scope conflict:** approve **two separate, linked new EPIC destinations**—one for deferred self/cross-user email-change journeys, one for complete Feature Flags management and runtime lifecycle—dependent on EPIC-00004's secure authentication, managed policy and entry authorization foundation. This is an explicit *later extension* of EPIC-00004's email-change deferral, **not** a retroactive rewrite or implicit amendment to EPIC-00004/TICKET-00030/00031 or their existing TASKs. Future EPICs must cite the deferral and this approval. Exact EPIC writing, TICKET/TASK decomposition and scheduling remain separate operations after the map's remaining decisions. Existing approved human/session/role journeys retain their existing owners.
+- **Complete coverage means disposition, not browser parity:** every relevant supported current package capability must have an owned consumer journey or explicit protected non-UI treatment; no supported public path is silently dropped. Keep credential delivery/expiry/recovery, Feature discovery/provisioning/preparation, direct worker claims, key/cohort/maintenance and other sensitive internals in guarded console/worker/service paths when appropriate, with safe UI intent/status where needed. Do not invent unsupported public signup, generic Permission CRUD, broad profile mutation, direct email override or raw-secret endpoints; no one-endpoint-per-package-method requirement. The Agent operation/surface split is reserved for [WF-033 — Define live Agent operation adoption and safe surfaces](WF-033-define-agent-operation-adoption-boundary.md); the starter handoff remains [WF-034 — Set the Agent OS reference-consumer and starter handoff contract](WF-034-set-reference-consumer-and-starter-handoff-contract.md).
+
+No EPIC, TICKET, TASK, endpoint, Feature activation or credential issuance is created by this resolution.
