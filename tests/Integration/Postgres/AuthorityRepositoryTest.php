@@ -15,6 +15,8 @@ use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use App\Application\Authorization\InstallationAuthority;
 use App\Application\Authorization\InvitationCorrectionAuthorization;
+use App\Application\Authorization\SessionAdministrationDecision;
+use App\Application\Authorization\UnavailableEmailChangeAdministration;
 use App\Application\Failure\PermissionDenied;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -23,6 +25,7 @@ use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
+use Fight\AccessControl\Application\AccessControl\Agent\CommandHandler\GrantPermissionToAgentHandler;
 use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\GrantPermissionToCustomRoleHandler;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
@@ -30,8 +33,10 @@ use Fight\AccessControl\Domain\AccessControl\Agent\Agent;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentCredentialId;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentId;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentName;
+use Fight\AccessControl\Domain\AccessControl\Agent\Command\GrantPermissionToAgent;
 use Fight\AccessControl\Domain\AccessControl\Agent\Exception\AgentOperationRejectedException;
 use Fight\AccessControl\Domain\AccessControl\Agent\Operation\AgentOperationFailure;
+use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\Exception\EmailChangeAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureConflictException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureReferenceException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureStateException;
@@ -43,6 +48,7 @@ use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\Role\Command\GrantPermissionToCustomRole;
 use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
@@ -328,10 +334,22 @@ final class AuthorityRepositoryTest extends TestCase
             PermissionTier::SUPER_ADMIN_ONLY,
             $at
         );
+        $sessionRead = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('READ_SESSIONS'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at
+        );
+        $sessionDelete = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('DELETE_SESSIONS'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at
+        );
         $role = Role::defineManaged(
             RoleId::generate(),
             RoleName::fromString('ROLE_SUPER_ADMIN'),
-            [$permission->getId()],
+            [$permission->getId(), $sessionRead->getId()],
             $at
         );
         $actorId = UserId::generate();
@@ -354,15 +372,48 @@ final class AuthorityRepositoryTest extends TestCase
         );
         $authority = new InstallationAuthority($users, $this->roles, $this->permissions);
         $invitationCallback = new InvitationCorrectionAuthorization($authority);
+        $readCallback = SessionAdministrationDecision::forRead($authority);
+        $revokeCallback = SessionAdministrationDecision::forRevocation($authority);
+        $sharedCallback = SessionAdministrationDecision::forSharedFallback($authority);
+        $emailCallback = new UnavailableEmailChangeAdministration();
 
         $this->connection->beginTransaction();
         try {
             $this->permissions->add($permission);
+            $this->permissions->add($sessionRead);
             $this->roles->add($role);
             $users->add($actor);
             $users->add($target);
             $authority->assertInstallationPermission($actorId, $permission->getName(), $target->getId());
             $invitationCallback->assertCanCorrectInvitation($actorId, $target->getId());
+            $readCallback->assertCanManageSessions($actorId, $target->getId());
+            try {
+                $revokeCallback->assertCanManageSessions($actorId, $target->getId());
+                self::fail('A session read right must not authorize another user session revocation.');
+            } catch (SessionAdministrationAuthorizationException) {
+                self::assertTrue($role->hasPermission($sessionRead->getId()));
+            }
+            try {
+                $sharedCallback->assertCanManageSessions($actorId, $target->getId());
+                self::fail('A shared session port must require read and revoke authority together.');
+            } catch (SessionAdministrationAuthorizationException) {
+                self::assertTrue($role->hasPermission($sessionRead->getId()));
+            }
+            try {
+                $emailCallback->assertCanManageEmailChange($actorId, $target->getId());
+                self::fail('No cross-user email-change permission has been approved.');
+            } catch (EmailChangeAdministrationAuthorizationException) {
+                self::assertSame($target->getId()->toString(), $users->getById($target->getId())->getId()->toString());
+            }
+            $this->permissions->add($sessionDelete);
+            $roleWithDelete = $role->reconcileManaged(
+                $role->getName(),
+                [$permission->getId(), $sessionRead->getId(), $sessionDelete->getId()],
+                $at->modify('+1 second')
+            );
+            self::assertTrue($this->roles->replace($role, $roleWithDelete));
+            $revokeCallback->assertCanManageSessions($actorId, $target->getId());
+            $sharedCallback->assertCanManageSessions($actorId, $target->getId());
             $updated = clone $actor;
             $updated->removeRole($role->getId(), $at->modify('+1 second'));
             self::assertTrue($users->replaceRoleAssignments($actor, $updated));
@@ -376,6 +427,12 @@ final class AuthorityRepositoryTest extends TestCase
                 $invitationCallback->assertCanCorrectInvitation($actorId, $target->getId());
                 self::fail('Revoked membership cannot authorize pending invitation correction.');
             } catch (InvitationAdministrationAuthorizationException) {
+                self::assertSame([], $users->getById($actorId)->getRoleIds());
+            }
+            try {
+                $readCallback->assertCanManageSessions($actorId, $target->getId());
+                self::fail('Revoked role membership cannot read another user sessions.');
+            } catch (SessionAdministrationAuthorizationException) {
                 self::assertSame([], $users->getById($actorId)->getRoleIds());
             }
         } finally {
@@ -460,6 +517,48 @@ final class AuthorityRepositoryTest extends TestCase
         }
         self::assertNull($agents->getById($agent->getId()));
         self::assertFalse($agents->hasPermissionAssignment($permission->getId()));
+    }
+
+    /**
+     * Keep tagged Agent grant dispatch closed until its operation contract is available
+     */
+    public function testTaggedAgentGrantDoesNotAdmitRepositoryOnlyAuthority(): void
+    {
+        $permission = $this->customPermission('AGENT_NOT_ACTIVE');
+        $this->permissions->add($permission);
+        $agents = new PostgresAgentRepository($this->connection, new AuthorizationReferenceFences($this->connection));
+        $agent = Agent::provision(
+            AgentId::generate(),
+            AgentName::fromString('not-admitted'),
+            AgentCredentialId::generate(),
+            'opaque-fixture-envelope',
+            $permission->getCreatedAt()
+        );
+        $this->unitOfWork->commitTransactional(fn() => $agents->add($agent));
+        $handler = new GrantPermissionToAgentHandler(
+            $agents,
+            $this->permissions,
+            $this->createStub(Clock::class),
+            $this->unitOfWork,
+            $this->createStub(EventDispatcher::class)
+        );
+        try {
+            try {
+                $handler->handle(CommandMessage::create(new GrantPermissionToAgent(
+                    UserId::generate(),
+                    $agent->getId(),
+                    $permission->getId()
+                )));
+                self::fail('Direct package grant must not admit a storage-only Agent.');
+            } catch (AgentOperationRejectedException $failure) {
+                self::assertSame(AgentOperationFailure::UNAVAILABLE, $failure->getReason());
+                self::assertNull($failure->getPrevious());
+            }
+            self::assertFalse($agents->hasPermissionAssignment($permission->getId()));
+            self::assertSame(1, $agents->getById($agent->getId())->getPermissionAssignmentRevision());
+        } finally {
+            $this->connection->executeStatement('DELETE FROM agents WHERE id = ?', [$agent->getId()->toString()]);
+        }
     }
 
     /**

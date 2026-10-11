@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 use App\Application\Authorization\InstallationAuthority;
 use App\Application\Authorization\InvitationCorrectionAuthorization;
+use App\Application\Authorization\SessionAdministrationDecision;
+use App\Application\Authorization\UnavailableEmailChangeAdministration;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationAdministrationAuthorization;
+use Fight\AccessControl\Application\AccessControl\EmailChangeGrant\Service\EmailChangeAdministrationAuthorization;
+use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionAdministrationAuthorization;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
@@ -48,6 +52,16 @@ return static function (Container $container): void {
     ): InvitationAdministrationAuthorization {
         return new InvitationCorrectionAuthorization($container->get(InstallationAuthority::class));
     });
+    $container->set(SessionAdministrationAuthorization::class, static function (
+        Container $container
+    ): SessionAdministrationAuthorization {
+        // No shared callback may authorize revocation with a read-only intent.
+        return SessionAdministrationDecision::forSharedFallback($container->get(InstallationAuthority::class));
+    });
+    $container->set(
+        EmailChangeAdministrationAuthorization::class,
+        static fn(): EmailChangeAdministrationAuthorization => new UnavailableEmailChangeAdministration()
+    );
     $container->set(PasswordHasher::class, static function (): PasswordHasher {
         return new PhpPasswordHasher(PASSWORD_ARGON2ID);
     });
