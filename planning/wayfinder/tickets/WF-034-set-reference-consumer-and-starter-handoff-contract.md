@@ -2,7 +2,7 @@
 
 **Labels:** `wayfinder:grill`
 **Mode:** HITL
-**Status:** Open
+**Status:** Closed
 **Map:** [Complete AccessControl consumer adoption](../accesscontrol-consumer-adoption-map.md)
 **Depends on:** [WF-032 — Reconcile AccessControl coverage with accepted Agent OS scope](WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md), [WF-033 — Define live Agent operation adoption and safe surfaces](WF-033-define-agent-operation-adoption-boundary.md)
 
@@ -39,7 +39,7 @@ reference consumer without becoming the implementer, certifier or release owner 
 Approve deliverable format/ownership and honest acceptance evidence. No starter code, certifications, releases,
 EPIC/TICKET/TASK creation, deployment or upstream API changes are performed by this interview.
 
-## Interview progress
+## Resolution
 
 - **Ownership and timing (revised by maintainer):** plan a **separate linked Agent OS-owned reference-consumer
   handoff EPIC**, not starter implementation/certification/release work or an EPIC-00009 amendment. **Supersede**
@@ -61,8 +61,8 @@ EPIC/TICKET/TASK creation, deployment or upstream API changes are performed by t
   or HTTP spec endpoint today. These **must be implemented before** the final starter handoff can claim the
   full UI/API reference journey. A handoff cannot portray proposed endpoints or a future viewer as implemented,
   ship ignored `.runs/openapi/` output without a current verified export/source/content hash, or expose private
-  documentation or secrets through a public starter route. Exact handoff artifact/package versioning and
-  later invalidation/evidence format remain to decide.
+  documentation or secrets through a public starter route. Exact file layout and publication transport are
+  downstream design choices, not permission to omit source/revision or evidence attribution.
 - **UI versus protected operations accepted:** 'all features including UI' means authorized UI for appropriate
   human-facing v0.5.0 use cases and actual qualified protected non-UI paths for secrets, delivery, recovery and
   internal operational effects, **not** a browser endpoint for every package method. Preserve WF-032/WF-033's
@@ -100,8 +100,24 @@ EPIC/TICKET/TASK creation, deployment or upstream API changes are performed by t
   [TICKET-00022](../../tickets/00022-TICKET.md)/[TASK-00063](../../tasks/00063-TASK.md) have been aligned
   as planning **without changing implementation**. They retain server permission/endpoint authorization,
   same-origin memory credentials, CSRF, private spec, CSP, redaction and actual-execution safety.
+- **One immutable attributable snapshot accepted:** after the complete approved v0.5.0 Agent OS consumer journey
+  (including appropriate UI and qualified protected operations), deliver a single versioned Agent OS-owned
+  handoff bundle with exact AccessControl tag/source commit, installed Composer lock identity, Agent OS source
+  commit, verified source/content hashes for the actual private OpenAPI export, and a per-capability matrix of
+  implemented, excluded or unsupported disposition. Attach independently attributable **redacted Agent OS
+  consumer evidence and known limits per in-scope capability**: reproducible scenario inputs/commands, tools
+  and versions, expected and actual observations and receipt links. Cover real PostgreSQL concurrency/cohort
+  and restoration fences, credential sink delivery/retry/rotation/revocation, authenticating and using a working
+  Agent, Feature lifecycle/runtime availability, human grants/expiry and authorized UI/Swagger Try it out with
+  actual endpoint protections where applicable. Distinguish package conformance from consumer checks; no
+  package fixture, historical receipt, storage-only repository or Swagger documentation alone qualifies use.
+  Keep prior published snapshots immutable and identified. When package, lock, Agent OS consumer code or API
+  contract changes, assess the affected claims and publish a **new bundle only after requalifying them**; do
+  not silently transfer an old claim to a new revision or require all five starter maintainers to run a common
+  pipeline. A later package release is not presumed to be v0.5.0; if the chosen lock/release changes, verify
+  its contracts against this approved coverage and label the actual supported release rather than manufacturing
+  an unchanged v0.5.0 proof. Exact manifest/file names and publication mechanism belong to the linked EPIC.
 
-## Resolution
-
-Pending final-snapshot versioning/attribution. Approved Swagger ownership and its dependent planning records
-are aligned; no code, enabled route, deployment or EPIC was created. Partial notes do not close WF-034.
+No EPIC, TICKET, TASK, starter-source edit, qualification run, credential, enabled Swagger route or deployment
+was created by this decision. [EPIC-00009](../../epics/00009-EPIC.md) retains per-starter immutable stable SemVer
+`>=1.0.0` plus manifest/snapshot eligibility without an all-five or AccessControl 1.0.0 gate.
