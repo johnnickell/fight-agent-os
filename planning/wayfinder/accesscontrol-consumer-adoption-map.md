@@ -74,18 +74,21 @@ projections, bounded effects and transaction/recovery evidence; neither a UI nor
 authorization. Registered checks, current-code retirement evidence and separate action authorization must qualify
 Feature activation and removal; no fake Feature is needed to render the screen.
 
-**Approved future destinations (not yet EPIC records):** WF-033 approved a **new bounded linked EPIC** for the
-shared AccessControl Agent operation/credential lifecycle, protected delivery/recovery, Agent management/creation
-UI and first *working* managed Explorer doing real exploration. Project Manager and later Agent instances reuse the
-boundary; full Workflow automation and a disposable Explorer-only test harness are not prerequisites. Real v0.5.0
-consumer qualification is integrated into implementation before live use, not replaced by manual dogfooding.
-EPIC-00006 retains Harness/template and browser Planning-Agent outcomes; the new EPIC supplies their credential
-prerequisite without silently expanding its existing TASKs. A **separate later linked EPIC** delivers human-edited,
-AI-assisted template authoring. WF-035 approved a **linked MVP Team/assignment EPIC** supplying EPIC-00007's
-first full coordinated Workflow: one default Team per Repository, alternate eligible Team Lead handoff for a
-*whole new TASK*, and strictly same-Team peer delegation thereafter. Distinct managed Team, Agent and template
-administration Permissions are initially granted only to Super Admin; future scoped admins require separate
-approval, not title-based authority. WF-032 approved **two other new linked EPICs** for human email change and
+**Approved destinations (only the first EPIC written):** the maintainer explicitly combined WF-033's Agent
+operation/credential and WF-035's Team/assignment destinations in
+[EPIC-00014 — Deliver the working managed Agent team](../epics/00014-EPIC.md), superseding their original
+separate-EPIC handoff and the assumption that Explorer use precedes Teams. The first real Explorer must belong
+to one Team and use a registered Repository; no unassigned bootstrap Agent. EPIC-00014's **full completion bar**
+requires all eight managed roles to perform their intended work in real authorized product journeys, not just
+profile definitions or first-Explorer proof. EPIC-00006/00007/00008/00012/00013 retain their owned Harness,
+Planning, Workflow, Triage, review, QA, hotfix and release implementations; EPIC-00014 supplies missing Agent/
+Team integration and refuses a complete-team claim until those paths work. Full Workflow automation is not a
+prerequisite to the *first Explorer use*, but is required for the complete team's acceptance. Team membership,
+Repository default/alternate **whole-TASK** intake and same-Team delegation are included in EPIC-00014. Distinct
+managed Team, Agent and template administration Permissions are initially granted only to Super Admin; future
+scoped administrators need separate approval. A **separate later linked EPIC destination** still owns human-edited,
+AI-assisted custom-template authoring, not the eight managed templates required by EPIC-00014. WF-032
+approved **two other new linked EPICs** for human email change and
 Feature Flags lifecycle after EPIC-00004's foundation, without rewriting its historical deferral or
 TICKET-00030/00031. WF-034 has accepted a **separate linked Agent OS reference-consumer handoff EPIC**:
 the maintainer **superseded staged external guidance** with one post-qualification v0.5.0 journey snapshot,
@@ -109,9 +112,9 @@ Finish the approved EPIC handoffs before TICKET/TASK decomposition.
 ## Decisions so far
 
 1. **[WF-032 — Reconcile AccessControl coverage with accepted Agent OS scope](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) is closed.** Self-service and Super Admin cross-user email-change request/cancel with mailbox confirmation, distinct protected management Permission, and Super Admin Feature Flags management (immutable-name creation, testing Permission, OFF/PREVIEW/ON, guarded removal) with initially Super Admin-granted `ADMIN_SAFE` management Permission are approved. Two separate linked new EPIC destinations explicitly extend EPIC-00004's deferred scope; sensitive operational paths are protected non-UI, unsupported features are not invented.
-2. **[WF-033 — Define live Agent operation adoption and safe surfaces](tickets/WF-033-define-agent-operation-adoption-boundary.md) is closed.** A new linked Agent lifecycle/management EPIC supplies the real credential boundary and first working Explorer; a separate later linked EPIC owns AI-assisted, human-approved custom-template authoring. Agents/templates can be incrementally dogfooded before full Workflows; actual current-contract consumer security qualification accompanies owned implementation, not a separate per-template harness.
+2. **[WF-033 — Define live Agent operation adoption and safe surfaces](tickets/WF-033-define-agent-operation-adoption-boundary.md) is closed.** Its Agent lifecycle and first Explorer boundary now feeds the explicitly consolidated [EPIC-00014](../epics/00014-EPIC.md); the separate later AI-assisted custom-template editor remains unwritten. Live current-contract consumer security qualification accompanies owned implementation, not a separate test harness.
 3. **[WF-034 — Set the Agent OS reference-consumer and starter handoff contract](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md) is closed.** A separate Agent OS-owned EPIC supplies **one immutable post-qualification** complete v0.5.0 consumer/UI snapshot with exact package lock/source, Agent OS commit, verified private OpenAPI hashes and redacted per-capability evidence, backend references, working protected Swagger/Try it out and adaptable React suggestions. No staged unqualified external guidance or starter certification/release is approved. Appropriate human UI and protected non-UI operational paths both need honest dispositions. TASK-00154 and its parents/ADR were explicitly aligned as planning for exact configured Swagger environments (initially `["local"]` here), independent safe APP_DEBUG and startup failure under `prod`/`production` plus debug true. Nothing is implemented by this resolution.
-4. **[WF-035 — Define project-linked Teams and available Agent selection](tickets/WF-035-define-project-teams-and-agent-selection.md) is closed.** Teams serve Repositories, one Team per Agent; MVP Triage can hand a *whole* independent TASK to an idle Lead on another associated Team, but all subsequent delegation stays within the chosen Team. A human-selected Pending start is unclaimed until revalidated admission; dependent TASKs require verified base inclusion. Team/Agent/template administration uses distinct current managed Permissions initially granted only to Super Admin; future scoped admins need separate authority planning. A linked Team/assignment EPIC is an MVP supplier to EPIC-00007; autonomous TASK selection is v2, not part of this MVP.
+4. **[WF-035 — Define project-linked Teams and available Agent selection](tickets/WF-035-define-project-teams-and-agent-selection.md) is closed.** Teams serve Repositories, one Team per Agent; whole-TASK alternate-Team intake is permitted, while subsequent delegation stays within the chosen Team. Pending start is unclaimed until revalidated admission; dependent TASKs require verified base inclusion. Its Team/assignment EPIC handoff has been explicitly consolidated into [EPIC-00014](../epics/00014-EPIC.md) without rewriting existing Workflow ownership. Autonomous TASK selection remains v2.
 
 ## Tickets
 
@@ -135,21 +138,25 @@ WF-032 + WF-033 + WF-034 + WF-035 → approved bounded EPIC handoff(s)
 
 ## Frontier
 
-No open Wayfinder decision remains. This map is **Closed** with approved EPIC destinations below; none has
-been written yet. Continue the map-wide **EPIC handoff phase**, not TICKET/TASK decomposition or execution.
+No open Wayfinder decision remains. This map is **Closed**; its combined first destination produced
+[EPIC-00014](../epics/00014-EPIC.md). Other approved EPIC destinations below remain unwritten. Continue the
+map-wide **EPIC handoff phase**, not TICKET/TASK decomposition or execution.
 
 ## Approved EPIC handoff
 
-Each destination below is **approved for a separate future grill**, not an existing EPIC or an implemented
-capability. Consume its linked decision and the [capability matrix](research/WF-032-accesscontrol-consumer-capability-matrix.md)
+Destination 1 was written through **this one grill**; each remaining destination requires its own later grill.
+Consume its linked decision and the [capability matrix](research/WF-032-accesscontrol-consumer-capability-matrix.md)
 without re-deciding settled boundaries. This is an authored planning order, not a new implementation priority or
 a release gate for an unrelated starter:
 
-1. **Managed Agent operation/credential lifecycle and first working Explorer** —
-   [WF-033](tickets/WF-033-define-agent-operation-adoption-boundary.md). Qualify the actual AccessControl
-   transaction/cohort, protected sink, recovery, Agent authority and first real Explorer; supply managed Agent
-   identity/creation UI to [EPIC-00006](../epics/00006-EPIC.md) and later execution. Project Manager and other
-   Agents reuse it. Neither storage-only tests nor package fixtures enable live use.
+1. **[EPIC-00014 — Deliver the working managed Agent team](../epics/00014-EPIC.md)** — explicitly combines
+   [WF-033](tickets/WF-033-define-agent-operation-adoption-boundary.md) and
+   [WF-035](tickets/WF-035-define-project-teams-and-agent-selection.md). One-Team-per-Agent creation, complete
+   reviewed managed template catalog, real authenticated first Explorer, qualified shared AccessControl
+   operation/credential lifecycle, Team/Repository membership and selection boundary. **Full acceptance** needs
+   every one of the eight roles doing real authorized work through its existing owned product path; Team/Triage
+   Workflow owners retain their implementations, and their historical completion labels are not live proof.
+   Neither package fixtures nor storage-only tests qualify actual use.
 2. **Human email-address change** —
    [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md). Self-service and guarded
    authorized cross-user request/cancel/confirmation, provider recovery and protected Permission, linked after
@@ -157,14 +164,10 @@ a release gate for an unrelated starter:
 3. **Feature Flags lifecycle and authorized management UI** —
    [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md). Actual declaration,
    provisioning, preparation, registered runtime checks and cautious activation/removal; no invented Feature.
-4. **MVP project Teams and whole-TASK Agent intake** —
-   [WF-035](tickets/WF-035-define-project-teams-and-agent-selection.md). Team roster/default/alternate intake,
-   server-authorized single start and same-Team-only peer delegation; supply [EPIC-00007](../epics/00007-EPIC.md)'s
-   first full coordinated Workflow without silently rewriting it, EPIC-00008 or accepted Triage routes.
-5. **Human-approved AI-assisted Agent template authoring** —
+4. **Human-approved AI-assisted Agent template authoring** —
    [WF-033](tickets/WF-033-define-agent-operation-adoption-boundary.md). A later linked EPIC separate from first
    Agent use; versioned, editable prompt and desired Permissions never create authority from AI output.
-6. **Complete Agent OS reference-consumer handoff to five starter maintainers** —
+5. **Complete Agent OS reference-consumer handoff to five starter maintainers** —
    [WF-034](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md). Take **one immutable**
    package/consumer-identified snapshot only after all relevant public v0.5.0 families have qualified use or an
    approved explicit exclusion, with appropriate UI, protected operations and implemented
@@ -173,8 +176,8 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next EPIC interview:** start with destination 1. Each grill writes **one** approved EPIC; return here for
-remaining handoffs before any map-wide TICKET decomposition. EPIC publication, independent review, hosted
+**Next EPIC interview:** destination 2, human email-address change. Each grill writes **one** approved EPIC;
+return here for remaining handoffs before any map-wide TICKET decomposition. EPIC publication, independent review, hosted
 checks, and starter maintenance remain separate from this decision map.
 
 ## Downstream implementation unknowns (not open Wayfinder decisions)
