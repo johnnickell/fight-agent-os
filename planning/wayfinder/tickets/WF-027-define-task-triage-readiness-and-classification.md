@@ -2,7 +2,7 @@
 
 **Labels:** `wayfinder:grill`
 **Mode:** HITL
-**Status:** Open
+**Status:** Closed
 **Map:** [SDLC intake triage](../sdlc-intake-triage-map.md)
 **Depends on:** —
 
@@ -23,8 +23,8 @@ WF-028 owns the exact hotfix template and independence contract.
 
 Use the shared bounded judgment capability from [TICKET-00037](../../tickets/00037-TICKET.md) as a proposed
 semantic assistant to Triage. Preserve the canonical eligibility query and separate the Triage Agent's main model
-from the decision evaluator. These proposals inform this open decision; they do not add an active intake gate or
-change TASK status, kind, priority, claims or requirements.
+from the decision evaluator. These historical proposals did not add an active intake gate or change TASK status,
+kind, priority, claims or requirements; the resolution below supersedes them where they differ.
 
 | Proposed use | Bounded question/input | Candidate output and boundary |
 |---|---|---|
@@ -48,10 +48,11 @@ missing acceptance criteria, unresolved human scope choices, deterministic block
 stale inputs and evaluator outage. Measure classification/readiness errors and total cost/latency; report false
 readiness separately from unnecessary escalation. WF-028 consumes accepted dispositions and owns dispatch.
 
-This record remains Open. The Jev proposal neither selects the Triage Agent's main model nor qualifies automatic
-classification, creates an execution grant or resolves the separate role/dispatch decision.
+These were proposals, not an additional readiness gate. The approved resolution below supersedes the proposed
+per-TASK semantic readiness assessment and defines a declared-kind fallback when Jev cannot classify. It neither
+qualifies Jev nor selects the Triage Agent's main model or dispatch mechanism.
 
-## Must decide
+## Decision questions considered
 
 - Intake timing and ownership: consume the canonical next candidate/eligibility reasons; distinguish a triageable
   incomplete item from an executable TASK without treating `needs-triage` as implementation-ready or changing queue priority.
@@ -75,3 +76,62 @@ classification, creates an execution grant or resolves the separate role/dispatc
 Set readiness/classification semantics and distinguish model judgment from deterministic enforcement. Preserve
 the single canonical eligibility contract in [TASK-00096](../../tasks/00096-TASK.md). WF-028 decides dispatch,
 grant/claim timing and hotfix roles. This record performs no real triage or Planning lifecycle mutation.
+
+## Resolution — 2026-10-10
+
+John approved classification and routing preparation, **not a second readiness review** of each `ready-for-agent`
+TASK. An authorized human selects a TASK through a future terminal workflow invocation or a browser request such
+as moving a Ready card toward In Progress. Triage consumes that selected TASK and its current declared kind and
+Planning/context/eligibility facts; it does not scan, rank or claim the queue. A UI gesture expresses an intent,
+not a completed status transition or execution grant. On explicit request, Triage may diagnose an incomplete TASK,
+but cannot make it executable. The canonical eligibility capability remains the sole deterministic owner of
+readiness, blockers, current authority and safe reasons; start must revalidate it under the applicable Workflow
+contract. Do not add a separate model-based readiness gate, mutate Planning status or replace the work skill's
+ordinary scope checks.
+
+### Typed classification and priority
+
+- Call the shared bounded Jev classifier for **every selected TASK**, including one whose declared kind appears
+  clear. Provide permission-filtered TASK intent, declared kind and relevant bounded evidence; treat TASK prose as
+  untrusted input, not policy. The initial routing categories are `feature`, `bugfix` and `chore`; enhancement is
+  `feature`, not a fourth workflow or a new Planning `kind`. Map the existing declared `bug` kind to `bugfix`
+  only in this routing vocabulary. Return `unknown`/ambiguous explicitly rather than inventing a category.
+- Jev also recommends one configurable initial priority band: `low`, `medium`, `high` or `urgent`. These are
+  advisory relative-priority labels, **not** authored Board order, a queue override or a new Planning priority
+  status. Do not require comparison to every Ready TASK to assign a band. Only an authorized human can decide a
+  Planning priority change. The exact rubric, evaluator, budgets and any later vocabulary revisions are qualified
+  and versioned during implementation; neither the file-screening nor tool-guard confidence threshold applies.
+- Classify work category and urgency/priority separately. A `bugfix` with recommended `urgent` priority can be
+  proposed for a distinct hotfix workflow, but an authorized human must confirm emergency treatment before it
+  starts. `urgent` on another category does not silently make it a bug or grant a hotfix route. Urgency never
+  authorizes skipping isolation, verification, independent review or release/deployment grants.
+
+### Conflict, fallback and handoff
+
+- When a usable Jev category materially conflicts with the TASK's declared kind such that the workflow route
+  changes, pause for human resolution and show both classifications and their evidence. No TASK kind, scope or
+  priority is silently rewritten. A non-material refinement such as calling a feature an enhancement does not
+  pause routing.
+- If Jev is unavailable, times out, returns `unknown`/ambiguous or otherwise supplies no usable category,
+  fall back to the current, supported TASK-declared kind for the **normal** workflow only. Mark the provenance as
+  declared-kind fallback, the priority as `unknown`, and the Jev failure/uncertainty separately from Planning
+  ineligibility. Do not claim a Jev result or infer emergency urgency. If the kind is missing, unsupported or
+  inconsistent with current authoritative facts, stop for human resolution rather than guessing.
+- Produce a bounded recommendation with TASK and context/eligibility revisions, category and evidence/provenance,
+  priority band or `unknown`, any emergency confirmation, reason for fallback or escalation, evaluator and rubric
+  identity when Jev ran, and the proposed category for WF-028's route selection. An authorized human resolves a material
+  conflict or approves changed scope, priority or emergency treatment. Triage may recommend a correction but
+  neither applies Planning amendments nor gains permissions through its classification. Fresh eligibility,
+  current grants and supported routes are validated by the receiving application operation, not Jev.
+- Bind judgments and any human disposition to their exact subject and rubric revisions; reject stale results.
+  Apply permission/disclosure and bounded source, time and spend constraints even if Jev is inexpensive. Retain
+  traceable classification/fallback/history without creating a competing queue. Qualification should compare
+  declared kinds with representative accepted and disputed TASKs, priority bands, urgent bugs, conflicts,
+  missing/unsupported kinds, stale facts and Jev outage; report errors, fallback and escalation rates, latency
+  and actual cost rather than assuming classification is free or infallible.
+
+[WF-028](WF-028-define-triage-dispatch-and-hotfix-role-boundaries.md) owns the predefined workflow catalog,
+route-to-role mapping, final invocation and authorization, claim timing, duplicate/retry recovery, and the exact
+senior-capability hotfix handoff. This decision neither chooses the hotfix implementer nor inserts a mandatory
+Triage gate into the already approved first Team Lead → Software Engineer execution slice. No runtime capability,
+Workflow, claim, Agent session or Jev invocation was created by closing this decision.
