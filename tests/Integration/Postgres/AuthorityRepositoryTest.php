@@ -8,6 +8,7 @@ use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
+use App\Adapter\Persistence\Repository\PostgresFeatureRepository;
 use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
@@ -22,6 +23,13 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\GrantPermissionToCustomRoleHandler;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureConflictException;
+use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureReferenceException;
+use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureStateException;
+use Fight\AccessControl\Domain\AccessControl\Feature\Feature;
+use Fight\AccessControl\Domain\AccessControl\Feature\FeatureId;
+use Fight\AccessControl\Domain\AccessControl\Feature\FeatureName;
+use Fight\AccessControl\Domain\AccessControl\Feature\FeatureStatus;
 use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
@@ -353,6 +361,205 @@ final class AuthorityRepositoryTest extends TestCase
             } catch (PermissionDenied) {
                 self::assertSame([], $users->getById($actorId)->getRoleIds());
             }
+        } finally {
+            $this->connection->rollBack();
+        }
+    }
+
+    /**
+     * Persists Feature settings and prevents removal of a referenced Permission
+     */
+    public function testFeatureReferenceFencesAndOptimisticWrites(): void
+    {
+        $first = $this->customPermission('FEATURE_FIRST');
+        $second = $this->customPermission('FEATURE_SECOND');
+        $this->permissions->add($first);
+        $this->permissions->add($second);
+        $features = new PostgresFeatureRepository(
+            $this->connection,
+            new AuthorizationReferenceFences($this->connection)
+        );
+        $feature = Feature::define(FeatureId::generate(), FeatureName::fromString('feature-first'), $first->getId());
+
+        $this->connection->beginTransaction();
+        try {
+            $features->add($feature);
+            self::assertTrue($this->permissions->hasFeatureReference($first->getId()));
+            self::assertFalse($this->permissions->remove($first));
+            self::assertSame(
+                $feature->getId()->toString(),
+                $features->getByName($feature->getName())->getId()->toString()
+            );
+            self::assertSame(1, $features->getAll(new Pagination(1, 10))->totalRecords());
+            self::assertTrue($features->replace($feature, $feature));
+            $intermediate = $feature->withPermission($second->getId());
+            $changed = $intermediate->withStatus(FeatureStatus::ON);
+            self::assertTrue($features->replace($feature, $intermediate));
+            self::assertFalse($features->replace($feature, $intermediate));
+            self::assertTrue($features->replace($intermediate, $changed));
+            self::assertSame(FeatureStatus::ON, $features->getById($feature->getId())->getStatus());
+            self::assertFalse($this->permissions->hasFeatureReference($first->getId()));
+            self::assertTrue($this->permissions->remove($first));
+            self::assertFalse($this->permissions->remove($second));
+            self::assertFalse($features->remove($feature));
+            self::assertTrue($features->remove($changed));
+            self::assertTrue($this->permissions->remove($second));
+            self::assertNull($features->getByName($feature->getName()));
+        } finally {
+            $this->connection->rollBack();
+        }
+        self::assertNull($features->getById($feature->getId()));
+        self::assertNotNull($this->permissions->getById($first->getId()));
+    }
+
+    /**
+     * Rejects duplicate Feature names and absent references without writing authority
+     */
+    public function testFeatureDuplicateAndMissingReferenceReject(): void
+    {
+        $permission = $this->customPermission('FEATURE_VALID');
+        $this->permissions->add($permission);
+        $features = new PostgresFeatureRepository(
+            $this->connection,
+            new AuthorizationReferenceFences($this->connection)
+        );
+        $feature = Feature::define(
+            FeatureId::generate(),
+            FeatureName::fromString('feature-valid'),
+            $permission->getId()
+        );
+        $this->connection->beginTransaction();
+        try {
+            $features->add($feature);
+            try {
+                $features->add(Feature::define(FeatureId::generate(), $feature->getName(), $permission->getId()));
+                self::fail('A duplicate Feature name cannot replace its stored identity.');
+            } catch (FeatureConflictException) {
+                self::assertSame(
+                    $feature->getId()->toString(),
+                    $features->getByName($feature->getName())->getId()->toString()
+                );
+            }
+            try {
+                $features->add(Feature::define(
+                    FeatureId::generate(),
+                    FeatureName::fromString('feature-missing'),
+                    PermissionId::generate()
+                ));
+                self::fail('A missing Permission cannot be referenced.');
+            } catch (FeatureReferenceException) {
+                self::assertNull($features->getByName(FeatureName::fromString('feature-missing')));
+            }
+            try {
+                $features->replace($feature, $feature->withPermission(PermissionId::generate()));
+                self::fail('A missing replacement Permission cannot be referenced.');
+            } catch (FeatureReferenceException) {
+                self::assertSame(
+                    $permission->getId()->toString(),
+                    $features->getById($feature->getId())->getPermissionId()->toString()
+                );
+            }
+        } finally {
+            $this->connection->rollBack();
+        }
+    }
+
+    /**
+     * Allows only one winner when Feature creation competes with Permission removal
+     */
+    public function testFeatureReferenceAndPermissionRemovalRace(): void
+    {
+        $permission = $this->customPermission('FEATURE_RACE');
+        $other = $this->customPermission('FEATURE_OTHER_RACE');
+        $this->permissions->add($permission);
+        $this->permissions->add($other);
+        $first = new PostgresFeatureRepository($this->connection, new AuthorizationReferenceFences($this->connection));
+        $secondConnection = $this->connection();
+        $second = new PostgresFeatureRepository(
+            $secondConnection,
+            new AuthorizationReferenceFences($secondConnection)
+        );
+        $secondPermissions = new PostgresPermissionRepository(
+            $secondConnection,
+            new AuthorizationReferenceFences($secondConnection)
+        );
+        $feature = Feature::define(
+            FeatureId::generate(),
+            FeatureName::fromString('feature-race'),
+            $permission->getId()
+        );
+        $otherFeature = Feature::define(FeatureId::generate(), FeatureName::fromString('other-race'), $other->getId());
+        try {
+            $this->connection->beginTransaction();
+            $first->add($feature);
+            $secondConnection->beginTransaction();
+            $secondConnection->executeStatement("SET LOCAL lock_timeout = '100ms'");
+            try {
+                $secondPermissions->remove($permission);
+                self::fail('A competing removal must wait for the reference writer.');
+            } catch (DriverException $failure) {
+                self::assertSame('55P03', $failure->getSQLState());
+            }
+            $secondConnection->rollBack();
+            $this->connection->commit();
+            $secondConnection->beginTransaction();
+            self::assertFalse($secondPermissions->remove($permission));
+            $secondConnection->rollBack();
+
+            $this->connection->beginTransaction();
+            self::assertTrue($this->permissions->remove($other));
+            $secondConnection->beginTransaction();
+            $secondConnection->executeStatement("SET LOCAL lock_timeout = '100ms'");
+            try {
+                $second->add($otherFeature);
+                self::fail('A competing reference writer must wait for removal.');
+            } catch (\Throwable $failure) {
+                self::assertInstanceOf(DriverException::class, $failure);
+                self::assertSame('55P03', $failure->getSQLState());
+            }
+            $secondConnection->rollBack();
+            $this->connection->commit();
+            $secondConnection->beginTransaction();
+            try {
+                $second->add($otherFeature);
+                self::fail('A removed Permission cannot be referenced after commit.');
+            } catch (FeatureReferenceException) {
+                self::assertNull($second->getById($otherFeature->getId()));
+            }
+            $secondConnection->rollBack();
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($secondConnection->isTransactionActive()) {
+                $secondConnection->rollBack();
+            }
+            $secondConnection->close();
+        }
+    }
+
+    /**
+     * Rejects invalid persisted Feature state instead of reporting the definition absent
+     */
+    public function testMalformedFeatureStateFailsClosed(): void
+    {
+        $permission = $this->customPermission('FEATURE_STATE');
+        $this->permissions->add($permission);
+        $features = new PostgresFeatureRepository(
+            $this->connection,
+            new AuthorizationReferenceFences($this->connection)
+        );
+        $feature = Feature::define(
+            FeatureId::generate(),
+            FeatureName::fromString('feature-state'),
+            $permission->getId()
+        );
+        $this->connection->beginTransaction();
+        try {
+            $features->add($feature);
+            $this->connection->update('features', ['name' => 'INVALID'], ['id' => $feature->getId()->toString()]);
+            $this->expectException(FeatureStateException::class);
+            $features->getById($feature->getId());
         } finally {
             $this->connection->rollBack();
         }
