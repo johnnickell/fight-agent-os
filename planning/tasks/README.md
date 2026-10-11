@@ -202,4 +202,30 @@
 | [TASK-00197](00197-TASK.md) | Remove prohibited content across published lineage | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
 | [TASK-00198](00198-TASK.md) | Inspect and correct authorized memory in the browser | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
 | [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | done | — |
+| [TASK-00200](00200-TASK.md) | Diagnose selected TASKs through a permission-limited Triage profile | needs-info | [TICKET-00051](../tickets/00051-TICKET.md) |
+| [TASK-00201](00201-TASK.md) | Classify every selected TASK with bounded Jev and safe fallback | ready-for-agent | [TICKET-00051](../tickets/00051-TICKET.md) |
+| [TASK-00202](00202-TASK.md) | Resolve material classification conflicts with human disposition | ready-for-agent | [TICKET-00051](../tickets/00051-TICKET.md) |
+| [TASK-00203](00203-TASK.md) | Configure and preview Repository branching and normal routes | ready-for-agent | [TICKET-00052](../tickets/00052-TICKET.md) |
+| [TASK-00204](00204-TASK.md) | Start classified normal work from the terminal | ready-for-agent | [TICKET-00052](../tickets/00052-TICKET.md) |
+| [TASK-00205](00205-TASK.md) | Start normal work from a Ready-card intent | ready-for-agent | [TICKET-00052](../tickets/00052-TICKET.md) |
+| [TASK-00206](00206-TASK.md) | Confirm and repair a direct hotfix | needs-info | [TICKET-00053](../tickets/00053-TICKET.md) |
+| [TASK-00207](00207-TASK.md) | Independently verify and hand off a hotfix PR | needs-info | [TICKET-00053](../tickets/00053-TICKET.md) |
+| [TASK-00208](00208-TASK.md) | Transfer an active normal bugfix to a linked hotfix | ready-for-agent | [TICKET-00053](../tickets/00053-TICKET.md) |
+| [TASK-00209](00209-TASK.md) | Offer a verified hotfix merge-back | needs-info | [TICKET-00054](../tickets/00054-TICKET.md) |
+| [TASK-00210](00210-TASK.md) | Authorize and reconcile the same-hotfix merge-back | ready-for-agent | [TICKET-00054](../tickets/00054-TICKET.md) |
+| [TASK-00211](00211-TASK.md) | Create standalone release TASKs with guarded completion | ready-for-agent | [TICKET-00055](../tickets/00055-TICKET.md) |
+| [TASK-00212](00212-TASK.md) | Configure and preview project release policy | ready-for-agent | [TICKET-00055](../tickets/00055-TICKET.md) |
+| [TASK-00213](00213-TASK.md) | Resolve supported release eligibility and route | ready-for-agent | [TICKET-00055](../tickets/00055-TICKET.md) |
+| [TASK-00214](00214-TASK.md) | Start one recoverable release Workflow | ready-for-agent | [TICKET-00056](../tickets/00056-TICKET.md) |
+| [TASK-00215](00215-TASK.md) | Prepare and certify the exact release candidate | needs-info | [TICKET-00056](../tickets/00056-TICKET.md) |
+| [TASK-00216](00216-TASK.md) | Approve a bounded exact-candidate release plan | ready-for-agent | [TICKET-00056](../tickets/00056-TICKET.md) |
+| [TASK-00217](00217-TASK.md) | Hand off human signing and verify its result | ready-for-agent | [TICKET-00056](../tickets/00056-TICKET.md) |
+| [TASK-00218](00218-TASK.md) | Verify the library candidate and publish its exact remote tag | ready-for-agent | [TICKET-00057](../tickets/00057-TICKET.md) |
+| [TASK-00219](00219-TASK.md) | Publish the project-required hosted library release | ready-for-agent | [TICKET-00057](../tickets/00057-TICKET.md) |
+| [TASK-00220](00220-TASK.md) | Verify library distribution against project policy | ready-for-agent | [TICKET-00057](../tickets/00057-TICKET.md) |
+| [TASK-00221](00221-TASK.md) | Finish library branch follow-through and release closeout | needs-info | [TICKET-00057](../tickets/00057-TICKET.md) |
+| [TASK-00222](00222-TASK.md) | Qualify and preflight an exact application deployment target | needs-info | [TICKET-00058](../tickets/00058-TICKET.md) |
+| [TASK-00223](00223-TASK.md) | Execute the approved application rollout and reconcile provider state | ready-for-agent | [TICKET-00058](../tickets/00058-TICKET.md) |
+| [TASK-00224](00224-TASK.md) | Verify production health and coordinate bounded recovery | ready-for-agent | [TICKET-00058](../tickets/00058-TICKET.md) |
+| [TASK-00225](00225-TASK.md) | Finish application branch follow-through and release closeout | needs-info | [TICKET-00058](../tickets/00058-TICKET.md) |
 <!-- /planning:records -->

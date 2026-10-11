@@ -53,4 +53,12 @@
 | [TICKET-00048](00048-TICKET.md) | Review and publish broader memory lessons | ready-for-agent | [EPIC-00011](../epics/00011-EPIC.md) |
 | [TICKET-00049](00049-TICKET.md) | Retrieve scoped memory selectively with Jev | ready-for-agent | [EPIC-00011](../epics/00011-EPIC.md) |
 | [TICKET-00050](00050-TICKET.md) | Inspect memory and remove prohibited content safely | ready-for-agent | [EPIC-00011](../epics/00011-EPIC.md) |
+| [TICKET-00051](00051-TICKET.md) | Classify a selected TASK for routing | ready-for-agent | [EPIC-00012](../epics/00012-EPIC.md) |
+| [TICKET-00052](00052-TICKET.md) | Configure routes and start normal work | ready-for-agent | [EPIC-00012](../epics/00012-EPIC.md) |
+| [TICKET-00053](00053-TICKET.md) | Execute a confirmed direct hotfix | ready-for-agent | [EPIC-00012](../epics/00012-EPIC.md) |
+| [TICKET-00054](00054-TICKET.md) | Merge a verified hotfix back under one authorization | ready-for-agent | [EPIC-00012](../epics/00012-EPIC.md) |
+| [TICKET-00055](00055-TICKET.md) | Define release TASKs and project release policy | ready-for-agent | [EPIC-00013](../epics/00013-EPIC.md) |
+| [TICKET-00056](00056-TICKET.md) | Coordinate and authorize one release | ready-for-agent | [EPIC-00013](../epics/00013-EPIC.md) |
+| [TICKET-00057](00057-TICKET.md) | Publish a library release | ready-for-agent | [EPIC-00013](../epics/00013-EPIC.md) |
+| [TICKET-00058](00058-TICKET.md) | Deploy an application release | ready-for-agent | [EPIC-00013](../epics/00013-EPIC.md) |
 <!-- /planning:records -->
