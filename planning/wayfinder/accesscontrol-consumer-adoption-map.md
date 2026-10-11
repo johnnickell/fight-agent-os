@@ -16,7 +16,7 @@ capability has an owned usable integration or a human-approved explicit non-UI/e
 **not** mean one endpoint per method, a general secret console, package v1.0.0, or starter implementation.
 
 **Done** = [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) through
-[WF-034](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md) are resolved or explicitly
+[WF-035](tickets/WF-035-define-project-teams-and-agent-selection.md) are resolved or explicitly
 excluded with maintainer approval; ownership/amendment paths for conflicts are recorded; the
 [capability matrix](research/WF-032-accesscontrol-consumer-capability-matrix.md) identifies gaps and proposed
 surfaces; and an approved next bounded EPIC destination is linked. Done is **planning handoff**, not live
@@ -59,7 +59,7 @@ AccessControl adoption, actual Agent qualification, starter certification, produ
   starter to be offered after its own immutable stable SemVer release `>=1.0.0`, required generation manifest
   and verified snapshot. No all-five prerequisite or AccessControl 1.0.0 gate is introduced here.
 
-### Proposed routing and EPIC handoff (subject to decisions)
+### Accepted routing and future EPIC handoffs (remaining decisions below)
 
 Human browser surfaces: authorized user/role/session/invitation management as planned; **approved in WF-032**:
 self-service and authorized cross-user email-change request/cancel with mailbox confirmation and a Super Admin
@@ -74,22 +74,24 @@ projections, bounded effects and transaction/recovery evidence; neither a UI nor
 authorization. Registered checks, current-code retirement evidence and separate action authorization must qualify
 Feature activation and removal; no fake Feature is needed to render the screen.
 
-**Next bounded EPIC destination after decisions:** qualify one *real* AccessControl Agent credential and operation
-journey for a managed Harness Agent through issuance → protected delivery → authenticated use → rotation/revocation
-→ restart/restore recovery, with safe admin intents/status and direct Permission policy. Recommend a separate
-linked EPIC rather than silently enlarging EPIC-00006's accepted Planning/terminal scope; record an EPIC-00006
-owner-approved amendment/cross-reference if needed. WF-032 approved **two other separate new EPIC destinations**:
-a deferred human email-change journey and a Feature Flags management/runtime lifecycle, both linked to
-EPIC-00004's authentication/authorization foundation.
-They explicitly extend its historical deferral without rewriting EPIC-00004 or TICKET-00030/00031. WF-034 still
-owns whether evidence-backed starter handoff needs another separate destination. Do not grill an EPIC before
-WF-033/WF-034 finish or descend to TICKET/TASK planning.
+**Approved future destinations (not yet EPIC records):** WF-033 approved a **new bounded linked EPIC** for the
+shared AccessControl Agent operation/credential lifecycle, protected delivery/recovery, Agent management/creation
+UI and first *working* managed Explorer doing real exploration. Project Manager and later Agent instances reuse the
+boundary; full Workflow automation and a disposable Explorer-only test harness are not prerequisites. Real v0.5.0
+consumer qualification is integrated into implementation before live use, not replaced by manual dogfooding.
+EPIC-00006 retains Harness/template and browser Planning-Agent outcomes; the new EPIC supplies their credential
+prerequisite without silently expanding its existing TASKs. A **separate later linked EPIC** delivers human-edited,
+AI-assisted template authoring; Teams/Workflow selection remain under WF-035. WF-032 approved **two other new
+linked EPICs** for human email change and Feature Flags lifecycle after EPIC-00004's foundation, without
+rewriting its historical deferral or TICKET-00030/00031. WF-034 still owns the evidence-based starter handoff.
+Do not grill any EPIC before WF-034/WF-035 finish or descend to TICKET/TASK planning.
 
 ## Decisions so far
 
 1. **[WF-032 — Reconcile AccessControl coverage with accepted Agent OS scope](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) is closed.** Self-service and Super Admin cross-user email-change request/cancel with mailbox confirmation, distinct protected management Permission, and Super Admin Feature Flags management (immutable-name creation, testing Permission, OFF/PREVIEW/ON, guarded removal) with initially Super Admin-granted `ADMIN_SAFE` management Permission are approved. Two separate linked new EPIC destinations explicitly extend EPIC-00004's deferred scope; sensitive operational paths are protected non-UI, unsupported features are not invented.
-2. **[WF-033 — Define live Agent operation adoption and safe surfaces](tickets/WF-033-define-agent-operation-adoption-boundary.md) is open.** Decide one qualified managed Agent use proof, surface split and EPIC-00006 ownership after WF-032.
+2. **[WF-033 — Define live Agent operation adoption and safe surfaces](tickets/WF-033-define-agent-operation-adoption-boundary.md) is closed.** A new linked Agent lifecycle/management EPIC supplies the real credential boundary and first working Explorer; a separate later linked EPIC owns AI-assisted, human-approved custom-template authoring. Agents/templates can be incrementally dogfooded before full Workflows; actual current-contract consumer security qualification accompanies owned implementation, not a separate per-template harness.
 3. **[WF-034 — Set the Agent OS reference-consumer and starter handoff contract](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md) is open.** Decide versioned evidence and Agent OS-only starter handoff after coverage and Agent criteria are settled.
+4. **[WF-035 — Define project-linked Teams and available Agent selection](tickets/WF-035-define-project-teams-and-agent-selection.md) is open.** The maintainer wants separately created Agents assigned to Teams linked to one or more projects and the next eligible available role-matching Agent selected for TASK Workflow Sessions. Decide Team scope, selection/independence, and a separate handoff that does not silently amend EPIC-00007 or the accepted WF-028 route.
 
 ## Tickets
 
@@ -97,8 +99,9 @@ WF-033/WF-034 finish or descend to TICKET/TASK planning.
 | Decision ID | Title | Type | Mode | Status | Depends on |
 |---|---|---|---|---|---|
 | [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) | Reconcile AccessControl coverage with accepted Agent OS scope | wayfinder:grill | HITL | Closed | — |
-| [WF-033](tickets/WF-033-define-agent-operation-adoption-boundary.md) | Define live Agent operation adoption and safe surfaces | wayfinder:grill | HITL | Open | [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) |
+| [WF-033](tickets/WF-033-define-agent-operation-adoption-boundary.md) | Define live Agent operation adoption and safe surfaces | wayfinder:grill | HITL | Closed | [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md) |
 | [WF-034](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md) | Set the Agent OS reference-consumer and starter handoff contract | wayfinder:grill | HITL | Open | [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md), [WF-033](tickets/WF-033-define-agent-operation-adoption-boundary.md) |
+| [WF-035](tickets/WF-035-define-project-teams-and-agent-selection.md) | Define project-linked Teams and available Agent selection | wayfinder:grill | HITL | Open | [WF-033](tickets/WF-033-define-agent-operation-adoption-boundary.md) |
 <!-- /planning:decisions -->
 
 ## Blocking relationships
@@ -106,16 +109,20 @@ WF-033/WF-034 finish or descend to TICKET/TASK planning.
 ```text
 WF-032 (coverage and accepted-scope owner) → WF-033 (Agent adoption and surface)
                                     WF-032 + WF-033 → WF-034 (reference handoff)
-WF-032 + WF-033 + WF-034 → approved bounded EPIC handoff(s)
+                                             WF-033 → WF-035 (Team assignment/selection)
+WF-032 + WF-033 + WF-034 + WF-035 → approved bounded EPIC handoff(s)
 ```
 
 ## Frontier
 
-[WF-033 — Define live Agent operation adoption and safe surfaces](tickets/WF-033-define-agent-operation-adoption-boundary.md)
-is the next unblocked decision. **Recommendation:** qualify one real managed Agent issuance → protected delivery →
-authenticated use → rotation/revocation → recovery journey on the full v0.5.0 operation/cohort contract before
-live enablement, and decide whether to link a new Agent EPIC or explicitly extend EPIC-00006. WF-032 is closed;
-WF-034 remains blocked on WF-033.
+[WF-035 — Define project-linked Teams and available Agent selection](tickets/WF-035-define-project-teams-and-agent-selection.md)
+is the next authored decision. **Recommendation:** let a Team explicitly serve one or more Repositories and hold
+separately instantiated role-matching Agents; choose an eligible available identity under the authoritative
+Workflow start/grant with fair deterministic selection, never by a prompt or template name. Do not make Team
+assignment a prerequisite to first working Explorer/Project Manager use. Preserve EPIC-00007/00008's first
+Workflow and independent-review boundaries and WF-028's hotfix confirmation without silent amendment.
+[WF-034 — Set the Agent OS reference-consumer and starter handoff contract](tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md)
+is also unblocked, but follows WF-035 in this map's authored frontier.
 
 ## Not yet specified (fog)
 
