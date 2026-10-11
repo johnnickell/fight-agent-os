@@ -16,14 +16,21 @@ use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
+use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\GrantPermissionToCustomRoleHandler;
+use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
+use Fight\AccessControl\Domain\AccessControl\Role\Command\GrantPermissionToCustomRole;
+use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
+use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Application\Messaging\Event\EventDispatcher;
+use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Repository\Pagination;
 use LogicException;
 use PHPUnit\Framework\TestCase;
@@ -223,6 +230,66 @@ final class AuthorityRepositoryTest extends TestCase
         $this->expectException(PersistenceConflict::class);
         $this->expectExceptionMessage('The role identity or name is already in use.');
         $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
+    }
+
+    /**
+     * Exercises the tagged custom-role grant through the owned PostgreSQL adapters
+     */
+    public function testTaggedGrantAcceptsOnlyAuthoritativeAdminSafePermission(): void
+    {
+        $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
+        $eligible = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('READ_DASHBOARD'),
+            PermissionTier::ADMIN_SAFE,
+            $at
+        );
+        $protected = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('MANAGE_AUTHORITY'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at
+        );
+        $this->permissions->add($eligible);
+        $this->permissions->add($protected);
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_READER'), [], $at);
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
+
+        $clock = $this->createStub(Clock::class);
+        $clock->method('now')->willReturn($at->modify('+1 second'));
+        $handler = new GrantPermissionToCustomRoleHandler(
+            $this->roles,
+            $this->permissions,
+            $clock,
+            $this->unitOfWork,
+            $this->createStub(EventDispatcher::class)
+        );
+        $actor = UserId::generate();
+        $handler->handle(CommandMessage::create(new GrantPermissionToCustomRole(
+            $actor,
+            $role->getId(),
+            $eligible->getId()
+        )));
+        self::assertTrue($this->roles->getById($role->getId())->hasPermission($eligible->getId()));
+
+        // A repeated grant is a no-op, but must still validate current eligibility.
+        $handler->handle(CommandMessage::create(new GrantPermissionToCustomRole(
+            $actor,
+            $role->getId(),
+            $eligible->getId()
+        )));
+        self::assertEquals($at->modify('+1 second'), $this->roles->getById($role->getId())->getUpdatedAt());
+
+        try {
+            $handler->handle(CommandMessage::create(new GrantPermissionToCustomRole(
+                $actor,
+                $role->getId(),
+                $protected->getId()
+            )));
+            self::fail('A protected Permission must not be granted to a custom Role.');
+        } catch (CustomRoleException) {
+            self::assertFalse($this->roles->getById($role->getId())->hasPermission($protected->getId()));
+        }
     }
 
     /**
