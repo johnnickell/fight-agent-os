@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Tests\Integration\Postgres;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
+use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
 use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
+use App\Adapter\Persistence\Repository\PostgresUserRepository;
+use App\Application\Authorization\InstallationAuthority;
+use App\Application\Failure\PermissionDenied;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -27,11 +31,14 @@ use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
+use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
+use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Repository\Pagination;
+use Fight\Common\Domain\Value\Internet\EmailAddress;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -289,6 +296,65 @@ final class AuthorityRepositoryTest extends TestCase
             self::fail('A protected Permission must not be granted to a custom Role.');
         } catch (CustomRoleException) {
             self::assertFalse($this->roles->getById($role->getId())->hasPermission($protected->getId()));
+        }
+    }
+
+    /**
+     * Checks fresh actor membership and target scope against installed PostgreSQL authority
+     */
+    public function testInstallationAuthorityUsesCurrentPostgresAssignments(): void
+    {
+        $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
+        $permission = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('MANAGE_USER_INVITATIONS'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at
+        );
+        $role = Role::defineManaged(
+            RoleId::generate(),
+            RoleName::fromString('ROLE_SUPER_ADMIN'),
+            [$permission->getId()],
+            $at
+        );
+        $actorId = UserId::generate();
+        $actor = User::invite(
+            $actorId,
+            EmailAddress::fromString('actor-'.$actorId->toString().'@example.test'),
+            $at
+        );
+        $actor->activate(PasswordHash::fromString((string) password_hash('test-password', PASSWORD_BCRYPT)), $at);
+        $actor->assignRole($role->getId(), $at);
+        $target = User::invite(
+            UserId::generate(),
+            EmailAddress::fromString('target-'.$actorId->toString().'@example.test'),
+            $at
+        );
+        $users = new PostgresUserRepository(
+            $this->connection,
+            new AuthorizationReferenceFences($this->connection),
+            new AuthenticationAuthorityFences($this->connection)
+        );
+        $authority = new InstallationAuthority($users, $this->roles, $this->permissions);
+
+        $this->connection->beginTransaction();
+        try {
+            $this->permissions->add($permission);
+            $this->roles->add($role);
+            $users->add($actor);
+            $users->add($target);
+            $authority->assertInstallationPermission($actorId, $permission->getName(), $target->getId());
+            $updated = clone $actor;
+            $updated->removeRole($role->getId(), $at->modify('+1 second'));
+            self::assertTrue($users->replaceRoleAssignments($actor, $updated));
+            try {
+                $authority->assertInstallationPermission($actorId, $permission->getName(), $target->getId());
+                self::fail('Revoked membership must be observed on the next decision.');
+            } catch (PermissionDenied) {
+                self::assertSame([], $users->getById($actorId)->getRoleIds());
+            }
+        } finally {
+            $this->connection->rollBack();
         }
     }
 
