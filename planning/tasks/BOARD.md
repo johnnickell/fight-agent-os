@@ -8,12 +8,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | in-progress | — | — |
-| 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | in-progress | — | [PR #41](https://github.com/johnnickell/fight-agent-os/pull/41) |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 36 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | — | — |
 | 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | — (standalone chore) | ready-for-agent | — | — |
@@ -28,7 +28,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md) | — |
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
-| 36 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00126](00126-TASK.md) | — |
 | 37 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00036](00036-TASK.md) | — |
 | 38 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | [TASK-00037](00037-TASK.md) | — |
 | 40 | [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00038](00038-TASK.md) | — |
@@ -101,12 +100,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00059](00059-TASK.md), [TASK-00117](00117-TASK.md) | — |
 | 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00118](00118-TASK.md) | — |
 | 114 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00119](00119-TASK.md) | — |
-| 115 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md), [TASK-00126](00126-TASK.md) | — |
+| 115 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md) | — |
 | 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00058](00058-TASK.md), [TASK-00118](00118-TASK.md) | — |
 | 117 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md), [TASK-00121](00121-TASK.md), [TASK-00122](00122-TASK.md), [TASK-00062](00062-TASK.md) | — |
 | 118 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00117](00117-TASK.md), [TASK-00036](00036-TASK.md) | — |
 | 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00124](00124-TASK.md) | — |
-| 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00125](00125-TASK.md), [TASK-00126](00126-TASK.md) | — |
+| 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00125](00125-TASK.md) | — |
 | 122 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00124](00124-TASK.md), [TASK-00125](00125-TASK.md), [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
 | — | [TASK-00159](00159-TASK.md) | Evaluate bounded typed questions with usage receipts | [TICKET-00037 — Configure and qualify Jev access for the Harness](../tickets/00037-TICKET.md) | ready-for-agent | [TASK-00184](00184-TASK.md) | — |
 | — | [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | [TICKET-00038 — Guard Pi tool execution with deterministic restrictions and Jev](../tickets/00038-TICKET.md) | ready-for-agent | [TASK-00160](00160-TASK.md), [TASK-00159](00159-TASK.md) | — |
@@ -252,6 +251,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 50 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | done | — | [PR #73](https://github.com/johnnickell/fight-agent-os/pull/73) |
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
+| 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #41](https://github.com/johnnickell/fight-agent-os/pull/41) |
 | — | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | — (standalone chore) | done | — | [PR #19](https://github.com/johnnickell/fight-agent-os/pull/19) |
 | — | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | — (standalone bug) | done | — | — |
 | — | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | — (standalone chore) | done | — | [PR #35](https://github.com/johnnickell/fight-agent-os/pull/35) |
