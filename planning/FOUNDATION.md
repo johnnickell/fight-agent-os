@@ -19,7 +19,12 @@ executable priority. Historical gate receipts remain historical.
 
 ## Accepted direction
 
-This is an independent application. Fight Common and Fight Access Control retain package ownership. Design
+This open-source application is a software factory: software to build software. Its planning, agent execution,
+review and delivery ambitions concern engineering work; they do not include a general-purpose personal AI
+operating system or an Internet homepage. The latter belong to a separate future project, not this roadmap.
+Current capabilities and outstanding integrations are distinguished above.
+
+Fight Common and Fight Access Control retain package ownership. Design
 architecture and interfaces for human maintainers; prefer cohesive deeper namespaces when flat directories mix
 unrelated responsibilities. Aim for meaningful 100% unit coverage without imposing TDD on ordinary feature work
 or adding tests of generated/configuration/tooling text.

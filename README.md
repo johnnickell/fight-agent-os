@@ -5,8 +5,10 @@
 
 # Fight Agent OS
 
-A personal AI operating system, starting with software engineering: plan in the browser, build in a customized
-Pi terminal, and understand the work through a companion dashboard.
+An open-source software factory: software to build software. Plan engineering work, carry it through a
+customized Pi terminal and managed workflow, and inspect progress in a browser dashboard as those capabilities
+are delivered. This project is not a general-purpose personal AI operating system or an Internet homepage;
+those belong to a separate future project.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
 API validation/error handling, an empty public-safe form metadata catalog and local engineering skills are

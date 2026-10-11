@@ -228,4 +228,5 @@
 | [TASK-00223](00223-TASK.md) | Execute the approved application rollout and reconcile provider state | ready-for-agent | [TICKET-00058](../tickets/00058-TICKET.md) |
 | [TASK-00224](00224-TASK.md) | Verify production health and coordinate bounded recovery | ready-for-agent | [TICKET-00058](../tickets/00058-TICKET.md) |
 | [TASK-00225](00225-TASK.md) | Finish application branch follow-through and release closeout | needs-info | [TICKET-00058](../tickets/00058-TICKET.md) |
+| [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | in-progress | — |
 <!-- /planning:records -->
