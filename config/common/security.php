@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Application\Authorization\InstallationAuthority;
+use App\Application\Authorization\InvitationCorrectionAuthorization;
+use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationAdministrationAuthorization;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Auth\Hmac\HmacRequestService;
 use Fight\Common\Adapter\Auth\Security\JwtDecoder;
 use Fight\Common\Adapter\Auth\Security\JwtEncoder;
@@ -29,6 +35,18 @@ return static function (Container $container): void {
 
     $container->set(ValidatorInterface::class, static function (): ValidatorInterface {
         return Validation::createValidator();
+    });
+    $container->set(InstallationAuthority::class, static function (Container $container): InstallationAuthority {
+        return new InstallationAuthority(
+            $container->get(UserRepository::class),
+            $container->get(RoleRepository::class),
+            $container->get(PermissionRepository::class)
+        );
+    });
+    $container->set(InvitationAdministrationAuthorization::class, static function (
+        Container $container
+    ): InvitationAdministrationAuthorization {
+        return new InvitationCorrectionAuthorization($container->get(InstallationAuthority::class));
     });
     $container->set(PasswordHasher::class, static function (): PasswordHasher {
         return new PhpPasswordHasher(PASSWORD_ARGON2ID);

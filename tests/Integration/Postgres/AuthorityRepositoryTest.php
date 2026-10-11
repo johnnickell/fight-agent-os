@@ -13,6 +13,7 @@ use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use App\Application\Authorization\InstallationAuthority;
+use App\Application\Authorization\InvitationCorrectionAuthorization;
 use App\Application\Failure\PermissionDenied;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -23,6 +24,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\GrantPermissionToCustomRoleHandler;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureConflictException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureReferenceException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureStateException;
@@ -344,6 +346,7 @@ final class AuthorityRepositoryTest extends TestCase
             new AuthenticationAuthorityFences($this->connection)
         );
         $authority = new InstallationAuthority($users, $this->roles, $this->permissions);
+        $invitationCallback = new InvitationCorrectionAuthorization($authority);
 
         $this->connection->beginTransaction();
         try {
@@ -352,6 +355,7 @@ final class AuthorityRepositoryTest extends TestCase
             $users->add($actor);
             $users->add($target);
             $authority->assertInstallationPermission($actorId, $permission->getName(), $target->getId());
+            $invitationCallback->assertCanCorrectInvitation($actorId, $target->getId());
             $updated = clone $actor;
             $updated->removeRole($role->getId(), $at->modify('+1 second'));
             self::assertTrue($users->replaceRoleAssignments($actor, $updated));
@@ -359,6 +363,12 @@ final class AuthorityRepositoryTest extends TestCase
                 $authority->assertInstallationPermission($actorId, $permission->getName(), $target->getId());
                 self::fail('Revoked membership must be observed on the next decision.');
             } catch (PermissionDenied) {
+                self::assertSame([], $users->getById($actorId)->getRoleIds());
+            }
+            try {
+                $invitationCallback->assertCanCorrectInvitation($actorId, $target->getId());
+                self::fail('Revoked membership cannot authorize pending invitation correction.');
+            } catch (InvitationAdministrationAuthorizationException) {
                 self::assertSame([], $users->getById($actorId)->getRoleIds());
             }
         } finally {
