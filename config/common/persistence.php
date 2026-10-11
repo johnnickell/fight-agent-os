@@ -64,7 +64,10 @@ return static function (Container $container): void {
         );
     });
     $container->set(AgentRepository::class, static function (Container $container): AgentRepository {
-        return new PostgresAgentRepository($container->get(Connection::class));
+        return new PostgresAgentRepository(
+            $container->get(Connection::class),
+            $container->get(AuthorizationReferenceFences::class)
+        );
     });
     $container->set(FeatureRepository::class, static function (Container $container): FeatureRepository {
         return new PostgresFeatureRepository(

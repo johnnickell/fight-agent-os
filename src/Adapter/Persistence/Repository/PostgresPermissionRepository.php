@@ -161,7 +161,10 @@ SQL,
         if (
             $replacement->getTier() === PermissionTier::SUPER_ADMIN_ONLY
             && (
-                $this->connection->fetchOne('SELECT 1 FROM agents LIMIT 1') !== false
+                $this->connection->fetchOne(
+                    'SELECT 1 FROM agent_permission_assignments WHERE permission_id = ? LIMIT 1',
+                    [$expected->getId()->toString()]
+                ) !== false
                 || $this->connection->fetchOne(
                     <<<'SQL'
 SELECT 1 FROM role_permissions rp JOIN roles r ON r.id = rp.role_id
@@ -174,7 +177,6 @@ SQL,
             return false;
         }
 
-        // Direct Agent assignment writers remain unavailable until the operation cohort is installed.
         return PostgresUniqueConstraintRace::execute(
             $this->connection,
             'uq_permissions_name',
