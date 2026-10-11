@@ -160,18 +160,21 @@ SQL,
         $this->referenceFences->holdPermissionReferences();
         if (
             $replacement->getTier() === PermissionTier::SUPER_ADMIN_ONLY
-            && $this->connection->fetchOne(
-                <<<'SQL'
+            && (
+                $this->connection->fetchOne('SELECT 1 FROM agents LIMIT 1') !== false
+                || $this->connection->fetchOne(
+                    <<<'SQL'
 SELECT 1 FROM role_permissions rp JOIN roles r ON r.id = rp.role_id
 WHERE rp.permission_id = ? AND (NOT r.managed OR r.name <> 'ROLE_SUPER_ADMIN') LIMIT 1
 SQL,
-                [$expected->getId()->toString()]
-            ) !== false
+                    [$expected->getId()->toString()]
+                ) !== false
+            )
         ) {
             return false;
         }
 
-        // Agent authority is not persisted or exposed in this installation.
+        // Direct Agent assignment writers remain unavailable until the operation cohort is installed.
         return PostgresUniqueConstraintRace::execute(
             $this->connection,
             'uq_permissions_name',
@@ -228,6 +231,7 @@ SQL
             ->andWhere('updated_at = :updated_at')
             ->andWhere('NOT EXISTS (SELECT 1 FROM role_permissions WHERE permission_id = :id)')
             ->andWhere('NOT EXISTS (SELECT 1 FROM features WHERE permission_id = :id)')
+            ->andWhere('NOT EXISTS (SELECT 1 FROM agent_permission_assignments WHERE permission_id = :id)')
             ->setParameters([
                 'id'         => $permission->getId()->toString(),
                 'name'       => $permission->getName()->toString(),

@@ -8,6 +8,7 @@ use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
+use App\Adapter\Persistence\Repository\PostgresAgentRepository;
 use App\Adapter\Persistence\Repository\PostgresFeatureRepository;
 use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
@@ -25,6 +26,12 @@ use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\GrantPermissionToCustomRoleHandler;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
+use Fight\AccessControl\Domain\AccessControl\Agent\Agent;
+use Fight\AccessControl\Domain\AccessControl\Agent\AgentCredentialId;
+use Fight\AccessControl\Domain\AccessControl\Agent\AgentId;
+use Fight\AccessControl\Domain\AccessControl\Agent\AgentName;
+use Fight\AccessControl\Domain\AccessControl\Agent\Exception\AgentOperationRejectedException;
+use Fight\AccessControl\Domain\AccessControl\Agent\Operation\AgentOperationFailure;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureConflictException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureReferenceException;
 use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureStateException;
@@ -374,6 +381,105 @@ final class AuthorityRepositoryTest extends TestCase
         } finally {
             $this->connection->rollBack();
         }
+    }
+
+    /**
+     * Reports truly empty Agent authority while rejecting all unqualified credential writes
+     */
+    public function testAbsentAgentAuthorityCannotAdmitCredentialWrites(): void
+    {
+        $agents = new PostgresAgentRepository($this->connection);
+        $permissionId = PermissionId::generate();
+        self::assertNull($agents->getById(AgentId::generate()));
+        self::assertNull($agents->getByCredentialId(AgentCredentialId::generate()));
+        self::assertSame(0, $agents->getAll(new Pagination())->totalRecords());
+        self::assertFalse($agents->hasPermissionAssignment($permissionId));
+
+        $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
+        $agent = Agent::provision(
+            AgentId::generate(),
+            AgentName::fromString('inert-fixture'),
+            AgentCredentialId::generate(),
+            'opaque-fixture-envelope',
+            $at
+        );
+        try {
+            $agents->add($agent);
+            self::fail('No Agent may be issued before its operation cohort is installed.');
+        } catch (AgentOperationRejectedException $failure) {
+            self::assertSame(AgentOperationFailure::UNAVAILABLE, $failure->getReason());
+            self::assertNull($failure->getPrevious());
+        }
+        self::assertNull($agents->getById($agent->getId()));
+        try {
+            $agents->validatePermissionAssignments([]);
+            self::fail('Permission writers cannot bypass the absent operation contract.');
+        } catch (AgentOperationRejectedException $failure) {
+            self::assertSame(AgentOperationFailure::UNAVAILABLE, $failure->getReason());
+        }
+    }
+
+    /**
+     * Rejects uncorrelated persisted Agent state and blocks protected promotion across its references
+     */
+    public function testUncorrelatedAgentAuthorityCannotEnableProtectedPromotion(): void
+    {
+        $agents = new PostgresAgentRepository($this->connection);
+        $permission = $this->managedPermission('AGENT_SCOPE');
+        $this->permissions->add($permission);
+        $protected = $permission->reconcileManaged(
+            $permission->getName(),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $permission->getCreatedAt()->modify('+1 second')
+        );
+        $agentId = AgentId::generate();
+        $credentialId = AgentCredentialId::generate();
+        $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
+
+        // Simulate an incomplete imported authority snapshot, not a supported Agent provisioning path.
+        $this->connection->beginTransaction();
+        try {
+            $this->connection->insert('agents', [
+                'id'                                    => $agentId->toString(),
+                'name'                                  => 'uncorrelated',
+                'state'                                 => 'active',
+                'credential_id'                         => $credentialId->toString(),
+                'credential_revision'                   => 0,
+                'encrypted_hmac_shared_secret_envelope' => 'opaque-fixture-envelope',
+                'permission_assignment_revision'        => 1,
+                'created_at'                            => $at->format('Y-m-d H:i:s.uP'),
+                'updated_at'                            => $at->format('Y-m-d H:i:s.uP')
+            ]);
+            $this->connection->insert('agent_permission_assignments', [
+                'agent_id'      => $agentId->toString(),
+                'permission_id' => $permission->getId()->toString()
+            ]);
+            self::assertTrue($agents->hasPermissionAssignment($permission->getId()));
+            try {
+                $agents->hasPermissionAssignment(PermissionId::generate());
+                self::fail('Incomplete Agent authority cannot prove other assignments absent.');
+            } catch (AgentOperationRejectedException $failure) {
+                self::assertSame(AgentOperationFailure::UNAVAILABLE, $failure->getReason());
+            }
+            self::assertFalse($this->permissions->replace($permission, $protected));
+            self::assertFalse($this->permissions->remove($permission));
+            try {
+                $agents->getById($agentId);
+                self::fail('Uncorrelated Agent state must not become an authoritative identity.');
+            } catch (AgentOperationRejectedException $failure) {
+                self::assertSame(AgentOperationFailure::UNAVAILABLE, $failure->getReason());
+            }
+            try {
+                $agents->getAll(new Pagination());
+                self::fail('Uncorrelated Agent state must not be listed as authoritative.');
+            } catch (AgentOperationRejectedException $failure) {
+                self::assertSame(AgentOperationFailure::UNAVAILABLE, $failure->getReason());
+            }
+        } finally {
+            $this->connection->rollBack();
+        }
+        self::assertFalse($agents->hasPermissionAssignment($permission->getId()));
+        self::assertSame(PermissionTier::ADMIN_SAFE, $this->permissions->getById($permission->getId())->getTier());
     }
 
     /**
