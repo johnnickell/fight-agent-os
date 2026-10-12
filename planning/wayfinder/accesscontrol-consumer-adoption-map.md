@@ -179,7 +179,11 @@ map-wide **TICKET decomposition phase**, not implementation TASK decomposition o
 [TICKETs](../epics/00016-EPIC.md#tickets) were approved and written. Email change retains the hard atomic
 old-mailbox notice seam before request/confirmation exposure. Feature Flags retains full discovery,
 preparation, registered runtime enforcement, complete catalog, management and CURRENT-code retirement
-without an invented product Feature. Destinations 4–5 still need accepted TICKET decomposition.
+without an invented product Feature. [EPIC-00017](../epics/00017-EPIC.md)'s five requirement
+[TICKETs](../epics/00017-EPIC.md#tickets) are also approved and written: database template authority,
+human publication/ancestor review, AI proposals, explicit one-time Permission reconciliation and new-role
+manual use through existing Agent creation. Publication changes no existing Agent or session. Only destination 5,
+[EPIC-00018](../epics/00018-EPIC.md), still needs accepted TICKET decomposition.
 These handoffs create no TASKs and establish no working product journey.
 
 ## Approved EPIC handoff
@@ -221,8 +225,8 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** decompose [EPIC-00017](../epics/00017-EPIC.md) into TICKETs, then continue
-across the map's other approved EPICs before creating implementation TASKs. EPIC publication, independent
+**Next planning operation:** decompose [EPIC-00018](../epics/00018-EPIC.md) into TICKETs to finish the map's
+remaining requirement decomposition before creating implementation TASKs. EPIC publication, independent
 review, hosted checks and starter maintenance remain separate from this decision map.
 
 ## Downstream implementation unknowns (not open Wayfinder decisions)

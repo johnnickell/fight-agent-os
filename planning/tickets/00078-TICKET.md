@@ -1,0 +1,97 @@
+---
+id: TICKET-00078
+epic: EPIC-00017
+title: Review and reconcile existing Agent Permission drift
+status: ready-for-agent
+---
+
+# Review and reconcile existing Agent Permission drift
+
+## Problem statement
+
+Template publication must not silently change existing Agents, but administrators need to understand and
+explicitly resolve differences between a chosen published desired set and actual direct Permissions. An
+additions-only update must not be mislabeled complete synchronization, and an old preview cannot authorize a
+new grant or removal after concurrent changes.
+
+## Solution and boundaries
+
+Show versioned current drift for an authorized Agent against an explicitly selected published template revision:
+desired set, actual direct set, additions, removals, invalid/ineligible items and uncertainty. Show the Agent's
+existing bound revision separately from the compared revision. Reading this view grants nothing, and publication
+under [TICKET-00076](00076-TICKET.md) never triggers an Agent update.
+
+Offer two distinct one-time human-confirmed operations:
+
+- **Add Missing Permissions:** grant only explicitly reviewed eligible missing items, preserve existing extras
+  and truthfully display remaining drift. Evaluate the complete resulting assignment under package rules;
+  invalid existing state cannot be silently laundered by a partial grant.
+- **Auto-sync Agent Permissions:** replace the actual direct set with the reviewed complete eligible desired
+  set, explicitly showing and confirming both additions and removals. Do not quietly drop invalid requested
+  items and call the result synchronized.
+
+Revalidate the current actor, Agent, template selection, Permission IDs/tiers, Team/Repository scope, owner-approved
+grant limits and expected state at mutation time, including no-ops. Use the package-owned assignment operations
+and actual shared transaction/reference fences. The chosen assignment commits atomically or fails; fresh state
+resolves an uncertain outcome before another attempt. Stale previews need refresh and renewed human confirmation,
+not automatic replay. Record attributable, secret-free evidence of the reviewed source revision and actual outcome.
+
+Neither operation installs an always-on sync rule, changes an Agent's bound template revision, changes its prompt
+or rewrites an active session's immutable Harness snapshot. Current Permission revocation nevertheless applies
+immediately through [TICKET-00061](00061-TICKET.md)'s independent live authorization. No credential rotation,
+Team transfer, ad hoc generic Permission editor, custom Role authority or automatic ancestor propagation is
+introduced. Explicit permission reconciliation is separate from any future Agent profile revision change.
+
+## Use cases
+
+| Use case | Commands | Queries | Events | Expected side effects |
+|---|---|---|---|---|
+| Inspect drift | N/A — read-only preview | Current Agent assignment, selected published template, Permission definitions/tiers and scope | N/A — preview does not grant or revoke | Version-bound additions/removals/invalid/uncertain view |
+| Add missing eligible items | Confirmed additions-only reconciliation composed with package assignment behavior | Fresh complete resulting set and expected state | Package assignment facts and owned reconciliation evidence only after actual committed effects | Reviewed missing grants added atomically; extras and remaining drift remain visible |
+| Replace complete desired set | Confirmed full reconciliation composed with package assignment behavior | Fresh complete desired/actual sets, references, grants and revisions | Package grant/revoke facts with attributable reviewed reconciliation outcome | Exact eligible desired set replaces actual set; no persistent synchronization rule |
+
+## Validation and permissions
+
+Direct-Permission assignment/reconciliation requires its distinct current managed `SUPER_ADMIN_ONLY`
+management Permission, held only through authoritative managed Super Admin membership, on every HTTP, CLI,
+worker and direct-bus path. Template-management rights alone do not authorize Agent assignment. An actor ID,
+role name, signed request or captured preview is not current authority. Even Super Admin cannot assign
+`SUPER_ADMIN_ONLY` Permissions to an Agent; only eligible current `ADMIN_SAFE` direct Permissions are allowed.
+
+Protect final full expected-state comparison and complete-set tier/reference validation against concurrent
+Agent assignment, Permission removal/promotion, template selection and scope changes, including desired-state
+no-ops. Compose through supported package contracts without copied lifecycle policy, nested outer transactions
+or audit-repository side effects. A missing atomic authorization/assignment seam blocks exposure pending explicit
+owner resolution and qualification of the tagged locked package. Do not infer concurrency safety from preflight
+reads or package fixtures. Safe failures distinguish denial, invalid set, stale preview, storage failure and
+uncertain commit; no false rollback, partial-success claim or name-based retargeting. Audit/projections exclude
+credentials, protected operation internals and unauthorized prompt/Permission details.
+
+## Acceptance and evidence
+
+- Publishing/reselecting any template revision changes no existing Agent. The drift view identifies the exact
+  compared versions and shows extras and invalid/unknown items without implied repair.
+- Additions-only preserves extras and reports remaining drift; full sync confirms removals and atomically reaches
+  the reviewed complete eligible set. Cancellation has no assignment effect; no-op still revalidates authority.
+- Actual PostgreSQL races cover assignment changes, Permission reference/tier changes, stale previews, rollback
+  and unknown commits. Direct unauthorized calls and protected-tier grants fail, even from a Super Admin caller.
+- Live tool checks observe revoked Permissions despite pinned snapshots; UI and audit identify actual outcomes
+  without claiming a prompt/template rebind. Owned tests, real consumer contract qualification and
+  `./bin/build` pass with exact package/source/lock and limitations recorded.
+
+## TASKs
+
+<!-- planning:children -->
+| ID | Title | Status |
+|---|---|---|
+| None | — | — |
+<!-- /planning:children -->
+
+## Decisions and progress
+
+Approved as area 4 of EPIC-00017's five-TICKET split. Extends
+[TICKET-00063](00063-TICKET.md)'s managed Agent administration with the explicit EPIC-00017 drift actions,
+consumes [TICKET-00076](00076-TICKET.md)'s published revisions and uses the qualified shared Agent/Permission
+persistence rather than a second grant system. [ADR 0001](../adr/0001-application-ownership-and-orchestration.md)
+and [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md) retain ownership/transaction rules.
+No Agent Permissions, profile bindings or sessions changed during decomposition.

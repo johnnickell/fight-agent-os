@@ -105,7 +105,6 @@ the same operation that completes their children.
 |---|---|---|
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | ready-for-agent |
-| [EPIC-00017](epics/00017-EPIC.md) | Author versioned Agent templates with human-approved AI assistance | ready-for-agent |
 | [EPIC-00018](epics/00018-EPIC.md) | Publish the qualified Agent OS AccessControl reference-consumer handoff | ready-for-agent |
 
 ### TICKETs without TASKs
@@ -129,4 +128,9 @@ the same operation that completes their children.
 | [TICKET-00072](tickets/00072-TICKET.md) | Show a complete authenticated Feature catalog and availability | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 | [TICKET-00073](tickets/00073-TICKET.md) | Administer immutable Feature settings and safe rollout transitions | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 | [TICKET-00074](tickets/00074-TICKET.md) | Retire only currently unreferenced Features and reintroduce safely | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
+| [TICKET-00075](tickets/00075-TICKET.md) | Establish database-authoritative Agent templates | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
+| [TICKET-00076](tickets/00076-TICKET.md) | Author and publish reviewed template revisions | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
+| [TICKET-00077](tickets/00077-TICKET.md) | Generate editable AI template proposals | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
+| [TICKET-00078](tickets/00078-TICKET.md) | Review and reconcile existing Agent Permission drift | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
+| [TICKET-00079](tickets/00079-TICKET.md) | Use published custom templates for real manual Agent work | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
 <!-- /planning:frontier -->

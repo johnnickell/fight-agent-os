@@ -77,4 +77,9 @@
 | [TICKET-00072](00072-TICKET.md) | Show a complete authenticated Feature catalog and availability | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
 | [TICKET-00073](00073-TICKET.md) | Administer immutable Feature settings and safe rollout transitions | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
 | [TICKET-00074](00074-TICKET.md) | Retire only currently unreferenced Features and reintroduce safely | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00075](00075-TICKET.md) | Establish database-authoritative Agent templates | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00076](00076-TICKET.md) | Author and publish reviewed template revisions | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00077](00077-TICKET.md) | Generate editable AI template proposals | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00078](00078-TICKET.md) | Review and reconcile existing Agent Permission drift | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00079](00079-TICKET.md) | Use published custom templates for real manual Agent work | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
 <!-- /planning:records -->
