@@ -84,3 +84,10 @@ snapshot rules with [EPIC-00017](../epics/00017-EPIC.md)'s explicit template-aut
 [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md). This supplies publication safety without
 making the later editor a prerequisite for EPIC-00014's initial managed Agent work. No seed, schema, reconciler
 transition or runtime authority was created by decomposition.
+
+TICKET-00034's accepted [TASK-00248](../tasks/00248-TASK.md) now owns the reviewed starting catalog. This TICKET's
+future primitive seed/storage TASKs consume those specifications; [TASK-00249](../tasks/00249-TASK.md) consumes
+that actual database authority for profile resolution. Do not make seeding depend on TASK-00249, TASK-00250 or
+whole TICKET-00034 completion. Keep one Harness template authority, no recurring source overwrites and no browser
+editor prerequisite for the initial catalog. Precise TASK allocation here still requires separate decomposition
+and approval; this coordination note creates no additional TASK or seed.

@@ -21,6 +21,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | [TICKET-00038 — Guard Pi tool execution with deterministic restrictions and Jev](../tickets/00038-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | [TICKET-00037 — Configure and qualify Jev access for the Harness](../tickets/00037-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | [TICKET-00034 — Define the SDLC team templates and role-specific capabilities](../tickets/00034-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -187,8 +188,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00186](00186-TASK.md) | Inspect private memory under scoped oversight | [TICKET-00046 — Keep scoped private Agent memory](../tickets/00046-TICKET.md) | needs-info | [TASK-00036](00036-TASK.md), [TASK-00185](00185-TASK.md) | — |
 | — | [TASK-00189](00189-TASK.md) | Inspect retained lessons under historical authority | [TICKET-00047 — Share attributed Workflow and TASK learning](../tickets/00047-TICKET.md) | needs-info | [TASK-00188](00188-TASK.md) | — |
 | — | [TASK-00191](00191-TASK.md) | Review and publish guidance at an authorized target | [TICKET-00048 — Review and publish broader memory lessons](../tickets/00048-TICKET.md) | needs-info | [TASK-00190](00190-TASK.md) | — |
-| — | [TASK-00200](00200-TASK.md) | Diagnose selected TASKs through a permission-limited Triage profile | [TICKET-00051 — Classify a selected TASK for routing](../tickets/00051-TICKET.md) | needs-info | [TASK-00096](00096-TASK.md) | — |
-| — | [TASK-00206](00206-TASK.md) | Confirm and repair a direct hotfix | [TICKET-00053 — Execute a confirmed direct hotfix](../tickets/00053-TICKET.md) | needs-info | [TASK-00204](00204-TASK.md), [TASK-00142](00142-TASK.md) | — |
+| — | [TASK-00200](00200-TASK.md) | Diagnose selected TASKs through a permission-limited Triage profile | [TICKET-00051 — Classify a selected TASK for routing](../tickets/00051-TICKET.md) | needs-info | [TASK-00096](00096-TASK.md), [TASK-00249](00249-TASK.md) | — |
+| — | [TASK-00206](00206-TASK.md) | Confirm and repair a direct hotfix | [TICKET-00053 — Execute a confirmed direct hotfix](../tickets/00053-TICKET.md) | needs-info | [TASK-00204](00204-TASK.md), [TASK-00142](00142-TASK.md), [TASK-00250](00250-TASK.md) | — |
 | — | [TASK-00207](00207-TASK.md) | Independently verify and hand off a hotfix PR | [TICKET-00053 — Execute a confirmed direct hotfix](../tickets/00053-TICKET.md) | needs-info | [TASK-00206](00206-TASK.md) | — |
 | — | [TASK-00209](00209-TASK.md) | Offer a verified hotfix merge-back | [TICKET-00054 — Merge a verified hotfix back under one authorization](../tickets/00054-TICKET.md) | needs-info | [TASK-00207](00207-TASK.md) | — |
 | — | [TASK-00215](00215-TASK.md) | Prepare and certify the exact release candidate | [TICKET-00056 — Coordinate and authorize one release](../tickets/00056-TICKET.md) | needs-info | [TASK-00214](00214-TASK.md) | — |
@@ -197,7 +198,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00225](00225-TASK.md) | Finish application branch follow-through and release closeout | [TICKET-00058 — Deploy an application release](../tickets/00058-TICKET.md) | needs-info | [TASK-00224](00224-TASK.md) | — |
 | — | [TASK-00244](00244-TASK.md) | Authorize and broker each bounded Agent use | [TICKET-00061 — Authenticate and authorize current Agent tool use](../tickets/00061-TICKET.md) | needs-info | [TASK-00242](00242-TASK.md), [TASK-00243](00243-TASK.md), [TASK-00234](00234-TASK.md), [TASK-00084](00084-TASK.md) | — |
 | — | [TASK-00245](00245-TASK.md) | Enforce current authority throughout first-party MCP discovery and invocation | [TICKET-00061 — Authenticate and authorize current Agent tool use](../tickets/00061-TICKET.md) | needs-info | [TASK-00244](00244-TASK.md) | — |
-| — | [TASK-00247](00247-TASK.md) | Connect manual Explorer sessions to authenticated scoped tools | [TICKET-00061 — Authenticate and authorize current Agent tool use](../tickets/00061-TICKET.md) | needs-info | [TASK-00245](00245-TASK.md), [TASK-00241](00241-TASK.md) | — |
+| — | [TASK-00247](00247-TASK.md) | Connect manual Explorer sessions to authenticated scoped tools | [TICKET-00061 — Authenticate and authorize current Agent tool use](../tickets/00061-TICKET.md) | needs-info | [TASK-00245](00245-TASK.md), [TASK-00241](00241-TASK.md), [TASK-00250](00250-TASK.md) | — |
+| — | [TASK-00249](00249-TASK.md) | Resolve exact role profiles with truthful capability availability | [TICKET-00034 — Define the SDLC team templates and role-specific capabilities](../tickets/00034-TICKET.md) | needs-info | [TASK-00248](00248-TASK.md) | — |
+| — | [TASK-00250](00250-TASK.md) | Bind role selections to isolated immutable Agent sessions | [TICKET-00034 — Define the SDLC team templates and role-specific capabilities](../tickets/00034-TICKET.md) | needs-info | [TASK-00249](00249-TASK.md), [TASK-00244](00244-TASK.md) | — |
 
 ## Human Action
 

@@ -46,9 +46,48 @@ model choices are explicit. Explorer favors measured speed/cost suitability; nev
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00248](../tasks/00248-TASK.md) | Define the eight reviewed SDLC template specifications | ready-for-agent |
+| [TASK-00249](../tasks/00249-TASK.md) | Resolve exact role profiles with truthful capability availability | needs-info |
+| [TASK-00250](../tasks/00250-TASK.md) | Bind role selections to isolated immutable Agent sessions | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
 
-Approved amendment to WF-014/WF-015 and EPIC-00006–00008. TASK decomposition is the next planning operation.
+Approved amendment to WF-014/WF-015 and EPIC-00006–00008. The maintainer explicitly selected this TICKET ahead
+of the AccessControl map's next TICKET and approved three TASKs:
+
+- [TASK-00248](../tasks/00248-TASK.md): complete reviewed eight-role specifications, prompts, requested capabilities,
+  limits, handoffs and historical aliases; no runtime or ninth required Triage role.
+- [TASK-00249](../tasks/00249-TASK.md): exact authorized profile resolution, complete references, model/resource
+  availability and provenance without grants or silent substitution.
+- [TASK-00250](../tasks/00250-TASK.md): integrate immutable role binding and current authority with actual isolated
+  session owners, without another launcher or duplicate role journey.
+
+TASK-00248 is `ready-for-agent`; TASK-00249/00250 retain `needs-info` for precise database-template, resource/model,
+Harness session/snapshot and named-Agent prerequisites. All are unranked. TASK-00200 now consumes TASK-00249 for
+its separately owned Triage definition, while TASK-00206 and TASK-00247 consume TASK-00250. These consumers keep
+their remaining real runtime/provisioning holds; records or definitions alone establish no usable identity.
+
+Apply EPIC-00017's accepted amendment to the older management/reconciliation wording above: TICKET-00075 owns
+initial seeding and database template authority, TICKET-00076 owns browser publication, and TICKET-00078 owns
+explicit one-time Permission reconciliation. TASK-00248 supplies reviewed seed inputs; TASK-00249 consumes the
+resulting database capability, never the reverse. Publication changes no existing Agent/session, and no recurring
+source reconciler or automatic grant propagation is introduced. Those primitives cannot depend on this whole
+TICKET or its final session integration. The later editor is not a prerequisite for initial managed roles.
+
+TICKET-00063 retains named Team-bound creation; TASK-00247 and existing Workflow owners retain real role outcomes,
+with TICKET-00065 coordinating complete team acceptance. Preserve the first Team Lead → Software Engineer →
+Awaiting review milestone, active TASK-00138/TASK-00226 and all existing execution priorities. No implementation,
+Agent, grant, session, provider call or operational enablement follows from this planning approval.
+
+This completes only the explicitly selected TICKET's decomposition. Older EPIC-00006 Harness/browser requirements
+remain incompletely decomposed; the AccessControl map still has 21 TICKETs needing approved TASK splits.
+Next planning operation: `/skill:to-tasks TICKET-00062`, returning to that map's pending Team primitives. Checkout/
+worktree choice, implementation, actual qualification, independent review and publication remain separate.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 350 records,
+263 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations, with repetitive deprecation warnings. Evidence: `.runs/build/20261012T181430Z-40635`; summary log:
+`.runs/build/ticket-00034-to-tasks.log`. These checks validate planning and the existing repository, not future
+catalog content, profile resolution, managed sessions or role journeys. Independent review and publication
+remain unperformed.

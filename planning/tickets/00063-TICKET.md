@@ -83,3 +83,9 @@ creation and reviewed-template integration. Map its precise primitive TASK depen
 creation consumes TASK-00242–00245's reusable controls and qualified lifecycle where required, not the final
 Explorer run. Do not make an Agent's creation depend on that Agent already performing the acceptance journey.
 No TASK split for this TICKET has been approved by this coordination note.
+
+TICKET-00034's approved TASK-00248/00249 now supply reviewed definitions and exact role-profile resolution.
+Named-Agent creation consumes those primitives, not TASK-00250's downstream session integration; TASK-00250
+instead consumes the actual creation capability. Map that direction during this TICKET's decomposition to avoid
+requiring a running role session before its Agent can be created. Triage and Hotfix consumers retain explicit
+holds for actual named identities/direct authority, not just a template label.

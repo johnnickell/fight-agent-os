@@ -267,6 +267,26 @@ follow-on does not claim full map-wide decomposition or implemented behavior.
 Next: `/skill:next` to consult the authoritative Board for the completed selected Jev planning slice. This does not
 rank/start implementation or claim that older EPIC requirements and other map handoffs are fully decomposed.
 
+### Approved selected SDLC template decomposition
+
+After the Jev handoff, the maintainer explicitly selected [TICKET-00034](../tickets/00034-TICKET.md) and approved
+[TASK-00248](../tasks/00248-TASK.md) for reviewed eight-role specifications,
+[TASK-00249](../tasks/00249-TASK.md) for exact authorized profile resolution and
+[TASK-00250](../tasks/00250-TASK.md) for immutable role-session integration. The last two retain explicit
+`needs-info` for actual template database, resource/model, session/snapshot and named-Agent primitives. Triage
+remains TASK-00200's separate extension. TASK-00200/00206/00247 now name the applicable concrete template/profile
+prerequisites without clearing their real remaining runtime holds or changing role-journey ownership.
+
+The newer EPIC-00017 amendment governs template authority: initial reviewed definitions feed TICKET-00075's
+database seed/storage owner; profile resolution consumes it. Browser publication and one-time Permission
+reconciliation remain separate, without recurring source overwrite or automatic grants. No second Harness
+registry, launcher or Workflow is introduced. All new TASKs are unranked and active Board work is unchanged.
+
+Only this selected TICKET's decomposition is complete. Older EPIC-00006 requirements remain incompletely
+decomposed, and the [AccessControl map](accesscontrol-consumer-adoption-map.md) still has 21 accepted TICKETs
+awaiting TASK splits. Planning qualifies no Agent or session and authorizes no implementation or live effects.
+Next planning operation: `/skill:to-tasks TICKET-00062`, returning to that map's pending Team primitives.
+
 ### Original completed handoff
 
 The original vision scope was complete. Its first separately approved grill handoff is [EPIC-00005 — Deliver the registered Planning workspace](../epics/00005-EPIC.md): guided local operation, repository and checkout registration, context resolution, explicit Markdown-to-PostgreSQL Planning cutover, and a minimal authoritative browser Planning surface. The EPIC consumes rather than repeats settled Wayfinder decisions; no EPIC was created by this map itself.

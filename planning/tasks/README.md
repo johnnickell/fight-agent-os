@@ -250,4 +250,7 @@
 | [TASK-00245](00245-TASK.md) | Enforce current authority throughout first-party MCP discovery and invocation | needs-info | [TICKET-00061](../tickets/00061-TICKET.md) |
 | [TASK-00246](00246-TASK.md) | Deliver independently authorized self-profile read and rename Tools | ready-for-agent | [TICKET-00061](../tickets/00061-TICKET.md) |
 | [TASK-00247](00247-TASK.md) | Connect manual Explorer sessions to authenticated scoped tools | needs-info | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | ready-for-agent | [TICKET-00034](../tickets/00034-TICKET.md) |
+| [TASK-00249](00249-TASK.md) | Resolve exact role profiles with truthful capability availability | needs-info | [TICKET-00034](../tickets/00034-TICKET.md) |
+| [TASK-00250](00250-TASK.md) | Bind role selections to isolated immutable Agent sessions | needs-info | [TICKET-00034](../tickets/00034-TICKET.md) |
 <!-- /planning:records -->

@@ -206,6 +206,15 @@ TASK-00171 consumes the shared MCP boundary while retaining judgment integration
 Explorer evidence without a duplicate engine or run. The other 21 TICKETs still need accepted TASK decomposition.
 No working product journey, live consumer qualification or published reference bundle follows from these records.
 
+The maintainer subsequently selected the existing [TICKET-00034](../tickets/00034-TICKET.md) as an explicit
+prerequisite-planning detour and approved [TASK-00248](../tasks/00248-TASK.md) through
+[TASK-00250](../tasks/00250-TASK.md): reviewed eight-role definitions, exact profile resolution and role-session
+integration. TASK-00247 now consumes TASK-00250; the Triage/Hotfix owners consume their applicable slices.
+Actual database-template/resource/model/session/Agent mappings remain held. TICKET-00075 consumes the reviewed
+definitions and supplies database authority to the resolver, avoiding a whole-parent cycle or duplicate catalog.
+This does not reduce this map's 21 remaining TICKET decompositions or complete older Harness requirements.
+Return to TICKET-00062 next; no new execution priority, grant or runtime qualification follows.
+
 ## Approved EPIC handoff
 
 Destinations 1–5 were written through **separate grills**; no EPIC handoff remains unwritten.
