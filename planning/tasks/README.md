@@ -292,4 +292,7 @@
 | [TASK-00287](00287-TASK.md) | Operate scheduled new-mailbox delivery and recovery | needs-info | [TICKET-00068](../tickets/00068-TICKET.md) |
 | [TASK-00288](00288-TASK.md) | Open confirmation links without changing account state | ready-for-agent | [TICKET-00069](../tickets/00069-TICKET.md) |
 | [TASK-00289](00289-TASK.md) | Confirm explicitly and return to fresh login | needs-info | [TICKET-00069](../tickets/00069-TICKET.md) |
+| [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
+| [TASK-00291](00291-TASK.md) | Provision missing Features atomically through protected operations | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
+| [TASK-00292](00292-TASK.md) | Inspect fresh candidate preparation against the intended target | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
 <!-- /planning:records -->

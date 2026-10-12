@@ -87,3 +87,11 @@ Approved as area 5 of EPIC-00016's five-TICKET split. Depends on
 [TICKET-00071](00071-TICKET.md)'s supported runtime registrations. The first live flagged capability remains
 a later explicit owner choice, not an EPIC completion gate. No cleanup chore, deployment or removal was
 performed by decomposition.
+
+TICKET-00070's approved TASK-00290 now supplies reusable exact-scope discovery; TASK-00291 supplies shared final
+expected-state/reference-write integrity and safe missing-OFF provisioning. This TICKET retains actual complete
+CURRENT running-version/deployment-overlap qualification and protection of its observation, separate cleanup/
+deploy authority, guarded removal and the true retirement/reintroduction lifecycle. Unknown current coverage
+holds even when local scanning works. TASK-00292's candidate preparation is not retirement evidence. No finished
+retirement UI or operational deployment journey reverse-blocks these primitives; their reusable implementation
+and local receipts alone cannot authorize removing a live Feature.

@@ -86,3 +86,10 @@ Approved as area 4 of EPIC-00016's five-TICKET split. Requires
 [TICKET-00072](00072-TICKET.md)'s catalog and [EPIC-00004](../epics/00004-EPIC.md)'s managed authority,
 current principal and authenticated UI without rewriting user/role owners. No management Permission or
 Feature setting was created here.
+
+TICKET-00070's approved TASK-00291 now supplies qualified shared reference/expected-state persistence and atomic
+provisioning, with TASK-00290's exact inventory and TASK-00292's separate fresh preparation. Consume those
+primitives; this TICKET retains management Permission/actor/intent checks, manual create/status/rebind entry
+integration and its own affected races, including manual create versus provision. No finished UI or management
+path reverse-blocks the reference primitive, and this management Permission is not privileged operator setup
+authority. Prepared OFF still needs complete runtime enforcement and separate authorization before rollout.

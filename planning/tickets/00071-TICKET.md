@@ -77,3 +77,10 @@ Approved as area 2 of EPIC-00016's five-TICKET split. Depends on
 [TICKET-00072](00072-TICKET.md) and safe enablement to [TICKET-00073](00073-TICKET.md).
 The first real flagged capability will be selected by its actual owner later. No middleware or flag was
 implemented here.
+
+TICKET-00070's approved supplier mapping is now TASK-00290 for exact discovery and the single explicit non-HTTP
+registration source, TASK-00291 for qualified shared persistence/reference behavior, and TASK-00292 for fresh
+candidate preparation before considering rollout. Reuse these primitives without another scanner/registry or
+reverse dependency on finished middleware/non-HTTP enforcement. A preparation observation is not runtime access;
+every actual invocation still performs the fresh package availability and ordinary authorization checks above.
+These suppliers do not select or seed a real product Feature and do not qualify current User/Agent entry authority.

@@ -439,9 +439,46 @@ suppliers; reuse attributable valid mailbox/restart evidence and refresh affecte
 journey reverse-blocks those primitives, no second queue/provider/client owner is created and no proof-only final
 TASK or parent ceremony is added. All four EPIC-00015 TICKETs now have approved TASK decompositions, not live adoption.
 
-All new orders remain unranked and active work unchanged. **Eleven of the map's 24 TICKETs have approved written
-TASK splits; 13 remain, TICKET-00070–00082**, alongside older incomplete Harness/managed review planning.
-Planning opened no route, confirmed no account, revoked no session and performed no live effect.
+That split brought the map to eleven approved TASK decompositions without opening a route, confirming an
+account, revoking a session or performing live effects.
+
+The maintainer subsequently approved [TICKET-00070](../tickets/00070-TICKET.md)'s three use cases:
+[TASK-00290](../tasks/00290-TASK.md) discovers complete Feature references for exact code scopes after TASK-00126;
+[TASK-00291](../tasks/00291-TASK.md) provisions missing Features atomically through protected operations after
+TASK-00290 and TASK-00036; [TASK-00292](../tasks/00292-TASK.md) inspects fresh candidate preparation using that
+qualified operational/persistence boundary. All three are features, ready behind listed blockers and unranked.
+
+Reuse existing Feature repositories/reference fences and attributable scoped evidence rather than another storage
+system or a proof-only qualification TASK. The inspected consumer has no composed Feature provisioning/preparation
+handlers or scanner. Exact CANDIDATE/CURRENT discovery validates native Attributes and explicit registrations
+across the supported application/module surface; partial, inaccessible, changed, malformed or wrong-scope input
+cannot become complete empty success. Unknown running-version coverage holds; TICKET-00074 retains actual
+retirement-time deployment/overlap qualification, not substitution of candidate absence or local scan receipts.
+
+Protected provisioning uses the package's one canonical transaction. Only missing names require the configured
+existing default Permission; all new definitions commit OFF together and existing identity/settings/binding/
+revision survive. TASK-00291 completes affected all-path reference integrity, including managed-policy preview/
+final removal, unpaginated all-status checks, rebind/no-op and competing-pass races and whole-pass rollback.
+Preserve applicable cohort-first authority ordering without a new fence owner or full live-Agent prerequisite.
+Creation facts are best-effort after commit; unknown acknowledgement/publication failure is not rollback or
+permission to replay facts. Protect the package's original-command/error-bearing failure event diagnostics.
+
+Separate read-only validation is usable before provisioning. Check every reference against fresh stored state
+and original bound Permission ID, with safe missing/broken/invalid categories and explicit malformed hydration
+qualification. Infrastructure/discovery failure is not absence; no fallback-by-name, stale cache or auto-repair.
+Prepared OFF is an exact candidate/target observation, not availability, distributed readiness, deployment approval
+or CURRENT-code retirement proof. No product Feature is invented to demonstrate the reusable infrastructure.
+
+TICKET-00071 consumes discovery/registration, persistence and preparation before rollout; TICKET-00073 consumes
+safe reference/preparation primitives; TICKET-00074 consumes CURRENT discovery and final reference release with
+separate cleanup/deployment authority. No finished UI/runtime/retirement or managed-release journey reverse-blocks
+these suppliers. Each slice owns affected behavior/contract evidence and the full gate; tooling/configuration are
+qualified directly, not product-tested as text or wiring. Missing support holds the affected path for owner resolution.
+
+All new orders remain unranked and active work unchanged. **Twelve of the map's 24 TICKETs have approved written
+TASK splits; 12 remain, TICKET-00071–00082**, alongside older incomplete Harness/managed review planning.
+One of EPIC-00016's five TICKETs is decomposed, not implemented. Planning ran no scanner/provision/query,
+changed no catalog and enabled no Feature or deployment.
 
 ## Approved EPIC handoff
 
@@ -482,9 +519,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00070` for
-[TICKET-00070](../tickets/00070-TICKET.md), mapping complete Feature-reference discovery, missing-OFF provisioning
-and exact candidate preparation, then continue this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00071` for
+[TICKET-00071](../tickets/00071-TICKET.md), mapping fresh package-backed HTTP and registered non-HTTP availability
+checks under ordinary authorization, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

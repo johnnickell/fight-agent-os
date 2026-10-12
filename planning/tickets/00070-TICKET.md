@@ -69,7 +69,9 @@ proof. No scanner/status/Permission error leaks arbitrary repository diagnostics
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00290](../tasks/00290-TASK.md) | Discover complete Feature references for exact code scopes | ready-for-agent |
+| [TASK-00291](../tasks/00291-TASK.md) | Provision missing Features atomically through protected operations | ready-for-agent |
+| [TASK-00292](../tasks/00292-TASK.md) | Inspect fresh candidate preparation against the intended target | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -80,3 +82,80 @@ Approved as area 1 of EPIC-00016's five-TICKET split. Supplies the shared persis
 and [ADR 0001](../adr/0001-application-ownership-and-orchestration.md) /
 [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md) without displacing package Feature
 policy. No actual scanner, migration, Feature or preparation proof was delivered by decomposition.
+
+### Approved TASK decomposition
+
+The maintainer approved three independently reviewable use cases, reusing existing Feature storage and reference
+fences rather than creating another persistence system or a proof-only qualification TASK:
+
+| TASK | Outcome | Blockers |
+|---|---|---|
+| [TASK-00290](../tasks/00290-TASK.md) | Discover complete Feature references for exact code scopes | TASK-00126 |
+| [TASK-00291](../tasks/00291-TASK.md) | Provision missing Features atomically through protected operations | TASK-00290, TASK-00036 |
+| [TASK-00292](../tasks/00292-TASK.md) | Inspect fresh candidate preparation against the intended target | TASK-00291 |
+
+All three are `feature`, `ready-for-agent` behind their listed blockers and unranked. TASK-00126's implemented
+`PostgresFeatureRepository`, Permission-reference checks and scoped PostgreSQL evidence remain their baseline,
+not proof of scanner completeness or a composed Feature lifecycle. The inspected command/query configuration
+contains no Feature provisioning/preparation registration. Each new slice owns actual implementation and affected
+integration evidence, not a second receipt-only acceptance gate.
+
+TASK-00290 implements exact CANDIDATE/CURRENT discovery, native Attribute instantiation and one explicit non-HTTP
+registration source. Cover the declared application/module surface, including unloaded declarations and supported
+method resolution, rather than only already-loaded classes or routes. Invalid placement/multiplicity/names,
+partial/inaccessible/changed code, wrong identity/scope or bounds exhaustion cannot become complete empty success.
+Inspect trusted selected candidate code without allowing arbitrary code execution or substituting current-process
+classes. Qualify protected bounded inspection and code identity directly. Unknown running-version coverage holds;
+TICKET-00074 retains actual deployment-overlap/current-observation qualification for retirement.
+
+TASK-00291 supplies protected synchronous package `ProvisionFeatures` with explicit trusted operator, exact
+candidate/target and the configured nullable default. Only a missing name makes that default required; empty or
+all-existing inventories preserve package unused-default behavior. All new definitions commit OFF together with
+owning-package IDs; existing identities/settings/bindings/revisions, including broken definitions, are untouched.
+No Permission, membership, grant, automatic repair or runtime registration is created by provisioning.
+
+This actual use case completes Feature-specific reference qualification across add/replace/remove, Permission/
+Role/Agent writes and TASK-00036's managed-policy preview/reconcile. Reuse the shared canonical connection,
+transaction-duration fence, full expected-state/no-op checks, positive revisions, canonical uniqueness and
+unpaginated all-status reference lookup. Include actual whole-pass rollback, competing provisioners, rebind/
+removal/no-op races and beyond-page removal conflicts. Preserve applicable cohort-first authority ordering without
+a new fence owner, complete live-Agent prerequisite or bypass of unavailable Agent operation contracts. Later
+management/retirement entry owners add their affected integration evidence without reverse-blocking this primitive.
+
+The provisioning handler returns `void` and emits best-effort creation facts after commit; lost acknowledgement
+or publication failure is not rollback. Fresh authorized inspection/repeat preserves committed winners and does
+not replay their facts. Contain the package's original-command/error-bearing `CommandFailedEvent` within trusted
+handling rather than exposing arbitrary diagnostics. No durable event outbox or preparation claim follows.
+
+TASK-00292 composes the separate read-only package query and safe protected result. Its dependency reuses the
+operational/persistence boundary; a caller need not provision first. Check every distinct name against current
+Feature state and its original bound Permission ID, not a reused name or current default. Preserve safe missing/
+broken/invalid issue categories; malformed Feature/Permission hydration needs explicit contract qualification,
+while infrastructure/discovery failures remain errors. No stale identity-map/negative-cache result, automatic
+repair or inferred readiness from a command/event. Exact code/target observations are not a distributed snapshot,
+durable certificate or fence against later privileged changes.
+
+TICKET-00071 consumes discovery/registration and qualified persistence, with preparation before rollout;
+TICKET-00073 consumes safe reference writes and fresh preparation; TICKET-00074 consumes CURRENT discovery and
+final expected-state/reference release with its independent deployment/cleanup authority. No final middleware,
+UI, retirement, Agent/Harness or managed release journey reverse-blocks these primitives. Prepared OFF is neither
+availability nor deployment approval, and a candidate result cannot authorize CURRENT-code retirement.
+
+Each slice tests owned behavior and important contracts with actual scoped scanner/PostgreSQL evidence and
+`./bin/build`. Validate configuration, migrations, generated artifacts and operational tools directly, not with
+product tests of text/wiring/tooling. Reuse attributable valid earlier evidence, refresh affected integration and
+require a failing regression before bug repair. No dummy product Feature or extra proof-only project is needed.
+Missing supported guarantees hold the affected path for separately authorized owner resolution, not vendor patches.
+
+Active TASK-00138/TASK-00226 and existing priorities remain unchanged. One of EPIC-00016's five TICKETs now has
+an approved written TASK split. Twelve of the map's 24 TICKETs are decomposed; **12 remain, TICKET-00071–00082**,
+alongside older incomplete Harness/managed review planning. Next planning operation: `/skill:to-tasks TICKET-00071`.
+Planning ran no scanner/provision/query, changed no catalog and enabled no Feature or deployment. Implementation/
+worktree choice, independent review, publication and actual target effects remain separate.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 392 records,
+305 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations. Repetitive Sass deprecations, React-Bootstrap `use client` bundling and >500 kB chunk warnings remain.
+Evidence: `.runs/build/20261012T225927Z-59525`; summary log: `.runs/build/ticket-00070-to-tasks.log`. These validate planning and the existing repository, not the future
+scanner, composed provisioning/preparation, full reference qualification or any actual deployment. Independent
+review and publication remain unperformed.

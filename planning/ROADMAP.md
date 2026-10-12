@@ -110,7 +110,6 @@ the same operation that completes their children.
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00070](tickets/00070-TICKET.md) | Discover provision and prepare complete Feature references | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 | [TICKET-00071](tickets/00071-TICKET.md) | Enforce current Feature availability at every registered entry | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 | [TICKET-00072](tickets/00072-TICKET.md) | Show a complete authenticated Feature catalog and availability | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 | [TICKET-00073](tickets/00073-TICKET.md) | Administer immutable Feature settings and safe rollout transitions | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |

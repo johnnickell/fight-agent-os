@@ -23,6 +23,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | [TICKET-00034 — Define the SDLC team templates and role-specific capabilities](../tickets/00034-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00283](00283-TASK.md) | Protect email-change issuance material | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -199,6 +200,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00285](00285-TASK.md) | Deliver one exact new-mailbox confirmation link | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | [TASK-00283](00283-TASK.md), [TASK-00040](00040-TASK.md) | — |
 | — | [TASK-00286](00286-TASK.md) | Recover and inspect email-change credential work | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | [TASK-00285](00285-TASK.md) | — |
 | — | [TASK-00288](00288-TASK.md) | Open confirmation links without changing account state | [TICKET-00069 — Confirm email change explicitly and return to login](../tickets/00069-TICKET.md) | ready-for-agent | [TASK-00285](00285-TASK.md), [TASK-00051](00051-TASK.md) | — |
+| — | [TASK-00291](00291-TASK.md) | Provision missing Features atomically through protected operations | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | [TASK-00290](00290-TASK.md), [TASK-00036](00036-TASK.md) | — |
+| — | [TASK-00292](00292-TASK.md) | Inspect fresh candidate preparation against the intended target | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | [TASK-00291](00291-TASK.md) | — |
 
 ## Needs Info
 

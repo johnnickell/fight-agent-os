@@ -119,7 +119,7 @@ TICKET-00064's accepted TASK-00261–00264 consume current authority for selecti
 reverse blockers of shared primitive qualification or manual Explorer. Final TASK-00265 consumes TASK-00241's
 actual readiness; changed/enabled participants must refresh affected qualification before live exposure.
 
-Next planning operation: `/skill:to-tasks TICKET-00070`, mapping complete Feature discovery and candidate preparation,
+Next planning operation: `/skill:to-tasks TICKET-00071`, mapping HTTP and registered non-HTTP Feature enforcement,
 then continue the remaining map TICKET decompositions. Implementation/worktree choice, independent review,
 publication, merge and live operational effects remain separate.
 
