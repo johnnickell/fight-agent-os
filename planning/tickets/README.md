@@ -82,4 +82,7 @@
 | [TICKET-00077](00077-TICKET.md) | Generate editable AI template proposals | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
 | [TICKET-00078](00078-TICKET.md) | Review and reconcile existing Agent Permission drift | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
 | [TICKET-00079](00079-TICKET.md) | Use published custom templates for real manual Agent work | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00080](00080-TICKET.md) | Account for complete consumer coverage and qualification | ready-for-agent | [EPIC-00018](../epics/00018-EPIC.md) |
+| [TICKET-00081](00081-TICKET.md) | Document reproducible backend API and browser references | ready-for-agent | [EPIC-00018](../epics/00018-EPIC.md) |
+| [TICKET-00082](00082-TICKET.md) | Publish and maintain the immutable maintainer handoff | ready-for-agent | [EPIC-00018](../epics/00018-EPIC.md) |
 <!-- /planning:records -->

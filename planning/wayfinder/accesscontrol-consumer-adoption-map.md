@@ -134,8 +134,8 @@ identifies the actual AccessControl lock/source, Agent OS commit, verified OpenA
 evidence by capability. Changes require impact review and a newly qualified bundle, not silent receipt reuse. The EPIC-00018 grill
 also clarified that a particular live flagged product capability is **not** a prerequisite: qualify and
 accurately present the Feature infrastructure without inventing a Feature or requiring a special caveat about
-one not yet being selected. All five EPIC handoffs are now approved; TICKET decomposition is the next
-map-wide phase.
+one not yet being selected. All five EPIC handoffs and their TICKET decompositions are now approved;
+separate TASK decomposition is the next map-wide phase.
 
 ## Decisions so far
 
@@ -171,8 +171,8 @@ No open Wayfinder decision remains. This map is **Closed**; its combined first d
 [EPIC-00015](../epics/00015-EPIC.md), and its Feature Flags destination produced
 [EPIC-00016](../epics/00016-EPIC.md), and its template-authoring destination produced
 [EPIC-00017](../epics/00017-EPIC.md), and its final reference-consumer handoff produced
-[EPIC-00018](../epics/00018-EPIC.md). All five approved EPIC destinations are now written. Continue the
-map-wide **TICKET decomposition phase**, not implementation TASK decomposition or execution.
+[EPIC-00018](../epics/00018-EPIC.md). All five approved EPIC destinations and their accepted TICKET
+decompositions are now written. Continue with separate **TASK decomposition**, not implementation execution.
 [EPIC-00014](../epics/00014-EPIC.md)'s seven requirement
 [TICKETs](../epics/00014-EPIC.md#tickets), [EPIC-00015](../epics/00015-EPIC.md)'s four requirement
 [TICKETs](../epics/00015-EPIC.md#tickets) and [EPIC-00016](../epics/00016-EPIC.md)'s five requirement
@@ -182,9 +182,14 @@ preparation, registered runtime enforcement, complete catalog, management and CU
 without an invented product Feature. [EPIC-00017](../epics/00017-EPIC.md)'s five requirement
 [TICKETs](../epics/00017-EPIC.md#tickets) are also approved and written: database template authority,
 human publication/ancestor review, AI proposals, explicit one-time Permission reconciliation and new-role
-manual use through existing Agent creation. Publication changes no existing Agent or session. Only destination 5,
-[EPIC-00018](../epics/00018-EPIC.md), still needs accepted TICKET decomposition.
-These handoffs create no TASKs and establish no working product journey.
+manual use through existing Agent creation. Publication changes no existing Agent or session.
+[EPIC-00018](../epics/00018-EPIC.md)'s three requirement
+[TICKETs](../epics/00018-EPIC.md#tickets) are also approved and written: current coverage/qualification,
+reproducible actual references and one immutable controlled-access maintainer handoff with successor
+requalification. Final external publication still requires the complete qualified consumer journey.
+All 24 requirements ([TICKET-00059](../tickets/00059-TICKET.md) through
+[TICKET-00082](../tickets/00082-TICKET.md)) await separate TASK decomposition. These handoffs create no TASKs
+and establish no working product journey, consumer qualification or published reference bundle.
 
 ## Approved EPIC handoff
 
@@ -225,9 +230,11 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** decompose [EPIC-00018](../epics/00018-EPIC.md) into TICKETs to finish the map's
-remaining requirement decomposition before creating implementation TASKs. EPIC publication, independent
-review, hosted checks and starter maintenance remain separate from this decision map.
+**Next planning operation:** `/skill:to-tasks TICKET-00059` for
+[TICKET-00059](../tickets/00059-TICKET.md), then continue across this map's remaining accepted TICKETs before
+implementation selection. This authored planning order does not change the TASK Board's active work or execution
+priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
+decision map.
 
 ## Downstream implementation unknowns (not open Wayfinder decisions)
 
