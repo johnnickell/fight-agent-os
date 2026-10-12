@@ -68,4 +68,8 @@
 | [TICKET-00063](00063-TICKET.md) | Administer named managed Agents and safe lifecycle intent | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
 | [TICKET-00064](00064-TICKET.md) | Select eligible Teams and Agents for authorized work | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
 | [TICKET-00065](00065-TICKET.md) | Operate all eight managed Agents in their owned journeys | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
+| [TICKET-00066](00066-TICKET.md) | Durably notify the old mailbox of email-change request and completion | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
+| [TICKET-00067](00067-TICKET.md) | Request inspect and cancel a pending human email change | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
+| [TICKET-00068](00068-TICKET.md) | Deliver and recover new-mailbox confirmation credentials | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
+| [TICKET-00069](00069-TICKET.md) | Confirm email change explicitly and return to login | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
 <!-- /planning:records -->
