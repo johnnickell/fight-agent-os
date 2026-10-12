@@ -91,3 +91,16 @@ TICKET-00061's approved [TASK-00247](../tasks/00247-TASK.md) owns the authentica
 and its real bounded source-cited use. This TICKET consumes that outcome with actual provenance for its Explorer
 role acceptance rather than creating another Explorer implementation, dummy identity or ceremonial duplicate run.
 The other roles and their existing Workflow owners remain unchanged; TASK-00247 is not full Team acceptance.
+
+TICKET-00063's accepted TASK-00258 supplies named Team-bound creation with supported composition still held;
+TASK-00260 supplies browser administration/eight-template creation, not working-role proof. TICKET-00064's
+accepted TASK-00261–00264 supply current selected-work eligibility, fair Team intake, atomic admission and
+same-Team delegation/independence. TASK-00141 consumes TASK-00264 for its actual first implementation journey;
+TASK-00204 consumes TASK-00263 and TASK-00207 consumes TASK-00264 without clearing other runtime holds.
+TASK-00265 integrates actual selected-Team/Pending start terminal/browser behavior through those existing owners.
+
+Map precise role-use TASK dependencies during this TICKET's separate decomposition. Reuse actual attributable
+outcomes without a second Workflow, independent-review engine or ceremonial duplicate run. Lower-level resource,
+commitment, base-inclusion, contribution and session owners remain incompletely mapped; do not substitute local
+Skills or historical parent completion. Core/manual Explorer is not gated on final selector/browser Planning or
+complete managed review journeys. This coordination note allocates no TASK for the all-role integration.

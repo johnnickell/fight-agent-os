@@ -104,13 +104,16 @@ TASK-00241, preserving a non-circular qualification path without enabling a part
 orders remain unranked; existing Board priorities and active work are unchanged.
 
 These records implement nothing and qualify no live operation. Continue map-wide TASK planning with
-[TICKET-00064](00064-TICKET.md), not execution selection or cohort enablement. TICKET-00062's accepted
+[TICKET-00065](00065-TICKET.md), not execution selection or cohort enablement. TICKET-00062's accepted
 TASK-00254, through TASK-00251–00253, now supplies Team/association/membership/transfer writers to TASK-00231
 and its downstream qualification chain. Supported initial membership and actual commitment/admission participant
 holds remain unresolved; adding blocker IDs does not qualify those writers or enable a cohort.
 TICKET-00063's subsequent TASK-00259, through TASK-00256–00258, now supplies actual human management/name,
 creation/initial-assignment and lifecycle entries to TASK-00231. Supported current-authority/binding/assignment
 composition remains held; final browser TASK-00260 follows full readiness and is not a primitive blocker.
+TICKET-00064's accepted TASK-00261–00264 consume shared current-use/roster facts for selection/admission;
+they do not clear lower-level commitment-writer holds or reverse-block this qualification chain. New enabled
+writers require refreshed affected participant/cohort evidence, not a claim that prior receipts cover them.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 333 records,
 246 active; `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero violations. Repetitive

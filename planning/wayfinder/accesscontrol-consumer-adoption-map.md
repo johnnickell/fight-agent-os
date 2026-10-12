@@ -255,9 +255,38 @@ full readiness follows qualification and final TASK-00260 browser acceptance fol
 depends on a completed role/diagnosis, browser administration, full Workflow or Planning cutover. Existing-Agent
 drift operations remain TICKET-00078, template publication remains EPIC-00017 and working roles remain TICKET-00065.
 
-All new orders remain unranked, with active work unchanged. Five of the map's 24 TICKETs now have approved written
-TASK splits; **19 remain, TICKET-00064–00082**, alongside older incomplete Harness planning outside this map.
-No Agent, binding, direct Permission, credential, session, live qualification or operational authority follows.
+That split brought the map to five written TASK decompositions, leaving 19 at that checkpoint. No Agent,
+binding, direct Permission, credential, session, live qualification or operational authority followed.
+
+The maintainer subsequently approved [TICKET-00064](../tickets/00064-TICKET.md)'s five TASKs:
+[TASK-00261](../tasks/00261-TASK.md) resolves selected-work Agent eligibility;
+[TASK-00262](../tasks/00262-TASK.md) recommends fair default/alternate whole-Team intake;
+[TASK-00263](../tasks/00263-TASK.md) binds selection through the existing authoritative Start;
+[TASK-00264](../tasks/00264-TASK.md) enforces same-Team phase admission/independence; and
+[TASK-00265](../tasks/00265-TASK.md) integrates durable withdrawable Pending start through existing entry paths.
+TASK-00261/00263/00264 retain `needs-info` for lower-level commitment/resource, configured-base inclusion,
+current admission and contribution/fresh-session primitives; consumer planning cannot qualify those facts.
+
+Fairness prefers an eligible default Team, then least-recent committed Team/Lead intake among eligible equivalents
+with stable identity ties. Owning Workflow history advances only on committed new intake, not preview, denial,
+rollback or original-command duplicates. Pending intent remains one finite human-selected consent, neither claim
+nor queued Runner, with fresh start checks and serialized withdrawal. Waiting for PR review/merge alone does not
+occupy an Agent; unknown activity still holds. Done is not proof of required change inclusion on the configured
+base, and a fresh reviewer name/session does not erase design/build/evidence contribution.
+
+TASK-00141 now consumes TASK-00264, TASK-00204 explicitly consumes TASK-00263 and TASK-00207 consumes
+TASK-00264 without clearing missing managed Review/QA/publication. TASK-00139 retains upstream Start/Markdown
+eligibility; TASK-00205 supplies the browser gesture and later TASK-00265 extends its owned pending/intake path.
+No second queue, claim, eligibility algorithm, automatic starter or full database Planning prerequisite is added
+to core terminal selection. The first Awaiting review milestone and authored execution orders are unchanged.
+
+TASK-00254's lower-level commitment-writer holds remain; do not reverse-block those suppliers, TASK-00244 or
+TASK-00241/manual Explorer on selection or complete Workflow journeys. Every newly enabled participant still
+requires refreshed current shared-fence/cohort evidence. No cross-Team peer delegation, autonomous TASK pick,
+Agent, grant, Workflow, process, merge or live qualification follows from these records.
+
+All new orders remain unranked and active work unchanged. **Six of the map's 24 TICKETs have approved written
+TASK splits; 18 remain, TICKET-00065–00082**, alongside older incomplete Harness/managed review planning.
 
 ## Approved EPIC handoff
 
@@ -298,9 +327,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00064` for
-[TICKET-00064](../tickets/00064-TICKET.md), mapping actual Team/Agent selection and authoritative admission
-consumers without whole-TICKET cycles, then continue this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00065` for
+[TICKET-00065](../tickets/00065-TICKET.md), mapping actual managed-role outcomes through their existing owners
+without whole-TICKET cycles, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

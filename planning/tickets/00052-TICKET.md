@@ -94,3 +94,12 @@ configuration/context (TASK-00081/00082); TASK-00204 consumes classification/dis
 existing Team Lead execution path (TASK-00202, TASK-00084, TASK-00141); TASK-00205 consumes the terminal/server
 start and canonical browser Ready view (TASK-00204, TASK-00111). All remain unranked. This split adds no
 Workflow, claim, Jev call or UI gesture. Remaining map requirements retain separate TASK decompositions.
+
+TICKET-00064's subsequent accepted TASK-00261/00262 supply current Team/Agent facts and fair whole-TASK intake;
+TASK-00204 now explicitly consumes TASK-00263's Team-specific admission through the same TASK-00139 Start.
+TASK-00141 supplies real same-Team execution using TASK-00264, not another selector or a cross-Team peer grant.
+TASK-00265 consumes these terminal/browser paths and extends their existing Execution owner with durable
+withdrawable Pending start and actual selected-Team integration. TASK-00205 stays the pointer/keyboard gesture
+owner; no reverse dependency on that final integration or duplicate route/start/claim/queue is introduced.
+Normal routing still needs no second routine confirmation, and unknown commit or withdrawal losing to start
+must expose authoritative state rather than replay or cancel live work. Actual prerequisite holds remain.

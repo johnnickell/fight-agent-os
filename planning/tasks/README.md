@@ -263,4 +263,9 @@
 | [TASK-00258](00258-TASK.md) | Create one named Team-bound Agent from retained intent | needs-info | [TICKET-00063](../tickets/00063-TICKET.md) |
 | [TASK-00259](00259-TASK.md) | Inspect current Agents and manage lifecycle intent | ready-for-agent | [TICKET-00063](../tickets/00063-TICKET.md) |
 | [TASK-00260](00260-TASK.md) | Complete accessible managed-Agent administration | needs-info | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00261](00261-TASK.md) | Resolve current Agent eligibility for selected work | needs-info | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00262](00262-TASK.md) | Recommend fair default or alternate-Team intake | ready-for-agent | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00263](00263-TASK.md) | Bind Team selection at the authoritative start | needs-info | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00264](00264-TASK.md) | Enforce same-Team delegation and reviewer independence | needs-info | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00265](00265-TASK.md) | Operate withdrawable Pending start through existing entry paths | ready-for-agent | [TICKET-00064](../tickets/00064-TICKET.md) |
 <!-- /planning:records -->

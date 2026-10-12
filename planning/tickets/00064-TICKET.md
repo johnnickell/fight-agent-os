@@ -66,7 +66,11 @@ verify dependencies or determine idle capacity is a hold, not a guess or client-
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00261](../tasks/00261-TASK.md) | Resolve current Agent eligibility for selected work | needs-info |
+| [TASK-00262](../tasks/00262-TASK.md) | Recommend fair default or alternate-Team intake | ready-for-agent |
+| [TASK-00263](../tasks/00263-TASK.md) | Bind Team selection at the authoritative start | needs-info |
+| [TASK-00264](../tasks/00264-TASK.md) | Enforce same-Team delegation and reviewer independence | needs-info |
+| [TASK-00265](../tasks/00265-TASK.md) | Operate withdrawable Pending start through existing entry paths | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -77,11 +81,60 @@ Approved as requirement area 6 of EPIC-00014's seven-TICKET split, consuming
 manual Explorer does not wait for a complete Workflow selector. The current parent Workflow and hotfix TICKETs
 remain the owners of claim, Kanban, routing and incident operations.
 
-TICKET-00062's approved TASK-00251/00252 supply registered Team/Repository/default facts,
-[TASK-00253](../tasks/00253-TASK.md) supplies roster/reference/admission fences and
-[TASK-00254](../tasks/00254-TASK.md) supplies guarded idle-transfer/removal. Map precise selector/start-consumer
-TASKs during this TICKET's decomposition. Actual enabled admission and commitment writers must participate in
-those shared fences; a preflight selector result or a cached busy flag cannot serialize against transfer.
-Keep primitive session/commitment participation separate from final selection/dispatch journeys to avoid cycles.
-No second claim/commitment store, full Workflow gate on manual Explorer use or assumption that a PR-wait label
-alone occupies an Agent is introduced. Existing actual creation/session/host holds remain unresolved.
+The maintainer approved five dependency-ordered TASKs:
+
+- [TASK-00261](../tasks/00261-TASK.md): current Agent eligibility for selected work, combining owning TASK/base
+  facts, exact profiles, Team/Repository scope, current authority and actual idle capacity without reservation.
+- [TASK-00262](../tasks/00262-TASK.md): deterministic default-Team preference and fair alternate whole-TASK
+  intake, never another TASK selection, claim or cross-Team phase assignment.
+- [TASK-00263](../tasks/00263-TASK.md): current Team/Lead admission through TASK-00139's existing Start, with
+  atomic owning commitment/claim/grant/dispatch and committed fairness advancement.
+- [TASK-00264](../tasks/00264-TASK.md): same-Team phase admission and actual reviewer independence, without
+  duplicating managed Review/QA/publication or introducing Team Lead into direct hotfix.
+- [TASK-00265](../tasks/00265-TASK.md): durable withdrawable Pending start and actual terminal/browser integration
+  through existing Execution and TASK-00204/00205 owners, after shared runtime readiness.
+
+TASK-00261/00263/00264 retain `needs-info` for exact lower-level commitment/resource, verified configured-base
+inclusion, current admission and contribution/fresh-session primitives. TASK-00139 supplies the base Start and
+pre-cutover immutable Markdown eligibility path, not proof that every such participant is already implemented.
+Where database Planning is the actual source, use TASK-00096's canonical typed fact/reason seam without another
+algorithm; browser/Triage consumers retain their own actual Planning dependencies. No database cutover gate is
+added to core terminal selection or manual Explorer use.
+
+Approved fairness prefers an eligible default Team, then least-recently-admitted eligible alternative Team and
+eligible Lead, with stable identity ties and never-admitted equivalents first. Choose Team before Lead so extra
+Leads do not multiply a Team's alternate turns. Keep order/history under Workflow ownership and advance only
+on actual committed new intake, never preview, rejection, rollback or duplicate original-command resolution.
+This policy does not promise starvation freedom under arbitrary changing capacity/eligibility.
+
+Pending intent names one human-selected TASK and bounded consent, not a claim, Workflow start, Agent reservation
+or queued Runner. Retry/reconsider only within its finite valid scope/deadline, revalidate at one start and resolve
+uncertainty before another effect. Changed scope or expired authority needs renewed human decision. Withdrawal
+serializes against admission: a lost race exposes the already-started Workflow, never silent live cancellation.
+A PR-wait label alone does not occupy an Agent; active/uncertain commitments hold. A Done prerequisite still needs
+actual verified inclusion on the configured base. Neither a prompt nor a new reviewer name/session proves
+independence from design/build/evidence contribution.
+
+TASK-00141 now consumes TASK-00264 and TASK-00204 explicitly consumes TASK-00263. TASK-00207 consumes
+TASK-00264's same-Team independence guard while retaining all missing managed Review/QA/publication holds.
+TASK-00205 remains the browser gesture owner and supplies later TASK-00265; no reverse blocker is added to
+TASK-00139 or the completed surface/role journeys. Authored order and the first Awaiting review milestone stay
+unchanged. Actual component writers must refresh affected shared cohort/fence evidence before exposure.
+
+TASK-00253/00254 remain the Team membership/fence and guarded-transfer owners. These selector/delegation
+consumers do not resolve TASK-00254's missing lower-level commitment writers and must not be reverse blockers
+of TASK-00244, TASK-00254, TASK-00241 or final manual Explorer use. No second claim/commitment/queue/Runner,
+automatic unrelated TASK selection, cross-Team peer delegation, merge or operational enrollment is introduced.
+
+All new TASKs are unranked and active TASK-00138/TASK-00226 remain unchanged. Six of the map's 24 TICKETs now
+have approved written TASK decompositions; 18 remain, TICKET-00065–00082. Older Harness/managed review planning
+is not completed by these mappings. Next planning operation: `/skill:to-tasks TICKET-00065`, integrating real
+role outcomes through existing owners rather than replacing them. Implementation/worktree choice, fresh runtime
+qualification, independent review, publication and live effects remain separately authorized.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 365 records,
+278 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations, with repetitive deprecation warnings. Evidence: `.runs/build/20261012T204437Z-46921`; summary log:
+`.runs/build/ticket-00064-to-tasks.log`. These validate planning and the existing repository, not future live
+eligibility, fairness, atomic Team admission, independent delegation or Pending start/Runner behavior.
+Independent review and publication remain unperformed.

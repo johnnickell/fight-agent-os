@@ -104,3 +104,12 @@ storage and persistence checks. Its worker sudo/private-engine model is a profil
 decision before Agent launch; it does not relax the installation-engine, credentials or role boundaries above.
 Pinned Pi subsequently passed a synthetic Codex transport/substitution/revocation fixture. Real OAuth, refresh,
 account mapping and broker-enforced grants remain unqualified; the fixture is not a managed Workflow.
+
+TICKET-00064's accepted TASK-00261–00264 now supply Team/Agent eligibility, fair whole-TASK intake, atomic
+Team admission and same-Team phase constraints. TASK-00139 retains the base Start and immutable Markdown
+eligibility capability; TASK-00263 extends that same owner, never creates another claim engine or reverse
+prerequisite. TASK-00141 explicitly consumes TASK-00264 for its real Team Lead/Software Engineer handoff.
+Lower-level commitment/resource/base/independence and phase/session mappings remain `needs-info`, not supplied
+by these consumers or by a completed role journey. No Planning database cutover is required by core selection.
+TASK-00265 later extends owned pending-intent/withdrawal and final terminal/browser integration, without changing
+the first Awaiting review milestone, authored order or active work. No live launch was enabled by planning.

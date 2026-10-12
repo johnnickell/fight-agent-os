@@ -111,8 +111,12 @@ explicit complete-policy extension with stable generated identities, not implici
 of TASK-00036's original catalog. Browser JWT and Agent HMAC stay separate. Planning changes no runtime behavior,
 creates no Agent/credential/session/grant and leaves all new TASK orders unranked and active Board work unchanged.
 
-Next planning operation: `/skill:to-tasks TICKET-00064`, mapping actual selection/admission owners without
-parent cycles; then continue the remaining map TICKET decompositions. Worktree selection, implementation, real
+TICKET-00064's accepted TASK-00261–00264 now consume current-use and roster primitives for actual selection/
+admission; they do not resolve lower-level Harness/commitment holds or become reverse blockers of TASK-00244
+or first manual Explorer use. Newly enabled participants still need current qualification, not inherited receipts.
+
+Next planning operation: `/skill:to-tasks TICKET-00065`, mapping real role outcomes through their existing
+owners; then continue the remaining map TICKET decompositions. Worktree selection, implementation, real
 qualification, independent review, publication and operational enrollment remain separately authorized.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 347 records,

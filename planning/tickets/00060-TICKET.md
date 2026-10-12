@@ -115,7 +115,11 @@ consumes these lifecycle/current-use components for protected management. TASK-0
 writer chain; final browser TASK-00260 follows TASK-00241, never the reverse. Initial binding/assignment
 composition remains held; no sequential package calls or new intent queue is assumed to resolve it.
 
-Next planning operation: `/skill:to-tasks TICKET-00064`, mapping actual selection/admission without parent cycles,
+TICKET-00064's accepted TASK-00261–00264 consume current authority for selection/admission, but are not
+reverse blockers of shared primitive qualification or manual Explorer. Final TASK-00265 consumes TASK-00241's
+actual readiness; changed/enabled participants must refresh affected qualification before live exposure.
+
+Next planning operation: `/skill:to-tasks TICKET-00065`, mapping actual role outcomes without parent cycles,
 then continue the remaining map TICKET decompositions. Implementation/worktree choice, independent review,
 publication, merge and live operational effects remain separate.
 

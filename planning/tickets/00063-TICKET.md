@@ -129,9 +129,12 @@ with TICKET-00078, self-profile Tools with TASK-00246, Team transfer with TASK-0
 TICKET-00065. Publication never silently rebinds existing Agents or sessions.
 
 All new TASK orders remain unranked; active TASK-00138/TASK-00226 and implementation priority are unchanged.
-Planning creates no Agent, Permission, credential, binding, session or live evidence. Five of this map's 24
-TICKETs now have accepted TASK decompositions; 19 remain, TICKET-00064–00082. The separate TICKET-00034 detour
-does not complete older Harness planning. Next planning operation: `/skill:to-tasks TICKET-00064`.
+Planning creates no Agent, Permission, credential, binding, session or live evidence. The subsequent
+TICKET-00064 split brings the map to six accepted TASK decompositions; 18 remain, TICKET-00065–00082.
+TASK-00261 consumes actual named creation for eligibility; TASK-00263/00264 supply current Team admission/
+delegation to existing Workflow owners, without becoming prerequisites of creation or manual Explorer use.
+The separate TICKET-00034 detour does not complete older Harness planning.
+Next planning operation: `/skill:to-tasks TICKET-00065`.
 Implementation/worktree choice, fresh qualification, independent review, publication and live effects remain
 separately authorized.
 
