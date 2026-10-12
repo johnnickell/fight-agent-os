@@ -87,3 +87,12 @@ queue becomes package credential authority. Identify exact shared primitive mapp
 do not introduce reciprocal whole-TICKET dependencies or require final request/confirmation UI as a supplier.
 Existing provider/schedule holds remain and changed integrations need fresh affected evidence. TASK-00273's notice
 contract amendment must preserve package credential behavior and be requalified here where relevant.
+
+TICKET-00067's approved [TASK-00280](../tasks/00280-TASK.md) now explicitly awaits this TICKET's precise
+issuance/cipher/provider/recovery primitive mappings before request exposure. TASK-00282 consumes that request
+path for administration. Map real lower-level suppliers during this decomposition, not a whole-TICKET gate or
+reverse dependency on completed account/admin UI. TASK-00278 supplies early current actor/target policy;
+TASK-00279 safe status and TASK-00281 cancellation remain independent of successful sending. This mapping does
+not resolve TASK-00273's atomic notice contract or TASK-00281's distinct cancellation fencing/audit hold.
+
+Next planning operation: `/skill:to-tasks TICKET-00068`; provider enrollment and implementation remain separate.

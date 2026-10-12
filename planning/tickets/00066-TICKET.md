@@ -133,9 +133,15 @@ Map concrete primitives during those decompositions without reciprocal whole-TIC
 operation do not depend on completed downstream browser journeys, and controlled provider qualification never
 authorizes replacing the current administration denial or opening unfinished routes.
 
-All new TASKs are unranked; active TASK-00138/TASK-00226 and existing authored orders remain unchanged. Eight of
-the map's 24 TICKETs now have approved written TASK splits; **16 remain, TICKET-00067–00082**. Older Harness/
-managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00067`.
+TICKET-00067's subsequent TASK-00278/00279 now own early authority/safe status; TASK-00280 consumes
+TASK-00274/00277 for self request and TASK-00282 integrates administration. TASK-00281 independently qualifies
+exact confirmed cancellation and required self audit; its inspected latest-target command has no expected-
+generation input, and this notice seam does not implicitly resolve that separate hold. Status/cancellation do
+not depend on sending readiness; final account/admin journeys do not reverse-block notice primitives.
+
+All new TASKs are unranked; active TASK-00138/TASK-00226 and existing authored orders remain unchanged. With the
+TICKET-00067 split, nine of the map's 24 TICKETs have written TASK splits; **15 remain, TICKET-00068–00082**.
+Older Harness/managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00068`.
 No request, confirmation, notice, provider or schedule is live from this decomposition. Implementation/worktree
 choice, upstream authorization, independent review, publication and operational enrollment remain separate.
 

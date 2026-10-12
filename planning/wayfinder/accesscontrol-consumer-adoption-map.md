@@ -345,9 +345,40 @@ credential path. Reuse qualified mail/schedule primitives without merging notice
 introducing whole-parent cycles. Final browser journeys are consumers, not prerequisites of notice primitives.
 Missing production authority or a real provider never becomes success from a fixture, catcher or historical receipt.
 
-All new orders remain unranked and active work unchanged. **Eight of the map's 24 TICKETs have approved written
-TASK splits; 16 remain, TICKET-00067–00082**, alongside older incomplete Harness/managed review planning.
+That split brought the map to eight approved written TASK decompositions, leaving 16 at that checkpoint.
 No email change, notice, provider/schedule enrollment, upstream edit or operational qualification was performed.
+
+The maintainer subsequently approved [TICKET-00067](../tickets/00067-TICKET.md)'s five slices:
+[TASK-00278](../tasks/00278-TASK.md) establishes current self/admin authority and a distinct protected managed
+Permission; [TASK-00279](../tasks/00279-TASK.md) delivers coherent scoped status and a real read-only account
+panel; [TASK-00280](../tasks/00280-TASK.md) delivers self request;
+[TASK-00281](../tasks/00281-TASK.md) delivers exact confirmed cancellation; and
+[TASK-00282](../tasks/00282-TASK.md) integrates cross-user operations into the existing user-detail journey.
+
+TASK-00280 consumes TASK-00274/00277 and retains `needs-info` for precise TICKET-00068 issuance/cipher/provider/
+recovery suppliers, alongside the unresolved notice seam. TASK-00281 retains `needs-info` for supported exact-
+intent/generation fencing, original-outcome observation and required atomic self-cancellation audit. The inspected
+cancel command takes only actor/target IDs and selects the latest eligible change; its handler audits only
+administrator calls. A UI revision/preflight or TASK-00273's separate request/confirmation seam does not establish
+these guarantees. Seek supported owner/tagged resolution, never hidden repository policy or nested transactions.
+
+The administration callback cannot authenticate supplied actor IDs and skips actor == target; shared trusted
+self/cross-user checks apply at all supported entries. TASK-00278 preserves the complete managed catalog with
+its distinct `SUPER_ADMIN_ONLY` extension, not role-name authority or a direct Agent grant. TASK-00279 composes
+current User/reservation/grant/delivery facts without exposing grants or mutating on read; delivery is not usable
+change or confirmation. Browser state stays volatile under one current-principal owner and local generation fences.
+
+TASK-00280 waits for qualified notices and new-mail sending; TASK-00281 cancellation does not depend on sending
+or the request journey and cannot affect a successor. Post-commit exception/unknown acknowledgement does not prove
+rollback or allow mutation replay; accepted request notices survive cancellation. TASK-00282 uses separate detail/
+action permissions, explicit target/intent confirmation and attributable shared operations, never a credential
+for the administrator or confirmation bypass. TICKET-00069 retains actual confirmation and login return.
+
+Map TICKET-00068's exact lower-level suppliers next without making them or notice primitives depend on completed
+account/admin/browser journeys. No second credential queue, profile editor or final proof-only TASK is introduced.
+All new orders remain unranked and active work unchanged. **Nine of the map's 24 TICKETs have approved written
+TASK splits; 15 remain, TICKET-00068–00082**, alongside older incomplete Harness/managed review planning.
+No Permission, API, UI, request, cancellation, credential or operational authority was enabled by these records.
 
 ## Approved EPIC handoff
 
@@ -388,9 +419,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00067` for
-[TICKET-00067](../tickets/00067-TICKET.md), preserving current self/admin authority and qualified notice/new-mail
-delivery gates before request exposure, then continue this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00068` for
+[TICKET-00068](../tickets/00068-TICKET.md), mapping qualified new-mail credential delivery/recovery primitives
+without reverse browser dependencies, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

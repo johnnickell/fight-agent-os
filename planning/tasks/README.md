@@ -280,4 +280,9 @@
 | [TASK-00275](00275-TASK.md) | Record completion notices without losing the original recipient | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
 | [TASK-00276](00276-TASK.md) | Dispatch one notice with protected recoverable outcomes | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
 | [TASK-00277](00277-TASK.md) | Operate scheduled notice recovery and safe inspection | needs-info | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00278](00278-TASK.md) | Enforce current email-change authority | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00279](00279-TASK.md) | Inspect current pending changes safely | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00280](00280-TASK.md) | Request an own-address change through the account journey | needs-info | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00281](00281-TASK.md) | Cancel a pending change without affecting a successor | needs-info | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00282](00282-TASK.md) | Administer another user's email change from user detail | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
 <!-- /planning:records -->

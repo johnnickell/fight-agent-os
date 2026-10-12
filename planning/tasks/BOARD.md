@@ -192,6 +192,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00274](00274-TASK.md) | Record an old-mailbox notice with each accepted request | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | ready-for-agent | [TASK-00273](00273-TASK.md) | — |
 | — | [TASK-00275](00275-TASK.md) | Record completion notices without losing the original recipient | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | ready-for-agent | [TASK-00274](00274-TASK.md) | — |
 | — | [TASK-00276](00276-TASK.md) | Dispatch one notice with protected recoverable outcomes | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | ready-for-agent | [TASK-00274](00274-TASK.md), [TASK-00040](00040-TASK.md) | — |
+| — | [TASK-00278](00278-TASK.md) | Enforce current email-change authority | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | [TASK-00036](00036-TASK.md), [TASK-00117](00117-TASK.md) | — |
+| — | [TASK-00279](00279-TASK.md) | Inspect current pending changes safely | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | [TASK-00278](00278-TASK.md), [TASK-00051](00051-TASK.md) | — |
+| — | [TASK-00282](00282-TASK.md) | Administer another user's email change from user detail | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | [TASK-00280](00280-TASK.md), [TASK-00281](00281-TASK.md), [TASK-00123](00123-TASK.md) | — |
 
 ## Needs Info
 
@@ -228,6 +231,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00272](00272-TASK.md) | Integrate managed Agents with a qualified application release | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00225](00225-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00241](00241-TASK.md) | — |
 | — | [TASK-00273](00273-TASK.md) | Qualify supported atomic notice coordination | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | needs-info | — | — |
 | — | [TASK-00277](00277-TASK.md) | Operate scheduled notice recovery and safe inspection | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | needs-info | [TASK-00275](00275-TASK.md), [TASK-00276](00276-TASK.md) | — |
+| — | [TASK-00280](00280-TASK.md) | Request an own-address change through the account journey | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | needs-info | [TASK-00279](00279-TASK.md), [TASK-00274](00274-TASK.md), [TASK-00277](00277-TASK.md) | — |
+| — | [TASK-00281](00281-TASK.md) | Cancel a pending change without affecting a successor | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | needs-info | [TASK-00279](00279-TASK.md) | — |
 
 ## Human Action
 

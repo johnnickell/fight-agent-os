@@ -95,3 +95,11 @@ The lower-level notice primitives do not depend on this completed browser journe
 postpones committed session revocation; failed atomic notice persistence prevents the whole confirmation commit.
 A post-commit exception or uncertain acknowledgement is not proof of rollback or permission for automatic replay.
 No confirmation TASK is allocated or exposure enabled by this coordination mapping.
+
+TICKET-00067's approved TASK-00278–00282 now own current self/admin authority, safe account status, self request,
+exact confirmed cancellation and cross-user detail integration. Reuse their actual qualified facts where needed,
+not a duplicate account/status owner. TASK-00280 still needs precise TICKET-00068 credential mappings;
+TASK-00281 retains its own supported generation-fencing/self-audit gate and must be exercised against this
+confirmation path's real winner semantics. Its cancellation does not require successful sending or this finished
+browser journey. Bearer confirmation here remains independent of a preexisting human session/admin Permission,
+with one-time package policy and the separately owned notice seam; no administrator bypass is introduced.

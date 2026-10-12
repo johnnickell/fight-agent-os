@@ -71,7 +71,11 @@ responses; no silent overwrite. Audit distinguishes self request/cancel and admi
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00278](../tasks/00278-TASK.md) | Enforce current email-change authority | ready-for-agent |
+| [TASK-00279](../tasks/00279-TASK.md) | Inspect current pending changes safely | ready-for-agent |
+| [TASK-00280](../tasks/00280-TASK.md) | Request an own-address change through the account journey | needs-info |
+| [TASK-00281](../tasks/00281-TASK.md) | Cancel a pending change without affecting a successor | needs-info |
+| [TASK-00282](../tasks/00282-TASK.md) | Administer another user's email change from user detail | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -91,6 +95,66 @@ admin authority, the protected Permission/callback, safe pending status and canc
 notice implementation does not replace `UnavailableEmailChangeAdministration` or make arbitrary callers trusted.
 Keep early authority primitives below final browser integration, without reverse-blocking notice capture or
 operation on the finished user journey. Provider delay does not erase accepted intent, while lack of a supported
-atomic intent seam blocks request exposure. This TICKET still needs its own approved TASK decomposition.
+atomic intent seam blocks request exposure.
 
-Next planning operation: `/skill:to-tasks TICKET-00067`; no implementation or live effects are authorized.
+### Approved TASK decomposition
+
+The maintainer approved five independently reviewable slices:
+
+| TASK | Outcome | Blockers and holds |
+|---|---|---|
+| [TASK-00278](../tasks/00278-TASK.md) | Enforce current email-change authority | TASK-00036 and TASK-00117; complete managed policy extension and all supported caller checks, no mutation exposure |
+| [TASK-00279](../tasks/00279-TASK.md) | Inspect current pending changes safely | TASK-00278 and TASK-00051; scoped query/API and real read-only account panel |
+| [TASK-00280](../tasks/00280-TASK.md) | Request an own-address change through the account journey | TASK-00279, TASK-00274 and TASK-00277; `needs-info` for precise TICKET-00068 credential primitives and existing notice-contract hold |
+| [TASK-00281](../tasks/00281-TASK.md) | Cancel a pending change without affecting a successor | TASK-00279; `needs-info` for supported exact-intent/generation fencing and atomic self-cancellation audit |
+| [TASK-00282](../tasks/00282-TASK.md) | Administer another user's email change from user detail | TASK-00280, TASK-00281 and TASK-00123; complete protected cross-user API/UI integration behind their unresolved holds |
+
+TASK-00278 extends the complete stable managed catalog rather than replacing it with a one-Permission policy.
+The distinct administration Permission is `SUPER_ADMIN_ONLY`, initially assigned only to managed Super Admin;
+self-service requires the current active owner, not that Permission. The package callback only checks actor !=
+target, so it cannot authenticate a supplied actor or protect self calls by itself. Every supported HTTP and
+non-HTTP entry needs trusted current actor/target policy; unsupported paths deny. Callback replacement alone
+never opens unfinished request/cancel operations. Existing detail-read rights and email-action rights stay distinct.
+
+The inspected `UserView` has no pending-change fields and `CredentialDeliveryStatusView` describes one delivery,
+not current change usability. TASK-00279 composes a coherent safe observation without returning a grant or
+inventing a second authority. GET does not expire, repair, send or mutate. Issued, delivered, confirmed, expired,
+cancelled and unknown remain distinct; absent or incoherent evidence is not a successful empty state. The account
+panel uses the shared `/me` owner and volatile generation-fenced data, not a stored draft or private URL state.
+
+The inspected `CancelEmailChange` takes only actor/target IDs and selects the latest eligible grant inside its
+own transaction. Expected-state repository comparisons protect that loaded state, not the change the human
+reviewed earlier; a browser revision/preflight cannot prevent delayed intent from cancelling a successor.
+The handler audits only administrator cancellation. TASK-00281 must qualify supported exact-intent fencing,
+original-outcome observation and atomic required self audit, obtaining separate owner/tagged-contract resolution
+if absent. TASK-00273's request/confirmation seam does not automatically resolve cancellation. No nested
+transaction, copied handler, hidden audit-repository policy or after-commit audit workaround is permitted.
+
+Request and cancellation remain separate paths after safe status. TASK-00280 waits for qualified old-notice and
+new-mail delivery; **TASK-00281 does not depend on sending readiness or TASK-00280**. Provider failure cannot
+remove the ability to cancel supported current authority. Cancellation preserves accepted request notices,
+does not promote an address and cannot recall already-sent mail. Required state/audit writes roll back together;
+post-commit event failure/lost acknowledgement may follow success and never authorizes blind mutation replay.
+The request command also supplies no client idempotency key; only supported original-result evidence can resolve
+uncertainty, not repeated equal input or the latest address alone.
+
+TASK-00282 extends the existing user detail under independent route/action checks, explicit target/intent
+confirmation and current callback authority. Reuse the request/status/cancel primitives, not another pipeline.
+Administrator action remains attributable and cannot receive the new-mail credential or bypass its confirmation.
+TICKET-00069 retains actual explicit confirmation, client/session invalidation and login return. TICKET-00068
+must supply precise lower-level issuance/cipher/provider/recovery dependencies to TASK-00280 without reverse-
+blocking those suppliers on a completed account/admin journey. Existing notice primitives likewise remain upstream.
+
+Each user-facing slice owns real safe HTTP/client behavior, PostgreSQL/package integration and applicable
+accessible browser evidence; no proof-only final TASK is added. All new orders are unranked; active
+TASK-00138/TASK-00226 and existing priorities remain unchanged. Nine of the map's 24 TICKETs now have approved
+written TASK splits; **15 remain, TICKET-00068–00082**. Older Harness/managed review planning is still incomplete.
+Next planning operation: `/skill:to-tasks TICKET-00068`. No permission, request, cancellation, UI or provider is live
+from planning; implementation/worktree choice, upstream changes, review, publication and operational effects remain separate.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 382 records,
+295 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations, with repetitive deprecation warnings. Evidence: `.runs/build/20261012T213728Z-53222`; summary log:
+`.runs/build/ticket-00067-to-tasks.log`. These validate planning and the existing repository, not future email
+administration authority, coherent status, request/cancellation contracts, browser journeys or real delivery.
+Independent review and publication remain unperformed.
