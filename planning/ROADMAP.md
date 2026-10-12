@@ -86,6 +86,7 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 | [EPIC-00013](epics/00013-EPIC.md) | Support release TASKs and project-specific release Workflows | project-specific-release-workflows | ready-for-agent |
 | [EPIC-00014](epics/00014-EPIC.md) | Deliver the working managed Agent team | working-managed-agent-team | ready-for-agent |
 | [EPIC-00015](epics/00015-EPIC.md) | Deliver mailbox-confirmed human email change | human-email-address-change | ready-for-agent |
+| [EPIC-00016](epics/00016-EPIC.md) | Deliver usable Feature Flags management and enforcement | feature-flags-lifecycle | ready-for-agent |
 <!-- /planning:epics -->
 
 ## Planning Frontier
@@ -104,6 +105,7 @@ the same operation that completes their children.
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | ready-for-agent |
 | [EPIC-00014](epics/00014-EPIC.md) | Deliver the working managed Agent team | ready-for-agent |
 | [EPIC-00015](epics/00015-EPIC.md) | Deliver mailbox-confirmed human email change | ready-for-agent |
+| [EPIC-00016](epics/00016-EPIC.md) | Deliver usable Feature Flags management and enforcement | ready-for-agent |
 
 ### TICKETs without TASKs
 
