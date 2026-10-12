@@ -85,3 +85,9 @@ Approved as area 3 of EPIC-00016's five-TICKET split. Uses
 [TICKET-00018](00018-TICKET.md) and [ADR 0004](../adr/0004-client-authority-and-runtime-state.md).
 This broad authenticated **read** is an explicit extension of WF-032's admin-only management reads, not
 permission to mutate. No catalog endpoint or client gate was created during planning.
+
+TICKET-00071's accepted TASK-00293 now supplies qualified human HTTP/package availability and fresh-read
+semantics; consume it without an unrelated dependency on TASK-00294's Agent/non-Action integration. The package
+rereads settings/bindings on every call but uses the immutable request principal. This TICKET owns complete
+catalog composition, safe repair presentation and browser invalidation, not another evaluator, principal source
+or runtime authorization owner. Operational failures cannot become empty catalogs or policy false.

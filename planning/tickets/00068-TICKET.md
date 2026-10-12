@@ -146,8 +146,8 @@ After initial qualification, a held usable credential needs no online provider o
 when atomic persistence is available. Shared-contract changes still require affected credential requalification.
 
 All new orders are unranked; active TASK-00138/TASK-00226 and existing priorities remain unchanged. With
-TICKET-00069/00070, twelve of the map's 24 TICKETs have written TASK splits; **12 remain, TICKET-00071–00082**.
-Older Harness/managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00071`.
+TICKET-00069–00071, thirteen of the map's 24 TICKETs have written TASK splits; **11 remain, TICKET-00072–00082**.
+Older Harness/managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00072`.
 No credential, provider, schedule, request, route or live effect was created by planning. Implementation/worktree
 choice, independent review, publication, upstream changes and actual enrollment remain separately authorized.
 

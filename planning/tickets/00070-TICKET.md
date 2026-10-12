@@ -135,7 +135,11 @@ while infrastructure/discovery failures remain errors. No stale identity-map/neg
 repair or inferred readiness from a command/event. Exact code/target observations are not a distributed snapshot,
 durable certificate or fence against later privileged changes.
 
-TICKET-00071 consumes discovery/registration and qualified persistence, with preparation before rollout;
+TICKET-00071's TASK-00293 now consumes this chain for human/public HTTP enforcement; TASK-00294 adds actual
+registered non-Action/Agent checks through TASK-00245. Reuse fresh package availability, native declarations and
+one registration source without a reverse blocker or runtime scanner/provisioning call. Preparation stays a
+protected pre-rollout observation, not an authorization decision at each invocation.
+
 TICKET-00073 consumes safe reference writes and fresh preparation; TICKET-00074 consumes CURRENT discovery and
 final expected-state/reference release with its independent deployment/cleanup authority. No final middleware,
 UI, retirement, Agent/Harness or managed release journey reverse-blocks these primitives. Prepared OFF is neither
@@ -147,9 +151,10 @@ product tests of text/wiring/tooling. Reuse attributable valid earlier evidence,
 require a failing regression before bug repair. No dummy product Feature or extra proof-only project is needed.
 Missing supported guarantees hold the affected path for separately authorized owner resolution, not vendor patches.
 
-Active TASK-00138/TASK-00226 and existing priorities remain unchanged. One of EPIC-00016's five TICKETs now has
-an approved written TASK split. Twelve of the map's 24 TICKETs are decomposed; **12 remain, TICKET-00071–00082**,
-alongside older incomplete Harness/managed review planning. Next planning operation: `/skill:to-tasks TICKET-00071`.
+Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00071, two of EPIC-00016's
+five TICKETs now have approved written TASK splits. Thirteen of the map's 24 are decomposed;
+**11 remain, TICKET-00072–00082**, alongside older incomplete Harness/managed review planning.
+Next planning operation: `/skill:to-tasks TICKET-00072`.
 Planning ran no scanner/provision/query, changed no catalog and enabled no Feature or deployment. Implementation/
 worktree choice, independent review, publication and actual target effects remain separate.
 

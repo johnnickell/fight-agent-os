@@ -95,3 +95,8 @@ deploy authority, guarded removal and the true retirement/reintroduction lifecyc
 holds even when local scanning works. TASK-00292's candidate preparation is not retirement evidence. No finished
 retirement UI or operational deployment journey reverse-blocks these primitives; their reusable implementation
 and local receipts alone cannot authorize removing a live Feature.
+
+TICKET-00071 now maps TASK-00293's native HTTP declarations and TASK-00294's registered non-Action/Agent
+checks. Actual later cleanup must remove every applicable declaration, explicit registration and runtime check,
+not just a route Attribute or Tool-list entry. Those gates do not qualify complete CURRENT absence, deploy the
+cleanup or revoke already-admitted work; this TICKET retains that separate operational/retirement boundary.

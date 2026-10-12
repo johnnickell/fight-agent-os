@@ -93,3 +93,10 @@ primitives; this TICKET retains management Permission/actor/intent checks, manua
 integration and its own affected races, including manual create versus provision. No finished UI or management
 path reverse-blocks the reference primitive, and this management Permission is not privileged operator setup
 authority. Prepared OFF still needs complete runtime enforcement and separate authorization before rollout.
+
+TICKET-00071 now maps TASK-00293's matched HTTP enforcement and TASK-00294's registered non-Action/Agent
+checks. Consume every applicable path before claiming rollout, without making a human-only capability wait
+for unrelated Agent integration. Keep unknown/missing coverage a hold; ON cannot replace underlying authority.
+These gates reread current settings and original Permission IDs while retaining request-principal snapshots;
+setting changes affect subsequent explicit checks, not retroactive cancellation. No management journey
+reverse-blocks either runtime primitive.

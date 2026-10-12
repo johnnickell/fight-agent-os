@@ -172,10 +172,10 @@ outcomes, required Triage integration and qualified applicable release paths mus
 Automatic parent rollup does not waive a child's missing real outcome or require another parent acceptance ceremony.
 
 All new TASKs are unranked; active TASK-00138/TASK-00226 and authored execution orders remain unchanged.
-With the subsequent TICKET-00066–00070 splits, twelve of the map's 24 TICKETs have approved written TASK splits;
-12 remain, TICKET-00071–00082. EPIC-00014's seven requirement TICKETs are decomposed, not implemented.
+With the subsequent TICKET-00066–00071 splits, thirteen of the map's 24 TICKETs have approved written TASK splits;
+11 remain, TICKET-00072–00082. EPIC-00014's seven requirement TICKETs are decomposed, not implemented.
 Older Harness/managed review planning remains incomplete.
-Next planning operation: `/skill:to-tasks TICKET-00071`. Implementation/worktree choice, fresh verification,
+Next planning operation: `/skill:to-tasks TICKET-00072`. Implementation/worktree choice, fresh verification,
 independent review, publication, enrollment and live effects remain separately authorized.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 372 records,

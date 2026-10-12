@@ -66,7 +66,8 @@ their own actor/target/delegation checks.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00293](../tasks/00293-TASK.md) | Guard matched HTTP Actions with current Feature availability | ready-for-agent |
+| [TASK-00294](../tasks/00294-TASK.md) | Enforce registered Feature checks outside HTTP Actions | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -84,3 +85,73 @@ candidate preparation before considering rollout. Reuse these primitives without
 reverse dependency on finished middleware/non-HTTP enforcement. A preparation observation is not runtime access;
 every actual invocation still performs the fresh package availability and ordinary authorization checks above.
 These suppliers do not select or seed a real product Feature and do not qualify current User/Agent entry authority.
+
+### Approved TASK decomposition
+
+The maintainer approved two enforcement paths, each owning its implementation and affected integration evidence:
+
+| TASK | Outcome | Blockers |
+|---|---|---|
+| [TASK-00293](../tasks/00293-TASK.md) | Guard matched HTTP Actions with current Feature availability | TASK-00117, TASK-00292 |
+| [TASK-00294](../tasks/00294-TASK.md) | Enforce registered Feature checks outside HTTP Actions | TASK-00293, TASK-00245 |
+
+Both are unranked features, `ready-for-agent` behind listed blockers. TASK-00294 remains transitively held by
+TASK-00245's unresolved first-party trust/current-use prerequisites; no alternate authentication/registry is
+invented to bypass them. Missing actual supported entry owners/contracts hold the affected path explicitly.
+
+TASK-00293 adds package-backed middleware post-route/authentication and pre-Action construction/dispatch.
+Inspect the actual matched FQCN method without using Slim's callable resolver, which obtains/constructs the
+Action. Instantiate the native Attribute; do not mistake malformed declarations for an unflagged route. Reuse
+TASK-00117's authoritative User/public classification and preserve its ordinary security metadata, route/method
+misses and request protections. Feature false gives fixed 404; Feature true only permits ordinary authorization
+to continue. No public exception, Agent-on-JWT route or authentication fallback is introduced. Actual Agent
+composition is qualified by TASK-00294 through its existing owning boundary.
+
+The inspected package `FeatureAvailability` rereads Feature and original bound Permission ID on every call,
+including OFF and ON. Unknown Feature, missing/mismatched binding, invalid metadata/state and operational errors
+must remain safely classified, not silently OFF/ON or leaked as raw diagnostics. Fresh Feature reads do not
+refresh the immutable principal snapshot; preserve its one-request semantics and resolve current authority for
+later requests/jobs. No role-name/name-to-ID shortcut, stale identity-map/negative cache, second nonce consumption,
+runtime scan/provision/repair or distributed check-and-effect/cancellation guarantee is added.
+
+TASK-00294 extends the shared runtime composition to actual registered CLI/worker/direct-use and Agent/MCP
+boundaries through TASK-00290's single registration source. Intersect package Feature restriction with the
+existing Tool Permission/current-use decision using the same registry, request-bound provider and signed context.
+Filter before pagination, mirrors or protected metadata disclosure; recheck invocation and supported continuations
+before protected argument validation, restoration/confirmation consumption, progress and handling. Minimal bounded
+protocol parsing needed to identify the Tool is not business execution. Unknown/denied Tool concealment remains
+Common-owned; operational failure cannot masquerade as a successful empty/partial catalog.
+
+Direct alternatives need the owning server-side check, not merely a method Attribute or HTTP middleware. Use
+qualified current caller/target/grant context without borrowing a principal or treating unknown worker identity
+as anonymous. New requests/pages/jobs reauthenticate through existing owners; within the request reuse one Agent
+snapshot without a second nonce transaction. Work already admitted may finish after a later status change.
+Unsupported modes/entries stay unavailable for rollout rather than becoming undocumented bypasses.
+
+TICKET-00072 consumes TASK-00293's human availability without an unrelated Agent dependency. TICKET-00073 must
+consume every applicable registered runtime boundary before rollout; TICKET-00074's eventual owner cleanup removes
+all declarations, explicit registrations and checks before CURRENT absence can justify retirement. No completed
+Feature gate reverse-blocks authentication, scanner, preparation or MCP primitives.
+
+Each slice owns actual package/PostgreSQL and dispatch integration evidence, safe failures, fresh-read/principal
+lifetime checks and `./bin/build`. Controlled native-metadata/operation fixtures prove owned reusable contracts,
+not live product endpoints/Tools; directly inspect actual framework/runtime composition and existing unflagged
+paths. No dummy product Feature, duplicate evaluator/registry, proof-only TASK or parent ceremony is needed.
+The first real capability stays its later owner's choice and full product-path evidence; configuration, tooling,
+migrations and generated files are validated directly, not product-tested as text/wiring. Confirmed bugs require
+a reproducing failing regression before repair. Record exact package/source/lock and fresh versus reused receipts.
+
+Active TASK-00138/TASK-00226 and existing priorities remain unchanged. Two of EPIC-00016's five TICKETs now have
+approved written TASK splits, not runtime acceptance. Thirteen of the map's 24 TICKETs are decomposed;
+**11 remain, TICKET-00072–00082**, alongside older incomplete Harness/managed review planning.
+Next planning operation: `/skill:to-tasks TICKET-00072`.
+No middleware, route, Tool gate, worker, nonce or Feature was enabled by planning. Implementation/worktree choice,
+independent review, publication, enrollment and actual deployment remain separate.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 394 records,
+307 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations. Repetitive Sass deprecations, React-Bootstrap `use client` bundling and >500 kB chunk warnings remain.
+Evidence: `.runs/build/20261012T235119Z-61643`; summary log: `.runs/build/ticket-00071-to-tasks.log`.
+These validate planning and the existing repository, not future middleware, non-Action/Agent enforcement,
+current-authentication/runtime qualification or a live Feature rollout. Independent review and publication
+remain unperformed.

@@ -475,10 +475,43 @@ separate cleanup/deployment authority. No finished UI/runtime/retirement or mana
 these suppliers. Each slice owns affected behavior/contract evidence and the full gate; tooling/configuration are
 qualified directly, not product-tested as text or wiring. Missing support holds the affected path for owner resolution.
 
-All new orders remain unranked and active work unchanged. **Twelve of the map's 24 TICKETs have approved written
-TASK splits; 12 remain, TICKET-00071–00082**, alongside older incomplete Harness/managed review planning.
-One of EPIC-00016's five TICKETs is decomposed, not implemented. Planning ran no scanner/provision/query,
-changed no catalog and enabled no Feature or deployment.
+That split brought the map to twelve approved TASK decompositions and EPIC-00016 to one of five,
+without running a scanner/provision/query, changing a catalog or enabling a Feature/deployment.
+
+The maintainer subsequently approved [TICKET-00071](../tickets/00071-TICKET.md)'s two enforcement paths:
+[TASK-00293](../tasks/00293-TASK.md) guards matched HTTP Actions with current Feature availability after
+TASK-00117 and TASK-00292; [TASK-00294](../tasks/00294-TASK.md) enforces registered checks outside HTTP Actions
+after TASK-00293 and TASK-00245. Both are unranked features, ready behind blockers. Existing first-party trust/
+current-use holds remain transitive through TASK-00245, without delaying human HTTP enforcement.
+
+Inspect final matched FQCN/native method metadata without resolving/constructing Actions. Apply the package
+Feature decision after routing/trusted authentication and before dispatch, retaining ordinary permissions,
+target/request controls, public classification and route/method misses. OFF/ineligible PREVIEW denies with 404;
+positive availability is no authorization grant. No new public exception, Agent-on-JWT route or scheme fallback.
+
+The package rereads Feature and bound Permission ID on every call, including OFF/ON, but the principal is an
+immutable request snapshot. Fresh settings and fresh authority have distinct lifetimes; reuse the Agent provider
+within one request without another nonce, and resolve current authority on later requests/jobs. Unknown/broken/
+malformed/outage states are safe classified errors, not silent OFF/ON, raw diagnostics or a successful empty
+Tool catalog. No stale identity-map/result cache, name-to-ID substitution or retroactive cancellation promise.
+
+Non-Action enforcement uses the existing registration source, Common Tool registry and current caller/target/
+grant boundary. Intersect Feature availability with ordinary Tool authority; filter before pagination/disclosure
+and recheck invocation/qualified continuations before protected validation, restoration/consumption, progress and
+handling. Direct alternatives need real guards; an Attribute, prior page or unknown worker identity is not
+admission. Unsupported paths remain unavailable rather than borrowing credentials or inventing another owner.
+
+TICKET-00072 consumes human availability without an unrelated Agent dependency. TICKET-00073 needs all applicable
+entries covered before rollout; TICKET-00074 later removes all these declarations/registrations/checks under
+separate cleanup/deployment authority. No runtime consumer reverse-blocks its auth/scanner/preparation/MCP supplier.
+Each slice owns affected implementation and actual package/PostgreSQL/framework evidence plus the full gate;
+controlled fixtures are not installed dummy Features/Tools or live-use claims. Tooling/configuration is qualified
+directly, not product-tested as text. The first actual flagged capability remains a later owner choice.
+
+All new orders remain unranked and active work unchanged. **Thirteen of the map's 24 TICKETs have approved written
+TASK splits; 11 remain, TICKET-00072–00082**, alongside older incomplete Harness/managed review planning.
+Two of EPIC-00016's five TICKETs are decomposed, not implemented. Planning enabled no middleware, route, Tool
+gate, worker, nonce, Feature or deployment.
 
 ## Approved EPIC handoff
 
@@ -519,9 +552,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00071` for
-[TICKET-00071](../tickets/00071-TICKET.md), mapping fresh package-backed HTTP and registered non-HTTP availability
-checks under ordinary authorization, then continue this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00072` for
+[TICKET-00072](../tickets/00072-TICKET.md), mapping the complete authenticated Feature catalog and fail-closed
+browser availability, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

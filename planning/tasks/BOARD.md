@@ -202,6 +202,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00288](00288-TASK.md) | Open confirmation links without changing account state | [TICKET-00069 — Confirm email change explicitly and return to login](../tickets/00069-TICKET.md) | ready-for-agent | [TASK-00285](00285-TASK.md), [TASK-00051](00051-TASK.md) | — |
 | — | [TASK-00291](00291-TASK.md) | Provision missing Features atomically through protected operations | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | [TASK-00290](00290-TASK.md), [TASK-00036](00036-TASK.md) | — |
 | — | [TASK-00292](00292-TASK.md) | Inspect fresh candidate preparation against the intended target | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | [TASK-00291](00291-TASK.md) | — |
+| — | [TASK-00293](00293-TASK.md) | Guard matched HTTP Actions with current Feature availability | [TICKET-00071 — Enforce current Feature availability at every registered entry](../tickets/00071-TICKET.md) | ready-for-agent | [TASK-00117](00117-TASK.md), [TASK-00292](00292-TASK.md) | — |
+| — | [TASK-00294](00294-TASK.md) | Enforce registered Feature checks outside HTTP Actions | [TICKET-00071 — Enforce current Feature availability at every registered entry](../tickets/00071-TICKET.md) | ready-for-agent | [TASK-00293](00293-TASK.md), [TASK-00245](00245-TASK.md) | — |
 
 ## Needs Info
 
