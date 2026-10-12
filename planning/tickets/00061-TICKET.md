@@ -72,3 +72,12 @@ Approved as requirement area 3 of EPIC-00014's seven-TICKET split. Requires
 [trusted Harness](../epics/00006-EPIC.md), EPIC-00005's registered context and qualified execution
 isolation where used. [TICKET-00065](00065-TICKET.md) owns real role-use integration; this TICKET owns reusable
 current Agent authentication/authorization, not another Workflow.
+
+Planning handoff from the accepted TICKET-00059/00060 decompositions: allocate this TICKET's actual activation,
+current-use and relevant human/Workflow delegation/target-policy primitives before final Explorer integration.
+Map their precise TASK IDs into [TASK-00231](../tasks/00231-TASK.md), [TASK-00232](../tasks/00232-TASK.md),
+[TASK-00233](../tasks/00233-TASK.md) and [TASK-00241](../tasks/00241-TASK.md) as applicable; those records remain
+`needs-info` for this mapping. Primitive implementations consume TASK-00228–00230 and TASK-00234–00240's real
+participants, not the entire parents or TASK-00241's final integration. Writer/switch/restore acceptance and final
+operational readiness then consume these controls, avoiding a cycle. No TASK for this TICKET has yet been proposed,
+approved or allocated by that coordination handoff.

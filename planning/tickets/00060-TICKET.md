@@ -64,7 +64,14 @@ credential is not an activated or usable Agent until TICKET-00061 validates the 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00234](../tasks/00234-TASK.md) | Enroll protected holders destinations and worker authority | ready-for-agent |
+| [TASK-00235](../tasks/00235-TASK.md) | Protect Agent credentials with independent encryption and key admission | ready-for-agent |
+| [TASK-00236](../tasks/00236-TASK.md) | Stage immutable credentials in the fixed protected sink | ready-for-agent |
+| [TASK-00237](../tasks/00237-TASK.md) | Deliver authorized lifecycle intent and safe original-operation status | ready-for-agent |
+| [TASK-00238](../tasks/00238-TASK.md) | Deliver and reconcile one exact credential attempt | ready-for-agent |
+| [TASK-00239](../tasks/00239-TASK.md) | Schedule finite recovery independently of events and callers | ready-for-agent |
+| [TASK-00240](../tasks/00240-TASK.md) | Maintain original material and hold unsafe key retirement | ready-for-agent |
+| [TASK-00241](../tasks/00241-TASK.md) | Integrate fail-closed lifecycle readiness and operator recovery | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -73,3 +80,36 @@ Approved as requirement area 2 of EPIC-00014's seven-TICKET split. Depends on
 [TICKET-00059](00059-TICKET.md) for operation/cohort persistence and supplies credentials to
 [TICKET-00061](00061-TICKET.md) and authorized status/intent to [TICKET-00063](00063-TICKET.md).
 No worker, sink, credential or provider enrollment is implemented by this record.
+
+The maintainer approved eight dependency-ordered TASK slices:
+[TASK-00234](../tasks/00234-TASK.md) enrolls protected holders/destinations and worker authority;
+[TASK-00235](../tasks/00235-TASK.md) supplies independent encryption and key admission;
+[TASK-00236](../tasks/00236-TASK.md) stages immutable credentials in the fixed sink with receipt lookup/cleanup;
+[TASK-00237](../tasks/00237-TASK.md) delivers authorized lifecycle intent and safe original-operation status;
+[TASK-00238](../tasks/00238-TASK.md) delivers/reconciles one exact attempt;
+[TASK-00239](../tasks/00239-TASK.md) schedules finite recovery independently of events/callers;
+[TASK-00240](../tasks/00240-TASK.md) maintains original material and holds unsafe key retirement; and
+[TASK-00241](../tasks/00241-TASK.md) integrates fail-closed operational readiness and recovery.
+
+TASK-00234–00240 consume persistence/admission primitives, not completion of TICKET-00059. Their concrete
+participants are now linked into TASK-00231–00233's writer/switch/restore prerequisites. TASK-00241 follows
+TASK-00233 and actual TICKET-00061 activation/current-use primitives; it remains `needs-info` until their precise
+TASK IDs are accepted. TASK-00231–00233 retain the same missing TICKET-00061 mapping. No primitive may depend on
+TASK-00241 or the whole TICKET's completion; integrated acceptance follows actual component implementations.
+A component pass cannot advertise positive readiness for an incomplete composition or substitute for real tools,
+independent witness/history and current activation/use evidence.
+
+This split introduces no browser secret route, parallel credential queue, physical key destruction or competing
+Harness/Workflow owner. Human managed Permissions and Team-bound creation stay with TICKET-00063; actual Agent
+HMAC, activation and broker-use controls stay with TICKET-00061. Safe operator enrollment, even when implemented,
+is not a production grant or permission to launch. Orders remain unranked and Board active work is unchanged.
+
+Next planning operation: `/skill:to-tasks TICKET-00061`, mapping its primitive dependencies without parent cycles,
+then continue the remaining map TICKET decompositions. Implementation/worktree choice, independent review,
+publication, merge and live operational effects remain separate.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 341 records,
+254 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations. Repetitive deprecation warnings remain. Evidence: `.runs/build/20261012T160819Z-36426`; summary log:
+`.runs/build/ticket-00060-to-tasks.log`. These are planning/repository checks, not fresh credential, sink, worker,
+activation/use or restoration qualification. Independent review and publication have not been performed.

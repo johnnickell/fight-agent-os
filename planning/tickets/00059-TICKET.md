@@ -91,15 +91,19 @@ The maintainer subsequently approved seven dependency-ordered TASK slices:
 [TASK-00232](../tasks/00232-TASK.md) operates controlled cohort changes and actual old-writer exclusion; and
 [TASK-00233](../tasks/00233-TASK.md) reconciles controlled restoration against independent history and live effects.
 
-TASK-00231–00233 remain `needs-info` until adjacent TICKET-00060/00061 and relevant policy-owner decompositions
-identify their actual destination/key/delegation, sink/worker/recovery and activation/use TASK prerequisites.
-Add precise blocker edges before readiness; do not invent IDs or make primitive implementations depend on this
-entire TICKET's completion. They consume TASK-00228–00230, while later integrated writer/switch/restore acceptance
-consumes their real participants. This preserves a non-circular qualification path without enabling a partial
-composition. TASK order is unranked; the existing Board priorities and active work remain unchanged.
+TICKET-00060's subsequently approved decomposition allocates [TASK-00234](../tasks/00234-TASK.md) through
+[TASK-00240](../tasks/00240-TASK.md) to real enrollment/authority, key, sink, lifecycle, delivery, scheduling and
+maintenance participants. TASK-00231–00233 now have their concrete component blocker edges; they remain
+`needs-info` for TICKET-00061's exact activation/current-use and relevant delegation/target-policy primitives.
+Add those edges before readiness, without inventing IDs or depending on whole-TICKET completion.
+
+Components consume TASK-00228–00230; integrated writer/switch/restore work consumes those components; final
+[TASK-00241](../tasks/00241-TASK.md) follows TASK-00233 and real TICKET-00061 controls. No primitive depends on
+TASK-00241, preserving a non-circular qualification path without enabling a partial composition. All new TASK
+orders remain unranked; existing Board priorities and active work are unchanged.
 
 These records implement nothing and qualify no live operation. Continue map-wide TASK planning with
-[TICKET-00060](00060-TICKET.md), not execution selection or cohort enablement.
+[TICKET-00061](00061-TICKET.md), not execution selection or cohort enablement.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 333 records,
 246 active; `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero violations. Repetitive

@@ -236,4 +236,12 @@
 | [TASK-00231](00231-TASK.md) | Fence every authority-changing writer | needs-info | [TICKET-00059](../tickets/00059-TICKET.md) |
 | [TASK-00232](00232-TASK.md) | Operate controlled cohort changes and exclude old writers | needs-info | [TICKET-00059](../tickets/00059-TICKET.md) |
 | [TASK-00233](00233-TASK.md) | Reconcile controlled restoration without resurrecting authority | needs-info | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00234](00234-TASK.md) | Enroll protected holders destinations and worker authority | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00235](00235-TASK.md) | Protect Agent credentials with independent encryption and key admission | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00236](00236-TASK.md) | Stage immutable credentials in the fixed protected sink | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00237](00237-TASK.md) | Deliver authorized lifecycle intent and safe original-operation status | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00238](00238-TASK.md) | Deliver and reconcile one exact credential attempt | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00239](00239-TASK.md) | Schedule finite recovery independently of events and callers | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00240](00240-TASK.md) | Maintain original material and hold unsafe key retirement | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00241](00241-TASK.md) | Integrate fail-closed lifecycle readiness and operator recovery | needs-info | [TICKET-00060](../tickets/00060-TICKET.md) |
 <!-- /planning:records -->
