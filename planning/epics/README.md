@@ -17,4 +17,5 @@
 | [EPIC-00012](00012-EPIC.md) | Introduce TASK Triage and the direct hotfix route | ready-for-agent | — |
 | [EPIC-00013](00013-EPIC.md) | Support release TASKs and project-specific release Workflows | ready-for-agent | — |
 | [EPIC-00014](00014-EPIC.md) | Deliver the working managed Agent team | ready-for-agent | — |
+| [EPIC-00015](00015-EPIC.md) | Deliver mailbox-confirmed human email change | ready-for-agent | — |
 <!-- /planning:records -->

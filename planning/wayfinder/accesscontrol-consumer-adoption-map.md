@@ -74,7 +74,7 @@ projections, bounded effects and transaction/recovery evidence; neither a UI nor
 authorization. Registered checks, current-code retirement evidence and separate action authorization must qualify
 Feature activation and removal; no fake Feature is needed to render the screen.
 
-**Approved destinations (only the first EPIC written):** the maintainer explicitly combined WF-033's Agent
+**Approved destinations (first two EPICs written):** the maintainer explicitly combined WF-033's Agent
 operation/credential and WF-035's Team/assignment destinations in
 [EPIC-00014 — Deliver the working managed Agent team](../epics/00014-EPIC.md), superseding their original
 separate-EPIC handoff and the assumption that Explorer use precedes Teams. The first real Explorer must belong
@@ -88,9 +88,13 @@ Repository default/alternate **whole-TASK** intake and same-Team delegation are 
 managed Team, Agent and template administration Permissions are initially granted only to Super Admin; future
 scoped administrators need separate approval. A **separate later linked EPIC destination** still owns human-edited,
 AI-assisted custom-template authoring, not the eight managed templates required by EPIC-00014. WF-032
-approved **two other new linked EPICs** for human email change and
-Feature Flags lifecycle after EPIC-00004's foundation, without rewriting its historical deferral or
-TICKET-00030/00031. WF-034 has accepted a **separate linked Agent OS reference-consumer handoff EPIC**:
+approved **two other new linked EPICs** after EPIC-00004's foundation. The human email-change destination
+is now [EPIC-00015](../epics/00015-EPIC.md); Feature Flags remains unwritten. Neither retroactively rewrites
+EPIC-00004's historical deferral or TICKET-00030/00031. In the approved EPIC-00015 grill, the maintainer
+specified one purpose-bound new-mailbox secret used on the non-mutating landing request and again on explicit
+confirmation; afterwards login uses the new address and existing password, or a **separate** password reset.
+The old mailbox receives secret-free notices on request and completion, including administrator-initiated
+changes. No request, confirmation, notice, provider or UI is live merely because this EPIC was written. WF-034 has accepted a **separate linked Agent OS reference-consumer handoff EPIC**:
 the maintainer **superseded staged external guidance** with one post-qualification v0.5.0 journey snapshot,
 including suitable UI, backend references, working protected Swagger/OpenAPI and optional React suggestions for
 the five starter maintainers; starters may adapt freely. Every supported public v0.5.0 use case must be
@@ -139,12 +143,13 @@ WF-032 + WF-033 + WF-034 + WF-035 → approved bounded EPIC handoff(s)
 ## Frontier
 
 No open Wayfinder decision remains. This map is **Closed**; its combined first destination produced
-[EPIC-00014](../epics/00014-EPIC.md). Other approved EPIC destinations below remain unwritten. Continue the
+[EPIC-00014](../epics/00014-EPIC.md) and its email-change destination produced
+[EPIC-00015](../epics/00015-EPIC.md). Three approved EPIC destinations below remain unwritten. Continue the
 map-wide **EPIC handoff phase**, not TICKET/TASK decomposition or execution.
 
 ## Approved EPIC handoff
 
-Destination 1 was written through **this one grill**; each remaining destination requires its own later grill.
+Destinations 1 and 2 were written through **separate grills**; each remaining destination requires its own grill.
 Consume its linked decision and the [capability matrix](research/WF-032-accesscontrol-consumer-capability-matrix.md)
 without re-deciding settled boundaries. This is an authored planning order, not a new implementation priority or
 a release gate for an unrelated starter:
@@ -157,10 +162,11 @@ a release gate for an unrelated starter:
    every one of the eight roles doing real authorized work through its existing owned product path; Team/Triage
    Workflow owners retain their implementations, and their historical completion labels are not live proof.
    Neither package fixtures nor storage-only tests qualify actual use.
-2. **Human email-address change** —
+2. **[EPIC-00015 — Deliver mailbox-confirmed human email change](../epics/00015-EPIC.md)** —
    [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md). Self-service and guarded
-   authorized cross-user request/cancel/confirmation, provider recovery and protected Permission, linked after
-   [EPIC-00004](../epics/00004-EPIC.md) without silently removing its historical deferral.
+   cross-user request/cancel, new-mailbox confirmation with non-mutating landing and explicit one-time submit,
+   safe old-mailbox notices at request/completion, real provider/recovery and a distinct protected Permission.
+   Linked after [EPIC-00004](../epics/00004-EPIC.md) without silently removing its historical deferral.
 3. **Feature Flags lifecycle and authorized management UI** —
    [WF-032](tickets/WF-032-reconcile-accesscontrol-coverage-and-accepted-scope.md). Actual declaration,
    provisioning, preparation, registered runtime checks and cautious activation/removal; no invented Feature.
@@ -176,7 +182,7 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next EPIC interview:** destination 2, human email-address change. Each grill writes **one** approved EPIC;
+**Next EPIC interview:** destination 3, Feature Flags lifecycle and authorized management UI. Each grill writes **one** approved EPIC;
 return here for remaining handoffs before any map-wide TICKET decomposition. EPIC publication, independent review, hosted
 checks, and starter maintenance remain separate from this decision map.
 
