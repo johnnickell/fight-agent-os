@@ -19,4 +19,5 @@
 | [EPIC-00014](00014-EPIC.md) | Deliver the working managed Agent team | ready-for-agent | — |
 | [EPIC-00015](00015-EPIC.md) | Deliver mailbox-confirmed human email change | ready-for-agent | — |
 | [EPIC-00016](00016-EPIC.md) | Deliver usable Feature Flags management and enforcement | ready-for-agent | — |
+| [EPIC-00017](00017-EPIC.md) | Author versioned Agent templates with human-approved AI assistance | ready-for-agent | — |
 <!-- /planning:records -->
