@@ -78,3 +78,12 @@ Approved as area 3 of EPIC-00015's four-TICKET split. Builds on
 confirmation link. Package-owned durable state is protected by
 [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md). This record enrolled no provider or
 scheduler and delivered no credential.
+
+TICKET-00066's approved [TASK-00276](../tasks/00276-TASK.md)/[TASK-00277](../tasks/00277-TASK.md) now own
+informational-notice dispatch and actual operational qualification, reusing TASK-00040's mail capability and
+TASK-00024's existing facilities where appropriate. This TICKET may consume qualified shared transport/provider/
+schedule primitives with attributable evidence, but neither their complete notice journey nor a separate notice
+queue becomes package credential authority. Identify exact shared primitive mappings during this decomposition;
+do not introduce reciprocal whole-TICKET dependencies or require final request/confirmation UI as a supplier.
+Existing provider/schedule holds remain and changed integrations need fresh affected evidence. TASK-00273's notice
+contract amendment must preserve package credential behavior and be requalified here where relevant.

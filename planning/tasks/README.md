@@ -275,4 +275,9 @@
 | [TASK-00270](00270-TASK.md) | Complete the named Hotfix Engineer's controlled handoff | ready-for-agent | [TICKET-00065](../tickets/00065-TICKET.md) |
 | [TASK-00271](00271-TASK.md) | Integrate managed Agents with a qualified library release | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
 | [TASK-00272](00272-TASK.md) | Integrate managed Agents with a qualified application release | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00273](00273-TASK.md) | Qualify supported atomic notice coordination | needs-info | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00274](00274-TASK.md) | Record an old-mailbox notice with each accepted request | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00275](00275-TASK.md) | Record completion notices without losing the original recipient | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00276](00276-TASK.md) | Dispatch one notice with protected recoverable outcomes | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00277](00277-TASK.md) | Operate scheduled notice recovery and safe inspection | needs-info | [TICKET-00066](../tickets/00066-TICKET.md) |
 <!-- /planning:records -->

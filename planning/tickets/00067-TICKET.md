@@ -82,3 +82,15 @@ Approved as area 2 of EPIC-00015's four-TICKET split. Requires
 [EPIC-00004](../epics/00004-EPIC.md)'s active browser authentication/current principal and
 [TICKET-00030](00030-TICKET.md)'s user detail without changing their ownership. Extends the explicit WF-032
 approval, not a retroactive EPIC-00004 rewrite. No permission grant or request endpoint was created here.
+
+TICKET-00066's approved split supplies [TASK-00274](../tasks/00274-TASK.md)'s atomic request-notice capture
+behind [TASK-00273](../tasks/00273-TASK.md)'s unresolved supported public contract, and
+[TASK-00277](../tasks/00277-TASK.md)'s operational notice readiness. Map those concrete prerequisites to this
+TICKET's later exposure TASKs alongside the still-unallocated TICKET-00068 credential primitives. Current self/
+admin authority, the protected Permission/callback, safe pending status and cancellation remain owned here;
+notice implementation does not replace `UnavailableEmailChangeAdministration` or make arbitrary callers trusted.
+Keep early authority primitives below final browser integration, without reverse-blocking notice capture or
+operation on the finished user journey. Provider delay does not erase accepted intent, while lack of a supported
+atomic intent seam blocks request exposure. This TICKET still needs its own approved TASK decomposition.
+
+Next planning operation: `/skill:to-tasks TICKET-00067`; no implementation or live effects are authorized.

@@ -316,9 +316,38 @@ stay unaccepted, and meaningful real QA cannot be replaced by all-N/A paperwork.
 role outcomes and the supporting Triage journey to actual owning evidence, without another parent acceptance gate.
 
 All seven EPIC-00014 requirement TICKETs now have approved written TASK decompositions, not completed runtime.
-All new orders remain unranked and active work unchanged. **Seven of the map's 24 TICKETs have approved written
-TASK splits; 17 remain, TICKET-00066–00082**, alongside older incomplete Harness/managed review planning.
+That split brought the map to seven approved written TASK decompositions, leaving 17 at that checkpoint.
 No Agent, grant, conversation, Workflow, review, PR, release, deployment or operational evidence was created.
+
+The maintainer subsequently approved [TICKET-00066](../tickets/00066-TICKET.md)'s five slices:
+[TASK-00273](../tasks/00273-TASK.md) qualifies supported atomic old-mailbox notice coordination;
+[TASK-00274](../tasks/00274-TASK.md) records accepted request notices;
+[TASK-00275](../tasks/00275-TASK.md) records completion notices bound to the original old recipient;
+[TASK-00276](../tasks/00276-TASK.md) dispatches one protected exact notice; and
+[TASK-00277](../tasks/00277-TASK.md) operates scheduled recovery, safe inspection and retention.
+
+TASK-00273 remains `needs-info` for the supported package seam/owner resolution and any required tagged release.
+The inspected request/confirmation commit before their events, which cannot establish the required atomic
+old-recipient/generation handoff. No after-commit subscriber, nested transaction, audit side effect or vendor
+patch may bypass this hold. Required state/audit/notice writes commit or roll back together; post-commit
+publication failure is not evidence of rollback or authority to replay a mutation.
+
+TASK-00276 consumes TASK-00274 and TASK-00040's shared mail capability, independently of TASK-00275.
+TASK-00277 consumes both captures through TASK-00275, dispatch through TASK-00276 and TASK-00024's existing
+facilities; it retains `needs-info` for real provider/schedule, protected target and retention/failure-policy
+enrollment. These informational effects are not a second credential queue. Cancellation/credential expiry
+cannot erase accepted notices, and request delivery cannot purge an original binding still needed by confirmation.
+Finite recovery preserves original identities; provider acceptance is not mailbox receipt or exactly-once proof.
+
+TICKET-00067 will consume request capture/readiness and retain self/admin entry authority; TICKET-00069 consumes
+completion capture/readiness and retains explicit confirmation/login return. Both still need TICKET-00068's
+credential path. Reuse qualified mail/schedule primitives without merging notice and credential lifecycle or
+introducing whole-parent cycles. Final browser journeys are consumers, not prerequisites of notice primitives.
+Missing production authority or a real provider never becomes success from a fixture, catcher or historical receipt.
+
+All new orders remain unranked and active work unchanged. **Eight of the map's 24 TICKETs have approved written
+TASK splits; 16 remain, TICKET-00067–00082**, alongside older incomplete Harness/managed review planning.
+No email change, notice, provider/schedule enrollment, upstream edit or operational qualification was performed.
 
 ## Approved EPIC handoff
 
@@ -359,9 +388,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00066` for
-[TICKET-00066](../tickets/00066-TICKET.md), preserving the supported atomic old-mailbox notice seam before
-email-change exposure, then continue this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00067` for
+[TICKET-00067](../tickets/00067-TICKET.md), preserving current self/admin authority and qualified notice/new-mail
+delivery gates before request exposure, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

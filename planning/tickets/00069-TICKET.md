@@ -85,3 +85,13 @@ credential, then returns to [TICKET-00017](00017-TICKET.md)'s login or
 [ADR 0003](../adr/0003-browser-authentication-security-profile.md) browser profile governs surviving
 sessions and client authority. Neither the safe landing nor the product confirmation was implemented by this
 planning record.
+
+TICKET-00066's approved [TASK-00275](../tasks/00275-TASK.md) supplies atomic completion-notice capture,
+including TASK-00274's original-recipient binding and TASK-00273's still-unresolved supported contract;
+[TASK-00277](../tasks/00277-TASK.md) supplies qualified operational notice recovery. Map those concrete
+prerequisites alongside TICKET-00068's future credential primitives when decomposing this TICKET. Its safe GET,
+explicit submit, public credential transport, session/client invalidation and login return remain owned here.
+The lower-level notice primitives do not depend on this completed browser journey. Actual provider delay never
+postpones committed session revocation; failed atomic notice persistence prevents the whole confirmation commit.
+A post-commit exception or uncertain acknowledgement is not proof of rollback or permission for automatic replay.
+No confirmation TASK is allocated or exposure enabled by this coordination mapping.

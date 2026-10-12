@@ -189,6 +189,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00262](00262-TASK.md) | Recommend fair default or alternate-Team intake | [TICKET-00064 — Select eligible Teams and Agents for authorized work](../tickets/00064-TICKET.md) | ready-for-agent | [TASK-00261](00261-TASK.md) | — |
 | — | [TASK-00265](00265-TASK.md) | Operate withdrawable Pending start through existing entry paths | [TICKET-00064 — Select eligible Teams and Agents for authorized work](../tickets/00064-TICKET.md) | ready-for-agent | [TASK-00263](00263-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00204](00204-TASK.md), [TASK-00205](00205-TASK.md), [TASK-00241](00241-TASK.md) | — |
 | — | [TASK-00270](00270-TASK.md) | Complete the named Hotfix Engineer's controlled handoff | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | ready-for-agent | [TASK-00207](00207-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00241](00241-TASK.md) | — |
+| — | [TASK-00274](00274-TASK.md) | Record an old-mailbox notice with each accepted request | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | ready-for-agent | [TASK-00273](00273-TASK.md) | — |
+| — | [TASK-00275](00275-TASK.md) | Record completion notices without losing the original recipient | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | ready-for-agent | [TASK-00274](00274-TASK.md) | — |
+| — | [TASK-00276](00276-TASK.md) | Dispatch one notice with protected recoverable outcomes | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | ready-for-agent | [TASK-00274](00274-TASK.md), [TASK-00040](00040-TASK.md) | — |
 
 ## Needs Info
 
@@ -223,6 +226,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00269](00269-TASK.md) | Integrate Release Manager PR publication and human handoff | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00268](00268-TASK.md) | — |
 | — | [TASK-00271](00271-TASK.md) | Integrate managed Agents with a qualified library release | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00221](00221-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00241](00241-TASK.md) | — |
 | — | [TASK-00272](00272-TASK.md) | Integrate managed Agents with a qualified application release | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00225](00225-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00241](00241-TASK.md) | — |
+| — | [TASK-00273](00273-TASK.md) | Qualify supported atomic notice coordination | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | needs-info | — | — |
+| — | [TASK-00277](00277-TASK.md) | Operate scheduled notice recovery and safe inspection | [TICKET-00066 — Durably notify the old mailbox of email-change request and completion](../tickets/00066-TICKET.md) | needs-info | [TASK-00275](00275-TASK.md), [TASK-00276](00276-TASK.md) | — |
 
 ## Human Action
 
