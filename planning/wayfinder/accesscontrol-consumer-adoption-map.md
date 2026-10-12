@@ -173,6 +173,9 @@ No open Wayfinder decision remains. This map is **Closed**; its combined first d
 [EPIC-00017](../epics/00017-EPIC.md), and its final reference-consumer handoff produced
 [EPIC-00018](../epics/00018-EPIC.md). All five approved EPIC destinations are now written. Continue the
 map-wide **TICKET decomposition phase**, not implementation TASK decomposition or execution.
+[EPIC-00014](../epics/00014-EPIC.md)'s seven requirement
+[TICKETs](../epics/00014-EPIC.md#tickets) were approved and written; destinations 2–5 still need TICKET
+decomposition. This does not create TASKs or accept any role as working.
 
 ## Approved EPIC handoff
 
@@ -213,7 +216,7 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** decompose [EPIC-00014](../epics/00014-EPIC.md) into TICKETs, then continue
+**Next planning operation:** decompose [EPIC-00015](../epics/00015-EPIC.md) into TICKETs, then continue
 across the map's other approved EPICs before creating implementation TASKs. EPIC publication, independent
 review, hosted checks and starter maintenance remain separate from this decision map.
 
