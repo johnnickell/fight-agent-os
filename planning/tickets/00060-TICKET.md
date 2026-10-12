@@ -71,7 +71,7 @@ credential is not an activated or usable Agent until TICKET-00061 validates the 
 | [TASK-00238](../tasks/00238-TASK.md) | Deliver and reconcile one exact credential attempt | ready-for-agent |
 | [TASK-00239](../tasks/00239-TASK.md) | Schedule finite recovery independently of events and callers | ready-for-agent |
 | [TASK-00240](../tasks/00240-TASK.md) | Maintain original material and hold unsafe key retirement | ready-for-agent |
-| [TASK-00241](../tasks/00241-TASK.md) | Integrate fail-closed lifecycle readiness and operator recovery | needs-info |
+| [TASK-00241](../tasks/00241-TASK.md) | Integrate fail-closed lifecycle readiness and operator recovery | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -93,9 +93,11 @@ The maintainer approved eight dependency-ordered TASK slices:
 
 TASK-00234–00240 consume persistence/admission primitives, not completion of TICKET-00059. Their concrete
 participants are now linked into TASK-00231–00233's writer/switch/restore prerequisites. TASK-00241 follows
-TASK-00233 and actual TICKET-00061 activation/current-use primitives; it remains `needs-info` until their precise
-TASK IDs are accepted. TASK-00231–00233 retain the same missing TICKET-00061 mapping. No primitive may depend on
-TASK-00241 or the whole TICKET's completion; integrated acceptance follows actual component implementations.
+TASK-00233 and TICKET-00061's now-accepted [TASK-00242](../tasks/00242-TASK.md) through
+[TASK-00245](../tasks/00245-TASK.md). TASK-00231–00233 and TASK-00241 are now `ready-for-agent` behind those
+explicit unfinished blockers; TASK-00244/00245's real Team/Harness/host/origin prerequisites remain `needs-info`.
+This resolves direct mapping, not qualification. No primitive may depend on TASK-00241 or the whole TICKET's
+completion; integrated acceptance follows actual components, and TASK-00247's Explorer integration follows it.
 A component pass cannot advertise positive readiness for an incomplete composition or substitute for real tools,
 independent witness/history and current activation/use evidence.
 
@@ -104,7 +106,7 @@ Harness/Workflow owner. Human managed Permissions and Team-bound creation stay w
 HMAC, activation and broker-use controls stay with TICKET-00061. Safe operator enrollment, even when implemented,
 is not a production grant or permission to launch. Orders remain unranked and Board active work is unchanged.
 
-Next planning operation: `/skill:to-tasks TICKET-00061`, mapping its primitive dependencies without parent cycles,
+Next planning operation: `/skill:to-tasks TICKET-00062`, mapping its Team primitives without parent cycles,
 then continue the remaining map TICKET decompositions. Implementation/worktree choice, independent review,
 publication, merge and live operational effects remain separate.
 

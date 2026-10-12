@@ -62,7 +62,12 @@ Tool input to models, child environments, UI or audit.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00242](../tasks/00242-TASK.md) | Authenticate signed Agent requests with atomic replay protection | ready-for-agent |
+| [TASK-00243](../tasks/00243-TASK.md) | Activate only the exact currently authorized delivered credential | ready-for-agent |
+| [TASK-00244](../tasks/00244-TASK.md) | Authorize and broker each bounded Agent use | needs-info |
+| [TASK-00245](../tasks/00245-TASK.md) | Enforce current authority throughout first-party MCP discovery and invocation | needs-info |
+| [TASK-00246](../tasks/00246-TASK.md) | Deliver independently authorized self-profile read and rename Tools | ready-for-agent |
+| [TASK-00247](../tasks/00247-TASK.md) | Connect manual Explorer sessions to authenticated scoped tools | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -73,11 +78,40 @@ Approved as requirement area 3 of EPIC-00014's seven-TICKET split. Requires
 isolation where used. [TICKET-00065](00065-TICKET.md) owns real role-use integration; this TICKET owns reusable
 current Agent authentication/authorization, not another Workflow.
 
-Planning handoff from the accepted TICKET-00059/00060 decompositions: allocate this TICKET's actual activation,
-current-use and relevant human/Workflow delegation/target-policy primitives before final Explorer integration.
-Map their precise TASK IDs into [TASK-00231](../tasks/00231-TASK.md), [TASK-00232](../tasks/00232-TASK.md),
-[TASK-00233](../tasks/00233-TASK.md) and [TASK-00241](../tasks/00241-TASK.md) as applicable; those records remain
-`needs-info` for this mapping. Primitive implementations consume TASK-00228–00230 and TASK-00234–00240's real
-participants, not the entire parents or TASK-00241's final integration. Writer/switch/restore acceptance and final
-operational readiness then consume these controls, avoiding a cycle. No TASK for this TICKET has yet been proposed,
-approved or allocated by that coordination handoff.
+The maintainer approved six dependency-ordered TASK slices:
+[TASK-00242](../tasks/00242-TASK.md) authenticates signed requests with atomic replay protection;
+[TASK-00243](../tasks/00243-TASK.md) activates only the exact currently authorized delivered credential;
+[TASK-00244](../tasks/00244-TASK.md) authorizes/brokers each bounded use;
+[TASK-00245](../tasks/00245-TASK.md) enforces current first-party MCP discovery/invocation authority;
+[TASK-00246](../tasks/00246-TASK.md) delivers separately authorized self-profile read/rename; and
+[TASK-00247](../tasks/00247-TASK.md) connects real manual Explorer sessions to authenticated scoped tools.
+
+TASK-00242–00245 are now linked into TASK-00231–00233 and TASK-00241, directly or through explicit dependency
+chains. Those four existing TASKs become `ready-for-agent` only behind their recorded unfinished blockers; this
+resolves their direct TICKET-00061 mapping, not implementation or runtime qualification. TASK-00244/00245 retain
+`needs-info` for actual Team/Harness/host and first-party origin prerequisites; TASK-00247 additionally needs
+accepted named-Agent, managed-template and real manual-session/provider TASKs. No missing owner is represented
+by a fabricated ID or a passing fixture. These holds still block the integrated qualification path.
+
+The dependency direction is persistence/credential primitives → authentication/activation/current-use components
+→ integrated writer/switch/restore qualification → TASK-00241 operational readiness → TASK-00247 manual Explorer
+integration. Neither Team/Harness primitives nor TASK-00242–00245 may depend on final Explorer work or whole-parent
+completion. TICKET-00062/00063 retain Team and named-Agent creation; TICKET-00065 consumes the real Explorer
+outcome/evidence without another implementation or ceremonial run. TASK-00171 now explicitly consumes TASK-00245
+and retains judgment endpoint/Tool and Pi caller integration, with no second MCP server or origin registry.
+
+Package principal snapshots remain request-scoped: every later page/invocation/request resolves fresh authority,
+without claiming retroactive cancellation of already-admitted work. Self-profile Permission definitions are an
+explicit complete-policy extension with stable generated identities, not implicit grants or a silent replacement
+of TASK-00036's original catalog. Browser JWT and Agent HMAC stay separate. Planning changes no runtime behavior,
+creates no Agent/credential/session/grant and leaves all new TASK orders unranked and active Board work unchanged.
+
+Next planning operation: `/skill:to-tasks TICKET-00062`, mapping its Team primitives into TASK-00244/00247 without
+parent cycles; then continue the remaining map TICKET decompositions. Worktree selection, implementation, real
+qualification, independent review, publication and operational enrollment remain separately authorized.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 347 records,
+260 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations. Repetitive deprecation warnings remain. Evidence: `.runs/build/20261012T165711Z-38536`; summary log:
+`.runs/build/ticket-00061-to-tasks.log`. These are planning/repository checks, not fresh Agent authentication,
+activation, broker/MCP, restoration or real Explorer evidence. Independent review and publication remain unperformed.

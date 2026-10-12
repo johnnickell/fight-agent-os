@@ -69,9 +69,9 @@ Admin UI access is not admission. Actor/target/delegation checks remain mandator
 | [TASK-00228](../tasks/00228-TASK.md) | Enforce shared cohort admission | ready-for-agent |
 | [TASK-00229](../tasks/00229-TASK.md) | Persist correlated issuance and credential retirement | ready-for-agent |
 | [TASK-00230](../tasks/00230-TASK.md) | Persist recoverable delivery and maintenance state | ready-for-agent |
-| [TASK-00231](../tasks/00231-TASK.md) | Fence every authority-changing writer | needs-info |
-| [TASK-00232](../tasks/00232-TASK.md) | Operate controlled cohort changes and exclude old writers | needs-info |
-| [TASK-00233](../tasks/00233-TASK.md) | Reconcile controlled restoration without resurrecting authority | needs-info |
+| [TASK-00231](../tasks/00231-TASK.md) | Fence every authority-changing writer | ready-for-agent |
+| [TASK-00232](../tasks/00232-TASK.md) | Operate controlled cohort changes and exclude old writers | ready-for-agent |
+| [TASK-00233](../tasks/00233-TASK.md) | Reconcile controlled restoration without resurrecting authority | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -93,9 +93,10 @@ The maintainer subsequently approved seven dependency-ordered TASK slices:
 
 TICKET-00060's subsequently approved decomposition allocates [TASK-00234](../tasks/00234-TASK.md) through
 [TASK-00240](../tasks/00240-TASK.md) to real enrollment/authority, key, sink, lifecycle, delivery, scheduling and
-maintenance participants. TASK-00231–00233 now have their concrete component blocker edges; they remain
-`needs-info` for TICKET-00061's exact activation/current-use and relevant delegation/target-policy primitives.
-Add those edges before readiness, without inventing IDs or depending on whole-TICKET completion.
+maintenance participants. TICKET-00061's accepted [TASK-00242](../tasks/00242-TASK.md) through
+[TASK-00245](../tasks/00245-TASK.md) now supply the exact authentication/activation/current-use and protected
+entry prerequisites. TASK-00231–00233 are `ready-for-agent` behind their recorded blockers, not implemented or
+qualified; TASK-00244/00245's remaining real Team/Harness/host/origin holds still block them transitively.
 
 Components consume TASK-00228–00230; integrated writer/switch/restore work consumes those components; final
 [TASK-00241](../tasks/00241-TASK.md) follows TASK-00233 and real TICKET-00061 controls. No primitive depends on
@@ -103,7 +104,7 @@ TASK-00241, preserving a non-circular qualification path without enabling a part
 orders remain unranked; existing Board priorities and active work are unchanged.
 
 These records implement nothing and qualify no live operation. Continue map-wide TASK planning with
-[TICKET-00061](00061-TICKET.md), not execution selection or cohort enablement.
+[TICKET-00062](00062-TICKET.md), not execution selection or cohort enablement.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 333 records,
 246 active; `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero violations. Repetitive

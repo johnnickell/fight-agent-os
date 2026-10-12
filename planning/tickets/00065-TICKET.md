@@ -86,3 +86,8 @@ corresponding [EPIC-00005](../epics/00005-EPIC.md), [EPIC-00006](../epics/00006-
 [EPIC-00012](../epics/00012-EPIC.md) and [EPIC-00013](../epics/00013-EPIC.md) owned journeys. Integration
 is the responsibility here; their existing implementation ownership is not displaced. No real role use was
 performed during this requirement decomposition.
+
+TICKET-00061's approved [TASK-00247](../tasks/00247-TASK.md) owns the authenticated manual Explorer integration
+and its real bounded source-cited use. This TICKET consumes that outcome with actual provenance for its Explorer
+role acceptance rather than creating another Explorer implementation, dummy identity or ceremonial duplicate run.
+The other roles and their existing Workflow owners remain unchanged; TASK-00247 is not full Team acceptance.

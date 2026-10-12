@@ -233,9 +233,9 @@
 | [TASK-00228](00228-TASK.md) | Enforce shared cohort admission | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
 | [TASK-00229](00229-TASK.md) | Persist correlated issuance and credential retirement | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
 | [TASK-00230](00230-TASK.md) | Persist recoverable delivery and maintenance state | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
-| [TASK-00231](00231-TASK.md) | Fence every authority-changing writer | needs-info | [TICKET-00059](../tickets/00059-TICKET.md) |
-| [TASK-00232](00232-TASK.md) | Operate controlled cohort changes and exclude old writers | needs-info | [TICKET-00059](../tickets/00059-TICKET.md) |
-| [TASK-00233](00233-TASK.md) | Reconcile controlled restoration without resurrecting authority | needs-info | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00231](00231-TASK.md) | Fence every authority-changing writer | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00232](00232-TASK.md) | Operate controlled cohort changes and exclude old writers | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00233](00233-TASK.md) | Reconcile controlled restoration without resurrecting authority | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
 | [TASK-00234](00234-TASK.md) | Enroll protected holders destinations and worker authority | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
 | [TASK-00235](00235-TASK.md) | Protect Agent credentials with independent encryption and key admission | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
 | [TASK-00236](00236-TASK.md) | Stage immutable credentials in the fixed protected sink | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
@@ -243,5 +243,11 @@
 | [TASK-00238](00238-TASK.md) | Deliver and reconcile one exact credential attempt | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
 | [TASK-00239](00239-TASK.md) | Schedule finite recovery independently of events and callers | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
 | [TASK-00240](00240-TASK.md) | Maintain original material and hold unsafe key retirement | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
-| [TASK-00241](00241-TASK.md) | Integrate fail-closed lifecycle readiness and operator recovery | needs-info | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00241](00241-TASK.md) | Integrate fail-closed lifecycle readiness and operator recovery | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00242](00242-TASK.md) | Authenticate signed Agent requests with atomic replay protection | ready-for-agent | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00243](00243-TASK.md) | Activate only the exact currently authorized delivered credential | ready-for-agent | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00244](00244-TASK.md) | Authorize and broker each bounded Agent use | needs-info | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00245](00245-TASK.md) | Enforce current authority throughout first-party MCP discovery and invocation | needs-info | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00246](00246-TASK.md) | Deliver independently authorized self-profile read and rename Tools | ready-for-agent | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00247](00247-TASK.md) | Connect manual Explorer sessions to authenticated scoped tools | needs-info | [TICKET-00061](../tickets/00061-TICKET.md) |
 <!-- /planning:records -->

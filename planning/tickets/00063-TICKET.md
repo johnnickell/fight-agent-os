@@ -77,3 +77,9 @@ operation/lifecycle, [TICKET-00062](00062-TICKET.md)'s Team and
 [TICKET-00061](00061-TICKET.md)'s live authorization before calling an Agent usable. Preserve
 [TICKET-00034](00034-TICKET.md)'s original role ownership and [EPIC-00017](../epics/00017-EPIC.md)'s later
 human-edited template publication/drift actions. This planning record creates no Agent or credential.
+
+TICKET-00061's accepted [TASK-00247](../tasks/00247-TASK.md) consumes this TICKET's actual named Team-bound Agent
+creation and reviewed-template integration. Map its precise primitive TASK dependencies during decomposition;
+creation consumes TASK-00242–00245's reusable controls and qualified lifecycle where required, not the final
+Explorer run. Do not make an Agent's creation depend on that Agent already performing the acceptance journey.
+No TASK split for this TICKET has been approved by this coordination note.

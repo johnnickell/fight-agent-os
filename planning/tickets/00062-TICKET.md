@@ -71,3 +71,10 @@ Approved as requirement area 4 of EPIC-00014's seven-TICKET split. Reuses [EPIC-
 registered Repository identities and [WF-035](../wayfinder/tickets/WF-035-define-project-teams-and-agent-selection.md).
 Supplies membership to [TICKET-00063](00063-TICKET.md) and the selector in [TICKET-00064](00064-TICKET.md);
 no Repository grant, Team, Agent or association was created in planning.
+
+TICKET-00061's accepted decomposition requires this TICKET's actual Team/Repository/roster authority primitives
+in [TASK-00244](../tasks/00244-TASK.md) and the real Team-assigned Explorer path in
+[TASK-00247](../tasks/00247-TASK.md). Allocate precise primitive TASK blockers during decomposition. Keep those
+primitives independent of final Explorer integration and whole-TICKET operational acceptance; separate core
+association/authority capability from later Agent UI/full journey integration as needed to avoid a dependency cycle.
+No TASK for this TICKET is created or approved by this coordination note.

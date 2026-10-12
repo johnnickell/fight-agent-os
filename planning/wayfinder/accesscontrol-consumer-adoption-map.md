@@ -193,11 +193,17 @@ All 24 requirements ([TICKET-00059](../tickets/00059-TICKET.md) through
 [TASK-00227](../tasks/00227-TASK.md) through [TASK-00233](../tasks/00233-TASK.md).
 [TICKET-00060](../tickets/00060-TICKET.md)'s eight-TASK split is approved and written as
 [TASK-00234](../tasks/00234-TASK.md) through [TASK-00241](../tasks/00241-TASK.md). Its concrete authority/key/sink/
-lifecycle/worker/maintenance components are now linked into TASK-00231–00233. Those three and TASK-00241 retain
-`needs-info` for TICKET-00061's exact activation/current-use and relevant delegation/target-policy primitives.
-Components consume early persistence/admission work; writer/switch/restore acceptance consumes those components;
-TASK-00241 follows restoration and real use controls, without whole-parent cycles or premature enablement.
-The other 22 TICKETs still need accepted TASK decomposition.
+lifecycle/worker/maintenance components are linked into TASK-00231–00233.
+[TICKET-00061](../tickets/00061-TICKET.md)'s six-TASK split is also approved and written as
+[TASK-00242](../tasks/00242-TASK.md) through [TASK-00247](../tasks/00247-TASK.md). Its authentication/activation/
+current-use and first-party MCP components now supply the exact TICKET-00061 blockers for TASK-00231–00233 and
+TASK-00241. Those existing TASKs are `ready-for-agent` behind unfinished blockers, not implemented or qualified.
+TASK-00244/00245 retain `needs-info` for actual Team/Harness/host/origin owners; TASK-00247 also needs actual named
+Agent/template/manual-session/provider prerequisites. Components consume early persistence/admission work;
+writer/switch/restore acceptance consumes components; TASK-00241 follows that qualification; TASK-00247's real
+Explorer integration follows operational readiness. No whole-parent cycle or premature enablement is introduced.
+TASK-00171 consumes the shared MCP boundary while retaining judgment integration; TICKET-00065 consumes real
+Explorer evidence without a duplicate engine or run. The other 21 TICKETs still need accepted TASK decomposition.
 No working product journey, live consumer qualification or published reference bundle follows from these records.
 
 ## Approved EPIC handoff
@@ -239,9 +245,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00061` for
-[TICKET-00061](../tickets/00061-TICKET.md), mapping its actual primitive dependencies into TASK-00231–00233 and
-TASK-00241 without whole-TICKET cycles, then continue across this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00062` for
+[TICKET-00062](../tickets/00062-TICKET.md), mapping its actual Team primitives into TASK-00244/00247 without
+whole-TICKET cycles, then continue across this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.
