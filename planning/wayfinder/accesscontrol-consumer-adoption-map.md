@@ -221,16 +221,43 @@ The maintainer then approved [TICKET-00062](../tickets/00062-TICKET.md)'s five-T
 [TASK-00253](../tasks/00253-TASK.md) supplies one-Team membership and admission fences;
 [TASK-00254](../tasks/00254-TASK.md) supplies guarded idle-transfer/removal; and
 [TASK-00255](../tasks/00255-TASK.md) integrates actual browser Team/roster administration.
-TASK-00253–00255 retain `needs-info` for the supported creation/membership seam, actual session/commitment
-participants and named-Agent creation. The package's internal issuance transaction does not imply atomic Team
+At that approval TASK-00253–00255 retained `needs-info` for the supported creation/membership seam, actual
+session/commitment participants and named-Agent creation; the subsequent creation mapping below resolves
+TASK-00255's direct mapping only. The package's internal issuance transaction does not imply atomic Team
 binding; unknown seams block creation rather than permit committed orphan Agents or post-commit repair.
 
 TASK-00244/00247/00250 now consume TASK-00253 and TASK-00231 consumes TASK-00254's real writer chain. These
 mappings do not clear actual contract/participant qualification holds. Creation/current-use consume early Team
 primitives, not final roster UI; named creation will supply TASK-00255. No full Workflow automation or Planning
 cutover gate is added to first manual use. All new TASKs remain unranked, with active work unchanged. No Team,
-Agent, grant, session, runtime or live proof follows. Four of the map's 24 TICKETs now have approved TASK splits;
-**20 remain, TICKET-00063–00082**, alongside older incomplete Harness planning outside this map.
+Agent, grant, session, runtime or live proof follows. That split brought the map to four accepted TASK
+decompositions, leaving 20 at that checkpoint.
+
+The maintainer subsequently approved [TICKET-00063](../tickets/00063-TICKET.md)'s five-TASK split:
+[TASK-00256](../tasks/00256-TASK.md) protects human management/name updates;
+[TASK-00257](../tasks/00257-TASK.md) previews exact reviewed named creation;
+[TASK-00258](../tasks/00258-TASK.md) creates one Team-bound Agent with complete initial authority from retained
+intent; [TASK-00259](../tasks/00259-TASK.md) exposes safe current administration/lifecycle; and
+[TASK-00260](../tasks/00260-TASK.md) integrates accessible real browser administration and eight-template creation.
+
+TASK-00258 retains `needs-info` for supported template/scope/current-authority/initial-assignment composition,
+in addition to TASK-00253's one-Team-at-creation seam. The inspected provision request contains name/destination,
+its service generates identity and commits internally, and full Permission replacement owns a separate transaction.
+Sequential calls, outer nesting, hidden audit policy or post-commit orphan repair do not establish the required
+binding or safe completion. Any supported intermediate assignment phase must remain incomplete and unable to
+activate/use; no committed Agent may be teamless. TASK-00260 retains the exact Triage-definition/registration
+primitive handoff to the existing seed/resource owner, not the completed diagnosis that itself needs an Agent.
+
+TASK-00247/00250/00255/00200/00206 now consume TASK-00258. TASK-00255 becomes `ready-for-agent` behind these
+unfinished blockers, resolving its direct creation mapping only; all actual contract/participant holds remain.
+Other held consumers keep `needs-info`. TASK-00231 consumes TASK-00259 and its management/creation writer chain;
+full readiness follows qualification and final TASK-00260 browser acceptance follows readiness. No primitive
+depends on a completed role/diagnosis, browser administration, full Workflow or Planning cutover. Existing-Agent
+drift operations remain TICKET-00078, template publication remains EPIC-00017 and working roles remain TICKET-00065.
+
+All new orders remain unranked, with active work unchanged. Five of the map's 24 TICKETs now have approved written
+TASK splits; **19 remain, TICKET-00064–00082**, alongside older incomplete Harness planning outside this map.
+No Agent, binding, direct Permission, credential, session, live qualification or operational authority follows.
 
 ## Approved EPIC handoff
 
@@ -271,8 +298,8 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00063` for
-[TICKET-00063](../tickets/00063-TICKET.md), mapping actual named-Agent creation for its profile/Explorer/roster
+**Next planning operation:** `/skill:to-tasks TICKET-00064` for
+[TICKET-00064](../tickets/00064-TICKET.md), mapping actual Team/Agent selection and authoritative admission
 consumers without whole-TICKET cycles, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this

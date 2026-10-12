@@ -110,7 +110,12 @@ TICKET-00062's accepted TASK-00253/00254 now supply actual Team authority and gu
 through TASK-00244/TASK-00231. Their unresolved creation/membership and commitment-participant holds remain;
 no primitive depends on final browser administration or TASK-00241 readiness.
 
-Next planning operation: `/skill:to-tasks TICKET-00063`, mapping named creation without parent cycles,
+TICKET-00063's subsequent TASK-00258 consumes retained lifecycle intent for named creation, and TASK-00259
+consumes these lifecycle/current-use components for protected management. TASK-00231 now includes that actual
+writer chain; final browser TASK-00260 follows TASK-00241, never the reverse. Initial binding/assignment
+composition remains held; no sequential package calls or new intent queue is assumed to resolve it.
+
+Next planning operation: `/skill:to-tasks TICKET-00064`, mapping actual selection/admission without parent cycles,
 then continue the remaining map TICKET decompositions. Implementation/worktree choice, independent review,
 publication, merge and live operational effects remain separate.
 

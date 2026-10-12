@@ -66,7 +66,7 @@ safe refetch/confirmation; never change another running session by changing the 
 | [TASK-00252](../tasks/00252-TASK.md) | Manage Repository associations and preferred Teams | ready-for-agent |
 | [TASK-00253](../tasks/00253-TASK.md) | Enforce one-Team Agent membership and shared admission fences | needs-info |
 | [TASK-00254](../tasks/00254-TASK.md) | Transfer idle Agents and remove associations safely | needs-info |
-| [TASK-00255](../tasks/00255-TASK.md) | Operate Team and roster administration in the browser | needs-info |
+| [TASK-00255](../tasks/00255-TASK.md) | Operate Team and roster administration in the browser | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -96,8 +96,10 @@ transaction or post-commit subscriber. A missing public seam blocks creation, no
 Agent, hidden audit side effect, vendor patch or inferred upstream approval. TICKET-00063 consumes the supported
 primitive and retains actual named-Agent creation.
 
-TASK-00254 retains `needs-info` for actual manual-session/applicable Workflow commitment/admission primitives;
-TASK-00255 additionally needs TICKET-00063's precise creation TASK. No unassign may leave a retained Agent with
+TASK-00254 retains `needs-info` for actual manual-session/applicable Workflow commitment/admission primitives.
+TICKET-00063's subsequent approved TASK-00258 now supplies TASK-00255's exact named creation blocker, resolving
+its direct mapping to `ready-for-agent` behind unfinished dependencies. Supported creation/membership and actual
+commitment-participant holds remain; this is neither implemented creation nor browser qualification. No unassign may leave a retained Agent with
 zero Teams. Waiting for human review/PR merge alone does not imply busy, but active or uncertain commitments
 block transfer. Transfers preserve historical Team/session/grant bindings and advance current authority epochs;
 removal preserves valid defaults and assignments, with no force or cascade shortcut.
@@ -113,9 +115,10 @@ TICKET-00064 keeps selection, same-Team delegation and authoritative start integ
 this split creates no scheduling, commitment, claim or credential registry. All TASK orders remain unranked and
 active TASK-00138/TASK-00226 are unchanged. Planning creates no Team, Agent, Permission, session or live effect.
 
-The AccessControl map now has four of its 24 TICKETs decomposed; 20 remain, TICKET-00063–00082. The separate
-TICKET-00034 detour is already decomposed but does not finish older Harness planning. Next planning operation:
-`/skill:to-tasks TICKET-00063`, mapping actual named creation without making its consumers prerequisites of it.
+With the subsequent TICKET-00063 split, the AccessControl map has five of its 24 TICKETs decomposed; 19 remain,
+TICKET-00064–00082. TASK-00258 consumes early Team binding, while its consumers do not become prerequisites
+of it. The separate TICKET-00034 detour is decomposed but does not finish older Harness planning.
+Next planning operation: `/skill:to-tasks TICKET-00064`, preserving actual admission/commitment ownership.
 Implementation/worktree choice, fresh qualification, independent review, publication and operational authority
 remain separate.
 

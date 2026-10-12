@@ -257,5 +257,10 @@
 | [TASK-00252](00252-TASK.md) | Manage Repository associations and preferred Teams | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
 | [TASK-00253](00253-TASK.md) | Enforce one-Team Agent membership and shared admission fences | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
 | [TASK-00254](00254-TASK.md) | Transfer idle Agents and remove associations safely | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
-| [TASK-00255](00255-TASK.md) | Operate Team and roster administration in the browser | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00255](00255-TASK.md) | Operate Team and roster administration in the browser | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00256](00256-TASK.md) | Protect human Agent administration and name updates | ready-for-agent | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00257](00257-TASK.md) | Preview exact managed-Agent creation | ready-for-agent | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00258](00258-TASK.md) | Create one named Team-bound Agent from retained intent | needs-info | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00259](00259-TASK.md) | Inspect current Agents and manage lifecycle intent | ready-for-agent | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00260](00260-TASK.md) | Complete accessible managed-Agent administration | needs-info | [TICKET-00063](../tickets/00063-TICKET.md) |
 <!-- /planning:records -->

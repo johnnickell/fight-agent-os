@@ -95,3 +95,10 @@ consumes [TICKET-00076](00076-TICKET.md)'s published revisions and uses the qual
 persistence rather than a second grant system. [ADR 0001](../adr/0001-application-ownership-and-orchestration.md)
 and [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md) retain ownership/transaction rules.
 No Agent Permissions, profile bindings or sessions changed during decomposition.
+
+TICKET-00063's accepted TASK-00256 supplies the distinct protected human management policy and TASK-00258
+supplies complete initial assignment for named creation, with supported binding/authorization composition held.
+TASK-00259 exposes safe bound/requested-versus-actual inspection without mutation. Reuse those prerequisites
+when mapping this TICKET's exact TASKs; do not duplicate initial creation or mistake its authority for approval
+to reconcile existing Agents. Add Missing/Auto-sync and their fresh confirmed complete-set concurrency contract
+remain here, never a recurring rule or a template/session rebind.

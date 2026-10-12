@@ -67,7 +67,11 @@ success or leaked target detail. Self-profile Tools belong to TICKET-00061, not 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00256](../tasks/00256-TASK.md) | Protect human Agent administration and name updates | ready-for-agent |
+| [TASK-00257](../tasks/00257-TASK.md) | Preview exact managed-Agent creation | ready-for-agent |
+| [TASK-00258](../tasks/00258-TASK.md) | Create one named Team-bound Agent from retained intent | needs-info |
+| [TASK-00259](../tasks/00259-TASK.md) | Inspect current Agents and manage lifecycle intent | ready-for-agent |
+| [TASK-00260](../tasks/00260-TASK.md) | Complete accessible managed-Agent administration | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -78,24 +82,62 @@ operation/lifecycle, [TICKET-00062](00062-TICKET.md)'s Team and
 [TICKET-00034](00034-TICKET.md)'s original role ownership and [EPIC-00017](../epics/00017-EPIC.md)'s later
 human-edited template publication/drift actions. This planning record creates no Agent or credential.
 
-TICKET-00061's accepted [TASK-00247](../tasks/00247-TASK.md) consumes this TICKET's actual named Team-bound Agent
-creation and reviewed-template integration. Map its precise primitive TASK dependencies during decomposition;
-creation consumes TASK-00242–00245's reusable controls and qualified lifecycle where required, not the final
-Explorer run. Do not make an Agent's creation depend on that Agent already performing the acceptance journey.
-No TASK split for this TICKET has been approved by this coordination note.
+The maintainer approved five dependency-ordered TASKs:
 
-TICKET-00034's approved TASK-00248/00249 now supply reviewed definitions and exact role-profile resolution.
-Named-Agent creation consumes those primitives, not TASK-00250's downstream session integration; TASK-00250
-instead consumes the actual creation capability. Map that direction during this TICKET's decomposition to avoid
-requiring a running role session before its Agent can be created. Triage and Hotfix consumers retain explicit
-holds for actual named identities/direct authority, not just a template label.
+- [TASK-00256](../tasks/00256-TASK.md): explicit protected human Agent-management rights and package name-only
+  updates, preserving complete policy, current authorization and actual acknowledgement/failure semantics.
+- [TASK-00257](../tasks/00257-TASK.md): read-only exact managed creation preview with complete reviewed desired
+  Permissions, Team/Repository scope and registered holder/destination readiness, never a grant.
+- [TASK-00258](../tasks/00258-TASK.md): one named Team-bound Agent from retained intent, exact template/scope
+  binding and complete initial assignment through a supported qualified composition.
+- [TASK-00259](../tasks/00259-TASK.md): safe current directory/detail and original-operation status, confirmed
+  rotation/revocation, separating issued, delivered, activated and bounded currently usable observations.
+- [TASK-00260](../tasks/00260-TASK.md): accessible real browser administration and creation from the eight
+  reviewed managed templates, incorporating the separately owned Triage definition without claiming role work.
 
-TICKET-00062's approved [TASK-00253](../tasks/00253-TASK.md), through TASK-00251/00252, now supplies initial
-Team binding and authoritative roster/reference fences. Its supported creation/membership seam remains a hard
-qualification hold: package issuance owns its transaction and generated Agent ID; no outer nested transaction,
-post-commit orphan repair or hidden audit policy establishes exactly one Team at creation. Resolve the actual
-supported integration in the primitive, then consume it here; do not make that primitive depend on this whole
-TICKET or its final browser journey. [TASK-00255](../tasks/00255-TASK.md)'s roster UI instead consumes this
-TICKET's actual named-Agent creation. TASK-00254 supplies guarded idle transfer/removal, not a second creation
-route. Coordinate distinct managed Team/Agent rights once, preserving protected tiers and the complete policy.
-No TASK split for named creation is allocated by this handoff.
+TASK-00256/00257/00259 are `ready-for-agent` only behind unfinished blockers. TASK-00258 retains `needs-info`:
+inspected `AgentProvisioningRequest` contains name and destination, the service generates the Agent ID and commits
+internally, and complete Permission replacement owns a separate package transaction. TASK-00253 retains supported
+one-Team initial binding; TASK-00258 additionally qualifies exact template/scope/current-authority and initial-
+assignment coordination. No nested outer transaction, subscriber repair, hidden audit policy, vendor edit or
+internal coordinator call can manufacture a public guarantee. Any supported separate assignment phase needs
+truthful incomplete state and actual activation/use exclusion; a committed Agent must never be teamless.
+
+TASK-00260 retains `needs-info` for a precise reviewed Triage definition/registration primitive under TASK-00200/
+EPIC-00012 and TICKET-00075's existing owners. Hand that definition to seed/resource authority independently of
+the completed diagnosis journey, which itself needs named creation. No invented ID, duplicate Triage catalog or
+whole-diagnosis/Workflow dependency is added to the creation primitive.
+
+TASK-00258 now supplies precise creation blockers to TASK-00247, TASK-00250, TASK-00255, TASK-00200 and TASK-00206.
+TASK-00255's direct mapping is resolved, so it becomes `ready-for-agent` behind unfinished blockers; all actual
+creation/membership/commitment holds remain transitively effective. Explorer/session/Triage/Hotfix consumers keep
+their other `needs-info` holds. Reviewed definitions/profile resolution remain TASK-00248/00249's responsibility;
+creation does not depend on a running session, completed role journey or final administration UI.
+
+TASK-00231 now consumes TASK-00259 and the TASK-00256–00258 dependency chain for actual human management,
+name, creation/initial-assignment and lifecycle writer/entry qualification. Downstream switch/restore/readiness
+inherit those blockers. These primitives do not depend on TASK-00241; final browser TASK-00260 does. Reusable
+TASK-00242–00245 controls supply activation/current-use/MCP through TASK-00259. No live operation is enabled
+before full composition qualification, and no full Workflow or Planning database-cutover gate is imposed on
+first manual Explorer use.
+
+Name updates preserve the package's last-committed-name semantics, not an invented expected name revision;
+acknowledgement describes the successful normalized request, not a fresh latest-name read. Other expected-state
+contracts stay intact. Distinct `SUPER_ADMIN_ONLY` human management rights never become direct Agent grants;
+only the complete eligible `ADMIN_SAFE` initial set may be assigned. Existing-Agent Add Missing/Auto-sync stays
+with TICKET-00078, self-profile Tools with TASK-00246, Team transfer with TASK-00254 and real role work with
+TICKET-00065. Publication never silently rebinds existing Agents or sessions.
+
+All new TASK orders remain unranked; active TASK-00138/TASK-00226 and implementation priority are unchanged.
+Planning creates no Agent, Permission, credential, binding, session or live evidence. Five of this map's 24
+TICKETs now have accepted TASK decompositions; 19 remain, TICKET-00064–00082. The separate TICKET-00034 detour
+does not complete older Harness planning. Next planning operation: `/skill:to-tasks TICKET-00064`.
+Implementation/worktree choice, fresh qualification, independent review, publication and live effects remain
+separately authorized.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 360 records,
+273 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations, with repetitive deprecation warnings. Evidence: `.runs/build/20261012T201449Z-44833`; summary log:
+`.runs/build/ticket-00063-to-tasks.log`. These validate planning and the existing repository, not future named
+creation, supported binding/assignment composition, lifecycle administration or browser/role qualification.
+Independent review and publication remain unperformed.

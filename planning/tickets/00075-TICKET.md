@@ -91,3 +91,10 @@ that actual database authority for profile resolution. Do not make seeding depen
 whole TICKET-00034 completion. Keep one Harness template authority, no recurring source overwrites and no browser
 editor prerequisite for the initial catalog. Precise TASK allocation here still requires separate decomposition
 and approval; this coordination note creates no additional TASK or seed.
+
+TICKET-00063's accepted TASK-00257/00258 consume the exact database-backed profile for preview and named creation;
+TASK-00260 integrates actual browser administration. The separately owned Triage definition must reach this
+seed/resource boundary through a precise accepted primitive handoff, not a dependency on TASK-00200's completed
+diagnosis (which now consumes TASK-00258). Map that input with the existing Triage owner during decomposition;
+TASK-00260 retains the explicit hold. Neither seed/storage nor TASK-00249 resolution may depend on named
+creation, session integration or final administration. There is no duplicate Triage catalog or editor gate.

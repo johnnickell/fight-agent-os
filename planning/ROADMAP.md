@@ -110,7 +110,6 @@ the same operation that completes their children.
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00063](tickets/00063-TICKET.md) | Administer named managed Agents and safe lifecycle intent | [EPIC-00014](epics/00014-EPIC.md) | ready-for-agent |
 | [TICKET-00064](tickets/00064-TICKET.md) | Select eligible Teams and Agents for authorized work | [EPIC-00014](epics/00014-EPIC.md) | ready-for-agent |
 | [TICKET-00065](tickets/00065-TICKET.md) | Operate all eight managed Agents in their owned journeys | [EPIC-00014](epics/00014-EPIC.md) | ready-for-agent |
 | [TICKET-00066](tickets/00066-TICKET.md) | Durably notify the old mailbox of email-change request and completion | [EPIC-00015](epics/00015-EPIC.md) | ready-for-agent |
