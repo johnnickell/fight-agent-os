@@ -110,7 +110,6 @@ the same operation that completes their children.
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00069](tickets/00069-TICKET.md) | Confirm email change explicitly and return to login | [EPIC-00015](epics/00015-EPIC.md) | ready-for-agent |
 | [TICKET-00070](tickets/00070-TICKET.md) | Discover provision and prepare complete Feature references | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 | [TICKET-00071](tickets/00071-TICKET.md) | Enforce current Feature availability at every registered entry | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 | [TICKET-00072](tickets/00072-TICKET.md) | Show a complete authenticated Feature catalog and availability | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |

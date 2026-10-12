@@ -290,4 +290,6 @@
 | [TASK-00285](00285-TASK.md) | Deliver one exact new-mailbox confirmation link | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
 | [TASK-00286](00286-TASK.md) | Recover and inspect email-change credential work | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
 | [TASK-00287](00287-TASK.md) | Operate scheduled new-mailbox delivery and recovery | needs-info | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00288](00288-TASK.md) | Open confirmation links without changing account state | ready-for-agent | [TICKET-00069](../tickets/00069-TICKET.md) |
+| [TASK-00289](00289-TASK.md) | Confirm explicitly and return to fresh login | needs-info | [TICKET-00069](../tickets/00069-TICKET.md) |
 <!-- /planning:records -->

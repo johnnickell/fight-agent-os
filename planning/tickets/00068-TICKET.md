@@ -139,9 +139,15 @@ checks require explicit authorization and remain distinct from network-free test
 consumer bug requires reproduction and a failing regression before repair. Source/lock changes from TASK-00273
 must requalify affected credential integration; no upstream edit/release authority is implied.
 
-All new orders are unranked; active TASK-00138/TASK-00226 and existing priorities remain unchanged. Ten of the
-map's 24 TICKETs now have approved written TASK splits; **14 remain, TICKET-00069–00082**. Older Harness/managed
-review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00069`.
+TICKET-00069 now maps TASK-00288's inert landing, consuming TASK-00285's fixed producer contract, and
+TASK-00289's explicit confirmation/login return, consuming TASK-00287's actual operation alongside notice/request
+and security owners. No completed page reverse-blocks delivery or workers, and receipt alone is not confirmation.
+After initial qualification, a held usable credential needs no online provider or delivery decryption to confirm
+when atomic persistence is available. Shared-contract changes still require affected credential requalification.
+
+All new orders are unranked; active TASK-00138/TASK-00226 and existing priorities remain unchanged. With
+TICKET-00069, eleven of the map's 24 TICKETs have written TASK splits; **13 remain, TICKET-00070–00082**.
+Older Harness/managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00070`.
 No credential, provider, schedule, request, route or live effect was created by planning. Implementation/worktree
 choice, independent review, publication, upstream changes and actual enrollment remain separately authorized.
 

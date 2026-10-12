@@ -198,6 +198,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00282](00282-TASK.md) | Administer another user's email change from user detail | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | [TASK-00280](00280-TASK.md), [TASK-00281](00281-TASK.md), [TASK-00123](00123-TASK.md) | — |
 | — | [TASK-00285](00285-TASK.md) | Deliver one exact new-mailbox confirmation link | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | [TASK-00283](00283-TASK.md), [TASK-00040](00040-TASK.md) | — |
 | — | [TASK-00286](00286-TASK.md) | Recover and inspect email-change credential work | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | [TASK-00285](00285-TASK.md) | — |
+| — | [TASK-00288](00288-TASK.md) | Open confirmation links without changing account state | [TICKET-00069 — Confirm email change explicitly and return to login](../tickets/00069-TICKET.md) | ready-for-agent | [TASK-00285](00285-TASK.md), [TASK-00051](00051-TASK.md) | — |
 
 ## Needs Info
 
@@ -238,6 +239,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00281](00281-TASK.md) | Cancel a pending change without affecting a successor | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | needs-info | [TASK-00279](00279-TASK.md) | — |
 | — | [TASK-00284](00284-TASK.md) | Enroll one shared real mail transport | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | needs-info | [TASK-00040](00040-TASK.md) | — |
 | — | [TASK-00287](00287-TASK.md) | Operate scheduled new-mailbox delivery and recovery | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | needs-info | [TASK-00284](00284-TASK.md), [TASK-00286](00286-TASK.md), [TASK-00274](00274-TASK.md) | — |
+| — | [TASK-00289](00289-TASK.md) | Confirm explicitly and return to fresh login | [TICKET-00069 — Confirm email change explicitly and return to login](../tickets/00069-TICKET.md) | needs-info | [TASK-00288](00288-TASK.md), [TASK-00275](00275-TASK.md), [TASK-00277](00277-TASK.md), [TASK-00287](00287-TASK.md), [TASK-00282](00282-TASK.md), [TASK-00063](00063-TASK.md) | — |
 
 ## Human Action
 

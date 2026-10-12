@@ -142,9 +142,16 @@ exact confirmed cancellation and required self audit; its inspected latest-targe
 generation input, and this notice seam does not implicitly resolve that separate hold. Status/cancellation do
 not depend on sending readiness; final account/admin journeys do not reverse-block notice primitives.
 
+TICKET-00069 now maps TASK-00288's inert landing and TASK-00289's explicit confirmation/login return.
+TASK-00289 consumes TASK-00275/00277 and actual request/delivery owners without reverse dependencies. Its source
+inspection adds exact reservation-revision qualification to TASK-00273/00275: current `confirmEmail()` checks
+latest grant/credential/destination but does not explicitly compare the bound revision or call `matchesReservation()`.
+Qualify supported-writer and same-address successor/ABA behavior; this is an unresolved guarantee, not a
+reproduced exploit or authorization for a vendor patch. Supported atomic notice and operational holds persist.
+
 All new TASKs are unranked; active TASK-00138/TASK-00226 and existing authored orders remain unchanged. With the
-TICKET-00067/00068 splits, ten of the map's 24 TICKETs have written TASK splits; **14 remain, TICKET-00069–00082**.
-Older Harness/managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00069`.
+TICKET-00067–00069 splits, eleven of the map's 24 TICKETs have written TASK splits; **13 remain, TICKET-00070–00082**.
+Older Harness/managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00070`.
 No request, confirmation, notice, provider or schedule is live from this decomposition. Implementation/worktree
 choice, upstream authorization, independent review, publication and operational enrollment remain separate.
 

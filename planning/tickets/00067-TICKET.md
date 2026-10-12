@@ -148,11 +148,17 @@ early TASK-00283 and TASK-00277 consumes shared TASK-00284, not completed creden
 mapping is resolved, not the supported notice/cancellation contracts or actual provider/schedule readiness.
 No supplier is reverse-blocked on a completed account/admin journey; safe status/cancel stay independent of sending.
 
+TICKET-00069 now maps TASK-00288's inert landing and TASK-00289's explicit same-secret confirmation/login
+return. TASK-00289 consumes TASK-00282's actual self/admin initiation and exact cancellation chain, with no reverse
+blocker. It owns full mailbox/browser confirmation, session/client invalidation and fresh-login acceptance;
+request/status/cancel primitives retain their owners and separate holds. Exact confirmation-reservation binding
+now needs explicit qualification through TASK-00273/00275; it does not resolve TASK-00281's intent/self-audit gate.
+
 Each user-facing slice owns real safe HTTP/client behavior, PostgreSQL/package integration and applicable
 accessible browser evidence; no proof-only final TASK is added. All new orders are unranked; active
-TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00068, ten of the map's 24 TICKETs
-have approved written TASK splits; **14 remain, TICKET-00069–00082**. Older Harness/managed review planning is
-still incomplete. Next planning operation: `/skill:to-tasks TICKET-00069`. No permission, request, cancellation, UI or provider is live
+TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00068/00069, eleven of the map's 24
+TICKETs have approved written TASK splits; **13 remain, TICKET-00070–00082**. Older Harness/managed review
+planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00070`. No permission, request, cancellation, UI or provider is live
 from planning; implementation/worktree choice, upstream changes, review, publication and operational effects remain separate.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 382 records,

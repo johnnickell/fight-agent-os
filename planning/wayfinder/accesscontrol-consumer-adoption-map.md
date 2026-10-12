@@ -405,9 +405,43 @@ provider/sender/mailbox and worker/schedule/key/target authority/qualification. 
 TASK-00281's cancellation-generation/self-audit hold are not resolved by this mapping. TICKET-00069 still owns
 safe landing, explicit confirmation, session invalidation and login return; link delivery alone is not that journey.
 
-All new orders remain unranked and active work unchanged. **Ten of the map's 24 TICKETs have approved written
-TASK splits; 14 remain, TICKET-00069–00082**, alongside older incomplete Harness/managed review planning.
-Planning enrolled no provider or schedule, generated no credential and performed no live effect.
+That split brought the map to ten approved written TASK decompositions without provider/schedule enrollment,
+credential generation or live effects.
+
+The maintainer subsequently approved [TICKET-00069](../tickets/00069-TICKET.md)'s two use cases:
+[TASK-00288](../tasks/00288-TASK.md) opens confirmation links without account-state changes, consuming
+TASK-00285 and TASK-00051; [TASK-00289](../tasks/00289-TASK.md) confirms explicitly and returns to fresh login,
+consuming TASK-00288, TASK-00275, TASK-00277, TASK-00287, TASK-00282 and TASK-00063.
+
+The landing captures the exact purpose fragment in bounded volatile memory and promptly removes URL/history
+material through the existing bootstrap. Public mail navigation needs no session/Permission; GET/prefetch never
+starts confirmation, sending or automatic authentication restoration/refresh. Neutral guidance deliberately
+omits the optional validity query. Deliberate protected POST submits the same secret, with shared request/CSRF/
+rate controls and explicit public Action classification, not a new password form or administrator bypass.
+
+TASK-00289 retains `needs-info` for atomic notice/reservation guarantees and actual operational qualification.
+The inspected `confirmEmail()` checks latest usable grant, credential and destination equality without explicitly
+comparing the bound reservation revision or calling `matchesReservation()`. TASK-00273/00275 now carry exact
+binding/supported-writer/same-address-ABA qualification; this is not a demonstrated exploit or upstream repair
+authority. Missing support holds, without vendor patches, copied policy, hidden repository effects, preflight-only
+checks or nested transactions. The service returns `void` and emits after commit; unknown acknowledgement or
+post-commit failure is not rollback or permission for replay.
+
+TASK-00275 owns atomic consumption/promotion/authentication/session/audit/completion intent and original-recipient
+binding; required notice failure rolls the transition back. Later provider delay cannot undo it or preserve revoked
+sessions. Once operationally qualified, confirmation of a held usable credential needs no online mail provider or
+delivery decryption. Existing auth/principal/cache/cookie/tab owners retire old authority and fence late responses,
+without instantaneous cross-tab promises or changes to unrelated server identities. Existing new-email/password
+login and separate reset request remain distinct; no session comes from confirmation proof.
+
+TASK-00282 supplies real self/admin initiation and cancellation. TASK-00277/00287 remain independent operational
+suppliers; reuse attributable valid mailbox/restart evidence and refresh affected integration. No complete browser
+journey reverse-blocks those primitives, no second queue/provider/client owner is created and no proof-only final
+TASK or parent ceremony is added. All four EPIC-00015 TICKETs now have approved TASK decompositions, not live adoption.
+
+All new orders remain unranked and active work unchanged. **Eleven of the map's 24 TICKETs have approved written
+TASK splits; 13 remain, TICKET-00070–00082**, alongside older incomplete Harness/managed review planning.
+Planning opened no route, confirmed no account, revoked no session and performed no live effect.
 
 ## Approved EPIC handoff
 
@@ -448,9 +482,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00069` for
-[TICKET-00069](../tickets/00069-TICKET.md), preserving safe landing, explicit same-secret confirmation, atomic
-completion notice and login return, then continue this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00070` for
+[TICKET-00070](../tickets/00070-TICKET.md), mapping complete Feature-reference discovery, missing-OFF provisioning
+and exact candidate preparation, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

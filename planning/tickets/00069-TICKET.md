@@ -73,7 +73,8 @@ not authorize other commands, including reset or fresh login.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00288](../tasks/00288-TASK.md) | Open confirmation links without changing account state | ready-for-agent |
+| [TASK-00289](../tasks/00289-TASK.md) | Confirm explicitly and return to fresh login | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -89,12 +90,12 @@ planning record.
 TICKET-00066's approved [TASK-00275](../tasks/00275-TASK.md) supplies atomic completion-notice capture,
 including TASK-00274's original-recipient binding and TASK-00273's still-unresolved supported contract;
 [TASK-00277](../tasks/00277-TASK.md) supplies qualified operational notice recovery. Map those concrete
-prerequisites alongside TICKET-00068's now-allocated credential primitives when decomposing this TICKET. Its safe GET,
+prerequisites alongside TICKET-00068's allocated credential primitives in the approved TASK split below. Its safe GET,
 explicit submit, public credential transport, session/client invalidation and login return remain owned here.
 The lower-level notice primitives do not depend on this completed browser journey. Actual provider delay never
 postpones committed session revocation; failed atomic notice persistence prevents the whole confirmation commit.
 A post-commit exception or uncertain acknowledgement is not proof of rollback or permission for automatic replay.
-No confirmation TASK is allocated or exposure enabled by this coordination mapping.
+That coordination mapping enabled no exposure; the subsequent approved TASK split is recorded below.
 
 TICKET-00067's approved TASK-00278–00282 now own current self/admin authority, safe account status, self request,
 exact confirmed cancellation and cross-user detail integration. Reuse their actual qualified facts where needed,
@@ -114,4 +115,76 @@ confirmation atomicity/session effects and actual login return; receipt of mail 
 TASK-00277 and TASK-00287 independently consume TASK-00284's shared provider, retaining separate notice/credential
 lifecycle and schedules. Their complete journeys never become reciprocal blockers or depend on this completed
 browser journey. Retain TASK-00273's supported atomic notice hold and actual provider/schedule authority limits.
-Next planning operation: `/skill:to-tasks TICKET-00069`; no confirmation route or live effect is enabled.
+
+### Approved TASK decomposition
+
+The maintainer approved two independently reviewable use cases, reusing the already owned atomic notice,
+credential/provider/recovery and authentication boundaries rather than adding a proof-only final TASK:
+
+| TASK | Outcome | Blockers and holds |
+|---|---|---|
+| [TASK-00288](../tasks/00288-TASK.md) | Open confirmation links without changing account state | TASK-00285 and TASK-00051; ready behind unfinished producer/public-frame foundations |
+| [TASK-00289](../tasks/00289-TASK.md) | Confirm explicitly and return to fresh login | TASK-00288, TASK-00275, TASK-00277, TASK-00287, TASK-00282 and TASK-00063; `needs-info` for supported atomic notice/reservation guarantees and actual operational qualification |
+
+TASK-00288 consumes the fixed producer path/encoding and reuses TASK-00043's qualified fragment bootstrap through
+the existing public frame. Capture is bounded, volatile and promptly removed from history before ordinary page
+behavior. Legitimate external-mail navigation is supported without applying mutation-only Origin rules to GET.
+GET/HEAD/prefetch never confirms, sends, logs in, refreshes, restores authentication or reads private `/me`. Neutral
+local capture guidance deliberately omits the parent's optional validity query; no mutating probe or fabricated
+valid/expired account state is allowed. Reload, teardown, history failure and restored pages cannot resurrect
+abandoned secrets. Landing alone neither enables a confirmation control nor qualifies the complete journey.
+
+TASK-00289 supplies the real deliberate button, typed client and guarded public POST using the same captured
+credential. Reuse the existing request/rate controls and explicit public Action classification; grant possession
+is proof, not an ambient session or administration Permission. CSRF proof remains non-authoritative transport
+protection, not a second mailbox secret. No password/new-email form, actor/recipient override, automatic submit,
+login/reset/reissue or new validity/history API is added. Exact input and secrets stay out of ordinary diagnostics,
+markup, persistence, screenshots, audit and shared client messages.
+
+**Observed qualification hold:** the inspected `AuthenticationService::confirmEmail()` checks latest usable grant,
+credential and destination equality but does not explicitly compare the bound reservation revision or call
+`matchesReservation()`. Exact generation/reservation fencing across supported writers and same-address successor/
+ABA cases must be qualified through TASK-00273/00275. This is not a demonstrated exploit or authority to patch
+upstream. Missing guarantees require separate owner/tagged-contract resolution, never copied package policy,
+nontransactional prechecks, hidden repository side effects or an outer nested transaction.
+
+The service also returns `void` and publishes its event after commit. TASK-00275 remains owner of atomic grant/
+User/authentication/session/audit/completion-intent coordination and exact original-recipient binding. Required
+notice failure rolls back the whole change; later provider delay does not undo promotion or postpone session
+revocation. An exception/lost response may follow success. Observe original outcome only through a qualified
+appropriately protected seam, otherwise retain truthful uncertainty; absent pending state, latest email or a
+rejected replay never proves the original result. No automatic mutation replay follows recovery or refresh.
+
+TASK-00289 connects TASK-00048/00049's shared auth/principal/private-cache generation barriers and existing exact
+cookie lifecycle. Clear old local authority and navigation intent on success/uncertainty, fence delayed results
+against newer explicit contexts and keep target-server revocation distinct from conservative local clearing of
+another browser identity. Signals remain bounded best-effort; missing APIs/suspended tabs do not weaken server
+checks or justify persistent coordination. No new session is issued. Existing TASK-00046 login and TASK-00054
+reset-request routes remain their owners: new email plus unchanged password for login, separate reset if forgotten.
+
+TASK-00282 supplies actual self/admin initiation and exact cancellation through TASK-00280/00281. The complete
+confirmation uses actual authorized new-mail receipt and secret-free completion to the original old mailbox,
+including post-commit notice recovery. TASK-00277/00287 keep independent worker/provider ownership; valid
+attributable receipts may be reused with affected integration refreshed. No repeated credential ceremony,
+provider, queue, private status owner or final proof registry is introduced. Final browser acceptance never
+reverse-blocks these primitives. Initial exposure needs qualified operations; an already-held usable credential
+can still confirm during provider/delivery-key outage when the required atomic persistence is available.
+
+Each slice owns observable behavior, applicable real PostgreSQL/HTTP/browser/security evidence and `./bin/build`.
+Configuration, infrastructure, generated artifacts and migrations are validated directly through their tools,
+not product tests of wiring/planning. Actual effects require bounded target/mailbox/process authority. A discovered
+bug needs a failing regression before authorized repair; local or historical receipts are not live qualification.
+
+All new orders remain unranked; active TASK-00138/TASK-00226 and existing priorities are unchanged. All four
+EPIC-00015 TICKETs now have approved written TASK splits, not completed implementation. Eleven of the map's
+24 TICKETs are decomposed; **13 remain, TICKET-00070–00082**, alongside older incomplete Harness/managed review
+planning. Next planning operation: `/skill:to-tasks TICKET-00070`.
+No route, account change, session revocation, mailbox/provider/schedule enrollment or live effect follows from
+these records. Implementation/worktree choice, independent review, publication and operational effects remain separate.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 389 records,
+302 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations, with repetitive deprecation warnings. Evidence: `.runs/build/20261012T223226Z-57425`; summary log:
+`.runs/build/ticket-00069-to-tasks.log`. These validate planning and the existing repository, not future link
+capture, exact reservation/notice qualification, confirmation/session/browser behavior or actual mail/login
+journeys. Independent review and publication remain unperformed.
