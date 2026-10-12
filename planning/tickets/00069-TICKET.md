@@ -89,7 +89,7 @@ planning record.
 TICKET-00066's approved [TASK-00275](../tasks/00275-TASK.md) supplies atomic completion-notice capture,
 including TASK-00274's original-recipient binding and TASK-00273's still-unresolved supported contract;
 [TASK-00277](../tasks/00277-TASK.md) supplies qualified operational notice recovery. Map those concrete
-prerequisites alongside TICKET-00068's future credential primitives when decomposing this TICKET. Its safe GET,
+prerequisites alongside TICKET-00068's now-allocated credential primitives when decomposing this TICKET. Its safe GET,
 explicit submit, public credential transport, session/client invalidation and login return remain owned here.
 The lower-level notice primitives do not depend on this completed browser journey. Actual provider delay never
 postpones committed session revocation; failed atomic notice persistence prevents the whole confirmation commit.
@@ -98,8 +98,20 @@ No confirmation TASK is allocated or exposure enabled by this coordination mappi
 
 TICKET-00067's approved TASK-00278–00282 now own current self/admin authority, safe account status, self request,
 exact confirmed cancellation and cross-user detail integration. Reuse their actual qualified facts where needed,
-not a duplicate account/status owner. TASK-00280 still needs precise TICKET-00068 credential mappings;
+not a duplicate account/status owner. TASK-00280 now consumes TASK-00287's actual credential operation;
 TASK-00281 retains its own supported generation-fencing/self-audit gate and must be exercised against this
 confirmation path's real winner semantics. Its cancellation does not require successful sending or this finished
 browser journey. Bearer confirmation here remains independent of a preexisting human session/admin Permission,
 with one-time package policy and the separately owned notice seam; no administrator bypass is introduced.
+
+TICKET-00068's accepted TASK-00283–00287 now map protected issuance, shared real transport, exact link delivery,
+existing-runner recovery and scheduled credential operation. Consume TASK-00285's fixed configured-HTTPS link/
+encoding contract and TASK-00287's actual delivery evidence. The package invocation lacks User ID/expiry; its
+producer resolves necessary immutable facts through the exact delivery identity, never address-based inference.
+This TICKET still owns safe nonmutating landing, volatile capture/history removal, same-secret explicit submit,
+confirmation atomicity/session effects and actual login return; receipt of mail alone does not prove those paths.
+
+TASK-00277 and TASK-00287 independently consume TASK-00284's shared provider, retaining separate notice/credential
+lifecycle and schedules. Their complete journeys never become reciprocal blockers or depend on this completed
+browser journey. Retain TASK-00273's supported atomic notice hold and actual provider/schedule authority limits.
+Next planning operation: `/skill:to-tasks TICKET-00069`; no confirmation route or live effect is enabled.

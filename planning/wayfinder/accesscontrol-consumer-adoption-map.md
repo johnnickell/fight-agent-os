@@ -355,8 +355,8 @@ panel; [TASK-00280](../tasks/00280-TASK.md) delivers self request;
 [TASK-00281](../tasks/00281-TASK.md) delivers exact confirmed cancellation; and
 [TASK-00282](../tasks/00282-TASK.md) integrates cross-user operations into the existing user-detail journey.
 
-TASK-00280 consumes TASK-00274/00277 and retains `needs-info` for precise TICKET-00068 issuance/cipher/provider/
-recovery suppliers, alongside the unresolved notice seam. TASK-00281 retains `needs-info` for supported exact-
+At that checkpoint, TASK-00280 consumed TASK-00274/00277 and retained `needs-info` for unmapped TICKET-00068
+issuance/cipher/provider/recovery suppliers, alongside the unresolved notice seam. TASK-00281 retains `needs-info` for supported exact-
 intent/generation fencing, original-outcome observation and required atomic self-cancellation audit. The inspected
 cancel command takes only actor/target IDs and selects the latest eligible change; its handler audits only
 administrator calls. A UI revision/preflight or TASK-00273's separate request/confirmation seam does not establish
@@ -374,11 +374,40 @@ rollback or allow mutation replay; accepted request notices survive cancellation
 action permissions, explicit target/intent confirmation and attributable shared operations, never a credential
 for the administrator or confirmation bypass. TICKET-00069 retains actual confirmation and login return.
 
-Map TICKET-00068's exact lower-level suppliers next without making them or notice primitives depend on completed
-account/admin/browser journeys. No second credential queue, profile editor or final proof-only TASK is introduced.
-All new orders remain unranked and active work unchanged. **Nine of the map's 24 TICKETs have approved written
-TASK splits; 15 remain, TICKET-00068–00082**, alongside older incomplete Harness/managed review planning.
-No Permission, API, UI, request, cancellation, credential or operational authority was enabled by these records.
+That split left exact TICKET-00068 suppliers unmapped without making them or notice primitives depend on
+completed account/admin/browser journeys. No second credential queue, profile editor or final proof-only TASK
+was introduced, and no Permission, API, UI, request, cancellation or credential was enabled.
+
+The maintainer subsequently approved [TICKET-00068](../tickets/00068-TICKET.md)'s five slices:
+[TASK-00283](../tasks/00283-TASK.md) protects issuance material;
+[TASK-00284](../tasks/00284-TASK.md) enrolls one shared real mail transport;
+[TASK-00285](../tasks/00285-TASK.md) delivers one exact new-mailbox link;
+[TASK-00286](../tasks/00286-TASK.md) extends bounded recovery/inspection; and
+[TASK-00287](../tasks/00287-TASK.md) operates actual scheduled credential delivery/recovery.
+
+TASK-00274 consumes TASK-00283, which does not depend on finished capture or credential operation. TASK-00284
+consumes TASK-00040 and owns the shared real-provider primitive previously unmapped inside TASK-00277. The notice
+TASK consumes that transport but retains its own schedule, retention and both-stage acceptance. TASK-00287 also
+consumes TASK-00284 plus TASK-00286 and accepted request capture. Neither completed recovery journey blocks the
+other. TASK-00280 gains TASK-00287 as a concrete supplier, not proof of runtime readiness. Status/cancellation
+remain independent of sending, and final account/admin/confirmation journeys do not reverse-block these primitives.
+
+The inspected cipher, registrations, runner dispatch and narrow worker audit allowance lack email delivery.
+These slices extend actual supported boundaries, not package grant/claim/backoff policy. Provider invocation has
+no User ID/expiry; fixed link composition resolves immutable facts through exact public delivery-ID lookup, never
+address/time inference or invented fields. Keep secrets out of status/logs/evidence and old-mail notices, with
+configured HTTPS, stable original delivery identity and honest at-least-once/provider-acceptance limits.
+
+TASK-00287 schedules independent key/provider-free expiry because delivery preflight can fail before cleanup.
+Reuse existing exact reservation/authority expiry, preserve outstanding human-delivery key access and qualify
+actual process restart, receipt and provider/outcome uncertainty. TASK-00284/00287 remain `needs-info` for actual
+provider/sender/mailbox and worker/schedule/key/target authority/qualification. TASK-00273's atomic notice seam and
+TASK-00281's cancellation-generation/self-audit hold are not resolved by this mapping. TICKET-00069 still owns
+safe landing, explicit confirmation, session invalidation and login return; link delivery alone is not that journey.
+
+All new orders remain unranked and active work unchanged. **Ten of the map's 24 TICKETs have approved written
+TASK splits; 14 remain, TICKET-00069–00082**, alongside older incomplete Harness/managed review planning.
+Planning enrolled no provider or schedule, generated no credential and performed no live effect.
 
 ## Approved EPIC handoff
 
@@ -419,9 +448,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00068` for
-[TICKET-00068](../tickets/00068-TICKET.md), mapping qualified new-mail credential delivery/recovery primitives
-without reverse browser dependencies, then continue this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00069` for
+[TICKET-00069](../tickets/00069-TICKET.md), preserving safe landing, explicit same-secret confirmation, atomic
+completion notice and login return, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

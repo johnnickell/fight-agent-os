@@ -285,4 +285,9 @@
 | [TASK-00280](00280-TASK.md) | Request an own-address change through the account journey | needs-info | [TICKET-00067](../tickets/00067-TICKET.md) |
 | [TASK-00281](00281-TASK.md) | Cancel a pending change without affecting a successor | needs-info | [TICKET-00067](../tickets/00067-TICKET.md) |
 | [TASK-00282](00282-TASK.md) | Administer another user's email change from user detail | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00283](00283-TASK.md) | Protect email-change issuance material | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00284](00284-TASK.md) | Enroll one shared real mail transport | needs-info | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00285](00285-TASK.md) | Deliver one exact new-mailbox confirmation link | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00286](00286-TASK.md) | Recover and inspect email-change credential work | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00287](00287-TASK.md) | Operate scheduled new-mailbox delivery and recovery | needs-info | [TICKET-00068](../tickets/00068-TICKET.md) |
 <!-- /planning:records -->

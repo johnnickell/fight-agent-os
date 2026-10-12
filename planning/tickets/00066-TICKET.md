@@ -94,10 +94,10 @@ The maintainer approved these five independently reviewable slices:
 | TASK | Outcome | Blockers and holds |
 |---|---|---|
 | [TASK-00273](../tasks/00273-TASK.md) | Qualify supported atomic notice coordination | `needs-info`: actual supported package seam/owner resolution and any tagged release remain unmapped; no allocated TASK blocker |
-| [TASK-00274](../tasks/00274-TASK.md) | Record an old-mailbox notice with each accepted request | TASK-00273; ready behind its unresolved contract, not exposed |
+| [TASK-00274](../tasks/00274-TASK.md) | Record an old-mailbox notice with each accepted request | TASK-00273 and TASK-00283; ready behind the unresolved notice contract, not exposed |
 | [TASK-00275](../tasks/00275-TASK.md) | Record completion notices without losing the original recipient | TASK-00274, including the qualified seam transitively |
 | [TASK-00276](../tasks/00276-TASK.md) | Dispatch one notice with protected recoverable outcomes | TASK-00274 and TASK-00040's shared mail capability; independent of completion capture |
-| [TASK-00277](../tasks/00277-TASK.md) | Operate scheduled notice recovery and safe inspection | TASK-00275, TASK-00276 and TASK-00024; `needs-info` for actual provider/schedule, protected target and retention/failure-policy enrollment |
+| [TASK-00277](../tasks/00277-TASK.md) | Operate scheduled notice recovery and safe inspection | TASK-00275, TASK-00276, TASK-00024 and TASK-00284; `needs-info` for actual provider/schedule, protected target and retention/failure-policy enrollment |
 
 TASK-00273 is a bounded contract/consumer-adoption chore, not authorization to modify or release upstream.
 The inspected v0.5.0 source remains `46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`; implementation must qualify
@@ -129,7 +129,10 @@ TICKET-00067 consumes TASK-00274 and TASK-00277 for request exposure and retains
 current status and cancellation UI. TICKET-00069 consumes TASK-00275 and TASK-00277 for confirmation exposure,
 with its explicit user action and login handoff. Both still require TICKET-00068's qualified new-mail credential
 boundary. That TICKET may reuse qualified mail/operational facilities, never the notice queue or its lifecycle.
-Map concrete primitives during those decompositions without reciprocal whole-TICKET blockers. Capture and notice
+TICKET-00068 now supplies TASK-00283's early issuance protection to TASK-00274 and TASK-00284's shared real
+transport to TASK-00277. TASK-00277 retains notice-specific schedule/retention and both-stage acceptance;
+TASK-00287 independently consumes the same transport and accepted request capture for credential operation.
+No complete notice/credential recovery journey blocks the other and no second provider is introduced. Capture and notice
 operation do not depend on completed downstream browser journeys, and controlled provider qualification never
 authorizes replacing the current administration denial or opening unfinished routes.
 
@@ -140,8 +143,8 @@ generation input, and this notice seam does not implicitly resolve that separate
 not depend on sending readiness; final account/admin journeys do not reverse-block notice primitives.
 
 All new TASKs are unranked; active TASK-00138/TASK-00226 and existing authored orders remain unchanged. With the
-TICKET-00067 split, nine of the map's 24 TICKETs have written TASK splits; **15 remain, TICKET-00068–00082**.
-Older Harness/managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00068`.
+TICKET-00067/00068 splits, ten of the map's 24 TICKETs have written TASK splits; **14 remain, TICKET-00069–00082**.
+Older Harness/managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00069`.
 No request, confirmation, notice, provider or schedule is live from this decomposition. Implementation/worktree
 choice, upstream authorization, independent review, publication and operational enrollment remain separate.
 

@@ -90,7 +90,7 @@ approval, not a retroactive EPIC-00004 rewrite. No permission grant or request e
 TICKET-00066's approved split supplies [TASK-00274](../tasks/00274-TASK.md)'s atomic request-notice capture
 behind [TASK-00273](../tasks/00273-TASK.md)'s unresolved supported public contract, and
 [TASK-00277](../tasks/00277-TASK.md)'s operational notice readiness. Map those concrete prerequisites to this
-TICKET's later exposure TASKs alongside the still-unallocated TICKET-00068 credential primitives. Current self/
+TICKET's exposure TASKs alongside TICKET-00068's now-allocated TASK-00283–00287 credential primitives. Current self/
 admin authority, the protected Permission/callback, safe pending status and cancellation remain owned here;
 notice implementation does not replace `UnavailableEmailChangeAdministration` or make arbitrary callers trusted.
 Keep early authority primitives below final browser integration, without reverse-blocking notice capture or
@@ -105,7 +105,7 @@ The maintainer approved five independently reviewable slices:
 |---|---|---|
 | [TASK-00278](../tasks/00278-TASK.md) | Enforce current email-change authority | TASK-00036 and TASK-00117; complete managed policy extension and all supported caller checks, no mutation exposure |
 | [TASK-00279](../tasks/00279-TASK.md) | Inspect current pending changes safely | TASK-00278 and TASK-00051; scoped query/API and real read-only account panel |
-| [TASK-00280](../tasks/00280-TASK.md) | Request an own-address change through the account journey | TASK-00279, TASK-00274 and TASK-00277; `needs-info` for precise TICKET-00068 credential primitives and existing notice-contract hold |
+| [TASK-00280](../tasks/00280-TASK.md) | Request an own-address change through the account journey | TASK-00279, TASK-00274, TASK-00277 and TASK-00287; supplier mapping resolved, existing notice-contract and operational qualification holds remain |
 | [TASK-00281](../tasks/00281-TASK.md) | Cancel a pending change without affecting a successor | TASK-00279; `needs-info` for supported exact-intent/generation fencing and atomic self-cancellation audit |
 | [TASK-00282](../tasks/00282-TASK.md) | Administer another user's email change from user detail | TASK-00280, TASK-00281 and TASK-00123; complete protected cross-user API/UI integration behind their unresolved holds |
 
@@ -142,14 +142,17 @@ TASK-00282 extends the existing user detail under independent route/action check
 confirmation and current callback authority. Reuse the request/status/cancel primitives, not another pipeline.
 Administrator action remains attributable and cannot receive the new-mail credential or bypass its confirmation.
 TICKET-00069 retains actual explicit confirmation, client/session invalidation and login return. TICKET-00068
-must supply precise lower-level issuance/cipher/provider/recovery dependencies to TASK-00280 without reverse-
-blocking those suppliers on a completed account/admin journey. Existing notice primitives likewise remain upstream.
+now supplies TASK-00283 protected issuance, TASK-00284 shared real transport, TASK-00285 exact link delivery,
+TASK-00286 recovery and TASK-00287 actual operation. TASK-00280 consumes TASK-00287; TASK-00274 consumes only
+early TASK-00283 and TASK-00277 consumes shared TASK-00284, not completed credential recovery. Missing supplier
+mapping is resolved, not the supported notice/cancellation contracts or actual provider/schedule readiness.
+No supplier is reverse-blocked on a completed account/admin journey; safe status/cancel stay independent of sending.
 
 Each user-facing slice owns real safe HTTP/client behavior, PostgreSQL/package integration and applicable
 accessible browser evidence; no proof-only final TASK is added. All new orders are unranked; active
-TASK-00138/TASK-00226 and existing priorities remain unchanged. Nine of the map's 24 TICKETs now have approved
-written TASK splits; **15 remain, TICKET-00068–00082**. Older Harness/managed review planning is still incomplete.
-Next planning operation: `/skill:to-tasks TICKET-00068`. No permission, request, cancellation, UI or provider is live
+TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00068, ten of the map's 24 TICKETs
+have approved written TASK splits; **14 remain, TICKET-00069–00082**. Older Harness/managed review planning is
+still incomplete. Next planning operation: `/skill:to-tasks TICKET-00069`. No permission, request, cancellation, UI or provider is live
 from planning; implementation/worktree choice, upstream changes, review, publication and operational effects remain separate.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 382 records,
