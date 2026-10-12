@@ -253,4 +253,9 @@
 | [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | ready-for-agent | [TICKET-00034](../tickets/00034-TICKET.md) |
 | [TASK-00249](00249-TASK.md) | Resolve exact role profiles with truthful capability availability | needs-info | [TICKET-00034](../tickets/00034-TICKET.md) |
 | [TASK-00250](00250-TASK.md) | Bind role selections to isolated immutable Agent sessions | needs-info | [TICKET-00034](../tickets/00034-TICKET.md) |
+| [TASK-00251](00251-TASK.md) | Establish authorized Teams on registered Repositories | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00252](00252-TASK.md) | Manage Repository associations and preferred Teams | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00253](00253-TASK.md) | Enforce one-Team Agent membership and shared admission fences | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00254](00254-TASK.md) | Transfer idle Agents and remove associations safely | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00255](00255-TASK.md) | Operate Team and roster administration in the browser | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
 <!-- /planning:records -->

@@ -76,3 +76,12 @@ Approved as requirement area 6 of EPIC-00014's seven-TICKET split, consuming
 [TICKET-00062](00062-TICKET.md)'s roster plus [TICKET-00061](00061-TICKET.md)'s live Agent use. The first
 manual Explorer does not wait for a complete Workflow selector. The current parent Workflow and hotfix TICKETs
 remain the owners of claim, Kanban, routing and incident operations.
+
+TICKET-00062's approved TASK-00251/00252 supply registered Team/Repository/default facts,
+[TASK-00253](../tasks/00253-TASK.md) supplies roster/reference/admission fences and
+[TASK-00254](../tasks/00254-TASK.md) supplies guarded idle-transfer/removal. Map precise selector/start-consumer
+TASKs during this TICKET's decomposition. Actual enabled admission and commitment writers must participate in
+those shared fences; a preflight selector result or a cached busy flag cannot serialize against transfer.
+Keep primitive session/commitment participation separate from final selection/dispatch journeys to avoid cycles.
+No second claim/commitment store, full Workflow gate on manual Explorer use or assumption that a PR-wait label
+alone occupies an Agent is introduced. Existing actual creation/session/host holds remain unresolved.

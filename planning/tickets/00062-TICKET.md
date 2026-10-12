@@ -62,7 +62,11 @@ safe refetch/confirmation; never change another running session by changing the 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00251](../tasks/00251-TASK.md) | Establish authorized Teams on registered Repositories | ready-for-agent |
+| [TASK-00252](../tasks/00252-TASK.md) | Manage Repository associations and preferred Teams | ready-for-agent |
+| [TASK-00253](../tasks/00253-TASK.md) | Enforce one-Team Agent membership and shared admission fences | needs-info |
+| [TASK-00254](../tasks/00254-TASK.md) | Transfer idle Agents and remove associations safely | needs-info |
+| [TASK-00255](../tasks/00255-TASK.md) | Operate Team and roster administration in the browser | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -72,9 +76,52 @@ registered Repository identities and [WF-035](../wayfinder/tickets/WF-035-define
 Supplies membership to [TICKET-00063](00063-TICKET.md) and the selector in [TICKET-00064](00064-TICKET.md);
 no Repository grant, Team, Agent or association was created in planning.
 
-TICKET-00061's accepted decomposition requires this TICKET's actual Team/Repository/roster authority primitives
-in [TASK-00244](../tasks/00244-TASK.md) and the real Team-assigned Explorer path in
-[TASK-00247](../tasks/00247-TASK.md). Allocate precise primitive TASK blockers during decomposition. Keep those
-primitives independent of final Explorer integration and whole-TICKET operational acceptance; separate core
-association/authority capability from later Agent UI/full journey integration as needed to avoid a dependency cycle.
-No TASK for this TICKET is created or approved by this coordination note.
+The maintainer approved five dependency-ordered TASKs:
+
+- [TASK-00251](../tasks/00251-TASK.md): authorized Team creation/inspection/name management on a real registered
+  Repository, with initial association/default and an explicit protected managed-policy extension.
+- [TASK-00252](../tasks/00252-TASK.md): additional associations, complete default/alternative views and explicit
+  preferred-Team changes, without changing existing assignments or grants.
+- [TASK-00253](../tasks/00253-TASK.md): consistent one-Team initial Agent binding, roster/reference authority and
+  shared transaction-duration admission fences.
+- [TASK-00254](../tasks/00254-TASK.md): confirmed genuinely idle transfer and safe unlink/reference removal under
+  current commitment/default/reference checks.
+- [TASK-00255](../tasks/00255-TASK.md): accessible real browser Team/Repository/default/roster administration,
+  consuming the actual named-Agent creation owner rather than duplicating provisioning.
+
+TASK-00251/00252 are `ready-for-agent` behind their unfinished blockers. TASK-00253 retains `needs-info` for the
+supported initial creation/membership integration and actual participant mapping: the inspected package service
+generates the Agent ID and commits issuance internally, so a Team binding cannot be assumed from an outer
+transaction or post-commit subscriber. A missing public seam blocks creation, not permission for an orphaned
+Agent, hidden audit side effect, vendor patch or inferred upstream approval. TICKET-00063 consumes the supported
+primitive and retains actual named-Agent creation.
+
+TASK-00254 retains `needs-info` for actual manual-session/applicable Workflow commitment/admission primitives;
+TASK-00255 additionally needs TICKET-00063's precise creation TASK. No unassign may leave a retained Agent with
+zero Teams. Waiting for human review/PR merge alone does not imply busy, but active or uncertain commitments
+block transfer. Transfers preserve historical Team/session/grant bindings and advance current authority epochs;
+removal preserves valid defaults and assignments, with no force or cascade shortcut.
+
+TASK-00244, TASK-00247 and TASK-00250 now explicitly consume TASK-00253. TASK-00231 consumes TASK-00254 and its
+primitive dependency chain for actual writer qualification; downstream switch/restore/readiness inherit it.
+These mappings do not clear remaining contract/host/Harness holds or qualify runtime behavior. Creation/current-use
+consume early Team primitives, never TASK-00255's final browser journey; primitive session/commitment suppliers
+cannot depend on final Explorer work or TASK-00241 readiness. Full Workflow automation and Planning database
+cutover are not prerequisites for first manual Explorer use; unqualified admission paths remain disabled.
+
+TICKET-00064 keeps selection, same-Team delegation and authoritative start integration with its existing owners;
+this split creates no scheduling, commitment, claim or credential registry. All TASK orders remain unranked and
+active TASK-00138/TASK-00226 are unchanged. Planning creates no Team, Agent, Permission, session or live effect.
+
+The AccessControl map now has four of its 24 TICKETs decomposed; 20 remain, TICKET-00063–00082. The separate
+TICKET-00034 detour is already decomposed but does not finish older Harness planning. Next planning operation:
+`/skill:to-tasks TICKET-00063`, mapping actual named creation without making its consumers prerequisites of it.
+Implementation/worktree choice, fresh qualification, independent review, publication and operational authority
+remain separate.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 355 records,
+268 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations, with repetitive deprecation warnings. Evidence: `.runs/build/20261012T195256Z-42731`; summary log:
+`.runs/build/ticket-00062-to-tasks.log`. These validate the planning change and existing repository, not future
+Team/roster behavior, the creation/membership seam, commitment races or browser/Agent qualification. Independent
+review and publication remain unperformed.

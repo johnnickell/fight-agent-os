@@ -203,7 +203,8 @@ Agent/template/manual-session/provider prerequisites. Components consume early p
 writer/switch/restore acceptance consumes components; TASK-00241 follows that qualification; TASK-00247's real
 Explorer integration follows operational readiness. No whole-parent cycle or premature enablement is introduced.
 TASK-00171 consumes the shared MCP boundary while retaining judgment integration; TICKET-00065 consumes real
-Explorer evidence without a duplicate engine or run. The other 21 TICKETs still need accepted TASK decomposition.
+Explorer evidence without a duplicate engine or run. At that checkpoint, 21 TICKETs still needed accepted TASK
+decomposition; the subsequent approved Team split below leaves 20.
 No working product journey, live consumer qualification or published reference bundle follows from these records.
 
 The maintainer subsequently selected the existing [TICKET-00034](../tickets/00034-TICKET.md) as an explicit
@@ -212,8 +213,24 @@ prerequisite-planning detour and approved [TASK-00248](../tasks/00248-TASK.md) t
 integration. TASK-00247 now consumes TASK-00250; the Triage/Hotfix owners consume their applicable slices.
 Actual database-template/resource/model/session/Agent mappings remain held. TICKET-00075 consumes the reviewed
 definitions and supplies database authority to the resolver, avoiding a whole-parent cycle or duplicate catalog.
-This does not reduce this map's 21 remaining TICKET decompositions or complete older Harness requirements.
-Return to TICKET-00062 next; no new execution priority, grant or runtime qualification follows.
+That detour did not reduce this map's then-21 remaining TICKET decompositions or complete older Harness requirements.
+
+The maintainer then approved [TICKET-00062](../tickets/00062-TICKET.md)'s five-TASK split:
+[TASK-00251](../tasks/00251-TASK.md) establishes protected Teams on registered Repositories;
+[TASK-00252](../tasks/00252-TASK.md) manages associations/defaults;
+[TASK-00253](../tasks/00253-TASK.md) supplies one-Team membership and admission fences;
+[TASK-00254](../tasks/00254-TASK.md) supplies guarded idle-transfer/removal; and
+[TASK-00255](../tasks/00255-TASK.md) integrates actual browser Team/roster administration.
+TASK-00253–00255 retain `needs-info` for the supported creation/membership seam, actual session/commitment
+participants and named-Agent creation. The package's internal issuance transaction does not imply atomic Team
+binding; unknown seams block creation rather than permit committed orphan Agents or post-commit repair.
+
+TASK-00244/00247/00250 now consume TASK-00253 and TASK-00231 consumes TASK-00254's real writer chain. These
+mappings do not clear actual contract/participant qualification holds. Creation/current-use consume early Team
+primitives, not final roster UI; named creation will supply TASK-00255. No full Workflow automation or Planning
+cutover gate is added to first manual use. All new TASKs remain unranked, with active work unchanged. No Team,
+Agent, grant, session, runtime or live proof follows. Four of the map's 24 TICKETs now have approved TASK splits;
+**20 remain, TICKET-00063–00082**, alongside older incomplete Harness planning outside this map.
 
 ## Approved EPIC handoff
 
@@ -254,9 +271,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00062` for
-[TICKET-00062](../tickets/00062-TICKET.md), mapping its actual Team primitives into TASK-00244/00247 without
-whole-TICKET cycles, then continue across this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00063` for
+[TICKET-00063](../tickets/00063-TICKET.md), mapping actual named-Agent creation for its profile/Explorer/roster
+consumers without whole-TICKET cycles, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

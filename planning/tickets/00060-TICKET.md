@@ -106,7 +106,11 @@ Harness/Workflow owner. Human managed Permissions and Team-bound creation stay w
 HMAC, activation and broker-use controls stay with TICKET-00061. Safe operator enrollment, even when implemented,
 is not a production grant or permission to launch. Orders remain unranked and Board active work is unchanged.
 
-Next planning operation: `/skill:to-tasks TICKET-00062`, mapping its Team primitives without parent cycles,
+TICKET-00062's accepted TASK-00253/00254 now supply actual Team authority and guarded writer prerequisites
+through TASK-00244/TASK-00231. Their unresolved creation/membership and commitment-participant holds remain;
+no primitive depends on final browser administration or TASK-00241 readiness.
+
+Next planning operation: `/skill:to-tasks TICKET-00063`, mapping named creation without parent cycles,
 then continue the remaining map TICKET decompositions. Implementation/worktree choice, independent review,
 publication, merge and live operational effects remain separate.
 

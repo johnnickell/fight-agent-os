@@ -89,9 +89,12 @@ The maintainer approved six dependency-ordered TASK slices:
 TASK-00242–00245 are now linked into TASK-00231–00233 and TASK-00241, directly or through explicit dependency
 chains. Those four existing TASKs become `ready-for-agent` only behind their recorded unfinished blockers; this
 resolves their direct TICKET-00061 mapping, not implementation or runtime qualification. TASK-00244/00245 retain
-`needs-info` for actual Team/Harness/host and first-party origin prerequisites; TASK-00247 additionally needs
-accepted named-Agent, managed-template and real manual-session/provider TASKs. No missing owner is represented
-by a fabricated ID or a passing fixture. These holds still block the integrated qualification path.
+`needs-info` for remaining Harness/host and first-party origin prerequisites. TICKET-00062's accepted
+TASK-00253 now supplies the exact Team authority to TASK-00244/00247/00250, with its creation/membership seam
+and participant holds intact; TASK-00254 feeds writer qualification through TASK-00231. TICKET-00034's
+TASK-00248–00250 supply the profile dependency chain, retaining actual resource/session prerequisites.
+TASK-00247 still needs named creation and real manual-session/provider participants. No missing owner is
+represented by a fabricated ID or fixture. These holds still block the integrated qualification path.
 
 The dependency direction is persistence/credential primitives → authentication/activation/current-use components
 → integrated writer/switch/restore qualification → TASK-00241 operational readiness → TASK-00247 manual Explorer
@@ -106,8 +109,8 @@ explicit complete-policy extension with stable generated identities, not implici
 of TASK-00036's original catalog. Browser JWT and Agent HMAC stay separate. Planning changes no runtime behavior,
 creates no Agent/credential/session/grant and leaves all new TASK orders unranked and active Board work unchanged.
 
-Next planning operation: `/skill:to-tasks TICKET-00062`, mapping its Team primitives into TASK-00244/00247 without
-parent cycles; then continue the remaining map TICKET decompositions. Worktree selection, implementation, real
+Next planning operation: `/skill:to-tasks TICKET-00063`, mapping named-Agent creation for its actual consumers
+without parent cycles; then continue the remaining map TICKET decompositions. Worktree selection, implementation, real
 qualification, independent review, publication and operational enrollment remain separately authorized.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 347 records,

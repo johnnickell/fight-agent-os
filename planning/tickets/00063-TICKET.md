@@ -89,3 +89,13 @@ Named-Agent creation consumes those primitives, not TASK-00250's downstream sess
 instead consumes the actual creation capability. Map that direction during this TICKET's decomposition to avoid
 requiring a running role session before its Agent can be created. Triage and Hotfix consumers retain explicit
 holds for actual named identities/direct authority, not just a template label.
+
+TICKET-00062's approved [TASK-00253](../tasks/00253-TASK.md), through TASK-00251/00252, now supplies initial
+Team binding and authoritative roster/reference fences. Its supported creation/membership seam remains a hard
+qualification hold: package issuance owns its transaction and generated Agent ID; no outer nested transaction,
+post-commit orphan repair or hidden audit policy establishes exactly one Team at creation. Resolve the actual
+supported integration in the primitive, then consume it here; do not make that primitive depend on this whole
+TICKET or its final browser journey. [TASK-00255](../tasks/00255-TASK.md)'s roster UI instead consumes this
+TICKET's actual named-Agent creation. TASK-00254 supplies guarded idle transfer/removal, not a second creation
+route. Coordinate distinct managed Team/Agent rights once, preserving protected tiers and the complete policy.
+No TASK split for named creation is allocated by this handoff.
