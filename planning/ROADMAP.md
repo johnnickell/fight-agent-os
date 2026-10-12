@@ -105,7 +105,6 @@ the same operation that completes their children.
 |---|---|---|
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | ready-for-agent |
-| [EPIC-00016](epics/00016-EPIC.md) | Deliver usable Feature Flags management and enforcement | ready-for-agent |
 | [EPIC-00017](epics/00017-EPIC.md) | Author versioned Agent templates with human-approved AI assistance | ready-for-agent |
 | [EPIC-00018](epics/00018-EPIC.md) | Publish the qualified Agent OS AccessControl reference-consumer handoff | ready-for-agent |
 
@@ -125,4 +124,9 @@ the same operation that completes their children.
 | [TICKET-00067](tickets/00067-TICKET.md) | Request inspect and cancel a pending human email change | [EPIC-00015](epics/00015-EPIC.md) | ready-for-agent |
 | [TICKET-00068](tickets/00068-TICKET.md) | Deliver and recover new-mailbox confirmation credentials | [EPIC-00015](epics/00015-EPIC.md) | ready-for-agent |
 | [TICKET-00069](tickets/00069-TICKET.md) | Confirm email change explicitly and return to login | [EPIC-00015](epics/00015-EPIC.md) | ready-for-agent |
+| [TICKET-00070](tickets/00070-TICKET.md) | Discover provision and prepare complete Feature references | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
+| [TICKET-00071](tickets/00071-TICKET.md) | Enforce current Feature availability at every registered entry | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
+| [TICKET-00072](tickets/00072-TICKET.md) | Show a complete authenticated Feature catalog and availability | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
+| [TICKET-00073](tickets/00073-TICKET.md) | Administer immutable Feature settings and safe rollout transitions | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
+| [TICKET-00074](tickets/00074-TICKET.md) | Retire only currently unreferenced Features and reintroduce safely | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 <!-- /planning:frontier -->

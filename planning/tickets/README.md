@@ -72,4 +72,9 @@
 | [TICKET-00067](00067-TICKET.md) | Request inspect and cancel a pending human email change | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
 | [TICKET-00068](00068-TICKET.md) | Deliver and recover new-mailbox confirmation credentials | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
 | [TICKET-00069](00069-TICKET.md) | Confirm email change explicitly and return to login | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
+| [TICKET-00070](00070-TICKET.md) | Discover provision and prepare complete Feature references | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00071](00071-TICKET.md) | Enforce current Feature availability at every registered entry | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00072](00072-TICKET.md) | Show a complete authenticated Feature catalog and availability | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00073](00073-TICKET.md) | Administer immutable Feature settings and safe rollout transitions | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00074](00074-TICKET.md) | Retire only currently unreferenced Features and reintroduce safely | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
 <!-- /planning:records -->
