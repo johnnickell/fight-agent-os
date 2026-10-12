@@ -188,8 +188,12 @@ manual use through existing Agent creation. Publication changes no existing Agen
 reproducible actual references and one immutable controlled-access maintainer handoff with successor
 requalification. Final external publication still requires the complete qualified consumer journey.
 All 24 requirements ([TICKET-00059](../tickets/00059-TICKET.md) through
-[TICKET-00082](../tickets/00082-TICKET.md)) await separate TASK decomposition. These handoffs create no TASKs
-and establish no working product journey, consumer qualification or published reference bundle.
+[TICKET-00082](../tickets/00082-TICKET.md)) have accepted TICKET records.
+[TICKET-00059](../tickets/00059-TICKET.md)'s seven-TASK split is now approved and written as
+[TASK-00227](../tasks/00227-TASK.md) through [TASK-00233](../tasks/00233-TASK.md). TASK-00231–00233 retain
+`needs-info` for exact adjacent participant/dependency mapping; TICKET-00060/00061 consume the earlier persistence
+primitives, not whole-parent completion. The other 23 TICKETs still need accepted TASK decomposition.
+No working product journey, live consumer qualification or published reference bundle follows from these records.
 
 ## Approved EPIC handoff
 
@@ -230,9 +234,10 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00059` for
-[TICKET-00059](../tickets/00059-TICKET.md), then continue across this map's remaining accepted TICKETs before
-implementation selection. This authored planning order does not change the TASK Board's active work or execution
+**Next planning operation:** `/skill:to-tasks TICKET-00060` for
+[TICKET-00060](../tickets/00060-TICKET.md), mapping its actual primitive dependencies into TASK-00231–00233
+without whole-TICKET cycles, then continue across this map's remaining accepted TICKETs before implementation
+selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.
 

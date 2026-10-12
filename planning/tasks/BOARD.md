@@ -20,6 +20,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | [TICKET-00038 — Guard Pi tool execution with deterministic restrictions and Jev](../tickets/00038-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | [TICKET-00037 — Configure and qualify Jev access for the Harness](../tickets/00037-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -161,6 +162,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00220](00220-TASK.md) | Verify library distribution against project policy | [TICKET-00057 — Publish a library release](../tickets/00057-TICKET.md) | ready-for-agent | [TASK-00219](00219-TASK.md) | — |
 | — | [TASK-00223](00223-TASK.md) | Execute the approved application rollout and reconcile provider state | [TICKET-00058 — Deploy an application release](../tickets/00058-TICKET.md) | ready-for-agent | [TASK-00222](00222-TASK.md) | — |
 | — | [TASK-00224](00224-TASK.md) | Verify production health and coordinate bounded recovery | [TICKET-00058 — Deploy an application release](../tickets/00058-TICKET.md) | ready-for-agent | [TASK-00223](00223-TASK.md) | — |
+| — | [TASK-00228](00228-TASK.md) | Enforce shared cohort admission | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | [TASK-00227](00227-TASK.md) | — |
+| — | [TASK-00229](00229-TASK.md) | Persist correlated issuance and credential retirement | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | [TASK-00228](00228-TASK.md) | — |
+| — | [TASK-00230](00230-TASK.md) | Persist recoverable delivery and maintenance state | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | [TASK-00229](00229-TASK.md) | — |
 
 ## Needs Info
 
@@ -177,6 +181,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00221](00221-TASK.md) | Finish library branch follow-through and release closeout | [TICKET-00057 — Publish a library release](../tickets/00057-TICKET.md) | needs-info | [TASK-00220](00220-TASK.md) | — |
 | — | [TASK-00222](00222-TASK.md) | Qualify and preflight an exact application deployment target | [TICKET-00058 — Deploy an application release](../tickets/00058-TICKET.md) | needs-info | [TASK-00217](00217-TASK.md) | — |
 | — | [TASK-00225](00225-TASK.md) | Finish application branch follow-through and release closeout | [TICKET-00058 — Deploy an application release](../tickets/00058-TICKET.md) | needs-info | [TASK-00224](00224-TASK.md) | — |
+| — | [TASK-00231](00231-TASK.md) | Fence every authority-changing writer | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | needs-info | [TASK-00230](00230-TASK.md) | — |
+| — | [TASK-00232](00232-TASK.md) | Operate controlled cohort changes and exclude old writers | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | needs-info | [TASK-00231](00231-TASK.md) | — |
+| — | [TASK-00233](00233-TASK.md) | Reconcile controlled restoration without resurrecting authority | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | needs-info | [TASK-00232](00232-TASK.md) | — |
 
 ## Human Action
 

@@ -229,4 +229,11 @@
 | [TASK-00224](00224-TASK.md) | Verify production health and coordinate bounded recovery | ready-for-agent | [TICKET-00058](../tickets/00058-TICKET.md) |
 | [TASK-00225](00225-TASK.md) | Finish application branch follow-through and release closeout | needs-info | [TICKET-00058](../tickets/00058-TICKET.md) |
 | [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | in-progress | — |
+| [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00228](00228-TASK.md) | Enforce shared cohort admission | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00229](00229-TASK.md) | Persist correlated issuance and credential retirement | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00230](00230-TASK.md) | Persist recoverable delivery and maintenance state | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00231](00231-TASK.md) | Fence every authority-changing writer | needs-info | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00232](00232-TASK.md) | Operate controlled cohort changes and exclude old writers | needs-info | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00233](00233-TASK.md) | Reconcile controlled restoration without resurrecting authority | needs-info | [TICKET-00059](../tickets/00059-TICKET.md) |
 <!-- /planning:records -->

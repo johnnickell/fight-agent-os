@@ -111,7 +111,6 @@ the same operation that completes their children.
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
 | [TICKET-00034](tickets/00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00059](tickets/00059-TICKET.md) | Persist and fence current Agent credential operations | [EPIC-00014](epics/00014-EPIC.md) | ready-for-agent |
 | [TICKET-00060](tickets/00060-TICKET.md) | Deliver protected Agent credential lifecycle and recovery | [EPIC-00014](epics/00014-EPIC.md) | ready-for-agent |
 | [TICKET-00061](tickets/00061-TICKET.md) | Authenticate and authorize current Agent tool use | [EPIC-00014](epics/00014-EPIC.md) | ready-for-agent |
 | [TICKET-00062](tickets/00062-TICKET.md) | Administer Repository-linked Teams and Agent rosters | [EPIC-00014](epics/00014-EPIC.md) | ready-for-agent |

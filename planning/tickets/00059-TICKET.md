@@ -65,7 +65,13 @@ Admin UI access is not admission. Actor/target/delegation checks remain mandator
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00227](../tasks/00227-TASK.md) | Accept the Agent persistence and restoration design | ready-for-agent |
+| [TASK-00228](../tasks/00228-TASK.md) | Enforce shared cohort admission | ready-for-agent |
+| [TASK-00229](../tasks/00229-TASK.md) | Persist correlated issuance and credential retirement | ready-for-agent |
+| [TASK-00230](../tasks/00230-TASK.md) | Persist recoverable delivery and maintenance state | ready-for-agent |
+| [TASK-00231](../tasks/00231-TASK.md) | Fence every authority-changing writer | needs-info |
+| [TASK-00232](../tasks/00232-TASK.md) | Operate controlled cohort changes and exclude old writers | needs-info |
+| [TASK-00233](../tasks/00233-TASK.md) | Reconcile controlled restoration without resurrecting authority | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -75,3 +81,28 @@ Approved as requirement area 1 of EPIC-00014's seven-TICKET split. Supply the op
 claimed merely by completing this persistence slice. Consume [WF-033](../wayfinder/tickets/WF-033-define-agent-operation-adoption-boundary.md)
 and installed package operation/cohort/restoration contracts subject to exact release qualification. No
 implementation or admission evidence was created during decomposition.
+
+The maintainer subsequently approved seven dependency-ordered TASK slices:
+[TASK-00227](../tasks/00227-TASK.md) accepts the concrete persistence/restoration design;
+[TASK-00228](../tasks/00228-TASK.md) implements shared cohort admission;
+[TASK-00229](../tasks/00229-TASK.md) persists original issuance and atomic retirement;
+[TASK-00230](../tasks/00230-TASK.md) completes recoverable delivery/maintenance persistence and queries;
+[TASK-00231](../tasks/00231-TASK.md) integrates every authority-changing writer;
+[TASK-00232](../tasks/00232-TASK.md) operates controlled cohort changes and actual old-writer exclusion; and
+[TASK-00233](../tasks/00233-TASK.md) reconciles controlled restoration against independent history and live effects.
+
+TASK-00231–00233 remain `needs-info` until adjacent TICKET-00060/00061 and relevant policy-owner decompositions
+identify their actual destination/key/delegation, sink/worker/recovery and activation/use TASK prerequisites.
+Add precise blocker edges before readiness; do not invent IDs or make primitive implementations depend on this
+entire TICKET's completion. They consume TASK-00228–00230, while later integrated writer/switch/restore acceptance
+consumes their real participants. This preserves a non-circular qualification path without enabling a partial
+composition. TASK order is unranked; the existing Board priorities and active work remain unchanged.
+
+These records implement nothing and qualify no live operation. Continue map-wide TASK planning with
+[TICKET-00060](00060-TICKET.md), not execution selection or cohort enablement.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 333 records,
+246 active; `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero violations. Repetitive
+deprecation warnings remain. Evidence: `.runs/build/20261012T153305Z-34306`; summary log:
+`.runs/build/ticket-00059-to-tasks.log`. These checks validate the planning change and existing repository, not
+future cohort, writer, credential or restoration behavior. Independent review, publication and merge are separate.
