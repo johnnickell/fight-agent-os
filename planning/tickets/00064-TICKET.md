@@ -126,11 +126,17 @@ consumers do not resolve TASK-00254's missing lower-level commitment writers and
 of TASK-00244, TASK-00254, TASK-00241 or final manual Explorer use. No second claim/commitment/queue/Runner,
 automatic unrelated TASK selection, cross-Team peer delegation, merge or operational enrollment is introduced.
 
-All new TASKs are unranked and active TASK-00138/TASK-00226 remain unchanged. Six of the map's 24 TICKETs now
-have approved written TASK decompositions; 18 remain, TICKET-00065–00082. Older Harness/managed review planning
-is not completed by these mappings. Next planning operation: `/skill:to-tasks TICKET-00065`, integrating real
-role outcomes through existing owners rather than replacing them. Implementation/worktree choice, fresh runtime
-qualification, independent review, publication and live effects remain separately authorized.
+TICKET-00065's subsequent TASK-00267 consumes actual TASK-00265 intake/Triage and TASK-00141 implementation
+for independent managed review, followed by TASK-00268 QA and TASK-00269 publication. Its other slices consume
+browser Planning, direct hotfix and independent library/application release paths. These are final integrations,
+not the missing generic phase/session/commitment primitives; no reverse blocker or live readiness is inferred.
+
+All new TASKs are unranked and active TASK-00138/TASK-00226 remain unchanged. With the TICKET-00065 split,
+seven of the map's 24 TICKETs have approved written TASK decompositions; 17 remain, TICKET-00066–00082.
+Older Harness/managed review planning is not completed by these mappings.
+Next planning operation: `/skill:to-tasks TICKET-00066`, preserving the atomic old-mailbox notice seam.
+Implementation/worktree choice, fresh runtime qualification, independent review, publication and live effects
+remain separately authorized.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 365 records,
 278 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero

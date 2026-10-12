@@ -110,7 +110,6 @@ the same operation that completes their children.
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00065](tickets/00065-TICKET.md) | Operate all eight managed Agents in their owned journeys | [EPIC-00014](epics/00014-EPIC.md) | ready-for-agent |
 | [TICKET-00066](tickets/00066-TICKET.md) | Durably notify the old mailbox of email-change request and completion | [EPIC-00015](epics/00015-EPIC.md) | ready-for-agent |
 | [TICKET-00067](tickets/00067-TICKET.md) | Request inspect and cancel a pending human email change | [EPIC-00015](epics/00015-EPIC.md) | ready-for-agent |
 | [TICKET-00068](tickets/00068-TICKET.md) | Deliver and recover new-mailbox confirmation credentials | [EPIC-00015](epics/00015-EPIC.md) | ready-for-agent |

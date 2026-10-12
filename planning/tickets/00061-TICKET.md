@@ -115,8 +115,12 @@ TICKET-00064's accepted TASK-00261–00264 now consume current-use and roster pr
 admission; they do not resolve lower-level Harness/commitment holds or become reverse blockers of TASK-00244
 or first manual Explorer use. Newly enabled participants still need current qualification, not inherited receipts.
 
-Next planning operation: `/skill:to-tasks TICKET-00065`, mapping real role outcomes through their existing
-owners; then continue the remaining map TICKET decompositions. Worktree selection, implementation, real
+TICKET-00065's accepted TASK-00266 now consumes TASK-00247's actual Explorer result alongside the separate
+Project Manager browser journey; TASK-00267–00272 integrate other owned roles without becoming prerequisites
+of manual use or clearing its remaining host/session holds.
+
+Next planning operation: `/skill:to-tasks TICKET-00066`, preserving the atomic old-mailbox notice seam;
+then continue the remaining map TICKET decompositions. Worktree selection, implementation, real
 qualification, independent review, publication and operational enrollment remain separately authorized.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 347 records,

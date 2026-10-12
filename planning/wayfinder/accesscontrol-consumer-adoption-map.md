@@ -285,8 +285,40 @@ TASK-00241/manual Explorer on selection or complete Workflow journeys. Every new
 requires refreshed current shared-fence/cohort evidence. No cross-Team peer delegation, autonomous TASK pick,
 Agent, grant, Workflow, process, merge or live qualification follows from these records.
 
-All new orders remain unranked and active work unchanged. **Six of the map's 24 TICKETs have approved written
-TASK splits; 18 remain, TICKET-00065–00082**, alongside older incomplete Harness/managed review planning.
+That split brought the map to six written TASK decompositions, leaving 18 at that checkpoint.
+
+The maintainer subsequently approved [TICKET-00065](../tickets/00065-TICKET.md)'s seven integration TASKs:
+[TASK-00266](../tasks/00266-TASK.md) connects Project Manager to human-governed browser Planning and consumes
+TASK-00247's original real Explorer result; [TASK-00267](../tasks/00267-TASK.md) continues actual Team Lead/
+Software Engineer work and human-selected Triage intake into independent same-Team Senior Engineer review;
+[TASK-00268](../tasks/00268-TASK.md) integrates separate QA; [TASK-00269](../tasks/00269-TASK.md) integrates
+bounded Release Manager PR publication; [TASK-00270](../tasks/00270-TASK.md) consumes the actual confirmed direct
+Hotfix Engineer handoff; and [TASK-00271](../tasks/00271-TASK.md)/[TASK-00272](../tasks/00272-TASK.md) integrate
+qualified library/application release paths independently.
+
+TASK-00266–00269 retain `needs-info` for actual browser conversation/proposal and generic managed Review/QA/
+publication owners. TASK-00270 waits on TASK-00207/00250/00241 and their unresolved capabilities. TASK-00271/00272
+retain `needs-info` for real qualified projects/runbooks/providers and signer/environment/health prerequisites,
+plus existing generic Review/QA and applicable merge-observation holds. Local Skills, template rows, fixture
+success and EPIC-00008's terminal metadata do not qualify these paths. No target or production effect is authorized.
+
+These final Agent/Team integrations consume the existing owners, implement only demonstrated missing bindings
+and reuse attributable valid outcomes without another Explorer launch, incident, release, proof registry or
+credential ceremony. They are not the missing generic primitives for TASK-00207/00215/00250/00264. Do not add
+reverse cycles through completed role journeys or gate the first manual Explorer/terminal implementation on
+browser Planning or full Review/QA/publication. Current shared qualification still applies to every enabled
+participant; changed inputs require affected evidence refresh rather than relabeling old receipts.
+
+The normal review → QA → PR integration chain is explicit; Project Manager, direct hotfix and the separate
+release paths retain their own prerequisites. One actual release TASK/Workflow per candidate remains unchanged,
+with separate human merge/signing/exact-effect authority. A PR alone is not a release/deployment, missing targets
+stay unaccepted, and meaningful real QA cannot be replaced by all-N/A paperwork. TICKET-00065 maps all eight
+role outcomes and the supporting Triage journey to actual owning evidence, without another parent acceptance gate.
+
+All seven EPIC-00014 requirement TICKETs now have approved written TASK decompositions, not completed runtime.
+All new orders remain unranked and active work unchanged. **Seven of the map's 24 TICKETs have approved written
+TASK splits; 17 remain, TICKET-00066–00082**, alongside older incomplete Harness/managed review planning.
+No Agent, grant, conversation, Workflow, review, PR, release, deployment or operational evidence was created.
 
 ## Approved EPIC handoff
 
@@ -327,9 +359,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00065` for
-[TICKET-00065](../tickets/00065-TICKET.md), mapping actual managed-role outcomes through their existing owners
-without whole-TICKET cycles, then continue this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00066` for
+[TICKET-00066](../tickets/00066-TICKET.md), preserving the supported atomic old-mailbox notice seam before
+email-change exposure, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

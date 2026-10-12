@@ -268,4 +268,11 @@
 | [TASK-00263](00263-TASK.md) | Bind Team selection at the authoritative start | needs-info | [TICKET-00064](../tickets/00064-TICKET.md) |
 | [TASK-00264](00264-TASK.md) | Enforce same-Team delegation and reviewer independence | needs-info | [TICKET-00064](../tickets/00064-TICKET.md) |
 | [TASK-00265](00265-TASK.md) | Operate withdrawable Pending start through existing entry paths | ready-for-agent | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00266](00266-TASK.md) | Connect Project Manager to human-governed browser Planning | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00267](00267-TASK.md) | Continue Team implementation into independent Senior Engineer review | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00268](00268-TASK.md) | Integrate separate QA Engineer verification | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00269](00269-TASK.md) | Integrate Release Manager PR publication and human handoff | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00270](00270-TASK.md) | Complete the named Hotfix Engineer's controlled handoff | ready-for-agent | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00271](00271-TASK.md) | Integrate managed Agents with a qualified library release | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00272](00272-TASK.md) | Integrate managed Agents with a qualified application release | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
 <!-- /planning:records -->

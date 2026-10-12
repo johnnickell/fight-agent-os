@@ -188,6 +188,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00259](00259-TASK.md) | Inspect current Agents and manage lifecycle intent | [TICKET-00063 — Administer named managed Agents and safe lifecycle intent](../tickets/00063-TICKET.md) | ready-for-agent | [TASK-00258](00258-TASK.md), [TASK-00245](00245-TASK.md) | — |
 | — | [TASK-00262](00262-TASK.md) | Recommend fair default or alternate-Team intake | [TICKET-00064 — Select eligible Teams and Agents for authorized work](../tickets/00064-TICKET.md) | ready-for-agent | [TASK-00261](00261-TASK.md) | — |
 | — | [TASK-00265](00265-TASK.md) | Operate withdrawable Pending start through existing entry paths | [TICKET-00064 — Select eligible Teams and Agents for authorized work](../tickets/00064-TICKET.md) | ready-for-agent | [TASK-00263](00263-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00204](00204-TASK.md), [TASK-00205](00205-TASK.md), [TASK-00241](00241-TASK.md) | — |
+| — | [TASK-00270](00270-TASK.md) | Complete the named Hotfix Engineer's controlled handoff | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | ready-for-agent | [TASK-00207](00207-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00241](00241-TASK.md) | — |
 
 ## Needs Info
 
@@ -216,6 +217,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00261](00261-TASK.md) | Resolve current Agent eligibility for selected work | [TICKET-00064 — Select eligible Teams and Agents for authorized work](../tickets/00064-TICKET.md) | needs-info | [TASK-00139](00139-TASK.md), [TASK-00244](00244-TASK.md), [TASK-00258](00258-TASK.md) | — |
 | — | [TASK-00263](00263-TASK.md) | Bind Team selection at the authoritative start | [TICKET-00064 — Select eligible Teams and Agents for authorized work](../tickets/00064-TICKET.md) | needs-info | [TASK-00262](00262-TASK.md) | — |
 | — | [TASK-00264](00264-TASK.md) | Enforce same-Team delegation and reviewer independence | [TICKET-00064 — Select eligible Teams and Agents for authorized work](../tickets/00064-TICKET.md) | needs-info | [TASK-00263](00263-TASK.md) | — |
+| — | [TASK-00266](00266-TASK.md) | Connect Project Manager to human-governed browser Planning | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00247](00247-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00114](00114-TASK.md) | — |
+| — | [TASK-00267](00267-TASK.md) | Continue Team implementation into independent Senior Engineer review | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00141](00141-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00265](00265-TASK.md) | — |
+| — | [TASK-00268](00268-TASK.md) | Integrate separate QA Engineer verification | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00267](00267-TASK.md) | — |
+| — | [TASK-00269](00269-TASK.md) | Integrate Release Manager PR publication and human handoff | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00268](00268-TASK.md) | — |
+| — | [TASK-00271](00271-TASK.md) | Integrate managed Agents with a qualified library release | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00221](00221-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00241](00241-TASK.md) | — |
+| — | [TASK-00272](00272-TASK.md) | Integrate managed Agents with a qualified application release | [TICKET-00065 — Operate all eight managed Agents in their owned journeys](../tickets/00065-TICKET.md) | needs-info | [TASK-00225](00225-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00241](00241-TASK.md) | — |
 
 ## Human Action
 

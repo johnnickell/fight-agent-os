@@ -115,12 +115,13 @@ TICKET-00064 keeps selection, same-Team delegation and authoritative start integ
 this split creates no scheduling, commitment, claim or credential registry. All TASK orders remain unranked and
 active TASK-00138/TASK-00226 are unchanged. Planning creates no Team, Agent, Permission, session or live effect.
 
-With the subsequent TICKET-00063/00064 splits, six of the map's 24 TICKETs are decomposed; 18 remain,
-TICKET-00065–00082. TASK-00258 consumes early Team binding. TASK-00261–00264 now consume roster/fence facts
+With the subsequent TICKET-00063–00065 splits, seven of the map's 24 TICKETs are decomposed; 17 remain,
+TICKET-00066–00082. TASK-00258 consumes early Team binding. TASK-00261–00264 now consume roster/fence facts
 for eligibility and owning start/delegation but do not resolve lower-level commitment-writer holds in TASK-00254.
 Do not reverse-block that primitive on these consumers or require full Workflow selection for manual Explorer.
 The separate TICKET-00034 detour is decomposed but does not finish older Harness planning.
-Next planning operation: `/skill:to-tasks TICKET-00065`, preserving existing role-journey ownership.
+TASK-00266–00272 now consume the existing role journeys without supplying these missing primitives or
+becoming reverse prerequisites. Next planning operation: `/skill:to-tasks TICKET-00066`.
 Implementation/worktree choice, fresh qualification, independent review, publication and operational authority
 remain separate.
 
