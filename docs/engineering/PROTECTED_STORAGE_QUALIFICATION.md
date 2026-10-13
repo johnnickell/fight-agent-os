@@ -383,6 +383,89 @@ R1 advances only for these encryption/recovery/comparison primitives. R2 uncerta
 aggregate accounting, and R3 independently authoritative required checks receive **no new qualification** here.
 TASK-00139 remains blocked; independent review and applicable QA are separate from these builder observations.
 
+## Schema-scoped restore admission fence — 2026-10-13 UTC
+
+This **R1 / AC-1** follow-up qualifies a PostgreSQL role/transaction mechanism for **controlled replacement of one
+schema**, not full-database restoration or package conformance. Run `d431931d-64f9-4399-9cd1-ec49e607ff47`,
+22:26:39–22:26:51 UTC, passed **93 scoped observations**. Exact SQL/Python, independent-session commands and outputs,
+blocking-backend observations, profiles and retirement are under `.runs/tasks/TASK-00138/restore-admission/` in the
+authorized worktree. The first attempt passed; intentional denied operations and terminated clients are retained.
+
+### Boundary and retained facts
+
+The dump contains only `payload`: inert entries and local generation/high-water metadata. A separate, non-dumped
+`control` schema holds an append-only fixture journal, sink-fact projection, generation sequence, incarnation registry
+and admission gate. A non-login owner owns both schemas/functions. The connected runtime role has only CONNECT,
+schema usage and EXECUTE for **stage, retire and status**; no direct table, schema-creation, temporary-table, role-
+escalation or reconciliation privileges. Definer functions use an explicit `pg_catalog` search path and qualified
+relation names. This is measured SQL privilege separation, not authentication of a deployed service: the trusted
+operator uses local `docker exec`/Unix-socket sessions in an isolated, trust-authenticated fixture database.
+
+Every fixture runtime operation locks the protected singleton gate **for the whole transaction**. Restore closure,
+repair and publication take that same conflicting lock. This conservatively serializes all fixture operations,
+including status; it is not a throughput recommendation. Closure commits before `pg_restore` may run. It withdraws
+the witness and allocates a strictly newer sequence generation and PostgreSQL-generated UUID, retained in a unique
+registry outside the dump. The gate binds that logical incarnation to the actual restored entry relation OID and
+local metadata; runtime callers also supply the expected incarnation/generation. A relation OID alone is not a
+never-reused identity. This mechanism assumes the trusted operator controls **every** schema replacement and does
+not roll back `control`; it does not authenticate an arbitrary restored cluster or defeat a bypassing administrator.
+
+Stage/retire atomically append exact inert after-images, a sequence/hash chain and protected count/head anchor while
+updating the sink projection. Repair verifies the complete fixture chain against that anchor and projection, then
+reconstructs the latest retained rows, original receipts, tombstones and maximum order. It creates neither new
+receipts nor replacement material. Repair commits while closed; publication separately rechecks the history,
+payload, incarnation, generation and relation identity under exclusion before publishing the witness. Ordinary
+admitted writes extend the journal automatically, without manually renewing a content manifest or generation.
+
+Staged payloads are public inert strings, **not encrypted credentials**. The sink projection is
+another protected table, **not an external delivery sink**. Earlier inert values remain in journal history; this is
+not a credential-erasure or key-retention design. These reduced state facts omit the complete package canonical
+request, twelve-field issuance, Agent/Permission/key authority, leases and external-call histories. The journal's
+source and projection share one database transaction/control plane; neither supplies independent off-host durability.
+
+### Direct outcomes
+
+| Probe | Observed outcome |
+|---|---|
+| Runtime privilege bypass | Eleven actual role-level attempts failed SQLSTATE `42501` without state change: payload/journal/gate writes, repair/publication/restore/private-helper calls, owner-role escalation, schema creation, temporary shadow table and replication-role bypass. These are the fixture's complete exposed paths, not all package writers. |
+| Live writer versus close | Restore closure demonstrably blocked on the live stage transaction's backend. After writer commit, closure proceeded; the original subject was denied and the new generation/incarnation remained closed. |
+| Interrupted operator before replacement | Controlled database restart preserved the closed gate, pending incarnation and journal. No cached startup readiness resumed writes. |
+| Actual older restore | `pg_dump --schema=payload --format=custom` and `pg_restore --clean --if-exists --exit-on-error` restored the first-entry checkpoint. It resurrected the inert first material and omitted later entries/cleanup; the non-dumped journal was unchanged. Old local generation, attempted publication and both runtime writers remained denied. Restored inert material was inspected, not authorized for use. |
+| Missing/corrupt history | Removing a journal event, changing its receipt, removing a sink projection or changing its terminal flag each denied repair. Privileged fault transactions rolled back exactly; no missing fact was interpreted as initial installation. |
+| Forward repair | Exact retained later receipt survived; the first entry remained retired with null material; high-water stayed 30. Payload matched the journal's latest facts, but repair alone did not admit operations. |
+| Publication before commit | A reader demonstrably blocked behind tentative publication. Killing that exact publication backend rolled the witness back; the released reader saw unavailable. The terminated client exited 2 and the gate remained closed. |
+| Committed publication/result withheld | `psql` suppressed the publication result, committed and then slept. An independent role connection verified the exact current subject before the sleeping backend was terminated (client exit 2). This is controlled result withholding, not network-level unknown-COMMIT fault injection or inference from an attempted update. |
+| Witness/identity faults | Missing/stale witness, swapped local incarnation and wrong relation OID each denied the guard; fault rollback retained exact prior state. A pre-restore subject remained denied after successful publication. |
+| Ordinary recovery and next switch | Exact retry returned the original later receipt; the cleaned ID stayed retired. A new ordinary write appended history without a new manual witness. Another close advanced incarnation/generation; a previously established REPEATABLE READ snapshot failed with SQLSTATE `40001` rather than using stale readiness. That error still needs sanitized unavailable mapping in the real adapter. |
+| Replacement process | After second repair/publication, a different database container on the same volume retained the exact gate, entries, journal and sink projection. A fresh role connection admitted only the current subject. This is process replacement, not replacing/restoring the whole dataset. |
+
+Genesis was explicit operator provisioning of a fresh empty fixture with an initialized journal anchor and closed
+gate, followed by comparison and publication—not runtime inference that absent history means a new installation.
+There is no runtime privilege to manufacture this initialization. No real installation's external inventory was
+established, and no production bootstrap is authorized.
+
+### Isolation and remaining admission work
+
+The pinned PostgreSQL 17.10 Alpine image is the preceding `742f40…` image. Database/replacement containers used
+UID/GID 70, network none/no TCP listener, read-only root, all capabilities dropped, no-new-privileges, disabled
+logging, 0.5 CPU, 512 MiB/no extra swap, 64 PIDs, 16 MiB shared memory, 16 MiB `/tmp`, 1 MiB socket tmpfs,
+256 descriptors and zero core limit. Only the short volume initializer used root/CHOWN/FOWNER. No host bind,
+credential or Engine socket was mounted. At most one database ran. Three containers and one owned named data
+volume were removed by exact ID/name and owner; final owner inventories were empty and main/TASK-00044 service
+starts were unchanged. The small schema dump lived only in that owned volume; raw non-secret observations remain.
+
+The data volume has **no hard byte quota**. Twelve journal-event slots and 128-byte new material bound fixture
+inputs, not WAL, indexes, dump allocation, shared Engine overhead or retained host evidence. No host exhaustion,
+Engine restart, service enrollment, provider or Agent participated. Controlled restart is not power-loss durability.
+R2 physical/lifecycle fencing is unchanged.
+
+This establishes a candidate **schema-scoped gate/role/journal mechanism**, not a complete independent restoration
+boundary. A restore of the whole cluster could roll back its control schema too; that topology is unsupported.
+Package-compatible complete history, actual external sink/call draining, independently protected control-plane
+recovery, installer/role coverage for every real writer, physical incarnation verification and supported lifecycle
+remain required. Separate encrypted-storage and gate experiments cannot be combined into a conformance claim.
+TASK-00139 remains blocked; no production check or credential use becomes ready from `fixture-published`.
+
 ## Disposition and remaining proof
 
 Continue the protected-file candidate without Keychain enrollment. Minimum qualification still needs:
@@ -397,8 +480,10 @@ Continue the protected-file candidate without Keychain enrollment. Minimum quali
    separately. Their complete composition, package conformance, crash-loss durability and unknown commits remain open.
 4. Complete cleanup/retention and capacity: the follow-up measures tombstone/high-water preservation and contended
    entry admission; physical storage quotas, restart accounting and production retention remain unqualified.
-5. Independent incarnation-bound restoration admission and lossless reconciliation. Unknown commits, missing
-   keys/receipts or partial reconciliation stay unavailable, not locally asserted readiness.
+5. Independent incarnation-bound restoration admission and lossless reconciliation. The schema-scoped follow-up
+   measures protected roles, conflicting transaction fences, fixture-journal repair and interrupted publication,
+   not complete package history or a whole-dataset-independent control plane. Unknown commits, missing keys/receipts
+   or partial reconciliation stay unavailable, not locally asserted readiness.
 
 TASK-00138 owns minimum selection/qualification. TASK-00139–00141 own actual authority, storage and role/broker
 composition before activation; TASK-00142 owns integrated parallel/recovery proof. Qualifying tagged adoption and

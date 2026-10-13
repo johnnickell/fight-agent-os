@@ -503,6 +503,65 @@ remain unqualified. The experiment deliberately neither seeds product tests nor 
 PHP. Newer develop's frontend/coverage/export gates and dependency acquisition also remain unqualified here. No
 check-ready state, Awaiting review transition, production Agent launch or full-TASK acceptance follows.
 
+## External HTTP behavioral observation — 2026-10-13 UTC
+
+This **R3 / AC-4** follow-up measures four existing public HTTP contracts from a separate trusted process rather than
+accepting candidate PHPUnit output. Run `7034378e-3bdf-4c00-bc4b-52b8dafcaaf7`, 22:30:26–22:30:38 UTC, passed
+**17 scoped observations** in `.runs/tasks/TASK-00138/semantic-observer/`. This advances one concrete independent
+behavioral-observer capability; it does not establish complete required semantic coverage or replace the full gate.
+
+The fixed observer implements the existing `ApplicationSmokeTest` expectations outside the candidate runtime:
+
+- `GET /`: exact 200, plain-text content type and `Fight Agent OS is ready.` bytes.
+- `GET /api` and `GET /api/v1/not-an-agent-os-route`: exact sanitized 404 JSON, JSON content type and `no-store`.
+- `POST /api/v1/auth/csrf`: exact sanitized 405 JSON with the same error response controls.
+- The three errors receive an oversized supplied correlation header; returned correlation IDs must be 32 lowercase
+  hexadecimal characters. Method/path detail must not appear in the exact two-field error body.
+
+An archived snapshot of `b5e15f3e2fc6941ae37e8ecf39246f3d9242731b` and a separately copied vendor tree mounted
+read-only into the candidate. PHP's built-in HTTP server ran the actual `public/index.php` bootstrap/routes; no test
+route, candidate test, PHPUnit runner or quality-tool mutation participated. The separate Python HTTP process mounted
+**only its pinned observer script**, not candidate source, vendor, tests or receipt storage. It sent actual TCP requests
+through the candidate's private loopback namespace, parsed bounded responses and computed these assertions itself.
+The controller retained exact source/vendor manifests, instrument/observer digests, candidate/observer profile digests,
+IDs, requests, output bytes/digest and exit status. This is host-collected evidence, not newly qualified durable
+signature custody. Independence here means runtime/source separation, **not independent technical review or QA**.
+
+After the four responses matched, pausing only the owned candidate left its namespace present but unable to answer.
+A fresh observer returned **unavailable / exit 23**, not its previous success. Unpausing and starting another fresh
+observer obtained all four matching responses again. This is a controlled paused-server availability sample, not
+service lifecycle, cancellation, scheduler readiness or all failure/interleaving qualification.
+
+The first run `b7e73eca-be44-4f56-a48b-199f5fbf917c` observed four empty 500 responses and failed (observer exit 24).
+Its launcher omitted required bootstrap environment. Source inspection found mandatory database-URL configuration
+and eager CSRF configuration validation. The corrected fixed launcher supplies an inert loopback database URL and
+test origin, and generates a fresh synthetic CSRF key **inside the candidate**, without putting it into host command
+arguments, profiles or logs. No database service is started, no credential/CSRF success operation is exercised, and
+no real secret or production provider is enrolled. Both exact instruments, raw results and failures remain. This
+corrects the experiment's startup, not application source or expected assertions.
+
+Both processes use pinned PHP/Python image `sha256:e4e87bae623511ed0ad325774c701cf2902f01d4d906cfd2dcf74da32fb7e1fe`,
+UID 65534, read-only root, dropped capabilities, no-new-privileges, 0.5 CPU, 256 MiB/no extra swap, 64 PIDs,
+16 MiB shared memory, 256 descriptors, zero core limit and disabled Docker logging. Each has 16 MiB `/tmp`; only the
+candidate has a further 16 MiB `var` tmpfs. Candidate network is none; observers join only that exact candidate's
+network namespace, not its PID or mount namespace. No host port, new network, volume, home, socket or canonical Git
+mount exists. At most candidate plus one observer run concurrently. HTTP reads cap bodies at 4,096 bytes, header
+lines at 4,096 bytes and headers at 32, with two-second socket timeouts; the controller imposes a 15-second observer
+deadline and 32,768-byte output cap. Those overflow/deadline branches were not separately stress-tested here.
+
+The failed run retired two containers; the repeat retired four by exact ID/owner. Both owner inventories were empty;
+the successful run retained unchanged source/vendor/observer bytes and main/TASK-00044 service starts. Snapshot and
+output retention remains outside qualified physical quotas; no new aggregate-accounting or historical-volume cleanup
+claim follows. The earlier historical anonymous-volume retirement caveat remains unresolved.
+
+**Selection limit:** these four baseline contracts are the entire selected observation set, not the full product
+specification. A candidate can deliberately produce those responses; the evidence proves the observed external
+behavior, not its internal implementation, every route, database effects, future requests or execution of every
+intended assertion. Verification-surface changes still need authorized expectation selection/review. The minimum
+production direction is protected exact-subject phase collection **plus named external observations where needed**,
+not generic semantic attestation. Required policy/coverage qualification remains R3 here; production selector/
+collector integration belongs to TASK-00140. This disposable observer enables neither check readiness nor Awaiting review.
+
 ## Qualification disposition and next owners
 
 - **R1 / AC-1:** see [current authority decisions](TERMINAL_AUTHORITY.md#current-authority-decisions--2026-10-06).
@@ -516,8 +575,9 @@ check-ready state, Awaiting review transition, production Agent launch or full-T
   launch, known-ID terminal removal and durable logical reservation/retention/history primitives are measured.
   Physical aggregate/retained-storage bounds, supported service lifecycle, unknown-create/engine-failure fencing and
   the composed authority/ledger/supervisor remain open. Separate samples do not qualify their integration.
-- **R3 / AC-3/4/5:** fixed branch-gate phase capabilities, external exact-subject receipts and omission/forgery rejection
-  are measured, not adversarial semantic completeness, durable policy/receipt custody, full file-tool race resistance,
+- **R3 / AC-3/4/5:** fixed branch-gate phase capabilities, external exact-subject receipts, omission/forgery rejection
+  and four externally observed HTTP contracts are measured, not complete required semantic coverage, durable
+  policy/receipt custody, full file-tool race resistance,
   managed role identities or production source publication. Prior file/handoff evidence was not rerun.
 
 These experiments do not replace the mandatory repository `./bin/build`. The original run omitted Composer/Planning/
