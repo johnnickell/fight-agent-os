@@ -82,7 +82,7 @@ signature or policy for accepting future dependency changes. There were no candi
 | Candidate writes | 16 MiB `/tmp` and 16 MiB `/app/var` tmpfs, noexec/nosuid/nodev; Docker's separately bounded 64 MiB `/dev/shm` |
 | Candidate resources | 0.5 CPU, 256 MiB memory, no swap, 32 PIDs, 256 file descriptors, zero core dump limit |
 | Database | Separate non-root UID/GID 999 container per environment; read-only root, dropped capabilities, no-new-privileges; 0.5 CPU, 512 MiB memory/no swap, 128 PIDs |
-| Database writes | 128 MiB `/pgdata`, 16 MiB `/tmp` tmpfs, plus 64 MiB `/dev/shm`; no persistent volumes |
+| Database writes | 128 MiB `/pgdata`, 16 MiB `/tmp` tmpfs, plus 64 MiB `/dev/shm`; an unused image-declared anonymous volume was also present, as corrected below |
 | Database workload | 100 connections, 16 MiB shared buffers; fixture-only `agent_os_test` superuser/database, trust authentication inside its private loopback namespace |
 | Network | Database uses `--network none`; its candidate joins **that exact container's** network namespace and reaches only private loopback PostgreSQL; no ports published, bridges or external dependency fetch |
 | Execution | Direct fixed PHP argv, 90-second owner deadline; a separate one-second cancellation probe; no repository host shell/wrapper execution |
@@ -118,7 +118,9 @@ Successful run `run-f56b25f2-a203-40a6-9add-5d4fdb6c0b8c` lasted 06:08:17–06:0
   outcome and did not consume that file. This probes collector ownership, **not** PHPUnit's resistance to malicious
   tests or exit-zero spoofing. No deliberately failing product tests or quality-tool failure fixtures were added.
 - All eleven containers were retired after matching recorded IDs and owner labels; a successful Docker inventory
-  confirmed no owned containers remained. No volumes/networks were created. One unrelated `omphalos-semantic-worker`
+  confirmed no owned containers remained. No networks were created. October 13 profile reinspection found two
+  image-declared anonymous volumes; see the [storage-profile correction](#storage-profile-correction-and-retained-attempts).
+  One unrelated `omphalos-semantic-worker`
   restart was observed during the run; the instrument never operated on it. Existing Agent OS service start times
   were unchanged. Do not present unrelated host activity as either our effect or a controlled isolation result.
 
@@ -355,6 +357,152 @@ the daemon. Supported service lifecycle, unknown-create reconciliation and aggre
 obligations; R1 storage/recovery and R3 independently authoritative checks are unchanged. TASK-00140 owns production
 composition and TASK-00142 integrated interruption/recovery proof. Check readiness remains disabled.
 
+## Durable reservation and late-create accounting — 2026-10-13 UTC
+
+This **R2 / AC-4** continuation selects a conservative minimum direction: reserve before dispatch, retain every
+unresolved effect across takeover, and account separately for runtime, retained artifacts and permanent history.
+Unknown creation keeps new admission closed; neither an empty Engine scan nor elapsed time settles it. This is a
+PostgreSQL mechanism probe plus owned Engine observations, not the production admission service or a daemon fence.
+
+Run `542fc9d2-1b61-4400-9436-aca826f09ce5`, 21:57:40–21:57:52 UTC, passed **70 scoped observations**. Exact SQL/Python,
+independent session inputs/results, recorded `pg_blocking_pids`, profiles, commands and final ledger are under
+`.runs/tasks/TASK-00138/reservation-ledger/` in the authorized worktree. No failed experiment attempt occurred.
+
+A singleton PostgreSQL pool-row lock serializes reserve, dispatch, cancel, takeover and release. Each immutable
+fixture operation binds its request digest and epoch, one runtime unit and 65,536 retained bytes; the pool permits
+**two runtime units, 131,072 retained bytes and four lifetime history rows**. Usage is reconstructed from retained
+rows, not process-local counters. Exact retry is distinguished from conflicting reuse, cancellation never clears
+its tombstone, and runtime removal does not release retained bytes or history. These deliberately tiny logical
+budgets are not physical quotas, production schema choices or permission checks.
+
+| Direct probe | Observation |
+|---|---|
+| Backend loss before reservation commit | `pg_terminate_backend` caused the held transaction to roll back; no history/reservation remained. The client exited 2 as expected. |
+| Last runtime slot contention | The losing independent session demonstrably blocked on PostgreSQL, then returned runtime-capacity after the winner committed. Exactly two reservations remained; exact existing retry still worked and changed digest conflicted. |
+| Cancellation and terminal removal | Two owned finite-sleep containers ran under their registered IDs. Cancellation retained the runtime reservation. Identity/owner-checked Engine removal and confirmed absence preceded SQL release; repeated release did not over-credit capacity. |
+| Runtime versus retention | After one runtime was removed, a new admission still failed retained-byte capacity. Only removal of its actual 65,536-byte inert fixture artifact preceded retained-byte release. History remained. |
+| Unresolved create and takeover | A committed dispatch intent was cancelled before the controlled client sent create. Takeover advanced epoch; controlled database restart retained the complete pending reservation/cancellation state. Stale dispatch and cancelled redispatch failed. An empty exact-effect Engine inventory did not reopen admission. |
+| Delayed creation | The driver then created that exact labelled effect. An old-epoch observer could not register it; the current observer registered the returned full ID, but the cancelled effect remained start-ineligible and Docker observed it in `created` state. Owned terminal removal and separate artifact retirement followed. |
+| Repeated work/history exhaustion | Four effects eventually had zero runtime/retained-byte use but four permanent history rows. A fifth admission failed history-capacity; an old exact retry remained cancelled. Replacement with a different database container ID on the same volume preserved the exact ledger and denial. |
+
+The observer functions accept trusted evidence supplied by the experiment driver; SQL cannot authenticate an Engine
+result. `may_start` is a sampled eligibility query, **not an atomic launch fence**. The delayed create is a controlled
+client sequence, not a request proved accepted and stalled inside the daemon. Clearing pending followed the one
+known create response; this does not settle multiple unknown requests, authorize retrying create or qualify stale
+process exclusion. The selected production direction must retain uncertainty indefinitely rather than invent a
+quiet-period deadline; recovery requires positive causal settlement or a separately qualified service/engine fence.
+
+The PostgreSQL 17.10 image is `sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193`;
+workloads use the earlier pinned PHP/Python image with a fixed `sleep 60`, no mounts or network. Database UID 70
+and workload UID 65534 use read-only root, dropped capabilities, no-new-privileges, disabled logging, 0.5 CPU each,
+64 PIDs, 16 MiB shared memory and no extra swap; database memory is 512 MiB, each workload 128 MiB. Database clients
+use only trusted `docker exec` Unix-socket sessions. Only the volume initializer uses root/CHOWN/FOWNER. At most one
+database and two workloads ran concurrently. Seven containers and one owned data volume were retired by exact
+identity/owner; final owner inventories were empty and main/TASK-00044 service starts were unchanged.
+
+The named database volume and host artifact directory have **no hard byte quota**. Artifact deletion was limited
+to four explicitly disposable inert payloads, checked against their recorded size/digest; evidence/diagnostics remain.
+WAL, indexes, snapshots, images, service metadata and all retained evidence are outside these logical pools. No
+engine restart, host exhaustion, credential, Agent/provider, service enrollment or product test participated. The
+fixture does not compose the earlier supervisor or qualify an all-writer authority boundary. R2 advances for
+contention, durable holds and separate retention/history accounting; physical aggregate bounds and lifecycle/unknown-
+effect fencing remain open. R1 protected restore admission and R3 semantic-check authority are not supplied by it.
+
+## Fixed gate capabilities and external phase receipts — 2026-10-13 UTC
+
+This **R3 / AC-4** continuation selects a fixed, trusted phase catalog and exact-subject externally collected receipts
+as the mechanical checker direction. It does **not** select a universal semantic attestation policy or enable check
+readiness. The catalog is outside candidate source authority; changes to tools, dependencies, commands, configuration
+or bootstrap need a separately qualified selection. Production selection/collection belongs to TASK-00140.
+
+Final run `eb09b54c-c4af-4498-bc81-49ead335ba61`, 22:08:23–22:08:56 UTC, passed **30 scoped observations** in
+`.runs/tasks/TASK-00138/fixed-gate/`. It captured branch commit `59f406a8300c38358c2c9e914fb19d53b82f1146` via
+`git archive` (**453 source files**) and copied **12,919 existing vendor files** with contained links resolved.
+This is exact-byte identification, not package supply-chain certification or qualification of newer develop.
+Subject digests below hash compact sorted JSON without the stored file's trailing newline.
+
+| Captured subject | SHA-256 |
+|---|---|
+| Source manifest | `a257d82df24b74769247ad364e4015b449bfe63e03309246d257db175ee2a7f6` |
+| Vendor manifest | `a2c2d19c8b6f1603c8c56b7bf6846618a0525ae3024cd253ddedc4fb671edb80` |
+| Trusted fixture policy | `e304da2cfd43736a2df766b52081138b9e21e648a202b305ecafd02d5e5808d2` |
+
+The trusted driver selected six required phase IDs/argv/image pairs rather than executing candidate `bin/build` or
+`build.php`: private database migration preparation; Pi presentation tests; Composer strict validation; Planning;
+Deptrac; PHPUnit. Separate read-only policy mounts fixed `composer.json`, lockfile, PHPUnit/Deptrac configuration,
+Planning executable and test bootstrap to the captured baseline. Candidate changes to those protected paths were
+not exercised or approved. Composer additionally disabled plugins/scripts; that intentionally narrower invocation
+qualified manifest validation only, not arbitrary project Composer capabilities.
+
+All six phases completed: **six migrations / 29 queries with two routine notices; seven Pi tests; valid Composer
+manifest; 188 Planning records / 141 active; Deptrac 651 allowed with zero violations/skips/uncovered/warnings/errors;
+147 PHP tests / 1,133 assertions**. No test warnings/deprecations/skips appeared; no coverage was measured. These are
+fresh restricted-profile observations of the branch's gate components, **not execution of the canonical wrapper**
+or proof of complete required phases for another revision. Mandatory repository `./bin/build` is verified separately.
+
+The policy also pins the exact instrument digest, including fixed runtime/mount/resource configuration. The host
+collector bound attempt, source/vendor/policy digests, phase, image/argv, exact container ID and captured profile-file
+digest, observed exit, termination classification and bounded output digest. A fresh in-memory host-only HMAC key
+authenticated fixture receipts; neither key nor receipt directory was mounted into candidate processes. The key was not persisted, so
+this is not durable receipt custody or independently replayable signature verification after controller restart.
+Captured exact instruments, profiles, logs and receipt/file digests support inspection of what was measured.
+
+- A real candidate-shaped process could write a forged success artifact in its own tmpfs but could not write the
+  policy, protected PHPUnit/Planning paths or collector receipt path. Its real additional-phase receipt could not
+  replace a missing required phase.
+- Omitting each of the six required receipts yielded incomplete. Duplicate phase, modified receipt and unsigned
+  success failed collection checks. Valid old receipts failed against a different attempt/source/vendor/policy
+  subject. No candidate-authored success text or artifact was consumed as authority.
+- Source, vendor and policy bytes were unchanged. No intentionally failing product test or altered quality-tool
+  fixture was introduced; these are collector-boundary probes, not tests proving that quality tools detect defects.
+
+### Storage-profile correction and retained attempts
+
+The first attempt `d4394808-ce1e-4ea8-931d-145e77ac509c` stopped at Planning: its ignore validation requires Git
+metadata and the archive had none. The corrected profile uses an **empty, template-free, read-only private bare Git
+directory** in the policy mount, explicit work-tree `/app` and disabled global/system Git configuration. It contains
+no canonical refs, objects, hooks, sibling metadata or human checkout administration; it qualifies this ignore query,
+not real Git import/commit/publication. Run `6a5e1017-a55a-4d21-91a7-e7aac8594671` then passed the 30 phase/collector
+observations, but subsequent evidence checking found an **unbounded, unused anonymous volume** at the image-declared
+`/var/lib/postgresql/data` path. Both attempts used tmpfs `/pgdata` for their actual database; neither original profile
+qualified the claim of no persistent mounts. A successful owner-label inventory had missed these unlabelled volumes.
+
+The two current volumes were removed only after matching saved creating-container mount identities, anonymous-volume
+metadata and creation times, and confirming no current container reference. `anonymous-volume-cleanup.json` retains
+that correlation; no global prune was used. The corrected profile covers the image-declared path with **1 MiB tmpfs**
+and rejects any persistent volume in captured mounts. Run `dc5a39b9-d34b-4b56-9aef-be0f25000ffc` repeated all 30
+observations with that correction. The final run additionally binds instrument/runtime configuration and captured
+profile-file digests into policy/receipts. All four exact instruments and results remain; the intermediate passes
+are limited to their recorded profiles, not relabelled final qualification.
+
+The four runs retired respectively **5, 8, 8 and 8 containers** by full ID/owner. The last two profiles created no
+volumes; the first two anonymous volumes were explicitly retired as above. No networks were created. Final owner
+container inventories were empty and successful runs preserved main/TASK-00044 service starts.
+
+A bounded reinspection of the original October 6 successful run's two saved database profiles found the same unused
+anonymous mounts. Its earlier “no volumes” statement above is corrected; its recorded container retirement does
+**not** prove those volumes' retirement or a wholly tmpfs-only writable profile. Their exact saved names/creating IDs
+are in `fixed-gate/historical-volume-caveat.json`. No current historical-volume inventory or mutation was performed;
+retirement remains unverified. Do not transfer the new profile's cleanup to that old run. Its measured `/pgdata`
+behavior remains evidence, with this added storage/accounting limit.
+
+PHP/Python and PostgreSQL use the preceding restricted-check image IDs; Node uses
+`sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94`. Non-root read-only containers have dropped
+capabilities, no-new-privileges, disabled logging, 0.5 CPU, no extra swap, 16 MiB shared memory, 256 descriptors and
+zero core limit. Candidates have 256 MiB memory/64 PIDs with 16 MiB `/tmp` and `var` tmpfs; PostgreSQL has 512 MiB/
+128 PIDs, 128 MiB data, 16 MiB `/tmp` and 1 MiB image-declared-path tmpfs. Only migration/PHPUnit join the exact
+private database's loopback-only network namespace; all other phases have network none. No external installs, credential/socket/home mounts or
+canonical Git are available. Output is capped at 65,536 bytes per phase with a 90-second driver deadline. This
+run did not fault the collector or compose controller-independent supervision. Host snapshots/evidence remain
+unquota-qualified; do not combine this result with the separate ledger into a claim of integrated accounting.
+
+**Remaining R3 gap:** measured-phase completeness is not semantic completeness. Candidate application/tests still
+execute in their language runtimes and can affect their own behavior. Required independent behavioral observations,
+review/acceptance of verification-surface changes, production policy provenance and durable collector composition
+remain unqualified. The experiment deliberately neither seeds product tests nor claims to defeat arbitrary malicious
+PHP. Newer develop's frontend/coverage/export gates and dependency acquisition also remain unqualified here. No
+check-ready state, Awaiting review transition, production Agent launch or full-TASK acceptance follows.
+
 ## Qualification disposition and next owners
 
 - **R1 / AC-1:** see [current authority decisions](TERMINAL_AUTHORITY.md#current-authority-decisions--2026-10-06).
@@ -365,16 +513,17 @@ composition and TASK-00142 integrated interruption/recovery proof. Check readine
   ordered storage, actual broker authority or always-on host/runtime support. These check experiments use no
   package authority and supply none of that proof.
 - **R2 / AC-4:** local bounded execution, private services, controller-loss stop, service-managed restart/serialized
-  launch and known-ID terminal removal/start ordering are measured. Host retention/aggregate admission, supported
-  service lifecycle, unknown-create/engine-failure fencing, complete required-check policy and supply-chain
-  qualification remain open. Known-ID samples do not establish a complete uncertain-effect admission protocol.
-- **R3 / AC-3/4/5:** protected mounts and externally collected process outcomes are measured, not full file-tool race
-  resistance, managed role identities, adversarial semantic check completeness or production source-publication proof.
-  The prior file/handoff prototype remains historical evidence and was not rerun.
+  launch, known-ID terminal removal and durable logical reservation/retention/history primitives are measured.
+  Physical aggregate/retained-storage bounds, supported service lifecycle, unknown-create/engine-failure fencing and
+  the composed authority/ledger/supervisor remain open. Separate samples do not qualify their integration.
+- **R3 / AC-3/4/5:** fixed branch-gate phase capabilities, external exact-subject receipts and omission/forgery rejection
+  are measured, not adversarial semantic completeness, durable policy/receipt custody, full file-tool race resistance,
+  managed role identities or production source publication. Prior file/handoff evidence was not rerun.
 
-The experiment is not the mandatory repository `./bin/build` and does not replace it. It omits the full gate's
-Composer/planning/architecture/Pi lanes, as well as frontend tooling, dependency installation and canonical Git
-operations. Those need explicit fixed capabilities/profiles; no host-shell fallback is allowed. Kernel/engine or
-trusted-controller compromise, native Linux, hostile multi-tenant support and universal isolation are not qualified.
+These experiments do not replace the mandatory repository `./bin/build`. The original run omitted Composer/Planning/
+architecture/Pi; the fixed-gate follow-up measures those branch-specific components. Newer develop's frontend/coverage/
+export gates, dependency installation and actual Git operations still need fixed qualified capabilities; no host-shell
+fallback is allowed. Kernel/engine or trusted-controller compromise, native Linux, hostile multi-tenant support and
+universal isolation are not qualified.
 TASK-00138 remains in progress and TASK-00139 blocked. Independent review must assess this checkpoint's claims and
 remaining requirements; passing these primitives cannot independently accept the whole TASK.
