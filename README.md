@@ -77,6 +77,11 @@ command are available. See [credential recovery](docs/engineering/CREDENTIAL_REC
 migration, data guards, bounded downtime-expiry cleanup and exit codes. There is no production provider or enrolled recovery schedule, so this does not
 enable sending credentials or establish complete production recovery.
 
+Trusted operators can explicitly preview and apply the version-controlled installation authority with
+`./bin/managed-policy preview --internal` and `./bin/managed-policy apply --internal`. Read the
+[managed policy runbook](docs/engineering/MANAGED_POLICY.md) before applying: this reconciles the exact managed
+catalog, not users, bootstrap, Swagger routes or live Agent operations. It never runs automatically.
+
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services
 ./bin/database status      # Inspect development migration status

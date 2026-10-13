@@ -7,6 +7,8 @@ use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\EmailChangeGrant\CommandHandler\ExpireEmailChangeHandler;
+use Fight\AccessControl\Application\AccessControl\ManagedPolicy\CommandHandler\ReconcileManagedPolicyHandler;
+use Fight\AccessControl\Application\AccessControl\ManagedPolicy\Service\ManagedPolicyPlanner;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\CommandHandler\DeliverPasswordResetHandler;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\CommandHandler\ExpirePasswordResetDeliveryHandler;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
@@ -17,9 +19,12 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ExpireInvit
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\Command\ExpireEmailChange;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\DeliverPasswordReset;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\ExpirePasswordResetDelivery;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Messaging\Command\Sync\CommandPipeline;
 use Fight\Common\Adapter\Messaging\Command\Sync\Routing\ServiceAwareCommandRouter;
@@ -46,6 +51,18 @@ return [
         },
         SynchronousCommandBus::class              => static function (Container $container): SynchronousCommandBus {
             return $container->get('messaging.command.bus');
+        },
+        ReconcileManagedPolicyHandler::class      => static function (
+            Container $container
+        ): ReconcileManagedPolicyHandler {
+            return new ReconcileManagedPolicyHandler(
+                $container->get(PermissionRepository::class),
+                $container->get(RoleRepository::class),
+                $container->get(ManagedPolicyPlanner::class),
+                $container->get(TransactionalUnitOfWork::class),
+                $container->get(EventDispatcher::class),
+                $container->get(Clock::class)
+            );
         },
         ExpireInvitationDeliveryHandler::class    => static function (
             Container $container
@@ -101,6 +118,7 @@ return [
         }
     ],
     'handlers' => [
+        ReconcileManagedPolicy::class      => ReconcileManagedPolicyHandler::class,
         ExpireInvitationDelivery::class    => ExpireInvitationDeliveryHandler::class,
         ExpirePasswordResetDelivery::class => ExpirePasswordResetDeliveryHandler::class,
         ExpireEmailChange::class           => ExpireEmailChangeHandler::class,
