@@ -4,6 +4,7 @@
 - **Date:** 2026-09-25
 - **Decision owners:** Fight Agent OS maintainers
 - **Acceptance:** Explicitly approved by the human maintainer under [TASK-00017](../tasks/00017-TASK.md) on 2026-09-25
+- **Precision clarification:** Explicitly approved during [TASK-00044](../tasks/00044-TASK.md) repair resumption; recorded 2026-10-13 (see below)
 
 ## Context and threats
 
@@ -33,12 +34,20 @@ success nor the package `LoginThrottle` interface proves a production control. D
 ### Access issuance, consumption and authoritative resolution
 
 Use one pinned **HS256** JWT profile in v1. An Agent OS `TokenEncoder` adapter enriches, but does not change, the
-package-supplied `sub`, `sid`, `type`, `auth_version`, `iat` or `exp`. It supplies configured `iss`, a single
+package-supplied `sub`, `sid`, `type`, `auth_version` or integer `iat`. It supplies configured `iss`, a single
 configured `aud`, and a cryptographically random unique `jti` (at least 128 bits); `nbf = iat`. Sign with the
-active key and a nonempty `kid` protected header. Issue `exp = iat + 900 seconds`, with integer UTC-second times;
-reject inconsistent package expiry rather than silently changing it. No roles, permissions, email, password,
-refresh material, private state or key metadata beyond `kid` belong in claims. JTI is an identification/correlation
+active key and a nonempty `kid` protected header. Serialize only package access expiry downward to integer UTC
+seconds (`DateTimeImmutable::getTimestamp()`); require the resulting `exp = iat + 900 seconds`. Reject any
+expiry that remains inconsistent after this normalization; do not replace it with a computed later deadline.
+No roles, permissions, email, password, refresh material, private state or key metadata beyond `kid` belong in claims. JTI is an identification/correlation
 value, **not** a server-side token-revocation list; never log the raw token or a full claims dump.
+
+Keep shared package validation/outcome clocks and session/grant/lease/delivery timestamps precise. Never floor
+the shared clock, round persisted deadlines or add expiry grace to obtain integer JWT times. Package immutable
+expiry and `TokenSet` may retain fractional precision; they are not subsecond-identical to JWT expiry. JWT expiry
+is equal to or less than that supplied DateTime, earlier by less than one second, never later. Any emitted
+whole-second timing representation must agree with JWT `iat`/`exp`, not advertise a later expiry. This clarification
+adds no login/refresh endpoint or response feature and requires no upstream dependency change.
 
 The application consumer independently parses and validates the protected header, signature and the complete
 claim profile before resolving any principal. Accept exactly one Bearer token from a single `Authorization` header;
@@ -264,6 +273,27 @@ release are separate states.
   `vendor/johnnickell/fight-access-control/src/`, with package-owned refresh conflict and replay behavior.
 - Locked Fight Common `JwtEncoder`/`JwtDecoder` in `vendor/johnnickell/fight-common/src/Adapter/Auth/Security/`:
   `JwtDecoder` configures only `SignedWith`; its exception wraps parser/validator details.
+
+## Approved access-expiry precision clarification
+
+During TASK-00044 repair, independent review R1 exposed fractional package expiry rejected by the original
+encoder. Repair cycle 1 resolved issuance by flooring the shared package clock, but independent R2 demonstrated
+post-deadline session rotation and late delivery outcomes. Repair cycle 2 held on the original contract; that
+upstream-only hold is now superseded, not an unresolved dependency requirement.
+
+The original 2026-09-25 wording required preservation of package `exp` and said to "reject inconsistent package
+expiry rather than silently changing it" with integer UTC-second times. It did not authorize JWT-only fractional
+normalization; the initial encoder refused fractional expiry. That original policy and the R1/R2 reports remain
+historical evidence, not a claim that shared-clock flooring was safe or independently accepted.
+
+The maintainer asked, "That doesn't require a library update. Can't you adjust and round the time?" The coordinator
+proposed **local JWT-expiry-only downward whole-second normalization**, precise session/delivery clocks, serialized
+`exp - iat = 900`, expiry at most fractionally earlier and an explicit requirement clarification instead of an
+upstream change. The maintainer responded, "then continue, please". This narrow approval authorizes the current
+access-expiry wording above, not shared-clock flooring, immutable package expiry modification, extended authority,
+new endpoints or vendor/dependency changes. Whole-second JWT/TokenSet timing representations must agree;
+subsecond identity is neither required nor claimed. All other accepted controls and independent acceptance
+requirements remain unchanged.
 
 ## Acceptance
 

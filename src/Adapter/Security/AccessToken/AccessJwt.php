@@ -45,12 +45,9 @@ final readonly class AccessJwt implements TokenEncoder, TokenDecoder
                 'aud' => [$this->keyring->audience],
                 'jti' => bin2hex(random_bytes(16)),
                 'nbf' => $claims['iat'],
+                // Normalize only JWT expiry downward; package/session clocks retain full precision.
                 'exp' => $expiration->getTimestamp()
             ];
-            if ($expiration->format('u') !== '000000') {
-                throw new TokenException();
-            }
-
             $this->assertClaims($claims);
             $header = self::base64Url(json_encode([
                 'alg' => 'HS256', 'kid' => $this->keyring->activeKid, 'typ' => 'JWT'

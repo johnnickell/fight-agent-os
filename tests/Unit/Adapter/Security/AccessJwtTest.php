@@ -38,21 +38,60 @@ final class AccessJwtTest extends TestCase
     }
 
     /**
+     * Normalizes only serialized expiry downward without mutating precise package time
+     */
+    #[DataProvider('expiryPrecision')]
+    public function testFractionalExpirySerializesDownward(string $time): void
+    {
+        $fixture = new AccessTokens();
+        $fixture->clock->time = new DateTimeImmutable($time);
+        $claims = $fixture->claims();
+        $package = array_intersect_key($claims, array_flip(['sub', 'sid', 'type', 'auth_version', 'iat']));
+        $expiration = $fixture->clock->now()->modify('+900 seconds');
+        $decoded = $fixture->jwt->decode($fixture->jwt->encode($package, $expiration));
+        self::assertSame($package, array_intersect_key($decoded, $package));
+        self::assertSame($package['iat'] + 900, $decoded['exp']);
+        self::assertSame($expiration->getTimestamp(), $decoded['exp']);
+        self::assertTrue(new DateTimeImmutable('@'.$decoded['exp']) <= $expiration);
+        self::assertSame($time, $fixture->clock->now()->format('Y-m-d\TH:i:s.uP'));
+        self::assertEquals($fixture->clock->now()->modify('+900 seconds'), $expiration);
+        $fixture->clock->time = new DateTimeImmutable('@'.$decoded['exp'])->modify('-1 microsecond');
+        self::assertSame($decoded, $fixture->jwt->decode($fixture->signed(json_encode($decoded, JSON_THROW_ON_ERROR))));
+        $fixture->clock->time = new DateTimeImmutable('@'.$decoded['exp']);
+        $this->assertRejected($fixture, $fixture->signed(json_encode($decoded, JSON_THROW_ON_ERROR)));
+    }
+
+    /**
+     * Supplies whole, ordinary fractional, end-of-second and timezone-offset precision
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function expiryPrecision(): iterable
+    {
+        yield 'whole' => ['2026-09-28T12:00:00.000000+00:00'];
+        yield 'fractional' => ['2026-09-28T12:00:00.123456+00:00'];
+        yield 'end-of-second' => ['2026-09-28T12:00:00.999999+00:00'];
+        yield 'offset' => ['2026-09-28T14:00:00.999999+02:00'];
+    }
+
+    /**
      * Rejects caller enrichment and inconsistent package expiry
      */
     public function testInvalidIssuance(): void
     {
         $fixture = new AccessTokens();
         $package = array_intersect_key($fixture->claims(), array_flip(['sub', 'sid', 'type', 'auth_version', 'iat']));
-        foreach (['extra', 'expiry', 'fraction', 'missing', 'wrong-type'] as $case) {
+        foreach (['extra', 'expiry', 'short-fraction', 'long-fraction', 'missing', 'wrong-type'] as $case) {
             $claims = $package;
             $expiration = $fixture->clock->now()->modify('+900 seconds');
             if ($case === 'extra') {
                 $claims['roles'] = ['admin'];
             } elseif ($case === 'expiry') {
                 $expiration = $expiration->modify('+1 second');
-            } elseif ($case === 'fraction') {
-                $expiration = $expiration->modify('+1 microsecond');
+            } elseif ($case === 'short-fraction') {
+                $expiration = $expiration->modify('-1 microsecond');
+            } elseif ($case === 'long-fraction') {
+                $expiration = $expiration->modify('+1 second +1 microsecond');
             } elseif ($case === 'missing') {
                 unset($claims['sid']);
             } else {

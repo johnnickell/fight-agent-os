@@ -14,7 +14,7 @@ use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
-use App\Adapter\Security\AccessToken\AccessIssuanceClock;
+use App\Application\Failure\AuthenticationRequired;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use DateInterval;
 use DateTimeImmutable;
@@ -33,6 +33,7 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepo
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
@@ -114,38 +115,7 @@ final class AccessTokenAuthenticationTest extends TestCase
         $user = User::invite(UserId::generate(), EmailAddress::fromString('package-login@example.test'), $now);
         $user->activate($hash, $now);
         $this->connection->transactional(fn() => $this->users->add($user));
-        $orm = ORMSetup::createAttributeMetadataConfiguration([], true);
-        $orm->enableNativeLazyObjects(true);
-        $throttle = $this->createStub(LoginThrottle::class);
-        $throttle->method('allows')->willReturn(true);
-        $generator = $this->createStub(RefreshCredentialGenerator::class);
-        $generator->method('generate')->willReturn(RefreshCredential::fromString(bin2hex(random_bytes(32))));
-        $service = new AuthenticationService(
-            $this->users,
-            $this->createStub(ActivationGrantRepository::class),
-            $this->sessions,
-            new SessionRevocationService($this->sessions),
-            new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $orm)),
-            new AccessIssuanceClock($this->fixture->clock),
-            $throttle,
-            $generator,
-            $hasher,
-            new PhpPasswordValidator(PASSWORD_ARGON2ID),
-            $this->fixture->jwt,
-            new AuthenticationTokenPolicy(
-                new DateInterval('PT15M'),
-                new DateInterval('P1D'),
-                new DateInterval('P2D'),
-                new DateInterval('P30D'),
-                new DateInterval('P1Y'),
-                new DateInterval('PT5S')
-            ),
-            $hash,
-            $this->createStub(EventDispatcher::class),
-            $this->createStub(PasswordResetGrantRepository::class),
-            $this->createStub(AuditEvidenceRepository::class),
-            $this->createStub(EmailChangeGrantRepository::class)
-        );
+        $service = $this->service($hash);
         $tokens = $service->login('package-login@example.test', 'private-fixture-password');
         $token = $tokens->getAccessToken()->toString();
         $claims = $this->fixture->jwt->decode($token);
@@ -157,13 +127,17 @@ final class AccessTokenAuthenticationTest extends TestCase
         self::assertSame($claims['iat'], $claims['nbf']);
         self::assertSame(900, $claims['exp'] - $claims['iat']);
         self::assertSame($now->getTimestamp() + 900, $tokens->getAccessTokenExpiresAt()->getTimestamp());
-        self::assertSame('000000', $tokens->getAccessTokenExpiresAt()->format('u'));
+        self::assertEquals($now->modify('+900 seconds'), $tokens->getAccessTokenExpiresAt());
+        self::assertSame($now->format('u'), $tokens->getAccessTokenExpiresAt()->format('u'));
+        self::assertTrue(new DateTimeImmutable('@'.$claims['exp']) <= $tokens->getAccessTokenExpiresAt());
         self::assertSame($claims['exp'], $tokens->getAccessTokenExpiresAt()->getTimestamp());
         self::assertSame($now, $this->fixture->clock->now());
         $session = $this->sessions->getById($tokens->getRefreshSessionId());
         self::assertNotNull($session);
         self::assertSame($claims['iat'], $session->getCreatedAt()->getTimestamp());
-        self::assertSame('000000', $session->getCreatedAt()->format('u'));
+        self::assertEquals($now, $session->getCreatedAt());
+        self::assertEquals($now->modify('+1 day'), $session->getIdleExpiresAt());
+        self::assertEquals($now->modify('+2 days'), $session->getAbsoluteExpiresAt());
         $authentication = $this->authentication();
         $next = $this->createMock(RequestHandlerInterface::class);
         $next->expects(self::once())->method('handle')->willReturnCallback(static function (
@@ -199,6 +173,90 @@ final class AccessTokenAuthenticationTest extends TestCase
         yield 'whole-second' => ['2026-09-28T12:00:00.000000Z'];
         yield 'ordinary-subsecond' => ['2026-09-28T12:00:00.123456Z'];
         yield 'end-of-second' => ['2026-09-28T12:00:00.999999Z'];
+        yield 'offset' => ['2026-09-28T14:00:00.999999+02:00'];
+    }
+
+    /**
+     * Preserves exact fractional session deadlines across package refresh and Bearer resolution
+     */
+    #[DataProvider('sessionDeadlines')]
+    public function testRefreshCannotResurrectExpiredFractionalSession(string $deadline, int $offset): void
+    {
+        $expiry = new DateTimeImmutable('2026-09-28T12:00:00.500000Z');
+        $created = $expiry->modify('-1 hour');
+        $now = $expiry->modify(sprintf('%+d microseconds', $offset));
+        $this->fixture->clock->time = $now;
+        $hash = PasswordHash::fromString((string) password_hash('fixture-password', PASSWORD_ARGON2ID));
+        $user = User::invite(UserId::generate(), EmailAddress::fromString('refresh@example.test'), $created);
+        $user->activate($hash, $created);
+        $this->connection->transactional(fn() => $this->users->add($user));
+        $credential = RefreshCredential::fromString(bin2hex(random_bytes(32)));
+        $session = RefreshSession::start(
+            RefreshSessionId::generate(),
+            $user->getId(),
+            $credential,
+            $created,
+            $expiry,
+            $deadline === 'absolute' ? $expiry : $expiry->modify('+2 days'),
+            $user->getAuthenticationVersion(),
+            false
+        );
+        $this->connection->transactional(fn() => RefreshSessionRecords::insert($this->connection, $session));
+        $before = $this->connection->fetchAssociative('SELECT * FROM refresh_sessions WHERE id = ?', [
+            $session->getId()->toString()
+        ]);
+        $denied = false;
+        $context = null;
+        try {
+            $tokens = $this->service($hash)->refresh($credential->toString())->getTokenSet();
+            try {
+                $context = new AuthenticateAccessToken(
+                    $this->fixture->jwt,
+                    $this->users,
+                    $this->sessions,
+                    $this->fixture->clock
+                )->authenticate($tokens->getAccessToken()->toString());
+            } catch (AuthenticationRequired) {
+                // Direct Bearer refusal must not hide a forbidden refresh rotation.
+            }
+        } catch (RefreshSessionNotFoundException) {
+            $denied = true;
+        }
+
+        self::assertSame($offset >= 0, $denied, 'No grace at or after an exact persisted session deadline');
+        $persisted = $this->sessions->getById($session->getId());
+        self::assertNotNull($persisted);
+        if ($offset >= 0) {
+            self::assertNull($context);
+            self::assertSame($before, $this->connection->fetchAssociative(
+                'SELECT * FROM refresh_sessions WHERE id = ?',
+                [$session->getId()->toString()]
+            ));
+        } else {
+            self::assertInstanceOf(AuthenticationContext::class, $context);
+            self::assertTrue($context->getRefreshSessionId()->equals($session->getId()));
+            self::assertEquals($session->getAbsoluteExpiresAt(), $persisted->getAbsoluteExpiresAt());
+            self::assertEquals($now, $persisted->getLastActivityAt());
+            $idle = $now->modify('+1 day');
+            self::assertEquals(
+                $idle < $session->getAbsoluteExpiresAt() ? $idle : $session->getAbsoluteExpiresAt(),
+                $persisted->getIdleExpiresAt()
+            );
+        }
+    }
+
+    /**
+     * Supplies immediately before, exact and after both fractional hard deadlines
+     *
+     * @return iterable<string, array{string, int}>
+     */
+    public static function sessionDeadlines(): iterable
+    {
+        foreach (['idle', 'absolute'] as $deadline) {
+            foreach ([-1, 0, 1, 400000] as $offset) {
+                yield $deadline.' '.$offset => [$deadline, $offset];
+            }
+        }
     }
 
     /**
@@ -324,6 +382,46 @@ final class AccessTokenAuthenticationTest extends TestCase
         foreach ($cases as $case) {
             yield $case => [$case];
         }
+    }
+
+    /**
+     * Composes real package authentication with owned token and persistence adapters
+     */
+    private function service(PasswordHash $hash): AuthenticationService
+    {
+        $orm = ORMSetup::createAttributeMetadataConfiguration([], true);
+        $orm->enableNativeLazyObjects(true);
+        $throttle = $this->createStub(LoginThrottle::class);
+        $throttle->method('allows')->willReturn(true);
+        $generator = $this->createStub(RefreshCredentialGenerator::class);
+        $generator->method('generate')->willReturn(RefreshCredential::fromString(bin2hex(random_bytes(32))));
+
+        return new AuthenticationService(
+            $this->users,
+            $this->createStub(ActivationGrantRepository::class),
+            $this->sessions,
+            new SessionRevocationService($this->sessions),
+            new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $orm)),
+            $this->fixture->clock,
+            $throttle,
+            $generator,
+            new PhpPasswordHasher(PASSWORD_ARGON2ID),
+            new PhpPasswordValidator(PASSWORD_ARGON2ID),
+            $this->fixture->jwt,
+            new AuthenticationTokenPolicy(
+                new DateInterval('PT15M'),
+                new DateInterval('P1D'),
+                new DateInterval('P2D'),
+                new DateInterval('P30D'),
+                new DateInterval('P1Y'),
+                new DateInterval('PT5S')
+            ),
+            $hash,
+            $this->createStub(EventDispatcher::class),
+            $this->createStub(PasswordResetGrantRepository::class),
+            $this->createStub(AuditEvidenceRepository::class),
+            $this->createStub(EmailChangeGrantRepository::class)
+        );
     }
 
     /**

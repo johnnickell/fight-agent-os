@@ -2,9 +2,10 @@
 
 [ADR 0003](../../planning/adr/0003-browser-authentication-security-profile.md) owns the accepted security policy.
 `AccessJwt` implements Fight Common `TokenEncoder`/`TokenDecoder`; package `AuthenticationService` supplies
-its five package-owned claims and expiration. Issuance preserves them, requires exactly 900 seconds and integer
-seconds (no fractional expiry), and adds issuer, single-element audience, `nbf = iat`, and random 128-bit lowercase
-hex JTI. Consumption independently validates compact encoding, duplicate JSON members (including escaped names),
+its five package-owned claims and expiration. Issuance preserves those claims and serializes only expiry
+downward to integer UTC seconds, requiring `exp - iat = 900`; inconsistent supplied expiry still fails closed.
+It adds issuer, single-element audience, `nbf = iat`, and random 128-bit lowercase hex JTI. Consumption independently
+validates compact encoding, duplicate JSON members (including escaped names),
 exact header/claim sets, types, signature, key, clock and identifiers. No roles, permissions or private claims.
 
 ## External configuration before boot
@@ -42,15 +43,20 @@ the last possible old issuance second. Synchronize clocks; retain the old entry 
 window. New issuance always uses the active key. A grossly incorrect clock requires operational recovery, not
 an expanded grace period. Production provisioning, deployment enrollment and emergency rotation are separate.
 
-The package `Clock` port is bound to `AccessIssuanceClock` around the raw UTC `SystemDeliveryClock`.
-It floors each reading to the current UTC second **before** package lifecycle code constructs timestamps,
-claims, session deadlines and token expiry. This shared package clock deliberately has whole-second precision;
-`AuthenticationService` must receive it for issuance, not a raw subsecond clock. The package therefore supplies
-unchanged integer `iat` and exact whole-second expiry 900 seconds later; `TokenSet` and JWT expiry agree.
-`AccessJwt` still rejects fractional or inconsistent supplied expiry rather than rewriting package output.
-Request validation and keyring checks retain the independent raw `SystemAccessClock`: access and persisted
-session deadlines receive no extra expiry grace. Inject the issuance adapter around deterministic/raw clocks
-in package integration tests; do not hide this contract with only whole-second fixtures.
+The shared package `Clock` port uses precise UTC `SystemDeliveryClock`; `AuthenticationService` must retain
+precise time for validation, rotation and session deadlines. Delivery grant/lease/outcome deadlines are also
+precise. Request validation and keyring checks use precise `SystemAccessClock`. Never floor a shared clock,
+round persisted deadlines or add grace to obtain integer JWT times.
+
+Under the explicitly approved [ADR precision clarification](../../planning/adr/0003-browser-authentication-security-profile.md#approved-access-expiry-precision-clarification),
+`AccessJwt` uses only supplied expiry's `getTimestamp()` for serialized `exp`. Package integer `iat` and other
+claims remain unchanged; serialized `exp` must equal `iat + 900`. Expiry that floors to a different second is
+refused, not repaired by computing another deadline. Package DateTime/`TokenSet` expiry retains its original
+fractional precision, while JWT expiry can be less than one second earlier, never later. Their whole-second
+timing representations agree; they are not subsecond-identical. Future login/refresh responses must expose
+whole-second timing no later than JWT expiry, not round package DateTime upward. No such response or endpoint
+is implemented here. Tests use representative fractional clocks and persisted hard deadlines, not only
+whole-second fixtures.
 
 `AuthenticateAccessToken` resolves session and user fresh on every request using package repository ports,
 requires active lifecycle, owned usable session, matching token/user/session versions, and issuance no earlier
