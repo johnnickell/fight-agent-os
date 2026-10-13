@@ -61,4 +61,30 @@
 | [TICKET-00056](00056-TICKET.md) | Coordinate and authorize one release | ready-for-agent | [EPIC-00013](../epics/00013-EPIC.md) |
 | [TICKET-00057](00057-TICKET.md) | Publish a library release | ready-for-agent | [EPIC-00013](../epics/00013-EPIC.md) |
 | [TICKET-00058](00058-TICKET.md) | Deploy an application release | ready-for-agent | [EPIC-00013](../epics/00013-EPIC.md) |
+| [TICKET-00059](00059-TICKET.md) | Persist and fence current Agent credential operations | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
+| [TICKET-00060](00060-TICKET.md) | Deliver protected Agent credential lifecycle and recovery | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
+| [TICKET-00061](00061-TICKET.md) | Authenticate and authorize current Agent tool use | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
+| [TICKET-00062](00062-TICKET.md) | Administer Repository-linked Teams and Agent rosters | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
+| [TICKET-00063](00063-TICKET.md) | Administer named managed Agents and safe lifecycle intent | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
+| [TICKET-00064](00064-TICKET.md) | Select eligible Teams and Agents for authorized work | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
+| [TICKET-00065](00065-TICKET.md) | Operate all eight managed Agents in their owned journeys | ready-for-agent | [EPIC-00014](../epics/00014-EPIC.md) |
+| [TICKET-00066](00066-TICKET.md) | Durably notify the old mailbox of email-change request and completion | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
+| [TICKET-00067](00067-TICKET.md) | Request inspect and cancel a pending human email change | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
+| [TICKET-00068](00068-TICKET.md) | Deliver and recover new-mailbox confirmation credentials | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
+| [TICKET-00069](00069-TICKET.md) | Confirm email change explicitly and return to login | ready-for-agent | [EPIC-00015](../epics/00015-EPIC.md) |
+| [TICKET-00070](00070-TICKET.md) | Discover provision and prepare complete Feature references | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00071](00071-TICKET.md) | Enforce current Feature availability at every registered entry | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00072](00072-TICKET.md) | Show a complete authenticated Feature catalog and availability | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00073](00073-TICKET.md) | Administer immutable Feature settings and safe rollout transitions | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00074](00074-TICKET.md) | Retire only currently unreferenced Features and reintroduce safely | ready-for-agent | [EPIC-00016](../epics/00016-EPIC.md) |
+| [TICKET-00075](00075-TICKET.md) | Establish database-authoritative Agent templates | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00076](00076-TICKET.md) | Author and publish reviewed template revisions | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00077](00077-TICKET.md) | Generate editable AI template proposals | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00078](00078-TICKET.md) | Review and reconcile existing Agent Permission drift | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00079](00079-TICKET.md) | Use published custom templates for real manual Agent work | ready-for-agent | [EPIC-00017](../epics/00017-EPIC.md) |
+| [TICKET-00080](00080-TICKET.md) | Account for complete consumer coverage and qualification | ready-for-agent | [EPIC-00018](../epics/00018-EPIC.md) |
+| [TICKET-00081](00081-TICKET.md) | Document reproducible backend API and browser references | ready-for-agent | [EPIC-00018](../epics/00018-EPIC.md) |
+| [TICKET-00082](00082-TICKET.md) | Publish and maintain the immutable maintainer handoff | ready-for-agent | [EPIC-00018](../epics/00018-EPIC.md) |
+| [TICKET-00083](00083-TICKET.md) | Deliver managed review through verified PR handoff | ready-for-agent | [EPIC-00008](../epics/00008-EPIC.md) |
+| [TICKET-00084](00084-TICKET.md) | Coordinate local TASK delivery through an open reviewed PR | in-progress | [EPIC-00008](../epics/00008-EPIC.md) |
 <!-- /planning:records -->

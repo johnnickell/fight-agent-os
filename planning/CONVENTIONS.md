@@ -27,6 +27,20 @@ adapters, and UI according to dependencies. A substantial SUBTASK may have a sep
 TASK owns complete acceptance and records the PR dependencies. Small bugs and chores may be standalone TASKs
 with `kind: bug` or `kind: chore` and an empty `ticket` field. Do not reopen an archived parent for unrelated work.
 
+## Delivery value before decomposition
+
+Every proposed TASK must name the accepted product outcome it delivers or the concrete delivery blocker it
+removes, with an existing owning EPIC/TICKET and observable user/team benefit where applicable. State that
+connection in the proposal and record's Outcome/Coordination; do not add a parallel scorecard or planning queue.
+Package API coverage, hypothetical reuse, demonstration screens and proving that infrastructure exists are not
+sufficient reasons for new work. Keep necessary safety, reliability and verification within the real delivery
+path; this rule does not waive them. Reuse existing owners and defer optional surface area without a current use.
+
+Preserve the Board's execution priorities and the accepted terminal-first milestone: one approved TASK through
+Team Lead and Software Engineer to durable Awaiting review. A later accepted product use does not automatically
+become a prerequisite to that milestone. Scope changes need recorded human approval; do not silently delete
+existing requirements or mass-close planned work. No TASK should be created merely to demonstrate this rule.
+
 ## Upstream capability qualification
 
 While Fight Access Control is pre-1.0, future consumer plans and UI dependencies name required capabilities,

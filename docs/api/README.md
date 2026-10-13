@@ -158,8 +158,10 @@ display stays disabled and CORS stays absent. Repository access and local filesy
 document access boundaries. Do not submit tokens or cookies to an external viewer.
 
 [TASK-00154](../../planning/tasks/00154-TASK.md) separately owns the themed viewer and guarded document reads:
-exact `APP_ENV=local` **and** current authoritative `READ_SWAGGER` are required. Neither a role claim, APP_DEBUG,
-public validation metadata nor this export command enables that future permission boundary.
+the exact `APP_ENV` must be expressly included in a configured allowed-environments set (initial Agent OS value
+`["local"]`) **and** the caller must have current authoritative `READ_SWAGGER`. This later approved scope
+supersedes the originally local-only TASK/ADR rule; no viewer is implemented yet. Neither a role claim,
+APP_DEBUG, public validation metadata nor this export command enables that future permission boundary.
 
 ## Current versus future security
 

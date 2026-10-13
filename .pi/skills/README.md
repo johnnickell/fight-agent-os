@@ -21,6 +21,20 @@ automatically invoke the next skill.
 Installing Pi, providers, third-party skills, and terminal extensions is a separate setup step. No account
 configuration or global skill installation is changed by this scaffold.
 
+[Build](build/SKILL.md) is the explicitly invoked local Team Lead coordinator: `/skill:build TASK-NNNNN`, or
+`/skill:build TICKET-NNNNN` when one eligible child is unambiguous. It dispatches fresh Pi role sessions for
+Engineer → independent Review → QA → Release Manager, including authorized non-force push, an open PR and
+applicable screenshot uploads without another approval prompt. Five shared repair cycles cover review and QA;
+QA failures do not reset the allowance. The successful handoff is human review/merge on GitHub. Run `/reload`
+in an existing Pi session to discover the new skill. No subagent extension is required with the qualified Pi
+1.2.0 CLI. Local context separation is not managed identity, sandboxing or Pi Durable execution.
+The read-only [next skill](next/SKILL.md) now recommends `build` by default for implementation and confirmed
+repairs; evidence-only, QA, delivery and planning handoffs retain their appropriate stage commands.
+Both resolve [target project context](../../docs/engineering/PROJECT_CONTEXT.md) from the invocation checkout
+and its instructions/bindings. Shared skill links stay with the provider; planning, standards, runtime, gates
+and completion rules come from the target. `build` passes that context to every fresh role, so a bound consumer
+does not need the same project substitutions repeated in each request.
+
 [Writing for Agents](writing-for-agents/SKILL.md) supports skill/instruction authoring now.
 [Graphify](graphify/SKILL.md) queries derived source relationships and scopes explicit maintenance; installing this
 skill does not install its CLI or refresh a graph. The [skill assessment](../../docs/engineering/SKILL_GAPS.md)

@@ -16,6 +16,12 @@ present labeled choices without inventing priority; each command must identify i
 Apply current [review](REVIEW.md), [QA](QA.md) and [landing](LANDING.md) standards; this table summarizes routing,
 not new acceptance or publication authority.
 
+The read-only [next skill](../../.pi/skills/next/SKILL.md) defaults new implementation and confirmed repair work
+to `/skill:build TASK-NNNNN`. An explicit [build invocation](../../.pi/skills/build/SKILL.md) delegates coordination
+through review, QA and land without another approval prompt; its Team Lead continues the stage routes below
+within that authority. Individual stage skills retain their narrower boundaries. Evidence-only, QA, delivery,
+planning and human-prerequisite handoffs remain specific to the actual state; `next` never launches the workflow.
+
 | Completed state | Next recommendation |
 |---|---|
 | Work implemented or repaired the TASK, required checks passed and committed evidence is ready | `/skill:review TASK-NNNNN` in an independent session |

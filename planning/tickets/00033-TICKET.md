@@ -14,6 +14,11 @@ comparable before/after captures in the eventual PR without managing Engineers d
 
 ## Solution and boundaries
 
+**Completion scope corrected 2026-10-13:** `done` records TASK-00146's local QA skill and evidence handoff only.
+The managed phase requirements retained below are transferred, without waiver, to
+[TICKET-00083](00083-TICKET.md). They are not delivered by the local skill. That open owner prevents the EPIC's
+local-skill completion from representing managed Workflow completion.
+
 Implement the QA Engineer phase after Senior Engineer review and before Release Manager `land`, under
 [Team roles](../../docs/engineering/TEAM.md) and [QA standards](../../docs/engineering/QA.md). Browser execution
 may be headless or visible. QA uses an immutable reviewed subject, separate identity/session and isolated test

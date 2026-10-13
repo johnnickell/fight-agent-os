@@ -223,17 +223,24 @@ adding exactly `app_debug: boolean` and `swagger_available: boolean`, mapped to 
 fields. Strictly reject missing/extra/wrong-type or unsupported-version data; document deployment compatibility
 and avoid indefinite dual schema ownership. These are public presentation flags, never permission grants.
 
-`app_debug` is true only when the server's exact APP_ENV is `local` and strictly parsed APP_DEBUG is true;
-unset debug defaults false and malformed values fail safely. `swagger_available` describes local viewer
-availability only and is false outside local or while the feature is unavailable. Actual viewer/document
-requests independently check server environment and current READ_SWAGGER. Neither public value may authorize
-an API operation, bypass unknown/stale authority, turn on PHP exception display or weaken secret redaction.
+**Subsequent explicit WF-034 amendment:** the original 2026-09-30 rule restricted both safe debug and Swagger
+to exact local. The maintainer later expanded [TASK-00154](../tasks/00154-TASK.md) to independent configuration,
+without changing this ADR's authority ownership or schema shape. `app_debug` reflects strictly parsed APP_DEBUG
+(false if absent), even if deliberately true in a non-local named environment; malformed configuration fails
+safely. **Reject startup** with a non-sensitive error when exact APP_ENV is `prod` or `production` and
+APP_DEBUG=true. This project sets APP_DEBUG=true locally and false in staging/production. `swagger_available`
+describes eligibility under a separately configured **exact allowed-environments set**, initially `["local"]`
+for this project; an empty set disables Swagger, while `test`, staging or production requires deliberate
+inclusion. Missing/malformed sets, unset/invalid/unlisted APP_ENV and wildcards fail closed. This public boolean
+is never a user grant; viewer and direct document reads independently require current `READ_SWAGGER`. Each
+Try it out still requires its actual endpoint authority. Neither public value may authorize an API operation,
+bypass unknown/stale authority, turn on PHP exception display or weaken secret redaction.
 
 Deliver these values through the existing escaped inert JSON boot block with its same-origin/CSP/no-store
 protections, not an environment/configuration dump. No new public config endpoint, token-bearing hidden input
 or base64 container is necessary; encoding is not protection. Keep every credential/principal/private-state
-prohibition above. Even enabled local diagnostics must never log raw token/cookie/CSRF/password/grant material,
-form bodies, personal data or unrestricted response/error objects. Modifying a flag in browser tools changes
+prohibition above. Even diagnostics deliberately enabled outside local must never log raw token/cookie/CSRF/
+password/grant material, form bodies, personal data or unrestricted response/error objects. Modifying a flag in browser tools changes
 only presentation/logging behavior, never server policy.
 
 Swagger consumes the existing memory-only credential provider and bounded restoration/refresh coordinator;
@@ -295,7 +302,7 @@ round trips and loss of browser drafts/intended routes on reload are deliberate 
 | [TASK-00117](../tasks/00117-TASK.md), [TASK-00049](../tasks/00049-TASK.md) | Single production `/me` endpoint/service, strict safe no-store View, real cache integration, permission change and stale-response tests; no second authority source |
 | [TASK-00050](../tasks/00050-TASK.md), [TASK-00051](../tasks/00051-TASK.md) | Theme invalid/missing/denied storage and OS tracking, production accessible control, permission-aware frame and forbidden states |
 | [TICKET-00022](../tickets/00022-TICKET.md) | Integrated HTTPS/security, storage and secret-redaction evidence, critical browser/accessibility journeys; not a substitute for lower-level tests |
-| [TASK-00154](../tasks/00154-TASK.md) | Explicit version-2 safe local/debug flags, secret-free guarded diagnostics, local-only READ_SWAGGER viewer/document access and existing memory-credential/theme integration; no long-lived token exception |
+| [TASK-00154](../tasks/00154-TASK.md) | Explicit version-2 safe debug/availability flags, independently configured secret-free diagnostics, exact configured-environment READ_SWAGGER viewer/document access and existing memory-credential/theme integration; no long-lived token exception; reject APP_DEBUG=true in prod/production |
 
 Implementers must test owned runtime behavior at its narrowest useful boundary: success, denial, malformed
 input, outage, out-of-order completion and cleanup. Verify configuration/tooling/artifact concerns directly,
