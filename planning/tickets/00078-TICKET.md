@@ -131,9 +131,9 @@ revocation evidence consumes existing credential/session owners. Refresh affecte
 making primitives reverse-depend on this finished UI. AI proposals, ancestor review, finished browser administration
 and complete role journeys are not prerequisites.
 
-With TICKET-00079–00081, all five EPIC-00017 TICKETs and twenty-three of 24 map TICKETs are decomposed, not implemented.
-Only TICKET-00082 remains, alongside older incomplete Harness/managed review planning. Active work and priorities remain
-unchanged. Next: `/skill:to-tasks TICKET-00082`. No Agent grants, bindings, credentials or sessions changed.
+With TICKET-00079–00082, all five EPIC-00017 TICKETs and all 24 map TICKETs are decomposed, not implemented.
+Older Harness/managed review planning remains incomplete. Active work and priorities remain
+unchanged. Next: `/skill:next` for read-only Board routing. No Agent grants, bindings, credentials or sessions changed.
 
 Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
 403 records and 316 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.

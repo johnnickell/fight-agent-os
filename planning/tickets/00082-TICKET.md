@@ -92,7 +92,7 @@ transaction/outbox, automatic notification system or guarantee of exactly-once e
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00308](../tasks/00308-TASK.md) | Publish the immutable qualified reference bundle to the five starter maintainers | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -115,3 +115,39 @@ TASK-00305. Consume its exact qualified code/scenario subjects, private export s
 viewer pairing and redacted UI guidance. The exporter's bounded digest does not qualify the whole consumer, and
 local ignored output alone is not a delivered artifact. This TICKET retains immutable packaging, recipient access,
 publication and successor handling; it does not introduce another viewer, reference guide or qualification run.
+
+### Approved TASK decomposition
+
+The maintainer approved [TASK-00308](../tasks/00308-TASK.md), **Publish the immutable qualified reference bundle
+to the five starter maintainers**, as one unranked chore blocked only by TASK-00307. TASK-00305's complete coverage
+is already upstream; no redundant or reverse dependencies are added. Keep `needs-info` for actual channel,
+publisher authority, recipient identities/access and retention selection/verification, with inherited holds intact.
+
+The accepted packaging direction is one versioned `.tar.gz` archive with a JSON identity manifest and detached
+whole-archive SHA-256. Component digests exclude the manifest's own bytes explicitly; the archive digest covers
+the manifest too. Every delivered component, qualified implementation versus later documentation identity,
+OpenAPI source/content hashes, scope/dispositions and actual/reused receipt provenance remain attributable.
+Safe durable evidence is included or reachable through immutable controlled references, never local scratch alone.
+
+Under separate publication authority, deliver the same identified snapshot, verification instructions and caveats
+to all five named starter maintainer destinations. Verify actual remote/downloaded bytes and effective recipient/
+required-reference access. Missing access, partial upload, conflicting digest or uncertainty remains incomplete;
+inspect the exact version before retry without overwriting published bytes. Artifact access grants no deployment/
+Swagger authority. No public-spec workaround, automatic grants, new publisher service or managed-release dependency.
+
+Document a manual successor procedure requiring changed-claim assessment, owning requalification and separately
+authorized complete new-version publication while preserving old bytes. No artificial second release, common
+starter update pipeline, starter edits/certification/release or acknowledgement requirement is added.
+
+All three EPIC-00018 TICKETs and all 24 adoption-map TICKETs now have approved written TASK decompositions, not
+implementation acceptance. Older Harness/managed-review planning and active TASK-00138/TASK-00226/TASK-00306
+remain open with unchanged priority. Next: `/skill:next` for read-only Board routing, not automatic execution.
+No bundle, upload, recipient access change/contact, live scenario or starter modification occurred.
+
+Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
+410 records, 324 active. `./bin/build` passed, including source stability: 459 tests, 3499 assertions, 78 captures,
+zero violations, 167.81 seconds. Evidence: `.runs/build/20261013T180453Z-99708`;
+log: `.runs/build/ticket-00082-to-tasks.log`. Sass deprecations, React-Bootstrap `use client` and >500 kB bundle
+warnings remain. These are fresh planning/existing-repository checks on the checkout based on `54dc8d2`, not
+archive verification, consumer qualification or actual recipient delivery. The separately committed skill-context
+work and TASK-00306 were unchanged by this decomposition. Independent review, publication and merge remain separate.

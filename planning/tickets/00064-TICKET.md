@@ -131,10 +131,10 @@ for independent managed review, followed by TASK-00268 QA and TASK-00269 publica
 browser Planning, direct hotfix and independent library/application release paths. These are final integrations,
 not the missing generic phase/session/commitment primitives; no reverse blocker or live readiness is inferred.
 
-All new TASKs are unranked and active TASK-00138/TASK-00226 remain unchanged. With the TICKET-00065–00081 splits,
-twenty-three of the map's 24 TICKETs have approved written TASK decompositions; only TICKET-00082 remains.
+All new TASKs are unranked and active TASK-00138/TASK-00226 remain unchanged. With the TICKET-00065–00082 splits,
+all 24 map TICKETs have approved written TASK decompositions.
 Older Harness/managed review planning is not completed by these mappings.
-Next planning operation: `/skill:to-tasks TICKET-00082`, mapping immutable packaging and authorized handoff.
+Next: `/skill:next` for read-only Board routing.
 Implementation/worktree choice, fresh runtime qualification, independent review, publication and live effects
 remain separately authorized.
 

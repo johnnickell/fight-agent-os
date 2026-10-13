@@ -149,9 +149,9 @@ owns actual package/PostgreSQL/HTTP or browser/accessibility behavior and `./bin
 validated directly. Confirmed bugs need reproducing failing regressions before repair.
 
 Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00073/00074, all five EPIC-00016 TICKETs
-have approved written TASK splits, not implementation acceptance. With TICKET-00075–00081, twenty-three of the map's 24
-are decomposed; **only TICKET-00082 remains**, alongside older incomplete Harness/managed review planning.
-Next planning operation: `/skill:to-tasks TICKET-00082`.
+have approved written TASK splits, not implementation acceptance. With TICKET-00075–00082, **all 24 map
+TICKETs are decomposed**; older Harness/managed review planning remains incomplete.
+Next: `/skill:next` for read-only Board routing.
 Planning exposed no endpoint, fetched no catalog, changed no UI and enabled no Feature. Implementation/worktree
 choice, independent review, publication and runtime/deployment effects remain separately authorized.
 

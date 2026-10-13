@@ -119,8 +119,8 @@ TICKET-00065's accepted TASK-00266 now consumes TASK-00247's actual Explorer res
 Project Manager browser journey; TASK-00267–00272 integrate other owned roles without becoming prerequisites
 of manual use or clearing its remaining host/session holds.
 
-Next planning operation: `/skill:to-tasks TICKET-00082`, mapping immutable packaging and authorized handoff;
-then continue the remaining map TICKET decompositions. Worktree selection, implementation, real
+All 24 adoption-map TICKETs now have approved TASK splits. Next: `/skill:next` for read-only Board routing;
+older Harness/managed-review planning outside this map remains incomplete. Worktree selection, implementation, real
 qualification, independent review, publication and operational enrollment remain separately authorized.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 347 records,

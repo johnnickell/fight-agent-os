@@ -150,8 +150,8 @@ Qualify supported-writer and same-address successor/ABA behavior; this is an unr
 reproduced exploit or authorization for a vendor patch. Supported atomic notice and operational holds persist.
 
 All new TASKs are unranked; active TASK-00138/TASK-00226 and existing authored orders remain unchanged. With the
-TICKET-00067–00081 splits, twenty-three of the map's 24 TICKETs have written TASK splits; **only TICKET-00082 remains**.
-Older Harness/managed review planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00082`.
+TICKET-00067–00082 splits, **all 24 map TICKETs have approved written TASK splits**.
+Older Harness/managed review planning is still incomplete. Next: `/skill:next` for read-only Board routing.
 No request, confirmation, notice, provider or schedule is live from this decomposition. Implementation/worktree
 choice, upstream authorization, independent review, publication and operational enrollment remain separate.
 

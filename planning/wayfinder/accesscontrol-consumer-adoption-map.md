@@ -541,9 +541,8 @@ evidence and the full gate; controlled fixtures are not installed dummy product 
 flagged capability is now `ai-template-proposals` under TICKET-00077. Tooling/configuration is validated directly,
 not product-tested.
 
-All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00081 below,
-**twenty-three of the map's 24 TICKETs have approved written TASK splits; only TICKET-00082 remains**, alongside
-older incomplete Harness/managed review planning. All five EPIC-00016 TICKETs are decomposed, not implemented. Planning
+All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00082 below,
+**all 24 map TICKETs have approved written TASK splits**. Older Harness/managed review planning remains incomplete. All five EPIC-00016 TICKETs are decomposed, not implemented. Planning
 exposed/fetched no catalog, changed no UI and enabled no Feature or deployment.
 
 ## Approved real Feature use and delivery-value amendment
@@ -758,10 +757,35 @@ qualify retained bytes. READ_SWAGGER, environment, independent debug, memory-onl
 endpoint authority stay intact. No public spec, token examples, unauthorized redistribution or automatic effects.
 
 TICKET-00082 retains immutable archive/manifest, recipient access, publication and successor handling, with no
-reverse blocker on references/accounting/product suppliers. Two of three EPIC-00018 TICKETs and twenty-three of
-24 map TICKETs are decomposed, not runtime acceptance. Only TICKET-00082 remains in this map; older Harness/managed
-review planning is still incomplete. Active work/priorities and terminal-first delivery stay unchanged. No guide,
-export, live request, starter edit, access grant or bundle was created.
+reverse blocker on references/accounting/product suppliers. That split brought EPIC-00018 to two of three and
+the map to twenty-three of 24 decompositions, not runtime acceptance. No guide, export, live request, starter edit,
+access grant or bundle was created.
+
+## Approved immutable-handoff TASK decomposition
+
+TICKET-00082 maps [TASK-00308](../tasks/00308-TASK.md)'s one unranked chore to publish the immutable qualified
+reference bundle to the five starter maintainers. It is `needs-info`, blocked only by TASK-00307 with TASK-00305
+already upstream. Concrete authenticated channel, publisher authority, recipient identities/access and retention
+must be selected and verified. All inherited coverage/runtime holds remain; no supplier depends on publication.
+
+One versioned `.tar.gz` archive, JSON identity manifest and detached SHA-256 identify every component and actual
+package/lock/qualified implementation versus later documentation, OpenAPI source/content and evidence subjects
+without self-hashing. Redacted evidence travels with the archive or at retained immutable controlled references;
+ignored scratch alone is insufficient. No new publication service, duplicate qualification or managed-release gate.
+
+Under separate publication authority, deliver the same identified bytes/instructions/caveats with verified
+recipient and required-reference access for all five destinations. Remote/retrieved hashes must agree; partial,
+conflicting or uncertain outcomes stay incomplete and reconcile by exact version before retry. Never overwrite
+published bytes, expose private specs publicly or infer deployment/Swagger authority from artifact readership.
+
+A manual successor procedure retains previous bytes, assesses changed claims, obtains owning requalification and
+authorizes a complete newly identified bundle. No artificial second release, starter source/certification/release,
+acknowledgement condition or common five-starter update pipeline follows.
+
+**All five EPICs, all 24 accepted TICKETs and their approved TASK decompositions are now written for this map.**
+This completes the selected map's planning phases, not implementation, qualification or publication. Older
+Harness/managed-review planning remains open elsewhere; active TASK-00138/TASK-00226/TASK-00306, priorities and
+terminal-first delivery stay unchanged. No bundle, upload, access grant, maintainer contact or live scenario occurred.
 
 ## Approved EPIC handoff
 
@@ -802,12 +826,11 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00082` for
-[TICKET-00082](../tickets/00082-TICKET.md), mapping immutable packaging and authorized maintainer handoff,
-then continue remaining accepted TICKETs before implementation
-selection. This authored planning order does not change the TASK Board's active work or execution
-priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
-decision map.
+**Next:** `/skill:next` to consult the authoritative Board after this map's completed planning phases. This is
+read-only routing, not automatic implementation selection or execution. Preserve existing active work and
+priorities; older Harness/managed-review planning outside this map remains incomplete, including TICKET-00083's
+unwritten TASK split. Implementation/worktree choice, independent review, repository publication/merge, bundle
+publication and starter maintenance remain separate from this decision map.
 
 ## Downstream implementation unknowns (not open Wayfinder decisions)
 

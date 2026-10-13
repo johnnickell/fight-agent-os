@@ -124,10 +124,10 @@ for TASK-00301 or whole-TICKET completion. Human-only editing/publication remain
 separately authorized existing-Agent Permission actions. Ancestor review offers that real handoff only when
 available, never a fake sync or a reverse prerequisite.
 
-With subsequent splits through TICKET-00081, all five EPIC-00017 TICKETs and twenty-three of 24 map TICKETs have
-approved TASK decompositions, not runtime acceptance. Only TICKET-00082 remains, alongside older incomplete Harness/
+With subsequent splits through TICKET-00082, all five EPIC-00017 TICKETs and all 24 map TICKETs have
+approved TASK decompositions, not runtime acceptance. This map's planning is complete, with older incomplete Harness/
 managed review planning. Priorities, active work and the terminal-first milestone are unchanged.
-Next: `/skill:to-tasks TICKET-00082`.
+Next: `/skill:next` for read-only Board routing.
 
 TICKET-00077 now maps [TASK-00302](../tasks/00302-TASK.md)'s real AI suggestion → human prompt/Permission edits →
 explicit publication integration. It consumes TASK-00300 without TASK-00301 and retains its precise provider/

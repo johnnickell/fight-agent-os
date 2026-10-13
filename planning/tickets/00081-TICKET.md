@@ -124,10 +124,10 @@ environments, independent APP_DEBUG, shared memory-only credentials/CSRF, no-sto
 unchanged; documentation access does not authorize Try it out effects or public spec exposure.
 
 TICKET-00082 retains immutable packaging, controlled recipient access, publication and successor handling; it is
-not a reverse prerequisite. No starter source/certification/release or live scenario is added. Two of three
-EPIC-00018 TICKETs and twenty-three of 24 map TICKETs are decomposed, not implemented. Only TICKET-00082 remains
-in this map, alongside older incomplete Harness/managed review planning. Active work/priorities are unchanged.
-Next: `/skill:to-tasks TICKET-00082`. No actual guide, export, viewer execution or handoff bundle was produced.
+not a reverse prerequisite. No starter source/certification/release or live scenario is added. With TICKET-00082's
+TASK-00308, all three EPIC-00018 TICKETs and all 24 map TICKETs are decomposed, not implemented. Older
+Harness/managed review planning remains incomplete. Active work/priorities are unchanged.
+Next: `/skill:next` for read-only Board routing. No actual guide, export, viewer execution or handoff bundle was produced.
 
 Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
 409 records, 323 active. `./bin/build` passed, including source stability: 459 tests, 3499 assertions, 78 captures,

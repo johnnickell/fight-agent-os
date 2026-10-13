@@ -130,12 +130,12 @@ TICKET-00065. Publication never silently rebinds existing Agents or sessions.
 
 All new TASK orders remain unranked; active TASK-00138/TASK-00226 and implementation priority are unchanged.
 Planning creates no Agent, Permission, credential, binding, session or live evidence. The subsequent
-TICKET-00064–00081 splits bring the map to twenty-three accepted TASK decompositions; only TICKET-00082 remains.
+TICKET-00064–00082 splits complete all 24 map TICKETs' accepted TASK decompositions.
 TASK-00261 consumes actual named creation for eligibility; TASK-00263/00264 supply current Team admission/
 delegation, while TASK-00266–00272 consume actual owned role journeys. None becomes a prerequisite of creation
 or first manual Explorer use, and none resolves the supported creation/initial-assignment composition holds.
 The separate TICKET-00034 detour does not complete older Harness planning.
-Next planning operation: `/skill:to-tasks TICKET-00082`.
+Next: `/skill:next` for read-only Board routing.
 
 TICKET-00075 now maps [TASK-00299](../tasks/00299-TASK.md)'s database-template initialization/history before
 TASK-00249 resolution and this TICKET's preview/creation. Required resource/reference and independent Triage-input

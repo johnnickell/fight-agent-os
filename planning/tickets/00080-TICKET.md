@@ -119,9 +119,9 @@ TASK-00302 supplies the real ai-template-proposals evidence without another demo
 
 TICKET-00081 consumes the qualified matrix for actual references; TICKET-00082 retains immutable packaging,
 authorized publication and recipient access. Their completed deliverables are not reverse prerequisites here.
-With TICKET-00081, two of three EPIC-00018 TICKETs and twenty-three of 24 map TICKETs are decomposed, not
-implemented. Only TICKET-00082 remains in this map, alongside older incomplete Harness/managed review planning.
-Active work/priorities are unchanged. Next planning target: `/skill:to-tasks TICKET-00082`.
+With TICKET-00081/00082, all three EPIC-00018 TICKETs and all 24 map TICKETs are decomposed, not
+implemented. Older Harness/managed review planning remains incomplete.
+Active work/priorities are unchanged. Next: `/skill:next` for read-only Board routing.
 No final assessment, exclusion approval, live scenario or publication occurred.
 
 ### Planning verification and resolved concurrency hold

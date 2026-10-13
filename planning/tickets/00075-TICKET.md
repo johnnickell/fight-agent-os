@@ -124,9 +124,8 @@ handoff remain unmapped readiness holds. EPIC-00012/TASK-00200 retains Triage ow
 role, duplicate catalog or completed-diagnosis dependency is introduced. Mapping TASK-00299 resolves only
 TASK-00249's database-owner gap, not its remaining resource/model or current scoped-read guarantees.
 
-This was EPIC-00017's first accepted TASK decomposition. With subsequent splits through TICKET-00081, all five TICKETs here and
-twenty-three of the map's 24 are decomposed; only TICKET-00082 remains, alongside older incomplete Harness/managed
-review planning. Active work and priorities are unchanged. Next: `/skill:to-tasks TICKET-00082`.
+This was EPIC-00017's first accepted TASK decomposition. With subsequent splits through TICKET-00082, all five TICKETs here and
+all 24 map TICKETs are decomposed; older Harness/managed review planning remains incomplete. Active work and priorities are unchanged. Next: `/skill:next` for read-only Board routing.
 No implementation follows.
 
 TICKET-00076 now maps [TASK-00300](../tasks/00300-TASK.md)'s actual human publication over this store/authority,
