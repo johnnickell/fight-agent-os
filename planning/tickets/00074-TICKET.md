@@ -136,9 +136,10 @@ deferred manual `CreateFeature` exposure. Actual source cleanup/deployment still
 product-owner decision and authority. No cleanup TASK for `ai-template-proposals` is created now, and retirement
 support does not block that product's initial shipping or the first terminal Awaiting review milestone.
 
-All five EPIC-00016 TICKETs now have approved TASK decompositions, not implementation acceptance. Sixteen of the
-map's 24 are decomposed; eight remain, TICKET-00075–00082, alongside older incomplete Harness/managed review
-planning. Active work and priorities remain unchanged. Next planning operation: `/skill:to-tasks TICKET-00075`.
+All five EPIC-00016 TICKETs now have approved TASK decompositions, not implementation acceptance. With
+TICKET-00075, seventeen of the map's 24 are decomposed; seven remain, TICKET-00076–00082, alongside older
+incomplete Harness/managed review planning. Active work and priorities remain unchanged.
+Next planning operation: `/skill:to-tasks TICKET-00076`.
 
 Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
 398 records and 311 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.

@@ -63,8 +63,10 @@ of the AccessControl map's next TICKET and approved three TASKs:
 - [TASK-00250](../tasks/00250-TASK.md): integrate immutable role binding and current authority with actual isolated
   session owners, without another launcher or duplicate role journey.
 
-TASK-00248 is `ready-for-agent`; TASK-00249/00250 retain `needs-info` for precise database-template, resource/model,
-Harness session/snapshot and named-Agent prerequisites. All are unranked. TASK-00200 now consumes TASK-00249 for
+TASK-00248 is `ready-for-agent`; TASK-00249/00250 retain `needs-info` for remaining resource/model,
+Harness session/snapshot and actual named-Agent composition prerequisites. TICKET-00075 now maps
+[TASK-00299](../tasks/00299-TASK.md)'s database initialization/history owner directly before TASK-00249;
+its resource/reference and independent Triage-input holds remain explicit. All are unranked. TASK-00200 now consumes TASK-00249 for
 its separately owned Triage definition, while TASK-00206 and TASK-00247 consume TASK-00250. These consumers keep
 their remaining real runtime/provisioning holds; records or definitions alone establish no usable identity.
 
@@ -80,10 +82,12 @@ with TICKET-00065 coordinating complete team acceptance. Preserve the first Team
 Awaiting review milestone, active TASK-00138/TASK-00226 and all existing execution priorities. No implementation,
 Agent, grant, session, provider call or operational enablement follows from this planning approval.
 
-This completes only the explicitly selected TICKET's decomposition. Older EPIC-00006 Harness/browser requirements
-remain incompletely decomposed; the AccessControl map still has 21 TICKETs needing approved TASK splits.
-Next planning operation: `/skill:to-tasks TICKET-00062`, returning to that map's pending Team primitives. Checkout/
-worktree choice, implementation, actual qualification, independent review and publication remain separate.
+This completed only the explicitly selected TICKET's decomposition; at that historical handoff the AccessControl
+map still had 21 TICKETs needing TASK splits and next returned to TICKET-00062. With subsequent splits through
+TICKET-00075, seventeen of the map's 24 are now decomposed; seven remain, TICKET-00076–00082. Older EPIC-00006
+Harness/browser and managed review requirements remain incompletely decomposed. Next planning operation:
+`/skill:to-tasks TICKET-00076`. Checkout/worktree choice, implementation, actual qualification, independent review
+and publication remain separate.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 350 records,
 263 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero

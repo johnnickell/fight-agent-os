@@ -301,4 +301,5 @@
 | [TASK-00296](00296-TASK.md) | Gate browser Feature presentation with current catalog availability | ready-for-agent | [TICKET-00072](../tickets/00072-TICKET.md) |
 | [TASK-00297](00297-TASK.md) | Manage the testing audience and rollout state for AI template proposals | needs-info | [TICKET-00073](../tickets/00073-TICKET.md) |
 | [TASK-00298](00298-TASK.md) | Retire Feature settings safely after deployed reference removal | needs-info | [TICKET-00074](../tickets/00074-TICKET.md) |
+| [TASK-00299](00299-TASK.md) | Initialize database-owned Agent templates without source overwrite | needs-info | [TICKET-00075](../tickets/00075-TICKET.md) |
 <!-- /planning:records -->

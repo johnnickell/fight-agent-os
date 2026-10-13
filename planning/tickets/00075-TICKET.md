@@ -72,7 +72,7 @@ transaction under ADR 0002. Template requests are not AccessControl grants; seed
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00299](../tasks/00299-TASK.md) | Initialize database-owned Agent templates without source overwrite | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -85,12 +85,12 @@ snapshot rules with [EPIC-00017](../epics/00017-EPIC.md)'s explicit template-aut
 making the later editor a prerequisite for EPIC-00014's initial managed Agent work. No seed, schema, reconciler
 transition or runtime authority was created by decomposition.
 
-TICKET-00034's accepted [TASK-00248](../tasks/00248-TASK.md) now owns the reviewed starting catalog. This TICKET's
-future primitive seed/storage TASKs consume those specifications; [TASK-00249](../tasks/00249-TASK.md) consumes
-that actual database authority for profile resolution. Do not make seeding depend on TASK-00249, TASK-00250 or
-whole TICKET-00034 completion. Keep one Harness template authority, no recurring source overwrites and no browser
-editor prerequisite for the initial catalog. Precise TASK allocation here still requires separate decomposition
-and approval; this coordination note creates no additional TASK or seed.
+TICKET-00034's accepted [TASK-00248](../tasks/00248-TASK.md) owns the reviewed starting catalog.
+[TASK-00299](../tasks/00299-TASK.md) now owns the approved single initialization/inspection outcome, consuming
+TASK-00248, TASK-00036's managed authority and TASK-00078's Workspace/Repository identities.
+[TASK-00249](../tasks/00249-TASK.md) consumes this actual database authority for profile resolution, never the
+reverse. Keep one Harness template authority, no recurring source overwrites and no browser editor prerequisite
+for the initial catalog; whole TICKET-00034 or completed Agent/session journeys are not seed prerequisites.
 
 TICKET-00063's accepted TASK-00257/00258 consume the exact database-backed profile for preview and named creation;
 TASK-00260 integrates actual browser administration. The separately owned Triage definition must reach this
@@ -98,3 +98,39 @@ seed/resource boundary through a precise accepted primitive handoff, not a depen
 diagnosis (which now consumes TASK-00258). Map that input with the existing Triage owner during decomposition;
 TASK-00260 retains the explicit hold. Neither seed/storage nor TASK-00249 resolution may depend on named
 creation, session integration or final administration. There is no duplicate Triage catalog or editor gate.
+
+### Approved TASK decomposition
+
+The maintainer approved one unranked feature, TASK-00299, initially `needs-info`. It delivers protected atomic
+initialization and bounded authorized inspection together with stable identities, immutable revisions/current
+selections, scope/ancestry/provenance and preservation of existing bindings/history. Repetition recognizes complete
+setup without comparing today's source to edited current rows or resetting custom templates. PostgreSQL competition,
+selection/reference races, required audit/rollback, uncertainty and actual writer/deployment qualification remain
+inside this outcome, not separate schema, inspection, transition or proof-only TASKs.
+
+The approved `MANAGE_AGENT_TEMPLATES` Permission is managed `SUPER_ADMIN_ONLY`, assigned only through managed
+Super Admin. Preserve the whole TASK-00036 policy and other accepted extensions; generate/version the stable ID
+through the owning factory/library during implementation. Every supported path checks current trusted human
+identity, intent and target/scope. This is neither a direct Agent grant nor publication/creation authority merely
+because a template exists; later publication remains TICKET-00076's actual operation over the same store.
+
+Source inspection found no implemented Agent-template store or recurring template reconciler in the inspected
+`src/`, `config/` and migration sources. Actual installed state still needs inspection: do not assume every target
+is empty or invent a legacy migration. Exclude actual old template writers before publication can become available,
+without changing Skill/policy authority, deleting seed files or migrating Planning Markdown.
+
+Required Harness resource/reference contracts and the independently deliverable Triage definition/registration
+handoff remain unmapped readiness holds. EPIC-00012/TASK-00200 retains Triage ownership; no ninth required starting
+role, duplicate catalog or completed-diagnosis dependency is introduced. Mapping TASK-00299 resolves only
+TASK-00249's database-owner gap, not its remaining resource/model or current scoped-read guarantees.
+
+This is EPIC-00017's first of five accepted TASK decompositions. Seventeen of the map's 24 TICKETs are decomposed;
+seven remain, TICKET-00076–00082, alongside older incomplete Harness/managed review planning. Active work and
+priorities are unchanged. Next planning operation: `/skill:to-tasks TICKET-00076`. No implementation follows.
+
+Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
+399 records and 312 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.
+Evidence: `.runs/build/20261013T152904Z-72221`; log: `.runs/build/ticket-00075-to-tasks.log`.
+Sass deprecations, React-Bootstrap `use client` and >500 kB bundle warnings remain. These are fresh planning/
+existing-repository checks, not template initialization, deployed writer exclusion, profile resolution or Agent
+qualification. Independent review/publication remain unperformed; no seed, policy or runtime change ran.

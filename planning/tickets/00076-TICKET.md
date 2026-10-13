@@ -91,3 +91,12 @@ Approved as area 2 of EPIC-00017's five-TICKET split. Depends on
 [TICKET-00077](00077-TICKET.md) contributes editable proposals, not a second publication path.
 [ADR 0001](../adr/0001-application-ownership-and-orchestration.md) preserves Harness versus AccessControl
 ownership. No template revision, browser editor or publication was implemented here.
+
+TICKET-00075 now maps [TASK-00299](../tasks/00299-TASK.md)'s single protected initialization/inspection and
+immutable database-template authority. Consume its approved managed `MANAGE_AGENT_TEMPLATES` SUPER_ADMIN_ONLY
+Permission through managed Super Admin and the same store/current-selection contracts, not a second catalog or
+policy. Its source-writer transition must be qualified before publication is enabled; its required resource/
+reference and independent Triage-input holds remain explicit. Completed editing never becomes an upstream seed
+prerequisite. This TICKET retains actual browser publication, history/rollback/ancestor review and impact evidence.
+
+Next planning operation: `/skill:to-tasks TICKET-00076`; no editor, publication or provider effect is implemented.

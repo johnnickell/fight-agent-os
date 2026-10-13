@@ -541,8 +541,8 @@ evidence and the full gate; controlled fixtures are not installed dummy product 
 flagged capability is now `ai-template-proposals` under TICKET-00077. Tooling/configuration is validated directly,
 not product-tested.
 
-All new orders remain unranked and active work unchanged. With the management/retirement splits below,
-**sixteen of the map's 24 TICKETs have approved written TASK splits; eight remain, TICKET-00075–00082**, alongside
+All new orders remain unranked and active work unchanged. With the management/retirement/initial-template splits below,
+**seventeen of the map's 24 TICKETs have approved written TASK splits; seven remain, TICKET-00076–00082**, alongside
 older incomplete Harness/managed review planning. All five EPIC-00016 TICKETs are decomposed, not implemented. Planning
 exposed/fetched no catalog, changed no UI and enabled no Feature or deployment.
 
@@ -607,9 +607,35 @@ No manual-create endpoint, dummy Feature, separate reintroduction/proof TASK or 
 created. A product owner's later explicit cleanup/deploy decision remains separate. Retirement does not block
 initial AI proposal delivery, any upstream primitive or the first terminal Awaiting review milestone.
 
-All five EPIC-00016 TICKETs are now decomposed, not implemented. Sixteen of 24 map TICKETs have approved written
-TASK splits; eight remain, TICKET-00075–00082, with older Harness/managed review planning still incomplete.
+That retirement split completed EPIC-00016's five decompositions and brought the map to sixteen of 24,
+not implementation acceptance. Older Harness/managed review planning remains incomplete.
 Planning performed no reference cleanup, deployment, Feature deletion, Permission/grant mutation or reintroduction.
+
+## Approved database-template initialization TASK decomposition
+
+[TASK-00299](../tasks/00299-TASK.md) delivers TICKET-00075 as one protected setup/inspection outcome after
+TASK-00248, TASK-00036 and TASK-00078. It removes TASK-00249's database prerequisite gap: one Harness template
+identity/history/current-selection authority, complete atomic initial catalog, preserved custom/edited revisions,
+scoped inspection and exclusion of recurring source overwrites. Required audit, PostgreSQL competition/rollback/
+uncertainty and direct deployment qualification belong inside this outcome, not separate infrastructure/proof TASKs.
+
+The approved managed `MANAGE_AGENT_TEMPLATES` Permission is SUPER_ADMIN_ONLY, assigned only through managed
+Super Admin while preserving the complete managed policy. TICKET-00076 consumes the same store/authority for
+publication; initialization grants no Agent authority and changes no existing binding or active session snapshot.
+
+The unranked TASK remains `needs-info` for precise required Harness resource/reference primitives and the independent
+Triage definition/registration handoff under EPIC-00012/TASK-00200. Completed diagnosis cannot be a seed prerequisite
+because it already consumes the named Agent. No ninth mandatory starting role, new Triage catalog, fake legacy
+migration or source/seed deletion is introduced. Source inspection found no implemented template store/reconciler
+in the inspected application/configuration/migrations, but actual target data/writers still require qualification.
+
+The sequence is TASK-00248 → TASK-00299 → TASK-00249 → actual Agent consumers. Browser publication, AI proposals
+and final role/session journeys do not reverse-block the initial catalog. TASK-00249 retains other resource/model/
+current-read holds. Initial terminal-first priorities and active work are unchanged.
+
+One of five EPIC-00017 TICKETs and seventeen of 24 map TICKETs are decomposed, not implemented. Seven remain,
+TICKET-00076–00082; older Harness/managed review planning is still incomplete. No seed, Permission, Agent, grant,
+session, provider call or deployment occurred during planning.
 
 ## Approved EPIC handoff
 
@@ -650,8 +676,8 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00075` for
-[TICKET-00075](../tickets/00075-TICKET.md), mapping database-authoritative versioned Agent templates,
+**Next planning operation:** `/skill:to-tasks TICKET-00076` for
+[TICKET-00076](../tickets/00076-TICKET.md), mapping human-reviewed template authoring and publication,
 then continue remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this

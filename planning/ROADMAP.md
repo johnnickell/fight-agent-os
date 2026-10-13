@@ -110,7 +110,6 @@ the same operation that completes their children.
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00075](tickets/00075-TICKET.md) | Establish database-authoritative Agent templates | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
 | [TICKET-00076](tickets/00076-TICKET.md) | Author and publish reviewed template revisions | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
 | [TICKET-00077](tickets/00077-TICKET.md) | Generate editable AI template proposals | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
 | [TICKET-00078](tickets/00078-TICKET.md) | Review and reconcile existing Agent Permission drift | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
