@@ -541,8 +541,8 @@ evidence and the full gate; controlled fixtures are not installed dummy product 
 flagged capability is now `ai-template-proposals` under TICKET-00077. Tooling/configuration is validated directly,
 not product-tested.
 
-All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00079 below,
-**twenty-one of the map's 24 TICKETs have approved written TASK splits; three remain, TICKET-00080–00082**, alongside
+All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00080 below,
+**twenty-two of the map's 24 TICKETs have approved written TASK splits; two remain, TICKET-00081/00082**, alongside
 older incomplete Harness/managed review planning. All five EPIC-00016 TICKETs are decomposed, not implemented. Planning
 exposed/fetched no catalog, changed no UI and enabled no Feature or deployment.
 
@@ -715,10 +715,32 @@ grants; it starts no work. Separate assignment retains current authority, protec
 host limits. Later publication changes no bound Agent/session; Workflow stays unavailable without an explicit
 owned route. TASK-00301/00302/00303 are not prerequisites and no supplier/initial-role reverse blocker is added.
 
-All five EPIC-00017 TICKETs and twenty-one of 24 map TICKETs have approved TASK decompositions, not runtime
-acceptance. Three remain, TICKET-00080–00082, with older Harness/managed review planning incomplete. Priorities
-and terminal-first delivery remain unchanged. No Agent, grant, credential, session, provider request, manual
-assignment or Workflow was created during planning.
+That split completed EPIC-00017's five decompositions and brought the map to twenty-one of 24, not runtime
+acceptance. No Agent, grant, credential, session, provider request, manual assignment or Workflow was created.
+
+## Approved coverage-accounting TASK decomposition
+
+TICKET-00080 maps [TASK-00305](../tasks/00305-TASK.md)'s one unranked chore to establish qualified consumer
+coverage for the maintainer handoff. It consumes existing human/Agent/Team, email, Feature and template evidence
+owners and their upstream contracts, not EPIC completion labels. Internal inventory can precede qualification;
+final acceptance requires actual qualified use or approved explicit dispositions for every relevant operation.
+No second test platform, proof product or coverage-driven endpoint/feature TASK is introduced.
+
+Status needs-info retains the final owner disposition of deferred manual CreateFeature, other discovered
+unsupported/unmapped public operations and inherited runtime/composition holds. Provisioning does not qualify
+manual creation; deferral is not permanent exclusion. Missing guarantees return to existing owners or explicit
+scope decisions, not invented prerequisites or silently weakened acceptance.
+
+Preserve WF-032's historical planning matrix and produce one current operation-level consumer matrix with exact
+package/source/lock, consumer/configuration/tool subjects and safe attributable receipts. Reused evidence retains
+its original identity and justified applicability; changed claims require owning requalification. TASK-00302
+supplies real ai-template-proposals evidence without another demonstration or forced retirement.
+
+TICKET-00081 consumes this coverage for actual references; TICKET-00082 retains immutable packaging/authorized
+delivery. Neither completed deliverable reverse-blocks accounting or product suppliers. One of three EPIC-00018
+TICKETs and twenty-two of 24 map TICKETs are decomposed, not runtime acceptance. Two remain, TICKET-00081/00082,
+with older Harness/managed review planning incomplete. Active work, priorities and terminal-first delivery remain
+unchanged. No qualified matrix, exclusion approval, live scenario, source/package change or publication occurred.
 
 ## Approved EPIC handoff
 
@@ -759,8 +781,8 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00080` for
-[TICKET-00080](../tickets/00080-TICKET.md), mapping complete consumer coverage and qualification accounting,
+**Next planning operation:** `/skill:to-tasks TICKET-00081` for
+[TICKET-00081](../tickets/00081-TICKET.md), mapping reproducible actual backend/API/browser references,
 then continue remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this

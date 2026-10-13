@@ -124,9 +124,9 @@ TASK-00301 ancestor review, TASK-00302 AI proposals and TASK-00303 existing-Agen
 No supplier, initial managed role or first terminal Awaiting review milestone reverse-depends on this custom-role
 consumer. No per-template certification, artificial demo or separate proof TASK is introduced.
 
-All five EPIC-00017 TICKETs and twenty-one of 24 map TICKETs now have approved TASK decompositions, not runtime
-acceptance. Three remain, TICKET-00080–00082, alongside older incomplete Harness/managed review planning. Active
-work/priorities remain unchanged. Next: `/skill:to-tasks TICKET-00080`. No Agent, grant, credential, session,
+With TICKET-00080, all five EPIC-00017 TICKETs and twenty-two of 24 map TICKETs have approved TASK decompositions,
+not runtime acceptance. Two remain, TICKET-00081/00082, alongside older incomplete Harness/managed review planning. Active
+work/priorities remain unchanged. Next: `/skill:to-tasks TICKET-00081`. No Agent, grant, credential, session,
 provider request, manual assignment or Workflow was created by planning.
 
 Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with

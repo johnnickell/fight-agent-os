@@ -176,9 +176,9 @@ not product tests of wiring/planning. Actual effects require bounded target/mail
 bug needs a failing regression before authorized repair; local or historical receipts are not live qualification.
 
 All new orders remain unranked; active TASK-00138/TASK-00226 and existing priorities are unchanged. All four
-EPIC-00015 TICKETs now have approved written TASK splits, not completed implementation. With TICKET-00070–00079,
-twenty-one of the map's 24 TICKETs are decomposed; **three remain, TICKET-00080–00082**, alongside older incomplete Harness/managed review
-planning. Next planning operation: `/skill:to-tasks TICKET-00080`.
+EPIC-00015 TICKETs now have approved written TASK splits, not completed implementation. With TICKET-00070–00080,
+twenty-two of the map's 24 TICKETs are decomposed; **two remain, TICKET-00081/00082**, alongside older incomplete Harness/managed review
+planning. Next planning operation: `/skill:to-tasks TICKET-00081`.
 No route, account change, session revocation, mailbox/provider/schedule enrollment or live effect follows from
 these records. Implementation/worktree choice, independent review, publication and operational effects remain separate.
 

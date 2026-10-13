@@ -83,7 +83,7 @@ transaction/recovery claims. This documentation adds no Permission, principal, t
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00305](../tasks/00305-TASK.md) | Establish qualified consumer coverage for the maintainer handoff | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -94,3 +94,58 @@ Approved as area 1 of EPIC-00018's three-TICKET split. Consume
 EPIC-00017 retain their implementations and qualification duties. This supplies the coverage gate for
 [TICKET-00081](00081-TICKET.md)'s references and [TICKET-00082](00082-TICKET.md)'s final publication. No live
 qualification, final matrix or starter handoff was produced by decomposition.
+
+### Approved TASK decomposition
+
+The maintainer approved one unranked chore: [TASK-00305](../tasks/00305-TASK.md), **Establish qualified consumer
+coverage for the maintainer handoff**. It removes the accepted EPIC-00018 coverage/publication blocker, not a
+reason to add product features or another certification campaign. Internal inventory may be prepared earlier;
+final acceptance requires actual qualified coverage or approved explicit dispositions, never inventory alone.
+
+Direct blockers are TASK-00066, TASK-00128, TASK-00154, TASK-00246, TASK-00255, TASK-00266, TASK-00269,
+TASK-00270, TASK-00271, TASK-00272, TASK-00289, TASK-00298, TASK-00301, TASK-00302, TASK-00303 and TASK-00304.
+Their upstream dependencies supply the existing human/Agent/Team, email, Feature and template paths. Completion
+labels are not receipts, and this later accounting does not reverse-block their delivery or expand their scope.
+
+Status `needs-info` retains the final owner disposition of deferred manual `CreateFeature` and any other
+unsupported/unmapped public operation, plus inherited runtime/composition holds. Provisioning does not qualify
+manual creation; deferral is not automatic exclusion. No endpoint, demonstration or TASK is invented for a row.
+
+Inspect the actual selected package/source/lock and consumer subject, preserve WF-032's historical matrix and
+produce one maintained current consumer matrix. Account for individual operations within every relevant family,
+real entry/authority/effect boundaries and applicable safe evidence. Reuse attributable unchanged receipts without
+relabelling them fresh; changes require impact assessment and owning requalification, not a second test platform.
+TASK-00302 supplies the real ai-template-proposals evidence without another demonstration or retirement requirement.
+
+TICKET-00081 consumes the qualified matrix for actual references; TICKET-00082 retains immutable packaging,
+authorized publication and recipient access. Their completed deliverables are not reverse prerequisites here.
+One of three EPIC-00018 TICKETs and twenty-two of 24 map TICKETs are decomposed, not implemented. Two remain,
+TICKET-00081/00082, alongside older incomplete Harness/managed review planning. Active work/priorities are unchanged.
+Next planning target: `/skill:to-tasks TICKET-00081`.
+No final assessment, exclusion approval, live scenario or publication occurred.
+
+### Planning verification and resolved concurrency hold
+
+`./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed initially with 405 records,
+318 active. Concurrent unrelated planning then added TASK-00306 and TICKET-00083/00084 and reopened EPIC-00008;
+the subsequent planning checks passed with 408 records, 322 active for that combined checkout. Those changes are
+not part of this decomposition's authority and have not been restored, staged or included in a commit here.
+
+Two full `./bin/build` attempts ran 459 tests/3499 assertions and 78 captures/zero violations, but **both failed
+the final source-stability gate** while concurrent edits changed the checkout. These are failed gates, not fresh
+acceptance receipts. Evidence: `.runs/build/20261013T170722Z-84920` and `.runs/build/20261013T171049Z-87037`;
+logs: `.runs/build/ticket-00080-to-tasks-attempt-1.log` and
+`.runs/build/ticket-00080-to-tasks-attempt-2.log`. Sass deprecations, React-Bootstrap `use client` and >500 kB bundle
+warnings also remain. `.runs/planning/ticket-00080/concurrent.sha256` records observations of concurrent files,
+not a claim that the other operation stopped editing them.
+
+The maintainer confirmed concurrent edits were paused. Their separate work was committed as `460d57c` and
+`20f5d18`; this decomposition preserves it and includes only its own record/handoff/generated-view changes.
+Fresh `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with 408 records,
+322 active. The rerun of `./bin/build` **passed**, including source stability: 459 tests, 3499 assertions,
+78 captures, zero violations, 145.27 seconds. Evidence: `.runs/build/20261013T172649Z-93402`;
+log: `.runs/build/ticket-00080-to-tasks.log`. The existing warnings above remain.
+
+This is fresh verification of the combined checkout based on `20f5d18`, not an isolated build excluding concurrent
+work or consumer runtime qualification. No product implementation, final coverage assessment, exclusion approval,
+independent review or publication has occurred. TASK-00305 retains its approved needs-info holds.

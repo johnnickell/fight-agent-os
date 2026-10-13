@@ -156,9 +156,9 @@ now needs explicit qualification through TASK-00273/00275; it does not resolve T
 
 Each user-facing slice owns real safe HTTP/client behavior, PostgreSQL/package integration and applicable
 accessible browser evidence; no proof-only final TASK is added. All new orders are unranked; active
-TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00068–00079, twenty-one of the map's 24
-TICKETs have approved written TASK splits; **three remain, TICKET-00080–00082**. Older Harness/managed review
-planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00080`. No permission, request, cancellation, UI or provider is live
+TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00068–00080, twenty-two of the map's 24
+TICKETs have approved written TASK splits; **two remain, TICKET-00081/00082**. Older Harness/managed review
+planning is still incomplete. Next planning operation: `/skill:to-tasks TICKET-00081`. No permission, request, cancellation, UI or provider is live
 from planning; implementation/worktree choice, upstream changes, review, publication and operational effects remain separate.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 382 records,

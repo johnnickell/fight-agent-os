@@ -143,9 +143,9 @@ migrations and generated files are validated directly, not product-tested as tex
 a reproducing failing regression before repair. Record exact package/source/lock and fresh versus reused receipts.
 
 Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00072–00074, all five EPIC-00016
-TICKETs now have approved written TASK splits, not runtime acceptance. With TICKET-00075–00079, twenty-one of the map's
-24 are decomposed; **three remain, TICKET-00080–00082**, alongside older incomplete Harness/managed review planning.
-Next planning operation: `/skill:to-tasks TICKET-00080`.
+TICKETs now have approved written TASK splits, not runtime acceptance. With TICKET-00075–00080, twenty-two of the map's
+24 are decomposed; **two remain, TICKET-00081/00082**, alongside older incomplete Harness/managed review planning.
+Next planning operation: `/skill:to-tasks TICKET-00081`.
 No middleware, route, Tool gate, worker, nonce or Feature was enabled by planning. Implementation/worktree choice,
 independent review, publication, enrollment and actual deployment remain separate.
 

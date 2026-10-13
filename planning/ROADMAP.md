@@ -110,7 +110,6 @@ the same operation that completes their children.
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00080](tickets/00080-TICKET.md) | Account for complete consumer coverage and qualification | [EPIC-00018](epics/00018-EPIC.md) | ready-for-agent |
 | [TICKET-00081](tickets/00081-TICKET.md) | Document reproducible backend API and browser references | [EPIC-00018](epics/00018-EPIC.md) | ready-for-agent |
 | [TICKET-00082](tickets/00082-TICKET.md) | Publish and maintain the immutable maintainer handoff | [EPIC-00018](epics/00018-EPIC.md) | ready-for-agent |
 | [TICKET-00083](tickets/00083-TICKET.md) | Deliver managed review through verified PR handoff | [EPIC-00008](epics/00008-EPIC.md) | ready-for-agent |

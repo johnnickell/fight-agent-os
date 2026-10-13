@@ -102,3 +102,10 @@ immutable archive and authenticated controlled-access distribution direction. Co
 [WF-034](../wayfinder/tickets/WF-034-set-reference-consumer-and-starter-handoff-contract.md) and
 [EPIC-00018](../epics/00018-EPIC.md)'s post-qualification, independent-starter ownership boundary. No artifact
 was assembled/published, recipient access changed or maintainer contacted during decomposition.
+
+TICKET-00080 now maps [TASK-00305](../tasks/00305-TASK.md)'s complete exact-subject coverage assessment. Its final
+qualified matrix and approved operation dispositions are a publication prerequisite, not status inferred from
+closed EPICs or an internal draft. Preserve actual/reused evidence identity and refresh affected claims if the
+package/lock/consumer/API/configuration subject changes before packaging. TASK-00305 does not itself assemble or
+publish a bundle, settle recipient access or approve exclusions. This TICKET retains those existing delivery
+boundaries; publication is not a reverse prerequisite for coverage accounting.

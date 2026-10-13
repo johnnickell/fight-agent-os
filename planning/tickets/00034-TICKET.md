@@ -90,9 +90,9 @@ Agent, grant, session, provider call or operational enablement follows from this
 
 This completed only the explicitly selected TICKET's decomposition; at that historical handoff the AccessControl
 map still had 21 TICKETs needing TASK splits and next returned to TICKET-00062. With subsequent splits through
-TICKET-00079, twenty-one of the map's 24 are now decomposed; three remain, TICKET-00080–00082. Older EPIC-00006
+TICKET-00080, twenty-two of the map's 24 are now decomposed; two remain, TICKET-00081/00082. Older EPIC-00006
 Harness/browser and managed review requirements remain incompletely decomposed. Next planning operation:
-`/skill:to-tasks TICKET-00080`. Checkout/worktree choice, implementation, actual qualification, independent review
+`/skill:to-tasks TICKET-00081`. Checkout/worktree choice, implementation, actual qualification, independent review
 and publication remain separate.
 
 Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 350 records,

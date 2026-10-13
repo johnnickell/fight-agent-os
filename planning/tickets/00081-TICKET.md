@@ -96,3 +96,10 @@ actual behavior owned by EPIC-00004 and EPIC-00014 through EPIC-00017, with exis
 the private API/viewer. Follow [API documentation](../../docs/api/README.md) and
 [ADR 0001](../adr/0001-application-ownership-and-orchestration.md). No viewer, export, reference bundle,
 scenario execution or starter-source change was delivered by decomposition.
+
+TICKET-00080 now maps [TASK-00305](../tasks/00305-TASK.md)'s one maintained current consumer matrix and exact-
+subject readiness assessment. Consume its operation-level coverage, actual qualified source/receipt subjects and
+approved dispositions without copying the historical WF-032 inventory into a conformance claim. Its needs-info
+scope/runtime holds remain; drafting references does not clear them. This TICKET retains reproducible backend/
+API/browser guidance and current private export provenance through TASK-00153/00154, not another viewer or
+qualification campaign. Completed references/publication do not reverse-block the accounting supplier.
