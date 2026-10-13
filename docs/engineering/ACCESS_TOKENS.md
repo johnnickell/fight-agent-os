@@ -42,6 +42,16 @@ the last possible old issuance second. Synchronize clocks; retain the old entry 
 window. New issuance always uses the active key. A grossly incorrect clock requires operational recovery, not
 an expanded grace period. Production provisioning, deployment enrollment and emergency rotation are separate.
 
+The package `Clock` port is bound to `AccessIssuanceClock` around the raw UTC `SystemDeliveryClock`.
+It floors each reading to the current UTC second **before** package lifecycle code constructs timestamps,
+claims, session deadlines and token expiry. This shared package clock deliberately has whole-second precision;
+`AuthenticationService` must receive it for issuance, not a raw subsecond clock. The package therefore supplies
+unchanged integer `iat` and exact whole-second expiry 900 seconds later; `TokenSet` and JWT expiry agree.
+`AccessJwt` still rejects fractional or inconsistent supplied expiry rather than rewriting package output.
+Request validation and keyring checks retain the independent raw `SystemAccessClock`: access and persisted
+session deadlines receive no extra expiry grace. Inject the issuance adapter around deterministic/raw clocks
+in package integration tests; do not hide this contract with only whole-second fixtures.
+
 `AuthenticateAccessToken` resolves session and user fresh on every request using package repository ports,
 requires active lifecycle, owned usable session, matching token/user/session versions, and issuance no earlier
 than session creation. It rechecks token expiry after store access. Store failure denies without preserving

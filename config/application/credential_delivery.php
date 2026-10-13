@@ -6,6 +6,7 @@ use App\Adapter\CredentialDelivery\InMemoryCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\CredentialDelivery\SystemDeliveryClock;
+use App\Adapter\Security\AccessToken\AccessIssuanceClock;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
@@ -27,9 +28,14 @@ return static function (Container $container): void {
     $container->set(PasswordResetDeliveryCipher::class, static function () use ($cipher): PasswordResetDeliveryCipher {
         return $cipher('password_reset');
     });
-    $container->set(Clock::class, static function (): Clock {
-        return new SystemDeliveryClock();
-    });
+    // Package lifecycle timestamps must precede JWT construction at whole-second precision.
+    $container->set(AccessIssuanceClock::class, static fn(): AccessIssuanceClock => new AccessIssuanceClock(
+        new SystemDeliveryClock()
+    ));
+    $container->set(
+        Clock::class,
+        static fn(Container $container): Clock => $container->get(AccessIssuanceClock::class)
+    );
     $container->set(CredentialDeliveryProvider::class, static function () use (
         $environment,
         $selection

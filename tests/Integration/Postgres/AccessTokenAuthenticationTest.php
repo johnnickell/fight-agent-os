@@ -14,6 +14,7 @@ use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
+use App\Adapter\Security\AccessToken\AccessIssuanceClock;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use DateInterval;
 use DateTimeImmutable;
@@ -100,8 +101,13 @@ final class AccessTokenAuthenticationTest extends TestCase
     /**
      * Authenticates a package login token then observes immediate persisted revocation
      */
-    public function testPackageLoginAndRequestScopedRevocation(): void
+    #[DataProvider('issuanceTimes')]
+    public function testPackageLoginAndRequestScopedRevocation(?string $time = null): void
     {
+        if ($time !== null) {
+            $this->fixture->clock->time = new DateTimeImmutable($time);
+        }
+
         $now = $this->fixture->clock->now();
         $hasher = new PhpPasswordHasher(PASSWORD_ARGON2ID);
         $hash = PasswordHash::fromString($hasher->hash('private-fixture-password'));
@@ -120,7 +126,7 @@ final class AccessTokenAuthenticationTest extends TestCase
             $this->sessions,
             new SessionRevocationService($this->sessions),
             new DoctrineTransactionalUnitOfWork(new EntityManager($this->connection, $orm)),
-            $this->fixture->clock,
+            new AccessIssuanceClock($this->fixture->clock),
             $throttle,
             $generator,
             $hasher,
@@ -145,9 +151,19 @@ final class AccessTokenAuthenticationTest extends TestCase
         $claims = $this->fixture->jwt->decode($token);
         self::assertSame($user->getId()->toString(), $claims['sub']);
         self::assertSame($tokens->getRefreshSessionId()->toString(), $claims['sid']);
+        self::assertSame($user->getAuthenticationVersion(), $claims['auth_version']);
+        self::assertSame('access', $claims['type']);
+        self::assertSame($now->getTimestamp(), $claims['iat']);
+        self::assertSame($claims['iat'], $claims['nbf']);
         self::assertSame(900, $claims['exp'] - $claims['iat']);
+        self::assertSame($now->getTimestamp() + 900, $tokens->getAccessTokenExpiresAt()->getTimestamp());
+        self::assertSame('000000', $tokens->getAccessTokenExpiresAt()->format('u'));
+        self::assertSame($claims['exp'], $tokens->getAccessTokenExpiresAt()->getTimestamp());
+        self::assertSame($now, $this->fixture->clock->now());
         $session = $this->sessions->getById($tokens->getRefreshSessionId());
         self::assertNotNull($session);
+        self::assertSame($claims['iat'], $session->getCreatedAt()->getTimestamp());
+        self::assertSame('000000', $session->getCreatedAt()->format('u'));
         $authentication = $this->authentication();
         $next = $this->createMock(RequestHandlerInterface::class);
         $next->expects(self::once())->method('handle')->willReturnCallback(static function (
@@ -171,6 +187,18 @@ final class AccessTokenAuthenticationTest extends TestCase
             fn() => $this->sessions->replace($session, $session->revoke())
         ));
         $this->assertUnauthorized($authentication, $request, $next);
+    }
+
+    /**
+     * Exercises whole-second and representative raw system-clock precision
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function issuanceTimes(): iterable
+    {
+        yield 'whole-second' => ['2026-09-28T12:00:00.000000Z'];
+        yield 'ordinary-subsecond' => ['2026-09-28T12:00:00.123456Z'];
+        yield 'end-of-second' => ['2026-09-28T12:00:00.999999Z'];
     }
 
     /**
