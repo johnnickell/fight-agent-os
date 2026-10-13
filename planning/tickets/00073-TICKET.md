@@ -147,8 +147,8 @@ TICKET-00077 retains real AI admission/provider/browser evidence and the deliber
 non-HTTP paths consume TASK-00294 without imposing unrelated Agent integration on human-only management. Neither
 completed AI authoring nor this management journey reverse-blocks upstream primitives. TICKET-00074 consumes this
 authority/detail/confirmation for its separate retirement operation. The terminal-first milestone and active work
-remain unchanged. With TICKET-00074–00078, twenty of 24 map TICKETs are decomposed; four remain, TICKET-00079–00082.
-Next planning operation: `/skill:to-tasks TICKET-00079`; no implementation follows from this approval.
+remain unchanged. With TICKET-00074–00079, twenty-one of 24 map TICKETs are decomposed; three remain, TICKET-00080–00082.
+Next planning operation: `/skill:to-tasks TICKET-00080`; no implementation follows from this approval.
 
 TICKET-00074 now maps [TASK-00298](../tasks/00298-TASK.md)'s complete retirement path after TASK-00297. It reuses
 this management authority/detail/confirmation and invalidation without a new Permission or reverse dependency.

@@ -82,7 +82,7 @@ provider disclosure controls must be real; do not launch outside approved limits
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00304](../tasks/00304-TASK.md) | Create and use a custom-template Agent for bounded manual work | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -100,3 +100,38 @@ its exact published custom revisions without waiting for TASK-00301's ancestor r
 completion. TASK-00300 preserves immutable history and existing bindings; published status is still not live
 Agent/provider readiness. Creation/manual-use qualification remains with this integration and its existing owners,
 never a reverse prerequisite for seeding or a duplicate editor/publication engine.
+
+### Approved TASK decomposition
+
+The maintainer approved one unranked feature: [TASK-00304](../tasks/00304-TASK.md), **Create and use a custom-template
+Agent for bounded manual work**, blocked by TASK-00300, TASK-00260 and TASK-00250. The existing administration
+journey supplies exact creation/initial assignment and TASK-00241 credential readiness transitively; no duplicate
+custom directory, credential flow or manual-work engine is added.
+
+Status `needs-info` retains precise EPIC-00006 manual-assignment, protected runtime/provider, disclosure, host and
+recovery mappings/qualification plus inherited creation/reference, administration/resource and session holds.
+The accepted durable-session direction is an integration preference, not runtime qualification; reconnect must
+resolve the same authorized identity/conversation without duplicate work or silently refreshed snapshots. Missing
+primitives cannot be replaced by completed Explorer/browser Planning or invented TASK IDs.
+
+One complete existing-browser creation → separate human assignment → useful actual result owns the delivery and
+evidence. Preview/confirm exact published custom revision, name, one Team, Repository scope, full eligible grants
+and resource/model constraints; preserve original intent and truthful lifecycle state through uncertainty. Creation
+alone starts no work. Current independent authority, protected credentials, disclosure and host limits apply to
+manual use; a role title/prompt is never Workflow eligibility. Later publication changes no existing Agent/session.
+
+TASK-00301 ancestor review, TASK-00302 AI proposals and TASK-00303 existing-Agent reconciliation are not prerequisites.
+No supplier, initial managed role or first terminal Awaiting review milestone reverse-depends on this custom-role
+consumer. No per-template certification, artificial demo or separate proof TASK is introduced.
+
+All five EPIC-00017 TICKETs and twenty-one of 24 map TICKETs now have approved TASK decompositions, not runtime
+acceptance. Three remain, TICKET-00080–00082, alongside older incomplete Harness/managed review planning. Active
+work/priorities remain unchanged. Next: `/skill:to-tasks TICKET-00080`. No Agent, grant, credential, session,
+provider request, manual assignment or Workflow was created by planning.
+
+Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
+404 records and 317 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.
+Evidence: `.runs/build/20261013T164846Z-82816`; log: `.runs/build/ticket-00079-to-tasks.log`.
+Sass deprecations, React-Bootstrap `use client` and >500 kB bundle warnings remain. These are fresh planning/
+existing-repository checks, not custom-Agent creation, provider/host qualification or actual manual-work evidence.
+Independent review and publication remain unperformed; no live enrollment, grant, session or assignment occurred.

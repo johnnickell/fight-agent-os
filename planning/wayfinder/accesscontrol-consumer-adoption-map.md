@@ -541,8 +541,8 @@ evidence and the full gate; controlled fixtures are not installed dummy product 
 flagged capability is now `ai-template-proposals` under TICKET-00077. Tooling/configuration is validated directly,
 not product-tested.
 
-All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00078 below,
-**twenty of the map's 24 TICKETs have approved written TASK splits; four remain, TICKET-00079–00082**, alongside
+All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00079 below,
+**twenty-one of the map's 24 TICKETs have approved written TASK splits; three remain, TICKET-00080–00082**, alongside
 older incomplete Harness/managed review planning. All five EPIC-00016 TICKETs are decomposed, not implemented. Planning
 exposed/fetched no catalog, changed no UI and enabled no Feature or deployment.
 
@@ -695,9 +695,30 @@ requires the complete eligible desired set. Bound and compared revisions stay di
 credentials and immutable snapshots stay unchanged. A real next-use check observes revocation despite the snapshot.
 No recurring rule, AI/ancestor-review dependency, whole role journey or separate proof TASK is introduced.
 
-Four of five EPIC-00017 TICKETs and twenty of 24 map TICKETs are decomposed, not implemented. Four remain,
-TICKET-00079–00082, with older Harness/managed review planning incomplete. Priorities and terminal-first delivery
-are unchanged. No Agent Permission, binding, credential or session changed during planning.
+That split brought EPIC-00017 to four of five and the map to twenty of 24 decompositions, not implementation.
+No Agent Permission, binding, credential or session changed during planning.
+
+## Approved custom-template Agent use TASK decomposition
+
+TICKET-00079 maps [TASK-00304](../tasks/00304-TASK.md)'s one unranked existing-browser creation → separate human
+assignment → useful actual manual-work result after TASK-00300, TASK-00260 and TASK-00250. Preview/retained
+creation, complete initial assignment, one-Team binding and TASK-00241 readiness remain upstream. No duplicate
+Agent directory, credential flow, manual-work engine, demonstration or per-template certification TASK is added.
+
+It remains needs-info for precise EPIC-00006 manual-assignment/runtime/provider/disclosure/host/recovery suppliers
+and inherited creation/reference, administration/resource and session holds. The durable-session direction needs
+qualification, not assumed support. Reattach preserves the same authorized Agent/conversation without duplicate
+work or snapshot refresh. Finished Explorer/browser Planning cannot replace missing primitive contracts.
+
+Custom creation pins the exact published revision, one Team, Repository scope and complete confirmed eligible
+grants; it starts no work. Separate assignment retains current authority, protected credentials, disclosure and
+host limits. Later publication changes no bound Agent/session; Workflow stays unavailable without an explicit
+owned route. TASK-00301/00302/00303 are not prerequisites and no supplier/initial-role reverse blocker is added.
+
+All five EPIC-00017 TICKETs and twenty-one of 24 map TICKETs have approved TASK decompositions, not runtime
+acceptance. Three remain, TICKET-00080–00082, with older Harness/managed review planning incomplete. Priorities
+and terminal-first delivery remain unchanged. No Agent, grant, credential, session, provider request, manual
+assignment or Workflow was created during planning.
 
 ## Approved EPIC handoff
 
@@ -738,8 +759,8 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00079` for
-[TICKET-00079](../tickets/00079-TICKET.md), mapping published custom-template creation and real bounded manual use,
+**Next planning operation:** `/skill:to-tasks TICKET-00080` for
+[TICKET-00080](../tickets/00080-TICKET.md), mapping complete consumer coverage and qualification accounting,
 then continue remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this

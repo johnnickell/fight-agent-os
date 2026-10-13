@@ -110,7 +110,6 @@ the same operation that completes their children.
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00079](tickets/00079-TICKET.md) | Use published custom templates for real manual Agent work | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
 | [TICKET-00080](tickets/00080-TICKET.md) | Account for complete consumer coverage and qualification | [EPIC-00018](epics/00018-EPIC.md) | ready-for-agent |
 | [TICKET-00081](tickets/00081-TICKET.md) | Document reproducible backend API and browser references | [EPIC-00018](epics/00018-EPIC.md) | ready-for-agent |
 | [TICKET-00082](tickets/00082-TICKET.md) | Publish and maintain the immutable maintainer handoff | [EPIC-00018](epics/00018-EPIC.md) | ready-for-agent |
