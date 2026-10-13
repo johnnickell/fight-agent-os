@@ -1,5 +1,6 @@
 import { build } from 'esbuild';
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, relative } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +24,7 @@ const result = await build({
   entryNames: '[name]-[hash]',
   chunkNames: 'chunk-[hash]',
   assetNames: '[name]-[hash]',
+  loader: { '.woff2': 'file' },
   bundle: true,
   plugins: [
     {
@@ -66,12 +68,21 @@ const prepaint = await build({
   legalComments: 'external',
   metafile: true
 });
+// Retain each font's redistribution terms in the deployed release, not only the source tree.
+const fontNotices = await Promise.all(
+  ['ubuntu', 'open-sans'].map(async (family) => {
+    const contents = await readFile(`assets/fonts/${family}-LICENSE.txt`);
+    const hash = createHash('sha256').update(contents).digest('hex').slice(0, 8).toUpperCase();
+    return { path: `${outdir}/${family}-${hash}.LEGAL.txt`, contents, text: contents.toString() };
+  })
+);
+const outputFiles = [...result.outputFiles, ...prepaint.outputFiles, ...fontNotices];
 const report = await inspectArtifacts(
   {
     inputs: { ...result.metafile.inputs, ...prepaint.metafile.inputs },
     outputs: { ...result.metafile.outputs, ...prepaint.metafile.outputs }
   },
-  [...result.outputFiles, ...prepaint.outputFiles],
+  outputFiles,
   styleInputs
 );
 const reportPrefix = checking ? 'production' : 'build';
@@ -93,8 +104,7 @@ const manifest = {
   script: `/build/${basename(entry[0])}`,
   stylesheet: `/build/${basename(entry[1].cssBundle)}`
 };
-for (const file of [...result.outputFiles, ...prepaint.outputFiles])
-  await writeFile(file.path, file.contents);
+for (const file of outputFiles) await writeFile(file.path, file.contents);
 await writeFile(`${outdir}/manifest.json.tmp`, JSON.stringify(manifest));
 await rename(`${outdir}/manifest.json.tmp`, `${outdir}/manifest.json`);
 console.log(JSON.stringify(manifest));

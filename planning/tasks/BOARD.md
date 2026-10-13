@@ -19,7 +19,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | — | — |
 | 44 | [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | [TICKET-00038 — Guard Pi tool execution with deterministic restrictions and Jev](../tickets/00038-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | [TICKET-00037 — Configure and qualify Jev access for the Harness](../tickets/00037-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
@@ -345,5 +344,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | — (standalone chore) | done | — | [PR #50](https://github.com/johnnickell/fight-agent-os/pull/50) |
 | — | [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | — (standalone chore) | done | — | [PR #51](https://github.com/johnnickell/fight-agent-os/pull/51) |
 | — | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | — (standalone chore) | done | — | [PR #62](https://github.com/johnnickell/fight-agent-os/pull/62) |
+| — | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | — (standalone chore) | done | — | [PR #81](https://github.com/johnnickell/fight-agent-os/pull/81) |
 | — | [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | — (standalone bug) | done | — | [PR #77](https://github.com/johnnickell/fight-agent-os/pull/77) |
 <!-- /planning:board -->

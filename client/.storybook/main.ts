@@ -12,7 +12,7 @@ const config: StorybookConfig = {
   viteFinal(config, { configType }) {
     return mergeConfig(config, {
       cacheDir: '../.runs/client/storybook-vite',
-      build: { sourcemap: false },
+      build: { sourcemap: false, assetsInlineLimit: 0 },
       resolve: applicationResolve,
       // Only Storybook's middleware server uses bin/client's published 16006 port.
       // Browser tests supply their own server, not this Docker port mapping.

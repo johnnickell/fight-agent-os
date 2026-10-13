@@ -16,12 +16,16 @@ use App\Adapter\Validation\PublicForms;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
+use Fight\Common\Application\Templating\TemplateEngine;
 
 return static function (Container $container): void {
+    $container->set(ClientShellResponder::class, static function (Container $container): ClientShellResponder {
+        return new ClientShellResponder($container->get(TemplateEngine::class));
+    });
     $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {
         return new ClientShellAction(
             new ClientAssetManifest($container['app.public_dir'].'/build'),
-            new ClientShellResponder()
+            $container->get(ClientShellResponder::class)
         );
     });
     $container->set(IndexAction::class, static function (): IndexAction {

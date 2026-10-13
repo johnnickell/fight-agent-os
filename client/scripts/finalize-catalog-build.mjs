@@ -11,6 +11,13 @@ await writeFile(path, `${JSON.stringify(metadata)}\n`);
 
 // Inspect the static catalog directly; tool bundles are not production /app assets.
 const root = new URL('../../.runs/client/storybook/', import.meta.url);
+// The disposable catalog also distributes the selected font bytes with their notices.
+for (const family of ['ubuntu', 'open-sans']) {
+  await writeFile(
+    new URL(`${family}-LICENSE.txt`, root),
+    await readFile(new URL(`../assets/fonts/${family}-LICENSE.txt`, import.meta.url))
+  );
+}
 const artifacts = [];
 async function inspect(directory, prefix = '') {
   for (const entry of await readdir(directory, { withFileTypes: true })) {

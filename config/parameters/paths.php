@@ -16,6 +16,7 @@ return static function (Container $container): void {
     $container['app.scripts_dir'] = sprintf('%s/scripts', $rootDir);
     $container['app.src_dir'] = sprintf('%s/src', $rootDir);
     $container['app.tests_dir'] = sprintf('%s/tests', $rootDir);
+    $container['app.templates_dir'] = sprintf('%s/templates', $rootDir);
     $container['app.vendor_dir'] = sprintf('%s/vendor', $rootDir);
     $container['app.storage_dir'] = sprintf('%s/var/storage', $rootDir);
     $databaseUrl = getenv('DATABASE_URL');

@@ -1,0 +1,122 @@
+[
+  {
+    "file": "ubuntu-cyrillic-ext-500-normal.woff2",
+    "sha256": "3985441a30918afb3b3d2970029daa4a2da0c75ca8600cb881fe59d7db897938",
+    "bytes": 21812
+  },
+  {
+    "file": "ubuntu-cyrillic-500-normal.woff2",
+    "sha256": "7141e2f1c644d2177574909484c430e4e254af7daf7e2a253a49bae92cdfd3d8",
+    "bytes": 18668
+  },
+  {
+    "file": "ubuntu-greek-ext-500-normal.woff2",
+    "sha256": "87290fd818f42526a99faa7cd0710500c41b46a48a4c1dbdc50b72662c8b745f",
+    "bytes": 13432
+  },
+  {
+    "file": "ubuntu-greek-500-normal.woff2",
+    "sha256": "cd095d54d97f9a0d83b053e8cb12bbdda12f15a5ca1a35ca510423fe6dde53f2",
+    "bytes": 13540
+  },
+  {
+    "file": "ubuntu-latin-ext-500-normal.woff2",
+    "sha256": "a90dec375bfc6a8b7c568da98f28b844916c5973e346f12eb55f016177e254df",
+    "bytes": 42480
+  },
+  {
+    "file": "ubuntu-latin-500-normal.woff2",
+    "sha256": "428ec293d3b79af16abdca704f630c6c951744f572eddbc80e970bc9a94a33d2",
+    "bytes": 30508
+  },
+  {
+    "file": "open-sans-cyrillic-ext-400-normal.woff2",
+    "sha256": "d18e67d924951d195e8687eff9260216064559f973924228741117811dec185f",
+    "bytes": 18032
+  },
+  {
+    "file": "open-sans-cyrillic-400-normal.woff2",
+    "sha256": "dbb0be746ac930892a1f0303d33f4cca4520120d2699ecadf34efeb6dd52a7f4",
+    "bytes": 11108
+  },
+  {
+    "file": "open-sans-greek-ext-400-normal.woff2",
+    "sha256": "944d5844f65414cc5b896678ccf898a41f1cfb5f5f942d41fcf669b52e266d25",
+    "bytes": 3756
+  },
+  {
+    "file": "open-sans-greek-400-normal.woff2",
+    "sha256": "8e22e3852c3c18cd2a96393c07d072af4f9db1432825c5c19101ef7adb3dfcc9",
+    "bytes": 9336
+  },
+  {
+    "file": "open-sans-latin-ext-400-normal.woff2",
+    "sha256": "c260ffc9d1acb022e1037cb8ffc8baa8fe8c44c2ae74429d3231c7ce6d2b7f21",
+    "bytes": 15380
+  },
+  {
+    "file": "open-sans-latin-400-normal.woff2",
+    "sha256": "0e44026ad31376af1b56593cd4acb4f353f8e8789c51759e18f64578e4ef296a",
+    "bytes": 18640
+  },
+  {
+    "file": "open-sans-cyrillic-ext-600-normal.woff2",
+    "sha256": "ef9e1a4ed554bd2f0a8102e856ab399cc7e162b2263667bebc2e6d28b337cf19",
+    "bytes": 18008
+  },
+  {
+    "file": "open-sans-cyrillic-600-normal.woff2",
+    "sha256": "08aec93f48938879be79e48f8e7c7af47fa288741bedeb9679835a21f9b49f95",
+    "bytes": 11100
+  },
+  {
+    "file": "open-sans-greek-ext-600-normal.woff2",
+    "sha256": "39f3e62840bd86db41b487a16c24bf3235445e9acdcca48bbc2c5bf561aebdee",
+    "bytes": 3748
+  },
+  {
+    "file": "open-sans-greek-600-normal.woff2",
+    "sha256": "472831a27e9a639033913d4c72563578ad6d6ea77a5b57b03186d3a624c3194b",
+    "bytes": 9460
+  },
+  {
+    "file": "open-sans-latin-ext-600-normal.woff2",
+    "sha256": "6dbc7eadcc20f0d1f2dccddd62a5431e66e8f7bd675c3a5147270325fe1555a4",
+    "bytes": 15280
+  },
+  {
+    "file": "open-sans-latin-600-normal.woff2",
+    "sha256": "a97a6ed7ef9f75c495e9224f5c59b2271d826e4a4345b738b390b0c76cc9f412",
+    "bytes": 18620
+  },
+  {
+    "file": "open-sans-cyrillic-ext-700-normal.woff2",
+    "sha256": "ae07fab39888e22081b44db4133644d83a20be46b0e32fd65dea7c2e4b0ad864",
+    "bytes": 17520
+  },
+  {
+    "file": "open-sans-cyrillic-700-normal.woff2",
+    "sha256": "71ea3254f0d75c7caedb5640931ea026994f396d81561fe454ec1dc4ed9f104c",
+    "bytes": 10876
+  },
+  {
+    "file": "open-sans-greek-ext-700-normal.woff2",
+    "sha256": "ecfcbdf8a4507140886fe7bfd171abf419fdcc0866f0957e4d5f899417180d09",
+    "bytes": 3788
+  },
+  {
+    "file": "open-sans-greek-700-normal.woff2",
+    "sha256": "e14079db93c2bcc36d1a01826cede4456e63a3c95f9fcb1dd1ae3a6bcce7fe1f",
+    "bytes": 9328
+  },
+  {
+    "file": "open-sans-latin-ext-700-normal.woff2",
+    "sha256": "3f959194168b9c2f90b70f7a2a548d3bac2a4328df65b1656fd848bfdeb7efe7",
+    "bytes": 15072
+  },
+  {
+    "file": "open-sans-latin-700-normal.woff2",
+    "sha256": "594a622208d1dad5d1dd58aef74f212ce7132d8f0aa5bacea6cfeb86d308c17a",
+    "bytes": 18204
+  }
+]

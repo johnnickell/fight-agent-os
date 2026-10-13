@@ -77,11 +77,12 @@ Production check output is `.runs/client/production/`, rebuilt clean without pru
 `production-metafile.json` and `production-artifacts.json` record the actual ESBuild/Sass input graph and
 output sizes/SHA-256 hashes. `build` applies the same inspection before publishing assets/manifest and writes
 `build-*` reports. The three-field manifest is published last; no extra private configuration is serialized.
-The current allowlist admits production `src` TypeScript, `styles` SCSS and locked non-dev runtime packages;
+The current allowlist admits production `src` TypeScript, `styles` SCSS, checksummed `assets/fonts` WOFF2 and locked non-dev runtime packages;
 it rejects test/story/fixture/prototype/cache inputs, development modules, external module imports and
-unexpected output types. Only hashed JS/CSS and external license notices are emitted. Source maps and
-source-map/sourceURL references are forbidden. The stylesheet may embed self-contained Bootstrap SVG controls,
-not external fonts/images/imports. New asset types or third-party resource contracts require a deliberate policy change.
+unexpected output types. Only hashed JS/CSS/qualified WOFF2 and external license notices are emitted. Source maps and
+source-map/sourceURL references are forbidden. The stylesheet may reference that build's emitted, pinned fonts
+and embed self-contained Bootstrap SVG controls, not remote resources or unbundled imports. See
+[font provenance and delivery](assets/fonts/README.md). New asset types or third-party resource contracts require a deliberate policy change.
 
 Artifact content inspection rejects known private environment names, process/import-meta environment access,
 private-key/JWT/AWS/GitHub credential signatures, literal credential properties, embedded UUID identities and
@@ -210,21 +211,32 @@ environment serialization, CDN, or service worker is enabled. The target is mode
 Bootstrap CSS and the accepted C/round-4 semantic mappings are included; no Bootstrap JavaScript plugins,
 custom-theme loader or complete product UI are introduced.
 
-Slim's `ClientShellAction` serves base HTML through `ClientShellResponder`; `ClientAssetManifest` accepts only
-existing hashed entry assets. Absent/invalid manifest or entry files produce generic no-store HTTP 503 without
-broken script references. The manifest is an internal build artifact, not a public API. Rebuild to repair an
-incomplete local deployment. HTTP development routing and the HTTPS gateway allow only hashed JS/CSS/license
-files under `/build/`. API and unrelated routing misses remain server-owned, including dotted paths.
+Slim's `ClientShellAction` serves base HTML through `ClientShellResponder` and autoescaped file-backed Twig
+in project-root `templates/client/`. The responder depends on Fight Common's application `TemplateEngine`, backed
+by the shared `TwigEngine`, environment and filesystem loader registered in `config/common/templating.php`.
+`config/parameters/templating.php` owns namespaced search paths and Twig options (including cache, reload,
+strict variables and filename-based escaping). The inherited `profile` name now resolves to a file under the
+same root. See [shared templating and parameter defaults](../docs/engineering/TEMPLATING.md).
+`ClientAssetManifest` still accepts only existing hashed entry assets. Absent/invalid manifest or entry files,
+missing templates and render errors produce generic no-store HTTP 503 without broken asset references or traces.
+If even the asset-free unavailable template fails, a minimal plain-text 503 remains readable. Only fixed public
+config is passed to Twig; its inert JSON uses HTML-significant character hex encoding before bypassing HTML
+escaping. There is no principal, credential, environment hydration or server-rendered React page.
+The manifest is an internal build artifact, not a public API. Rebuild to repair an incomplete local deployment.
+HTTP development routing and the HTTPS gateway allow only hashed JS/CSS/qualified WOFF2/license files under
+`/build/`. Font responses use `font/woff2`, immutable caching and nosniff. API and unrelated routing misses remain
+server-owned, including dotted paths.
 
 For production-like local HTTPS, follow [local HTTPS setup](../docs/engineering/LOCAL_HTTPS.md), then run
 `./bin/https up` after building assets to refresh the gateway configuration. Open **https://localhost:18443/app**.
 The gateway mounts only `public/build/` for static delivery, with immutable caching of hashed assets. HTML is
-no-store with a restrictive self-only script/style CSP, no inline executable code/eval, no-referrer and nosniff.
+no-store with a restrictive self-only script/style/font CSP, no inline executable code/eval, no-referrer and nosniff.
 The inert config JSON is not executable. A blocking, self-hosted prepaint script runs before the stylesheet
 and deferred React ESM, sharing its preference mapping source with the runtime. This shell policy is not the
 integrated production security certification.
 
-Deploy the PHP release together with its complete `public/build/` output. Assets are **not committed**.
+Deploy the PHP release, `templates/` and complete `public/build/` output, including both hashed font license
+notices. Generated build output is **not committed**; the pinned source font files and licenses are committed.
 The build publishes the manifest last by rename and retains old hashes for already-open documents. A real
 deployment should atomically switch complete release directories and retain old assets for its supported
 client lifetime; deployment/pruning automation is not implemented here. Do not delete live chunks during a
@@ -398,8 +410,11 @@ values mean System; Light/Dark persist exact enum values; System removes the key
 System mode, listens for cross-tab storage updates, and releases listeners on unmount. Denied storage or media
 does not prevent rendering. This is presentation, not authority or an account preference; no remote sync or
 custom-theme loader exists. `styles/base/_tokens.scss` recreates TASK-00035's C/round-4 colors and Bootstrap
-mappings without prototype code or assets. Ubuntu is a local-font preference with system fallback, not a bundled
-font; non-Latin glyphs and official brand assets require separate qualification. Semantic landmarks, visible
+mappings without prototype code or assets. Self-hosted Ubuntu Medium 500 supplies headings and Open Sans
+400/600/700 supplies body/forms/controls, with system fallback and `font-display: swap`. Shared SCSS loads the
+same pinned faces in production and Storybook; no remote font provider is used. See
+[exact subsets, licenses and coverage limits](assets/fonts/README.md). Official brand assets remain separate.
+Semantic landmarks, visible
 focus, reduced-motion overrides and wrapping do not establish universal accessibility certification.
 
 Tests prove observable route/landmark/title/keyboard behavior, controlled pending/failed imports, render failures
@@ -432,7 +447,7 @@ use a factory-generated UUID and deterministic injected outcomes; only the real 
 Stories confer no runtime authority, real authentication or server-side permission semantics.
 
 `styles/base/_tokens.scss` owns background/surface/text/muted/border/action/on-action/focus and info/success/warning/danger
-colors, a local Ubuntu-first fallback font stack, a spacing unit, radius and motion duration. It maps body/link/border/form and
+colors, Open Sans body and Ubuntu heading stacks with system fallbacks, a spacing unit, radius and motion duration. It maps body/link/border/form and
 component-local button/alert Bootstrap variables deliberately. Components use text labels as well as borders,
 not color alone. Native button/field controls and selector labels have 44 CSS-pixel minimum targets, headers wrap, long text breaks, focus uses
 an offset 3px outline, and reduced motion removes animation/transitions while retaining loading/busy text.

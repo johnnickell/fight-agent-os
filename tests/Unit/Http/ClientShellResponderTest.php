@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Tests\Unit\Http;
 
 use App\Adapter\Http\Web\ClientShellResponder;
+use Fight\Common\Adapter\Templating\TwigEngine;
+use Fight\Common\Application\Templating\Exception\TemplatingException;
+use Fight\Common\Application\Templating\TemplateEngine;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ResponseFactory;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
 /**
  * Exercises public shell presentation and safe deployment failure
@@ -18,7 +23,7 @@ final class ClientShellResponderTest extends TestCase
      */
     public function test_that_shell_contains_only_the_approved_runtime_configuration(): void
     {
-        $response = (new ClientShellResponder())->respond((new ResponseFactory())->createResponse(), [
+        $response = $this->responder()->respond((new ResponseFactory())->createResponse(), [
             'prepaint'   => '/build/prepaint-CCCCCCCC.js',
             'script'     => '/build/main-AAAAAAAA.js',
             'stylesheet' => '/build/main-BBBBBBBB.css'
@@ -31,6 +36,7 @@ final class ClientShellResponderTest extends TestCase
         self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
         self::assertSame('no-referrer', $response->getHeaderLine('Referrer-Policy'));
         self::assertStringContainsString("script-src 'self'", $response->getHeaderLine('Content-Security-Policy'));
+        self::assertStringContainsString("font-src 'self'", $response->getHeaderLine('Content-Security-Policy'));
         self::assertStringNotContainsString('unsafe-inline', $response->getHeaderLine('Content-Security-Policy'));
         self::assertSame('', $response->getHeaderLine('Set-Cookie'));
         self::assertStringContainsString('<script type="module" src="/build/main-AAAAAAAA.js"></script>', $html);
@@ -38,6 +44,10 @@ final class ClientShellResponderTest extends TestCase
         self::assertLessThan(
             strpos($html, '<link rel="stylesheet"'),
             strpos($html, '<script src="/build/prepaint-CCCCCCCC.js"></script>')
+        );
+        self::assertLessThan(
+            strpos($html, '<script type="module"'),
+            strpos($html, '<link rel="stylesheet"')
         );
         self::assertStringNotContainsString('data-bs-theme="light"', $html);
         self::assertStringContainsString('<link rel="stylesheet" href="/build/main-BBBBBBBB.css">', $html);
@@ -60,7 +70,7 @@ final class ClientShellResponderTest extends TestCase
      */
     public function test_that_asset_attributes_are_escaped(): void
     {
-        $response = (new ClientShellResponder())->respond((new ResponseFactory())->createResponse(), [
+        $response = $this->responder()->respond((new ResponseFactory())->createResponse(), [
             'prepaint'   => '/build/"<prepaint>',
             'script'     => '/build/"<script>',
             'stylesheet' => '/build/"<style>'
@@ -76,7 +86,7 @@ final class ClientShellResponderTest extends TestCase
      */
     public function test_that_missing_assets_return_safe_unavailable_presentation(): void
     {
-        $response = (new ClientShellResponder())->respond((new ResponseFactory())->createResponse(), null);
+        $response = $this->responder()->respond((new ResponseFactory())->createResponse(), null);
         $html = (string) $response->getBody();
 
         self::assertSame(503, $response->getStatusCode());
@@ -84,5 +94,43 @@ final class ClientShellResponderTest extends TestCase
         self::assertStringContainsString('<h1>Application unavailable</h1>', $html);
         self::assertStringNotContainsString('<script', $html);
         self::assertStringNotContainsString('runtime-config', $html);
+    }
+
+    /**
+     * Contains renderer failures without exposing engine diagnostics
+     */
+    public function test_that_engine_failures_return_safe_plain_text(): void
+    {
+        $templates = $this->createStub(TemplateEngine::class);
+        $templates->method('render')->willThrowException(new TemplatingException('private renderer detail'));
+        $response = (new ClientShellResponder($templates))->respond((new ResponseFactory())->createResponse(), [
+            'prepaint'   => '/build/prepaint-CCCCCCCC.js',
+            'script'     => '/build/main-AAAAAAAA.js',
+            'stylesheet' => '/build/main-BBBBBBBB.css'
+        ]);
+
+        self::assertSame(503, $response->getStatusCode());
+        self::assertSame('text/plain; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
+        self::assertSame('no-referrer', $response->getHeaderLine('Referrer-Policy'));
+        self::assertStringContainsString("default-src 'none'", $response->getHeaderLine('Content-Security-Policy'));
+        self::assertSame(
+            'Application unavailable. Please contact the installation operator.',
+            (string) $response->getBody()
+        );
+    }
+
+    /**
+     * Creates presentation with the real public templates
+     */
+    private function responder(): ClientShellResponder
+    {
+        $loader = new FilesystemLoader();
+        $loader->addPath(dirname(__DIR__, 3).'/templates/client', 'client');
+
+        $templates = new TwigEngine(new Environment($loader, ['autoescape' => 'name', 'strict_variables' => true]));
+
+        return new ClientShellResponder($templates);
     }
 }
