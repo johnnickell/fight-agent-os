@@ -1,6 +1,8 @@
 # Architecture
 
-Fight Agent OS starts with the Slim composition from `johnnickell/project-slim`.
+Fight Agent OS is an open-source software factory: software for planning, building, reviewing and delivering
+software. Its browser and Pi surfaces serve engineering workflows, not a general-purpose personal AI operating
+system or an Internet homepage. It starts with the Slim composition from `johnnickell/project-slim`.
 
 - `src/Domain/`: business state, invariants, value objects, and capability interfaces as introduced
 - `src/Application/`: command/query handlers and application coordination as introduced

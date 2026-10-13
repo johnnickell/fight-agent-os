@@ -30,7 +30,12 @@ Out of scope: postponing earlier security/accessibility work, broad/flaky end-to
 
 ## Validation and permissions
 
-Production startup rejects default, absent, malformed, or weak secrets and insecure canonical origins. Local trust enrollment is explicit and reversible. CSP/headers must cover application routes while development-tool exceptions remain narrowly scoped. Swagger specifically requires exact APP_ENV=local and authoritative READ_SWAGGER for viewer/bootstrap and document access under [TICKET-00010](00010-TICKET.md); test/legacy development/production and APP_DEBUG=true cannot enable it. Safe debug flags never permit secret logging or widen server authority. Rate-limit identity keys and diagnostics must avoid account disclosure and unbounded personal-data retention.
+Production startup rejects default, absent, malformed, or weak secrets and insecure canonical origins. Local trust enrollment is explicit and reversible. CSP/headers must cover application routes while development-tool exceptions remain narrowly scoped. Swagger is initially configured for exact APP_ENV=local, with an expressly configured exact environment set
+allowed under [TICKET-00010](00010-TICKET.md); `test`/staging/production are ineligible unless listed. Both
+viewer/bootstrap and document require current authoritative READ_SWAGGER, and Try it out retains each endpoint's
+independent authority. APP_DEBUG never enables Swagger. Optional sanitized diagnostics may be enabled separately
+outside local, but APP_DEBUG=true in exact `prod`/`production` fails startup. Safe debug flags never permit secret
+logging or widen server authority. Rate-limit identity keys and diagnostics must avoid account disclosure and unbounded personal-data retention.
 
 Security checks include anonymous, ordinary user, Super Admin, stale authority, and cross-user denial cases. Accessibility evidence distinguishes automated checks from keyboard/manual observations and records untested assistive technology/browser boundaries. Logs, errors, metrics/analytics, URLs, referrers, screenshots, and audit records are inspected for credentials/grants.
 

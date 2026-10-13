@@ -70,7 +70,7 @@ No focused child map is required at this handoff. The accepted repository/Planni
 5. **[Define browser planning and conversation ownership](tickets/WF-012-define-browser-planning-and-conversation-ownership.md) is closed.** Provide one seamless repository-scoped journey from durable intake through map, EPIC, TICKET, and TASK planning; keep conversations resumable and proposals revision-checked; and project canonical Roadmap, queue, execution, review, and delivery facts without conflating their authority.
 6. **[Research MCP Skills and Pi support](tickets/WF-013-research-mcp-skills-and-pi-support.md) is closed.** Treat the stable `2026-07-28` Skills protocol as usable but its host ecosystem as immature; prefer an origin-aware host-owned TypeScript/Pi-package adapter, reject unsafe v1 cases, keep trust policy in Agent OS, and leave MCP wire primitives to official SDKs rather than Fight Common.
 7. **[Define skill trust and harness distribution](tickets/WF-014-define-skill-trust-and-harness-distribution.md) is closed.** Establish Harness as the owner of versioned Skills, Themes, prompts, Agent personas and profile templates, trusted first-party MCP origins, package releases, user profiles, and session snapshots; distribute one npm package from `harness/`; keep MCP resources database-authoritative, static, verified, origin-bound, revisioned, and permission-filtered; and provision distinct direct-Permission Agents through secure client-held HMAC keys.
-8. **[Define the coordinated TASK authority protocol](tickets/WF-015-define-coordinated-task-authority-protocol.md) is closed.** Use distinct managed Explorer, Planner, Coordinator, Builder, Reviewer, and Publisher profiles; run one server-authoritative TASK workflow per explicit grant; preserve durable claims and commit-specific independent acceptance; allow three bounded revision cycles by default; publish one unstacked PR; permit proportionate mechanical repairs without ceremonial re-review; and return merge control to the human.
+8. **[Define the coordinated TASK authority protocol](tickets/WF-015-define-coordinated-task-authority-protocol.md) is closed.** Use distinct managed Explorer, Planner, Coordinator, Builder, Reviewer, and Publisher profiles; run one server-authoritative TASK workflow per explicit grant; preserve durable claims and commit-specific independent acceptance; allow five bounded revision cycles by default; publish one unstacked PR; permit proportionate mechanical repairs without ceremonial re-review; and return merge control to the human.
 9. **[Define runner dispatch and recovery](tickets/WF-016-define-runner-dispatch-and-recovery.md) is closed.** Run one registered container-native PHP Agent runner with three one-shot consumers by default; dispatch one durable PostgreSQL-backed Command per explicitly granted TASK workflow; preserve leases, checkpoints, safe restart recovery, and distinct pause/cancel/disable/halt controls; sandbox each Pi peer to its isolated worktree; broker credentials and external tools through Agent OS; and grant no Docker socket.
 10. **[Define execution history and event authority](tickets/WF-017-define-execution-history-and-event-authority.md) is closed.** Use one event-sourced Workflow per TASK grant with application-Command authority, separate Reviews and protected role-specific Pi conversation lineages, lightweight non-authoritative observations, immutable Git/code-review and S3-compatible Artifact evidence, truthful usage and duration facts, rebuildable browser projections, and tiered privacy-aware retention.
 11. **[Prototype the sessions-first browser experience](tickets/WF-018-prototype-sessions-first-browser-experience.md) is closed.** Use a compact cursor-paginated Workflow table without embedded event history; switch the whole result set to an independent archive through one toggle; preserve running visibility across archive; load Summary, Changes, Activity, and Evidence independently; and place Sessions in a collapsible-sidebar/thin-bar/footer shell whose final themes and visual design remain separate.
@@ -266,6 +266,26 @@ follow-on does not claim full map-wide decomposition or implemented behavior.
 
 Next: `/skill:next` to consult the authoritative Board for the completed selected Jev planning slice. This does not
 rank/start implementation or claim that older EPIC requirements and other map handoffs are fully decomposed.
+
+### Approved selected SDLC template decomposition
+
+After the Jev handoff, the maintainer explicitly selected [TICKET-00034](../tickets/00034-TICKET.md) and approved
+[TASK-00248](../tasks/00248-TASK.md) for reviewed eight-role specifications,
+[TASK-00249](../tasks/00249-TASK.md) for exact authorized profile resolution and
+[TASK-00250](../tasks/00250-TASK.md) for immutable role-session integration. The last two retain explicit
+`needs-info` for actual template database, resource/model, session/snapshot and named-Agent primitives. Triage
+remains TASK-00200's separate extension. TASK-00200/00206/00247 now name the applicable concrete template/profile
+prerequisites without clearing their real remaining runtime holds or changing role-journey ownership.
+
+The newer EPIC-00017 amendment governs template authority: initial reviewed definitions feed TICKET-00075's
+database seed/storage owner; profile resolution consumes it. Browser publication and one-time Permission
+reconciliation remain separate, without recurring source overwrite or automatic grants. No second Harness
+registry, launcher or Workflow is introduced. All new TASKs are unranked and active Board work is unchanged.
+
+Only this selected TICKET's decomposition is complete. Older EPIC-00006 requirements remain incompletely
+decomposed, and the [AccessControl map](accesscontrol-consumer-adoption-map.md) still has 21 accepted TICKETs
+awaiting TASK splits. Planning qualifies no Agent or session and authorizes no implementation or live effects.
+Next planning operation: `/skill:to-tasks TICKET-00062`, returning to that map's pending Team primitives.
 
 ### Original completed handoff
 
