@@ -344,6 +344,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | — (standalone chore) | done | — | [PR #62](https://github.com/johnnickell/fight-agent-os/pull/62) |
 | — | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | — (standalone chore) | done | — | [PR #81](https://github.com/johnnickell/fight-agent-os/pull/81) |
 | — | [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | — (standalone bug) | done | — | [PR #77](https://github.com/johnnickell/fight-agent-os/pull/77) |
-| — | [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | — (standalone chore) | done | — | [PR #82](https://github.com/johnnickell/fight-agent-os/pull/82) |
-| — | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | [TICKET-00084 — Coordinate local TASK delivery through an open reviewed PR](../tickets/00084-TICKET.md) | done | — | [PR #83](https://github.com/johnnickell/fight-agent-os/pull/83) |
+| — | [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | — (standalone chore) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
+| — | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | [TICKET-00084 — Coordinate local TASK delivery through an open reviewed PR](../tickets/00084-TICKET.md) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
 <!-- /planning:board -->
