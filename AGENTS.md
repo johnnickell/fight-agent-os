@@ -1,5 +1,19 @@
 # Fight Agent OS
 
+## Work routing
+
+For “What's next?”, `next`, or an unqualified `/ask-matt`, go straight to the [Board](planning/tasks/BOARD.md)
+before general project orientation. Read its current human decision and active work; otherwise select the first
+executable ready TASK in Board order. Use the [Wayfinder index](planning/wayfinder/README.md) for map status and current frontier pointers.
+Follow [lightweight work routing](planning/CONVENTIONS.md#lightweight-work-routing) for validation,
+bounded evidence reads and planning handoffs. Recommend and stop; load execution guidance when work is invoked.
+This routing path does not require reading README, architecture, full project context, task history or receiving skills.
+
+## Project guidance
+
+For execution or substantive planning changes, load the applicable guidance below. The read-only routing
+path above takes precedence over broad orientation reads; it does not waive engineering or delivery rules.
+
 Read [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md), and [planning/CONVENTIONS.md](planning/CONVENTIONS.md).
 Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 [planning/FOUNDATION.md](planning/FOUNDATION.md) for the starting scope and unfinished integrations.

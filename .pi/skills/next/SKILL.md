@@ -1,133 +1,110 @@
 ---
 name: next
-description: Report the next executable TASK and available Wayfinder frontier, with the skill commands to run.
+description: Recommend current TASK work, Wayfinder decisions and planning handoffs from bounded Board and index reads.
 disable-model-invocation: true
 ---
 
 # Next
 
-Route the human to current work. This is a read-only recommendation: inspect, report, and stop before invoking
-another skill or changing planning.
+Recommend and stop. This is read-only navigation, not execution, independent assessment or a planning audit.
+Use the target's routing instructions before general project orientation.
 
-First resolve [target project context](../../../docs/engineering/PROJECT_CONTEXT.md). Read the target's
-instructions and documented routing substitutions before its Board or reports. Planning paths and commands
-below belong to the target; skill and workflow links belong to the supplied provider. Use the target's
-headings, statuses, map inventory and completion rules where its binding differs. Do not inspect the provider's
-planning as a fallback or require a target-local copy of its skills.
+## 1. Resolve routing context and freshness
 
-## 1. Validate the planning view
+Use [routing context](../../../docs/engineering/PROJECT_CONTEXT.md#routing-only-context), not delivery context.
+Resolve the operator's named checkout, otherwise the invocation's Git root. Read its AGENTS routing section and
+only routing substitutions in its conventions/capability binding. Provider skill paths never select the target.
+Use the target's Board path, section names, status vocabulary, map inventory and completion semantics.
+Do not read provider planning as a fallback or guess a private installation path.
 
-1. Read `planning/CONVENTIONS.md` as the authority for status, priority, blocking, and Wayfinder frontier semantics.
-2. Run `./bin/planning-check` without `--write`.
-3. If validation fails, report that planning is stale or invalid, include the failing command result, and stop without
-   recommending work. If the failure is unsynchronized parent completion, name `./bin/planning-check --write`
-   as the mechanical repair only when the target's conventions authorize automatic parent completion,
-   not a parent review or approval. This read-only skill does not perform the repair.
+Run the target's documented read-only planning validator once when available (here, `./bin/planning-check`).
+On failure, report the actual error and smallest planning-owner handoff; stop selection without `--write`.
+Name automatic parent synchronization as a repair only if target rules authorize it. When no validator exists,
+disclose the limitation and cross-check selected metadata against the authored Board; do not claim freshness.
+For a target without a Board, follow its documented planning entry or report the missing source/owner decision.
 
-Validation is complete only when the generated Board and Wayfinder indexes are current.
+Use heading searches and bounded section reads, normally no more than about 24,000 characters of retrieved
+routing evidence in total. Stop with a precise unresolved input before exceeding that scope unless the user
+requests a deeper audit. Do not open whole long tasks, appended histories, source trees, graphs, general
+README/architecture/context, or all receiving skills. An ambiguous route is a valid result, not a reason to
+reconstruct the portfolio. These limits do not waive verification in the workflow eventually invoked.
 
-## 2. Select TASK work
+## 2. Select TASK work and its next stage
 
-Read `planning/tasks/BOARD.md` and the complete record for every TASK considered here.
+Read the Board's current human decision and active section. Return **all active TASKs**; otherwise the first
+executable Ready Frontier row in authoritative order, never the lowest ID. Do not start another TASK while
+active work exists. If neither exists, say no TASK is currently executable; surface relevant Needs Info/Human
+Action and the first waiting/triage reason under target rules, without claiming all work is finished.
 
-- When **Active Work** has entries, return the active TASK or TASKs. Continue them before recommending Ready
-  Frontier work.
-- Otherwise, return the first row of **Ready Frontier**. Its generated order is authoritative; never substitute a
-  lower TASK ID.
-- When neither section has an entry, report that no TASK is currently executable.
-- Report relevant **Needs Info** or **Human Action** entries as human input, separate from the TASK recommendation.
+Check selected TASK frontmatter/title and current progress/handoff only. Resolve blocker status only when
+needed; completed dependency edges remain history. Preserve the Board choice when scope, approval or evidence
+is unclear and name the missing input. `done` alone proves neither independent review, QA nor publication.
 
-Before describing the command, read the provider's [build skill](../build/SKILL.md) and any canonical review
-for the selected TASK in the target's canonical base worktree.
-Default executable implementation and repair recommendations to `build`, which coordinates through independent
-review, QA and authorized land. Read [work](../work/SKILL.md) instead only when the operator explicitly requests implementation
-alone. Recommending `build` does not invoke it or grant publication authority; the operator's invocation does.
-Apply the [local-first verification policy](../../../docs/engineering/REVIEW.md#local-gate-and-optional-hosted-checks); an optional missing hosted run is not a new blocker. If a report incorrectly requires optional CI, route to independent reassessment rather than overriding its verdict.
-Before initial acceptance, a review whose only outstanding explicit requirement is hosted evidence routes to authorized draft publication under
-[landing standards](../../../docs/engineering/LANDING.md#draft-publication-to-obtain-hosted-evidence), or to
-independent `review` once that evidence is available. Read the selected skill before recommending it. State
-missing publication authority as human input; do not recommend `work` for an evidence-only blocker. Read the selected TASK's canonical QA report when present under [QA standards](../../../docs/engineering/QA.md).
-A current confirmed QA failure routes to `build` even when an older technical review says accept. Preserve its
-existing ledger and consumed revision allowance; QA failure does not reset it. Once technical acceptance is established, missing or
-incomplete required/requested QA routes to `qa` or its named prerequisite; read that skill before recommending it.
-Use [QA applicability](../../../docs/engineering/QA.md#applicability) for all behavior-affecting changes, including
-non-UI work. An absent applicability assessment also routes accepted work to `qa`; a reasoned N/A in the technical
-handoff or canonical QA report can satisfy that boundary for changes with no behavioral consequence.
-Before acceptance, unimplemented TASKs and unresolved implementation findings route to `build`; completed
-implementation awaiting technical review routes to `review`. A missing QA report must not send unimplemented
-work directly into QA.
-An accepted TASK with applicable QA satisfied routes to `land`; implementation findings default to `build`.
-For accepted candidate A with administrative closeout B, resume final delivery verification through `land`,
-including when required final-head proof becomes available. Apply the same route to an older delivery-only
-`revise` report that explicitly preserves accepted A under [landing intake](../../../docs/engineering/LANDING.md#intake-and-authority).
-Do not require another independent review, repeat initial draft intake or reopen implementation solely for delivery.
-An unresolved literal-final-head completion contract needs the requirement owner's
-amendment decision under [closeout rules](../../../docs/engineering/LANDING.md#acceptance-candidate-and-administrative-closeout),
-not another status commit. Preserve the Board's TASK selection.
+For selected work with delivery evidence, resolve the canonical base using Git common-directory/worktree
+metadata. Check only its canonical review/QA identity, verdict, current findings and continuation fields;
+check existence before opening. Do not scan private runs or load whole tasks from other worktrees. Match
+repository/TASK and the claimed subject; an older report does not establish current-head acceptance. If the
+current handoff cannot establish an applicable subject/bridge, report evidence reconciliation or independent
+reassessment, not a guessed pass, repair or delivery. Do not perform that assessment inside `next`.
 
-For a TASK requiring implementation, provide:
+Use this stage routing once evidence supports it:
 
-```text
-TASK: TASK-NNNNN — Title
-Why: Active work to continue | First executable Ready Frontier entry
-Next: /skill:build TASK-NNNNN
-```
+| Current state | Recommendation |
+| --- | --- |
+| Unimplemented work, ongoing implementation or confirmed implementation/QA defects | `/skill:build TASK-NNNNN`; preserve the existing worktree, ledger and consumed revision allowance. QA failure does not reset it. |
+| Explicit request for implementation alone | `/skill:work TASK-NNNNN` |
+| Completed implementation awaiting independent technical acceptance | `/skill:review TASK-NNNNN` |
+| Accepted work with missing/incomplete QA or applicability assessment | `/skill:qa TASK-NNNNN`, or the explicit missing prerequisite; include non-UI behavior |
+| Accepted work with applicable QA satisfied or justified overall N/A | `/skill:land TASK-NNNNN`, subject to existing publication authority |
+| Unknown/stale subject, uncertain findings or contradictory reports | Name the evidence owner and exact reconciliation/reassessment needed; do not infer a stage verdict |
 
-If multiple TASKs are active, list all of them and state that the Board provides no instruction to start another
-TASK. Do not invent a winner.
+Use supplied capability metadata/bindings to confirm availability before printing a command. Reading a second
+skill's full instructions is not required merely to recommend it; load them when invoked. If command shape or
+availability is unclear, inspect only its synopsis or name the missing capability. Do not make unsupported
+claims about its behavior. Invoking `build` carries its defined authority; recommending it grants none.
 
-TASK selection is complete when every returned ID, title, status, blocker state, and reason agrees with the Board
-and owning record.
+For evidence-only exceptions, read only the relevant policy section if the selected handoff requires it:
+[optional hosted checks](../../../docs/engineering/REVIEW.md#local-gate-and-optional-hosted-checks),
+[QA applicability](../../../docs/engineering/QA.md#applicability), or
+[landing intake](../../../docs/engineering/LANDING.md#intake-and-authority), with target substitutions.
+An optional-CI-only erroneous verdict needs independent reassessment, not implementation. Before acceptance,
+explicitly required hosted proof may need authorized draft publication then independent review. Accepted
+candidate A with permitted administrative closeout B resumes through land, including delivery-only revise
+that preserves A. A literal-final-head contradiction needs the requirement owner's amendment decision;
+do not recommend another status commit. Missing authority is human input. Preserve findings and history.
 
-## 3. Select Wayfinder decisions
+## 3. Resolve Wayfinder from its index
 
-Read `planning/wayfinder/README.md`, then every live map listed there. Inspect every **Active** map for decisions.
-Closed maps have no decision frontier, but inspect their linked planning handoffs for explicitly unfinished EPIC
-or decomposition work under the target's map-wide planning order.
-Do not invent unfinished destinations or reopen settled maps; verify resulting live/archived records.
+Read only the target Wayfinder index's map-status/frontier inventory. After a successful freshness check,
+an explicitly all-Closed inventory needs **no map reads**. Report no decision frontier, not that downstream
+planning or implementation is complete. If there is no index, say so; do not infer closure.
 
-For each active map:
+For each Active/Open map, use only current status/frontier sections and decision/dependency metadata needed
+to verify availability. The authored frontier wins over numeric order. Availability requires an Open decision,
+all WF dependencies Closed, and any explicit external prerequisite met. Unknown state, absent/multiple/closed
+frontiers or unmet prerequisites need named owner attention; an all-Closed decision register cannot close an
+Open map. Use sourced inventory dispositions for intentionally absent frontiers. Do not read resolved decision
+histories, research or closed maps merely to prove absence again.
 
-1. Treat its authored `## Frontier` as authority. Do not replace it with the lowest WF ID.
-2. Read every frontier decision record and each record named by `Depends on`.
-3. A decision is available only when its status is **Open** and every dependency is **Closed**.
-4. Report a missing frontier, multiple frontier choices, a closed frontier decision, or unfinished dependencies as
-   map state requiring attention rather than fabricating available work.
+Return every available map frontier when there are multiple, with no invented global priority. The supported
+command is `/skill:wayfinder work WF-NNN`; include map, decision title and why it is available. If the inventory
+conflicts with current evidence, report the conflict and stop that route rather than repairing it.
 
-Read the provider's [wayfinder skill](../wayfinder/SKILL.md) before recommending a decision. Read a mode-specific skill's current
-`SKILL.md` before making any claim about it; omit claims that its actual scope does not support. The Wayfinder skill
-owns map coordination, so the copyable command is:
+## 4. Route unfinished planning without reconstructing history
 
-```text
-WAYFINDER: WF-NNN — Decision title
-Map: Active map title
-Why: Authored frontier; all dependencies closed
-Mode: Ticket label and mode
-Next: /skill:wayfinder work WF-NNN
-```
+Read the Board/Roadmap's **current planning handoff** and only its named owner's current progress/approval
+section. Closed maps can still have unfinished decomposition. Apply the target's map-wide phase order:
+remaining decisions/approved unwritten EPICs, accepted TICKET decomposition, then TASK decomposition.
+Honor an explicit narrower request. Use `/skill:to-tickets EPIC-NNNNN` or `/skill:to-tasks TICKET-NNNNN`
+only when that phase and target are supported; unresolved scope/approval is human input.
 
-When one active map has one available frontier, return it as the next Wayfinder decision. When multiple active maps
-have available frontiers, return every map's available frontier and state that planning defines no global map
-priority; let the human choose. When no map is active, report `WAYFINDER: None — all maps are closed`; this does
-not by itself establish that their linked EPIC/TICKET/TASK planning handoffs are complete.
+Neither parent status nor a nonempty child table establishes full decomposition. Missing or contradictory
+current handoffs need the planning owner's reconciliation; do not search every closed map, parent, child or
+archive to manufacture a next phase. Planning choices never replace the executable TASK Board.
 
-Wayfinder selection is complete when every active map has either one evidence-backed recommendation or one explicit
-reason it has none.
+## 5. Stop at the recommendation
 
-## 4. Select the planning phase
-
-For a selected map or each map with an explicit unfinished handoff, follow the target's map-wide planning order
-and the [handoff command shapes](../../../docs/engineering/HANDOFFS.md#planning-handoffs). Prefer remaining
-decisions/grills and approved unwritten EPICs, then accepted TICKET decomposition for all its EPICs, then TASK
-decomposition for all its TICKETs. Read the receiving skill before recommending its command. Show the actual
-target and evidence for its phase; a nonempty child table or parent status alone cannot prove full decomposition.
-Honor an explicit narrower choice, and show unresolved scope/approval as human input rather than a runnable
-next phase. Multiple maps remain independent choices without invented global priority. This recommendation does
-not override the authoritative TASK Board or automatically start any planning or implementation.
-
-## 5. Stop at the route
-
-Return compact `TASK`, `WAYFINDER`, and applicable `PLANNING` / `HUMAN INPUT` sections. Finish each actionable
-recommendation with a copyable `Next:` line under the [handoff rules](../../../docs/engineering/HANDOFFS.md), using
-the actual target. Do not edit status, refresh generated
-views, create branches or worktrees, or begin the recommended skill.
+Return compact TASK, WAYFINDER and applicable PLANNING/HUMAN INPUT sections. Give each route's ID/title,
+short evidence-backed reason and copyable `Next:` command, or precise missing input/owner. Identify uncertainty
+without burying available routes. Do not invoke another skill, change status/reports/views, create worktrees,
+refresh graphs or start implementation. Full context and gates belong to the selected workflow's invocation.
