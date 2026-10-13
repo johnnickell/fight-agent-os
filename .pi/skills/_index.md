@@ -4,6 +4,7 @@
 - `adopt/SKILL.md`
 - `architecture/SKILL.md`
 - `audit/SKILL.md`
+- `build/SKILL.md`
 - `design/SKILL.md`
 - `design-review/SKILL.md`
 - `fix/SKILL.md`

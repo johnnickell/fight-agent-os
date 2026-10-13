@@ -31,21 +31,25 @@ Read `planning/tasks/BOARD.md` and the complete record for every TASK considered
 - When neither section has an entry, report that no TASK is currently executable.
 - Report relevant **Needs Info** or **Human Action** entries as human input, separate from the TASK recommendation.
 
-Before describing the command, read `.pi/skills/work/SKILL.md` and any canonical review for the selected TASK.
+Before describing the command, read `.pi/skills/build/SKILL.md` and any canonical review for the selected TASK.
+Default executable implementation and repair recommendations to `build`, which coordinates through independent
+review, QA and authorized land. Read `work` instead only when the operator explicitly requests implementation
+alone. Recommending `build` does not invoke it or grant publication authority; the operator's invocation does.
 Apply the [local-first verification policy](../../../docs/engineering/REVIEW.md#local-gate-and-optional-hosted-checks); an optional missing hosted run is not a new blocker. If a report incorrectly requires optional CI, route to independent reassessment rather than overriding its verdict.
 Before initial acceptance, a review whose only outstanding explicit requirement is hosted evidence routes to authorized draft publication under
 [landing standards](../../../docs/engineering/LANDING.md#draft-publication-to-obtain-hosted-evidence), or to
 independent `review` once that evidence is available. Read the selected skill before recommending it. State
 missing publication authority as human input; do not recommend `work` for an evidence-only blocker. Read the selected TASK's canonical QA report when present under [QA standards](../../../docs/engineering/QA.md).
-A current confirmed QA failure routes to `work` even when an older technical review says accept. Once technical acceptance is established, missing or
+A current confirmed QA failure routes to `build` even when an older technical review says accept. Preserve its
+existing ledger and consumed revision allowance; QA failure does not reset it. Once technical acceptance is established, missing or
 incomplete required/requested QA routes to `qa` or its named prerequisite; read that skill before recommending it.
 Use [QA applicability](../../../docs/engineering/QA.md#applicability) for all behavior-affecting changes, including
 non-UI work. An absent applicability assessment also routes accepted work to `qa`; a reasoned N/A in the technical
 handoff or canonical QA report can satisfy that boundary for changes with no behavioral consequence.
-Before acceptance, unimplemented TASKs and unresolved implementation findings route to `work`; completed
+Before acceptance, unimplemented TASKs and unresolved implementation findings route to `build`; completed
 implementation awaiting technical review routes to `review`. A missing QA report must not send unimplemented
 work directly into QA.
-An accepted TASK with applicable QA satisfied routes to `land`; implementation findings route to `work`.
+An accepted TASK with applicable QA satisfied routes to `land`; implementation findings default to `build`.
 For accepted candidate A with administrative closeout B, resume final delivery verification through `land`,
 including when required final-head proof becomes available. Apply the same route to an older delivery-only
 `revise` report that explicitly preserves accepted A under [landing intake](../../../docs/engineering/LANDING.md#intake-and-authority).
@@ -59,7 +63,7 @@ For a TASK requiring implementation, provide:
 ```text
 TASK: TASK-NNNNN — Title
 Why: Active work to continue | First executable Ready Frontier entry
-Next: /skill:work TASK-NNNNN
+Next: /skill:build TASK-NNNNN
 ```
 
 If multiple TASKs are active, list all of them and state that the Board provides no instruction to start another

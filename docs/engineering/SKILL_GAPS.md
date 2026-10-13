@@ -1,5 +1,15 @@
 # Engineering guidance comparison and skill gaps
 
+## Local coordination amendment — 2026-10-13
+
+[TASK-00306](../../planning/tasks/00306-TASK.md) adds the original project-local
+[build skill](../../.pi/skills/build/SKILL.md) under explicit maintainer authority. It coordinates existing
+work/review/QA/land responsibilities through fresh Pi processes, five shared repair cycles and automatic
+authorized PR/capture publication. It does not import the Factory launcher or give work/review publication
+authority. The historical comparison below remains source-assessment evidence; its earlier absence of an
+approved local coordinator is superseded by this amendment. Managed roles and durable Workflow enforcement
+remain [TICKET-00083](../../planning/tickets/00083-TICKET.md)'s separate scope.
+
 This is a bounded comparison for [TASK-00130](../../planning/tasks/00130-TASK.md), not an adoption of Fight Software Factory authority. Source snapshot: local read-only `fight-software-factory` checkout `5ba0fc0` (paths below relative to that checkout). Current authority is [ADR 0001](../../planning/adr/0001-application-ownership-and-orchestration.md), [engineering standards](STANDARDS.md), [review standards](REVIEW.md), and the project-local `work`/`review` skills. The maintainer approved four separately bounded skill [TASKs](../../planning/tasks/BOARD.md); none is installed by TASK-00130.
 
 | Source at Factory `5ba0fc0` | Comparison with Agent OS; disposition and reason |
