@@ -154,3 +154,23 @@ Lower-level commitment/resource/base/independence and phase/session mappings rem
 by these consumers or by a completed role journey. No Planning database cutover is required by core selection.
 TASK-00265 later extends owned pending-intent/withdrawal and final terminal/browser integration, without changing
 the first Awaiting review milestone, authored order or active work. No live launch was enabled by planning.
+
+### Remaining EPIC-00007 requirement ownership
+
+John approved six additional TICKETs on the existing isolated planning branch without changing TASK-00138–00142.
+This TICKET remains the core Start, grant/claim/dispatch-intent, sandbox, preparation, Workflow/phase/process custody,
+Team Lead/Software Engineer handoff and recovery owner through Awaiting review. Apply the full accepted EPIC
+contracts, including event-store/Command authority, exact idempotency, current grant/lease fences, immutable subject
+and safe quiescence; this note creates no second implementation slice or new status/blocker.
+
+[TICKET-00093](00093-TICKET.md) owns enrolled Runner operation, transport/capacity and drain/halt integration over
+those existing contracts. [TICKET-00094](00094-TICKET.md) supplies exact evidence/private Artifacts and their safe
+retention; this TICKET still validates the complete handoff and transitions to Awaiting review.
+[TICKET-00095](00095-TICKET.md) provides the separately authorized web research seam.
+[TICKET-00096](00096-TICKET.md), [TICKET-00097](00097-TICKET.md) and [TICKET-00098](00098-TICKET.md) own safe
+history/projections, sessions browser presentation and honest usage/forecasting respectively. None replaces
+execution authority or adds a browser/forecast/Planning-cutover blocker to the first terminal milestone.
+
+Map exact early suppliers during later TASK decomposition rather than depending on completed TICKETs or final
+Team/role journeys. Existing Team/Agent, Harness and shared-fence readiness holds remain; these requirement records
+are not runtime evidence. The EPIC records approval/verification and the next map-wide planning handoff.

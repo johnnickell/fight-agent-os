@@ -206,10 +206,20 @@ WF-011 + WF-014 + WF-015 + WF-016 + WF-017 + WF-018 + WF-020 + WF-021 + WF-022 +
 
 ## Frontier
 
-WF-029, WF-030 and WF-031 are closed. John approved the named EPIC-00006 amendment on 2026-10-08, and the
-accepted requirements are recorded in the existing EPIC. No unresolved decision or unwritten EPIC destination
-remains in this follow-on scope; the map is Closed. The selected Jev follow-on now has an approved six-TICKET
-decomposition; its implementation TASK decomposition is the next separate operation.
+The map remains Closed with no decision frontier. Its original six destinations are written as EPIC-00005 through
+EPIC-00010, and the Jev follow-on decisions/amendment are accepted. John has approved the remaining EPIC-00006
+Harness/browser, EPIC-00007 execution, EPIC-00009 project-creation and EPIC-00010 instruction-editing TICKET splits.
+The original map's requirement phase is complete against the actual accepted coverage traced below, including
+EPIC-00008's retained managed TICKET-00083 rather than its historical local-only completion.
+
+Continue with `/skill:to-tasks TICKET-00085` to begin the remaining Harness TASK splits, then the remaining accepted
+map TICKETs, including TICKET-00083 and TICKET-00086–00109. Each split still needs its own human approval. This is a
+planning recommendation, not executable priority or full planning completion; preserve accepted TASKs, unmet
+supplier holds and the Board's terminal-first order. Do not launch implementation or reopen closed decisions.
+
+The dated selected-slice handoffs below preserve their historical approvals and routing. They do not override
+this current handoff or the TASK Board's execution priority. All runtime implementation and qualification remain
+with their owning records.
 
 ### Completed handoff: Extend EPIC-00006 with Jev compaction and judgment workflows
 
@@ -286,6 +296,141 @@ Only this selected TICKET's decomposition is complete. Older EPIC-00006 requirem
 decomposed, and the [AccessControl map](accesscontrol-consumer-adoption-map.md) still has 21 accepted TICKETs
 awaiting TASK splits. Planning qualifies no Agent or session and authorizes no implementation or live effects.
 Next planning operation: `/skill:to-tasks TICKET-00062`, returning to that map's pending Team primitives.
+
+### Approved remaining EPIC-00006 requirement decomposition
+
+John explicitly selected [EPIC-00006](../epics/00006-EPIC.md) in an isolated worktree and approved eight additional
+requirement TICKETs, completing that EPIC's requirement split without replacing its existing team, branding or Jev
+records:
+
+- [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md)
+- [TICKET-00086 — Manage versioned Harness resources](../tickets/00086-TICKET.md)
+- [TICKET-00087 — Discover and load trusted first-party Skills](../tickets/00087-TICKET.md)
+- [TICKET-00088 — Resolve immutable Harness session snapshots](../tickets/00088-TICKET.md)
+- [TICKET-00089 — Configure and qualify protected generative providers](../tickets/00089-TICKET.md)
+- [TICKET-00090 — Run and recover authorized durable Agent conversations](../tickets/00090-TICKET.md)
+- [TICKET-00091 — Prepare and explicitly apply structured Planning proposals](../tickets/00091-TICKET.md)
+- [TICKET-00092 — Deliver the browser Planning Agent journey](../tickets/00092-TICKET.md)
+
+These are accepted requirements, not implemented capabilities or accepted TASK splits. They retain the seed-once
+Agent-template amendment, fixed protected-sink credential delivery and qualified Pi Durable preference. Existing
+EPIC-00014/00017 consumers retain their precise missing supplier-TASK/runtime holds; naming a requirement owner
+does not clear readiness. Generic resources/models/snapshots/sessions/proposals must not reverse-depend on final
+browser Planning, Explorer, AI-template/custom-use integration or the complete Workflow. Actual Planning Apply
+still requires its verified database authority; earlier manual/provider/proposal primitives do not.
+
+No new TASK, grant, provider call, runtime activation, priority change or automatic Markdown cutover occurs here.
+Remaining map work is the TICKET phase for EPIC-00007's undecomposed requirements and EPIC-00009/00010, before
+map-wide TASK decomposition. The closed decision map needs no reopened interviews or new queue for that work.
+Verification and the isolated worktree outcome are recorded in EPIC-00006; formal review and delivery are separate.
+
+Next: `/skill:to-tickets EPIC-00007` for remaining requirements, preserving TICKET-00032 and its accepted TASKs.
+
+### Approved remaining EPIC-00007 requirement decomposition
+
+John continued on the same isolated planning branch and approved six additional requirement TICKETs:
+
+- [TICKET-00093 — Operate the enrolled Runner and bounded dispatch](../tickets/00093-TICKET.md)
+- [TICKET-00094 — Retain and protect immutable execution evidence](../tickets/00094-TICKET.md)
+- [TICKET-00095 — Provide bounded first-party web research](../tickets/00095-TICKET.md)
+- [TICKET-00096 — Expose trustworthy Workflow history and live state](../tickets/00096-TICKET.md)
+- [TICKET-00097 — Inspect and control execution through the sessions Dashboard](../tickets/00097-TICKET.md)
+- [TICKET-00098 — Explain execution usage and completion estimates](../tickets/00098-TICKET.md)
+
+Together with [TICKET-00032](../tickets/00032-TICKET.md)'s retained core execution, these accepted records complete
+EPIC-00007's requirement decomposition. TASK-00138–00142 remain unchanged. The existing Start/claim/grant/lease,
+sandbox/preparation, Team Lead → Software Engineer handoff and recovery contracts are not replaced or split into
+competing authorities. New Runner operation consumes committed dispatch/custody; evidence supplies exact subjects;
+history, Dashboard and forecasts remain non-authoritative consumers. Accepted Team/Agent selection, browser
+Start/Pending, protected Harness and later managed Review/QA/publication retain their owners and unmet supplier holds.
+
+This is requirement approval, not TASK decomposition, implementation qualification, Agent launch or completed EPIC.
+No new Board priority, automatic provider call, live enrollment, extra normal-start prompt or database Planning
+cutover is introduced. The terminal milestone remains independent of final browser/forecast delivery; Markdown
+continues supplying immutable eligibility until its separate verified switch. Exact early shared supplier TASKs
+must not reverse-depend on finished consumer journeys. Verification is recorded in EPIC-00007; delivery is separate.
+
+The remaining original map requirement phase is EPIC-00009 and EPIC-00010. Finish those approved destinations'
+TICKET splits before descending to remaining TASK decompositions, unless the human explicitly selects otherwise.
+Earlier selected-slice next lines above are historical and do not supersede this current handoff.
+
+Next: `/skill:to-tickets EPIC-00009`.
+
+### Approved EPIC-00009 creation requirement decomposition
+
+John selected EPIC-00009 and approved six requirement TICKETs on the same isolated planning branch:
+
+- [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md)
+- [TICKET-00100 — Generate and prepare a fresh local project](../tickets/00100-TICKET.md)
+- [TICKET-00101 — Confirm and recover one durable creation attempt](../tickets/00101-TICKET.md)
+- [TICKET-00102 — Publish the confirmed initial project to GitHub](../tickets/00102-TICKET.md)
+- [TICKET-00103 — Register the created checkout and complete the handoff](../tickets/00103-TICKET.md)
+- [TICKET-00104 — Explain creation failures with bounded support assistance](../tickets/00104-TICKET.md)
+
+These accepted requirements complete EPIC-00009's TICKET split, not its TASK decomposition or runtime acceptance.
+Catalog/manifest, deterministic local stages, one confirmed durable attempt, optional human-authorized GitHub
+publication, existing registration/context integration and advisory support retain distinct ownership. No second
+Repository/context/template/provider authority, coding Workflow, TASK claim or managed Review pipeline is added.
+Local-only remains first-class; assistance outage never gates deterministic creation or recovery. Root/mount and
+credential setup remain separate explicit operator actions.
+
+TICKET-00103 carries the actual integrated create/register evidence, including at least one real eligible managed
+stable release `>=1.0.0`, preferably `project-slim`, plus local-only/private-publication and recovery paths. That
+source release remains an external authorized maintainer action; this planning session neither verified current
+release availability nor created one. New generated repositories begin with verified database-authoritative context
+without importing Planning; existing Markdown authority, source projects, readiness holds and Board priority remain
+unchanged. No project, snapshot download, credential/provider access, cleanup or publication occurs through planning.
+
+Exact early shared contracts must not reverse-depend on completed browser/integrated journeys. No TASK is allocated.
+Verification is recorded in EPIC-00009; full build, review and delivery remain separate. EPIC-00010 still needs its
+accepted requirement split before the remaining map TASK phase. Earlier selected-slice next lines are historical
+and do not supersede the current Frontier.
+
+Next: `/skill:to-tickets EPIC-00010`.
+
+### Approved EPIC-00010 instruction-editing requirement decomposition
+
+John selected EPIC-00010 and approved five requirement TICKETs on the same isolated planning branch:
+
+- [TICKET-00105 — Inspect effective repository instructions](../tickets/00105-TICKET.md)
+- [TICKET-00106 — Save and delete instruction files safely](../tickets/00106-TICKET.md)
+- [TICKET-00107 — Prepare bounded AI instruction suggestions](../tickets/00107-TICKET.md)
+- [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md)
+- [TICKET-00109 — Synchronize the designated checkout safely](../tickets/00109-TICKET.md)
+
+The accepted split completes this EPIC's requirements without another context/identity/Skill/session/Runner owner,
+coding Workflow or managed Review dependency. Direct editing works without AI; assistance cannot submit. Save is
+local only; publication requires its own exact consent and safe default-branch return; manual/scheduled sync remains
+currently authorized and clean fast-forward-only. Shared checkout ownership and effective-change contracts precede
+final integration so producers do not wait on finished consumers. Existing supplier holds and Board order remain.
+
+TICKET-00109 carries the real Fight Agent OS instruction-change journey through separately human-controlled merge
+and safe sync, with focused evidence from each owning TICKET, not a demonstration or certification product. This
+planning session created no instruction change, Skill, Agent/provider call, branch, PR, merge or scheduled update.
+No TASK was allocated. Verification is recorded in EPIC-00010; full build, review and delivery remain separate.
+
+### Original map requirement-phase coverage and next phase
+
+This coverage follows accepted requirement records and authored handoffs, not child-table non-emptiness or parent
+implementation status. Historical next lines above do not supersede the current Frontier.
+
+| Destination | Accepted requirement coverage |
+|---|---|
+| [EPIC-00005](../epics/00005-EPIC.md) | Approved TICKET-00023–00029 cover installation, identity, context, Planning, queue, migration and Dashboard; existing TASK splits remain |
+| [EPIC-00006](../epics/00006-EPIC.md) | Existing TICKET-00034/00035/00037–00045 retain team/branding/Jev; approved TICKET-00085–00092 complete generic Harness/browser requirements without replacing newer template/Agent owners |
+| [EPIC-00007](../epics/00007-EPIC.md) | TICKET-00032 retains core execution; approved TICKET-00093–00098 complete Runner/evidence/research/history/browser/usage requirements |
+| [EPIC-00008](../epics/00008-EPIC.md) | Accepted TICKET-00083 retains the entire managed review/QA/revision/acceptance/publication/reconciliation scope for TASK decomposition; completed local TICKET-00033/00084 do not satisfy it |
+| [EPIC-00009](../epics/00009-EPIC.md) | Approved TICKET-00099–00104 cover deterministic creation, confirmed recovery, optional publication, registration and support |
+| [EPIC-00010](../epics/00010-EPIC.md) | Approved TICKET-00105–00109 cover focused instruction inspection/editing, optional assistance, separate publication and safe synchronization |
+
+All six original destinations now have accepted TICKET coverage. This does not complete their remaining TASK
+splits, actual implementation or runtime qualification. Existing Jev/team/local TASKs keep their accepted outcomes;
+other maps retain their own unfinished planning. Recommend TICKET-00085 first to continue the earlier Harness
+primitives before final consumers, not because its ID confers execution priority. Continue through remaining
+accepted map TICKETs, including TICKET-00083 and TICKET-00086–00109, stopping for each required split approval.
+No new blocker, priority, credential, runtime or publication grant is created by this phase handoff.
+
+Next: `/skill:to-tasks TICKET-00085`.
 
 ### Original completed handoff
 
