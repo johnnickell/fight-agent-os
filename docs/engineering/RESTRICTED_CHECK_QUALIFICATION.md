@@ -562,6 +562,100 @@ production direction is protected exact-subject phase collection **plus named ex
 not generic semantic attestation. Required policy/coverage qualification remains R3 here; production selector/
 collector integration belongs to TASK-00140. This disposable observer enables neither check readiness nor Awaiting review.
 
+## Fixed retention store and restart-failure bounds — 2026-10-13 UTC
+
+This **R2 / AC-4** follow-up measures a trusted retained-artifact storage boundary and service failure behavior,
+not a complete physical host quota or Engine fence. Final run `93a1faa9-cd0a-4bd7-95be-2e0df1ffd7de`,
+23:17:38–23:17:53 UTC, passed **35 scoped observations**. Exact driver/supervisor/fill instruments, configuration,
+launchd records, container profiles, disk-image associations and results are under
+`.runs/tasks/TASK-00138/retention-fence/` in the authorized worktree. No production service, Agent or provider was enrolled.
+
+### Fixed-size trusted retention candidate
+
+`hdiutil` created a **64 MiB non-sparse read/write UDIF image with Journaled HFS+**, mounted only at an owned scratch
+path with ownership enabled and Spotlight creation disabled. This is a trusted-host retention experiment: **no
+container received this mount**. It neither retries nor rehabilitates the earlier APFS/container-bind lifecycle.
+HFS+ here is a local candidate, not a cross-platform selection or encrypted credential store.
+
+| Actual operation | Observed result |
+|---|---|
+| Two independent writers, each capped at 40 MiB | Both reached ENOSPC; together they wrote 64,815,104 bytes. They shared one filesystem limit, not two independent per-file allowances. A pre-existing 128 KiB inert artifact retained its hash. |
+| Smaller writes after the large-write failure | 16,384 bytes remained usable. A bounded 512-byte tail writer exhausted that remainder, then observed ENOSPC and zero available blocks. Large-write ENOSPC alone had not established inability to commit a small control record. |
+| Unlink while retaining an open descriptor | The 34,078,720-byte file lost its directory entry but retained its allocation. A fresh write still returned ENOSPC with zero new bytes. Directory absence is not physical reclamation. |
+| Close descriptor and delete fill files | A fresh 1 MiB write and `fsync` succeeded. This demonstrates scoped reuse, not an assertion that every filesystem block or host allocation was reclaimed. |
+| Normal detach and remount | Original artifact hash, complete terminal control state and volume UUID matched. Both detach operations succeeded without force, with jobs already unloaded. This is clean lifecycle continuity, not abrupt-power-loss durability. |
+| Image extent and host allocation | Image length and sampled `st_blocks × 512` were both exactly 67,108,864 bytes before and after. Deleting interior files did not shrink this reservation. |
+
+Reserve the **whole image**, filesystem metadata and explicitly separate overhead before creation; summing live
+artifact lengths would under-account it. A fixed image bounds its addressable filesystem writes, not outer APFS
+copy-on-write/snapshots, arbitrary numbers of images, controller evidence, Docker images/metadata or PostgreSQL WAL.
+The trusted operator can resize/replace an image; no protection from that authority is claimed. This does not
+qualify Docker reading snapshots from the mount, concurrent detach, native Linux, encryption, backup rollback,
+complete quota-reclamation accounting or the existing production storage adapters. No host exhaustion was attempted.
+
+### Service retry budget and unavailable control storage
+
+A disposable launchd GUI-session job loads fixed trusted configuration outside the mount. Its narrow operation is
+ownership-checked **removal of one already known inert container**, not create/start, Workflow execution or admission.
+It requires the expected mounted device, an existing owner/subject record and existing lock; no missing state is
+initialized. Under `flock`, it persists an attempt counter with file sync, atomic replacement and directory sync
+**before** accessing the Engine. Two attempts are allowed. This file is a fixture control record, not the earlier
+PostgreSQL reservation ledger or a complete independent authority store.
+
+`KeepAlive = { SuccessfulExit = false }` and `ThrottleInterval = 3` request restart after the fixture's failure exit
+17. Budget exhaustion deliberately exits **zero to stop launchd retry**, never to report a successful check or
+cancellation. The hold remains true even after the positive known-ID removal; no capacity release was implemented.
+Managed stdout/stderr go to `/dev/null`, while an 8 KiB file-size limit bounds each supervisor-written state file.
+This avoids an application log growth path but does not bound launchd/system diagnostics or total host processes.
+
+| Probe | Observed result |
+|---|---|
+| Truly full control filesystem | The service exited without changing the reserved record or removing the running container. Persist-before-effect failed closed; it did **not** prove quiescence. |
+| Space restored; valid connector | A fresh job committed an attempt, inspected full ID/owner, removed that exact container and observed 404. The controller independently observed absence. |
+| Missing Engine socket | Actual Unix `connect` failed with `FileNotFoundError` / ENOENT. Launchd performed three runs: two persisted unsuccessful attempts, then a budget-exhausted exit zero. The container stayed running and the hold stayed true. |
+| Connector restored, explicit kickstart | A new PID still saw the exhausted counter, made no new removal attempt and retained the hold. Merely making Docker reachable did not renew authority or reset history. |
+| State file removed | The service stopped without recreating it or removing the live container. The trusted driver restored the exact saved fixture bytes afterward. |
+| Image normally detached | A new service process rejected the bare mountpoint rather than writing control state into the underlying host directory. After remount the terminal state was unchanged. |
+
+**Critical limit:** refusing a new effect because the control store is full leaves an existing workload alive.
+The fixture is not an adequate production cancellation/watchdog composition. Separate protected control/emergency
+capacity and an independently enforceable retirement path still need qualification; a diagnostic/artifact pool must
+not consume the last capacity needed to preserve cancellation intent. The budget guards only failures **after** the
+trusted supervisor initializes: invalid executable/configuration, pre-guard crashes, hostile replacement, logout,
+suspend/reboot, absolute watchdog deadlines and service-manager restart failures remain unqualified. The mounted
+device check is scoped to this controlled lifecycle, not authenticated storage-incarnation or race-proof path custody.
+
+A missing connector is **not a stopped Engine**: the actual shared daemon remained healthy and the workload continued.
+No accepted-but-stalled create/start, daemon restart or lost daemon response was injected. Neither an exhausted
+supervisor nor an empty inventory settles unknown effects. Keep their admission/claims/reservations held until causal
+settlement or a separately qualified fence; a dedicated owned Engine/failure domain is needed to test daemon faults
+without disturbing shared workloads. No such execution-domain fence was qualified here.
+
+### Retained failures, isolation and disposition
+
+- `b2bc8a93-3c1d-4b8d-9e80-a4f8e3615f7c` failed the full-store expectation: large allocation failures still allowed
+  the small control commit and owned-container removal. The instrument had not exhausted smaller allocations.
+  Its result/commands survive, but it did not save that intermediate control record before retiring the image.
+- `b749788d-c7b0-4528-a7a2-c5fca574ecba` passed its 33 assertions after adding tail exhaustion. Subsequent evidence
+  inspection found its intended unavailable connector exceeded the Unix socket address limit. Direct recheck of
+  that 178-character address returned `AF_UNIX path too long`; it qualifies address failure, **not connector loss**.
+  The final run uses a short absent path relative to the fixed job working directory and explicitly verifies ENOENT
+  and three launchd runs. It also retains the original synthetic artifact bytes and initial service configurations.
+- Each run retained its exact instruments. Respectively one/two/two inert containers, one/five/five temporary jobs
+  and one disk image per run were retired. Images were detached normally after checking their exact image-path /
+  device / mount association, then deleted. No force detach, global cleanup or unrelated service mutation occurred.
+- Containers used the preceding pinned `e4e87b…` PHP/Python image, UID 65534, read-only root, no mounts/network,
+  dropped capabilities, no-new-privileges, disabled logging, 0.25 CPU, 128 MiB/no extra swap, 16 PIDs, 1 MiB shared
+  memory, 64 descriptors and zero core limit. At most one ran, with a finite 120-second inert sleep. That fallback
+  deadline was not the cancellation mechanism tested. No new Docker volume/network or credential mount was created.
+- Main service start times were unchanged. Images/cache and bounded experiment receipts remain outside the tested
+  retention pool. Earlier historical anonymous-volume retirement is still unverified; this cleanup does not cover it.
+
+R2 advances for this fixed filesystem, deletion/reuse distinction and post-initialization restart-budget primitive.
+Supported complete lifecycle, unknown daemon effects, aggregate host/retained-storage bounds and composition with
+actual durable authority remain open. R1/R3 receive no new qualification. TASK-00139 remains blocked; TASK-00140
+owns production composition, not a transfer of these still-missing minimum proofs out of TASK-00138.
+
 ## Qualification disposition and next owners
 
 - **R1 / AC-1:** see [current authority decisions](TERMINAL_AUTHORITY.md#current-authority-decisions--2026-10-06).
@@ -573,8 +667,9 @@ collector integration belongs to TASK-00140. This disposable observer enables ne
   package authority and supply none of that proof.
 - **R2 / AC-4:** local bounded execution, private services, controller-loss stop, service-managed restart/serialized
   launch, known-ID terminal removal and durable logical reservation/retention/history primitives are measured.
-  Physical aggregate/retained-storage bounds, supported service lifecycle, unknown-create/engine-failure fencing and
-  the composed authority/ledger/supervisor remain open. Separate samples do not qualify their integration.
+  A fixed trusted retention filesystem and bounded post-initialization service retries are additionally measured.
+  Complete physical aggregate/retained-storage bounds, supported service lifecycle, unknown-create/engine-failure
+  fencing and the composed authority/ledger/supervisor remain open. Separate samples do not qualify their integration.
 - **R3 / AC-3/4/5:** fixed branch-gate phase capabilities, external exact-subject receipts, omission/forgery rejection
   and four externally observed HTTP contracts are measured, not complete required semantic coverage, durable
   policy/receipt custody, full file-tool race resistance,
