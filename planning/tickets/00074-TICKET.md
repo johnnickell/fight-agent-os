@@ -137,9 +137,9 @@ product-owner decision and authority. No cleanup TASK for `ai-template-proposals
 support does not block that product's initial shipping or the first terminal Awaiting review milestone.
 
 All five EPIC-00016 TICKETs now have approved TASK decompositions, not implementation acceptance. With
-TICKET-00075–00080, twenty-two of the map's 24 are decomposed; two remain, TICKET-00081/00082, alongside older
+TICKET-00075–00081, twenty-three of the map's 24 are decomposed; only TICKET-00082 remains, alongside older
 incomplete Harness/managed review planning. Active work and priorities remain unchanged.
-Next planning operation: `/skill:to-tasks TICKET-00081`.
+Next planning operation: `/skill:to-tasks TICKET-00082`.
 
 Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
 398 records and 311 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.

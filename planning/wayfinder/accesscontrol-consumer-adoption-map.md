@@ -541,8 +541,8 @@ evidence and the full gate; controlled fixtures are not installed dummy product 
 flagged capability is now `ai-template-proposals` under TICKET-00077. Tooling/configuration is validated directly,
 not product-tested.
 
-All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00080 below,
-**twenty-two of the map's 24 TICKETs have approved written TASK splits; two remain, TICKET-00081/00082**, alongside
+All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00081 below,
+**twenty-three of the map's 24 TICKETs have approved written TASK splits; only TICKET-00082 remains**, alongside
 older incomplete Harness/managed review planning. All five EPIC-00016 TICKETs are decomposed, not implemented. Planning
 exposed/fetched no catalog, changed no UI and enabled no Feature or deployment.
 
@@ -737,10 +737,31 @@ its original identity and justified applicability; changed claims require owning
 supplies real ai-template-proposals evidence without another demonstration or forced retirement.
 
 TICKET-00081 consumes this coverage for actual references; TICKET-00082 retains immutable packaging/authorized
-delivery. Neither completed deliverable reverse-blocks accounting or product suppliers. One of three EPIC-00018
-TICKETs and twenty-two of 24 map TICKETs are decomposed, not runtime acceptance. Two remain, TICKET-00081/00082,
-with older Harness/managed review planning incomplete. Active work, priorities and terminal-first delivery remain
-unchanged. No qualified matrix, exclusion approval, live scenario, source/package change or publication occurred.
+delivery. Neither completed deliverable reverse-blocks accounting or product suppliers. That split brought
+EPIC-00018 to one of three and the map to twenty-two of 24 decompositions, not runtime acceptance. No qualified
+matrix, exclusion approval, live scenario, source/package change or publication occurred.
+
+## Approved integration-reference TASK decomposition
+
+TICKET-00081 maps [TASK-00307](../tasks/00307-TASK.md)'s one unranked chore to document the qualified backend,
+API and browser integration reference. It is ready-for-agent behind TASK-00305, including inherited scope/runtime
+holds and TASK-00153/00154; no redundant direct blockers or separate documentation projects are introduced.
+
+Supply one coherent reference set for every in-scope family: exact actual code/authority/transaction/recovery
+boundaries, safe scenario inputs/commands, expected versus observed results and applicable redacted owner receipts.
+React guidance reflects observed accessible states, not planned UI or mandatory starter design. Refresh affected
+claims through their owners without another demonstration, certification campaign or coverage-driven product.
+
+Verify private export/source/content identity with owning tools and agreement with the actual viewer-served spec
+and request evidence. The bounded source digest does not qualify the whole runtime; failed/stale export cannot
+qualify retained bytes. READ_SWAGGER, environment, independent debug, memory-only credentials/CSRF, no-store and
+endpoint authority stay intact. No public spec, token examples, unauthorized redistribution or automatic effects.
+
+TICKET-00082 retains immutable archive/manifest, recipient access, publication and successor handling, with no
+reverse blocker on references/accounting/product suppliers. Two of three EPIC-00018 TICKETs and twenty-three of
+24 map TICKETs are decomposed, not runtime acceptance. Only TICKET-00082 remains in this map; older Harness/managed
+review planning is still incomplete. Active work/priorities and terminal-first delivery stay unchanged. No guide,
+export, live request, starter edit, access grant or bundle was created.
 
 ## Approved EPIC handoff
 
@@ -781,8 +802,8 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00081` for
-[TICKET-00081](../tickets/00081-TICKET.md), mapping reproducible actual backend/API/browser references,
+**Next planning operation:** `/skill:to-tasks TICKET-00082` for
+[TICKET-00082](../tickets/00082-TICKET.md), mapping immutable packaging and authorized maintainer handoff,
 then continue remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this

@@ -164,9 +164,9 @@ paid work. No second publisher, conversation store, provider endpoint, infrastru
 TASK-00301, completed Explorer/browser Planning and Feature retirement are not prerequisites. Suppliers and the
 terminal-first milestone are not reverse-blocked by this later product integration.
 
-With subsequent splits through TICKET-00080, all five EPIC-00017 TICKETs and twenty-two of 24 map TICKETs are
-decomposed, not implemented. Two remain, TICKET-00081/00082, alongside older incomplete Harness/managed review planning. Existing priorities and active work
-remain unchanged. Next: `/skill:to-tasks TICKET-00081`. No provider request, testing grant, Feature rollout,
+With subsequent splits through TICKET-00081, all five EPIC-00017 TICKETs and twenty-three of 24 map TICKETs are
+decomposed, not implemented. Only TICKET-00082 remains, alongside older incomplete Harness/managed review planning. Existing priorities and active work
+remain unchanged. Next: `/skill:to-tasks TICKET-00082`. No provider request, testing grant, Feature rollout,
 template publication, Agent or session effect occurred during planning.
 
 Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with

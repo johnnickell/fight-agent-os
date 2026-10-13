@@ -309,4 +309,5 @@
 | [TASK-00304](00304-TASK.md) | Create and use a custom-template Agent for bounded manual work | needs-info | [TICKET-00079](../tickets/00079-TICKET.md) |
 | [TASK-00305](00305-TASK.md) | Establish qualified consumer coverage for the maintainer handoff | needs-info | [TICKET-00080](../tickets/00080-TICKET.md) |
 | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | in-progress | [TICKET-00084](../tickets/00084-TICKET.md) |
+| [TASK-00307](00307-TASK.md) | Document the qualified backend API and browser integration reference | ready-for-agent | [TICKET-00081](../tickets/00081-TICKET.md) |
 <!-- /planning:records -->

@@ -152,9 +152,9 @@ require a failing regression before bug repair. No dummy product Feature or extr
 Missing supported guarantees hold the affected path for separately authorized owner resolution, not vendor patches.
 
 Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00071–00074, all five EPIC-00016
-TICKETs now have approved written TASK splits. With TICKET-00075–00080, twenty-two of the map's 24 are decomposed;
-**two remain, TICKET-00081/00082**, alongside older incomplete Harness/managed review planning.
-Next planning operation: `/skill:to-tasks TICKET-00081`.
+TICKETs now have approved written TASK splits. With TICKET-00075–00081, twenty-three of the map's 24 are decomposed;
+**only TICKET-00082 remains**, alongside older incomplete Harness/managed review planning.
+Next planning operation: `/skill:to-tasks TICKET-00082`.
 Planning ran no scanner/provision/query, changed no catalog and enabled no Feature or deployment. Implementation/
 worktree choice, independent review, publication and actual target effects remain separate.
 

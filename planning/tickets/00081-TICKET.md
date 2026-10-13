@@ -86,7 +86,7 @@ access distinct from reusable safe guidance, and never weaken Swagger permission
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00307](../tasks/00307-TASK.md) | Document the qualified backend API and browser integration reference | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -103,3 +103,36 @@ approved dispositions without copying the historical WF-032 inventory into a con
 scope/runtime holds remain; drafting references does not clear them. This TICKET retains reproducible backend/
 API/browser guidance and current private export provenance through TASK-00153/00154, not another viewer or
 qualification campaign. Completed references/publication do not reverse-block the accounting supplier.
+
+### Approved TASK decomposition
+
+The maintainer approved one unranked chore: [TASK-00307](../tasks/00307-TASK.md), **Document the qualified backend
+API and browser integration reference**, `ready-for-agent` blocked by TASK-00305. TASK-00154 and TASK-00153 are
+already upstream; no redundant blocker, viewer, specification or separate React documentation project is added.
+Inherited coverage/scope/runtime holds remain binding, and internal drafting cannot substitute for qualification.
+
+Deliver one coherent Markdown reference set with exact implemented code, actor/target/current authority,
+transaction/effect/recovery boundaries, safe scenario prerequisites/commands and expected versus observed outcomes
+for every in-scope family. Use attributable owner receipts, refreshing affected claims through their owners rather
+than commissioning another demonstration or certification run. Optional React guidance comes from observed
+accessible loading/denial/conflict/uncertainty/recovery states, not planned screens or a mandatory starter UI.
+
+Verify current private export/source/content identity with owning export/check tools and pair it with the actual
+viewer-served specification and supported request evidence. The exporter's bounded source digest does not qualify
+the whole runtime. Retained bytes after a failed export are not current proof. Current READ_SWAGGER, exact allowed
+environments, independent APP_DEBUG, shared memory-only credentials/CSRF, no-store and endpoint authority remain
+unchanged; documentation access does not authorize Try it out effects or public spec exposure.
+
+TICKET-00082 retains immutable packaging, controlled recipient access, publication and successor handling; it is
+not a reverse prerequisite. No starter source/certification/release or live scenario is added. Two of three
+EPIC-00018 TICKETs and twenty-three of 24 map TICKETs are decomposed, not implemented. Only TICKET-00082 remains
+in this map, alongside older incomplete Harness/managed review planning. Active work/priorities are unchanged.
+Next: `/skill:to-tasks TICKET-00082`. No actual guide, export, viewer execution or handoff bundle was produced.
+
+Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
+409 records, 323 active. `./bin/build` passed, including source stability: 459 tests, 3499 assertions, 78 captures,
+zero violations, 154.18 seconds. Evidence: `.runs/build/20261013T173821Z-95507`;
+log: `.runs/build/ticket-00081-to-tasks.log`. Sass deprecations, React-Bootstrap `use client` and >500 kB bundle
+warnings remain. These are fresh planning/existing-repository checks, not reference-authoring completion,
+private viewer qualification or a new export/consumer run. TASK-00306 and existing active work were unchanged;
+independent review, publication and merge remain separate.

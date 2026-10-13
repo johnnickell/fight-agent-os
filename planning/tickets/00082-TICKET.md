@@ -109,3 +109,9 @@ closed EPICs or an internal draft. Preserve actual/reused evidence identity and 
 package/lock/consumer/API/configuration subject changes before packaging. TASK-00305 does not itself assemble or
 publish a bundle, settle recipient access or approve exclusions. This TICKET retains those existing delivery
 boundaries; publication is not a reverse prerequisite for coverage accounting.
+
+TICKET-00081 now maps [TASK-00307](../tasks/00307-TASK.md)'s coherent backend/API/browser reference set after
+TASK-00305. Consume its exact qualified code/scenario subjects, private export source/content hashes, actual
+viewer pairing and redacted UI guidance. The exporter's bounded digest does not qualify the whole consumer, and
+local ignored output alone is not a delivered artifact. This TICKET retains immutable packaging, recipient access,
+publication and successor handling; it does not introduce another viewer, reference guide or qualification run.
