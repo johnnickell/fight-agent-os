@@ -147,8 +147,13 @@ TICKET-00077 retains real AI admission/provider/browser evidence and the deliber
 non-HTTP paths consume TASK-00294 without imposing unrelated Agent integration on human-only management. Neither
 completed AI authoring nor this management journey reverse-blocks upstream primitives. TICKET-00074 consumes this
 authority/detail/confirmation for its separate retirement operation. The terminal-first milestone and active work
-remain unchanged. Fifteen of 24 map TICKETs are now decomposed; nine remain, TICKET-00074–00082.
-Next planning operation: `/skill:to-tasks TICKET-00074`; no implementation follows from this approval.
+remain unchanged. With TICKET-00074, sixteen of 24 map TICKETs are now decomposed; eight remain, TICKET-00075–00082.
+Next planning operation: `/skill:to-tasks TICKET-00075`; no implementation follows from this approval.
+
+TICKET-00074 now maps [TASK-00298](../tasks/00298-TASK.md)'s complete retirement path after TASK-00297. It reuses
+this management authority/detail/confirmation and invalidation without a new Permission or reverse dependency.
+Its actual CURRENT/deployment-activation safety hold is distinct from rollout/active-repair qualification;
+no premature cleanup chore or live retirement of `ai-template-proposals` is authorized.
 
 Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
 397 records and 310 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.

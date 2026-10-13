@@ -142,10 +142,10 @@ TICKET-00077 owns `ai-template-proposals` admission and full product-path eviden
 migrations and generated files are validated directly, not product-tested as text/wiring. Confirmed bugs require
 a reproducing failing regression before repair. Record exact package/source/lock and fresh versus reused receipts.
 
-Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00072/00073, four of EPIC-00016's
-five TICKETs now have approved written TASK splits, not runtime acceptance. Fifteen of the map's 24 are decomposed;
-**nine remain, TICKET-00074–00082**, alongside older incomplete Harness/managed review planning.
-Next planning operation: `/skill:to-tasks TICKET-00074`.
+Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00072–00074, all five EPIC-00016
+TICKETs now have approved written TASK splits, not runtime acceptance. Sixteen of the map's 24 are decomposed;
+**eight remain, TICKET-00075–00082**, alongside older incomplete Harness/managed review planning.
+Next planning operation: `/skill:to-tasks TICKET-00075`.
 No middleware, route, Tool gate, worker, nonce or Feature was enabled by planning. Implementation/worktree choice,
 independent review, publication, enrollment and actual deployment remain separate.
 

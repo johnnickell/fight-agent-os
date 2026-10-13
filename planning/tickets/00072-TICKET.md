@@ -148,10 +148,10 @@ proof-only TASK is introduced. Controlled component/contract fixtures are not li
 owns actual package/PostgreSQL/HTTP or browser/accessibility behavior and `./bin/build`; tooling/configuration is
 validated directly. Confirmed bugs need reproducing failing regressions before repair.
 
-Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00073, four of EPIC-00016's five TICKETs
-have approved written TASK splits, not implementation acceptance. Fifteen of the map's 24 are decomposed;
-**nine remain, TICKET-00074–00082**, alongside older incomplete Harness/managed review planning.
-Next planning operation: `/skill:to-tasks TICKET-00074`.
+Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00073/00074, all five EPIC-00016 TICKETs
+have approved written TASK splits, not implementation acceptance. Sixteen of the map's 24 are decomposed;
+**eight remain, TICKET-00075–00082**, alongside older incomplete Harness/managed review planning.
+Next planning operation: `/skill:to-tasks TICKET-00075`.
 Planning exposed no endpoint, fetched no catalog, changed no UI and enabled no Feature. Implementation/worktree
 choice, independent review, publication and runtime/deployment effects remain separately authorized.
 

@@ -29,7 +29,7 @@ ID and current positive expected revision. Package removal compares the *entire*
 write boundary under the shared transaction/reference fence; removal and Permission-reference release commit
 or roll back together. Do not delete the Permission or its grants. Show truthful referenced/stale/held/unknown/
 uncertain outcomes, refetch and reconfirm instead of blindly retrying. A broken binding does not require
-fabricated repair before otherwise safe retirement. A later authorized provision/create of the same name gets
+fabricated repair before otherwise safe retirement. Later authorized provisioning of the same name gets
 a **new identity**, OFF with the current existing selected/default Permission, not resurrected ON/PREVIEW or
 the old audience; old commands cannot mutate/remove the new identity.
 
@@ -44,7 +44,7 @@ An actual Feature's later cleanup chore belongs to its actual owner when it beco
 |---|---|---|---|---|
 | Establish current absence | Human-authorized owner cleanup/deploy via separate chore, not the Feature API | Fresh complete CURRENT inventory over actual running code/modules and all explicit checks | Existing owning cleanup/deploy facts; no Feature removal fact yet | References removed and deployed under owner policy, or visible safe hold |
 | Retire approved record | Authorized package `RemoveFeature` with stable ID/positive revision after confirmation | Current target and complete CURRENT references at package boundary | Package `FeatureRemoved` after confirmed commit | Record and its Permission reference removed atomically; grants/Permission preserved |
-| Reintroduce name later | Ordinary separately authorized `ProvisionFeatures` or `CreateFeature` | Fresh candidate and authoritative absence/default or selected existing Permission | New package `FeatureCreated` for new OFF identity | New state starts OFF; stale old ID commands cannot touch it |
+| Reintroduce name later | Existing separately authorized `ProvisionFeatures` | Fresh candidate and authoritative absence/default or selected existing Permission | New package `FeatureCreated` for new OFF identity | New state starts OFF; stale old ID commands cannot touch it |
 
 ## Validation and permissions
 
@@ -76,7 +76,7 @@ arbitrary scanner/SQL/exception details.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00298](../tasks/00298-TASK.md) | Retire Feature settings safely after deployed reference removal | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -113,5 +113,36 @@ TICKET-00073 now maps [TASK-00297](../tasks/00297-TASK.md)'s complete management
 and mutation invalidation path, after TASK-00036/TASK-00296. Consume its approved `MANAGE_FEATURES` ADMIN_SAFE
 policy rather than duplicating authorization. Its trusted rollout/active-repair holds are not retirement evidence;
 this TICKET still owns actual CURRENT absence and protection of that observation. No cleanup TASK or removal is
-authorized merely because `ai-template-proposals` has been selected. Fifteen of 24 map TICKETs are decomposed;
-nine remain, TICKET-00074–00082. Next planning operation: `/skill:to-tasks TICKET-00074`.
+authorized merely because `ai-template-proposals` has been selected.
+
+### Approved TASK decomposition
+
+[TASK-00298](../tasks/00298-TASK.md) supplies one complete retirement browser/server path after TASK-00297.
+Its dependency chain supplies discovery, shared persistence, management authority and catalog invalidation;
+no separate scanning, confirmation, reintroduction or proof-only TASK is needed. Reuse package `RemoveFeature`
+with stable ID/positive revision, complete CURRENT discovery, final full-state comparison and atomic reference
+release. Preserve Permissions/grants, permit otherwise-safe broken-binding retirement, and retain truthful
+conflict/unknown/uncertain outcomes with no blind replay or same-name retargeting.
+
+The TASK is an unranked feature with status `needs-info`. Actual running-version/module coverage and protection
+against conflicting activation between discovery and deletion remain unqualified. A scope enum, local scan,
+candidate absence, database reference fence or prepared result cannot supply that deployment guarantee. Name and
+qualify the actual trusted participants/policy; unknown support holds without a new deployment platform, vendor
+patch, nested transaction or invented blocker ID.
+
+Later reintroduction uses existing protected provisioning: new identity, OFF, revision 1, current existing default
+Permission and no resurrection of old settings. Lifecycle evidence belongs inside this TASK; it does not certify
+deferred manual `CreateFeature` exposure. Actual source cleanup/deployment still requires a separate future
+product-owner decision and authority. No cleanup TASK for `ai-template-proposals` is created now, and retirement
+support does not block that product's initial shipping or the first terminal Awaiting review milestone.
+
+All five EPIC-00016 TICKETs now have approved TASK decompositions, not implementation acceptance. Sixteen of the
+map's 24 are decomposed; eight remain, TICKET-00075–00082, alongside older incomplete Harness/managed review
+planning. Active work and priorities remain unchanged. Next planning operation: `/skill:to-tasks TICKET-00075`.
+
+Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
+398 records and 311 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.
+Evidence: `.runs/build/20261013T025411Z-70103`; log: `.runs/build/ticket-00074-to-tasks.log`.
+Sass deprecations, React-Bootstrap `use client` and >500 kB bundle warnings remain. These are fresh planning/
+existing-repository checks, not implementation, CURRENT-deployment qualification or actual retirement evidence.
+Independent review and publication remain unperformed; no code cleanup, deployment, deletion or reintroduction ran.
