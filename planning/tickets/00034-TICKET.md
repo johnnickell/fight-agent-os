@@ -20,6 +20,12 @@ specialization. Hotfix has senior capability and a shortened, explicitly scoped 
 owns TASK landing and later project-specific release/deployment runbook assistance, with separate effect grants.
 Defining a template does not implement those future flows. Preserve the first Team Lead → Software Engineer slice.
 
+The 2026-10-13 [Pi Durable direction](00032-TICKET.md#pi-durable-integration-direction--2026-10-13) refines the
+session integration consumed by TASK-00250: browser and terminal attach to the same authorized durable Agent
+conversation. A client is not a new Agent or credential holder, and reconnect does not reselect its role.
+Protected Harness/session primitives remain with EPIC-00006's existing ownership and unresolved decomposition;
+this template TICKET does not become a second runtime implementation or unblock those missing capabilities.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |

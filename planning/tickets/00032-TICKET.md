@@ -50,6 +50,47 @@ labels derive from persisted Workflow/sandbox identities. Retried dispatch recon
 ownership/profile before reuse. Fence stale consumers, serialize short Git administration and never launch a second
 agent while the first may remain active. A worktree without containers is partial preparation, not running work.
 
+## Pi Durable integration direction — 2026-10-13
+
+John requested this bounded refinement of existing Harness and execution work after reviewing Pi Durable:
+prefer `@earendil-works/pi-durable` for durable conversation execution where qualification satisfies our contracts.
+Evaluate it before implementing equivalent checkpoint, queued-input and reconnect machinery. Record the exact
+package/source revision, supported runtime, storage choice and observed limitations in the implementing TASK;
+if it cannot meet a required contract, record the specific gap before selecting an alternative. This is an
+integration preference, not package adoption or proof that existing Pi extensions work unchanged.
+
+The product goal is one installation-owned durable Agent conversation reachable from authorized terminal and
+browser clients. Closing either client detaches it; it does not cancel accepted work. Reattachment resolves the
+same Agent/session and committed state. The owning machine must be running to execute work; durable recovery
+does not imply execution while powered off, automatic cross-machine migration or a new always-online hub.
+Keep the terminal-first milestone; browser interaction arrives through its existing Planning/session owners.
+
+PHP/PostgreSQL retain Workflow grants, claims, fencing, provisioning and phase transitions. Pi Durable may own
+transcripts and internal execution checkpoints behind the Harness adapter; its internal tasks are not Planning
+TASKs. Map stable conversation/submission/attempt references across that boundary. Reconcile lost acknowledgements
+against the original PHP operation before retrying; a durable submission does not make external effects exactly-once.
+Only demonstrably replay-safe work may rerun. Unknown effects, expired authority and uncertain liveness hold.
+Stored approval answers retain their original scope and validity; they never bypass current authorization.
+
+Qualify a single active storage owner, protected storage outside disposable worktrees, brokered tools/providers,
+and explicit stop/pause/cancel behavior including owned background work. Pin executable extension versions as well
+as names across restart; mutable upstream configuration must not silently replace our immutable Harness snapshots.
+Clients use the same authorized operations with original request identities and current-state resynchronization;
+concurrent input must preserve one bounded active turn and expose conflicts rather than duplicate execution.
+Transcript access remains owner-first, and Workflow observation retains its exclusion of private Pi transcripts.
+
+References inspected on 2026-10-13: [Earendil's introduction](https://earendil.com/posts/pi-durable/), the
+[experimental package contract](https://github.com/earendil-works/pi/blob/main/packages/durable/README.md), and
+[IndyDevDan's playground](https://github.com/disler/durable-pi). The playground supplies browser/terminal design
+examples, not our authentication, sandbox or Workflow policy. The linked
+[video](https://www.youtube.com/watch?v=DNDYYHsypZg) motivated this request; its contents were not independently
+retrieved. These upstream references are mutable; implementation must qualify pinned code.
+
+TASK-00141 owns the execution integration and TASK-00142 its recovery proof. TASK-00250 consumes the protected
+session primitives; TASK-00266 consumes the browser Planning owners. Their existing unmapped prerequisites remain
+explicit. TASK-00164's separately approved Pi 1.1.0 local compaction scope is preserved. No new TASK, dependency,
+priority, Wayfinder session, runtime launch or database Planning cutover follows from this amendment.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
