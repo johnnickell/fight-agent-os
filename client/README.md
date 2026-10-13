@@ -212,7 +212,11 @@ Bootstrap CSS and the accepted C/round-4 semantic mappings are included; no Boot
 custom-theme loader or complete product UI are introduced.
 
 Slim's `ClientShellAction` serves base HTML through `ClientShellResponder` and autoescaped file-backed Twig
-in project-root `templates/client/`. Its dedicated Twig environment and namespaced filesystem loader leave the inherited sample renderer unchanged.
+in project-root `templates/client/`. The responder depends on Fight Common's application `TemplateEngine`, backed
+by the shared `TwigEngine`, environment and filesystem loader registered in `config/common/templating.php`.
+`config/parameters/templating.php` owns namespaced search paths and Twig options (including cache, reload,
+strict variables and filename-based escaping). The inherited `profile` name now resolves to a file under the
+same root. See [shared templating and parameter defaults](../docs/engineering/TEMPLATING.md).
 `ClientAssetManifest` still accepts only existing hashed entry assets. Absent/invalid manifest or entry files,
 missing templates and render errors produce generic no-store HTTP 503 without broken asset references or traces.
 If even the asset-free unavailable template fails, a minimal plain-text 503 remains readable. Only fixed public

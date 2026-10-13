@@ -7,6 +7,7 @@ namespace Tests\Integration\Http;
 use App\Adapter\Http\Action\ClientShellAction;
 use App\Adapter\Http\Web\ClientAssetManifest;
 use App\Adapter\Http\Web\ClientShellResponder;
+use Fight\Common\Adapter\Templating\TwigEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ResponseFactory;
@@ -111,9 +112,10 @@ final class ClientShellTest extends TestCase
         }
         $loader = new FilesystemLoader();
         $loader->addPath($this->directory, 'client');
+        $templates = new TwigEngine(new Environment($loader, ['autoescape' => 'name', 'strict_variables' => true]));
         $action = new ClientShellAction(
             new ClientAssetManifest($this->directory),
-            new ClientShellResponder(new Environment($loader, ['autoescape' => 'html', 'strict_variables' => true]))
+            new ClientShellResponder($templates)
         );
         $response = $action->handle(
             (new ServerRequestFactory())->createServerRequest('GET', 'https://agent-os.test/app'),
@@ -162,7 +164,9 @@ final class ClientShellTest extends TestCase
         $loader = new FilesystemLoader();
         $loader->addPath(dirname(__DIR__, 3).'/templates/client', 'client');
 
-        return new ClientShellResponder(new Environment($loader, ['autoescape' => 'html', 'strict_variables' => true]));
+        $templates = new TwigEngine(new Environment($loader, ['autoescape' => 'name', 'strict_variables' => true]));
+
+        return new ClientShellResponder($templates);
     }
 
     /**

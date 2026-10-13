@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Http;
 
 use App\Adapter\Http\Web\ClientShellResponder;
+use Fight\Common\Adapter\Templating\TwigEngine;
+use Fight\Common\Application\Templating\Exception\TemplatingException;
+use Fight\Common\Application\Templating\TemplateEngine;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ResponseFactory;
 use Twig\Environment;
@@ -94,6 +97,31 @@ final class ClientShellResponderTest extends TestCase
     }
 
     /**
+     * Contains renderer failures without exposing engine diagnostics
+     */
+    public function test_that_engine_failures_return_safe_plain_text(): void
+    {
+        $templates = $this->createStub(TemplateEngine::class);
+        $templates->method('render')->willThrowException(new TemplatingException('private renderer detail'));
+        $response = (new ClientShellResponder($templates))->respond((new ResponseFactory())->createResponse(), [
+            'prepaint'   => '/build/prepaint-CCCCCCCC.js',
+            'script'     => '/build/main-AAAAAAAA.js',
+            'stylesheet' => '/build/main-BBBBBBBB.css'
+        ]);
+
+        self::assertSame(503, $response->getStatusCode());
+        self::assertSame('text/plain; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
+        self::assertSame('no-referrer', $response->getHeaderLine('Referrer-Policy'));
+        self::assertStringContainsString("default-src 'none'", $response->getHeaderLine('Content-Security-Policy'));
+        self::assertSame(
+            'Application unavailable. Please contact the installation operator.',
+            (string) $response->getBody()
+        );
+    }
+
+    /**
      * Creates presentation with the real public templates
      */
     private function responder(): ClientShellResponder
@@ -101,6 +129,8 @@ final class ClientShellResponderTest extends TestCase
         $loader = new FilesystemLoader();
         $loader->addPath(dirname(__DIR__, 3).'/templates/client', 'client');
 
-        return new ClientShellResponder(new Environment($loader, ['autoescape' => 'html', 'strict_variables' => true]));
+        $templates = new TwigEngine(new Environment($loader, ['autoescape' => 'name', 'strict_variables' => true]));
+
+        return new ClientShellResponder($templates);
     }
 }

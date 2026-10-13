@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Web;
 
+use Fight\Common\Application\Templating\TemplateEngine;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
-use Twig\Environment;
 
 /**
  * Class ClientShellResponder
@@ -18,7 +18,7 @@ final class ClientShellResponder
     /**
      * Constructs ClientShellResponder
      */
-    public function __construct(private readonly Environment $twig)
+    public function __construct(private readonly TemplateEngine $templates)
     {
     }
 
@@ -35,7 +35,7 @@ final class ClientShellResponder
         $contentType = 'text/html; charset=utf-8';
         if ($assets !== null) {
             try {
-                $body = $this->twig->render('@client/shell.html.twig', [
+                $body = $this->templates->render('@client/shell.html.twig', [
                     'assets' => $assets,
                     // Fixed ADR 0004 allowlist, never an environment/configuration-object dump.
                     'config' => ['schema_version' => 1, 'api_base_path' => '/api/v1']
@@ -48,7 +48,7 @@ final class ClientShellResponder
 
         if ($body === null) {
             try {
-                $body = $this->twig->render('@client/unavailable.html.twig');
+                $body = $this->templates->render('@client/unavailable.html.twig');
             } catch (Throwable) {
                 $body = 'Application unavailable. Please contact the installation operator.';
                 $contentType = 'text/plain; charset=utf-8';
