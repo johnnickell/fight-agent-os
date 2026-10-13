@@ -9,13 +9,19 @@ disable-model-invocation: true
 Route the human to current work. This is a read-only recommendation: inspect, report, and stop before invoking
 another skill or changing planning.
 
+First resolve [target project context](../../../docs/engineering/PROJECT_CONTEXT.md). Read the target's
+instructions and documented routing substitutions before its Board or reports. Planning paths and commands
+below belong to the target; skill and workflow links belong to the supplied provider. Use the target's
+headings, statuses, map inventory and completion rules where its binding differs. Do not inspect the provider's
+planning as a fallback or require a target-local copy of its skills.
+
 ## 1. Validate the planning view
 
 1. Read `planning/CONVENTIONS.md` as the authority for status, priority, blocking, and Wayfinder frontier semantics.
 2. Run `./bin/planning-check` without `--write`.
 3. If validation fails, report that planning is stale or invalid, include the failing command result, and stop without
    recommending work. If the failure is unsynchronized parent completion, name `./bin/planning-check --write`
-   as the mechanical repair under [automatic parent completion](../../../planning/CONVENTIONS.md#automatic-parent-completion),
+   as the mechanical repair only when the target's conventions authorize automatic parent completion,
    not a parent review or approval. This read-only skill does not perform the repair.
 
 Validation is complete only when the generated Board and Wayfinder indexes are current.
@@ -31,9 +37,10 @@ Read `planning/tasks/BOARD.md` and the complete record for every TASK considered
 - When neither section has an entry, report that no TASK is currently executable.
 - Report relevant **Needs Info** or **Human Action** entries as human input, separate from the TASK recommendation.
 
-Before describing the command, read `.pi/skills/build/SKILL.md` and any canonical review for the selected TASK.
+Before describing the command, read the provider's [build skill](../build/SKILL.md) and any canonical review
+for the selected TASK in the target's canonical base worktree.
 Default executable implementation and repair recommendations to `build`, which coordinates through independent
-review, QA and authorized land. Read `work` instead only when the operator explicitly requests implementation
+review, QA and authorized land. Read [work](../work/SKILL.md) instead only when the operator explicitly requests implementation
 alone. Recommending `build` does not invoke it or grant publication authority; the operator's invocation does.
 Apply the [local-first verification policy](../../../docs/engineering/REVIEW.md#local-gate-and-optional-hosted-checks); an optional missing hosted run is not a new blocker. If a report incorrectly requires optional CI, route to independent reassessment rather than overriding its verdict.
 Before initial acceptance, a review whose only outstanding explicit requirement is hosted evidence routes to authorized draft publication under
@@ -76,7 +83,7 @@ and owning record.
 
 Read `planning/wayfinder/README.md`, then every live map listed there. Inspect every **Active** map for decisions.
 Closed maps have no decision frontier, but inspect their linked planning handoffs for explicitly unfinished EPIC
-or decomposition work under [map-wide planning order](../../../planning/CONVENTIONS.md#map-wide-planning-order).
+or decomposition work under the target's map-wide planning order.
 Do not invent unfinished destinations or reopen settled maps; verify resulting live/archived records.
 
 For each active map:
@@ -87,7 +94,7 @@ For each active map:
 4. Report a missing frontier, multiple frontier choices, a closed frontier decision, or unfinished dependencies as
    map state requiring attention rather than fabricating available work.
 
-Read `.pi/skills/wayfinder/SKILL.md` before recommending a decision. Read a mode-specific skill's current
+Read the provider's [wayfinder skill](../wayfinder/SKILL.md) before recommending a decision. Read a mode-specific skill's current
 `SKILL.md` before making any claim about it; omit claims that its actual scope does not support. The Wayfinder skill
 owns map coordination, so the copyable command is:
 
@@ -109,7 +116,7 @@ reason it has none.
 
 ## 4. Select the planning phase
 
-For a selected map or each map with an explicit unfinished handoff, follow [map-wide planning order](../../../planning/CONVENTIONS.md#map-wide-planning-order)
+For a selected map or each map with an explicit unfinished handoff, follow the target's map-wide planning order
 and the [handoff command shapes](../../../docs/engineering/HANDOFFS.md#planning-handoffs). Prefer remaining
 decisions/grills and approved unwritten EPICs, then accepted TICKET decomposition for all its EPICs, then TASK
 decomposition for all its TICKETs. Read the receiving skill before recommending its command. Show the actual

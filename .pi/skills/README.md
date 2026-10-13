@@ -30,6 +30,10 @@ in an existing Pi session to discover the new skill. No subagent extension is re
 1.2.0 CLI. Local context separation is not managed identity, sandboxing or Pi Durable execution.
 The read-only [next skill](next/SKILL.md) now recommends `build` by default for implementation and confirmed
 repairs; evidence-only, QA, delivery and planning handoffs retain their appropriate stage commands.
+Both resolve [target project context](../../docs/engineering/PROJECT_CONTEXT.md) from the invocation checkout
+and its instructions/bindings. Shared skill links stay with the provider; planning, standards, runtime, gates
+and completion rules come from the target. `build` passes that context to every fresh role, so a bound consumer
+does not need the same project substitutions repeated in each request.
 
 [Writing for Agents](writing-for-agents/SKILL.md) supports skill/instruction authoring now.
 [Graphify](graphify/SKILL.md) queries derived source relationships and scopes explicit maintenance; installing this

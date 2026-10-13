@@ -6,7 +6,8 @@ disable-model-invocation: true
 
 # Build
 
-Act as Team Lead for one TASK under [Team roles](../../../docs/engineering/TEAM.md). Delegate implementation,
+Act as Team Lead for one TASK in the target project, using the role responsibilities in
+[Team roles](../../../docs/engineering/TEAM.md). Delegate implementation,
 independent technical review, behavioral QA and publication to their respective roles. Coordinate and inspect
 evidence; do not implement or issue an independent verdict yourself. Fresh Pi processes separate conversation
 context, not OS permissions or credentials. Managed PHP authority, durable execution and browser attachment
@@ -21,8 +22,10 @@ deploy or continue to another TASK. A question about planning does not invoke th
 
 ## Resolve and record
 
-1. Read the supplied record, parent, [Board](../../../planning/tasks/BOARD.md) and
-   [planning conventions](../../../planning/CONVENTIONS.md). A TICKET input selects its sole eligible TASK only
+1. Resolve [target project context](../../../docs/engineering/PROJECT_CONTEXT.md) before reading planning or
+   dispatching a child. Read the supplied record, parent, Board and planning conventions from that target,
+   applying its documented bindings. Provider-relative links supply shared instructions, not a target checkout.
+   A TICKET input selects its sole eligible TASK only
    when no other child is active or ambiguously owned. Inspect live/archived children and state the selected ID.
    With zero or multiple candidates, ask for the missing prerequisite/choice; do not decompose, choose by lowest
    number or build the entire TICKET. Check approved scope, readiness and integration of blockers on the base.
@@ -36,7 +39,7 @@ deploy or continue to another TASK. A question about planning does not invoke th
    child and record coordinator session, checkout, branch and run path. An existing lock requires inspecting
    its owner/processes before continuation; never automatically delete it. This is advisory local coordination,
    not a managed claim. Release only your lock after proving children stopped; uncertain liveness retains it.
-4. Keep a private ledger containing original authorization, TASK/base/head, model, effective/consumed/remaining
+4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, model, effective/consumed/remaining
    cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Check installed
    `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools
    is a prerequisite hold. Use existing provider authentication without printing credentials; do not change
@@ -55,8 +58,10 @@ or its session file. Each new empty session directory supplies fresh context; Re
 implementation contributions. Repairs receive the current findings and dispositions explicitly.
 
 Write `request.md` in the attempt directory before launching. Include role, TASK, exact checkout/base/head,
-absolute owning skill path, permitted effects, relevant evidence paths, original authorization, remaining repair
-allowance and expected handoff. Tell the child to read that skill and references, execute only its stage, publish
+absolute owning provider skill path, absolute project-context path, target instruction/binding paths, permitted
+effects, relevant evidence paths, original authorization, remaining repair allowance and expected handoff.
+Tell the child to verify the target Git identity and read the context, target instructions and binding before
+that skill and its nested references. Apply target substitutions throughout, execute only its stage, publish
 the required report, then stop without delegating other roles or invoking `build`. Do not copy Engineer dialogue
 into reviewer prompts or suggest a verdict. Explicitly carry delegated land and capture-publication authority
 into the Release Manager prompt.
