@@ -16,12 +16,28 @@ use App\Adapter\Validation\PublicForms;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
 return static function (Container $container): void {
+    $container->set(ClientShellResponder::class, static function (): ClientShellResponder {
+        $templates = new FilesystemLoader();
+        $directory = dirname(__DIR__, 2).'/templates/client';
+        // Missing deployments fail inside the responder, not during container construction.
+        if (is_dir($directory)) {
+            $templates->addPath($directory, 'client');
+        }
+
+        // Keep public rendering isolated from general-purpose template globals and options.
+        return new ClientShellResponder(new Environment($templates, [
+            'autoescape'       => 'html',
+            'strict_variables' => true
+        ]));
+    });
     $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {
         return new ClientShellAction(
             new ClientAssetManifest($container['app.public_dir'].'/build'),
-            new ClientShellResponder()
+            $container->get(ClientShellResponder::class)
         );
     });
     $container->set(IndexAction::class, static function (): IndexAction {

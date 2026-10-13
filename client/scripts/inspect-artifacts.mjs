@@ -80,6 +80,16 @@ function inspectJavascript(text, path) {
  */
 export async function inspectArtifacts(metafile, files, styleInputs) {
   const lock = JSON.parse(await readFile('package-lock.json', 'utf8'));
+  const fontInventory = JSON.parse(await readFile('assets/fonts/checksums.json', 'utf8'));
+  const fonts = new Map(fontInventory.map((font) => [`assets/fonts/${font.file}`, font.sha256]));
+  for (const [path, sha256] of fonts) {
+    if (
+      createHash('sha256')
+        .update(await readFile(path))
+        .digest('hex') !== sha256
+    )
+      reject(`font checksum mismatch in ${path}`);
+  }
   const inputs = [...new Set([...Object.keys(metafile.inputs), ...styleInputs])].sort();
   for (const path of inputs) {
     if (prohibitedPath.test(path)) reject(`development/private input ${path}`);
@@ -88,7 +98,7 @@ export async function inspectArtifacts(metafile, files, styleInputs) {
       const dependency = lock.packages[packagePath];
       if (!dependency || dependency.dev || dependency.link)
         reject(`non-runtime dependency ${path}`);
-    } else if (!/^(?:src\/.*\.(?:ts|tsx)|styles\/.*\.scss)$/.test(path)) {
+    } else if (!fonts.has(path) && !/^(?:src\/.*\.(?:ts|tsx)|styles\/.*\.scss)$/.test(path)) {
       reject(`input outside production roots ${path}`);
     }
   }
@@ -97,9 +107,23 @@ export async function inspectArtifacts(metafile, files, styleInputs) {
       reject('external source import');
   }
   const outputs = [];
+  const fontOutput =
+    /^(?:ubuntu|open-sans)-(?:latin|latin-ext|greek|greek-ext|cyrillic|cyrillic-ext)-(?:400|500|600|700)-normal-[A-Z0-9]{8}\.woff2$/;
+  const emittedFonts = new Set(
+    files.filter((file) => fontOutput.test(basename(file.path))).map((file) => basename(file.path))
+  );
   for (const file of files) {
     const name = basename(file.path);
-    if (!/^(?:main|chunk|prepaint)-[A-Z0-9]{8}\.(?:js|css)(?:\.LEGAL\.txt)?$/.test(name)) {
+    const sha256 = createHash('sha256').update(file.contents).digest('hex');
+    if (fontOutput.test(name)) {
+      if (!fontInventory.some((font) => font.sha256 === sha256)) reject(`unqualified font ${name}`);
+      outputs.push({ name, bytes: file.contents.byteLength, sha256 });
+      continue;
+    }
+    if (
+      !/^(?:main|chunk|prepaint)-[A-Z0-9]{8}\.(?:js|css)(?:\.LEGAL\.txt)?$/.test(name) &&
+      !/^(?:ubuntu|open-sans)-[A-Z0-9]{8}\.LEGAL\.txt$/.test(name)
+    ) {
       reject(`unexpected output ${name}`);
     }
     const text = file.text;
@@ -110,8 +134,9 @@ export async function inspectArtifacts(metafile, files, styleInputs) {
     if (name.endsWith('.css')) {
       if (/@import\b/i.test(text)) reject(`unbundled stylesheet import in ${name}`);
       for (const match of text.matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/gi)) {
-        // Bootstrap's compiled, self-contained SVG controls are the only current CSS assets.
-        if (!embeddedSvg(match[2])) reject(`non-embedded CSS resource in ${name}`);
+        // Only compiled SVG controls and this build's pinned same-origin fonts are allowed.
+        if (!embeddedSvg(match[2]) && !emittedFonts.has(match[2].replace(/^\.\//, '')))
+          reject(`unapproved CSS resource in ${name}`);
       }
     }
     outputs.push({
