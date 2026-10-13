@@ -307,4 +307,5 @@
 | [TASK-00302](00302-TASK.md) | Generate and review real AI template proposals behind controlled rollout | needs-info | [TICKET-00077](../tickets/00077-TICKET.md) |
 | [TASK-00303](00303-TASK.md) | Review and explicitly reconcile an Agent's template Permission drift | needs-info | [TICKET-00078](../tickets/00078-TICKET.md) |
 | [TASK-00304](00304-TASK.md) | Create and use a custom-template Agent for bounded manual work | needs-info | [TICKET-00079](../tickets/00079-TICKET.md) |
+| [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | in-progress | [TICKET-00084](../tickets/00084-TICKET.md) |
 <!-- /planning:records -->

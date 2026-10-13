@@ -78,7 +78,7 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 | [EPIC-00005](epics/00005-EPIC.md) | Deliver the registered Planning workspace | registered-planning-workspace | ready-for-agent |
 | [EPIC-00006](epics/00006-EPIC.md) | Deliver browser Planning Agents and the trusted Harness | browser-planning-agents-harness | ready-for-agent |
 | [EPIC-00007](epics/00007-EPIC.md) | Coordinate one TASK through implementation | coordinator-builder-awaiting-review | ready-for-agent |
-| [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | review-publish-pr-handoff | done |
+| [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | review-publish-pr-handoff | in-progress |
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | deterministic-project-creation | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | repository-instruction-editing | ready-for-agent |
 | [EPIC-00011](epics/00011-EPIC.md) | Deliver durable scoped Agent memory | durable-agent-memory | ready-for-agent |
@@ -113,4 +113,5 @@ the same operation that completes their children.
 | [TICKET-00080](tickets/00080-TICKET.md) | Account for complete consumer coverage and qualification | [EPIC-00018](epics/00018-EPIC.md) | ready-for-agent |
 | [TICKET-00081](tickets/00081-TICKET.md) | Document reproducible backend API and browser references | [EPIC-00018](epics/00018-EPIC.md) | ready-for-agent |
 | [TICKET-00082](tickets/00082-TICKET.md) | Publish and maintain the immutable maintainer handoff | [EPIC-00018](epics/00018-EPIC.md) | ready-for-agent |
+| [TICKET-00083](tickets/00083-TICKET.md) | Deliver managed review through verified PR handoff | [EPIC-00008](epics/00008-EPIC.md) | ready-for-agent |
 <!-- /planning:frontier -->

@@ -9,6 +9,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify the terminal execution sandbox boundary | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | in-progress | — | — |
 | — | [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | — (standalone chore) | in-progress | — | — |
+| — | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | [TICKET-00084 — Coordinate local TASK delivery through an open reviewed PR](../tickets/00084-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 

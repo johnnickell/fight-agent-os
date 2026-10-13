@@ -80,7 +80,7 @@ A branch name, latest branch head, PR, chat transcript, or process-local result 
 
 Only persisted blocking findings authorize automatic implementation revision. Non-blocking findings are recorded for human judgment and do not consume or trigger a revision cycle. One cycle means the Software Engineer addresses the current blocking findings, records their dispositions, runs the required checks, and creates a new implementation commit, after which an independent Senior Engineer evaluates that exact new snapshot.
 
-A workflow defaults to three revision cycles. Terminal and browser start surfaces expose one optional positive per-workflow override, such as a future `--revision-cycles 5` option. The installation supplies a server-side maximum through environment configuration, initially defaulting to ten; clients cannot exceed the effective ceiling. The start confirmation and workflow history show the default, requested, effective, consumed, and remaining values. Time and cost budgets independently bound work.
+A workflow defaults to five revision cycles. Terminal and browser start surfaces expose one optional positive per-workflow override, such as a future `--revision-cycles 7` option. The installation supplies a server-side maximum through environment configuration, initially defaulting to ten; clients cannot exceed the effective ceiling. The start confirmation and workflow history show the default, requested, effective, consumed, and remaining values. Time and cost budgets independently bound work.
 
 Reaching any cap causes a hard stop in Needs Human. Continuation requires a new human grant after examining findings, instructions, TASK scope, and evidence; limits never extend automatically. Escalate before exhaustion for scope expansion, contradictory or ambiguous blocking findings, unavailable required evidence, unsafe repository state, changed authority or context, an exception request, or inability to preserve unrelated work.
 
@@ -119,3 +119,9 @@ Explorer remains a bounded faster/cheaper scouting role. The first slice still s
 QA failure blocks landing and returns findings through Team Lead; source repairs trigger technical review and
 then affected QA. Capture comparable before/after evidence under [QA standards](../../../docs/engineering/QA.md).
 Package release and application deployment remain distinct future runbooks, not implicit TASK landing effects.
+
+## Approved revision allowance amendment — 2026-10-13
+
+The maintainer increased the original three-cycle default to five. Technical review and QA share this one
+allowance; a QA failure never resets it. The default installation maximum remains ten and time/cost/process
+budgets remain independent. This changes the accepted default without reopening the Wayfinder session.

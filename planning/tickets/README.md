@@ -85,4 +85,6 @@
 | [TICKET-00080](00080-TICKET.md) | Account for complete consumer coverage and qualification | ready-for-agent | [EPIC-00018](../epics/00018-EPIC.md) |
 | [TICKET-00081](00081-TICKET.md) | Document reproducible backend API and browser references | ready-for-agent | [EPIC-00018](../epics/00018-EPIC.md) |
 | [TICKET-00082](00082-TICKET.md) | Publish and maintain the immutable maintainer handoff | ready-for-agent | [EPIC-00018](../epics/00018-EPIC.md) |
+| [TICKET-00083](00083-TICKET.md) | Deliver managed review through verified PR handoff | ready-for-agent | [EPIC-00008](../epics/00008-EPIC.md) |
+| [TICKET-00084](00084-TICKET.md) | Coordinate local TASK delivery through an open reviewed PR | in-progress | [EPIC-00008](../epics/00008-EPIC.md) |
 <!-- /planning:records -->
