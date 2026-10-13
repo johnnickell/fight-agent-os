@@ -58,7 +58,10 @@ see its [guarded lifecycle and reports](docs/engineering/BACKEND_TESTS.md). Over
 Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTTPS origin and
 `APP_CSRF_MAC_KEY` as an independent, external hex-encoded 32-byte-or-stronger random key
 (e.g. generate with `openssl rand -hex 32`); do not commit either secret or use the JWT/HMAC signing key.
-The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
+Also configure the external `APP_ACCESS_TOKEN_CONFIG` HS256 keyring before boot; follow
+[access-token configuration](docs/engineering/ACCESS_TOKENS.md) for its exact shape and finite rotation bounds.
+JWT issuance/consumption and request-scoped PostgreSQL authentication are available, but no login/refresh/logout
+or protected resource endpoint is registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`

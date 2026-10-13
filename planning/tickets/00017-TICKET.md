@@ -49,7 +49,7 @@ Login is public but throttled; refresh/logout require the ambient credential plu
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00044](../tasks/00044-TASK.md) | Enforce complete access-token authentication | ready-for-agent |
+| [TASK-00044](../tasks/00044-TASK.md) | Enforce complete access-token authentication | in-progress |
 | [TASK-00045](../tasks/00045-TASK.md) | Enforce browser authentication request controls | ready-for-agent |
 | [TASK-00046](../tasks/00046-TASK.md) | Deliver the canonical email and password login journey | ready-for-agent |
 | [TASK-00047](../tasks/00047-TASK.md) | Deliver rotating refresh and current-session logout | ready-for-agent |

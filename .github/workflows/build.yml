@@ -15,6 +15,20 @@ jobs:
         run: |
           export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
           printf 'FIGHT_AGENT_OS_USER=%s\n' "$FIGHT_AGENT_OS_USER" >> "$GITHUB_ENV"
+          # Ephemeral CI-only keys stay private and outside uploaded gate reports.
+          python3 - <<'PY'
+          import json, os, secrets
+          config = {
+              'algorithm': 'HS256', 'issuer': 'https://agent-os.test',
+              'audience': 'agent-os-api', 'active_kid': 'ci',
+              'keys': [{'kid': 'ci', 'secret_hex': secrets.token_hex(32)}]
+          }
+          with open('.env', 'w') as env:
+              env.write('APP_BROWSER_ORIGIN=https://agent-os.test\n')
+              env.write('APP_CSRF_MAC_KEY=' + secrets.token_hex(32) + '\n')
+              env.write("APP_ACCESS_TOKEN_CONFIG='" + json.dumps(config) + "'\n")
+          os.chmod('.env', 0o600)
+          PY
           docker compose build web
           ./bin/composer install --no-interaction --prefer-dist --no-progress
           ./bin/client setup

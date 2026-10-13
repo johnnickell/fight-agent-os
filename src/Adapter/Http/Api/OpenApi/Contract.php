@@ -58,22 +58,29 @@ use OpenApi\Attributes as OA;
         JSON responses use exactly application/json, JSend and snake_case data fields.
         Safe correlation is exposed only in X-Correlation-ID, not in the JSON envelope.
         No login, refresh, logout, invitation, authenticated resource or persistence API
-        is implied by the reusable schemas or the future Bearer scheme.
+        is implied by the reusable schemas or the reusable Bearer scheme.
         CORS is absent: no approved cross-origin client or credentialed preflight exists.
         See planning/adr/0003-browser-authentication-security-profile.md in this repository.
         TEXT
 )]
 #[OA\Server(url: '/', description: 'Same-origin HTTPS only; deployment must configure its exact trusted origin')]
 #[OA\SecurityScheme(
-    securityScheme: 'FutureAccessBearer',
+    securityScheme: 'AccessBearer',
     type: 'http',
     scheme: 'bearer',
     bearerFormat: 'JWT',
     description: <<<'TEXT'
-        FUTURE ONLY, not applied to bootstrap. One Authorization Bearer access token,
-        held only in volatile memory, never URL/body/cookie or persistent browser storage.
-        ADR 0003 requires HS256, full header/claim/key/time validation and authoritative
-        user/session/version resolution. Those consumers are not yet implemented.
+        Reusable authentication boundary, not applied to public reads; no protected operation
+        is registered yet. Exactly one Authorization: Bearer compact JWT, at most 2048 token
+        bytes; no repeated/comma-folded headers, extra whitespace or alternative query/body/cookie
+        credentials. Access tokens stay in volatile memory, never persistent browser storage.
+        Pinned HS256 with configured kid and finite prior-key overlap; exact issuer, single audience,
+        subject/session/JTI/type/version and integer timestamps. Lifetime is 900 seconds with
+        30 seconds future-only tolerance and no expiry grace. Each request resolves current
+        active user, owned usable session and matching versions from PostgreSQL. JWTs contain
+        no roles or permissions. Refusals are generic correlated no-store 401 responses.
+        Protected JSON request bodies are bounded to 16 KiB and must be seekable.
+        Opaque refresh cookies are not JWTs or Bearer credentials.
         TEXT
 )]
 #[OA\Header(header: 'NoStore', required: true, schema: new OA\Schema(type: 'string', enum: ['no-store']))]
