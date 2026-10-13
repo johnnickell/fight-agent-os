@@ -305,4 +305,5 @@
 | [TASK-00300](00300-TASK.md) | Author and publish human-reviewed Agent templates | needs-info | [TICKET-00076](../tickets/00076-TICKET.md) |
 | [TASK-00301](00301-TASK.md) | Review ancestor updates and restore retained template revisions | ready-for-agent | [TICKET-00076](../tickets/00076-TICKET.md) |
 | [TASK-00302](00302-TASK.md) | Generate and review real AI template proposals behind controlled rollout | needs-info | [TICKET-00077](../tickets/00077-TICKET.md) |
+| [TASK-00303](00303-TASK.md) | Review and explicitly reconcile an Agent's template Permission drift | needs-info | [TICKET-00078](../tickets/00078-TICKET.md) |
 <!-- /planning:records -->

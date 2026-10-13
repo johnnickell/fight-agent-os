@@ -84,7 +84,7 @@ credentials, protected operation internals and unauthorized prompt/Permission de
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00303](../tasks/00303-TASK.md) | Review and explicitly reconcile an Agent's template Permission drift | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -108,3 +108,41 @@ TICKET-00076 now maps [TASK-00300](../tasks/00300-TASK.md)'s published revision/
 revisions without requiring completed ancestor review for ordinary drift inspection/reconciliation. The editor's
 Agent impact does not duplicate this comparison or authorize its assignment effects. TASK-00301 may offer this
 separate handoff only when available; publication never dispatches it, and this TICKET cannot reverse-block the editor.
+
+### Approved TASK decomposition
+
+The maintainer approved one unranked feature: [TASK-00303](../tasks/00303-TASK.md), **Review and explicitly reconcile
+an Agent's template Permission drift**, blocked by TASK-00300, TASK-00241 and TASK-00250. TASK-00259 inspection,
+TASK-00256's distinct assignment authority and initial creation/assignment are upstream. This one browser/API
+outcome owns versioned preview, Add Missing and Auto-sync, their explicit confirmations, recovery and evidence;
+no inspection-only, infrastructure or proof TASK is added.
+
+Status `needs-info` retains the supported atomic current-caller/target/template/scope authorization, complete-set
+assignment, required reviewed-source audit and outcome-recovery seam. The inspected public replacement command
+carries actor/Agent/expected assignment revision/IDs, not the full consumer review intent; its internal coordinator
+owns a transaction and its handler publishes afterward. Preflight checks, internal-coordinator calls, outer
+transactions or post-commit audit cannot supply the missing guarantee. No-op races require explicit qualification.
+These are unqualified integration contracts, not a demonstrated deployed exploit or permission to patch vendor code.
+
+Add Missing preserves extras and validates the complete resulting assignment; Auto-sync explicitly confirms
+removals and requires the complete eligible desired set. Bound and compared revisions remain separate. Neither
+action rebinds a template/prompt, rotates credentials, refreshes sessions or installs recurring sync. Actual next-use
+revocation evidence consumes existing credential/session owners. Refresh affected writer/cohort qualification without
+making primitives reverse-depend on this finished UI. AI proposals, ancestor review, finished browser administration
+and complete role journeys are not prerequisites.
+
+Four of five EPIC-00017 TICKETs and twenty of 24 map TICKETs are decomposed, not implemented. Four remain,
+TICKET-00079–00082, alongside older incomplete Harness/managed review planning. Active work and priorities remain
+unchanged. Next: `/skill:to-tasks TICKET-00079`. No Agent grants, bindings, credentials or sessions changed.
+
+Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
+403 records and 316 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.
+Evidence: `.runs/build/20261013T162942Z-80679`; log: `.runs/build/ticket-00078-to-tasks.log`.
+Sass deprecations, React-Bootstrap `use client` and >500 kB bundle warnings remain. These are fresh planning/
+existing-repository checks, not atomic reconciliation, live assignment or retained-session revocation qualification.
+Independent review and publication remain unperformed.
+
+Seven pre-existing planning edits (TASK-00141/00142/00164/00250/00266 and TICKET-00032/00034) were preserved
+byte-for-byte and excluded from this change. They were separately committed as `a4b2cfb` during this operation;
+the build validates the combined checkout on that baseline, not an isolated tree without those edits.
+The current map handoff above supersedes the earlier handoff left untouched in TICKET-00034.
