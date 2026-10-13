@@ -285,11 +285,103 @@ These are ordinary logical removals, not secure erasure. No daemon/host restart 
 Controlled restart and replacement establish retained-volume continuity, **not power-loss/server-crash durability,
 backup independence, restore freshness, encrypted recovery or supported unattended service lifecycle**.
 
-Next R1 proof must compose real encrypted storage, purpose-separated keys, original-byte recovery and protected
-receipts with an independently controlled restore witness and qualified physical storage. Actual package conformance,
-database roles, installer/path/ACL and service lifecycle remain downstream prerequisites. R2 uncertain effects/lifecycle/
-aggregate retention and R3 required-check policy are unchanged. No production readiness or full-TASK acceptance
-follows from these primitives.
+At this checkpoint, encrypted storage and original-byte recovery remained unmeasured; the follow-up below advances
+those primitives. An independently controlled restore-admission witness and qualified physical storage remain open.
+Actual package conformance, database roles, installer/path/ACL and service lifecycle remain prerequisites. R2 uncertain
+effects/lifecycle/aggregate retention and R3 required-check policy are unchanged. No production readiness or full-TASK
+acceptance follows from these primitives.
+
+## Encrypted storage and dump/restore comparison — 2026-10-13 UTC
+
+This **R1 / AC-1** follow-up combines PHP/libsodium encryption with actual PostgreSQL storage and `pg_dump` /
+`pg_restore`. It measures original-byte recovery and comparison with separately retained fixture evidence, **not
+restoration admission**, package conformance or a production sink. Instruments, bounded command transcripts,
+profiles and safe observations are in `.runs/tasks/TASK-00138/encrypted-restore/` in the authorized worktree.
+No production schema, package adapter, migration, service or product test was added.
+
+The expanded run `2ffabbe4-274a-42c2-8740-d135d340cc80`, 21:43:56–21:44:07 UTC, passed **94 scoped observations**.
+That count includes process/cleanup checks and repeated checks after restart, not 94 independent guarantees.
+PostgreSQL 17.10 uses the preceding pinned Alpine image. PHP 8.5.10/libsodium 1.0.18 uses the preceding custody
+image `sha256:a4193582e6675ff918eb0fd95f450586b9910cf199cab60da1825c5279874ecf`. No images were pulled or built
+for the experiment. Exact instruments are copied into each run before invocation.
+
+### Encryption, rotation and retained identity
+
+The fixture generates two random synthetic 32-byte credentials and independent delivery-v1, delivery-v2,
+authentication and fingerprint keys inside owned storage. PostgreSQL contains only encrypted credential material;
+key files and continuity/reference evidence are separate volumes, absent from the database container. A dedicated
+UID 10001 PHP process reads `0400` keys under a `0700` directory on a read-only mount. This reuses the trusted-parent
+assumption; it does not newly qualify path races, ACLs, provisioning durability or a production service identity.
+
+XChaCha20-Poly1305 binds the twelve issuance field names, an explicit fixture-domain context and the selected key
+version. The fixed-order, type-preserving JSON encoding is **synthetic**, not package canonicalization or validation.
+A separate keyed fingerprint retains original-byte identity across rewrap; receipt IDs come from PostgreSQL's UUID
+factory. A fixed-message HMAC continuity value retained outside the database lets a fresh process compare recovered
+bytes without exporting the credential. No plaintext, keys, ciphertext or continuity tags enter host evidence/logs.
+The reference manifest includes receipts, binding metadata, encrypted-material digests, tombstones, order and counts;
+it is a fixture comparison record, not a complete independent issuance/audit journal.
+
+| Direct probe | Observed result and boundary |
+|---|---|
+| Change each of twelve issuance fields | Every AEAD decryption failed. Cross-delivery envelope substitution, changed ciphertext/nonce/version and use of the authentication key also failed; an unknown version was unavailable. |
+| Rewrap the second entry | Decrypting under v1 and encrypting the **same bytes** under v2 changed the envelope while retaining receipt, binding and keyed fingerprint. A new recovery matched the original continuity value. No successor credential was generated. |
+| Roll back a rewrap transaction | Exact stored state remained unchanged. This is explicit SQL rollback, not a killed backend or unknown-COMMIT outcome. |
+| Temporarily remove the old key | A fresh process could not recover the v1 entry and generated no replacement key; the v2 entry still recovered. An explicit operator rename restored the retained v1 key. This is not key-retirement policy or independent backup qualification. |
+| Cleanup | Removed the first material while preserving both receipts/bindings, its tombstone, two lifetime reservations and high-water 20. The prior concurrent/idempotent SQL matrix was not rerun against this encrypted fixture. |
+
+### Real older/current dumps, comparison and non-admission
+
+An older custom-format dump was taken after the first delivery at order 10. A later dump followed the second delivery,
+rewrap and first-delivery cleanup. The expanded run's dumps were **5,733 and 5,930 bytes**, retained only in the
+PostgreSQL container's bounded `/tmp`; host evidence contains their lengths/digests, not dump bytes. Actual
+`createdb` / `pg_restore --exit-on-error` restored each into a different database name/OID on the same server.
+
+- The older restored database disagreed with the separately mounted final reference: it lacked the later receipt,
+  reset observed order to 10 and contained the formerly removed material. This is a **rollback counterexample**,
+  not proof that restore itself prevents resurrection. The comparison did not decrypt that restored material,
+  repair it, publish a witness or authorize any use.
+- The latest restored database exactly matched the fixture reference, retained the first tombstone/material absence
+  and recovered the second credential's original bytes under v2. Fresh-process comparison/recovery repeated after
+  controlled database-container restart. This establishes retained-volume continuity, not power-loss durability.
+- Six actual SQL mutations separately changed receipt, binding, tombstone, high-water, reservation count and material
+  in the restored database. Each made comparison fail; rollback restored the exact prior dataset. These are direct
+  infrastructure probes, not seeded product-suite failures or tests that quality tools catch errors.
+- Unmounting the reference and replacing its JSON with corrupt bytes each returned comparison unavailable without
+  changing the database. Only an explicit operator action restored the reference. Content equality is named
+  `fixture-content-match`, never ready/admitted. No incarnation-bound generation or permission is produced.
+
+Different database OIDs/names identify these observed copies, **not an authenticated, never-reused storage
+incarnation**. The reference is outside the restore target but on the same trusted engine and under the fixture
+operator's control. There is no conflicting all-writer fence, independently authoritative complete history,
+lossless forward repair, atomic witness publication, package invocation or delayed external effect here. The
+[package restoration contract](#package-contract-inspected) still requires those guarantees. A content hash or
+successful latest-dump comparison cannot stand in for them; ordinary writes must not need a new manual manifest.
+
+### Isolation, failed attempt and retirement
+
+PostgreSQL ran non-root UID 70, read-only root, network none with a loopback-only listener, 0.5 CPU, 512 MiB/no extra
+swap, 64 PIDs, 16 MiB shared memory, 16 MiB `/tmp` and 1 MiB socket tmpfs. PHP clients joined only that exact network
+namespace, ran UID 10001 with 0.5 CPU/128 MiB/no extra swap/64 PIDs/16 MiB shared memory, and had read-only root.
+All containers dropped capabilities, used no-new-privileges, disabled Docker logging, 256 file descriptors and zero
+core limit. Only bounded initializer/operator containers ran root with the recorded CHOWN/FOWNER/DAC_OVERRIDE
+subsets. The sole host bind was the read-only instrument; no home, Git administration, Engine socket or Agent
+workspace was mounted. At most one database and one short-lived helper ran concurrently.
+
+Three owned named volumes held data, keys and reference evidence. They have **no hard byte quota**; finite input,
+a three-entry fixture bound and small dumps do not qualify physical/WAL/engine allocation or aggregate retention.
+No production credentials, live Agent/provider, shared-engine restart, host exhaustion or service enrollment occurred.
+
+The first run `3b1045de-5c92-4984-b023-afee697ea337` failed when the driver requested `compare-older` but PHP accepted
+`compare-old`; earlier crypto observations are retained, not full-run success. Correcting that selector produced
+run `b8984b87-b9a1-47b6-ab8a-fd5867247deb` with 70 observations. The expanded run replaced its weak array-only
+comparison samples with actual SQL mutations and added missing/corrupt-reference reader checks. All three exact
+sources/results remain. They retired respectively **11, 14 and 17 containers**, each with three volumes, by matched
+full identity/owner; every final owner inventory was empty. Both successful runs preserved observed main and
+TASK-00044 service start times. Cleanup is ordinary logical deletion, not forensic erasure. Non-secret scratch remains.
+
+R1 advances only for these encryption/recovery/comparison primitives. R2 uncertain effects, supported lifecycle and
+aggregate accounting, and R3 independently authoritative required checks receive **no new qualification** here.
+TASK-00139 remains blocked; independent review and applicable QA are separate from these builder observations.
 
 ## Disposition and remaining proof
 
@@ -297,11 +389,12 @@ Continue the protected-file candidate without Keychain enrollment. Minimum quali
 
 1. Effective file/ACL/parent-path protection and installation-owned mount exclusion with the actual service identity;
    supported automatic service/runtime lifecycle, unsafe-state cache invalidation and recoverable provisioning.
-2. Every issuance-field crypto binding, key-version selection, original-byte-preserving rewrapping and independently
-   protected backup/restore. Never decrypt authentication envelopes as delivery recovery or auto-reissue after loss.
-3. Complete encrypted immutable staging and exact durable receipts: the PostgreSQL follow-up measures concurrent
-   retries, binding/order rejection, backend loss and retained-volume restart continuity, not actual package
-   conformance, crash-loss durability, encrypted original-byte recovery or unknown commit outcomes.
+2. Qualify package-compatible issuance encoding, key-version lifecycle and independently protected backup/restore.
+   The encrypted follow-up measures twelve-field AEAD rejection and original-byte-preserving rewrap under a synthetic
+   encoding, not package conformance. Never decrypt authentication envelopes for recovery or auto-reissue after loss.
+3. Complete encrypted immutable staging and exact durable receipts: concurrent retries, binding/order rejection and
+   backend loss were measured in the earlier unencrypted SQL fixture; encryption/rewrap/dump recovery were measured
+   separately. Their complete composition, package conformance, crash-loss durability and unknown commits remain open.
 4. Complete cleanup/retention and capacity: the follow-up measures tombstone/high-water preservation and contended
    entry admission; physical storage quotas, restart accounting and production retention remain unqualified.
 5. Independent incarnation-bound restoration admission and lossless reconciliation. Unknown commits, missing
