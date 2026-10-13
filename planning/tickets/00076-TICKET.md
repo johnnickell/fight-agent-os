@@ -124,9 +124,14 @@ for TASK-00301 or whole-TICKET completion. Human-only editing/publication remain
 separately authorized existing-Agent Permission actions. Ancestor review offers that real handoff only when
 available, never a fake sync or a reverse prerequisite.
 
-Two of five EPIC-00017 TICKETs and eighteen of 24 map TICKETs now have approved TASK decompositions, not runtime
-acceptance. Six remain, TICKET-00077–00082, alongside older incomplete Harness/managed review planning. Existing
-priorities, active work and the terminal-first milestone are unchanged. Next: `/skill:to-tasks TICKET-00077`.
+With TICKET-00077, three of five EPIC-00017 TICKETs and nineteen of 24 map TICKETs have approved TASK
+decompositions, not runtime acceptance. Five remain, TICKET-00078–00082, alongside older incomplete Harness/
+managed review planning. Priorities, active work and the terminal-first milestone are unchanged.
+Next: `/skill:to-tasks TICKET-00078`.
+
+TICKET-00077 now maps [TASK-00302](../tasks/00302-TASK.md)'s real AI suggestion → human prompt/Permission edits →
+explicit publication integration. It consumes TASK-00300 without TASK-00301 and retains its precise provider/
+protected-attempt recovery holds. Human authoring remains independent of AI Feature/provider availability.
 No editor, publication, template selection, Agent/grant/session change or provider effect occurred during planning.
 
 Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with

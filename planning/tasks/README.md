@@ -304,4 +304,5 @@
 | [TASK-00299](00299-TASK.md) | Initialize database-owned Agent templates without source overwrite | needs-info | [TICKET-00075](../tickets/00075-TICKET.md) |
 | [TASK-00300](00300-TASK.md) | Author and publish human-reviewed Agent templates | needs-info | [TICKET-00076](../tickets/00076-TICKET.md) |
 | [TASK-00301](00301-TASK.md) | Review ancestor updates and restore retained template revisions | ready-for-agent | [TICKET-00076](../tickets/00076-TICKET.md) |
+| [TASK-00302](00302-TASK.md) | Generate and review real AI template proposals behind controlled rollout | needs-info | [TICKET-00077](../tickets/00077-TICKET.md) |
 <!-- /planning:records -->

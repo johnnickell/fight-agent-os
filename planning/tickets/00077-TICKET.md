@@ -102,7 +102,7 @@ details and arbitrary provider errors out of browser responses, model context, l
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00302](../tasks/00302-TASK.md) | Generate and review real AI template proposals behind controlled rollout | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -135,7 +135,8 @@ TICKET-00073 now maps [TASK-00297](../tasks/00297-TASK.md)'s complete management
 readiness and active-repair composition remain needs-info. This TICKET consumes that outcome and retains the real
 AI admission/provider/editor integration, deliberate testing audience and all applicable alternative-path evidence.
 Neither the provider journey nor management reverse-blocks reusable suppliers; manual authoring and safe handling
-of admitted requests remain independent of this Feature's availability. No new TASK for this TICKET is allocated.
+of admitted requests remain independent of this Feature's availability. No TASK for this TICKET was allocated
+at that management-decomposition stage; the subsequent approved split is recorded below.
 
 TICKET-00076 now maps [TASK-00300](../tasks/00300-TASK.md)'s actual human editor/review/publication boundary.
 Consume that specific outcome, not completed TASK-00301 ancestor review/rollback or the whole parent TICKET.
@@ -143,4 +144,34 @@ TASK-00300 retains its candidate-validation/reference-fencing and inherited reso
 its same exact human draft/review and original-publication outcome path; they never create a second publisher,
 self-approve or gate manual editing on the Feature. Actual provider/Harness admission/recovery remains here.
 
-Next planning operation: `/skill:to-tasks TICKET-00077`; no provider request or AI authoring is implemented.
+### Approved TASK decomposition
+
+The maintainer approved one unranked feature: [TASK-00302](../tasks/00302-TASK.md), **Generate and review real AI
+template proposals behind controlled rollout**. It consumes TASK-00300's actual human editor/publication,
+TASK-00297's Feature management/catalog chain, TASK-00294's alternative-admission enforcement, TASK-00250's
+immutable Agent-session integration and TASK-00241's qualified credential/current-use readiness.
+
+Status is `needs-info`: exact EPIC-00006 suppliers for protected durable proposals, delegated generative execution,
+provider disclosure/budgets and uncertain-call recovery remain unmapped/unqualified. Inherited publication,
+session/host/origin and rollout holds remain. The actual provider/model, limits and existing testing Permission/
+audience require selection and qualification, not invented identifiers or grants. Inspected application/configuration/
+Harness sources did not establish the required runtime; Jev Decisions readiness does not substitute for it.
+
+One actual provider suggestion → human prompt/Permission editing → explicit publication journey owns recovery,
+rollout and evidence. New requests/regeneration are flagged; manual publication and authorized existing-attempt
+status/result/cancellation/safe recovery are not. OFF is neither cancellation nor permission to duplicate uncertain
+paid work. No second publisher, conversation store, provider endpoint, infrastructure-only or proof-only TASK is added.
+TASK-00301, completed Explorer/browser Planning and Feature retirement are not prerequisites. Suppliers and the
+terminal-first milestone are not reverse-blocked by this later product integration.
+
+Three of five EPIC-00017 TICKETs and nineteen of 24 map TICKETs are decomposed, not implemented. Five remain,
+TICKET-00078–00082, alongside older incomplete Harness/managed review planning. Existing priorities and active work
+remain unchanged. Next: `/skill:to-tasks TICKET-00078`. No provider request, testing grant, Feature rollout,
+template publication, Agent or session effect occurred during planning.
+
+Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
+402 records and 315 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.
+Evidence: `.runs/build/20261013T161019Z-76454`; log: `.runs/build/ticket-00077-to-tasks.log`.
+Sass deprecations, React-Bootstrap `use client` and >500 kB bundle warnings remain. These are fresh planning/
+existing-repository checks, not protected proposal/provider, Feature rollout or AI authoring qualification.
+Independent review and publication remain unperformed; no live enrollment, request or grant occurred.

@@ -252,6 +252,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00298](00298-TASK.md) | Retire Feature settings safely after deployed reference removal | [TICKET-00074 — Retire only currently unreferenced Features and reintroduce safely](../tickets/00074-TICKET.md) | needs-info | [TASK-00297](00297-TASK.md) | — |
 | — | [TASK-00299](00299-TASK.md) | Initialize database-owned Agent templates without source overwrite | [TICKET-00075 — Establish database-authoritative Agent templates](../tickets/00075-TICKET.md) | needs-info | [TASK-00248](00248-TASK.md), [TASK-00036](00036-TASK.md), [TASK-00078](00078-TASK.md) | — |
 | — | [TASK-00300](00300-TASK.md) | Author and publish human-reviewed Agent templates | [TICKET-00076 — Author and publish reviewed template revisions](../tickets/00076-TICKET.md) | needs-info | [TASK-00249](00249-TASK.md), [TASK-00259](00259-TASK.md), [TASK-00051](00051-TASK.md) | — |
+| — | [TASK-00302](00302-TASK.md) | Generate and review real AI template proposals behind controlled rollout | [TICKET-00077 — Generate editable AI template proposals](../tickets/00077-TICKET.md) | needs-info | [TASK-00300](00300-TASK.md), [TASK-00297](00297-TASK.md), [TASK-00294](00294-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00241](00241-TASK.md) | — |
 
 ## Human Action
 

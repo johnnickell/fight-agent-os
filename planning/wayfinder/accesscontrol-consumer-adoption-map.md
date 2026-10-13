@@ -541,8 +541,8 @@ evidence and the full gate; controlled fixtures are not installed dummy product 
 flagged capability is now `ai-template-proposals` under TICKET-00077. Tooling/configuration is validated directly,
 not product-tested.
 
-All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00076 below,
-**eighteen of the map's 24 TICKETs have approved written TASK splits; six remain, TICKET-00077–00082**, alongside
+All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00077 below,
+**nineteen of the map's 24 TICKETs have approved written TASK splits; five remain, TICKET-00078–00082**, alongside
 older incomplete Harness/managed review planning. All five EPIC-00016 TICKETs are decomposed, not implemented. Planning
 exposed/fetched no catalog, changed no UI and enabled no Feature or deployment.
 
@@ -655,9 +655,29 @@ completion. Human authoring/publication remains independent of ai-template-propo
 editor, provider endpoint, inspection-only or proof-only TASK is added; supplier direction and terminal-first
 priorities remain unchanged. Missing composition guarantees hold without vendor patches or nested transactions.
 
-Two of five EPIC-00017 TICKETs and eighteen of 24 map TICKETs have approved TASK decompositions; six remain,
-TICKET-00077–00082, with older Harness/managed review planning still incomplete. No template, publication, selection,
-Agent/grant/session mutation or provider effect occurred during planning.
+That split brought EPIC-00017 to two of five and the map to eighteen of 24 approved TASK decompositions.
+No template, publication, selection, Agent/grant/session mutation or provider effect occurred during planning.
+
+## Approved AI template proposal TASK decomposition
+
+TICKET-00077 maps [TASK-00302](../tasks/00302-TASK.md)'s one unranked real provider → human prompt/Permission
+editing → explicit publication outcome after TASK-00300, TASK-00297, TASK-00294, TASK-00250 and TASK-00241.
+Recovery, actual ai-template-proposals rollout and evidence belong inside this delivery, not separate proof work.
+
+It remains needs-info for exact EPIC-00006 protected attempt/provider/delegation/disclosure/budget/recovery
+supplier mappings and qualification, plus inherited editor/session/rollout holds. Jev readiness is not a generative
+provider. Actual provider/model and existing testing Permission/audience require deliberate selection and live
+qualification. No fictional blocker, second proposal platform or provider endpoint is introduced.
+
+New requests/regeneration use the initiating human's current Feature/management authority at every supported
+admission. The Agent gains no protected human right, and shared provider tools are not globally flagged. Manual
+publication and authorized existing-attempt inspection/cancellation/safe recovery remain available when OFF;
+recovery cannot duplicate uncertain paid work or revive a cancelled/superseded draft. TASK-00301, completed
+Explorer/browser Planning and retirement are not prerequisites; suppliers and terminal-first priorities stay upstream.
+
+Three of five EPIC-00017 TICKETs and nineteen of 24 map TICKETs are decomposed, not implemented. Five remain,
+TICKET-00078–00082, with older Harness/managed review planning incomplete. No Feature, provider request, testing
+grant, template publication, Agent or session effect occurred during planning.
 
 ## Approved EPIC handoff
 
@@ -698,8 +718,8 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00077` for
-[TICKET-00077](../tickets/00077-TICKET.md), mapping bounded AI proposals through the actual editor and Feature,
+**Next planning operation:** `/skill:to-tasks TICKET-00078` for
+[TICKET-00078](../tickets/00078-TICKET.md), mapping explicit existing-Agent Permission drift and reconciliation,
 then continue remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
