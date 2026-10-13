@@ -10,15 +10,21 @@ use App\Domain\Security\Csrf\Query\GetCsrfProof;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\QueryHandler as DeliveryQuery;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\QueryHandler\FindCredentialDeliveryStatusHandler;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\QueryHandler\FindDueCredentialDeliveriesHandler;
+use Fight\AccessControl\Application\AccessControl\ManagedPolicy\QueryHandler\PreviewManagedPolicyHandler;
+use Fight\AccessControl\Application\AccessControl\ManagedPolicy\Service\ManagedPolicyPlanner;
 use Fight\AccessControl\Application\AccessControl\Permission\QueryHandler\ListPermissionsHandler;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\Agent\AgentRepository;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindExpiredCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Query\PreviewManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\Query\ListPermissions;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Messaging\Query\QueryPipeline;
 use Fight\Common\Adapter\Messaging\Query\Routing\ServiceAwareQueryRouter;
 use Fight\Common\Adapter\Messaging\Query\RoutingQueryBus;
@@ -46,6 +52,21 @@ return [
             Container $container
         ): QueryBus {
             return $container->get('messaging.query.bus');
+        },
+        ManagedPolicyPlanner::class                                 => static function (
+            Container $container
+        ): ManagedPolicyPlanner {
+            return new ManagedPolicyPlanner(
+                $container->get(PermissionRepository::class),
+                $container->get(RoleRepository::class),
+                $container->get(UserRepository::class),
+                $container->get(AgentRepository::class)
+            );
+        },
+        PreviewManagedPolicyHandler::class                          => static function (
+            Container $container
+        ): PreviewManagedPolicyHandler {
+            return new PreviewManagedPolicyHandler($container->get(ManagedPolicyPlanner::class));
         },
         GetCsrfProofHandler::class                                  => static function (
             Container $container
@@ -93,6 +114,7 @@ return [
         }
     ],
     'handlers' => [
+        PreviewManagedPolicy::class            => PreviewManagedPolicyHandler::class,
         ListPermissions::class                 => ListPermissionsHandler::class,
         GetCsrfProof::class                    => GetCsrfProofHandler::class,
         FindDueCredentialDeliveries::class     => FindDueCredentialDeliveriesHandler::class,
