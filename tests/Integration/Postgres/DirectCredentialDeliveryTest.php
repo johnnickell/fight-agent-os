@@ -55,6 +55,7 @@ use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\AccessClock;
 
 /**
  * Proves direct package delivery against guarded PostgreSQL
@@ -482,6 +483,70 @@ final class DirectCredentialDeliveryTest extends TestCase
             self::assertSame('claimed', $this->row('activation')['delivery_status']);
             $due = $this->queries()->fetch(new FindDueCredentialDeliveries($clock->time, 10));
             self::assertSame($seen[0], $due[0]->getDeliveryId()->toString());
+        }
+    }
+
+    /**
+     * Confirms outcomes only before the exact fractional grant-capped lease deadline
+     */
+    #[DataProvider('fractionalOutcomeTimes')]
+    public function testFractionalDeliveryDeadlineCannotCommitLateOutcome(string $purpose, int $offset): void
+    {
+        $this->now = new DateTimeImmutable('2026-10-02T12:00:00.500000Z');
+        $grant = $this->seed($purpose);
+        $expiry = $grant->getExpiresAt();
+        $clock = new AccessClock($expiry->modify('-400000 microseconds'));
+        $this->container->set(Clock::class, static fn(): Clock => $clock);
+        $calls = 0;
+        $claimed = null;
+        $this->provider(function () use (
+            $clock,
+            $expiry,
+            $offset,
+            $purpose,
+            &$calls,
+            &$claimed
+        ): CredentialDeliveryOutcome {
+            ++$calls;
+            $claimed = $this->row($purpose);
+            $clock->time = $expiry->modify(sprintf('%+d microseconds', $offset));
+
+            return CredentialDeliveryOutcome::DELIVERED;
+        });
+        $denied = false;
+        try {
+            $this->dispatch($purpose);
+        } catch (CredentialDeliveryTransitionException) {
+            $denied = true;
+        }
+
+        self::assertSame(1, $calls);
+        self::assertIsArray($claimed);
+        self::assertEquals($expiry, new DateTimeImmutable($claimed['delivery_lease_until']));
+        self::assertSame($offset >= 0, $denied, 'No grace at or after a precise grant-capped lease deadline');
+        $after = $this->row($purpose);
+        if ($offset >= 0) {
+            self::assertSame($claimed, $after);
+            self::assertSame('claimed', $after['delivery_status']);
+            self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        } else {
+            self::assertSame('delivered', $after['delivery_status']);
+            self::assertNull($after['delivery_ciphertext']);
+            self::assertEquals($clock->time, new DateTimeImmutable($after['delivery_last_outcome_at']));
+        }
+    }
+
+    /**
+     * Supplies both families immediately before, at and after fractional expiry
+     *
+     * @return iterable<string, array{string, int}>
+     */
+    public static function fractionalOutcomeTimes(): iterable
+    {
+        foreach (['activation', 'password_reset'] as $purpose) {
+            foreach ([-1, 0, 1, 400000] as $offset) {
+                yield $purpose.' '.$offset => [$purpose, $offset];
+            }
         }
     }
 

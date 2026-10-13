@@ -169,7 +169,10 @@ Bootstrap accepts no body, Content-Type or query. It creates/reuses an HttpOnly 
 short-lived MAC proof, not authentication. Origin is optional but exact when present; Fetch Metadata is optional
 but must be `same-origin` when present. These are current GET semantics, not mutation exemptions.
 
-The unused `FutureAccessBearer` scheme describes **memory-only access-token transport**. Opaque refresh
+The reusable `AccessBearer` scheme describes the implemented **memory-only access-token boundary**:
+pinned HS256, exact claims and times, bounded keys, strict single-header extraction and per-request PostgreSQL
+user/session/version resolution. No protected operation is registered yet; the public reads remain public.
+See [configuration and integration](../engineering/ACCESS_TOKENS.md). Opaque refresh
 credentials are browser-managed HttpOnly cookies; their eventual exact cookie name and operations are not
 invented here. `x-future-browser-security` retains the accepted cookie/mutation policy from
 [ADR 0003](../../planning/adr/0003-browser-authentication-security-profile.md). No cookie `apiKey` scheme invites
@@ -179,4 +182,5 @@ The generic `ValidationFail` dictionary describes supported dotted snake_case pa
 constrain by key name. Bootstrap narrows this to `body` or `cookie`. No body-bearing operation exists yet, so
 HTTP dotted-field matrices and authenticated 401/409/422 journeys remain deferred to their owning TASKs.
 Schema checks do not prove MAC correctness, server authorization or a complete authentication journey;
-existing focused security tests cover CSRF policy.
+focused security tests cover CSRF and access-token policy; package-created session integration proves the
+access-token middleware without adding a fake HTTP endpoint.

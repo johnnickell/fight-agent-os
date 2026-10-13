@@ -27,9 +27,7 @@ return static function (Container $container): void {
     $container->set(PasswordResetDeliveryCipher::class, static function () use ($cipher): PasswordResetDeliveryCipher {
         return $cipher('password_reset');
     });
-    $container->set(Clock::class, static function (): Clock {
-        return new SystemDeliveryClock();
-    });
+    $container->set(Clock::class, static fn(): Clock => new SystemDeliveryClock());
     $container->set(CredentialDeliveryProvider::class, static function () use (
         $environment,
         $selection

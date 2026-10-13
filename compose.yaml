@@ -15,6 +15,7 @@ services:
         condition: service_healthy
     environment: &application-environment
       APP_ENV: development
+      APP_ACCESS_TOKEN_CONFIG: ${APP_ACCESS_TOKEN_CONFIG:-}
       APP_BROWSER_ORIGIN: ${APP_BROWSER_ORIGIN:-}
       APP_CSRF_MAC_KEY: ${APP_CSRF_MAC_KEY:-}
       APP_CREDENTIAL_DELIVERY_KEY: ${APP_CREDENTIAL_DELIVERY_KEY:-}

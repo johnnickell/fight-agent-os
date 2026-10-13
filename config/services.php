@@ -22,6 +22,7 @@ foreach (
     'common/presentation.php',
     'common/templating.php',
     'application/csrf.php',
+    'application/access_tokens.php',
     'application/credential_delivery.php',
     'application/controller.php'
     ] as $manifestEntry
