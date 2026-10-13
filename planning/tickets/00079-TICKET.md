@@ -94,3 +94,9 @@ Approved as area 5 of EPIC-00017's five-TICKET split. Depends on
 [TICKET-00061](00061-TICKET.md)'s authenticated use. Existing EPIC-00006 Harness and relevant host/Runner
 owners retain their implementations; no whole-Workflow prerequisite is invented for qualified manual work.
 No Agent, credential, assignment or Workflow was created by decomposition.
+
+TICKET-00076 now maps [TASK-00300](../tasks/00300-TASK.md)'s actual publication boundary. This TICKET may consume
+its exact published custom revisions without waiting for TASK-00301's ancestor review/rollback or whole-TICKET
+completion. TASK-00300 preserves immutable history and existing bindings; published status is still not live
+Agent/provider readiness. Creation/manual-use qualification remains with this integration and its existing owners,
+never a reverse prerequisite for seeding or a duplicate editor/publication engine.

@@ -136,3 +136,11 @@ readiness and active-repair composition remain needs-info. This TICKET consumes 
 AI admission/provider/editor integration, deliberate testing audience and all applicable alternative-path evidence.
 Neither the provider journey nor management reverse-blocks reusable suppliers; manual authoring and safe handling
 of admitted requests remain independent of this Feature's availability. No new TASK for this TICKET is allocated.
+
+TICKET-00076 now maps [TASK-00300](../tasks/00300-TASK.md)'s actual human editor/review/publication boundary.
+Consume that specific outcome, not completed TASK-00301 ancestor review/rollback or the whole parent TICKET.
+TASK-00300 retains its candidate-validation/reference-fencing and inherited resource/Agent holds. AI proposals use
+its same exact human draft/review and original-publication outcome path; they never create a second publisher,
+self-approve or gate manual editing on the Feature. Actual provider/Harness admission/recovery remains here.
+
+Next planning operation: `/skill:to-tasks TICKET-00077`; no provider request or AI authoring is implemented.

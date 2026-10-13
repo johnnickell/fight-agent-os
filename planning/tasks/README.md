@@ -302,4 +302,6 @@
 | [TASK-00297](00297-TASK.md) | Manage the testing audience and rollout state for AI template proposals | needs-info | [TICKET-00073](../tickets/00073-TICKET.md) |
 | [TASK-00298](00298-TASK.md) | Retire Feature settings safely after deployed reference removal | needs-info | [TICKET-00074](../tickets/00074-TICKET.md) |
 | [TASK-00299](00299-TASK.md) | Initialize database-owned Agent templates without source overwrite | needs-info | [TICKET-00075](../tickets/00075-TICKET.md) |
+| [TASK-00300](00300-TASK.md) | Author and publish human-reviewed Agent templates | needs-info | [TICKET-00076](../tickets/00076-TICKET.md) |
+| [TASK-00301](00301-TASK.md) | Review ancestor updates and restore retained template revisions | ready-for-agent | [TICKET-00076](../tickets/00076-TICKET.md) |
 <!-- /planning:records -->

@@ -80,7 +80,8 @@ memory-only client state. Required revision/audit effects are atomic; no externa
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00300](../tasks/00300-TASK.md) | Author and publish human-reviewed Agent templates | needs-info |
+| [TASK-00301](../tasks/00301-TASK.md) | Review ancestor updates and restore retained template revisions | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -99,4 +100,38 @@ policy. Its source-writer transition must be qualified before publication is ena
 reference and independent Triage-input holds remain explicit. Completed editing never becomes an upstream seed
 prerequisite. This TICKET retains actual browser publication, history/rollback/ancestor review and impact evidence.
 
-Next planning operation: `/skill:to-tasks TICKET-00076`; no editor, publication or provider effect is implemented.
+### Approved TASK decomposition
+
+The maintainer approved two dependency-ordered vertical features, both unranked:
+
+- [TASK-00300](../tasks/00300-TASK.md): human browse/create/revise/review/publish through a complete browser/API
+  path, with history/diff, authorized Agent impact and original-outcome recovery. Blocked by TASK-00249,
+  TASK-00259 and TASK-00051; TASK-00299's database authority is upstream. Status `needs-info` until complete
+  unpublished-candidate validation and final reference/current-authority fencing composition are qualified.
+- [TASK-00301](../tasks/00301-TASK.md): explicit retained-revision restoration and exact old-ancestor/new-ancestor/
+  custom review through that same publication boundary. Status `ready-for-agent`, blocked by TASK-00300 and its
+  inherited holds. Keeping current mutates nothing; accepting changes never silently updates existing Agents.
+
+TASK-00300 reuses MANAGE_AGENT_TEMPLATES and TASK-00259's separately protected Agent inspection. Read-only profile
+resolution and Permission lists are not an atomic publication guarantee. Qualify actual participant/currentness/
+transaction contracts; unknown support holds without vendor patches, nested transactions, a duplicate catalog or
+invented dependency IDs. Complete prompt/Permission review, expected-selection generations, immutable history and
+atomic required audit protect both slices. No publication assigns Permissions, rebinds Agents or refreshes sessions.
+
+TICKET-00077's actual AI proposal integration and TICKET-00079's custom use can consume TASK-00300 without waiting
+for TASK-00301 or whole-TICKET completion. Human-only editing/publication remains available independently of
+`ai-template-proposals`; this split implements no provider call or second publisher. TICKET-00078 retains the
+separately authorized existing-Agent Permission actions. Ancestor review offers that real handoff only when
+available, never a fake sync or a reverse prerequisite.
+
+Two of five EPIC-00017 TICKETs and eighteen of 24 map TICKETs now have approved TASK decompositions, not runtime
+acceptance. Six remain, TICKET-00077–00082, alongside older incomplete Harness/managed review planning. Existing
+priorities, active work and the terminal-first milestone are unchanged. Next: `/skill:to-tasks TICKET-00077`.
+No editor, publication, template selection, Agent/grant/session change or provider effect occurred during planning.
+
+Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
+401 records and 314 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.
+Evidence: `.runs/build/20261013T154606Z-74329`; log: `.runs/build/ticket-00076-to-tasks.log`.
+Sass deprecations, React-Bootstrap `use client` and >500 kB bundle warnings remain. These are fresh planning/
+existing-repository checks, not editor/publication/reference-fencing, ancestor review or AI/provider qualification.
+Independent review and publication remain unperformed; no runtime template or Agent state was changed.

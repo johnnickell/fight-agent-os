@@ -541,8 +541,8 @@ evidence and the full gate; controlled fixtures are not installed dummy product 
 flagged capability is now `ai-template-proposals` under TICKET-00077. Tooling/configuration is validated directly,
 not product-tested.
 
-All new orders remain unranked and active work unchanged. With the management/retirement/initial-template splits below,
-**seventeen of the map's 24 TICKETs have approved written TASK splits; seven remain, TICKET-00076–00082**, alongside
+All new orders remain unranked and active work unchanged. With the subsequent splits through TICKET-00076 below,
+**eighteen of the map's 24 TICKETs have approved written TASK splits; six remain, TICKET-00077–00082**, alongside
 older incomplete Harness/managed review planning. All five EPIC-00016 TICKETs are decomposed, not implemented. Planning
 exposed/fetched no catalog, changed no UI and enabled no Feature or deployment.
 
@@ -633,9 +633,31 @@ The sequence is TASK-00248 → TASK-00299 → TASK-00249 → actual Agent consum
 and final role/session journeys do not reverse-block the initial catalog. TASK-00249 retains other resource/model/
 current-read holds. Initial terminal-first priorities and active work are unchanged.
 
-One of five EPIC-00017 TICKETs and seventeen of 24 map TICKETs are decomposed, not implemented. Seven remain,
-TICKET-00076–00082; older Harness/managed review planning is still incomplete. No seed, Permission, Agent, grant,
+That initialization split brought EPIC-00017 to one of five and the map to seventeen of 24 decompositions,
+not implementation acceptance; older Harness/managed review planning remains incomplete. No seed, Permission, Agent, grant,
 session, provider call or deployment occurred during planning.
+
+## Approved human-template publication TASK decomposition
+
+TICKET-00076 maps two unranked vertical features. [TASK-00300](../tasks/00300-TASK.md) delivers human browser/API
+browse/create/revise/review/publish with history/diff, separately authorized Agent impact and original-outcome
+recovery after TASK-00249, TASK-00259 and TASK-00051. TASK-00299's store and MANAGE_AGENT_TEMPLATES authority
+remain upstream. It is needs-info for complete candidate-validation and final reference/current-authority fencing;
+read-only profile resolution and a Permission catalog are not that atomic guarantee.
+
+[TASK-00301](../tasks/00301-TASK.md) delivers exact old-ancestor/new-ancestor/custom review and deliberate retained-
+revision restoration through the same publication boundary. It is ready-for-agent behind TASK-00300 and inherited
+holds. Keep-current is read-only; publication/selection preserves historical bytes and every existing Agent grant,
+binding and active snapshot. TICKET-00078 retains separately confirmed Agent Permission changes, not automatic sync.
+
+TICKET-00077's AI proposals and TICKET-00079's custom use can consume TASK-00300 without TASK-00301 or whole-TICKET
+completion. Human authoring/publication remains independent of ai-template-proposals availability. No duplicated
+editor, provider endpoint, inspection-only or proof-only TASK is added; supplier direction and terminal-first
+priorities remain unchanged. Missing composition guarantees hold without vendor patches or nested transactions.
+
+Two of five EPIC-00017 TICKETs and eighteen of 24 map TICKETs have approved TASK decompositions; six remain,
+TICKET-00077–00082, with older Harness/managed review planning still incomplete. No template, publication, selection,
+Agent/grant/session mutation or provider effect occurred during planning.
 
 ## Approved EPIC handoff
 
@@ -676,8 +698,8 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00076` for
-[TICKET-00076](../tickets/00076-TICKET.md), mapping human-reviewed template authoring and publication,
+**Next planning operation:** `/skill:to-tasks TICKET-00077` for
+[TICKET-00077](../tickets/00077-TICKET.md), mapping bounded AI proposals through the actual editor and Feature,
 then continue remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this

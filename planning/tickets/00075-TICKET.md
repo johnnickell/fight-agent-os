@@ -124,9 +124,15 @@ handoff remain unmapped readiness holds. EPIC-00012/TASK-00200 retains Triage ow
 role, duplicate catalog or completed-diagnosis dependency is introduced. Mapping TASK-00299 resolves only
 TASK-00249's database-owner gap, not its remaining resource/model or current scoped-read guarantees.
 
-This is EPIC-00017's first of five accepted TASK decompositions. Seventeen of the map's 24 TICKETs are decomposed;
-seven remain, TICKET-00076–00082, alongside older incomplete Harness/managed review planning. Active work and
-priorities are unchanged. Next planning operation: `/skill:to-tasks TICKET-00076`. No implementation follows.
+This was EPIC-00017's first accepted TASK decomposition. With TICKET-00076, two of this EPIC's five and eighteen
+of the map's 24 TICKETs are decomposed; six remain, TICKET-00077–00082, alongside older incomplete Harness/managed
+review planning. Active work and priorities are unchanged. Next: `/skill:to-tasks TICKET-00077`.
+No implementation follows.
+
+TICKET-00076 now maps [TASK-00300](../tasks/00300-TASK.md)'s actual human publication over this store/authority,
+with [TASK-00301](../tasks/00301-TASK.md)'s retained-revision/ancestor review downstream. Candidate validation and
+final publication/reference fencing remain their qualified composition, not a guarantee inferred from seeding.
+Neither completed editor nor AI proposals reverse-blocks this initial database outcome.
 
 Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
 399 records and 312 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.

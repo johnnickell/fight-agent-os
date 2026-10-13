@@ -206,6 +206,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00294](00294-TASK.md) | Enforce registered Feature checks outside HTTP Actions | [TICKET-00071 — Enforce current Feature availability at every registered entry](../tickets/00071-TICKET.md) | ready-for-agent | [TASK-00293](00293-TASK.md), [TASK-00245](00245-TASK.md) | — |
 | — | [TASK-00295](00295-TASK.md) | Read a complete authenticated Feature catalog | [TICKET-00072 — Show a complete authenticated Feature catalog and availability](../tickets/00072-TICKET.md) | ready-for-agent | [TASK-00293](00293-TASK.md) | — |
 | — | [TASK-00296](00296-TASK.md) | Gate browser Feature presentation with current catalog availability | [TICKET-00072 — Show a complete authenticated Feature catalog and availability](../tickets/00072-TICKET.md) | ready-for-agent | [TASK-00295](00295-TASK.md), [TASK-00051](00051-TASK.md) | — |
+| — | [TASK-00301](00301-TASK.md) | Review ancestor updates and restore retained template revisions | [TICKET-00076 — Author and publish reviewed template revisions](../tickets/00076-TICKET.md) | ready-for-agent | [TASK-00300](00300-TASK.md) | — |
 
 ## Needs Info
 
@@ -250,6 +251,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00297](00297-TASK.md) | Manage the testing audience and rollout state for AI template proposals | [TICKET-00073 — Administer immutable Feature settings and safe rollout transitions](../tickets/00073-TICKET.md) | needs-info | [TASK-00036](00036-TASK.md), [TASK-00296](00296-TASK.md) | — |
 | — | [TASK-00298](00298-TASK.md) | Retire Feature settings safely after deployed reference removal | [TICKET-00074 — Retire only currently unreferenced Features and reintroduce safely](../tickets/00074-TICKET.md) | needs-info | [TASK-00297](00297-TASK.md) | — |
 | — | [TASK-00299](00299-TASK.md) | Initialize database-owned Agent templates without source overwrite | [TICKET-00075 — Establish database-authoritative Agent templates](../tickets/00075-TICKET.md) | needs-info | [TASK-00248](00248-TASK.md), [TASK-00036](00036-TASK.md), [TASK-00078](00078-TASK.md) | — |
+| — | [TASK-00300](00300-TASK.md) | Author and publish human-reviewed Agent templates | [TICKET-00076 — Author and publish reviewed template revisions](../tickets/00076-TICKET.md) | needs-info | [TASK-00249](00249-TASK.md), [TASK-00259](00259-TASK.md), [TASK-00051](00051-TASK.md) | — |
 
 ## Human Action
 

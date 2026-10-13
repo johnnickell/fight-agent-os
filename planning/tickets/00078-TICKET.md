@@ -102,3 +102,9 @@ TASK-00259 exposes safe bound/requested-versus-actual inspection without mutatio
 when mapping this TICKET's exact TASKs; do not duplicate initial creation or mistake its authority for approval
 to reconcile existing Agents. Add Missing/Auto-sync and their fresh confirmed complete-set concurrency contract
 remain here, never a recurring rule or a template/session rebind.
+
+TICKET-00076 now maps [TASK-00300](../tasks/00300-TASK.md)'s published revision/authorized impact boundary and
+[TASK-00301](../tasks/00301-TASK.md)'s retained-revision/ancestor review. Consume actual selected immutable
+revisions without requiring completed ancestor review for ordinary drift inspection/reconciliation. The editor's
+Agent impact does not duplicate this comparison or authorize its assignment effects. TASK-00301 may offer this
+separate handoff only when available; publication never dispatches it, and this TICKET cannot reverse-block the editor.
