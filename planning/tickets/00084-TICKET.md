@@ -2,7 +2,7 @@
 id: TICKET-00084
 epic: EPIC-00008
 title: Coordinate local TASK delivery through an open reviewed PR
-status: in-progress
+status: done
 ---
 
 # Coordinate local TASK delivery through an open reviewed PR
@@ -56,7 +56,7 @@ local qualification from an actual end-to-end TASK publication. No product-suite
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00306](../tasks/00306-TASK.md) | Add a local build coordinator through automatic PR publication | in-progress |
+| [TASK-00306](../tasks/00306-TASK.md) | Add a local build coordinator through automatic PR publication | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -64,3 +64,10 @@ local qualification from an actual end-to-end TASK publication. No product-suite
 Approved for immediate local implementation on the current checkout by the maintainer on 2026-10-13, named
 `build` at the maintainer's request. Plan and implementation commits remain separate from concurrent TICKET
 decomposition. [TICKET-00083](00083-TICKET.md) owns the distinct managed delivery requirement.
+
+On 2026-10-13 the operator authorized complete TASK-00306 closeout, including target-context and phase-model
+amendments, and explicitly deferred behavioral QA to live Harness testing during the next actual TASK. Its
+independent technical acceptance and direct qualification are recorded in the child; live QA is **deferred,
+not PASS or N/A**. This exception applies only to qualification of the local coordinator itself. It does not
+weaken the review/QA/publication gates that the coordinator must apply to subsequent TASKs, close managed
+TICKET-00083, or claim live end-to-end delivery. Eligible parent completion follows the child's recorded outcome.

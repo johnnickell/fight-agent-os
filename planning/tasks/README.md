@@ -228,7 +228,7 @@
 | [TASK-00223](00223-TASK.md) | Execute the approved application rollout and reconcile provider state | ready-for-agent | [TICKET-00058](../tickets/00058-TICKET.md) |
 | [TASK-00224](00224-TASK.md) | Verify production health and coordinate bounded recovery | ready-for-agent | [TICKET-00058](../tickets/00058-TICKET.md) |
 | [TASK-00225](00225-TASK.md) | Finish application branch follow-through and release closeout | needs-info | [TICKET-00058](../tickets/00058-TICKET.md) |
-| [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | in-progress | — |
+| [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | done | — |
 | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
 | [TASK-00228](00228-TASK.md) | Enforce shared cohort admission | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
 | [TASK-00229](00229-TASK.md) | Persist correlated issuance and credential retirement | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
@@ -308,7 +308,7 @@
 | [TASK-00303](00303-TASK.md) | Review and explicitly reconcile an Agent's template Permission drift | needs-info | [TICKET-00078](../tickets/00078-TICKET.md) |
 | [TASK-00304](00304-TASK.md) | Create and use a custom-template Agent for bounded manual work | needs-info | [TICKET-00079](../tickets/00079-TICKET.md) |
 | [TASK-00305](00305-TASK.md) | Establish qualified consumer coverage for the maintainer handoff | needs-info | [TICKET-00080](../tickets/00080-TICKET.md) |
-| [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | in-progress | [TICKET-00084](../tickets/00084-TICKET.md) |
+| [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | done | [TICKET-00084](../tickets/00084-TICKET.md) |
 | [TASK-00307](00307-TASK.md) | Document the qualified backend API and browser integration reference | ready-for-agent | [TICKET-00081](../tickets/00081-TICKET.md) |
 | [TASK-00308](00308-TASK.md) | Publish the immutable qualified reference bundle to the five starter maintainers | needs-info | [TICKET-00082](../tickets/00082-TICKET.md) |
 <!-- /planning:records -->
