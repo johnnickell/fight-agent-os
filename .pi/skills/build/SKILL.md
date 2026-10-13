@@ -39,7 +39,7 @@ deploy or continue to another TASK. A question about planning does not invoke th
    child and record coordinator session, checkout, branch and run path. An existing lock requires inspecting
    its owner/processes before continuation; never automatically delete it. This is advisory local coordination,
    not a managed claim. Release only your lock after proving children stopped; uncertain liveness retains it.
-4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, model, effective/consumed/remaining
+4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, resolved role models, effective/consumed/remaining
    cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Check installed
    `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools
    is a prerequisite hold. Use existing provider authentication without printing credentials; do not change
@@ -49,6 +49,43 @@ Before first dispatch, inspect existing canonical Review/QA and any earlier buil
 warranted by current evidence; do not rebuild accepted implementation. Continue the original consumed allowance
 on resumed or repeated invocation for the same delivery, including after QA failure. A fresh process, directory
 or command does not reset the counter. An exhausted allowance needs an explicit human continuation grant.
+
+## Resolve phase models
+
+Resolve the model map before dispatch; the coordinator's model is **not** a child default. For each role,
+apply explicit invocation choices first, then role settings in the target's documented project binding, then
+these local defaults, resolving each field in that order. Resolve provider from the invocation role choice,
+then the target-bound role choice, otherwise retain the configured provider. Never switch providers to obtain a default model. These defaults apply to
+`openai-codex`; another provider needs an explicit or target-bound role map before dispatch.
+
+| Role | Default model family | Thinking | Verified available ID on 2026-10-13 |
+|---|---|---|---|
+| Team Lead | Sol | medium | `gpt-6.1-sol` |
+| Software Engineer, including repairs | Sol | high | `gpt-6.1-sol` |
+| Senior Engineer review | Sol | high | `gpt-6.1-sol` |
+| QA Engineer | Terra | high | `gpt-5.6-terra` |
+| Release Manager land | Luna | medium | `gpt-6-luna` |
+
+Team Lead is a recommendation when starting a coordinator, not a command to replace an active session.
+Astra is an explicit override, never an automatic fallback or escalation after failure. Model choice does not
+weaken stage responsibilities, independence, evidence gates or the shared repair allowance.
+
+For a fresh delivery, inspect `pi --list-models` and the installed provider's model metadata without sending a
+TASK prompt. For each default family choose its newest available stable numeric version (compare version
+components, not strings); exclude previews, dated snapshots and fuzzy/rolling aliases. The table records a
+qualification snapshot, not invented future IDs or permission to assume API availability equals Pi access.
+Explicit exact model pins remain exact. Verify the requested thinking level against provider metadata; missing
+models, unsupported thinking, ambiguous versions or unresolved configuration hold that phase with a specific
+prerequisite. Do not silently substitute a family, provider or reasoning level.
+
+Record the requested family/override, configuration source, resolved provider, exact model ID and thinking for
+each role in the ledger before any child starts. Pin these choices for repairs and resumed invocations; do not
+refresh to a newly released model mid-delivery. An explicit model-change request may amend subsequent attempts
+at a reconciled stage boundary, preserving prior identities, evidence and consumed cycles. A legacy ledger with
+only inherited coordinator settings must resolve and record its role map before the next child; never interrupt
+an active child merely to apply new defaults. Include the resolved selection in each child request and forbid
+the child from changing it. Record provider-reported identity separately; if unavailable, say so rather than
+presenting requested/configured identity or catalog availability as provider execution proof.
 
 ## Dispatch fresh roles
 
@@ -67,14 +104,19 @@ into reviewer prompts or suggest a verdict. Explicitly carry delegated land and 
 into the Release Manager prompt.
 
 Use this supported dispatch shape. Populate quoted variables from the ledger; `attempt` is the fresh directory,
-`task_checkout` the selected checkout, and `task_id`/`role` the actual stage identity. Pi's shell tool supplies
-`PI_PROVIDER`, `PI_MODEL` and `PI_REASONING_LEVEL`; require all three or resolve the configured selection first.
-Honor explicit role-specific model choices instead of inheritance; never silently switch providers.
+`task_checkout` the selected checkout, and `task_id`/`role` the actual stage identity. Set `stage_provider`,
+`stage_model` and `stage_thinking` from that role's pinned ledger entry. Ambient `PI_MODEL` and
+`PI_REASONING_LEVEL` describe the coordinator and must not fill missing stage values. Exact IDs avoid Pi's
+fuzzy model selection. Require all stage values before launching and export them only inside the child subshell.
 
 ```bash
 (
   umask 077
   cd "$task_checkout" || exit 1
+  : "${stage_provider:?Resolve the role provider first}"
+  : "${stage_model:?Resolve the role model first}"
+  : "${stage_thinking:?Resolve the role thinking level first}"
+  export PI_PROVIDER="$stage_provider" PI_MODEL="$stage_model" PI_REASONING_LEVEL="$stage_thinking"
   if pi --print --session-dir "$attempt/sessions" --name "$task_id $role" \
     --provider "$PI_PROVIDER" --model "$PI_MODEL" --thinking "$PI_REASONING_LEVEL" \
     -- "@$attempt/request.md" > "$attempt/final.txt" 2> "$attempt/stderr.log"; then
@@ -90,7 +132,8 @@ Honor explicit role-specific model choices instead of inheritance; never silentl
 Use a bounded shell-tool timeout suitable for the stage. Observe the child; do not detach it into an unobserved
 background process. If the host yields a running process, wait and give useful progress updates without launching
 the next stage. Inspect exit code, stderr, persisted session and required artifacts. Exit zero or a reassuring
-final response is not acceptance. Missing exit, timeout, cancellation, provider error, truncated output or
+final response is not acceptance. Compare the session's configured model/thinking with the pinned ledger entry;
+an unexpected selection holds advancement. Missing exit, timeout, cancellation, provider error, truncated output or
 uncertain liveness is incomplete. Reconcile/stop the original child before another attempt. Cancellation does
 not guarantee cancellation of remote effects. On restart, read the ledger and original Git/report/PR state;
 this skill does not guarantee unattended survival after terminal/host exit.
