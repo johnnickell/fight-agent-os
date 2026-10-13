@@ -247,6 +247,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00284](00284-TASK.md) | Enroll one shared real mail transport | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | needs-info | [TASK-00040](00040-TASK.md) | — |
 | — | [TASK-00287](00287-TASK.md) | Operate scheduled new-mailbox delivery and recovery | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | needs-info | [TASK-00284](00284-TASK.md), [TASK-00286](00286-TASK.md), [TASK-00274](00274-TASK.md) | — |
 | — | [TASK-00289](00289-TASK.md) | Confirm explicitly and return to fresh login | [TICKET-00069 — Confirm email change explicitly and return to login](../tickets/00069-TICKET.md) | needs-info | [TASK-00288](00288-TASK.md), [TASK-00275](00275-TASK.md), [TASK-00277](00277-TASK.md), [TASK-00287](00287-TASK.md), [TASK-00282](00282-TASK.md), [TASK-00063](00063-TASK.md) | — |
+| — | [TASK-00297](00297-TASK.md) | Manage the testing audience and rollout state for AI template proposals | [TICKET-00073 — Administer immutable Feature settings and safe rollout transitions](../tickets/00073-TICKET.md) | needs-info | [TASK-00036](00036-TASK.md), [TASK-00296](00296-TASK.md) | — |
 
 ## Human Action
 

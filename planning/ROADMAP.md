@@ -110,7 +110,6 @@ the same operation that completes their children.
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00073](tickets/00073-TICKET.md) | Administer immutable Feature settings and safe rollout transitions | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 | [TICKET-00074](tickets/00074-TICKET.md) | Retire only currently unreferenced Features and reintroduce safely | [EPIC-00016](epics/00016-EPIC.md) | ready-for-agent |
 | [TICKET-00075](tickets/00075-TICKET.md) | Establish database-authoritative Agent templates | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |
 | [TICKET-00076](tickets/00076-TICKET.md) | Author and publish reviewed template revisions | [EPIC-00017](epics/00017-EPIC.md) | ready-for-agent |

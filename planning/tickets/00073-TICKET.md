@@ -9,7 +9,7 @@ status: ready-for-agent
 
 ## Problem statement
 
-A stored rollout setting is not a usable management journey. Administrators need safe creation, testing audience
+A stored rollout setting is not a usable management journey. Administrators need safe provisioning, testing audience
 rebinding and OFF/PREVIEW/ON transitions, with current authority and concurrency protection instead of a role
 shortcut, stale checkbox or accidental removal of public availability.
 
@@ -76,7 +76,7 @@ provider/key/credential material and arbitrary infrastructure messages.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00297](../tasks/00297-TASK.md) | Manage the testing audience and rollout state for AI template proposals | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -125,7 +125,34 @@ flag. TICKET-00077 owns actual provider/browser/alternative-entry evidence; reus
 Select the real testing Permission/audience explicitly, without automatic grants or changing the terminal-first
 execution priority. Setting ON is not deployment approval or permission to make a provider call.
 
-The earlier three-TASK draft was not approved. No TASK IDs are allocated here. Re-propose only inspection/
-management and safe status/binding outcomes needed by the real rollout; preserve the unresolved trusted readiness
-and active broken-binding repair questions rather than hiding them behind a fake Feature. Each proposed TASK
-must pass the delivery-value rule in planning/CONVENTIONS.md. No separate demo, manual-create or proof-only TASK.
+The earlier three-TASK draft was not approved. The amendment allocated no TASK IDs; the maintainer subsequently
+approved the single vertical management outcome below. No separate demo, manual-create or proof-only TASK.
+
+### Approved TASK decomposition
+
+[TASK-00297](../tasks/00297-TASK.md) owns the complete audience/status management browser/API path after
+TASK-00036 and TASK-00296, which transitively supply provisioning, preparation, HTTP enforcement and the catalog/
+frame. It includes inspection, the approved `MANAGE_FEATURES` `ADMIN_SAFE` extension initially granted only to
+managed Super Admin, current actor/target/intent checks, both package setters, confirmation and browser invalidation.
+This is one independently reviewable product prerequisite, not separate read-only or policy-infrastructure TASKs.
+
+It is an unranked feature with status `needs-info`: trusted code/target/preparation/applicable-entry rollout
+composition and safe active broken-binding repair remain unqualified. The preparation query is not deployment
+authority; a repair must not require broken pre-state to pass preparation or restore live availability before
+safety checks. Existing protected installation authorization cannot simply accept this ADMIN_SAFE Permission;
+preserve its SUPER_ADMIN_ONLY boundary and implement the distinct management policy without role shortcuts.
+Unknown support holds; no vendor patches, outer transactions or guessed upstream seam.
+
+TICKET-00077 retains real AI admission/provider/browser evidence and the deliberate testing audience. Applicable
+non-HTTP paths consume TASK-00294 without imposing unrelated Agent integration on human-only management. Neither
+completed AI authoring nor this management journey reverse-blocks upstream primitives. TICKET-00074 consumes this
+authority/detail/confirmation for its separate retirement operation. The terminal-first milestone and active work
+remain unchanged. Fifteen of 24 map TICKETs are now decomposed; nine remain, TICKET-00074–00082.
+Next planning operation: `/skill:to-tasks TICKET-00074`; no implementation follows from this approval.
+
+Planning verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed with
+397 records and 310 active. `./bin/build` passed: 459 tests, 3499 assertions, 78 captures, zero violations.
+Evidence: `.runs/build/20261013T024016Z-67998`; log: `.runs/build/ticket-00073-to-tasks.log`.
+Sass deprecations, React-Bootstrap `use client` and >500 kB bundle warnings remain. These are fresh checks of
+planning and the existing repository, not implementation, readiness, browser-management or live AI evidence.
+Independent review and publication remain unperformed; no Feature, Permission or provider operation was enabled.

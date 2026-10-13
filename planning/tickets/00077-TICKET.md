@@ -119,8 +119,9 @@ The maintainer subsequently approved `ai-template-proposals` as the first real F
 flag demonstration. TASK-00290–00296 remain upstream suppliers as applicable; this TICKET's eventual TASKs own
 real product integration and provider evidence. A testing Permission/audience must be deliberately selected and
 qualified, not invented or automatically granted by planning. The separate manual-create browser/API proposal
-under TICKET-00073 is deferred; its TASK decomposition remains unapproved. This amendment creates no TASK,
-changes no execution priority and does not insert AI authoring before the terminal-first Awaiting review milestone.
+under TICKET-00073 is deferred; its revised single-TASK decomposition was subsequently approved below. That
+amendment created no TASK, changed no execution priority and did not insert AI authoring before the terminal-first
+Awaiting review milestone.
 
 Amendment verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed;
 396 records, 309 active, no new IDs. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
@@ -128,3 +129,10 @@ violations. Sass deprecations, React-Bootstrap `use client` and >500 kB chunk wa
 Evidence: `.runs/build/20261013T021935Z-65872`; log: `.runs/build/ai-template-proposals-scope.log`.
 These are fresh planning/existing-repository checks, not Feature/provider/browser runtime evidence. No Feature,
 Permission, provider call or deployment was enabled; independent review and publication remain unperformed.
+
+TICKET-00073 now maps [TASK-00297](../tasks/00297-TASK.md)'s complete management path, including approved
+`MANAGE_FEATURES` authority, protected detail/choices, status/rebinding, confirmation and invalidation. Its trusted
+readiness and active-repair composition remain needs-info. This TICKET consumes that outcome and retains the real
+AI admission/provider/editor integration, deliberate testing audience and all applicable alternative-path evidence.
+Neither the provider journey nor management reverse-blocks reusable suppliers; manual authoring and safe handling
+of admitted requests remain independent of this Feature's availability. No new TASK for this TICKET is allocated.

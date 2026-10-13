@@ -299,4 +299,5 @@
 | [TASK-00294](00294-TASK.md) | Enforce registered Feature checks outside HTTP Actions | ready-for-agent | [TICKET-00071](../tickets/00071-TICKET.md) |
 | [TASK-00295](00295-TASK.md) | Read a complete authenticated Feature catalog | ready-for-agent | [TICKET-00072](../tickets/00072-TICKET.md) |
 | [TASK-00296](00296-TASK.md) | Gate browser Feature presentation with current catalog availability | ready-for-agent | [TICKET-00072](../tickets/00072-TICKET.md) |
+| [TASK-00297](00297-TASK.md) | Manage the testing audience and rollout state for AI template proposals | needs-info | [TICKET-00073](../tickets/00073-TICKET.md) |
 <!-- /planning:records -->

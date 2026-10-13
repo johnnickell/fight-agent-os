@@ -541,10 +541,10 @@ evidence and the full gate; controlled fixtures are not installed dummy product 
 flagged capability is now `ai-template-proposals` under TICKET-00077. Tooling/configuration is validated directly,
 not product-tested.
 
-All new orders remain unranked and active work unchanged. **Fourteen of the map's 24 TICKETs have approved written
-TASK splits; 10 remain, TICKET-00073–00082**, alongside older incomplete Harness/managed review planning.
-Three of EPIC-00016's five TICKETs are decomposed, not implemented. Planning exposed/fetched no catalog, changed
-no UI and enabled no Feature or deployment.
+All new orders remain unranked and active work unchanged. With the management split below, **fifteen of the map's
+24 TICKETs have approved written TASK splits; nine remain, TICKET-00074–00082**, alongside older incomplete
+Harness/managed review planning. Four of EPIC-00016's five TICKETs are decomposed, not implemented. Planning
+exposed/fetched no catalog, changed no UI and enabled no Feature or deployment.
 
 ## Approved real Feature use and delivery-value amendment
 
@@ -561,14 +561,33 @@ as recovery. TICKET-00077 owns real-provider proposal → human prompt/Permissio
 and denied-provider-request evidence across actual supported admission paths.
 
 Declare the actual Feature in product code and use protected OFF provisioning. Defer TICKET-00073's standalone
-manual-create UI/API; its earlier three-TASK draft was not approved and must be revised. TICKET-00080 retains
-honest per-contract accounting for deferred `CreateFeature` exposure; do not silently certify or permanently
-exclude it. No new EPIC, TICKET, TASK, fake Feature or demonstration project is created. TASK-00290–00296 remain
+manual-create UI/API; its earlier three-TASK draft was not approved and is replaced by the single TASK below.
+TICKET-00080 retains honest per-contract accounting for deferred `CreateFeature` exposure; do not silently
+certify or permanently exclude it. That selection created no EPIC, TICKET, TASK, fake Feature or demonstration project. TASK-00290–00296 remain
 upstream without reverse dependencies on the completed AI journey. The testing Permission/audience and rollout
 readiness remain to be qualified, not automatically granted/enabled by this decision.
 
-Planning counts and active priorities are unchanged. The accepted terminal-first TASK through Lead/Engineer to
+That selection changed neither planning counts nor active priorities. The accepted terminal-first TASK through Lead/Engineer to
 Awaiting review remains the first execution milestone; this later product use does not precede or block it.
+
+## Approved rollout-management TASK decomposition
+
+[TASK-00297](../tasks/00297-TASK.md) delivers TICKET-00073 as one complete audience/status management browser/API
+path for `ai-template-proposals`, after TASK-00036 and TASK-00296. It owns the approved `MANAGE_FEATURES`
+ADMIN_SAFE extension initially granted only to managed Super Admin, protected detail/choices, package setters,
+current authorization, revision-bound confirmation and actual catalog invalidation. No separate inspection,
+policy, manual-create or demonstration TASK is introduced.
+
+The TASK is unranked and `needs-info`: trusted code/target/preparation/applicable-entry readiness composition
+and safe active broken-binding repair remain unqualified. Existing preparation is an observation, not deployment
+authority; repair cannot demand that broken pre-state pass preparation or restore live access before safety checks.
+Preserve package transaction ownership and distinct protected installation authority. TICKET-00077 owns real AI
+admission/provider evidence and applicable non-HTTP coverage; neither finished AI authoring nor management
+reverse-blocks reusable suppliers. TICKET-00074 consumes authority/detail/confirmation for separate retirement.
+
+Fifteen of 24 TICKETs now have approved TASK decompositions; nine remain, TICKET-00074–00082. EPIC-00016 is four
+of five decomposed, not implemented. Active work and the terminal-first milestone remain unchanged. Planning
+created no Permission, Feature, UI, provider request or deployment.
 
 ## Approved EPIC handoff
 
@@ -609,9 +628,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00073` for
-[TICKET-00073](../tickets/00073-TICKET.md), revising its unapproved split around `ai-template-proposals`
-management and safe rollout without a standalone manual-create path, then continue remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00074` for
+[TICKET-00074](../tickets/00074-TICKET.md), mapping guarded retirement without creating a premature cleanup
+TASK for `ai-template-proposals`, then continue remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

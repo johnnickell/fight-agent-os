@@ -151,10 +151,10 @@ product tests of text/wiring/tooling. Reuse attributable valid earlier evidence,
 require a failing regression before bug repair. No dummy product Feature or extra proof-only project is needed.
 Missing supported guarantees hold the affected path for separately authorized owner resolution, not vendor patches.
 
-Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00071/00072, three of EPIC-00016's
-five TICKETs now have approved written TASK splits. Fourteen of the map's 24 are decomposed;
-**10 remain, TICKET-00073–00082**, alongside older incomplete Harness/managed review planning.
-Next planning operation: `/skill:to-tasks TICKET-00073`.
+Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00071–00073, four of EPIC-00016's
+five TICKETs now have approved written TASK splits. Fifteen of the map's 24 are decomposed;
+**nine remain, TICKET-00074–00082**, alongside older incomplete Harness/managed review planning.
+Next planning operation: `/skill:to-tasks TICKET-00074`.
 Planning ran no scanner/provision/query, changed no catalog and enabled no Feature or deployment. Implementation/
 worktree choice, independent review, publication and actual target effects remain separate.
 

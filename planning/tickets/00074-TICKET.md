@@ -108,3 +108,10 @@ Qualify actual removal/reintroduction and uncertain-outcome invalidation through
 change, honest absence and current server evaluation. Do not patch browser availability from an event or reuse a
 retired identity; affected data/late results must be fenced. These catalog primitives do not establish deployed
 CURRENT absence or authorize retirement, and neither waits for this completed cleanup journey.
+
+TICKET-00073 now maps [TASK-00297](../tasks/00297-TASK.md)'s complete management authority/detail/confirmation
+and mutation invalidation path, after TASK-00036/TASK-00296. Consume its approved `MANAGE_FEATURES` ADMIN_SAFE
+policy rather than duplicating authorization. Its trusted rollout/active-repair holds are not retirement evidence;
+this TICKET still owns actual CURRENT absence and protection of that observation. No cleanup TASK or removal is
+authorized merely because `ai-template-proposals` has been selected. Fifteen of 24 map TICKETs are decomposed;
+nine remain, TICKET-00074–00082. Next planning operation: `/skill:to-tasks TICKET-00074`.
