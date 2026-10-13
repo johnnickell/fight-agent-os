@@ -184,6 +184,113 @@ engine crash, offline recovery or restoration freshness proof. The recovery copy
 not a qualified separately protected/off-host backup. The encrypted fixture is a file, **not PostgreSQL ordered
 storage**. R1 is advanced, not closed; R2/R3 supervision, accounting and required-check obligations remain open.
 
+## PostgreSQL ordering and replay primitives — 2026-10-13 UTC
+
+This **R1 / AC-1** continuation measures the selected PostgreSQL mechanism with independent client/backend
+sessions. It does not implement a package sink, enroll an Agent or qualify encrypted durable storage. The disposable
+SQL and Python instruments stay under `.runs/tasks/TASK-00138/ordered-storage/` in the authorized worktree; no
+production schema, migration, adapter or product test is added. The prior custody experiment remains separate.
+
+Run `564fe132-f5fc-44d8-b81d-cc43399fb46e`, 21:24:33–21:24:41 UTC, completed **63 scoped observations** on
+PostgreSQL **17.10**, aarch64 Alpine, image
+`sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193`.
+The retained `instrument.py`, `fixture.sql`, `commands.json`, per-session SQL/stdout/stderr, `profile.json` and
+`result.json` record exact inputs, independent observations and cleanup. This is a first successful attempt, not
+a corrected failure. Observation count includes identity/client/cleanup checks, not 63 independent guarantees.
+
+### Measured transaction shape
+
+The fixture separates immutable delivery metadata/receipt/fingerprint from removable material and persistent slot
+high-water. A single `SELECT ... FOR UPDATE` capacity row serializes stage and cleanup, including the same delivery
+ID across different slots. Delivery-ID and slot/order uniqueness provide additional constraints. New entries,
+material, high-water and an eight-entry lifetime reservation commit together. Existing exact retries are resolved
+before checking new-entry capacity; cleanup preserves the entry and reservation rather than forgetting history.
+This deliberately conservative global lock is a qualification mechanism, not a selected production schema or
+throughput claim. Narrower locks require their own consistent lock order and concurrency proof.
+
+Public inert fixture bytes stand in for encrypted material. Metadata equality uses all twelve field names from
+`AgentIssuance::toArray()` at the retained package commit `614c34b189fd1ab73a10ace173e206ce010bb2e3`; the two delivery
+contract documents and that class were freshly matched to the pinned Git blobs. This is not adoption or a claim
+about current releases. The fixture does not call package constructors/services, validate canonical issuance,
+perform actual rotation or authenticate associated data. A SHA-256 fingerprint detects changed fixture bytes;
+it is not a production ciphertext/key design. Opaque receipts are independently generated with PostgreSQL's UUID
+factory, not derived from material, and verification reads binding metadata plus material presence, not bytes.
+
+| Direct probe | Observed outcome |
+|---|---|
+| Two concurrent identical stages | Session B had recorded `pg_blocking_pids` while A held the lock. An independent session saw no uncommitted entry. After A committed, both clients returned the same receipt, with one entry/reservation. |
+| Exact binding and bytes | Changing each of twelve metadata fields denied receipt verification. With the same delivery ID, each of the other eleven field changes and changed bytes returned conflict. Fabricated/swapped receipts also failed. Changing delivery ID denotes another entry, not a same-ID retry. |
+| Arrival order and reassignment | Order 20 arrived after order 30 without lowering high-water. An order-30 different binding was denied; a distinct Agent/caller binding at order 40 advanced the same slot. An older retry retained its original receipt. These are synthetic bindings, not package rotations or authority checks. |
+| Before-commit backend loss | `pg_terminate_backend` killed a held transaction. A new session observed neither its entry nor its reservation; the client exited 2. |
+| Committed result unavailable to caller | `psql` suppressed the receipt to `/dev/null`; an independent session observed the committed entry before its backend was terminated during a subsequent sleep. A fresh retry recovered the exact stored receipt without another reservation. This is controlled result withholding plus real connection loss, **not** packet-level loss during COMMIT or unknown-outcome fault injection. |
+| Last reservation contention | With seven entries retained, A held the eighth while B demonstrably blocked. After commit B returned capacity; eight entries/reservations remained. Existing exact retries still worked at capacity. |
+| Cleanup versus replay | Replay demonstrably blocked behind cleanup, then returned retired. Material was absent, receipt verification failed, and changed-byte replay remained conflict. Full binding, receipt/fingerprint, high-water and all eight reservations survived; cleanup did not reopen capacity. |
+| Material loss and oversize input | Separate material deletion made verification fail and retry unavailable, without reconstructing material. A 257-byte payload exceeded the 256-byte fixture limit before writing. |
+
+At READ COMMITTED, these sampled blocked/unblocked sequences and fresh-session reads establish transaction
+visibility and ordering for this fixture. Three competing sessions were observed waiting on PostgreSQL locks;
+barriers use backend state, not an assumed delay. They do not establish every interleaving, deadlock recovery,
+timeout classification, authority-writer participation or cross-system exactly-once behavior. An old receipt still
+verified before cleanup despite newer slot entries: receipt validity is deliberately **not** current selection,
+activation or signing authority. The real consumer must enforce that separate boundary.
+
+### Isolation, retention and remaining limits
+
+One disposable database container used UID/GID 70, read-only root, dropped capabilities, no-new-privileges,
+network none, no TCP listener/ports, no host binds/socket, disabled Docker logging, 0.5 CPU, 512 MiB memory/no
+extra swap, 64 PIDs, 256 file descriptors and zero core limit. Data used a **256 MiB tmpfs**, with separate
+16 MiB `/tmp`, 1 MiB Unix-socket tmpfs and 16 MiB shared memory. Twenty database connections and 20-second
+statement/idle-transaction timeouts bounded the fixture. Trusted `docker exec` clients used its private Unix socket;
+no Agent/check container received database or Engine authority. Profile limits were inspected, not stress-tested.
+
+`fsync` and `synchronous_commit` were on, but **tmpfs is not power-loss durability**. Backend termination leaves
+the same database server alive; this tmpfs run qualifies no server/engine restart, disk failure, backup, restore or
+independently witnessed incarnation. The one container was removed after matching full ID/owner, its owner inventory
+was empty, and main Agent OS service start times were unchanged. No named volume/network was created; retained
+non-secret scratch is not forensic erasure or quota-qualified host retention.
+
+The eight-entry admission bound and 256-byte payload/2,048-byte binding limits apply only to this synthetic SQL
+path. They do not bound WAL, indexes, maintenance, service/controller metadata or retained host evidence. Permanent
+history cannot grow forever in a finite store: production must deny **new** enrollment/staging at its reserved
+capacity without deleting tombstones or disabling existing recovery. Physical quotas, lifetime policy, storage
+headroom and restart reconciliation remain unqualified; this is not R2 aggregate-accounting closure.
+
+### Persistent-volume restart follow-up
+
+A second profile replaces only the data tmpfs with one owned local named volume and adds controlled database
+container restart/recreation. Run `7c9baac9-fd7a-408d-8a35-4b4812a0ec8b`, 21:29:56–21:30:06 UTC, passed **80 scoped
+observations**, including the preceding ordering/replay matrix and seven continuity observations after each
+restart/recreation. The replacement had a new full container ID and reattached only that same volume. Fresh
+sessions observed the same eight entries, six remaining materials, eight reservations and slot high-waters 50/3;
+original receipts still matched, cleaned delivery stayed retired, missing material stayed unavailable and new
+admission stayed at capacity. Replaying the retained lower-order entry did not lose its original receipt.
+
+The volume initializer alone ran as container root with CHOWN/FOWNER, then retired before PostgreSQL startup.
+It had only the owned data volume, no host bind/socket/network, read-only root, 0.25 CPU, 64 MiB memory/no extra
+swap, 16 PIDs and disabled logging. Database/replacement profiles retain the preceding non-root/resource/network
+controls except that **the named data volume has no hard byte quota**. Tiny fixed input and eight entries bound
+this experiment's requests, not PostgreSQL's physical allocation or future repeated operation. Do not combine the
+first run's 256 MiB tmpfs bound with this run's persistence into a claim that one qualified profile provides both.
+
+The first persistent attempt, `a0e7a185-6440-4c80-ace3-deb720c73518`, failed before schema creation: `pg_isready`
+accepted the image entrypoint's temporary initialization server, then the SQL connection met its shutdown. Its
+exact instrument, error and cleanup remain. The corrected readiness check additionally requires PID 1 to be the
+final PostgreSQL executable before the matrix begins. This is an image-specific startup observation, not general
+production readiness or package/schema availability. Both intentionally terminated clients in the successful
+matrix again exited 2; no unexpected SQL failure occurred in that repeat.
+
+The failed attempt's two containers/one volume and successful repeat's three containers/one volume were removed
+after exact ID/name and owner checks. Final owner inventories were empty; main Agent OS starts were unchanged.
+These are ordinary logical removals, not secure erasure. No daemon/host restart or shared-service mutation occurred.
+Controlled restart and replacement establish retained-volume continuity, **not power-loss/server-crash durability,
+backup independence, restore freshness, encrypted recovery or supported unattended service lifecycle**.
+
+Next R1 proof must compose real encrypted storage, purpose-separated keys, original-byte recovery and protected
+receipts with an independently controlled restore witness and qualified physical storage. Actual package conformance,
+database roles, installer/path/ACL and service lifecycle remain downstream prerequisites. R2 uncertain effects/lifecycle/
+aggregate retention and R3 required-check policy are unchanged. No production readiness or full-TASK acceptance
+follows from these primitives.
+
 ## Disposition and remaining proof
 
 Continue the protected-file candidate without Keychain enrollment. Minimum qualification still needs:
@@ -192,10 +299,11 @@ Continue the protected-file candidate without Keychain enrollment. Minimum quali
    supported automatic service/runtime lifecycle, unsafe-state cache invalidation and recoverable provisioning.
 2. Every issuance-field crypto binding, key-version selection, original-byte-preserving rewrapping and independently
    protected backup/restore. Never decrypt authentication envelopes as delivery recovery or auto-reissue after loss.
-3. Atomic immutable staging and exact durable receipts on independent PostgreSQL sessions: identical retry and lost
-   response, changed tuple/bytes rejection, same-order collision, delayed predecessor and reassignment.
-4. Cleanup retaining permanent tombstones and slot high-water; no replay resurrection. Capacity denies new staging
-   without discarding existing recovery/deduplication history.
+3. Complete encrypted immutable staging and exact durable receipts: the PostgreSQL follow-up measures concurrent
+   retries, binding/order rejection, backend loss and retained-volume restart continuity, not actual package
+   conformance, crash-loss durability, encrypted original-byte recovery or unknown commit outcomes.
+4. Complete cleanup/retention and capacity: the follow-up measures tombstone/high-water preservation and contended
+   entry admission; physical storage quotas, restart accounting and production retention remain unqualified.
 5. Independent incarnation-bound restoration admission and lossless reconciliation. Unknown commits, missing
    keys/receipts or partial reconciliation stay unavailable, not locally asserted readiness.
 
