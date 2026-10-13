@@ -70,12 +70,13 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 
 ## Current planning handoff
 
-The closed vision map still has incomplete Harness/browser **TICKET decomposition** in
-[EPIC-00006's accepted progress and team amendment](epics/00006-EPIC.md#progress). Its Jev and template
-slices cover selected requirements, not the whole EPIC. Under [map-wide phase order](CONVENTIONS.md#map-wide-planning-order),
-reconcile and propose the remaining requirement split with `/skill:to-tickets EPIC-00006` before further
-map-wide TASK decomposition. The requirement owner must approve the proposed split before records are written;
-this navigation pointer creates no new scope or approval. An explicit narrower choice remains valid.
+The closed vision map's original EPIC-00005–00010 destinations now have accepted **TICKET coverage**; see the
+[requirement-phase coverage and next phase](wayfinder/complete-agent-os-vision-map.md#original-map-requirement-phase-coverage-and-next-phase)
+and [EPIC-00010's current handoff](epics/00010-EPIC.md#planning-phase-handoff-and-verification).
+Continue **TASK decomposition** with `/skill:to-tasks TICKET-00085`, then the remaining accepted map TICKETs,
+including TICKET-00083 and TICKET-00086–00109, under [map-wide phase order](CONVENTIONS.md#map-wide-planning-order).
+Each proposed split needs human approval before TASK records are written. This is planning sequence, not
+implementation authority or Board priority; an explicit narrower choice remains valid.
 
 [TASK-00249](tasks/00249-TASK.md) retains its exact Harness resource/model prerequisite-mapping hold;
 existing owners must resolve it, not another generic Wayfinder session. Use the Board for current execution
@@ -119,12 +120,36 @@ the same operation that completes their children.
 
 | EPIC ID | Title | Status |
 |---|---|---|
-| [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | ready-for-agent |
-| [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | ready-for-agent |
+| None | — | — |
 
 ### TICKETs without TASKs
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
 | [TICKET-00083](tickets/00083-TICKET.md) | Deliver managed review through verified PR handoff | [EPIC-00008](epics/00008-EPIC.md) | ready-for-agent |
+| [TICKET-00085](tickets/00085-TICKET.md) | Install and configure the versioned Harness | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00086](tickets/00086-TICKET.md) | Manage versioned Harness resources | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00087](tickets/00087-TICKET.md) | Discover and load trusted first-party Skills | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00088](tickets/00088-TICKET.md) | Resolve immutable Harness session snapshots | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00089](tickets/00089-TICKET.md) | Configure and qualify protected generative providers | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00090](tickets/00090-TICKET.md) | Run and recover authorized durable Agent conversations | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00091](tickets/00091-TICKET.md) | Prepare and explicitly apply structured Planning proposals | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00092](tickets/00092-TICKET.md) | Deliver the browser Planning Agent journey | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00093](tickets/00093-TICKET.md) | Operate the enrolled Runner and bounded dispatch | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00094](tickets/00094-TICKET.md) | Retain and protect immutable execution evidence | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00095](tickets/00095-TICKET.md) | Provide bounded first-party web research | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00096](tickets/00096-TICKET.md) | Expose trustworthy Workflow history and live state | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00097](tickets/00097-TICKET.md) | Inspect and control execution through the sessions Dashboard | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00098](tickets/00098-TICKET.md) | Explain execution usage and completion estimates | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00099](tickets/00099-TICKET.md) | Manage trusted immutable starter releases | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00100](tickets/00100-TICKET.md) | Generate and prepare a fresh local project | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00101](tickets/00101-TICKET.md) | Confirm and recover one durable creation attempt | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00102](tickets/00102-TICKET.md) | Publish the confirmed initial project to GitHub | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00103](tickets/00103-TICKET.md) | Register the created checkout and complete the handoff | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00104](tickets/00104-TICKET.md) | Explain creation failures with bounded support assistance | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00105](tickets/00105-TICKET.md) | Inspect effective repository instructions | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
+| [TICKET-00106](tickets/00106-TICKET.md) | Save and delete instruction files safely | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
+| [TICKET-00107](tickets/00107-TICKET.md) | Prepare bounded AI instruction suggestions | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
+| [TICKET-00108](tickets/00108-TICKET.md) | Publish an instruction change through a recoverable PR | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
+| [TICKET-00109](tickets/00109-TICKET.md) | Synchronize the designated checkout safely | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
 <!-- /planning:frontier -->
