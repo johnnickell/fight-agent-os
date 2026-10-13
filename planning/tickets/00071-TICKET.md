@@ -76,8 +76,8 @@ Approved as area 2 of EPIC-00016's five-TICKET split. Depends on
 [TICKET-00070](00070-TICKET.md)'s authoritative persistence/inventory and
 [TICKET-00010](00010-TICKET.md)'s separately owned Action gate; supplies server truth to
 [TICKET-00072](00072-TICKET.md) and safe enablement to [TICKET-00073](00073-TICKET.md).
-The first real flagged capability will be selected by its actual owner later. No middleware or flag was
-implemented here.
+The maintainer subsequently selected `ai-template-proposals` under TICKET-00077 as the first real flagged
+capability. That owner consumes this enforcement; selection implements no middleware or flag.
 
 TICKET-00070's approved supplier mapping is now TASK-00290 for exact discovery and the single explicit non-HTTP
 registration source, TASK-00291 for qualified shared persistence/reference behavior, and TASK-00292 for fresh
@@ -138,7 +138,7 @@ Each slice owns actual package/PostgreSQL and dispatch integration evidence, saf
 lifetime checks and `./bin/build`. Controlled native-metadata/operation fixtures prove owned reusable contracts,
 not live product endpoints/Tools; directly inspect actual framework/runtime composition and existing unflagged
 paths. No dummy product Feature, duplicate evaluator/registry, proof-only TASK or parent ceremony is needed.
-The first real capability stays its later owner's choice and full product-path evidence; configuration, tooling,
+TICKET-00077 owns `ai-template-proposals` admission and full product-path evidence; configuration, tooling,
 migrations and generated files are validated directly, not product-tested as text/wiring. Confirmed bugs require
 a reproducing failing regression before repair. Record exact package/source/lock and fresh versus reused receipts.
 

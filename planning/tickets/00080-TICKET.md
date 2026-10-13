@@ -41,8 +41,13 @@ expanding acceptance here.
 This requirement owns coverage accounting and the complete-journey readiness assessment, not a second test
 platform, generic certification system or all-EPIC status check. No endpoint-per-package-method rule, browser
 secret console, dummy Feature or proof-only product is introduced. Accurately qualify the reusable Feature
-infrastructure without requiring a specially selected product flag or a special absence-of-live-flag caveat.
-Internal preparation may precede completed qualification; the final external handoff may not.
+infrastructure through its owners and account separately for the selected real `ai-template-proposals` journey
+under EPIC-00017/TICKET-00077. Reuse that owner's real provider/browser/admission evidence rather than introducing
+a special demonstration or second acceptance ceremony. Standalone manual-create UI/API under TICKET-00073 is now
+deferred: provisioning does not qualify `CreateFeature`, and the deferral is not an automatic permanent exclusion.
+Retain its explicit disposition and obtain any required final scope decision before handoff; do not invent a screen
+or TASK merely to fill a coverage row. Internal preparation may precede completed qualification; the final external
+handoff may not.
 
 ## Use cases
 

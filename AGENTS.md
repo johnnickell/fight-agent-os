@@ -6,6 +6,7 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 
 - This is a fresh, independent project. Do not import existing Factory workflows, historical plans, or approvals
 - Planning uses EPIC → TICKET → TASK. Grilling writes an EPIC; decomposition is a separate operation
+- Propose TASKs only for named product outcomes or concrete delivery blockers; defer speculative features and infrastructure demonstrations under planning/CONVENTIONS.md
 - Follow repository terminology when using external planning skills. Do not silently map a TASK to a TICKET
 - Use `.pi/skills/writing-for-agents/SKILL.md` when authoring skills or agent-facing instructions
 - Put fresh Pi skills in `.pi/skills/<name>/SKILL.md`; design their behavior through planning

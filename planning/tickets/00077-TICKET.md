@@ -31,6 +31,25 @@ completed, failed, stale and uncertain states; losing a browser connection never
 resumption uses authorized protected proposal state under the existing Harness ownership, not a new conversation
 platform or persistent browser draft store.
 
+Use `ai-template-proposals` as the first real Feature, approved under EPIC-00016. Gate new proposal requests,
+including deliberate regeneration, at the real HTTP Action and every supported alternative admission path.
+OFF admits no new proposal/provider request; PREVIEW requires the initiating authorized template administrator's
+bound testing Permission ID; ON permits otherwise-authorized administrators. This never grants template-management,
+Agent/tool/provider, disclosure or publication authority. The assisting Agent does not acquire protected human
+management Permissions to satisfy the gate, and shared provider tools are not globally flagged for unrelated work.
+
+Keep human-only editing and publication available at every flag state. Status, result inspection, cancellation
+and qualified recovery of already-admitted attempts retain their ordinary authorization and safe lifecycle; OFF
+is not a retroactive cancellation or a reason to strand paid work. Recovery cannot become a new/regenerated
+proposal or silently duplicate an uncertain provider call. Consume TICKET-00071's registered server boundaries
+and TICKET-00072's availability plus `/me` controls at the actual Generate/Regenerate interaction.
+
+Declare the name in real proposal code and use TASK-00290/00291 discovery/provisioning to create it OFF against
+an explicitly selected existing testing Permission; qualify TASK-00292 preparation before rollout. No seed/demo
+Feature, separate manual-create screen/API or new test product is needed. TICKET-00073 owns authorized status/
+binding management. This TICKET owns the actual integrated rollout evidence and affected alternative-path coverage,
+not a new proof-only TASK or reverse dependency from reusable infrastructure onto completed AI authoring.
+
 Keep human-only editing available and label AI unavailability honestly. Actual provider-assisted editing must be
 qualified before claiming this TICKET delivered; a fixture response or manual fallback is insufficient. Do not
 silently switch providers/models, broaden source disclosure, grant the assisting Agent management Permissions,
@@ -70,6 +89,11 @@ details and arbitrary provider errors out of browser responses, model context, l
   publication attempts cannot expand authority or disclosure. Human approval still undergoes current validation.
 - Delayed responses, concurrent human edits, revocation, cancellation, disconnect and provider failure preserve
   draft ownership and safe recovery without hidden publication, credential exposure or silent provider fallback.
+- `ai-template-proposals` OFF and PREVIEW-ineligible users cannot initiate provider work through HTTP or an
+  alternative admission path. Eligible PREVIEW and ordinary-authorized ON users complete real provider proposal,
+  prompt/Permission editing and explicit publication; the flag never bypasses management or provider authority.
+- Manual editing/publication and authorized status/result/cancellation/recovery remain usable when OFF. Test
+  switching OFF with an admitted request and distinguish safe completion from a fresh paid proposal.
 - Owned proposal/provider/browser tests, direct configured-provider qualification and `./bin/build` pass.
   Reused historical provider receipts and synthetic model output are not fresh assisted-authoring acceptance.
 
@@ -90,3 +114,17 @@ that platform. Apply [ADR 0001](../adr/0001-application-ownership-and-orchestrat
 [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md) and
 [ADR 0004](../adr/0004-client-authority-and-runtime-state.md). No provider call, credential access or AI proposal
 was performed by decomposition.
+
+The maintainer subsequently approved `ai-template-proposals` as the first real Feature instead of creating a
+flag demonstration. TASK-00290–00296 remain upstream suppliers as applicable; this TICKET's eventual TASKs own
+real product integration and provider evidence. A testing Permission/audience must be deliberately selected and
+qualified, not invented or automatically granted by planning. The separate manual-create browser/API proposal
+under TICKET-00073 is deferred; its TASK decomposition remains unapproved. This amendment creates no TASK,
+changes no execution priority and does not insert AI authoring before the terminal-first Awaiting review milestone.
+
+Amendment verification: `./bin/planning-check --write`, `./bin/planning-check` and `git diff --check` passed;
+396 records, 309 active, no new IDs. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations. Sass deprecations, React-Bootstrap `use client` and >500 kB chunk warnings remain.
+Evidence: `.runs/build/20261013T021935Z-65872`; log: `.runs/build/ai-template-proposals-scope.log`.
+These are fresh planning/existing-repository checks, not Feature/provider/browser runtime evidence. No Feature,
+Permission, provider call or deployment was enabled; independent review and publication remain unperformed.

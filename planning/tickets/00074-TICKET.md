@@ -84,9 +84,11 @@ arbitrary scanner/SQL/exception details.
 Approved as area 5 of EPIC-00016's five-TICKET split. Depends on
 [TICKET-00070](00070-TICKET.md)'s exact CURRENT discovery/reference fences and
 [TICKET-00073](00073-TICKET.md)'s management authority/confirmation; respects
-[TICKET-00071](00071-TICKET.md)'s supported runtime registrations. The first live flagged capability remains
-a later explicit owner choice, not an EPIC completion gate. No cleanup chore, deployment or removal was
-performed by decomposition.
+[TICKET-00071](00071-TICKET.md)'s supported runtime registrations. The first real Feature is now
+`ai-template-proposals` under TICKET-00077; its later retirement still needs a separate owner-approved cleanup
+and deployed CURRENT absence, not premature removal to demonstrate this capability. Manual-create UI/API is
+deferred; selected reintroduction uses protected provisioning, without claiming package `CreateFeature` consumer
+qualification. No cleanup chore, deployment or removal was performed by decomposition.
 
 TICKET-00070's approved TASK-00290 now supplies reusable exact-scope discovery; TASK-00291 supplies shared final
 expected-state/reference-write integrity and safe missing-OFF provisioning. This TICKET retains actual complete

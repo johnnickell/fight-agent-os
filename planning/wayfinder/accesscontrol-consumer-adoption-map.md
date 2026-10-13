@@ -104,8 +104,8 @@ frontend visibility. This expands WF-032's admin-only management *reads*, not it
 requirement for current server-side checks. When an ON Feature becomes permanent, a separately planned chore
 removes all code references and deploys their removal **before** guarded record retirement. An empty installed
 catalog is honest; no fabricated Feature or extra proof-only project is required to claim that the reusable
-capability was built. The first real Feature is deliberately selected and integrated by its actual owner, and
-no live Feature use is claimed until then. The separate AI-assisted template-authoring grill produced
+capability was built. The maintainer has now selected `ai-template-proposals` under EPIC-00017/TICKET-00077;
+that owner integrates it and supplies real-use evidence. Selection is not implementation or live enablement. The separate AI-assisted template-authoring grill produced
 [EPIC-00017](../epics/00017-EPIC.md): after the approved initial managed template seeds, Agent templates are
 database-authoritative, including Super Admin-reviewed browser revisions of the starting roles and new roles.
 Publishing a revision does not change existing Agents; one-time Super Admin-confirmed additions-only or full
@@ -506,7 +506,7 @@ entries covered before rollout; TICKET-00074 later removes all these declaration
 separate cleanup/deployment authority. No runtime consumer reverse-blocks its auth/scanner/preparation/MCP supplier.
 Each slice owns affected implementation and actual package/PostgreSQL/framework evidence plus the full gate;
 controlled fixtures are not installed dummy Features/Tools or live-use claims. Tooling/configuration is qualified
-directly, not product-tested as text. The first actual flagged capability remains a later owner choice.
+directly, not product-tested as text. TICKET-00077 now owns the selected first Feature, `ai-template-proposals`.
 
 That split brought the map to thirteen approved TASK decompositions and EPIC-00016 to two of five, without
 enabling middleware, a route, Tool gate, worker, nonce, Feature or deployment.
@@ -538,12 +538,37 @@ second principal, name-to-ID shortcut, mutation replay or instant push/cross-tab
 TICKET-00073 owns management UI/detail/mutations and their invalidation; TICKET-00074 owns removal/reintroduction
 integration. Neither reverse-blocks these primitives. Each slice owns affected actual server/browser/accessibility
 evidence and the full gate; controlled fixtures are not installed dummy product Features/routes. The first real
-flagged capability remains a later owner choice. Tooling/configuration is validated directly, not product-tested.
+flagged capability is now `ai-template-proposals` under TICKET-00077. Tooling/configuration is validated directly,
+not product-tested.
 
 All new orders remain unranked and active work unchanged. **Fourteen of the map's 24 TICKETs have approved written
 TASK splits; 10 remain, TICKET-00073–00082**, alongside older incomplete Harness/managed review planning.
 Three of EPIC-00016's five TICKETs are decomposed, not implemented. Planning exposed/fetched no catalog, changed
 no UI and enabled no Feature or deployment.
+
+## Approved real Feature use and delivery-value amendment
+
+The maintainer selected [EPIC-00017](../epics/00017-EPIC.md) /
+[TICKET-00077](../tickets/00077-TICKET.md)'s actual AI proposal journey for `ai-template-proposals` and rejected
+further TASKs for speculative features or infrastructure demonstrations. New TASKs must name the accepted
+product outcome or concrete delivery blocker under planning/CONVENTIONS.md; necessary safety/verification stays
+with that real path, not an extra proof-only project.
+
+OFF prevents new proposal/regeneration admission; PREVIEW requires ordinary template-management authority plus
+the bound testing Permission; ON retains ordinary authority. Human-only editing/publication and safe status,
+result/cancellation/recovery for admitted attempts remain available when OFF. No new paid request may masquerade
+as recovery. TICKET-00077 owns real-provider proposal → human prompt/Permission editing → explicit publication
+and denied-provider-request evidence across actual supported admission paths.
+
+Declare the actual Feature in product code and use protected OFF provisioning. Defer TICKET-00073's standalone
+manual-create UI/API; its earlier three-TASK draft was not approved and must be revised. TICKET-00080 retains
+honest per-contract accounting for deferred `CreateFeature` exposure; do not silently certify or permanently
+exclude it. No new EPIC, TICKET, TASK, fake Feature or demonstration project is created. TASK-00290–00296 remain
+upstream without reverse dependencies on the completed AI journey. The testing Permission/audience and rollout
+readiness remain to be qualified, not automatically granted/enabled by this decision.
+
+Planning counts and active priorities are unchanged. The accepted terminal-first TASK through Lead/Engineer to
+Awaiting review remains the first execution milestone; this later product use does not precede or block it.
 
 ## Approved EPIC handoff
 
@@ -585,16 +610,17 @@ a release gate for an unrelated starter:
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
 **Next planning operation:** `/skill:to-tasks TICKET-00073` for
-[TICKET-00073](../tickets/00073-TICKET.md), mapping authorized immutable Feature management and safe rollout
-transitions, then continue this map's remaining accepted TICKETs before implementation
+[TICKET-00073](../tickets/00073-TICKET.md), revising its unapproved split around `ai-template-proposals`
+management and safe rollout without a standalone manual-create path, then continue remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.
 
 ## Downstream implementation unknowns (not open Wayfinder decisions)
 
-- The first real Agent OS Feature declaration/runtime use is selected by its actual future capability owner;
-  EPIC-00016 builds the complete reusable lifecycle without inventing a fake Feature or claiming live use.
+- `ai-template-proposals` is selected under EPIC-00017/TICKET-00077. Actual declaration/admission integration,
+  the testing Permission/audience, provider qualification and runtime evidence remain unimplemented; selection
+  does not enable it. EPIC-00016 supplies reusable lifecycle primitives, not a fake Feature.
 - Exact existing/deployed Agent or Feature data outside this repository and the actual protection/restore tools;
   owner inventory and runtime evidence are required before enabling effects, not assumptions from empty local data.
 - Exact UI routes, permission IDs, PostgreSQL schema, sink implementation, worker topology and conformance run

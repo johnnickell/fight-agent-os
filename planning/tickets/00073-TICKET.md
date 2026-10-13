@@ -15,11 +15,13 @@ shortcut, stale checkbox or accidental removal of public availability.
 
 ## Solution and boundaries
 
-Provide accessible Feature Flags list/detail/create/edit controls and bounded HTTP/direct operations using the
-package `CreateFeature`, `GetFeatureById`, `SetFeaturePermission` and `SetFeatureStatus` contracts. Reuse
+Provide accessible Feature Flags list/detail/edit controls and bounded HTTP/direct operations using the
+package `GetFeatureById`, `SetFeaturePermission` and `SetFeatureStatus` contracts for the first real rollout:
+[EPIC-00017](../epics/00017-EPIC.md) / [TICKET-00077](00077-TICKET.md)'s `ai-template-proposals`. Reuse
 [TICKET-00072](00072-TICKET.md)'s complete catalog and authoritative package Permission choices for the admin
 surface; permit separately protected detail/repair projection without creating a competing broad catalog.
-Manual creation chooses a strict immutable name and an existing testing Permission ID and always begins `OFF`.
+TASK-00291 provisions the declared real Feature OFF. Standalone manual-create browser/API work is deferred;
+do not create it just to exercise package `CreateFeature` or demonstrate this management system.
 Show current binding, status, stable ID, positive revision and safe missing-binding repair marker; rebind only
 to a current existing Permission. Every edit uses the current expected revision; a valid no-op still validates
 expected full state and binding, advances no revision and emits no false change fact. A real edit advances once
@@ -34,15 +36,14 @@ leaving ON for PREVIEW/OFF; cancellation dispatches nothing. On stale conflict, 
 and obtain new confirmation if the still-intended transition remains dangerous, never replay blindly.
 
 No rename, generic Permission CRUD or creation, testing-Permission-as-management right, direct SQL bypass,
-role-name grant, automatic cleanup TASK or deletion engine is introduced. The guarded removal operation and
-its confirmation/refusal integration belong to [TICKET-00074](00074-TICKET.md). The empty screen remains
+role-name grant, standalone manual-create screen/API, automatic cleanup TASK or deletion engine is introduced.
+The guarded removal operation and its confirmation/refusal integration belong to [TICKET-00074](00074-TICKET.md). The empty screen remains
 useful; no arbitrary or dummy Feature is seeded for acceptance.
 
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Create manually | Authorized package `CreateFeature` | Strict name uniqueness and existing Permission ID | Package `FeatureCreated` after commit | One new immutable-name OFF record, retaining all unrelated settings/grants |
 | Inspect or repair binding | `SetFeaturePermission` after confirmed authorized selection; N/A for read | Package `GetFeatureById`, existing Permission choices and complete catalog | Package `FeaturePermissionChanged` on actual committed change; none for read/no-op | Exact revision-checked rebind; original Permission reference released safely |
 | Change rollout state | `SetFeatureStatus` with current expected revision and any required confirmation | Fresh Feature, preparation/current-policy and registered enforcement | Package `FeatureStatusChanged` after actual committed change | OFF/PREVIEW/ON setting changes, not action authority or cleanup |
 
@@ -60,10 +61,10 @@ provider/key/credential material and arbitrary infrastructure messages.
 
 ## Acceptance and evidence
 
-- A currently authorized administrator can create OFF, inspect/repair binding and transition settings;
+- A currently authorized administrator can inspect/repair the provisioned Feature's binding and transition settings;
   ordinary Users, stale/revoked authority, testing-Permission holders without management rights and unauthorized
   direct calls are denied. No protected-tier or future scoped administrator privilege is inferred.
-- PostgreSQL checks cover concurrent manual create/provision, status-versus-rebind stale conflicts, full-state
+- PostgreSQL checks cover provisioning-versus-management interactions, status-versus-rebind stale conflicts, full-state
   compare/no-op, Permission-removal winner orders and rollback with authoritative next availability checks.
 - UI gives truthful empty/loading/repair/denial/conflict states; leaving ON requires confirmation and a stale
   result requires refetch/reconfirmation. Enabling cannot claim rollout without complete runtime coverage.
@@ -89,8 +90,8 @@ Feature setting was created here.
 
 TICKET-00070's approved TASK-00291 now supplies qualified shared reference/expected-state persistence and atomic
 provisioning, with TASK-00290's exact inventory and TASK-00292's separate fresh preparation. Consume those
-primitives; this TICKET retains management Permission/actor/intent checks, manual create/status/rebind entry
-integration and its own affected races, including manual create versus provision. No finished UI or management
+primitives; this TICKET retains management Permission/actor/intent checks, status/rebind entry
+integration and its own affected races. Manual creation is deferred by the later product-use amendment below. No finished UI or management
 path reverse-blocks the reference primitive, and this management Permission is not privileged operator setup
 authority. Prepared OFF still needs complete runtime enforcement and separate authorization before rollout.
 
@@ -104,7 +105,27 @@ reverse-blocks either runtime primitive.
 TICKET-00072 now maps TASK-00295's single complete authenticated `GET /api/v1/features` and TASK-00296's volatile
 browser availability/invalidation. Reuse that broad safe catalog for listing; current edit revision, protected
 repair/detail and Permission choices remain this management boundary's responsibility, not an expansion of the
-ordinary-user catalog. Qualify actual create/rebind/status completion and uncertain-outcome invalidation through
+ordinary-user catalog. Qualify actual rebind/status completion and uncertain-outcome invalidation through
 TASK-00296, including late responses and Feature-only private-data fences. A command/event does not supply a new
 availability snapshot; refresh and reauthorize without automatic replay. No management completion reverse-blocks
 either catalog primitive, and no duplicate broad endpoint or authority store is introduced.
+
+### Approved product-use amendment
+
+After challenging the proposed manual-creation slice, the maintainer selected `ai-template-proposals` in
+TICKET-00077 as the first real Feature. This narrows the earlier manual-create requirement: use real declarations
+and protected OFF provisioning; defer the standalone manual-create UI/API rather than adding a demonstration
+TASK. Package `CreateFeature` still exists; this deferral does not claim its consumer qualification or silently
+exclude it from the final coverage accounting owned by TICKET-00080.
+
+Management supports that real rollout: OFF stops new AI proposal admission, PREVIEW restricts it to otherwise-
+authorized administrators with the bound testing Permission, and ON retains ordinary management/provider checks.
+Manual template editing/publication and safe lifecycle handling of admitted requests remain independent of the
+flag. TICKET-00077 owns actual provider/browser/alternative-entry evidence; reusable Feature work stays upstream.
+Select the real testing Permission/audience explicitly, without automatic grants or changing the terminal-first
+execution priority. Setting ON is not deployment approval or permission to make a provider call.
+
+The earlier three-TASK draft was not approved. No TASK IDs are allocated here. Re-propose only inspection/
+management and safe status/binding outcomes needed by the real rollout; preserve the unresolved trusted readiness
+and active broken-binding repair questions rather than hiding them behind a fake Feature. Each proposed TASK
+must pass the delivery-value rule in planning/CONVENTIONS.md. No separate demo, manual-create or proof-only TASK.
