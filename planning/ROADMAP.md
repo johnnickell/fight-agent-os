@@ -68,6 +68,22 @@ separate accepted implementation scope; self-learning awaits trustworthy metrics
 
 The [external architecture study](research/atomic-lessons.md) informs contracts without importing Atomic's runtime.
 
+## Current planning handoff
+
+The closed vision map still has incomplete Harness/browser **TICKET decomposition** in
+[EPIC-00006's accepted progress and team amendment](epics/00006-EPIC.md#progress). Its Jev and template
+slices cover selected requirements, not the whole EPIC. Under [map-wide phase order](CONVENTIONS.md#map-wide-planning-order),
+reconcile and propose the remaining requirement split with `/skill:to-tickets EPIC-00006` before further
+map-wide TASK decomposition. The requirement owner must approve the proposed split before records are written;
+this navigation pointer creates no new scope or approval. An explicit narrower choice remains valid.
+
+[TASK-00249](tasks/00249-TASK.md) retains its exact Harness resource/model prerequisite-mapping hold;
+existing owners must resolve it, not another generic Wayfinder session. Use the Board for current execution
+priority. Refresh this handoff when the accepted planning phase changes; historical selected-slice handoffs
+do not supersede it or prove full decomposition.
+
+## EPIC status
+
 <!-- planning:epics -->
 | EPIC ID | Title | Target | Status |
 |---|---|---|---|

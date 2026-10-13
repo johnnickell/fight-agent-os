@@ -1,5 +1,13 @@
 # TASK Board
 
+## Routing index
+
+Read only current human decisions and active work below; otherwise the first ready TASK.
+Use [lightweight routing](../CONVENTIONS.md#lightweight-work-routing) for validation and evidence limits.
+[Wayfinder status and frontiers](../wayfinder/README.md) answer the decision-routing question.
+Use the [current planning handoff](../ROADMAP.md#current-planning-handoff) for planning phases; do not infer full decomposition from closed maps.
+Read the referenced current section, not the full historical record. Missing handoff/phase needs owner input.
+
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 
 <!-- planning:board -->

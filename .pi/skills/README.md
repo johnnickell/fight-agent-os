@@ -34,6 +34,9 @@ role choices take precedence; exact selections are verified and pinned per deliv
 keep their selection. These are local defaults, not implemented managed Agent profile configuration.
 The read-only [next skill](next/SKILL.md) now recommends `build` by default for implementation and confirmed
 repairs; evidence-only, QA, delivery and planning handoffs retain their appropriate stage commands.
+It uses Board sections, Wayfinder inventory and current handoffs within a bounded read budget. Closed maps
+and task histories are not reread to navigate; missing handoffs are reported for owner reconciliation.
+Receiving workflow instructions and full execution context load when that workflow is invoked.
 Both resolve [target project context](../../docs/engineering/PROJECT_CONTEXT.md) from the invocation checkout
 and its instructions/bindings. Shared skill links stay with the provider; planning, standards, runtime, gates
 and completion rules come from the target. `build` passes that context to every fresh role, so a bound consumer

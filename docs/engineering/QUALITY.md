@@ -76,6 +76,11 @@ AGENTS.md files and linked standards/skills. Consider missing guidance, inaccura
 Place shared rules in one authority and link to it. Keep the root focused on universal requirements and routing;
 add narrower instructions only at demonstrated responsibility boundaries. Do not create a file per directory or
 force every instruction document into a fixed section template.
+For root entry points, put a short **Work routing** section first: exact local Board (or explicit absence),
+Wayfinder index, and bounded routing conventions. Follow it with project guidance loaded for execution.
+Preserve project-specific architecture, lifecycle, quality gates and delivery authority; standardizing entry
+structure does not make downstream projects part of provider skills. Fully generated Boards use navigation
+links in AGENTS/conventions; editable Board introductions may link indexes outside generated blocks.
 Keep content proportionate without a hard word quota or mandatory deletion count. An additions-only change is
 valid when existing guidance remains accurate; an empty relevant diff does not justify inspecting unrelated
 recent commits or inventing updates. Preserve necessary rationale and commands even when discoverable in code.

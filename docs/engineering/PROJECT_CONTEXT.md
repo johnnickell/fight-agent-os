@@ -1,8 +1,22 @@
 # Target project context for shared skills
 
-Resolve this context before selecting work or running a delivery stage. The repository supplying a skill is
+Resolve the applicable context below before selecting work or running a delivery stage. The repository supplying a skill is
 the **provider**; the repository receiving the work is the **target**. They may be the same checkout. A skill's
 location never selects the target, and matching TASK IDs across repositories never establish ownership.
+
+## Routing-only context
+
+For `next` or “What's next?”, resolve the named checkout or invocation Git root, then go directly to its
+AGENTS routing entry and Board. Read only local routing substitutions, validation requirements and the
+Wayfinder status/frontier index. Read selected records' metadata/current handoffs as needed. Resolve Git
+common-directory/worktree identity only when locating the selected TASK's canonical evidence.
+
+Do not load general README, architecture, foundation, full profile/CONTEXT, parents, runtime or delivery
+standards merely to recommend a route. Confirm suggested capabilities through supplied metadata/bindings;
+read their full instructions when invoked. Missing routing inputs need a named owner handoff, not provider
+planning as a fallback. This narrow entry does not waive full context or gates for actual work.
+
+## Execution and substantive planning context
 
 1. Start with the operator's named target/checkout, otherwise the invocation's working directory. Resolve its
    Git root, common directory, registered worktrees, branch and remote. Follow the target's checkout-choice
