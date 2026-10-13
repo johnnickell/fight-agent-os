@@ -128,7 +128,8 @@ as anonymous. New requests/pages/jobs reauthenticate through existing owners; wi
 snapshot without a second nonce transaction. Work already admitted may finish after a later status change.
 Unsupported modes/entries stay unavailable for rollout rather than becoming undocumented bypasses.
 
-TICKET-00072 consumes TASK-00293's human availability without an unrelated Agent dependency. TICKET-00073 must
+TICKET-00072's TASK-00295 now consumes TASK-00293's human availability for the complete catalog;
+TASK-00296 adds browser integration without an unrelated Agent dependency. TICKET-00073 must
 consume every applicable registered runtime boundary before rollout; TICKET-00074's eventual owner cleanup removes
 all declarations, explicit registrations and checks before CURRENT absence can justify retirement. No completed
 Feature gate reverse-blocks authentication, scanner, preparation or MCP primitives.
@@ -141,10 +142,10 @@ The first real capability stays its later owner's choice and full product-path e
 migrations and generated files are validated directly, not product-tested as text/wiring. Confirmed bugs require
 a reproducing failing regression before repair. Record exact package/source/lock and fresh versus reused receipts.
 
-Active TASK-00138/TASK-00226 and existing priorities remain unchanged. Two of EPIC-00016's five TICKETs now have
-approved written TASK splits, not runtime acceptance. Thirteen of the map's 24 TICKETs are decomposed;
-**11 remain, TICKET-00072–00082**, alongside older incomplete Harness/managed review planning.
-Next planning operation: `/skill:to-tasks TICKET-00072`.
+Active TASK-00138/TASK-00226 and existing priorities remain unchanged. With TICKET-00072, three of EPIC-00016's
+five TICKETs now have approved written TASK splits, not runtime acceptance. Fourteen of the map's 24 are decomposed;
+**10 remain, TICKET-00073–00082**, alongside older incomplete Harness/managed review planning.
+Next planning operation: `/skill:to-tasks TICKET-00073`.
 No middleware, route, Tool gate, worker, nonce or Feature was enabled by planning. Implementation/worktree choice,
 independent review, publication, enrollment and actual deployment remain separate.
 

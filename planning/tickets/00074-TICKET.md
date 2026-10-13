@@ -100,3 +100,9 @@ TICKET-00071 now maps TASK-00293's native HTTP declarations and TASK-00294's reg
 checks. Actual later cleanup must remove every applicable declaration, explicit registration and runtime check,
 not just a route Attribute or Tool-list entry. Those gates do not qualify complete CURRENT absence, deploy the
 cleanup or revoke already-admitted work; this TICKET retains that separate operational/retirement boundary.
+
+TICKET-00072's TASK-00295/00296 now supply complete catalog observation and volatile browser invalidation.
+Qualify actual removal/reintroduction and uncertain-outcome invalidation through those owners, preserving stable-ID
+change, honest absence and current server evaluation. Do not patch browser availability from an event or reuse a
+retired identity; affected data/late results must be fenced. These catalog primitives do not establish deployed
+CURRENT absence or authorize retirement, and neither waits for this completed cleanup journey.

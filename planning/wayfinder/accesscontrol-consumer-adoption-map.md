@@ -508,10 +508,42 @@ Each slice owns affected implementation and actual package/PostgreSQL/framework 
 controlled fixtures are not installed dummy Features/Tools or live-use claims. Tooling/configuration is qualified
 directly, not product-tested as text. The first actual flagged capability remains a later owner choice.
 
-All new orders remain unranked and active work unchanged. **Thirteen of the map's 24 TICKETs have approved written
-TASK splits; 11 remain, TICKET-00072–00082**, alongside older incomplete Harness/managed review planning.
-Two of EPIC-00016's five TICKETs are decomposed, not implemented. Planning enabled no middleware, route, Tool
-gate, worker, nonce, Feature or deployment.
+That split brought the map to thirteen approved TASK decompositions and EPIC-00016 to two of five, without
+enabling middleware, a route, Tool gate, worker, nonce, Feature or deployment.
+
+The maintainer subsequently approved [TICKET-00072](../tickets/00072-TICKET.md)'s two paths:
+[TASK-00295](../tasks/00295-TASK.md) reads a complete authenticated Feature catalog after TASK-00293;
+[TASK-00296](../tasks/00296-TASK.md) gates browser Feature presentation with current catalog availability after
+TASK-00295 and TASK-00051. Both are unranked features, ready behind blockers, without an Agent runtime dependency.
+
+One authenticated `GET /api/v1/features` composes package listing/availability for all signed-in Users, not just
+Dashboard/testing/management Permission holders. Return one bounded complete response with explicit total and
+completeness, all OFF records and safe identities/settings/original binding IDs/nullable names/repair marker and
+server availability. No client paging/filter/actor input, whole management-View serialization or edit revision.
+Qualified missing binding is unavailable; inconsistent IDs/state, outages and uncertain completeness fail the read.
+
+The current repository's separate row/count queries and later binding/availability reads need a qualified coherent
+boundary. TASK-00295 owns it against actual writers using existing canonical connection/reference ownership,
+not count equality, an assumed all-writer fence, stale snapshot or a new global catalog store. Preserve fresh
+READ COMMITTED semantics and bounded resource/lock lifetime; no GET writes/repair, partial success or held browser
+transaction. Establish finite row/page/query/byte/time limits and fail safely on overflow. Complete-empty is valid.
+
+Browser integration uses one volatile private-data owner with the sole `/me` source, existing exact ordinary
+Permission evaluation and context/catalog-generation fences. Gate outlets/loaders/navigation/controls/forms and
+activation with current server availability. At most 60 monotonic seconds from request start, additionally bounded
+by `/me` authority, governs freshness. Expiry/resume/invalidation retires affected data/late results before bounded
+refetch; Feature-only invalidation also fences its dependent data/drafts. No persistence, broadcast authority,
+second principal, name-to-ID shortcut, mutation replay or instant push/cross-tab consistency is claimed.
+
+TICKET-00073 owns management UI/detail/mutations and their invalidation; TICKET-00074 owns removal/reintroduction
+integration. Neither reverse-blocks these primitives. Each slice owns affected actual server/browser/accessibility
+evidence and the full gate; controlled fixtures are not installed dummy product Features/routes. The first real
+flagged capability remains a later owner choice. Tooling/configuration is validated directly, not product-tested.
+
+All new orders remain unranked and active work unchanged. **Fourteen of the map's 24 TICKETs have approved written
+TASK splits; 10 remain, TICKET-00073–00082**, alongside older incomplete Harness/managed review planning.
+Three of EPIC-00016's five TICKETs are decomposed, not implemented. Planning exposed/fetched no catalog, changed
+no UI and enabled no Feature or deployment.
 
 ## Approved EPIC handoff
 
@@ -552,9 +584,9 @@ a release gate for an unrelated starter:
    Starters can adapt independently; no starter-source edits, certification, release, all-five gate or
    modification of [EPIC-00009](../epics/00009-EPIC.md)'s per-starter eligibility.
 
-**Next planning operation:** `/skill:to-tasks TICKET-00072` for
-[TICKET-00072](../tickets/00072-TICKET.md), mapping the complete authenticated Feature catalog and fail-closed
-browser availability, then continue this map's remaining accepted TICKETs before implementation
+**Next planning operation:** `/skill:to-tasks TICKET-00073` for
+[TICKET-00073](../tickets/00073-TICKET.md), mapping authorized immutable Feature management and safe rollout
+transitions, then continue this map's remaining accepted TICKETs before implementation
 selection. This authored planning order does not change the TASK Board's active work or execution
 priority. EPIC publication, independent review, hosted checks and starter maintenance remain separate from this
 decision map.

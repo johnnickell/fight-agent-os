@@ -100,3 +100,11 @@ for unrelated Agent integration. Keep unknown/missing coverage a hold; ON cannot
 These gates reread current settings and original Permission IDs while retaining request-principal snapshots;
 setting changes affect subsequent explicit checks, not retroactive cancellation. No management journey
 reverse-blocks either runtime primitive.
+
+TICKET-00072 now maps TASK-00295's single complete authenticated `GET /api/v1/features` and TASK-00296's volatile
+browser availability/invalidation. Reuse that broad safe catalog for listing; current edit revision, protected
+repair/detail and Permission choices remain this management boundary's responsibility, not an expansion of the
+ordinary-user catalog. Qualify actual create/rebind/status completion and uncertain-outcome invalidation through
+TASK-00296, including late responses and Feature-only private-data fences. A command/event does not supply a new
+availability snapshot; refresh and reauthorize without automatic replay. No management completion reverse-blocks
+either catalog primitive, and no duplicate broad endpoint or authority store is introduced.

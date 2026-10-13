@@ -74,7 +74,8 @@ responses; client guarding never grants server access.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00295](../tasks/00295-TASK.md) | Read a complete authenticated Feature catalog | ready-for-agent |
+| [TASK-00296](../tasks/00296-TASK.md) | Gate browser Feature presentation with current catalog availability | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -91,3 +92,72 @@ semantics; consume it without an unrelated dependency on TASK-00294's Agent/non-
 rereads settings/bindings on every call but uses the immutable request principal. This TICKET owns complete
 catalog composition, safe repair presentation and browser invalidation, not another evaluator, principal source
 or runtime authorization owner. Operational failures cannot become empty catalogs or policy false.
+
+### Approved TASK decomposition
+
+The maintainer approved two independently reviewable paths:
+
+| TASK | Outcome | Blockers |
+|---|---|---|
+| [TASK-00295](../tasks/00295-TASK.md) | Read a complete authenticated Feature catalog | TASK-00293 |
+| [TASK-00296](../tasks/00296-TASK.md) | Gate browser Feature presentation with current catalog availability | TASK-00295, TASK-00051 |
+
+Both are unranked features, ready behind listed blockers. TASK-00294's Agent runtime is not a prerequisite.
+TASK-00295 owns the real `GET /api/v1/features` read for all currently authenticated Users, without Dashboard,
+testing or management Permission requirements. It composes package `ListFeatures` and `FeatureAvailability`
+through a justified complete-catalog Application operation, not another evaluator, renamed query or public gate.
+
+The approved protocol is one bounded complete response, not browser-managed paging. Return explicit complete/count
+metadata only after buffering and validating every internal page and item. Include OFF and safe Feature identity,
+name, status, original testing Permission ID/nullable name, missing-binding marker and server Boolean. Do not
+serialize the management View wholesale or expose its edit revision/private internals. No caller-selected actor,
+filter, sort, page or binding is accepted. Choose and qualify finite row/page/query/byte/time/lock-wait limits before
+exposure; overflow or failure produces a safe error, not a success prefix, truncation or an empty substitute.
+
+Inspected `PostgresFeatureRepository::getAll()` fetches rows and count separately; the package handler then resolves
+Permissions and availability rereads settings/bindings. Stable counts/digests alone cannot prove complete enumeration
+under concurrent insert/delete. TASK-00295 owns a bounded coherent read boundary through existing canonical
+connection/reference ownership, including actual Feature/Permission writers and cleanup after failures. The current
+Permission add path does not acquire the fence used by replace/remove; do not assume complete writer participation.
+Preserve READ COMMITTED/fresh-per-call semantics without a stale snapshot, hidden transaction, new global epoch or
+cross-request held cursor. This is an unqualified catalog guarantee, not a reproduced storage defect.
+
+A narrowly established missing binding may retain the original ID, null name and repair marker with false
+availability; mismatched IDs, invalid reconstruction, vanished/reintroduced identities, outages and indeterminate
+completeness fail the read. Never blanket-map arbitrary exceptions to false, invent a same-named replacement or
+repair state on GET. An observation uses the admitted immutable principal, not a new grant or an atomic snapshot
+with a separate `/me` request. Actual runtime operations still enforce current authority independently.
+
+TASK-00296 mounts the production catalog service in the authenticated frame and keeps its private server data
+within the existing volatile context/generation lifecycle. `/me` remains the sole ordinary-Permission/principal
+source. Decode complete responses atomically, combine server availability with the existing exact Permission
+evaluator, and guard outlets/loaders, navigation, controls/forms and activation callbacks. Missing required Features
+fail closed; unflagged/public paths retain their own semantics without a new private-catalog prerequisite.
+
+Freshness is at most 60 monotonic seconds from request start and cannot outlive current `/me` authority. Expiry,
+resume/clock discontinuity, refresh, logout, context/authority or Feature invalidation removes usable presentation
+and dependent private data, fences old successes/errors and permits only bounded current-context refetch/retry.
+A Feature-only invalidation must also retire its dependent data/drafts even if the principal scope is unchanged.
+Safe intended-route restoration rechecks both authorities. Cross-tab signals carry bounded invalidation intent,
+not settings/availability/identity; no new push bus, persistence, instant consistency or mutation replay is promised.
+
+TICKET-00073 consumes the single catalog and owns management UI, protected detail/repair and actual mutation
+invalidation; TICKET-00074 owns actual removal/reintroduction integration. They refresh affected evidence without
+reverse-blocking these primitives. No dummy Feature/flagged product route, duplicate management page or final
+proof-only TASK is introduced. Controlled component/contract fixtures are not live rollout evidence. Each slice
+owns actual package/PostgreSQL/HTTP or browser/accessibility behavior and `./bin/build`; tooling/configuration is
+validated directly. Confirmed bugs need reproducing failing regressions before repair.
+
+Active TASK-00138/TASK-00226 and existing priorities remain unchanged. Three of EPIC-00016's five TICKETs now
+have approved written TASK splits, not implementation acceptance. Fourteen of the map's 24 are decomposed;
+**10 remain, TICKET-00073–00082**, alongside older incomplete Harness/managed review planning.
+Next planning operation: `/skill:to-tasks TICKET-00073`.
+Planning exposed no endpoint, fetched no catalog, changed no UI and enabled no Feature. Implementation/worktree
+choice, independent review, publication and runtime/deployment effects remain separately authorized.
+
+Decomposition verification: `./bin/planning-check --write` and `./bin/planning-check` passed with 396 records,
+309 active; `git diff --check` passed. `./bin/build` passed with 459 tests, 3499 assertions, 78 captures and zero
+violations. Repetitive Sass deprecations, React-Bootstrap `use client` bundling and >500 kB chunk warnings remain.
+Evidence: `.runs/build/20261013T015846Z-63763`; summary log: `.runs/build/ticket-00072-to-tasks.log`.
+These validate planning and the existing repository, not future catalog consistency, authenticated endpoint,
+browser authority integration or live Feature use. Independent review and publication remain unperformed.

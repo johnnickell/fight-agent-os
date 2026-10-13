@@ -119,7 +119,7 @@ TICKET-00065's accepted TASK-00266 now consumes TASK-00247's actual Explorer res
 Project Manager browser journey; TASK-00267–00272 integrate other owned roles without becoming prerequisites
 of manual use or clearing its remaining host/session holds.
 
-Next planning operation: `/skill:to-tasks TICKET-00072`, mapping the complete Feature catalog and browser availability;
+Next planning operation: `/skill:to-tasks TICKET-00073`, mapping authorized Feature management and safe rollout;
 then continue the remaining map TICKET decompositions. Worktree selection, implementation, real
 qualification, independent review, publication and operational enrollment remain separately authorized.
 

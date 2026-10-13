@@ -297,4 +297,6 @@
 | [TASK-00292](00292-TASK.md) | Inspect fresh candidate preparation against the intended target | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
 | [TASK-00293](00293-TASK.md) | Guard matched HTTP Actions with current Feature availability | ready-for-agent | [TICKET-00071](../tickets/00071-TICKET.md) |
 | [TASK-00294](00294-TASK.md) | Enforce registered Feature checks outside HTTP Actions | ready-for-agent | [TICKET-00071](../tickets/00071-TICKET.md) |
+| [TASK-00295](00295-TASK.md) | Read a complete authenticated Feature catalog | ready-for-agent | [TICKET-00072](../tickets/00072-TICKET.md) |
+| [TASK-00296](00296-TASK.md) | Gate browser Feature presentation with current catalog availability | ready-for-agent | [TICKET-00072](../tickets/00072-TICKET.md) |
 <!-- /planning:records -->

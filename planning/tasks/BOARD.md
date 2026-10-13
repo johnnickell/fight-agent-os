@@ -204,6 +204,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00292](00292-TASK.md) | Inspect fresh candidate preparation against the intended target | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | [TASK-00291](00291-TASK.md) | — |
 | — | [TASK-00293](00293-TASK.md) | Guard matched HTTP Actions with current Feature availability | [TICKET-00071 — Enforce current Feature availability at every registered entry](../tickets/00071-TICKET.md) | ready-for-agent | [TASK-00117](00117-TASK.md), [TASK-00292](00292-TASK.md) | — |
 | — | [TASK-00294](00294-TASK.md) | Enforce registered Feature checks outside HTTP Actions | [TICKET-00071 — Enforce current Feature availability at every registered entry](../tickets/00071-TICKET.md) | ready-for-agent | [TASK-00293](00293-TASK.md), [TASK-00245](00245-TASK.md) | — |
+| — | [TASK-00295](00295-TASK.md) | Read a complete authenticated Feature catalog | [TICKET-00072 — Show a complete authenticated Feature catalog and availability](../tickets/00072-TICKET.md) | ready-for-agent | [TASK-00293](00293-TASK.md) | — |
+| — | [TASK-00296](00296-TASK.md) | Gate browser Feature presentation with current catalog availability | [TICKET-00072 — Show a complete authenticated Feature catalog and availability](../tickets/00072-TICKET.md) | ready-for-agent | [TASK-00295](00295-TASK.md), [TASK-00051](00051-TASK.md) | — |
 
 ## Needs Info
 
