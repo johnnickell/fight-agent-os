@@ -44,6 +44,36 @@ content digest when retained; do not fabricate quotations or confuse a search sn
 Reused evidence remains historical with current access checks, never reported as a fresh retrieval. Stop/cancellation
 and uncertain provider outcomes retain actual original correlation and bounded recovery, not a promise of no billing.
 
+### Required Jev gate before web-content ingestion
+
+Screen external web content through the shared typed Jev capability in [TICKET-00037](00037-TICKET.md) before
+releasing it to the working Agent. Apply the gate to search titles/snippets, retrieved page content and extracted
+link labels, including every separately authorized follow-up page/subpage. Artifact reads, cached results and
+resumed context must not bypass admission. Bind screening to the exact content representation released, its digest,
+origin and current policy; changed content or policy requires a new evaluation. Retained content remains untrusted.
+
+Use a protected, versioned question/rubric asking whether the supplied web content contains a likely prompt-injection
+attempt. Treat that content as untrusted evaluator input, never instructions or executable tools. Return a bounded
+typed judgment with explicit uncertainty through the shared evaluator; PHP owns the admission decision. Define and
+qualify this consumer's conservative thresholds before activation; do not reuse the file-relevance 0.70 threshold
+or confuse Yes probability with classification confidence. A valid negative that satisfies the admission policy
+may release only the evaluated content. A likely injection, uncertain/incomplete answer, refusal, invalid result,
+timeout, unavailable Jev or exhausted budget withholds the content and returns a safe reason without echoing it.
+Do not silently downgrade to unscreened delivery or rephrase/retry until the material passes.
+
+Authorize disclosure to Jev separately from retrieval and reuse protected provider access, strict response
+validation, bounded input/time/concurrency/spend and cancellation from the shared capability. Never silently
+truncate an oversized page and mark the whole page screened. Any chunked policy must cover every released segment
+and qualify context-spanning attacks within bounded aggregate work; otherwise return unsupported/incomplete.
+The evaluator has no tool or permission-granting authority. Screening can miss attacks or flag benign material;
+passing never certifies safety or weakens SSRF, disclosure, tool, filesystem or Workflow restrictions.
+
+Keep a bounded, access-controlled audit trail linking the invoking human/Agent, Workflow/assignment, authorized
+query/retrieval and redirect chain, source digest, evaluator/rubric/policy versions, coverage, admission decision,
+failure category and available usage. Minimize sensitive query/URL fields; exclude raw hostile bodies, credentials
+and private content from ordinary logs, receipts and denial responses. Auditing does not authorize additional
+retention or disclosure. Reuse the first-party broker and shared evaluator, not a second Jev client or authority model.
+
 Exclude arbitrary third-party MCP, direct child credentials, generic web crawling/browser automation, unrestricted
 network, another search-provider platform, autonomous work selection and a demonstration-only research screen.
 This is the accepted research seam for useful scoped work, not a prerequisite on every TASK that needs no web access.
@@ -54,6 +84,7 @@ This is the accepted research seam for useful scoped work, not a prerequisite on
 |---|---|---|---|---|
 | Search public references | N/A — search is an application Query, not a Planning mutation | Bounded authorized web search with current context | Sanitized operational/usage observations, not accepted Planning or Workflow transitions | Protected external request and compact attributable results; possible provider cost |
 | Retrieve a selected page | N/A — retrieval is an independently authorized Query | Exact bounded URL request with checked resolved destinations | Safe retrieval/coverage observations, not authority-bearing events | Bounded external read; no arbitrary proxy or follow-up execution |
+| Screen web content before release | Internal bounded Jev evaluation; no permission or Workflow mutation | Typed injection judgment and deterministic admission outcome | Redacted source/policy-bound screening and usage observations | Separately authorized evaluator disclosure/cost; withheld content never reaches the working Agent |
 | Retain large useful evidence | Existing Artifact admission/verification operation | Current content identity, visibility and limits | Existing committed Artifact facts | Private immutable evidence reference without raw payload in events |
 | Inspect availability or original result | N/A — read-only status | Safe tool/provider availability and authorized retained result | N/A — inspection does not retry or invoke a provider | Honest denial/unavailable/partial status and provenance |
 
@@ -78,6 +109,14 @@ or audit uses the canonical transaction boundary with external calls outside it.
   permission alone cannot retrieve a page, and content cannot grant further tools or instruct policy changes.
 - Actual HTTP adapter behavior covers redirect/DNS/address SSRF boundaries, response/decompression/time limits,
   unavailable/partial results and secret-safe diagnostics. Use controlled safe targets, never production attack probes.
+- Search and retrieval release no external content before the mandatory Jev gate admits the exact delivered
+  representation. Follow-up pages, link labels, private Artifact reads and cached/resumed evidence cannot bypass it.
+  Changed source/policy invalidates admission; suspicious, uncertain, partial, failed or unavailable screening holds
+  content without leaking it through errors, logs or alternate tools. Protected receipts retain attribution and usage.
+- Qualify the versioned rubric and thresholds with bounded benign references, quoted attack examples and adversarial
+  web content, including attempts to influence the evaluator itself. Report false positives, missed detections and
+  coverage limits honestly. Controlled outcomes verify admission/failure behavior; they do not establish live
+  detection accuracy. Missing disclosure authority or unqualified screening keeps web-content delivery unavailable.
 - Large evidence is private and digest-bound; unknown retrieval/usage and historical reuse are labelled honestly.
   Owned application/adapter tests, directly authorized provider/network qualification and `./bin/build` pass.
   Doubles test fault contracts, not live Brave support; no HTTP-library, configuration or sandbox-tool tests.
@@ -102,3 +141,13 @@ Consume exact early contracts from [TICKET-00061](00061-TICKET.md), [TICKET-0008
 TICKET-00043 may compose these operations only under the same caller authority; Jev is not a privileged principal.
 Provider enrollment/live calls need separate authorization and qualified limits. No API key, MCP connection,
 retrieval, disclosure or implementation TASK is created by this planning approval.
+
+### Approved web-content screening amendment — 2026-10-13
+
+John approved mandatory Jev prompt-injection screening for this web-research capability, with an independently
+committed amendment in the existing planning worktree. This accepts the web-specific gate previously only a candidate
+in EPIC-00006; it does not require universal tool-result screening or change the earlier Harness milestone.
+At decomposition, bind the web gate to TICKET-00037's qualified evaluator and the production first-party authority/
+broker contracts; local Pi readiness alone does not prove managed-service availability. Settle the rubric, thresholds,
+coverage and unavailable behavior before activation. No TASK allocation, implementation, provider call or runtime
+activation is performed by this amendment.
