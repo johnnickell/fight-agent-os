@@ -3,7 +3,8 @@
 PHP `OpenApi\Attributes` are the single authored OpenAPI **3.0.3** source. TASK-00153 replaces the former
 handwritten `docs/api/openapi.yaml`; no independently maintained YAML or tracked generated specification remains.
 TASK-00021's YAML receipts are historical evidence, not the current input. The document describes **only
-`GET /api/v1/auth/csrf` and the public-safe `GET /api/v1/validations/{form_name}`**. See
+`GET /api/v1/auth/csrf`, the public-safe `GET /api/v1/validations/{form_name}`, and authenticated
+`GET /api/v1/me`**. See
 [validation metadata](VALIDATIONS.md) for its explicit private-artifact export, read and future form-registration
 contract. Its `info.version: 0.1.0` labels the representative contract, not an authentication release.
 
@@ -139,7 +140,7 @@ When implementing an API operation:
    check and the canonical build; review the operation inventory and hashes before handing off.
 
 Shared routing responses and mapper-only schemas are not operations. The public-safe validation read has a
-separate security boundary from protected Swagger. It is the second actual operation in this contract; no
+separate security boundary from protected Swagger. `/me` adds authenticated identity, not a catalog read; no
 separate specification is introduced. The migration makes object types inferred by the
 generator explicit in the output of existing `allOf` object constraints; their accepted real response shapes
 are unchanged.
@@ -169,9 +170,39 @@ Bootstrap accepts no body, Content-Type or query. It creates/reuses an HttpOnly 
 short-lived MAC proof, not authentication. Origin is optional but exact when present; Fetch Metadata is optional
 but must be `same-origin` when present. These are current GET semantics, not mutation exemptions.
 
+## Matched-Action security (TASK-00117)
+
+Every registered API-v1 Action uses `Class:handle` and declares exactly one class-level access mode:
+argument-free `#[Authenticated]`, explicitly approved argument-free `#[PublicAccess]`, or one or more
+`#[RequiresPermission('CATALOG_NAME')]` declarations (all required). Missing, conflicting, malformed,
+unsupported-target and unknown catalog declarations fail closed as sanitized server errors before Action
+construction. Use final nonstatic Actions. Access metadata stays on the class; source/Validation and operation
+attributes stay on `handle`, following the ordering above.
+
+The only public allowlisted Action identities are `CsrfBootstrapAction` and `ReadValidationAction`.
+Their own origin/cookie/input/catalog controls remain mandatory. Credential-flow Actions are not registered;
+adding a public exception requires the owning approved endpoint and an explicit identity allowlist change,
+never a URL pattern or a blanket group bypass. Swagger, other API routes and `/mcp` gain no exception.
+
+Slim runs failure handling, routing, group security, input validation, endpoint controls, then the selected
+Action. Security reflects only the matched declaration, authenticates with TASK-00044's consumer, creates
+one request-local package `CurrentPrincipalProvider`, and resolves exact current role/permission references
+before construction. The immutable package `SecurityContext` supplies the reusable conjunctive
+`PermissionGuard`. Never put the caching principal provider in the shared container. HTTP permission
+checks are early gates, not replacements for application/package self, target, tier, grant or audit policy.
+
+`GET /api/v1/me` needs authentication, not `VIEW_DASHBOARD`. It dispatches package `GetUserById` and
+maps its safe `UserView` plus current authority to JSend data with exactly `user_id`, `email`, sorted
+`roles` and sorted `permissions` name lists. It returns no-store with safe correlation, no cookie and no
+token/session/grant/password material. Real-route PostgreSQL tests prove anonymous/invalid/stale/revoked
+refusal before construction/query work and fresh permissions/session state on successive requests.
+Permission conjunction is proven directly at the guard boundary. No real permission-protected operation
+is registered yet: its HTTP 403/allow/no-dispatch matrix belongs to the first owning consumer, not a fixture
+route. Route and method misses retain 404/405; root/web and future independent MCP remain outside this group.
+
 The reusable `AccessBearer` scheme describes the implemented **memory-only access-token boundary**:
 pinned HS256, exact claims and times, bounded keys, strict single-header extraction and per-request PostgreSQL
-user/session/version resolution. No protected operation is registered yet; the public reads remain public.
+user/session/version resolution. `/me` is protected; the two approved public reads remain public.
 See [configuration and integration](../engineering/ACCESS_TOKENS.md). Opaque refresh
 credentials are browser-managed HttpOnly cookies; their eventual exact cookie name and operations are not
 invented here. `x-future-browser-security` retains the accepted cookie/mutation policy from
@@ -180,7 +211,7 @@ manual refresh credentials, and no credential examples are published.
 
 The generic `ValidationFail` dictionary describes supported dotted snake_case paths, which OpenAPI 3.0 cannot
 constrain by key name. Bootstrap narrows this to `body` or `cookie`. No body-bearing operation exists yet, so
-HTTP dotted-field matrices and authenticated 401/409/422 journeys remain deferred to their owning TASKs.
+HTTP dotted-field matrices and mutation 409/422 journeys remain deferred to their owning TASKs.
 Schema checks do not prove MAC correctness, server authorization or a complete authentication journey;
 focused security tests cover CSRF and access-token policy; package-created session integration proves the
 access-token middleware without adding a fake HTTP endpoint.

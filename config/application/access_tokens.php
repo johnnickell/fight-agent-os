@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 use App\Adapter\Http\Api\Auth\BearerCredential;
 use App\Adapter\Http\Middleware\Api\Auth\AccessTokenAuthentication;
+use App\Adapter\Http\Middleware\Api\Auth\ApiActionSecurity;
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Adapter\Security\AccessToken\AccessKeyring;
 use App\Adapter\Security\AccessToken\SystemAccessClock;
+use App\Application\Authorization\PermissionGuard;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Auth\Security\TokenDecoder;
 use Fight\Common\Application\Auth\Security\TokenEncoder;
@@ -49,6 +54,25 @@ return static function (Container $container): void {
             $container->get(AuthenticateAccessToken::class)
         )
     );
+
+    $container->set(AuthoritativePrincipalResolver::class, static fn(
+        Container $container
+    ): AuthoritativePrincipalResolver => new AuthoritativePrincipalResolver(
+        $container->get(UserRepository::class),
+        $container->get(RefreshSessionRepository::class),
+        $container->get(RoleRepository::class),
+        $container->get(PermissionRepository::class),
+        $container->get(SystemAccessClock::class)
+    ));
+    $container->set(ApiActionSecurity::class, static fn(
+        Container $container
+    ): ApiActionSecurity => new ApiActionSecurity(
+        new BearerCredential(),
+        $container->get(AuthenticateAccessToken::class),
+        $container->get(AuthoritativePrincipalResolver::class),
+        $container->get(PermissionRepository::class),
+        new PermissionGuard()
+    ));
 
     // Fail at boot in every environment; public routes never bypass invalid signing configuration.
     $container->get(AccessKeyring::class);

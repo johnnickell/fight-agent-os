@@ -63,10 +63,14 @@ requires active lifecycle, owned usable session, matching token/user/session ver
 than session creation. It rechecks token expiry after store access. Store failure denies without preserving
 SQL/exception chains. It returns package `AuthenticationContext` without permission projection.
 
-Attach `AccessTokenAuthentication` only to an approved protected pipeline **inside** `ApiFailureMiddleware`.
-It overwrites the request's `AuthenticationContext::class` attribute only after successful validation, never a
-shared mutable singleton. No protected operation is registered by TASK-00044. TASK-00117 owns route metadata,
-JWT-by-default guarding and authoritative permission projection; login/refresh/logout belong to their TASKs.
+TASK-00044's standalone `AccessTokenAuthentication` remains available for explicitly protected pipelines
+**inside** `ApiFailureMiddleware`. TASK-00117's registered API-v1 group uses `ApiActionSecurity` with the same
+extractor/authentication service, then constructs a fresh package `CurrentPrincipalProvider` per protected
+request. It overwrites authentication/current-principal/security attributes only after verified resolution;
+no shared caching provider or client-supplied authority is used. `/me` is the first protected operation.
+See [matched-Action security](../api/README.md#matched-action-security-task-00117) for the exact public
+allowlist, metadata placement, permission conjunction and safe projection. Login/refresh/logout and the first
+real permission-protected operation's HTTP matrix remain with their owning TASKs.
 
 The extractor accepts exact case-sensitive `Bearer ` plus one compact token, at most 2048 token bytes (2055
 header bytes). It rejects duplicated/folded headers, whitespace/control ambiguity, alternative credential
@@ -79,4 +83,5 @@ need an explicitly planned transport policy rather than silently bypassing inspe
 
 Known refusals use generic JSend `401 Unauthorized.`, `Cache-Control: no-store`, and safe `X-Correlation-ID`.
 No token, claim, key, SQL, decoder diagnostic or authentication audit event is logged by this boundary.
-Existing public reads remain public and OpenAPI advertises no authentication journey or fake resource route.
+Existing approved public reads remain public. OpenAPI describes the real `/me` read, not a login/refresh
+journey or fabricated permission-protected resource route.

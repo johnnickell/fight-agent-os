@@ -13,6 +13,7 @@ use Fight\AccessControl\Application\AccessControl\CredentialDelivery\QueryHandle
 use Fight\AccessControl\Application\AccessControl\ManagedPolicy\QueryHandler\PreviewManagedPolicyHandler;
 use Fight\AccessControl\Application\AccessControl\ManagedPolicy\Service\ManagedPolicyPlanner;
 use Fight\AccessControl\Application\AccessControl\Permission\QueryHandler\ListPermissionsHandler;
+use Fight\AccessControl\Application\AccessControl\User\QueryHandler\GetUserByIdHandler;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentRepository;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
@@ -24,6 +25,7 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGra
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\Query\ListPermissions;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\User\Query\GetUserById;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Messaging\Query\QueryPipeline;
 use Fight\Common\Adapter\Messaging\Query\Routing\ServiceAwareQueryRouter;
@@ -104,6 +106,11 @@ return [
                 $container->get(EmailChangeGrantRepository::class)
             );
         },
+        GetUserByIdHandler::class                                   => static fn(
+            Container $container
+        ): GetUserByIdHandler => new GetUserByIdHandler(
+            $container->get(UserRepository::class)
+        ),
         ListPermissionsHandler::class                               => static function (
             Container $container
         ): ListPermissionsHandler {
@@ -114,6 +121,7 @@ return [
         }
     ],
     'handlers' => [
+        GetUserById::class                     => GetUserByIdHandler::class,
         PreviewManagedPolicy::class            => PreviewManagedPolicyHandler::class,
         ListPermissions::class                 => ListPermissionsHandler::class,
         GetCsrfProof::class                    => GetCsrfProofHandler::class,

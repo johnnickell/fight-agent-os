@@ -92,6 +92,10 @@ use OpenApi\Attributes as OA;
     new OA\Schema(ref: '#/components/schemas/Error'),
     new OA\Schema(properties: [new OA\Property(property: 'message', enum: ['Bad request.'])])
 ])]
+#[OA\Schema(schema: 'UnauthorizedError', allOf: [
+    new OA\Schema(ref: '#/components/schemas/Error'),
+    new OA\Schema(properties: [new OA\Property(property: 'message', enum: ['Unauthorized.'])])
+])]
 #[OA\Schema(schema: 'ForbiddenError', allOf: [
     new OA\Schema(ref: '#/components/schemas/Error'),
     new OA\Schema(properties: [new OA\Property(property: 'message', enum: ['Forbidden.'])])
@@ -134,6 +138,15 @@ use OpenApi\Attributes as OA;
         new OA\Schema(ref: '#/components/schemas/ValidationFail'),
         new OA\Schema(ref: '#/components/schemas/BadRequestError')
     ])
+)]
+#[OA\Response(
+    response: 'Unauthorized',
+    description: 'Missing, invalid or no longer authoritative Bearer authentication',
+    headers: [
+        new OA\Header(ref: '#/components/headers/NoStore', header: 'Cache-Control'),
+        new OA\Header(ref: '#/components/headers/CorrelationId', header: 'X-Correlation-ID')
+    ],
+    content: new OA\JsonContent(ref: '#/components/schemas/UnauthorizedError')
 )]
 #[OA\Response(
     response: 'Forbidden',
