@@ -217,7 +217,7 @@ rather than bypassing auth or leaking credentials to make the viewer appear comp
 | [TASK-00019](../tasks/00019-TASK.md) | Reject invalid API input before dispatch | done |
 | [TASK-00020](../tasks/00020-TASK.md) | Centralize correlated and sanitized API failures | done |
 | [TASK-00021](../tasks/00021-TASK.md) | Publish and restrict the representative OpenAPI contract | done |
-| [TASK-00117](../tasks/00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | in-progress |
+| [TASK-00117](../tasks/00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | done |
 | [TASK-00153](../tasks/00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done |
 | [TASK-00154](../tasks/00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | ready-for-agent |
 | [TASK-00155](../tasks/00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done |
