@@ -87,7 +87,8 @@ work. Keep raw exceptions, credentials and unrelated content out of logs, teleme
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00430](../tasks/00430-TASK.md) | Inspect effective instructions through bounded designated-checkout queries | needs-info |
+| [TASK-00431](../tasks/00431-TASK.md) | Browse effective instructions in the repository Dashboard | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -102,5 +103,87 @@ Consume existing registration/context/Dashboard and exact qualified deterministi
 coding or managed Review journeys. Supply [TICKET-00106](00106-TICKET.md) and [TICKET-00107](00107-TICKET.md)
 without depending on final editing/assistance. [TICKET-00109](00109-TICKET.md) owns synchronization facts/operations;
 absence of that integration remains explicit, not a reason to invent freshness or reverse-block bounded reads.
-Existing supplier holds and Board priority remain unchanged. No TASK, file read outside planning, runtime discovery,
-checkout change or live Agent operation is authorized by this requirement approval.
+Existing supplier holds and Board priority remain unchanged. The requirement approval authorized no TASK, file read
+outside planning, runtime discovery, checkout change or live Agent operation. The subsequent approval below now
+allocates TASK records only, not operational authority.
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved two slices in `.runs/worktrees/ticket-00083-to-tasks` on
+`feature/ticket-00083-to-tasks`. Both are unranked features with blank PRs, normally one independently reviewable PR.
+
+| Slice | Accepted owner | Exact known blockers | Delivered boundary |
+|---|---|---|---|
+| A | [TASK-00430](../tasks/00430-TASK.md) | TASK-00082, TASK-00368; protected-read/custody supplier unallocated | Authorized designated-checkout enumeration/single-file query API, qualified effective labels and coherent content/digest/Git/provenance |
+| B | [TASK-00431](../tasks/00431-TASK.md) | TASK-00430, TASK-00107 | Recognized-file list and one-file read-only viewer in the existing repository Dashboard, with accessible truthful states |
+
+TASK-00430 starts `needs-info` for the precise protected human-authorized instruction-read route and current
+checkout-custody participants under existing TICKET-00032/00093 execution/Runner owners. TASK-00082's discovery and
+TASK-00368's enrollment facts do not implement that route. TASK-00369's Workflow resource contracts are relevant
+but do not alone qualify this human read scope. No missing supplier ID, Workflow, TASK claim, Agent, alternate
+checkout or second ownership registry is invented. Early suppliers must remain independent of completed coding,
+Review, editing, assistance, publication or synchronization journeys. Existing runtime holds remain unchanged.
+TASK-00431 is ready behind unfinished/held suppliers, not runtime-qualified.
+
+TASK-00430 reuses TASK-00082's sole context/discovery owner and its transitive roots/identity/lifecycle/configuration
+contracts. It qualifies actual supported Pi semantics rather than assuming historical precedence; unknown or
+unsupported behavior cannot receive a guessed Loaded label. The mechanical Runner returns bounded observations;
+Application interprets them under current View instructions authority. All five exact accepted names remain the
+allowlist. Digest and returned bytes describe the same bounded observation; physical containment must survive
+replacement races, not just lexical/stat checks. Reject unsafe paths/types/encoding/size/case and stale or conflicting
+identity/custody without reading unrelated files, relinking or selecting another checkout.
+
+TASK-00431 extends TASK-00107's existing workspace and shared `/me`/frame/theme/transport owners. Render content
+inertly with no-store volatile state and late-success/error fences. Show effective versus ignored/untracked status
+honestly, disclose safe technical provenance and keep denied/stale/failed/unavailable states useful. Fresh keyboard,
+focus/announcement, responsive light/dark, accessibility/reflow and applicable reduced-motion evidence are required.
+No viewer creates a draft, grants effect permission or sends content to a provider.
+
+TICKET-00106/00107 consume the exact bounded observations and existing viewer; direct editing and optional assistance
+remain separate. TICKET-00108 retains publication; TICKET-00109 retains synchronization facts/operations and the real
+integrated instruction-change journey. Unknown remote freshness stays unknown and reads never fetch. Observations
+are not reservations, current grants, guaranteed future writes or proof that an existing Agent session reloaded.
+No `.pi`, nested/parent/user content, recursive scan, arbitrary file, mutation, provider operation or new resolver.
+
+Each slice includes owned behavior tests, actual qualified Pi/Git/Runner or browser evidence as applicable, guidance
+and `./bin/build`. Qualify tools/infrastructure/prose directly, not product tests of Pi/Git, generated lists,
+Markdown, configuration or wrappers. No proof-only TASK is introduced and no existing supplier gains a reverse
+inspection blocker or has a hold cleared.
+
+TICKET-00106 now maps TASK-00432/00433's exact Save/Delete/reconciliation and Dashboard form, retaining its distinct
+protected mutation/shared-custody/physical-guarantee hold. Neither this read contract nor its allocation authorizes
+a write; no reverse inspection dependency follows.
+
+This completes this TICKET's split, not implementation or the remaining map. Continue `/skill:next` for Board-based selection after TICKET-00109's approved final split. Preserve active TASK-00138, terminal-first Board priority,
+independent holds and Markdown Planning authority. Implementation checkout, finite private fixture/read/runtime
+authority, full build, independent review and publication remain separate.
+
+### Planning verification
+
+This historical inspection-split receipt predates TICKET-00106's Save/Delete split; latest planning verification
+is in TICKET-00109. Counts and handoff state below describe the earlier point, not runtime evidence.
+
+Recorded the approved split in `.runs/worktrees/ticket-00083-to-tasks` on `feature/ticket-00083-to-tasks`, preserving
+prior uncommitted planning. Highest live ID before allocation was TASK-00429; no archived TASK records existed.
+TASK-00430/00431 match the approved exact known blockers, statuses and template sections, both unranked features with
+blank PRs. The protected-read/current-custody supplier edge remains explicitly unallocated, not guessed or claimed
+cycle-checked; TASK-00430 stays `needs-info`. TASK-00431's ready metadata is not runtime qualification.
+
+`./bin/planning-check --write` and `./bin/planning-check` passed with 558 records, 466 active and current generated
+views, reporting no invalid links or dependency cycles. Tracked `git diff --check` and all 123 new/untracked TASK
+whitespace checks passed. A before/after hash comparison of every pre-existing TASK's frontmatter confirmed no
+status, priority, dependency or PR metadata changed during this recording pass. No existing owner gained an
+inspection reverse blocker. Prior mappings and independent creation/support/host/provider/authority holds remain.
+
+TASK-00138/00139/00142/00159/00184/00226 remain byte-identical to this worktree's HEAD. TASK-00138 remains the sole
+active Board item, order 2. Context, Runner enrollment/resource and Dashboard coordination records the consumer gap
+without changing existing ownership/policy. TICKET-00106/00107 record incoming observations/viewer suppliers, not
+approved decompositions or effect authority at that checkpoint. That split advanced handoffs to TICKET-00106,
+then TICKET-00107–00109; all four remained on the Planning Frontier and no stale TICKET-00105 command remained.
+
+Full `./bin/build` was not run and remains required before commit/publication. These are planning checks, not
+fresh Pi-discovery, Git/Runner/physical containment, PostgreSQL application-participant or browser acceptance.
+No live private instruction read, runtime discovery, credential/host/service change, checkout operation, provider
+call, Agent session, filesystem effect, Planning import or cutover occurred. All changes remain uncommitted;
+implementation, independent review and publication remain outstanding. No commit, push, PR or merge occurred.
+Unrelated main-checkout work was untouched and is not claimed clean; earlier receipts remain historical.

@@ -99,10 +99,84 @@ retain bounded needs-human state when safe recovery is unsupported. Raw secrets/
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00355](../tasks/00355-TASK.md) | Request inspect and recover protected proposals | ready-for-agent |
+| [TASK-00356](../tasks/00356-TASK.md) | Record human Planning answers and operation boundaries | ready-for-agent |
+| [TASK-00357](../tasks/00357-TASK.md) | Prepare and inspect typed Planning candidates | ready-for-agent |
+| [TASK-00358](../tasks/00358-TASK.md) | Explicitly create or apply reviewed Planning changes | ready-for-agent |
+| [TASK-00359](../tasks/00359-TASK.md) | Apply multi-record Planning proposals atomically | ready-for-agent |
+| [TASK-00360](../tasks/00360-TASK.md) | Reconcile rejected proposals without silent application | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved six independently reviewable implementation slices in the existing isolated planning
+worktree. They separate reusable proposal contracts from database-authoritative Planning decisions/Apply and
+final browser/role integration.
+
+| Slice | Accepted owner | Delivered boundary |
+|---|---|---|
+| A | [TASK-00355](../tasks/00355-TASK.md) | Protected proposal admission, typed result/status, cancellation and original-attempt recovery |
+| B | [TASK-00356](../tasks/00356-TASK.md) | Revisioned human answers/corrections and explicit distinct Planning operation boundaries |
+| C | [TASK-00357](../tasks/00357-TASK.md) | Real typed Planning candidates with exact references, human corrections and retained versions |
+| D | [TASK-00358](../tasks/00358-TASK.md) | Explicit human semantic Create/Apply and original committed-outcome recovery |
+| E | [TASK-00359](../tasks/00359-TASK.md) | All-or-none multi-record decomposition and supported initial map/decision creation |
+| F | [TASK-00360](../tasks/00360-TASK.md) | Explicit bounded reconciliation yielding a new current-base candidate for separate human review |
+
+TASK-00355 consumes TASK-00349/00351/00353, including existing provider admission/accounting transitively, without
+Planning cutover or final browser dependencies. TASK-00356 consumes TASK-00349/00352/00086/00104: conversation input
+remains distinct from existing Planning DecisionPoints, and actual Planning mutation requires verified database
+authority. TASK-00357 consumes TASK-00355/00356; TASK-00358 consumes TASK-00357; TASK-00359 consumes TASK-00358;
+TASK-00360 consumes TASK-00359. TASK-00085–00095 retain semantic artifacts, evidence, lifecycle, relationships and
+ordering; TASK-00103/00104 retain authority enforcement and verified cutover. No nested transaction or second
+allocator/attempt/transcript authority substitutes for their actual participants.
+
+All six records are `ready-for-agent` behind unfinished dependencies, not runtime qualification. TASK-00350's
+precise operational host/broker gap and inherited Team/creation/current-authority holds persist. Real provider-
+assisted acceptance uses one selected qualified TASK-00346 or TASK-00347 path, never mandatory simultaneous setup
+or a proof-only product. Owned tests, actual integration and operator guidance belong within these outcomes.
+Orders remain unranked; Board priority and the active terminal-first milestone remain unchanged.
+
+TASK-00302 gains TASK-00355, not completed TASK-00356–00360. It retains template payload/Permission validation,
+Feature admission, editor and explicit publication plus its independent host/authority/rollout/publication holds.
+The sole proposal-allocation gap is mapped, but its `needs-info` remains. TASK-00266 gains TASK-00360's complete
+proposal/answer/Apply/reconciliation chain while retaining actual Project Manager integration. The subsequent
+TICKET-00092 split now adds TASK-00362–00367, with TASK-00361 transitively, resolving its browser allocation gap
+while retaining TASK-00364's exact protected prototype-execution hold. Existing profile, contribution, Triage/scoped-read and host/authority holds remain.
+No final consumer reverse-blocks shared primitives; generic proposal availability does not imply live template
+or managed-role qualification.
+
+TICKET-00092 now maps TASK-00361–00367's browser intake/questions/previews, visibility/handoff and continuous
+journey against these operations. Durable server candidates are not autosaved manual forms. Reconciliation is an explicit
+new bounded request, not automatic retry; Apply remains a separate exact human command. Unknown original outcomes
+hold another Apply, and neither accepted Planning content nor a final proposal starts execution/publication.
+
+This decomposition is complete, not implementation. Following TICKET-00092–00099's approved browser/Runner/evidence/web-research/history/sessions/measurement/catalog splits,
+continue `/skill:next` for Board-based selection after TICKET-00109's approved final split. Preserve Markdown authority until separately approved verified
+cutover and preserve all unresolved suppliers. Planning authorizes no model call, account/credential operation,
+proposal, accepted answer, Planning mutation, cutover or runtime execution.
+
+### Planning verification
+
+Prepared in `.runs/worktrees/ticket-00083-to-tasks` on `feature/ticket-00083-to-tasks`, preserving all prior approved
+uncommitted planning changes. Live and archived TASK identities were rechecked before allocating TASK-00355–00360;
+the live ceiling was TASK-00354 and the archive contained no TASK records. `./bin/planning-check --write` and
+`./bin/planning-check` passed with 487 records, 395 active and current generated views. Tracked `git diff --check`
+and all 52 new/untracked TASK whitespace checks passed, including these six records. Validation reported no
+invalid planning links or dependency cycles; that historical handoff advanced to TICKET-00092. Board
+priority and active TASK-00138 remain unchanged, and all new orders are unranked.
+
+These are planning checks, not provider/runtime, database Apply or browser qualification. The full `./bin/build`
+was not run and remains required before commit/publication. No implementation, provider call, credential access,
+proposal/answer, live Planning mutation, cutover, session launch, commit, push, PR or merge was performed. Changes
+remain uncommitted in the isolated worktree; independent review and publication are separate. Unrelated concurrent
+main-checkout work was left untouched, not claimed clean or included in this scope. Earlier receipts remain
+historical and are not fresh evidence for these unimplemented capabilities.
+
+### Original requirement approval and supplier handoff
+
+The allocation requests below are superseded by the approved mappings above, not by operational qualification.
 
 Approved as area 7 of the remaining eight-TICKET EPIC-00006 decomposition. Consumes
 [WF-012](../wayfinder/tickets/WF-012-define-browser-planning-and-conversation-ownership.md),
@@ -111,9 +185,18 @@ Approved as area 7 of the remaining eight-TICKET EPIC-00006 decomposition. Consu
 [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md) and
 [ADR 0004](../adr/0004-client-authority-and-runtime-state.md).
 
+TICKET-00089 now maps TASK-00344/00345's protected disclosure/budget admission and original-outcome/accounting
+contracts. TASK-00346/00347 independently supply actual OpenRouter/Codex paths; proposal consumers use the selected
+qualified path without requiring both configured. TICKET-00090 now maps TASK-00348/00349 early assignment/attempt
+facts and TASK-00351/00352/00353 invocation/attachment/recovery. Those suppliers retain TASK-00350's precise
+operational host/broker gap; this TICKET now maps structured proposals/results to TASK-00355/00357, semantic
+answer acceptance to TASK-00356 and Apply/reconciliation to TASK-00358–00360. TASK-00302 consumes only TASK-00355.
+Do not make provider primitives depend on completed proposal/application or browser journeys.
+
 Planning Apply consumes TICKET-00026's semantic operations and the verified TICKET-00028 authority switch, with
 TICKET-00027 queue revisions where applicable. Early protected attempts/results consume exact session/provider
 contracts and supply TASK-00302 independently of final Explorer/Project Manager or complete browser Planning.
 [TICKET-00092](00092-TICKET.md) owns the browser journey and consumes these operations; no reverse dependency on
-its final UI or role acceptance is permitted. No TASKs, live proposal, Planning mutation or authority cutover is
-created by this requirement approval; existing consumer needs-info holds require separate precise TASK mapping.
+its final UI or role acceptance is permitted. The original requirement approval created no TASKs; the subsequent
+approved split above creates planning records only. Actual supported contracts, host/authority composition and
+consumer qualification remain incomplete; no live proposal, Planning mutation or authority cutover occurred.

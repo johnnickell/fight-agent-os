@@ -97,6 +97,35 @@ session primitives; TASK-00266 consumes the browser Planning owners. Their exist
 explicit. TASK-00164's separately approved Pi 1.1.0 local compaction scope is preserved. No new TASK, dependency,
 priority, Wayfinder session, runtime launch or database Planning cutover follows from this amendment.
 
+TICKET-00090's subsequent approved decomposition now assigns shared assignment/attempt/runtime/attachment/recovery
+and retention to TASK-00348–00354. TASK-00350 evaluates Pi Durable inside the protected runtime adapter and retains
+`needs-info` for precise reusable operational host/broker participants under these existing execution owners and
+relevant TICKET-00093 owners. TASK-00138 qualification alone supplies no implemented process/storage boundary.
+Expose a narrow non-circular participant contract, not completed TASK-00141 or whole Runner/Workflow delivery as a
+manual-session prerequisite. This does not move sandbox/provisioner/Workflow ownership, add an execution priority
+or clear any existing host/authority hold. TASK-00141 still owns the real coding handoff and TASK-00142 its recovery
+proof; shared conversation mappings are not fresh live execution evidence.
+
+TICKET-00092 now maps TASK-00361–00367's browser capabilities, consumed by TASK-00266 rather than implemented there.
+TASK-00364's bounded AFK preparation retains `needs-info` for exact protected prototype-execution participants and
+supported scope under existing execution/host owners. TASK-00087 stores findings/evidence, not executable prototype
+support. Resolve the narrow operational mapping alongside TASK-00350's host/broker hold; do not expand these coding
+TASKs, fabricate a manual Workflow or make operational suppliers depend on finished browser/role use. TICKET-00095
+separately supplies qualified screened external research, never arbitrary network or prototype execution.
+
+TICKET-00093's subsequent approved TASK-00368–00373 now cover enrolled Runner identity, early shared admission,
+original dispatch, one-shot consumers, drain/Halt and restart/recovery integration. TASK-00139–00142 retain their
+existing scope, blockers and order; TASK-00369 supplies applicable Workflow commitment/capacity/resource participants
+to Team consumers without reverse-depending on final role use. These mappings do not implement the early protected
+host/broker/storage or prototype-execution gaps in TASK-00350/00364. Those holds remain under existing execution
+ownership; neither enrollment nor completed Workflow consumers substitutes for narrow operational participants.
+
+TICKET-00094 now maps TASK-00374–00380's Artifact/contribution/subject/receipt/read/retention/redaction delivery.
+TASK-00140 gains early TASK-00374 storage and TASK-00141 gains TASK-00377's receipt/subject chain, without browser
+or Planning-cutover gates. Existing preparation and complete current handoff/Awaiting review ownership and authored
+orders remain unchanged; actual final evidence stays in TASK-00141's real production run. No completed role journey
+reverse-blocks these primitives, no second acceptance engine is introduced and host/prototype holds persist.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
@@ -188,6 +217,45 @@ retention; this TICKET still validates the complete handoff and transitions to A
 [TICKET-00096](00096-TICKET.md), [TICKET-00097](00097-TICKET.md) and [TICKET-00098](00098-TICKET.md) own safe
 history/projections, sessions browser presentation and honest usage/forecasting respectively. None replaces
 execution authority or adds a browser/forecast/Planning-cutover blocker to the first terminal milestone.
+
+TICKET-00100 now maps TASK-00406–00410's deterministic local-generation capabilities. TASK-00407 explicitly awaits
+the exact reusable protected local-operation boundary and TASK-00409 actual bounded process supervision, dependency
+egress and credential isolation under existing execution ownership. Neither TASK-00138 qualification nor TASK-00368
+enrollment supplies that implementation. Do not fabricate a coding Workflow/Agent or substitute completed Team/
+role journeys for narrow human-authorized participants. Their early attempt and cleanup authority remain with
+TICKET-00101. This mapping adds no reverse dependency, implementation authority or scope change to terminal TASKs.
+
+TICKET-00102 now maps TASK-00418's early protected GitHub preflight and TASK-00420's exact initial publication.
+They retain separate unallocated protected `gh` invocation/current-identity and Git/SSH invocation requirements
+under existing host/source-host ownership. Human creation is not Release Manager authority; no completed managed
+role journey, existing local skill, Runner enrollment or sandbox qualification substitutes for these participants.
+This coordination changes no terminal TASK scope/status/order and allocates no missing host supplier.
+
+TICKET-00105 now maps TASK-00430's bounded designated-checkout instruction inspection and TASK-00431's browser
+viewer. TASK-00430 retains a precise protected human-authorized read route/current-custody participant gap under
+these execution and TICKET-00093 owners. Context discovery and enrolled Runner facts are not that route;
+TASK-00369's Workflow resource contracts do not alone qualify human reads. Map the narrow actual supplier without
+fabricating a Workflow/Agent, introducing another ownership registry or reverse-blocking terminal delivery.
+This note allocates no supplier and changes no existing TASK scope, status, order or effect authority.
+
+TICKET-00109 now maps TASK-00441–00444's separate check/update/schedule/browser flow. Protected source-read/fetch
+and shared-custody, conditional Git/physical-exclusion, and actual scheduled actor/delegation/revocation/runtime
+mappings remain distinct holds. Existing enrollment, Workflow resource and generic scheduler facilities do not
+qualify them. No new executor/registry, implicit administrator, reverse terminal dependency or metadata/priority
+change follows; operational authority remains separate.
+
+TICKET-00108 now maps TASK-00436–00440's separate human instruction-publication flow. TASK-00436 retains exact
+publication admission/shared-custody and protected identity/preflight gaps; TASK-00437 protected existing-checkout
+Git branch/index/commit and physical exclusion; TASK-00438 authenticated Git/GitHub PR invocation. Map narrow
+actual suppliers under existing execution/source-host owners, not Workflow/Release Manager grants, a second
+provisioner or a qualification-only substitute. TASK-00439/00440 inherit these holds. No terminal TASK scope,
+metadata, priority or reverse dependency changes and no operational authority follows.
+
+TICKET-00106 now maps TASK-00432's exact instruction Save/Delete/reconciliation and TASK-00433's Dashboard form.
+TASK-00432 retains a distinct protected human-authorized mutation/shared-custody supplier hold under these and
+TICKET-00093 owners. A qualified read route or Workflow resource contract does not qualify physical conditional
+writes/deletes. Map narrow actual participants and platform guarantees without inventing a Workflow/Agent or
+second custody registry; no existing owner gains a reverse blocker, widened scope or changed priority here.
 
 Map exact early suppliers during later TASK decomposition rather than depending on completed TICKETs or final
 Team/role journeys. Existing Team/Agent, Harness and shared-fence readiness holds remain; these requirement records

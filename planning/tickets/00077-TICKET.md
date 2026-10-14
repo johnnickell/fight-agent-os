@@ -151,9 +151,11 @@ template proposals behind controlled rollout**. It consumes TASK-00300's actual 
 TASK-00297's Feature management/catalog chain, TASK-00294's alternative-admission enforcement, TASK-00250's
 immutable Agent-session integration and TASK-00241's qualified credential/current-use readiness.
 
-Status is `needs-info`: exact EPIC-00006 suppliers for protected durable proposals, delegated generative execution,
-provider disclosure/budgets and uncertain-call recovery remain unmapped/unqualified. Inherited publication,
-session/host/origin and rollout holds remain. The actual provider/model, limits and existing testing Permission/
+Subsequent TICKET-00089–00091 splits now map TASK-00344/00345 provider admission/accounting, TASK-00349/00351/00353
+original attempts/invocation/recovery and TASK-00355 protected proposal admission/result/status/cancellation/recovery.
+TASK-00302 gains TASK-00355, not TASK-00356–00360's database Planning decisions/Apply or final browser Planning.
+Status remains `needs-info` for TASK-00350's exact operational host/broker gap and inherited publication,
+session/authority/origin and rollout composition. Mappings do not qualify actual live support. The actual provider/model, limits and existing testing Permission/
 audience require selection and qualification, not invented identifiers or grants. Inspected application/configuration/
 Harness sources did not establish the required runtime; Jev Decisions readiness does not substitute for it.
 

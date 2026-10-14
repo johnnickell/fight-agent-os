@@ -111,7 +111,11 @@ The maintainer approved seven independently reviewable integration slices:
 
 - [TASK-00266](../tasks/00266-TASK.md): connect the real Project Manager to human-governed browser Planning,
   carrying forward TASK-00247's actual Explorer result without another Explorer run. Consumes TASK-00247,
-  TASK-00250 and TASK-00114; remains `needs-info` for actual browser conversation/turn/proposal/Apply owners.
+  TASK-00250 and TASK-00114, now with TASK-00360's proposal/answer/Apply/reconciliation chain under TICKET-00091.
+  TICKET-00090 maps conversation/turn/recovery through existing dependencies. TICKET-00092 now adds TASK-00362–00367
+  with TASK-00361 transitively for intake, interviews/maps, artifact Apply, AFK preparation, recovery, sharing and
+  explicit continuation. It remains `needs-info` for actual host/current-authority/role composition and TASK-00364's
+  exact protected prototype-execution participants. Browser mappings are not live use or duplicate role ownership.
 - [TASK-00267](../tasks/00267-TASK.md): continue real Team implementation into independent same-Team Senior
   Engineer review. Consumes TASK-00141, TASK-00250 and TASK-00265, including actual Triage routing and exact
   Team Lead/Software Engineer handoff; remains `needs-info` for generic managed Review/revision/acceptance owners.

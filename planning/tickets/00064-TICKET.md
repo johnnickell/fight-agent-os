@@ -94,8 +94,16 @@ The maintainer approved five dependency-ordered TASKs:
 - [TASK-00265](../tasks/00265-TASK.md): durable withdrawable Pending start and actual terminal/browser integration
   through existing Execution and TASK-00204/00205 owners, after shared runtime readiness.
 
-TASK-00261/00263/00264 retain `needs-info` for exact lower-level commitment/resource, verified configured-base
-inclusion, current admission and contribution/fresh-session primitives. TASK-00139 supplies the base Start and
+TICKET-00093's subsequent TASK-00369 now supplies narrow applicable Workflow commitment/capacity/resource
+participants to TASK-00261/00263 and transitively TASK-00264; TASK-00254 consumes it independently. This resolves
+that supplier allocation, not manual-session writer coverage, complete atomic Team admission or live qualification.
+It never depends on completed selection, role use or Runner consumers. Independent creation, current authority,
+configured-base, contribution and host holds persist.
+
+TICKET-00094 now maps TASK-00375's early contribution/source-lineage contract into TASK-00261/00264, with
+TASK-00263 consuming it transitively. This resolves allocation, not actual source completeness or independence.
+TASK-00261/00263/00264 retain `needs-info` for complete commitment/resource composition, verified configured-base
+inclusion, current admission and actual contribution-source/fresh-session composition. TASK-00139 supplies the base Start and
 pre-cutover immutable Markdown eligibility path, not proof that every such participant is already implemented.
 Where database Planning is the actual source, use TASK-00096's canonical typed fact/reason seam without another
 algorithm; browser/Triage consumers retain their own actual Planning dependencies. No database cutover gate is

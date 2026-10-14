@@ -81,10 +81,67 @@ Reconcile unknown effects before dependent continuation; preserve explicit stops
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00339](../tasks/00339-TASK.md) | Resolve and inspect exact Harness configuration | ready-for-agent |
+| [TASK-00340](../tasks/00340-TASK.md) | Retain immutable Harness snapshot bindings | ready-for-agent |
+| [TASK-00341](../tasks/00341-TASK.md) | Hold protected work on Harness drift | ready-for-agent |
+| [TASK-00342](../tasks/00342-TASK.md) | Resume and explicitly continue real sessions | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved four delivery slices in the existing isolated planning worktree, normally one bounded PR
+each. Early resolution/binding/currentness contracts remain independent of completed runtime continuation so
+protected brokers and loaders can consume them without circular dependencies.
+
+| Slice | Accepted owner | Delivered boundary |
+|---|---|---|
+| A | [TASK-00339](../tasks/00339-TASK.md) | Deterministic authorized exact Harness configuration and safe reproducibility/readiness inspection |
+| B | [TASK-00340](../tasks/00340-TASK.md) | Immutable snapshot retention/binding with reference fencing, atomic required audit and original-outcome recovery |
+| C | [TASK-00341](../tasks/00341-TASK.md) | Exact drift/currentness inspection and reusable guard for new protected operations |
+| D | [TASK-00342](../tasks/00342-TASK.md) | Actual runtime binding/reconnect, explicit linked continuation and separately attributed reported identity |
+
+TASK-00339 consumes TASK-00323/00334/00083 and now TICKET-00089's TASK-00343 early model/provider catalog.
+That resolves its sole mapping hold: status is `ready-for-agent` behind unfinished dependencies, not live
+qualification. TASK-00340 now consumes TASK-00339 plus TASK-00348's early authorized session-identity/intent and
+binding transaction contract under TICKET-00090, resolving its sole mapping hold; it is ready behind unfinished suppliers. TASK-00341 consumes TASK-00340/00084; its
+`ready-for-agent` status retains those unfinished dependencies. TASK-00342 consumes TASK-00340/00341/00244/00336
+and TASK-00345's original-provider-outcome/accounting, now with TASK-00351/00352/00353 invocation/attachment/recovery.
+It retains `needs-info` for TASK-00350's exact operational host/broker gap and actual authority composition. All orders remain unranked; priorities stay
+unchanged. TASK-00346/00347 independently qualify actual provider paths; neither depends on completed continuation.
+
+TASK-00244 and TASK-00336 gain TASK-00340/00341, not completed TASK-00342. Their remaining admission, signing,
+current-authority, host and acting-window holds remain. TASK-00250 and TASK-00325 gain TASK-00342 and retain their
+separate role/provider/contribution or protected-session holds. Exact role facts remain with TASK-00249 and
+TASK-00250's named-Agent integration; no generic snapshot primitive waits for a completed role journey.
+
+TICKET-00090 maps early identity/assignment to TASK-00348 and attempts to TASK-00349, independently of completed
+execution/continuation. TASK-00348 consumes TASK-00339; TASK-00351 activation composes bindings/currentness with
+TASK-00244/00336/00344/00345 and TASK-00350's protected host adapter. Neither a persisted binding nor supplied session ID grants authority. Final loader observations and reported
+model/response identities remain separately attributed evidence, never a silent edit to selected configuration.
+No new session, transcript, grant, credential or provider platform is introduced. Real runtime qualification and
+owned tests stay within their product outcomes, not separate proof-only TASKs.
+
+This decomposition is complete, not implementation. Following TICKET-00089–00099's provider/conversation/proposal/browser/Runner/evidence/web-research/history/sessions/measurement/catalog
+splits, continue `/skill:next` for Board-based selection after TICKET-00109's approved final split. Preserve Markdown authority, terminal-first execution priority
+and all unresolved supplier holds. Planning authorizes no session launch, provider call or operational enrollment.
+
+### Planning verification
+
+Prepared in `.runs/worktrees/ticket-00083-to-tasks` on `feature/ticket-00083-to-tasks`, preserving prior approved
+planning changes. Live and archived TASK identities were rechecked before allocating TASK-00339–00342; the archive
+contained no TASK records. `./bin/planning-check --write` and `./bin/planning-check` passed with 469 records,
+377 active and current generated views. Tracked `git diff --check` and all four new-record whitespace checks
+passed. Validation found no dependency cycles or invalid planning links. New orders remain unranked; active
+TASK-00138 and the Board's existing priorities are unchanged.
+
+These are planning receipts, not actual snapshot, session, provider or host qualification. The full `./bin/build`
+was not run and remains required before commit/publication. No implementation, session launch/reconnect, provider
+call, credential access, enrollment, commit, push, PR or merge was performed. Changes remain uncommitted in the
+isolated worktree; independent review and delivery remain separate.
+
+### Original requirement approval
 
 Approved as area 4 of the remaining eight-TICKET EPIC-00006 decomposition. Consumes
 [WF-009](../wayfinder/tickets/WF-009-define-repository-context-and-policy-precedence.md),
@@ -93,8 +150,25 @@ Approved as area 4 of the remaining eight-TICKET EPIC-00006 decomposition. Consu
 [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md), including the
 [Pi Durable direction](00032-TICKET.md#pi-durable-integration-direction--2026-10-13).
 
-Consume TICKET-00085 profiles/package facts, TICKET-00086 resource identities, TICKET-00087 origin/manifest facts,
-TICKET-00089 model availability and TICKET-00025 context. Decompose early exact-reference contracts independently
+Consume TICKET-00085's approved [TASK-00321](../tasks/00321-TASK.md) package facts,
+[TASK-00322](../tasks/00322-TASK.md) exact connection/origin facts and
+[TASK-00323](../tasks/00323-TASK.md) owned profile revisions, plus TICKET-00086's exact resource owners
+TASK-00327/00329/00330, TICKET-00087's early TASK-00333 trust and TASK-00334 choice facts, TICKET-00089's TASK-00343
+model/compatibility facts and TICKET-00025 context. TASK-00335 owns actual protected MCP publication; its completed transport
+must not reverse-block the lower-level snapshot/admission facts required by TASK-00244/00245. Define exact
+reference/manifest inspection through existing early owners rather than assuming full remote loading is available.
+
+TASK-00336's previously requested snapshot/selection/currentness mappings are now supplied by TASK-00340/00341
+above. TICKET-00090 now maps TASK-00350's session/host/acting-window adapter with early TASK-00348/00349 facts.
+It retains `needs-info` for TASK-00350's exact operational host/broker participant gap and actual supported scope. Map those independently of completed
+loading/cache, final switching and onboarding. Actual verified selection provenance can then flow from the loader
+to its session consumer without a reverse prerequisite on the completed loader. No invented bootstrap grant,
+second session store or fixture substitutes for the unresolved admission/authority contracts.
+[TASK-00325](../tasks/00325-TASK.md) consumes this TICKET's snapshot/continuation primitives for terminal switching;
+those primitives must not depend on that completed consumer or TASK-00326's onboarding journey. The new package/
+profile/model owner mappings are planning facts, not cleared remaining session/host holds or runtime qualification.
+Decompose early exact-reference contracts independently
 of complete journeys; provider catalog and resource primitives must not wait for snapshots or final session use.
-TASK-00250 remains the existing role integration consumer. Its `needs-info` and actual host/Agent/contribution
-prerequisites remain until precise TASK mapping and qualification. No live snapshot/session is created here.
+TASK-00250 remains the existing role integration consumer and now names TASK-00342 for generic snapshot/continuation
+behavior. Its `needs-info` and remaining actual host/Agent/contribution prerequisites remain until precise TASK
+mapping and qualification. No live snapshot/session is created here.
