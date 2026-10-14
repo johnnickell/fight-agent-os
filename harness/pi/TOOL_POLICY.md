@@ -1,0 +1,180 @@
+# Deterministic Pi tool policy
+
+This opt-in profile is **deterministic protection only**. It needs no Jev credential and performs no semantic
+screening. It is not a managed Workflow grant, qualified sandbox, filesystem/process isolation or autonomous
+launcher. Installing the package without selecting a policy leaves ordinary sessions unchanged.
+
+## Operator setup
+
+Qualified runtime: **Pi 1.2.0, macOS, Node 22.23.1**. Other Pi versions/platforms refuse activation. The package
+uses Pi's exported tool-definition factories and execution wrappers, not a patched Pi installation. Review and
+trust every loaded extension; they run as your OS user. Do not activate this profile in coordinator/delivery
+sessions that require unsupported tools, unrestricted shell or child launch.
+
+1. Outside the repository and all allowed roots, create an operator-owned directory (`0700`) and a JSON file
+   (`0600`, owned by the launching user, regular file, no symlinks or hardlinks). A suitable location is
+   `~/Library/Application Support/Fight Agent OS/tool-policy/`. Keep this directory outside Agent write roots.
+   No repository instruction, model output, environment setting or session entry selects a profile.
+2. Author the version-1 contract below with real **absolute** paths. Choose a short lowercase/hyphen profile ID,
+   positive integer revision, explicit tools/effects/roots and protected resources. List every sensitive resource
+   within allowed roots. The example is a shape, not runnable permission or an instruction to activate it.
+3. Start a fresh trusted Pi process with an explicit operator flag:
+
+   ```sh
+   pi --fight-tool-policy "$HOME/Library/Application Support/Fight Agent OS/tool-policy/policy.json"
+   ```
+
+   Load this package first using the [installation instructions](README.md#install), or add
+   `-e /absolute/path/to/harness/pi` for one invocation. No global installation or settings edit is automatic.
+4. Inspect `/fight-policy`. Require `active`, the intended profile/revision/digest, tool/effect lists and coverage.
+   The TUI status also says **deterministic protection only**. Print/JSON/RPC modes put redacted startup/inspection
+   status on stderr, not protocol stdout. A missing or invalid selected policy leaves supported wrappers and the
+   denial hook fail-closed; it never silently falls back to unrestricted tools. Without a selected flag, inspection
+   says `inactive/not-selected` and tools are unchanged.
+5. To revise policy, stop current work, edit the machine-local file as the operator, increment `revision`, and
+   explicitly `/reload` or restart with the selected file. Detected drift invalidates the current profile and
+   cancels pending operations. No operation-level approval changes policy. Restart after changing guard code or
+   Pi itself; `/reload` is qualified for policy/session lifecycle, not proof of dependency/module-cache replacement.
+
+```json
+{
+  "version": 1,
+  "profile": "local-source",
+  "revision": 1,
+  "roots": ["/absolute/working/root"],
+  "protectedPaths": ["/absolute/working/root/private-resource"],
+  "tools": ["read", "write", "edit"],
+  "effects": ["read", "write"],
+  "scripts": []
+}
+```
+
+Every top-level field is required; unknown fields, unsupported tools/effects and invalid bounds fail activation.
+At most 16 roots, 64 protected paths, 4 tools, 3 effects and 32 script entries are accepted; the policy file is at
+most 64 KiB. Roots must already be directories and cannot be `/`. Symlinked configured roots are pinned to their
+initial canonical destination and rechecked. `read` needs effect `read`; `write` needs `write`; `edit` needs both `read` and `write`.
+No delete, generic command, network, provider or child-launch permission exists in this schema. Effect classes
+admit a declared operation; they do not constrain what trusted script code does internally.
+
+## Paths and protected resources
+
+The policy directory, selected policy, Harness source directory, Pi installation, Pi agent directory, common SSH/
+AWS/GnuPG/macOS Keychain locations, and every approved script are protected from direct Agent file access.
+Configured protected paths deny both reads and writes, including new descendants and symlink aliases. Components
+named `.git`, `.pi`, `.ssh`, `.aws`, `.gnupg`, `auth.json`, or `.env`/`.env.*` are reserved anywhere in a path.
+Other credentials/resources need explicit `protectedPaths`; this is not semantic credential detection. Choose
+minimal roots rather than granting an entire home directory. Pi's own credential use is outside file-tool access.
+
+Paths are canonicalized component by component, including existing ancestors of new write targets. Internal
+symlinks can reach allowed regular files; out-of-root and protected destinations, dangling symlinks, hardlinked
+files and special files are denied. Tilde, leading `@`, percent encodings, backslashes and control characters are
+rejected rather than interpreted ambiguously. Images retain Pi's renderer through checked PNG/JPEG/GIF/WebP/BMP
+reads. Reads/edits and existing write targets are limited to 1 MiB; new write content and aggregate edit inputs
+also have a 1 MiB ceiling. Edits accept 1–128 replacements. Read offset/limit must be positive integers.
+
+Execution wrappers clone final arguments **after every `tool_call` hook**, validate types again, and construct
+fresh tool definitions with checked filesystem operations. Every access/read/mkdir/write rechecks session,
+cancellation, policy/guard content, canonical roots/resources and the final target immediately before its
+synchronous filesystem effect. A queued edit/write therefore cannot use an earlier path check. There is no
+cached/reusable allow decision. Guard source bytes and policy bytes are digest-bound; inspection and admission
+recheck them. Replaced wrapped-tool ownership makes the profile unavailable.
+
+These checks do **not** close OS-level TOCTOU races: another process can change filesystem components between
+check/open or check/spawn. Hardlinks and symlinks are deliberately restricted, not an inode-capability sandbox.
+Synchronous effect calls avoid JavaScript yields between final validation and access, not same-user races.
+
+## Approved bash scripts
+
+`bash` has no generic safe-executable allow entry and never evaluates command text with a shell. To enable it,
+include `bash` in `tools`, `execute` and the script's declared effects in `effects`, and add an approved entry:
+
+```json
+{
+  "path": "/absolute/operator-bin/check-source",
+  "sha256": "<actual lowercase SHA-256 of the reviewed executable script>",
+  "cwd": "/absolute/working/root",
+  "args": [["check"], ["check", "brief"]],
+  "effects": ["read", "execute"]
+}
+```
+
+Compute the real digest with the platform SHA-256 tool (`shasum -a 256 /absolute/operator-bin/check-source` on
+macOS). The executable must be a regular, single-link, at-most-64-KiB shebang script **outside all allowed roots**.
+The policy must hold its current digest before activation and before each spawn. Scripts are implicitly protected.
+A changed script requires renewed operator review and policy revision/selection, not Agent repair of its hash.
+
+The only accepted command spelling is the canonical absolute script path followed by one exact approved argv
+alternative, joined with single ASCII spaces. Path/argument tokens allow only `A–Z a–z 0–9 _ . / -`, at most
+256 characters each. At most 16 arguments per alternative and 32 alternatives per script are supported. Empty
+argv is `[[]]`. No quoting, escapes, substitution, operators, redirects, pipes, environment assignments, Unicode
+lookalikes, `env`, interpreter prefixes, relative executable lookup or arbitrary `sh -c`/`eval` entry is accepted.
+The current canonical cwd must exactly match the entry and lie within an allowed root. Timeout is positive and
+at most 30 seconds (default 30); combined output is bounded at 64 KiB, marked truncated, and not spooled to a
+bypass-readable temporary file. The child receives only fixed PATH `/usr/bin:/bin` and C locale, not provider/
+application secrets or session identity from the parent environment.
+
+**Operator review is essential.** Admit only narrowly purposed scripts with independently understood effects
+and fixed trusted dependencies; do not approve scripts that evaluate arguments, load mutable repository code,
+source writable shell files, launch Pi/children, or access protected resources. Pinning the top-level script does
+not pin its interpreter, imported code, system utilities, dynamically read configuration or subprocess effects.
+A script can access anything its OS user can access despite its declared effect class. The guard cannot verify
+that declaration or enforce root/protected-path constraints inside a process. Qualification exercised only
+self-contained disposable scripts using fixed OS utilities; it does not certify an operator's build/test scripts
+or any arbitrary interpreter as safe. Use TASK-00138's separately qualified execution boundary when containment
+is required; do not broaden this policy to emulate it.
+
+## Route coverage and lifecycle
+
+| Route | Treatment in the selected profile |
+|---|---|
+| Pi `read`, `write`, `edit`, `bash` Agent calls | Execution-time wrappers and fresh per-effect admission |
+| Later argument-changing `tool_call` hook | Final wrapper checks changed arguments, not the earlier proposal |
+| `grep`, `find`, `ls`, `powershell`, custom/MCP tools | Inactive by default and denied by name before execution if enabled/called |
+| `codemode`, tool search, `jev_read_file`, helpers, child/sub-agent launch | Agent tool execution denied; trusted registration/startup/hooks are outside this boundary |
+| `ctx.executeTool` nested calls | Denied by `parentToolCallId`, including nested calls to the four wrapped names |
+| TUI `!` and `!!`, built-in RPC `bash` dispatch | `user_bash` handled with a denial result; no local shell fallthrough |
+| Trusted extensions, commands, SDK host calls, external editors, startup resources, `@file` prompt attachment | **Outside Agent tool coverage**, not isolated or intercepted by this policy |
+
+Pi 1.2.0's CLI has no built-in Agent-callable child launcher. Custom child/helper tools are denied in their
+entirety; children are not launched and inheritance is not claimed. MCP startup connections and trusted extension
+code can run before any tool call. Prefer a dedicated launch with only reviewed extensions, `--no-mcp` and
+`--no-approve` where project resources are unnecessary; these flags are not themselves a sandbox. Do not expose
+SDK `session.executeBash`, `pi.exec`, raw Node APIs or tool implementations through an unreviewed host/helper.
+They are trusted-host capabilities, **not covered Agent routes**. A controlled probe directly demonstrated that
+SDK `executeBash` itself bypasses `user_bash`; the CLI TUI/RPC dispatch owns that event. The profile cannot make
+an arbitrary SDK host or malicious trusted extension safe and must not be advertised for that purpose.
+
+Reload/shutdown abort pending script processes and invalidate old wrapper closures. File operations waiting in
+Pi's mutation queue recheck their original session/epoch and cannot start after invalidation. No semantic or
+human admission decision is pending in this deterministic slice. Session switch/fork/tree navigation invalidates
+the old context; even a cancelled navigation needs explicit reload/reselection before more work. An already
+started synchronous write cannot be rolled back; process-group cancellation cannot contain escaped descendants
+or undo prior script effects. A direct process is bounded, not a proof that all descendants stopped.
+
+`/fight-policy` and normal block reasons contain bounded profile IDs, revisions/digests, counts and enumerated
+reason codes, not source bodies, command strings, paths or credentials. Pi itself still renders/persists original
+tool arguments and allowed results; the guard does not redact Pi's whole transcript. Do not put secrets into tool
+arguments. Status is refreshed on admission/inspection, not an external liveness monitor. An unloaded/disabled
+extension cannot reliably announce its own absence, block tools or detect a later unprotected process. Verify the
+launch resources and current inspection before relying on protection; use external enforcement for stronger needs.
+
+## Qualification and verification
+
+Run `./bin/harness-check` for owned policy/effect behavior, then mandatory `./bin/build`; both include the policy
+suite. The focused container deliberately uses `noexec` temporary storage: its process tests inject `/bin/sh`
+only as a test launcher. Production uses direct script spawn, separately exercised in real Pi. These do not substitute
+for real runtime qualification. TASK-00160's retained evidence uses real Pi 1.2.0 SDK tool dispatch, actual hooks,
+wrapped filesystem/script effects, a late path-mutating hook, actual built-in codemode/tool-search denial,
+controlled helper/MCP-named/child tool and nested denial, script/policy/source drift, actual reload and obsolete
+closures. Guard copies in disposable fixtures are SHA-256 matched to the submitted implementation, allowing
+source-drift probes without modifying the checkout. No live MCP service or child execution is qualified. The real CLI RPC process also denies both context-included
+and excluded `bash` commands and keeps startup/inspection diagnostics off protocol stdout. Inputs are controlled; no provider call, user credential
+or live operator policy is used. Direct SDK calls to private pipeline entrypoints are qualification drivers,
+not a supported external launch API. Separate real CLI PTYs exercise policy inspection, missing-policy refusal,
+`!`/`!!` denial and reload in comparable dark/wide and light/narrow sessions. Baseline PTYs use the pinned
+presentation-only package. Native terminal images are unavailable: ANSI transcripts demonstrate interaction and
+file effects, **not visual clipping/font/layout correctness**. Independent Review and QA remain separate.
+
+Jev-enabled screening remains TASK-00161; file-screening enforcement remains TASK-00309. Their tools are denied
+in this profile until a separately implemented, qualified policy composition explicitly admits them. Deterministic
+protection is neither those features nor TASK-00138 sandbox qualification.

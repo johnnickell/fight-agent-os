@@ -2,17 +2,17 @@
   "name": "@fight/agent-os-pi",
   "version": "0.1.0",
   "private": true,
-  "description": "Fight Agent OS terminal identity, protected Jev judgments and opt-in file screening for Pi",
+  "description": "Fight Agent OS terminal identity, Jev judgments, file screening and opt-in deterministic tool policy for Pi",
   "license": "MIT",
   "type": "module",
   "keywords": ["pi-package"],
   "engines": {"node": ">=22"},
-  "files": ["src/", "README.md", "JUDGMENTS.md", "FILE_SCREENING.md", "FILE_SCREENING_RULE.md", "LICENSE"],
+  "files": ["src/", "README.md", "JUDGMENTS.md", "FILE_SCREENING.md", "FILE_SCREENING_RULE.md", "TOOL_POLICY.md", "LICENSE"],
   "scripts": {"test": "node --test tests/*.test.mjs"},
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*",
     "typebox": "*"
   },
-  "pi": {"extensions": ["./src/extension.ts", "./src/jev-extension.ts"]}
+  "pi": {"extensions": ["./src/extension.ts", "./src/jev-extension.ts", "./src/tool-policy-extension.ts"]}
 }
