@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Invitation;
+namespace App\Application\Invitation\CommandHandler;
 
+use App\Application\Invitation\InvitationTransaction;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\Command\InviteOrdinaryUser;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;

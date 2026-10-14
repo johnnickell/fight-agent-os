@@ -67,7 +67,8 @@ The current lock remains Fight Access Control **v0.5.0**, source/lock reference
 Symfony Console is now an explicit runtime dependency (`^8.1`), retaining the already-locked **v8.1.6**.
 
 The Adapter `InviteUserCommand` injects `CommandBus`/`QueryBus` and dispatches the owned `InviteOrdinaryUser`
-message. `InviteOrdinaryUserHandler` owns installation orchestration: it dispatches public `InvitePendingUser`
+message. [`App\Application\Invitation\CommandHandler\InviteOrdinaryUserHandler`](../../src/Application/Invitation/CommandHandler/InviteOrdinaryUserHandler.php)
+owns installation orchestration: it dispatches public `InvitePendingUser`
 and `AssignRoleToUser` messages through the same configured command pipeline, and policy/outcome reads through the
 query pipeline. It never injects/calls those handlers directly. It does not copy identity, grant, assignment or
 delivery policy, insert assignments, or register consumer delivery intent. This owned message is justified by the
