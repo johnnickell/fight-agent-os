@@ -132,8 +132,12 @@ export function parseEvaluation(body, request, config) {
     if (!object(a.legend) || Object.keys(a.legend).length !== ids.length || !ids.every(id => a.legend[id] === q.levels[Number(id)])) reject('invalid-result');
     const mean = ids.reduce((sum, id) => sum + Number(id) * probabilities[id], 0);
     if (Math.abs(mean - a.score) > 0.000001) reject('invalid-result');
-    const score = q.min + (a.score / (q.levels.length - 1)) * (q.max - q.min);
-    if (!finite(score) || score < q.min || score > q.max) reject('invalid-result');
+    const fraction = a.score / (q.levels.length - 1), span = q.max - q.min;
+    // Interpolate from the nearer anchor to preserve endpoints and reduce cancellation.
+    const mapped = fraction <= 0.5 ? q.min + fraction * span : q.max - (1 - fraction) * span;
+    if (!finite(mapped)) reject('invalid-result');
+    // Native bounds/distribution are already validated; contain only mapping roundoff.
+    const score = Math.max(q.min, Math.min(q.max, mapped));
     return { ...base, status: 'answered', score, min: q.min, max: q.max, providerIndex: a.score, confidence: a.confidence, probabilities };
   });
   return { state: incomplete ? 'incomplete' : 'complete', answers };

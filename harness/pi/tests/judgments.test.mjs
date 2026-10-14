@@ -83,6 +83,46 @@ for (const boundary of [0, 1]) {
   });
 }
 
+for (const [name, min, max, index, expected] of [
+  ['decimal lower anchor', -0.3, 0.1, 0, -0.3],
+  ['decimal upper anchor', -0.3, 0.1, 2, 0.1],
+  ['asymmetric upper anchor', -1, 0.2, 2, 0.2],
+  ['decimal weighted interior', -0.3, 0.1, 1.5, 0],
+  ['positive decimal upper anchor', 0.1, 0.3, 2, 0.3],
+  ['negative decimal upper anchor', -0.3, -0.1, 2, -0.1],
+  ['narrow representable upper anchor', 1, 1 + Number.EPSILON, 2, 1 + Number.EPSILON],
+  ['subnormal upper anchor', -Number.MIN_VALUE, Number.MIN_VALUE, 2, Number.MIN_VALUE],
+]) {
+  test(`consumer preserves bounded score mapping: ${name}`, async t => {
+    const b = response(); b.answers.warmth.score = index;
+    b.answers.warmth.probabilities = { 0: 1 - index / 2, 1: 0, 2: index / 2 };
+    const f = fixture(t, { transport: { submit: async () => ({ status: 200, body: b }) } });
+    const r = request(f.config); Object.assign(r.questions[2], { min, max });
+    const result = await f.consumer.evaluate(r);
+    assert.equal(result.state, 'complete');
+    const answer = result.answers[2];
+    if (index === 0 || index === 2) assert.equal(answer.score, expected);
+    else assert.ok(Math.abs(answer.score - expected) <= Number.EPSILON * (max - min));
+    assert.equal(answer.min, min); assert.equal(answer.max, max); assert.equal(answer.providerIndex, index);
+    assert.ok(answer.score >= min && answer.score <= max);
+  });
+}
+for (const [name, mutate] of [
+  ['native score below zero', a => { a.score = -Number.MIN_VALUE; }],
+  ['native score above last level', a => { a.score = 2 + 2 * Number.EPSILON; }],
+  ['inconsistent weighted mean', a => { a.score = 1; }],
+  ['invalid distribution', a => { a.probabilities = { 0: -Number.EPSILON, 1: 0, 2: 1 }; }],
+]) {
+  test(`decimal scale still rejects ${name}`, async t => {
+    const b = response(); b.answers.warmth.score = 2;
+    b.answers.warmth.probabilities = { 0: 0, 1: 0, 2: 1 }; mutate(b.answers.warmth);
+    const f = fixture(t, { transport: { submit: async () => ({ status: 200, body: b }) } });
+    const r = request(f.config); Object.assign(r.questions[2], { min: -0.3, max: 0.1 });
+    const result = await f.consumer.evaluate(r);
+    assert.equal(result.state, 'invalid-result'); assert.equal(result.answers, null);
+  });
+}
+
 test('declared unknown is explicit incomplete, never a positive/negative or ordinary classification', async t => {
   const b = response(); b.answers.color = { type: 'choice', choice: 'unknown', confidence: 1,
     probabilities: { blue: 0, red: 0, unknown: 1 } };
