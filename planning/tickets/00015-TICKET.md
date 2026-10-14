@@ -52,7 +52,7 @@ Bootstrap is a separately audited trusted-console capability, not anonymous web 
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00036](../tasks/00036-TASK.md) | Reconcile the exact managed authority policy | done |
-| [TASK-00037](../tasks/00037-TASK.md) | Deliver trusted ordinary-user console invitations | ready-for-agent |
+| [TASK-00037](../tasks/00037-TASK.md) | Deliver trusted ordinary-user console invitations | in-progress |
 | [TASK-00038](../tasks/00038-TASK.md) | Guard the one-time Super Admin bootstrap | ready-for-agent |
 <!-- /planning:children -->
 

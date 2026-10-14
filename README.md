@@ -86,6 +86,11 @@ Trusted operators can explicitly preview and apply the version-controlled instal
 `./bin/managed-policy preview --internal` and `./bin/managed-policy apply --internal`. Read the
 [managed policy runbook](docs/engineering/MANAGED_POLICY.md) before applying: this reconciles the exact managed
 catalog, not users, bootstrap, Swagger routes or live Agent operations. It never runs automatically.
+After reconciliation, trusted operators can invite an ordinary pending user with
+`./bin/invite-user --internal --operator=OPERATOR_UUID --email=person@example.test`.
+Read the [console invitation runbook](docs/engineering/CONSOLE_INVITATIONS.md) for operator attribution,
+atomic `ROLE_USER` assignment, safe outcomes and recoverable delivery. This is not Super Admin bootstrap or
+public registration, and local delivery adapters do not send email.
 
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services

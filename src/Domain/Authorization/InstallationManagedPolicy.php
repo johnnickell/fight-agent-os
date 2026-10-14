@@ -6,12 +6,15 @@ namespace App\Domain\Authorization;
 
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPermissionDefinition;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicy;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyChangeAction;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedRoleDefinition;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
+use LogicException;
 
 /**
  * Class InstallationManagedPolicy
@@ -48,6 +51,18 @@ final class InstallationManagedPolicy
         'READ_SWAGGER'            => '01a132ed-a1d6-4d73-acf1-882187ebe9f8'
     ];
     private const array SELF_SERVICE = ['VIEW_DASHBOARD', 'READ_OWN_SESSIONS', 'DELETE_OWN_SESSIONS'];
+
+    /**
+     * Validates that the complete installation authority is reconciled
+     */
+    public static function requireReconciled(ManagedPolicyPlan $plan): void
+    {
+        foreach ([...$plan->getPermissions(), ...$plan->getRoles()] as $item) {
+            if ($item->getAction() !== ManagedPolicyChangeAction::UNCHANGED) {
+                throw new LogicException('Managed installation authority requires reconciliation.');
+            }
+        }
+    }
 
     /**
      * Builds typed definitions and retains every approved application reference

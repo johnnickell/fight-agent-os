@@ -65,6 +65,15 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
      */
     private function approvedActor(string $actor, string $action): bool
     {
+        if (str_starts_with($actor, 'console:')) {
+            return preg_match('/\Aconsole:[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $actor) === 1
+                && in_array($action, [
+                    'user.invited',
+                    'user.console_role_assigned',
+                    'user.invitation_delivery.failed',
+                    'user.invitation_delivery.confirmed'
+                ], true);
+        }
         if ($actor === 'credential-recovery') {
             return in_array($action, [
                 'user.invitation_delivery.failed',
