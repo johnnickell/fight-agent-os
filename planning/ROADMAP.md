@@ -20,6 +20,10 @@ operations that consume them. Markdown remains authoritative before cutover; a r
 the same eligibility/claim operations, not a second Workflow engine. The console must not infer an operator's
 business authority merely from access to a terminal. Exact enrollment and grant contracts are settled before launch.
 
+The October 6 [tool-mediated strategy](../docs/engineering/TOOL_MEDIATED_EXECUTION.md) replaces the first
+Engineer-root VM profile: scoped files/notes and separate role sessions first, then fixed permission-gated checks
+in a qualified restricted environment. The file-only prototype is not production readiness or a completed TASK.
+
 John approved the [incremental Harness protection and retrieval milestone](epics/00006-EPIC.md#approved-incremental-harness-protection-and-retrieval--2026-10-07)
 on 2026-10-07 for existing human-operated Pi sessions. Prioritize deterministic controls plus Jev screening and
 required file relevance screening at an initial 0.70 positive-read threshold. This bounded Harness slice can
@@ -54,12 +58,12 @@ is complete for the selected TICKET-00040 through TICKET-00045 scope; implementa
 Older browser/Harness planning is not implicitly complete. Broader routing retains its separate triage-map decisions. TASK-00138 retains its qualification requirements, and the Board's
 current executable ordering is unchanged by this planning amendment.
 
-The next execution TASKs are [sandbox boundary](tasks/00138-TASK.md), [authorized console start](tasks/00139-TASK.md),
+The next execution TASKs are [tool-mediated boundaries](tasks/00138-TASK.md), [authorized console start](tasks/00139-TASK.md),
 [recoverable preparation](tasks/00140-TASK.md), [Pi delegation](tasks/00141-TASK.md), and
 [parallel/recovery qualification](tasks/00142-TASK.md). They are incremental delivery slices, not a promise that
 existing foundation dependencies disappear or that a container alone is ready for autonomous work.
 
-Current amendments define [Team roles](../docs/engineering/TEAM.md), [sandbox startup](tickets/00032-TICKET.md),
+Current amendments define [Team roles](../docs/engineering/TEAM.md), [tool-mediated startup](tickets/00032-TICKET.md),
 [post-review QA](tickets/00033-TICKET.md), and [team templates](tickets/00034-TICKET.md). Those TICKETs cover selected
 cross-cutting requirements, not full decomposition of their parent EPICs; remaining EPIC requirements still need
 TICKET/TASK coverage before execution. Prioritize Graphify and Writing for Agents locally, then security audit and

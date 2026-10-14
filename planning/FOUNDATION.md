@@ -1,7 +1,7 @@
 # Foundation and capability inventory
 
-Snapshot: 2026-09-26, refreshed during TASK-00135 and the approved skill closeout from current source and planning records. A completed component
-is not proof of an end-to-end journey. The [Roadmap](ROADMAP.md) owns sequence; the [Board](tasks/BOARD.md) owns
+Snapshot: 2026-09-26 foundation inventory, with the execution strategy amended during TASK-00138 on 2026-10-06.
+A completed component is not proof of an end-to-end journey. The [Roadmap](ROADMAP.md) owns sequence; the [Board](tasks/BOARD.md) owns
 executable priority. Historical gate receipts remain historical.
 
 | Capability | Current evidence | Remaining boundary |
@@ -13,7 +13,7 @@ executable priority. Historical gate receipts remain historical.
 | Browser experience | Non-product React/TypeScript shell at `/app`, strict public boot config, Docker-pinned frontend checks; TASK-00026 accepted locally; typed API/CSRF service in TASK-00027 independently accepted with scoped non-visual QA; TASK-00029's original neutral production components and Storybook evidence have independent technical and scoped browser QA acceptance; TASK-00050's accepted semantic theme and local appearance selector are implemented pending independent review | The shell does not invoke the service or mount authority; TASK-00028's injected-loader cache, guard/action and safe navigation foundation has independent review and scoped behavioral/browser QA acceptance. Real `/me`, authentication integration, product journeys and complete browser Planning/observability remain planned |
 | Registered Planning | EPIC-00005 and TICKETs | Registered repository/checkout authority, verified import and database cutover remain planned; Markdown is authoritative now |
 | Managed Harness and SDLC team | EPIC-00006, team-template requirements; installable `harness/pi` terminal identity | Presentation does not imply managed Agent execution |
-| Isolated TASK execution | EPIC-00007, TICKET-00032 and TASK-00138 [local VM qualification](../docs/engineering/DOCKER_SANDBOX_QUALIFICATION.md) | Two VMs passed synthetic storage/restart checks; pinned Pi CLI passed synthetic SSE, secret substitution and revocation. Full isolation/profile, real-provider broker and host accounting remain unqualified; production PHP start/recovery is unimplemented |
+| Isolated TASK execution | October 6 [tool-mediated strategy](../docs/engineering/TOOL_MEDIATED_EXECUTION.md) replaces the first root-VM profile; bounded two-session file/notes/correction prototype demonstrated, no candidate execution | Production authorization, file/message capabilities, restricted checks/protected results, accounting and recovery remain unimplemented/unqualified; historical VM receipts do not certify the new profile |
 | Independent review, QA and delivery | Local review/QA/land guidance; EPIC-00008, completed local TICKET-00033, managed TICKET-00083 and local coordination TICKET-00084 | Managed review/QA/publication phases remain planned; local skill completion does not close that scope; release/deployment need separate runbooks and implementation |
 | Verification | Current `scripts/build.php`: read-only Composer/planning/metadata freshness, syntax/style/types/dependencies/Rector, one guarded all-suite backend coverage phase, frontend coverage/production/catalog/browser checks and source stability | TASK-00033 has current independent technical acceptance and scoped tooling/CLI QA PASS at `36d9a9c`, resolving LAND-01/R1/R2/R3 with actual clean native Linux wrapper install/write, cold-cache analysis, repeated normal-use reaping, receipt privacy/access and guarded cleanup/development-preservation evidence. Historical prepared-runtime acceptance is not substituted. TASK and TICKET-00013 close together; PR #69 publication/final verification remain pending at this checkpoint, with human merge separate. Combined coverage and automated browser observations are not universal accessibility certification |
 
@@ -34,10 +34,13 @@ Awaiting review. The next slice adds Senior Engineer, QA Engineer and Release Ma
 for bounded research; Project Manager owns planning; Hotfix Engineer has a narrowly authorized emergency path.
 See [Team roles](../docs/engineering/TEAM.md).
 
-The Runner is deterministic PHP infrastructure. It prepares worktrees and isolated local container environments
-through a constrained provisioner and verifies isolation before any Agent starts. A prompt, Compose project name
-or separate directory alone does not provide a security boundary. Prefer proven isolation mechanisms and qualify
-the configured policy on supported hosts; report residual risks without promising zero blast radius.
+The Runner remains deterministic PHP infrastructure. The selected first profile gives Engineer scoped source/
+scratch writes and TASK-only Review/QA reads, with no shell/private engine. Trusted infrastructure owns Git,
+permissions, provider access and fixed restricted-container check operations; the Team Lead may request routine
+checks automatically within a preapproved grant. File/handoff readiness is separate from candidate-check readiness.
+The disposable two-session prototype is partial tool/context evidence, not production authorization or OS isolation.
+A prompt, worktree or Compose name alone is not a security boundary. Qualify actual capabilities and preserve
+independent results, limits and recovery rather than promising zero blast radius.
 
 ## Working material and authority
 

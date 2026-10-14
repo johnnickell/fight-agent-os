@@ -28,6 +28,12 @@ PHP validates grants, claims and transitions, provisions/verifies the isolated w
 Agent sessions, tracks attempts and limits, and reconciles external effects. Team Lead supplies judgment and
 delegation requests through those operations; it does not improvise provisioning or become workflow authority.
 
+For the first [tool-mediated execution profile](TOOL_MEDIATED_EXECUTION.md), Engineer uses scoped file tools and
+TASK-only Review/QA reads, not a shell or private engine. Team Lead may inspect source, request a bounded
+implementation correction and automatically request permitted checks; that is not an independent technical
+verdict or security clearance. Trusted application operations own actual check execution, Git mutations and
+protected results. A missing test capability remains unavailable, never replaced by an unrestricted Lead shell.
+
 The first production slice remains **one TASK → Team Lead → Software Engineer → durable Awaiting review**.
 EPIC-00008 extends it to **Senior Engineer review → QA Engineer verification → Release Manager land → human PR
 handoff**. Apply [QA applicability](QA.md#applicability) to changed behavior, including non-UI interfaces and
