@@ -24,7 +24,7 @@ export declare function validateFilePolicy(value: unknown): FilePolicy;
 export declare class FileSource {
   authorize(path: string, policy: FilePolicy): string;
   openDirectory(path: string, policy: FilePolicy): number;
-  snapshot(path: string, policy: FilePolicy, options?: { maxBytes?: number }): Snapshot;
+  snapshot(path: string, policy: FilePolicy, options?: { maxBytes?: number; onRead?: (bytes: number) => void }): Snapshot;
 }
 export declare class FileScreening {
   constructor(dependencies: { settings: { load(): unknown }; configuration(): OperatorConfiguration | null;

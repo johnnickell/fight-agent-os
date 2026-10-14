@@ -139,6 +139,25 @@ test('32 KiB source boundary is complete, but JSON escaping may exceed shared en
   result = await f.screening.screen(input());
   assert.equal(result.status, 'payload-limit'); assert.equal(result.threshold, 'unresolved'); assert.equal(f.calls(), 1);
 });
+test('rejected snapshots report local bytes without inventing provider work', async t => {
+  const f = fixture(t);
+  writeFileSync(join(f.root, 'source.txt'), Buffer.alloc(32768, 0xff));
+  const result = await f.screening.screen(input());
+  assert.equal(result.status, 'binary-source'); assert.equal(result.accounting.sourceChecks, 1);
+  assert.equal(result.accounting.sourceCheckBytes, 32768); assert.equal(result.receipt, null);
+  assert.equal(result.source, null); assert.equal(result.judgment, null); assert.equal(f.calls(), 0);
+});
+test('a rejected validation reread is accounted without consuming new candidate allowance', async t => {
+  const f = fixture(t, undefined, { afterDispatch: root => writeFileSync(join(root, 'source.txt'), Buffer.alloc(32768)) });
+  const result = await f.screening.screen(batch({ paths: ['source.txt'] }));
+  assert.equal(result.results[0].status, 'binary-source'); assert.equal(result.coverage.totalSourceBytes, 29);
+  assert.equal(result.coverage.admittedSourceBytes, 29); assert.equal(result.coverage.completedFiles, 0);
+  assert.equal(result.accounting.sourceCheckBytes, 3 * 29 + 32768);
+  assert.equal(result.accounting.providerAttempts, 1); assert.equal(result.accounting.reportedCostUsd, 0);
+  assert.equal(result.accounting.unknownCosts, 1); assert.equal(result.accounting.retainedReservations, 1);
+  assert.equal(result.results[0].source, null); assert.equal(result.results[0].judgment, null);
+  assert.equal(f.calls(), 1);
+});
 test('question and choice bounds are shared, not bypassed by tool encoding', async t => {
   const f = fixture(t), q = classification();
   for (let n = 0; n < 14; n++) q.choices[`extra${n}`] = 'Extra';
@@ -229,6 +248,47 @@ test('total source ceiling admits only 32 complete 32 KiB candidates', async t =
   assert.equal(result.coverage.totalSourceBytes, 1048576); assert.equal(result.coverage.completedFiles, 32);
   assert.equal(result.results.filter(r => r.status === 'batch-source-limit').length, 2); assert.equal(f.calls(), 32);
   assert.ok(result.accounting.sourceCheckBytes > result.coverage.totalSourceBytes, 'local authorization rereads are accounted separately');
+});
+for (const [name, contents, statuses, completed, admitted] of [
+  ['binary', [Buffer.alloc(32768)], { 'binary-source': 32 }, 0, 0],
+  ['invalid UTF-8', [Buffer.alloc(32768, 0xff)], { 'binary-source': 32 }, 0, 0],
+  ['mixed rejected and valid', [Buffer.alloc(32768), Buffer.alloc(32768, 0xff), '\t'.repeat(32768), 'x'.repeat(32768)],
+    { 'binary-source': 16, 'payload-limit': 8, complete: 8 }, 8, 16],
+]) {
+  test(`rejected ${name} initial reads exhaust the total source allowance`, async t => {
+    const f = fixture(t), paths = [];
+    for (let n = 0; n < 50; n++) {
+      const path = `bounded-${n}.txt`, content = contents[n % contents.length]; paths.push(path);
+      writeFileSync(join(f.root, path), typeof content === 'string' && content.startsWith('x') ? String(n).padEnd(32768, 'x') : content);
+    }
+    const result = await f.screening.screen(batch({ paths }));
+    assert.equal(result.coverage.totalSourceBytes, 1048576);
+    assert.equal(result.coverage.admittedSourceBytes, admitted * 32768);
+    assert.equal(result.coverage.completedFiles, completed);
+    assert.equal(result.coverage.unresolvedFiles, 50 - completed); assert.equal(result.coverage.complete, false);
+    assert.equal(result.results.filter(r => r.status === 'batch-source-limit').length, 18);
+    for (const [status, count] of Object.entries(statuses)) assert.equal(result.results.filter(r => r.status === status).length, count);
+    assert.equal(f.calls(), completed); assert.equal(f.credentials(), completed);
+    assert.equal(result.accounting.providerAttempts, completed);
+    assert.ok(Math.abs(result.accounting.reportedCostUsd - completed * 0.00000168) < 1e-18);
+    if (completed === 0) assert.equal(result.accounting.sourceCheckBytes, 1048576);
+    else assert.ok(result.accounting.sourceCheckBytes > 1048576, 'successful siblings still count independent validation rereads');
+    assert.ok(result.results.filter(r => r.status !== 'complete').every(r => r.threshold === 'unresolved' && r.source === null && r.judgment === null));
+  });
+}
+test('rejected reads consume an uneven remaining allowance without denying a later fitting file', async t => {
+  const f = fixture(t), paths = [];
+  for (let n = 0; n < 31; n++) { const path = `binary-${n}.txt`; paths.push(path); writeFileSync(join(f.root, path), Buffer.alloc(32768)); }
+  writeFileSync(join(f.root, 'invalid.txt'), Buffer.alloc(8192, 0xff));
+  writeFileSync(join(f.root, 'too-large.txt'), 'x'.repeat(32768));
+  writeFileSync(join(f.root, 'fits.txt'), 'x'.repeat(24576));
+  writeFileSync(join(f.root, 'after.txt'), 'x');
+  const result = await f.screening.screen(batch({ paths: [...paths, 'invalid.txt', 'too-large.txt', 'fits.txt', 'after.txt'] }));
+  assert.equal(result.coverage.totalSourceBytes, 1048576); assert.equal(result.coverage.admittedSourceBytes, 24576);
+  assert.equal(result.results[31].status, 'binary-source'); assert.equal(result.results[32].status, 'batch-source-limit');
+  assert.equal(result.results[33].threshold, 'positive'); assert.equal(result.results[34].status, 'batch-source-limit');
+  assert.equal(result.coverage.completedFiles, 1); assert.equal(f.calls(), 1);
+  assert.ok(result.accounting.sourceCheckBytes > 1048576);
 });
 for (const selection of [{ paths: Array(51).fill('source.txt') }, { glob: '{a,b}.txt' }, { glob: '[abc].txt' }, { paths: [] }, { path: 'source.txt', glob: '*.txt' }]) {
   test(`reject malformed or excessive selection ${JSON.stringify(selection).slice(0, 60)}`, async t => {

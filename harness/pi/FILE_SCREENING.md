@@ -69,9 +69,13 @@ invented total. Explicit lists deduplicate canonical paths, and unauthorized pat
 include bounded relative paths for follow-up (maximum 512 bytes); longer names are skipped without source disclosure.
 The single-file result keeps its existing hashed path identity.
 
-Batches admit at most 1 MiB source and use at most two workers, still subject to the shared two-outstanding-request,
-fifteen-second request, encoded-payload and persisted spending ceilings. Each file gets an independent result. Partial
-failures preserve valid completions; cancellation stops new dispatch and rejects obsolete late answers. Results are
+Batches consume at most 1 MiB total initial-source bytes and use at most two workers, still subject to the shared
+two-outstanding-request, fifteen-second request, encoded-payload and persisted spending ceilings. Initial reads consume
+the allowance even when decoding, stability checks or payload admission later fail; unread oversized/denied files
+consume no bytes. `coverage.totalSourceBytes` reports this consumption; `admittedSourceBytes` separately counts bytes
+in successful initial UTF-8 snapshots, not necessarily completed evaluations. Neither counter includes validation
+rereads. Each file gets an independent result. Partial failures preserve valid completions; cancellation stops new
+dispatch and rejects obsolete late answers. Results are
 bounded to 64 KiB: if judgment metadata does not fit, explicit `result-presentation-limit` markers replace it and
 coverage is incomplete. Full shared receipts remain in their owning bounded inspection buffer; batch receipts are compact.
 `providerAttempts` counts calls to the shared capability, including admission failures, not necessarily dispatched/billed
@@ -81,8 +85,9 @@ A 128-entry LRU stores judgment metadata only, at most 8 KiB per entry (1 MiB re
 binds actual session, complete authority policy/allocation, exact content digest, need, declared question/choices,
 configuration/evaluator, rubric and policy. Complete positive and negative judgments may be reused; unknown/failure
 results are not cached. Every hit rechecks current policy, source access and exact digest, with fresh source revision.
-Hits have `receipt: null`, `cache.hit: true`, and no new provider usage. Local `sourceChecks`/`sourceCheckBytes` count
-successful byte reads separately from admitted source: authorization checks may reread the same bytes several times.
+Hits have `receipt: null`, `cache.hit: true`, and no new provider usage. Local `sourceChecks` counts snapshot attempts;
+`sourceCheckBytes` counts all bytes actually read, including rejected snapshots and independent validation rereads.
+Authorization checks may reread the same bytes several times, so this local total can exceed the initial-source ceiling.
 No source body enters the cache; shutdown/reload and observed authority drift clear it. It is not shared with children.
 Current access is checked again before delivery, including early batch completions. This remains same-user trusted
 runtime protection, not enforced read interception or an OS sandbox.
@@ -103,9 +108,10 @@ bytes and sources >32 KiB are refused. The open itself prevents ancestor-symlink
 filesystem adapter used by focused checks uses descriptor-relative `/proc/self/fd` traversal with `O_NOFOLLOW`
 on every component. Other filesystem hosts fail closed, and the participating Jev runtime remains macOS-only.
 Before reading, the opened descriptor must match the authorized inode and metadata; reads are bounded to 32 KiB
-plus one detection byte. Metadata/path identity are checked again after the
-read. The source is re-resolved and compared before disclosure and after provider completion. Changed/replaced or
-unstable source discards the judgment. Same-user arbitrary filesystem mutation is not an OS security boundary.
+plus one detection byte, further capped by the remaining initial-source allowance for a batch candidate. When no
+detection byte fits, post-read size/metadata checks still reject growth rather than accepting a truncated snapshot.
+Metadata/path identity are checked again after the read. The source is re-resolved and compared before disclosure
+and after provider completion. Changed/replaced or unstable source discards the judgment. Same-user arbitrary filesystem mutation is not an OS security boundary.
 
 Results contain `status`, `threshold`, typed `judgment`, question digest and predeclared relevance set, raw-byte
 SHA-256/source revision/byte count, coverage and the shared redacted receipt. Source/path identifiers are hashes,

@@ -106,7 +106,7 @@ export class FileSource {
     if (stamp(fstatSync(fd, { bigint: true })) !== stamp(before)) { closeSync(fd); deny('unstable-source'); }
     return fd;
   }
-  snapshot(path, policy, { maxBytes = sourceByteLimit } = {}) {
+  snapshot(path, policy, { maxBytes = sourceByteLimit + 1, onRead = () => {} } = {}) {
     const canonical = this.authorize(path, policy), lexical = resolve(path);
     const before = lstatSync(canonical, { bigint: true });
     if (!before.isFile()) deny('unsupported-file');
@@ -124,9 +124,13 @@ export class FileSource {
       // A replaced parent can redirect open(), but cannot cause a read of a different inode.
       if (!opened.isFile() || stamp(opened) !== stamp(before) || realpathSync(lexical) !== canonical ||
         stamp(lstatSync(canonical, { bigint: true })) !== stamp(before)) deny('unstable-source');
-      const bytes = Buffer.alloc(sourceByteLimit + 1);
+      // Never use the detection byte to exceed the remaining initial-source allowance.
+      const bytes = Buffer.alloc(Math.min(sourceByteLimit + 1, maxBytes));
       let count = 0, read;
-      while (count < bytes.length && (read = readSync(fd, bytes, count, bytes.length - count, null)) > 0) count += read;
+      while (count < bytes.length && (read = readSync(fd, bytes, count, bytes.length - count, null)) > 0) {
+        count += read;
+        onRead(read); // Consumption survives decoding, stability and I/O failures.
+      }
       if (count > sourceByteLimit) deny('source-limit');
       if (count !== Number(before.size) || stamp(fstatSync(fd, { bigint: true })) !== stamp(before) ||
         realpathSync(lexical) !== canonical || stamp(lstatSync(canonical, { bigint: true })) !== stamp(before)) deny('unstable-source');
@@ -211,7 +215,7 @@ export class FileScreening {
       const discovered = await discoverFiles({ input, cwd: this.cwd, policy: bound.policy, source: this.source, stopped,
         signal: controller.signal, remainingMs: Math.max(0, deadline - this.now()) });
       const results = Array(discovered.candidates.length);
-      let cursor = 0, sourceBytes = 0;
+      let cursor = 0, sourceBytes = 0, admittedSourceBytes = 0;
       const accounting = { sourceChecks: 0, sourceCheckBytes: 0, cacheHits: 0, providerAttempts: 0,
         reportedCostUsd: 0, unknownCosts: 0, retainedReservations: 0,
         measuredUsage: null };
@@ -225,7 +229,7 @@ export class FileScreening {
           }
           const result = await this.#single({ path: candidate.path, need: input.need, question: input.question }, {
             signal: controller.signal, accounting, stopped, remainingSourceBytes: () => batchLimits.sourceBytes - sourceBytes,
-            admit: bytes => { if (sourceBytes + bytes > batchLimits.sourceBytes) return false; sourceBytes += bytes; return true; },
+            consume: bytes => { sourceBytes += bytes; }, admitted: bytes => { admittedSourceBytes += bytes; },
           });
           if (result.cache?.hit) accounting.cacheHits++;
           if (result.receipt) {
@@ -257,8 +261,8 @@ export class FileScreening {
           const freshPolicy = this.#policy();
           if (freshPolicy.identity !== bound.identity) deny('stale-file-policy');
           accounting.sourceChecks++;
-          const fresh = this.source.snapshot(discovered.candidates[index].path, freshPolicy.policy);
-          accounting.sourceCheckBytes += fresh.bytes;
+          const fresh = this.source.snapshot(discovered.candidates[index].path, freshPolicy.policy,
+            { onRead: bytes => { accounting.sourceCheckBytes += bytes; } });
           const prior = results[index].source;
           if (fresh.digest !== prior.digest || fresh.revision !== prior.revision || fresh.id !== prior.id) deny('unstable-source');
         } catch (error) {
@@ -268,7 +272,7 @@ export class FileScreening {
       }
       const completed = results.filter(result => result.coverage.complete).length;
       const coverage = { ...discovered.coverage, complete: discovered.coverage.complete && completed === results.length,
-        completedFiles: completed, unresolvedFiles: results.length - completed, totalSourceBytes: sourceBytes,
+        completedFiles: completed, unresolvedFiles: results.length - completed, totalSourceBytes: sourceBytes, admittedSourceBytes,
         stopReason: stopped(), evaluatedScope: 'enumerated-candidates-only', presentedJudgments: results.filter(result => result.judgment).length };
       const output = { status: coverage.complete ? 'complete' : 'incomplete', threshold: 'unresolved', policyVersion: filePolicyVersion,
         judgment: null, source: null, receipt: null, coverage, accounting, results, elapsedMs: Math.max(0, this.now() - start) };
@@ -284,15 +288,16 @@ export class FileScreening {
         judgment: null, source: null, receipt: null, results: [], coverage: { complete: false } };
     } finally { clearTimeout(timer); signal.removeEventListener('abort', abort); }
   }
-  async #single(input, { signal, accounting = { sourceChecks: 0, sourceCheckBytes: 0 }, admit = () => true, stopped = () => null,
-    remainingSourceBytes = () => sourceByteLimit } = {}) {
+  async #single(input, { signal, accounting = { sourceChecks: 0, sourceCheckBytes: 0 }, consume = () => {}, admitted = () => {}, stopped = () => null,
+    remainingSourceBytes = () => sourceByteLimit + 1 } = {}) {
     let snapshot, evaluation, prepared, bound;
     const generation = this.#generation;
-    const read = (path, policy, maxBytes = sourceByteLimit) => {
+    const read = (path, policy, maxBytes = sourceByteLimit + 1, initial = false) => {
       accounting.sourceChecks++;
-      const fresh = this.source.snapshot(path, policy, { maxBytes });
-      accounting.sourceCheckBytes += fresh.bytes;
-      return fresh;
+      return this.source.snapshot(path, policy, { maxBytes, onRead: bytes => {
+        accounting.sourceCheckBytes += bytes;
+        if (initial) consume(bytes);
+      } });
     };
     try {
       const question = inputQuestion(input);
@@ -303,8 +308,8 @@ export class FileScreening {
       if (availability !== 'available') deny(availability);
       const path = resolve(this.cwd, input.path);
       if (this.#authority !== bound.identity) { this.#cache.clear(); this.#authority = bound.identity; }
-      snapshot = read(path, bound.policy, remainingSourceBytes());
-      if (!admit(snapshot.bytes)) deny('batch-source-limit');
+      snapshot = read(path, bound.policy, remainingSourceBytes(), true);
+      admitted(snapshot.bytes);
       const current = () => {
         if (stopped()) deny(stopped());
         if (signal?.aborted || generation !== this.#generation) deny('cancelled');
