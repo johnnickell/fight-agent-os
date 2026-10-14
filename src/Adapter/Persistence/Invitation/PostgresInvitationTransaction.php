@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapter\Persistence;
+namespace App\Adapter\Persistence\Invitation;
 
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Application\Invitation\InvitationTransaction;

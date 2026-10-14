@@ -81,7 +81,9 @@ not an authorized application writer or part of that concurrency guarantee.
 
 The canonical Doctrine unit of work rejects nested transactions. Calling the two handlers sequentially with it
 would permit a committed unassigned invitation, and wrapping those unchanged handlers in another transaction
-would fail. Console composition registers `PostgresInvitationTransaction` as a narrowly scoped participant for
+would fail. Console composition registers
+[`App\Adapter\Persistence\Invitation\PostgresInvitationTransaction`](../../src/Adapter/Persistence/Invitation/PostgresInvitationTransaction.php)
+as a narrowly scoped participant for
 the two routed package handlers. Its outer scope uses the canonical Doctrine commit. Participant callbacks require
 that active scope and reject nested participation; direct dispatch of either package operation outside the owned
 scope fails closed. The general application unit of work and delivery handlers remain unchanged. This is an
