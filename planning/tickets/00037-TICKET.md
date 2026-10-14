@@ -125,3 +125,16 @@ its configured source may prompt. Opaque credential unavailability is honest wit
 upstream denial remains distinct. No duplicate Jev store, auth-file inspection/copy or silent alternate source.
 No real credential resolution or paid requests are authorized for automated implementation; live acceptance needs
 John's explicit ceilings and successful permitted check. Managed infrastructure-owned credentials remain future work.
+
+### Authorized live evidence — 2026-10-14
+
+John subsequently approved exactly one fixed synthetic paid check through Pi-managed OpenRouter resolution,
+with request/session ceilings $0.002688/$0.005376; the session ceiling does not authorize a second call.
+[TASK-00184](../tasks/00184-TASK.md#authorized-live-evidence-recovery--2026-10-14) records the successful actual
+Pi 1.2.0/macOS TUI check against the expected TypeSafe build: Yes probability 0.99, 438 ms, 290 input/23 output
+tokens and provider-reported cost $0.00001218. The retained ledger settled 13 micro-USD with no pending reservation;
+zero additional requests are authorized. Actual in-process disclosure scans found zero credential occurrences,
+reload returned unchecked without dispatch, and the main Agent model remained unchanged. Controlled cancellation
+is separate from unexercised live pending-network cancellation; no native screenshots or persisted notification-only
+JSONL were obtained. Independent Review/QA and H-01's exact historical synthetic-item human cleanup remain pending.
+This evidence supersedes the earlier live authorization hold, not other acceptance or managed-credential boundaries.

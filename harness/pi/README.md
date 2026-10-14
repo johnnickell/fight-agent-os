@@ -1,8 +1,9 @@
 # Fight terminal for Pi
 
 Version 0.1.0 supplies the approved Fight Agent OS welcome mark and compact working header (qualified with Pi
-0.87.1), plus operator-only Jev setup and synthetic readiness (Pi 1.2.0 on macOS). Live Decisions acceptance
-remains outstanding; controlled results do not establish account access or model accuracy. This is not the
+0.87.1), plus operator-only Jev setup and synthetic readiness (Pi 1.2.0 on macOS). One authorized live Decisions
+check succeeded on October 14, 2026; independent acceptance remains pending. A synthetic result does not establish
+model accuracy or another installation's account access. This is not the
 managed Runner, an execution sandbox, tool safeguards or required file screening.
 
 ## Install
@@ -77,7 +78,8 @@ prompt, environment, argv, transcript or receipt. Keep the main Agent provider/m
    and [Jev endpoint/prices](https://openrouter.ai/api/v1/models/typesafe/jev-1.13/endpoints).
    The qualified public contract is `POST https://openrouter.ai/api/alpha/decisions`, model
    `typesafe/jev-1.13`, provider TypeSafe, expected response build `typesafe/jev-1.13-20260917`.
-   A different returned build is rejected, never silently adopted. Live wire behavior is not yet qualified.
+   A different returned build is rejected, never silently adopted. The fixed synthetic path returned that build
+   in the October 14 live check; other question types and live refusal behavior are not qualified here.
 3. Use `/jev setup`. Confirm that exact connection, enter explicit positive integer request/session ceilings in
    micro-USD (1 USD = 1,000,000), then approve **only** the fixed synthetic kettle proposition and current price.
    No credential is read and no provider request is sent by setup. No monetary ceiling is selected for you.
@@ -127,11 +129,22 @@ process's resources. Nonsecret settings permissions do not isolate them from sam
 settings/runtime are directly qualified in this slice; other hosts report unsupported. There is no Keychain-only
 isolation claim. Managed infrastructure-owned credentials and TASK-00138 isolation remain separate future work.
 
-### Finish live qualification
+### Qualify your installation
 
-TASK-00184 remains incomplete until the human authorizes ceilings, credential resolution and a paid successful
+The [TASK-00184 qualification record](../../planning/tasks/00184-TASK.md#authorized-live-evidence-recovery--2026-10-14)
+reports one real Pi-managed OpenRouter check: Yes probability 0.99, 438 ms, 290 input/23 output tokens and
+provider-reported cost $0.00001218. The conservative ledger settled 13 micro-USD, with no pending reservation.
+Its $0.002688 request / $0.005376 session ceilings authorized **one request only**, not a repeat. Reload returned
+to unchecked without another dispatch; the main Agent remained openai-codex/gpt-6.1-sol/high. Exact-key scans of
+actual captured presentation/evidence found no occurrences. Native terminal images, a persisted JSONL transcript
+(no model messages were sent), real pending-network cancellation and independent invoice verification were not
+obtained; pending cancellation/stale completion use separately labeled controlled tests. Independent Review/QA
+remain separate. This receipt neither enrolls another account nor authorizes another billed check.
+
+For your own qualification, explicitly authorize ceilings, credential resolution and one paid fixed synthetic
 check. With the trusted package loaded, use `/jev setup`, `/jev inspect`, then `/jev check` and confirm once.
 Retain only redacted configuration/evaluator/schema, elapsed time, outcome and available measured usage/cost.
-Inspect terminal/session/log presentation for disclosure without printing credentials. Exercise reload/shutdown
-and verify an unchanged main model. Do not invoke Pi credential-print commands or inspect private auth files.
-Controlled injected credentials/transport and real-runtime receipts must remain labeled separately from live evidence.
+Inspect actual terminal/session/log presentation for disclosure without printing credentials; record absent files
+rather than claiming they were scanned. Exercise reload/shutdown and verify an unchanged main model. Do not invoke
+Pi credential-print commands or inspect private auth files. Keep controlled injected credentials/transport separate
+from live evidence. Preserve uncertain charges and obtain new permission before any additional live request.
