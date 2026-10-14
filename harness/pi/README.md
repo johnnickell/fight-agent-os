@@ -1,7 +1,9 @@
 # Fight terminal for Pi
 
 Version 0.1.0 supplies the approved Fight Agent OS welcome mark and compact working header (qualified with Pi
-0.87.1), plus operator-only Jev setup and synthetic readiness (Pi 1.2.0 on macOS). One authorized live Decisions
+0.87.1), plus operator-only Jev setup/synthetic readiness and a trusted-consumer typed-judgment capability (Pi 1.2.0 on
+macOS). Mixed typed forms have controlled Pi integration evidence, not live qualification; see
+[bounded typed judgments](JUDGMENTS.md). One authorized live Decisions
 check succeeded on October 14, 2026; independent acceptance remains pending. A synthetic result does not establish
 model accuracy or another installation's account access. This is not the
 managed Runner, an execution sandbox, tool safeguards or required file screening.
@@ -81,7 +83,8 @@ prompt, environment, argv, transcript or receipt. Keep the main Agent provider/m
    A different returned build is rejected, never silently adopted. The fixed synthetic path returned that build
    in the October 14 live check; other question types and live refusal behavior are not qualified here.
 3. Use `/jev setup`. Confirm that exact connection, enter explicit positive integer request/session ceilings in
-   micro-USD (1 USD = 1,000,000), then approve **only** the fixed synthetic kettle proposition and current price.
+   micro-USD (1 USD = 1,000,000), choose `fixed-synthetic-only` for readiness alone (or explicitly enable
+   `authorized-supplied-state` for [trusted consumers](JUDGMENTS.md)), then confirm disclosure and current price.
    No credential is read and no provider request is sent by setup. No monetary ceiling is selected for you.
    Price confirmation expires after 24 hours; run setup again after expiry or any connection/price change.
 4. Use `/jev inspect` for redacted effective settings and configuration-bound readiness. Inspection does not
@@ -95,7 +98,7 @@ request must not exceed session. Reconfirm pricing before use. Provider routing 
 TypeSafe only and the published token-price maxima; they are not proof of server-side billing enforcement.
 An unknown or uncertain billed outcome retains the reservation; reported actual cost settles it once, rounded
 up to micro-USD. Missing cost is unknown, never zero. There are no automatic retries. A price-bound breach is a
-failure: stop live use and requalify pricing, rather than retrying. Do not delete a ledger to regain budget.
+failure that halts further admission in the persisted session ledger: reconcile and requalify pricing, rather than retrying. Do not delete a ledger to regain budget.
 
 Settings and session charges live outside the repository under
 `~/Library/Application Support/Fight Agent OS/jev/` (directory `0700`, files `0600`). Settings contain **no key**
@@ -103,7 +106,9 @@ or duplicate credential-store reference. Session-ID-bound reservations survive r
 lock, corrupted ledger or unresolved charge fails closed and needs human reconciliation, not automatic reset.
 Changing settings invalidates readiness and cancels pending work. Shutdown/reload rejects stale completions.
 Two concurrent operations, a 15-second deadline, 64 KiB input and response limits, eight questions and sixteen
-choices are shared ceilings; this slice submits exactly one fixed yes/no question and no choices or private source.
+choices are shared ceilings across readiness and typed consumers. `/jev check` still submits exactly one fixed
+yes/no question and no choices or private source. Trusted consumers separately require current disclosure
+permission and explicit request/session allocations; see [their contract and qualification limits](JUDGMENTS.md).
 A complete finite Yes probability of at least 0.70 passes this synthetic check, not a measured accuracy claim.
 
 ### Authentication boundary and failures

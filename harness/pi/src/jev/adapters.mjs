@@ -1,4 +1,5 @@
 import { connection, Unavailable } from './readiness.mjs';
+import { parseProviderJson } from './strict-json.mjs';
 
 /** Resolve only Pi's configured OpenRouter source; the supported API deliberately hides resolution errors */
 export class PiCredentials {
@@ -43,7 +44,7 @@ export class DecisionsTransport {
           chunks.push(value);
         }
         let body;
-        try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+        try { body = parseProviderJson(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))); }
         catch { throw new Unavailable('invalid-result'); }
         return { status: 200, body };
       } finally { await reader.cancel(); reader.releaseLock(); }

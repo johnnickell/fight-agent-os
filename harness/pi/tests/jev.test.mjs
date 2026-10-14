@@ -111,7 +111,12 @@ test('request and repeated session ceilings reject before retrieving credentials
 test('a reported price breach charges actual cost and stops readiness', async t => {
   const f = fixture(t, { transport: { submit: async () => ({ status: 200, body: body({ usage: { input_tokens: 40, output_tokens: 2, cost: 0.02 } }) }) } });
   assert.equal((await f.readiness.check()).state, 'price-bound-exceeded');
-  assert.throws(() => f.budget.reserve(1, 10000), { code: 'session-budget' });
+  assert.throws(() => f.budget.reserve(1, 10000), { code: 'budget-unavailable' });
+});
+test('a price-bound violation blocks further session admission even after reload with ample remaining budget', async t => {
+  const f = fixture(t, { transport: { submit: async () => ({ status: 200, body: body({ usage: { input_tokens: 40, output_tokens: 2, cost: 0.003 } }) }) } });
+  assert.equal((await f.readiness.check()).state, 'price-bound-exceeded');
+  assert.throws(() => new SessionBudget('synthetic-session', f.directory).reserve(2688, 100000), { code: 'budget-unavailable' });
 });
 test('synthetic No remains a negative, not ready or a fabricated Yes', async t => {
   const f = fixture(t, { transport: { submit: async () => ({ status: 200, body: body({ answers: { kettle_blue: { type: 'noul', noul: 0 } } }) }) } });
@@ -186,6 +191,12 @@ test('transport discards error bodies, bounds success bodies and rejects invalid
     if (typeof expected === 'number') assert.deepEqual(await check, { status: expected, body: null });
     else await assert.rejects(check, { code: expected });
   }
+});
+test('transport rejects duplicate answer identities instead of accepting the last JSON member', async () => {
+  const raw = '{"model":"typesafe/jev-1.13-20260917","provider":"TypeSafe","answers":{"kettle_blue":{"type":"noul","noul":0},"kettle_blue":{"type":"noul","noul":1}},"usage":{"input_tokens":1,"output_tokens":1,"cost":0}}';
+  const transport = new DecisionsTransport(async () => new Response(raw));
+  await assert.rejects(transport.submit(connection.endpoint, readinessPayload(config()),
+    Buffer.from('synthetic-not-real'), new AbortController().signal), { code: 'invalid-result' });
 });
 test('Pi credentials resolve only the injected OpenRouter source and never render opaque errors', async () => {
   for (const resolve of [async () => undefined, async () => { throw new Error('DO-NOT-RENDER'); },

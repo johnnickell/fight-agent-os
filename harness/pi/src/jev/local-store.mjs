@@ -82,6 +82,7 @@ export class SessionBudget {
       const ledger = readPrivate(this.path, { settled: 0, pending: {} });
       if (!Number.isSafeInteger(ledger.settled) || ledger.settled < 0 || !ledger.pending ||
         typeof ledger.pending !== 'object' || Array.isArray(ledger.pending) ||
+        (ledger.halted !== undefined && ledger.halted !== true) ||
         Object.keys(ledger.pending).length > 128 || Object.values(ledger.pending).some(v => !Number.isSafeInteger(v) || v < 0)) {
         throw new Unavailable('budget-unavailable');
       }
@@ -97,6 +98,8 @@ export class SessionBudget {
   }
   reserve(amount, ceiling) {
     return this.#change(ledger => {
+      if (ledger.halted === true || !Number.isSafeInteger(amount) || amount < 1 ||
+        !Number.isSafeInteger(ceiling) || ceiling < amount) throw new Unavailable('budget-unavailable');
       const used = ledger.settled + Object.values(ledger.pending).reduce((sum, value) => sum + value, 0);
       if (!Number.isSafeInteger(used + amount) || used + amount > ceiling || Object.keys(ledger.pending).length >= 128) {
         throw new Unavailable('session-budget');
@@ -108,6 +111,8 @@ export class SessionBudget {
     this.#change(ledger => {
       if (!Object.hasOwn(ledger.pending, id) || !Number.isSafeInteger(amount) || amount < 0 ||
         !Number.isSafeInteger(ledger.settled + amount)) throw new Unavailable('budget-unavailable');
+      // A breached reservation invalidates the price bound for this session, including after reload.
+      if (amount > ledger.pending[id]) ledger.halted = true;
       delete ledger.pending[id]; ledger.settled += amount;
     });
   }
