@@ -89,10 +89,76 @@ Qualified protected state may retain authorized content under its own access and
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00343](../tasks/00343-TASK.md) | Configure and inspect allowed provider choices | ready-for-agent |
+| [TASK-00344](../tasks/00344-TASK.md) | Admit disclosure-approved budgeted generation | ready-for-agent |
+| [TASK-00345](../tasks/00345-TASK.md) | Inspect and reconcile original generation outcomes | ready-for-agent |
+| [TASK-00346](../tasks/00346-TASK.md) | Generate through protected OpenRouter | needs-info |
+| [TASK-00347](../tasks/00347-TASK.md) | Generate through protected local Codex | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved five independently reviewable delivery slices in the existing isolated planning worktree.
+Early catalog facts, admission and original-outcome accounting remain independent of completed provider adapters
+and final conversation journeys; the two actual providers are independently usable and qualified.
+
+| Slice | Accepted owner | Delivered boundary |
+|---|---|---|
+| A | [TASK-00343](../tasks/00343-TASK.md) | Protected revisioned provider/model choices and safe early compatibility/readiness inspection |
+| B | [TASK-00344](../tasks/00344-TASK.md) | Exact disclosure-approved admission with durable finite budget reservations before effects |
+| C | [TASK-00345](../tasks/00345-TASK.md) | Original outcome inspection/reconciliation, attributed usage and honest uncertainty/accounting |
+| D | [TASK-00346](../tasks/00346-TASK.md) | Actual installation-protected OpenRouter generation and real Planning consumption |
+| E | [TASK-00347](../tasks/00347-TASK.md) | Actual Pi/provider-owned local openai-codex generation and real Planning consumption |
+
+TASK-00343 consumes TASK-00322 and is `ready-for-agent` behind unfinished dependencies, not live support.
+TICKET-00090's subsequent approved split maps TASK-00349's early assignment/submission/attempt/cancellation and
+transaction participants to TASK-00344/00345, resolving their sole mapping holds; both become `ready-for-agent`
+behind unfinished dependencies. TASK-00346 consumes TASK-00344/00345/00072 plus TASK-00351 invocation; TASK-00347
+consumes TASK-00344/00345 plus TASK-00351 independently. Both retain `needs-info` for TASK-00350's exact reusable
+operational host/broker participant gap and actual authority composition. Live provider qualification is separate. Early
+identity/attempt/invocation contracts cannot depend on completed provider-driven execution. All orders are unranked;
+Board priority and the terminal-first milestone remain unchanged.
+
+TASK-00323 and TASK-00339 gain TASK-00343, resolving their sole remaining supplier-mapping holds and changing to
+`ready-for-agent` behind unfinished dependencies. TASK-00299 gains TASK-00343 and TASK-00249 inherits it: independent
+Triage/scoped-read holds and actual seed/reference/resolution qualification remain. TASK-00300 retains complete
+publication/current-authority composition. TASK-00342 gains TASK-00345 for original-provider outcomes, preserving
+session/host/continuation holds. TASK-00302/00304 gain TASK-00344/00345; their proposal, manual-assignment, runtime,
+Feature or publication holds remain. Consumers qualify a selected permitted real path; neither provider must be
+configured when the other is usable, and no blanket both-provider setup dependency is imposed.
+
+Provider configuration is not live qualification, disclosure permission or a session grant. TASK-00346/00347 own
+actual provider-specific status/stop/usage semantics and real Planning consumption within their outcomes, not a
+separate proof-only application. Their early runtime seams do not require final browser Planning, role journeys or
+database Planning cutover. TASK-00342/00325 retain linked continuation/switching; no adapter reverse-depends on them.
+Jev Decisions and Agent credential delivery remain distinct; no second queue, auth lifecycle or session store is added.
+
+TICKET-00098 now maps TASK-00396's Workflow-attributed usage consumer of TASK-00345's original accounting. It adds
+actual correlation and projections, not another reservation ledger or raw streaming sum. TASK-00399's separate safe
+account/quota source and protected refresh supplier remain unallocated; generation support qualifies neither.
+
+This decomposition is complete, not implementation. Following TICKET-00090–00099's approved conversation/proposal/browser/Runner/evidence/web-research/history/sessions/measurement/catalog
+splits, continue `/skill:next` for Board-based selection after TICKET-00109's approved final split. Preserve Markdown authority and all unresolved participant holds.
+Planning authorizes no login, key inspection/enrollment, session launch, provider request or paid qualification.
+
+### Planning verification
+
+Prepared in `.runs/worktrees/ticket-00083-to-tasks` on `feature/ticket-00083-to-tasks`, preserving all prior approved
+uncommitted planning work. Live and archived TASK identities were rechecked before allocating TASK-00343–00347;
+the archive contained no TASK records. `./bin/planning-check --write` and `./bin/planning-check` passed with
+474 records, 382 active and current generated views. Tracked `git diff --check` and all 39 new/untracked TASK
+whitespace checks passed, including these five records. No dependency cycles or invalid planning links were
+reported. Active TASK-00138 and existing Board priorities remain unchanged; new orders remain unranked.
+
+These are planning receipts, not provider, credential, host or live Planning qualification. The full `./bin/build`
+was not run and remains required before commit/publication. No implementation, account/login setup, credential
+inspection/enrollment, session launch, provider call, commit, push, PR or merge occurred. Independent review and
+delivery remain separate. All planning changes remain uncommitted in the isolated worktree. Separately observed
+Jev/Harness/build changes in the main checkout were left untouched; no claim that the main checkout is clean.
+
+### Original requirement approval
 
 Approved as area 5 of the remaining eight-TICKET EPIC-00006 decomposition. Consumes the provider boundary in
 [WF-019](../wayfinder/tickets/WF-019-select-end-to-end-proof-and-epic-handoff.md),
@@ -106,4 +172,8 @@ suppliers; finished Explorer/browser Planning or database Planning cutover is no
 TICKET-00090 owns shared durable execution, TICKET-00091 owns proposal attempts/results, and this TICKET owns
 provider semantics/accounting; define non-circular contracts during separate TASK decomposition. Existing Agent,
 credential and qualified host owners remain mandatory, not silently replaced by generic parent dependencies.
-No provider request, credential inspection, enrollment, implementation TASK or readiness clearance occurs here.
+The prior TICKET-00088 handoff requested exact early catalog and original-provider-outcome suppliers. The approved
+TASK-00343 and TASK-00345 mappings above now resolve that ownership without claiming live support. Early catalog/
+readiness facts do not depend on completed snapshots, provider switching or conversation execution. Uncertainty
+never permits another generation or spend reset; precise TICKET-00090 participant holds remain. No provider request,
+credential inspection, enrollment or runtime readiness clearance occurs through this planning.

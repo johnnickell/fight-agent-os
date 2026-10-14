@@ -83,10 +83,70 @@ occur outside business transactions. Uncertain changes require exact-state inspe
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00321](../tasks/00321-TASK.md) | Install and maintain exact Harness releases | ready-for-agent |
+| [TASK-00322](../tasks/00322-TASK.md) | Configure trusted machine-local connections | ready-for-agent |
+| [TASK-00323](../tasks/00323-TASK.md) | Manage revisioned user Harness profiles | ready-for-agent |
+| [TASK-00324](../tasks/00324-TASK.md) | Connect through qualified protected credential storage | ready-for-agent |
+| [TASK-00325](../tasks/00325-TASK.md) | Show unmistakable identity and switch through linked continuations | needs-info |
+| [TASK-00326](../tasks/00326-TASK.md) | Deliver guided Harness setup and diagnostics | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved six delivery slices in the existing isolated planning worktree after TICKET-00083's
+approved split. TASK-00321–00326 retain this TICKET's accepted boundaries, normally one independently reviewable
+PR per TASK, with documentation and direct platform/tool qualification inside their owning product outcomes.
+
+| Slice | Accepted owner | Delivered boundary |
+|---|---|---|
+| A | [TASK-00321](../tasks/00321-TASK.md) | Exact independently versioned package install/update/retained-release rollback and visibly mutable development mode; reuse approved branding |
+| B | [TASK-00322](../tasks/00322-TASK.md) | Explicit machine-local connection revisions, expected host-assigned installation/origin, private handles and safe identity verification |
+| C | [TASK-00323](../tasks/00323-TASK.md) | User-owned non-secret database Harness preferences, immutable history, exact authorized resource/model references and expected-state writes |
+| D | [TASK-00324](../tasks/00324-TASK.md) | Interactive Keychain/Secret Service integration through existing protected lifecycle/current-use owners, truthful readiness, recovery and disconnection |
+| E | [TASK-00325](../tasks/00325-TASK.md) | Persistent textual connection/profile/environment identity, theme-collision warning/override and explicit linked-session switching |
+| F | [TASK-00326](../tasks/00326-TASK.md) | Existing operator-guide/Dashboard help extension, bounded read-only diagnostics and actual supported setup/recovery journey |
+
+TICKET-00086's subsequent approved split maps TASK-00323's exact resource/reference suppliers to
+TASK-00327/00329/00330. TICKET-00089 now maps TASK-00343's model catalog to TASK-00323, resolving its sole remaining
+mapping hold; status is `ready-for-agent` behind unfinished dependencies, not actual consumer/live-provider
+qualification. TASK-00325 consumes TICKET-00088's TASK-00342 snapshot/linked-continuation integration, now including
+TASK-00345 original outcomes and TASK-00351/00352/00353 invocation/attachment/recovery. It retains `needs-info` for
+TASK-00350's precise operational host/broker gap and actual authority/host/provider composition. Other new TASKs are `ready-for-agent` behind their explicit dependencies,
+not claims of usable runtime. TASK-00324 consumes TASK-00241's actual integrated credential/current-use readiness
+and now TASK-00338's exact origin/cache removal composition from TICKET-00087. That supplier uses lower-level
+credential owners, not completed onboarding; unresolved authority/session/host mappings remain transitive. All new orders are unranked and existing
+Board active work/terminal-first priority is unchanged.
+
+Keep dependencies non-circular: TASK-00321–00323 supply package/connection/profile facts to snapshot and broker
+consumers. Resource/model, holder/sink/current-use and snapshot/session primitives must not depend on completed
+switching, final onboarding, Explorer or browser Planning. TASK-00324 integrates interactive protected access but
+does not create another sink, issuer, queue or signer, nor reverse-block shared credential readiness. Interactive
+OS-store support is qualified through existing TASK-00234/00236/00243/00244 owners; missing support denies rather
+than adds a plaintext fallback. User profiles do not replace TASK-00249's role-template resolver or clear its holds.
+
+This TICKET's TASK split is complete, not implementation or runtime qualification. Browser Planning and verified
+Markdown-to-database Planning cutover are not installation prerequisites. TICKET-00109's approved final split completes original-map planning phases.
+Next: `/skill:next` for Board-based selection, preserving all prior approved splits and unresolved suppliers.
+No package publication, global configuration change, enrollment, credential access or implementation follows from
+this planning approval.
+
+### Planning verification
+
+Prepared in `.runs/worktrees/ticket-00083-to-tasks` on `feature/ticket-00083-to-tasks`, preserving the preceding
+TICKET-00083 changes. Live and archived TASK identities were inspected before allocating TASK-00321–00326;
+the archive contained no TASK records. `./bin/planning-check --write` and `./bin/planning-check` passed with
+453 records, 361 active and current generated views. Tracked `git diff --check` and all six new-record whitespace
+checks passed. Validation found no dependency cycles or invalid planning links; existing Board priority and active
+TASK-00138 are unchanged. TICKET-00088 now names package/connection/profile suppliers without a reverse switching edge.
+
+These are planning receipts, not application/runtime or platform qualification. The full `./bin/build` was not
+run and remains required before commit or publication. No implementation, package/configuration mutation,
+credential access, enrollment, session launch, commit, push, PR or merge was performed. Changes remain uncommitted
+in the isolated worktree; formal independent review and delivery are separate.
+
+### Original requirement approval
 
 Approved as area 1 of the remaining eight-TICKET EPIC-00006 decomposition. Consumes
 [WF-014](../wayfinder/tickets/WF-014-define-skill-trust-and-harness-distribution.md) and
@@ -98,4 +158,6 @@ Resource references use [TICKET-00086](00086-TICKET.md), provider choices use [T
 session application uses TICKET-00088. Decompose exact independent capabilities rather than creating whole-TICKET
 cycles: package/connection/profile identity supplies snapshot resolution; completed session switching does not
 reverse-block those primitives. Browser Planning and database Planning cutover are not installation prerequisites.
-No TASK, package publication, global configuration change, enrollment or credential access is authorized here.
+That requirement approval created no TASK and authorized no package publication, global configuration change,
+enrollment or credential access. The separately approved TASK split above now supplies implementation ownership,
+not authority to perform those effects.

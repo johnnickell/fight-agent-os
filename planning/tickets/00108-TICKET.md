@@ -108,7 +108,11 @@ replay protect browser controls. Navigation to GitHub contains no credentials an
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00436](../tasks/00436-TASK.md) | Preview and admit exact instruction publication | needs-info |
+| [TASK-00437](../tasks/00437-TASK.md) | Create and recover the selected-file commit | needs-info |
+| [TASK-00438](../tasks/00438-TASK.md) | Push and reconcile one exact GitHub PR | needs-info |
+| [TASK-00439](../tasks/00439-TASK.md) | Return the published checkout safely to default | ready-for-agent |
+| [TASK-00440](../tasks/00440-TASK.md) | Publish and recover instruction changes in the Dashboard | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -124,4 +128,104 @@ Consume [TICKET-00105](00105-TICKET.md)/[TICKET-00106](00106-TICKET.md) selected
 identity/context/Runner/Git/provider contracts. TICKET-00102's initial-project publication and TICKET-00083's managed
 publication retain different intents and authority; reusable adapters do not make those completed journeys
 prerequisites. Share checkout ownership and drift primitives with [TICKET-00109](00109-TICKET.md), not a circular
-whole-TICKET dependency. No TASK, grant, branch, commit, push, PR, cleanup or merge is created by this approval.
+whole-TICKET dependency. TICKET-00106 now maps TASK-00432's exact Save/Delete/result/currentness contracts and
+TASK-00433's existing-Dashboard form. Its protected mutation/shared-custody/physical-guarantee hold remains;
+publication must compose the actual early owners without reverse-blocking Save or inventing a second lock registry.
+TICKET-00107 now maps TASK-00434/00435's protected suggestions and explicit existing-form adoption. Neither
+proposal nor Save grants publication; assistance availability must not gate an independently authorized direct-edit
+publication path. These incoming mappings did not allocate publication TASKs; the subsequent approval below does.
+Neither requirement approval nor decomposition qualifies Git/provider effects or grants operational authority.
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved five slices in `.runs/worktrees/ticket-00083-to-tasks` on
+`feature/ticket-00083-to-tasks`. All are unranked features with blank PRs, normally one independently reviewable PR each.
+
+| Slice | Accepted owner | Status | Exact blockers | Delivered boundary |
+|---|---|---|---|---|
+| A | [TASK-00436](../tasks/00436-TASK.md) | needs-info | TASK-00432, TASK-00117 | Complete selected-file publication preview/confirmation API, original admission and early stage/custody participants |
+| B | [TASK-00437](../tasks/00437-TASK.md) | needs-info | TASK-00436 | Owned branch/switch, exact selected-file staging/commit and original local-effect recovery |
+| C | [TASK-00438](../tasks/00438-TASK.md) | needs-info | TASK-00437 | Protected non-force push, one attributable GitHub PR and original provider-effect reconciliation |
+| D | [TASK-00439](../tasks/00439-TASK.md) | ready-for-agent | TASK-00438 | Safe owned return to original registered-default revision, verified clean state, currentness and custody disposition |
+| E | [TASK-00440](../tasks/00440-TASK.md) | ready-for-agent | TASK-00439, TASK-00433 | Existing Dashboard preview/confirmation, original recovery, retained-state warnings and real PR/return handoff |
+
+TASK-00436 retains exact human publication admission/shared-custody and protected source-host identity/preflight
+mapping holds. TASK-00437 separately needs protected existing-checkout Git branch/index/commit invocation and physical
+exclusion guarantees. TASK-00438 separately needs protected authenticated Git transport and GitHub PR invocation.
+Map actual narrow suppliers under existing execution/Runner/source-host owners before implementation; no unknown
+supplier ID, second registry/provisioner, fabricated Workflow/Agent or borrowed Release Manager grant is introduced.
+TASK-00418/00420 retain related creation-specific `gh`/Git holds, not whole-journey prerequisites or already-qualified
+suppliers. TASK-00315's broker remains Release-Manager-only. Enrollment and database locks do not prove physical
+Git safety. TASK-00439/00440 are ready behind unfinished/held suppliers, not runtime-qualified.
+
+TASK-00432 supplies early exact Save/result/custody/currentness contracts, transitively including TASK-00430's read
+boundary and TASK-00341/00084's immutable drift rules. TASK-00433 supplies the existing form, not publication consent.
+All independent read/mutation/runtime holds remain. Early stage/ownership/result contracts are supplied without
+waiting for completed later publication/browser/sync consumers. No direct edit, optional assistance or terminal
+owner gains a reverse dependency or stronger clean-tree requirement for ordinary Save.
+
+Only a selected recognized root file can become the confirmed subject, with an otherwise eligible clean baseline.
+No force-add of ignored content, unrelated staging, stash/reset/discard, branch adoption or hidden normalization.
+Preview exact diff, owned collision-safe branch, bounded commit message, source/native provider identity and default
+base plus all intended effects. One confirmation admits that exact plan; current authority and expected state are
+rechecked at every effect boundary, and material changes require renewed human consent. Source-host API identity
+does not establish the Git transport principal. No browser/Agent receives credentials or publication authority.
+
+Commit required state/audit/original effect intent before external work; verify outcomes separately through actual
+PostgreSQL participants. Branch/switch/staging/commit, push/PR and return each retain their own original identity and
+reconciliation. Process exit, matching names/bytes, queue acknowledgement and expired lease are not success or
+ownership. Partial/unknown outcomes remain held; no duplicate commit/PR, blind push replay, automatic compensation,
+remote branch deletion or exactly-once claim. Stop blocks subsequent effects, not undoing completed publication.
+
+After verified PR creation, return only when the owned checkout transition is physically safe, the default identity/
+original revision is unchanged and unrelated work is preserved. Independently verify clean default and absence of
+proposal content; blocked return remains partial even when the PR exists. Release only proved releasable custody.
+Use actual observed file/effective changes for existing form/context drift, preserving immutable history without
+Pi reload or Agent continuation. Return does not fetch, move default to a new revision, merge or synchronize.
+
+The browser publishes saved local state, never unsent drafts or an Agent suggestion implicitly. Keep explicit
+confirmation, exact original recovery, no-store volatile state and authentication/context/form-generation fences.
+Show PR identity/title/base/head/OID, truthful publication versus merge observations and retained local-state warnings;
+open only the qualified credential-free GitHub link in a protected new tab. No newer-draft overwrite, automatic
+business replay, second editor/session or AI prerequisite. TICKET-00109 retains synchronization and final real Fight
+Agent OS instruction-change acceptance with separately human-controlled merge.
+
+Owned tests, actual PostgreSQL/Git/Runner/GitHub integration, fresh accessible responsive light/dark browser evidence,
+guidance and `./bin/build` remain inside these delivery slices. Qualify tools/configuration directly, not product
+tests of Git/GitHub, wrappers, generated artifacts or infrastructure; no proof-only TASK. Implementation checkout
+and finite private-read/credential/file/provider effects require separate authority. Preserve active TASK-00138,
+terminal-first priorities, existing holds and Markdown Planning authority.
+
+This completes this TICKET's split only. Continue `/skill:next` for Board-based selection after TICKET-00109's approved TASK-00441–00444 split.
+Its core check/update/scheduling primitives consume early custody/results without reverse-blocking publication;
+TASK-00444 consumes actual browser/PR/safe-return delivery before separate human merge and final sync acceptance. No implementation, live qualification, full build, independent review or publication occurred.
+
+### Planning verification
+
+This historical publication-split receipt predates TICKET-00109's final split; latest planning verification is in
+TICKET-00109. Counts and handoff state below describe the earlier checkpoint, not runtime evidence.
+
+Recorded the approved split in `.runs/worktrees/ticket-00083-to-tasks` on `feature/ticket-00083-to-tasks`, preserving
+prior uncommitted planning. Highest live ID before allocation was TASK-00435; no archived TASK records existed.
+TASK-00436–00440 match approved titles, exact blockers and template sections, all unranked features with blank PRs.
+TASK-00436–00438 remain `needs-info` for their distinct exact protected-operation mappings; TASK-00439/00440 are
+ready behind dependencies, not runtime-qualified. Existing read/mutation/custody/host/provider holds remain intact.
+
+`./bin/planning-check --write` and `./bin/planning-check` passed with 567 records, 475 active and current generated
+views, reporting no invalid links or dependency cycles. Tracked `git diff --check` and all 132 new/untracked TASK
+whitespace checks passed. Before/after hashing of every pre-existing TASK's frontmatter confirmed no status,
+priority, dependency or PR metadata changed in this recording pass. No existing owner gained a reverse publication
+dependency and no unknown supplier ID was allocated.
+
+TASK-00138/00139/00142/00159/00184/00226 remain byte-identical to this worktree's HEAD. TASK-00138 remains the sole
+active Board item, order 2. Save/form/currentness/custody and related creation/managed-publication owners record
+narrow coordination without scope expansion or metadata changes. TICKET-00109 records incoming publication/result/
+return contracts, not an approved sync split or operational authority. Current handoffs advance to TICKET-00109;
+it remains on the Planning Frontier, TICKET-00108 is removed, and no stale current TICKET-00108 command remains.
+
+Full `./bin/build` was not run and remains required before commit/publication. These are planning checks, not fresh
+PostgreSQL/Git/Runner/GitHub/browser acceptance evidence. No private instruction read, credential access, provider
+request, reservation, branch/index/commit/push/PR effect, default return, merge, cleanup or sync occurred. Markdown
+Planning authority is unchanged. Implementation, actual qualification, independent review and publication remain
+outstanding. All changes remain uncommitted; no commit, push, PR or merge occurred. Unrelated main-checkout work
+was untouched and is not claimed clean; earlier receipts remain historical.

@@ -76,16 +76,113 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 
 The closed vision map's original EPIC-00005–00010 destinations now have accepted **TICKET coverage**; see the
 [requirement-phase coverage and next phase](wayfinder/complete-agent-os-vision-map.md#original-map-requirement-phase-coverage-and-next-phase)
-and [EPIC-00010's current handoff](epics/00010-EPIC.md#planning-phase-handoff-and-verification).
-Continue **TASK decomposition** with `/skill:to-tasks TICKET-00085`, then the remaining accepted map TICKETs,
-including TICKET-00083 and TICKET-00086–00109, under [map-wide phase order](CONVENTIONS.md#map-wide-planning-order).
-Each proposed split needs human approval before TASK records are written. This is planning sequence, not
-implementation authority or Board priority; an explicit narrower choice remains valid.
+and [TICKET-00109's approved final split](tickets/00109-TICKET.md#approved-task-decomposition-and-current-handoff).
+The selected original map's **planning phases are complete**, not implementation or runtime qualification.
+Next: `/skill:next` for Board-based selection under [map-wide phase order](CONVENTIONS.md#map-wide-planning-order).
+Publication reconciliation preserves upstream TASK-00138 completion; the refreshed Board has no active TASK and
+TASK-00139 is first ready. Terminal-first priorities remain; unrelated maps retain their own planning handoffs.
+The approved identity reconciliation preserves upstream local screening TASK-00309 and renumbers only this split's
+managed-Review owner to TASK-00445. Earlier receipts/active-work statements describe the pre-reconciliation baseline;
+[TICKET-00109's publication checkpoint](tickets/00109-TICKET.md#authorized-planning-publication-checkpoint) owns current evidence.
+The [TICKET-00083 split](tickets/00083-TICKET.md#approved-task-decomposition-and-current-handoff) is approved as
+TASK-00445 and TASK-00310–00320 and the [TICKET-00085 split](tickets/00085-TICKET.md#approved-task-decomposition-and-current-handoff)
+as TASK-00321–00326. The [TICKET-00086 split](tickets/00086-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00327–00332 and [TICKET-00087](tickets/00087-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00333–00338. [TICKET-00088](tickets/00088-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00339–00342. [TICKET-00089](tickets/00089-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00343–00347. [TICKET-00090](tickets/00090-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00348–00354. [TICKET-00091](tickets/00091-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00355–00360. [TICKET-00092](tickets/00092-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00361–00367. [TICKET-00093](tickets/00093-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00368–00373. [TICKET-00094](tickets/00094-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00374–00380. [TICKET-00095](tickets/00095-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00381–00384. [TICKET-00096](tickets/00096-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00385–00389. [TICKET-00097](tickets/00097-TICKET.md#approved-task-decomposition-and-current-handoff)
+adds TASK-00390–00395. [TICKET-00098](tickets/00098-TICKET.md#approved-task-decomposition-and-current-handoff)
+now adds TASK-00396–00400. TASK-00387 gains early usage/time suppliers TASK-00396/00397 alongside visibility
+TASK-00390; TASK-00320 gains base forecast TASK-00400. Only these allocation holds are resolved, not runtime
+qualification. TASK-00399 retains its safe quota-source/protected-refresh mapping hold without blocking history
+or forecasts. Completed Dashboard/forecast cannot reverse-block early primitives. No terminal producer gains a
+browser blocker; independent holds and unfinished runtime persist.
+[TICKET-00099](tickets/00099-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00401–00405 for
+catalog administration, immutable snapshots/manifest, private source, retained lifecycle and exact profile
+associations. TASK-00402 retains the real managed-release prerequisite, TASK-00403 its protected credential/access
+mapping gap; TASK-00404 now gains TASK-00411, resolving only its early attempt/reference allocation hold. Existing storage/identity/profile
+owners gain no reverse blocker and no operational hold is cleared. All new orders remain unranked.
+[TICKET-00100](tickets/00100-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00406–00410 for
+local feasibility, generation, fresh Git, optional preparation and separate local cleanup. TASK-00407 now gains
+TASK-00412 but retains protected local-operation gaps; TASK-00409 retains actual process/egress support and
+TASK-00410 gains TASK-00413 while retaining reference composition and inherited host/process holds.
+[TICKET-00101](tickets/00101-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00411–00417 for
+early immutable admission/stage/cleanup contracts, real stage advancement and browser confirmation/recovery/cleanup.
+TASK-00411/00414 retain initial-mode/actual first-link/stage holds after the registration allocation below.
+[TICKET-00102](tickets/00102-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00418–00421 for
+early publication preflight, exact remote creation, verified initial publication and separate remote cleanup.
+TASK-00411/00414/00417 gain TASK-00418/00420/00421 respectively, resolving allocation only. TASK-00418/00420 retain
+protected `gh`/Git invocation mapping holds; actual reference/local-host/process/provider holds remain, including
+TASK-00417. Early suppliers cannot wait for final browser/receipt acceptance. No runtime qualification hold or
+terminal priority is cleared; all new orders remain unranked.
+[TICKET-00103](tickets/00103-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00422–00426 for
+early finalization preflight, actual reference protection, registration/link, initial context and durable receipt/
+Dashboard handoff with real integrated acceptance. TASK-00411/00413/00414 gain TASK-00422/00423/00425 respectively;
+only allocation gaps resolve. TASK-00413 becomes ready behind suppliers; TASK-00410/00417 retain actual reference/
+host/process/provider holds. TASK-00422/00425 remain `needs-info` for a distinct new-Repository database-authority
+supplier under TICKET-00028; existing migration/post-cutover TASK-00102/00103 do not provide it. No fake cutover,
+configuration bypass or live Planning authority change follows. Final receipt never reverse-blocks early owners.
+[TICKET-00104](tickets/00104-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00427–00429 for
+model-free playbooks/safe diagnostics, protected OpenRouter support and its browser journey. TASK-00428 remains
+`needs-info` for exact pre-registration attempt/Workspace Agent/snapshot/assignment scope under existing owners;
+Repository-bound contracts cannot fabricate context or silently widen authority. No deterministic creation or early
+supplier gains a reverse assistance blocker. EPIC-00009's six TICKET splits are recorded, not runtime-qualified.
+[TICKET-00105](tickets/00105-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00430/00431 for
+bounded effective-instruction queries and the existing-Dashboard viewer. TASK-00430 retains an exact protected
+human read/current-custody supplier gap under existing execution/Runner owners; no fabricated Workflow or second
+resolver. Inspection grants no edit/disclosure/sync authority and adds no reverse blocker to early suppliers.
+[TICKET-00106](tickets/00106-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00432/00433 for
+exact Save/Delete/reconciliation and the existing-Dashboard form. TASK-00432 retains its distinct protected mutation/
+shared-custody/physical-guarantee hold; reads and database fences alone do not qualify conditional filesystem effects.
+Reuse context/Harness drift owners; no provider, completed publication/sync or reverse terminal dependency is added.
+[TICKET-00107](tickets/00107-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00434/00435 for
+bounded durable instruction suggestions and explicit adoption into the existing form. Existing read/Skill/Agent/
+protected-runtime holds remain; direct editing gains no AI dependency.
+[TICKET-00108](tickets/00108-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00436–00440 for
+exact publication preview/admission, selected-file commit, non-force push/PR, safe default return and Dashboard
+recovery/handoff. TASK-00436–00438 retain distinct protected admission/identity, local Git and authenticated Git/PR
+mapping holds; TASK-00439/00440 are ready behind them, not qualified. No creation/managed-publication journey or
+optional AI becomes a prerequisite.
+[TICKET-00109](tickets/00109-TICKET.md#approved-task-decomposition-and-current-handoff) adds TASK-00441–00444 for
+retained status/explicit checks, exact fast-forward/recovery, currently authorized scheduling and the existing
+Dashboard/final real instruction-change journey. TASK-00441–00443 retain protected fetch/custody, conditional Git/
+physical-exclusion and scheduled actor/delegation/runtime holds; TASK-00444 is ready behind suppliers, not qualified.
+No earlier supplier gains a reverse dependency. Latest planning checks are in
+[TICKET-00109](tickets/00109-TICKET.md#authorized-planning-publication-checkpoint); publication-stage full build passed,
+with final documented-tree verification and publication still pending at that checkpoint.
+Planning completion grants no implementation, live source/credential/Git/scheduler effects, merge or cutover authority.
 
-[TASK-00249](tasks/00249-TASK.md) retains its exact Harness resource/model prerequisite-mapping hold;
-existing owners must resolve it, not another generic Wayfinder session. Use the Board for current execution
-priority. Refresh this handoff when the accepted planning phase changes; historical selected-slice handoffs
-do not supersede it or prove full decomposition.
+[TASK-00249](tasks/00249-TASK.md) inherits exact resource and model suppliers through TASK-00299, retaining
+scoped-read and Triage holds. TASK-00323/00339 gain TASK-00343 and become ready behind unfinished dependencies,
+not live qualification. TASK-00342 gains TASK-00345; TASK-00302/00304 gain TASK-00344/00345. TASK-00340/00342 and
+provider suppliers now consume TASK-00348/00349 identity/attempts and TASK-00351/00352/00353 invocation/attachment/
+recovery. TASK-00340/00344/00345 become ready behind unfinished dependencies after their sole mappings resolve.
+TASK-00244/00336 consume TASK-00350's protected session adapter, retaining its precise operational host/broker gap
+under existing execution owners and actual authority composition. TASK-00302 now gains TASK-00355's early proposal
+contract independently of Planning cutover; its Feature/publication and host/authority holds persist. TASK-00266
+gains TASK-00360's proposal/answer/Apply/reconciliation chain and now TASK-00362–00367's browser operations, with
+TASK-00361 transitively. Its browser allocation gap resolves, but actual role/host/authority holds remain, alongside
+TASK-00364's exact protected prototype-execution participant gap. TASK-00087 evidence storage does not execute
+prototypes; external web research separately requires TICKET-00095's qualified screened tools. TASK-00254/00261/
+00263 now gain TASK-00369's early applicable Workflow commitment/capacity/resource participants, with TASK-00264
+consuming them transitively; independent composition/base/contribution/authority holds remain. Runner enrollment
+or completed consumers do not resolve TASK-00350/00364's host/prototype gaps. TASK-00140/00087 gain TASK-00374
+private storage; TASK-00250/00261/00264 gain TASK-00375 contribution facts, preserving independent holds.
+TASK-00141/00373 gain TASK-00377's exact receipt/subject chain, and TASK-00445 gains TASK-00378 protected reads.
+Execution ownership/order remains unchanged; those precise early supplier edges add no browser/cutover or final
+retention prerequisite. TASK-00381 consumes TASK-00171's protected shared Jev integration; independent TASK-00382
+search and TASK-00383 retrieval use that gate, while TASK-00384 consumes existing Artifact/read/recovery owners for
+retained/cached/resumed delivery. TASK-00364 names these conditional web capabilities without a blanket local-only
+blocker or clearing its prototype hold. Local Jev readiness is not managed qualification. Primitives never reverse-
+depend on completed web research, runtime continuation, Planning Apply or final browser/role consumers. Use the Board for current execution priority. Refresh this handoff
+when the accepted phase changes; historical selected-slice handoffs do not supersede it or prove full decomposition.
 
 ## EPIC status
 
@@ -130,30 +227,5 @@ the same operation that completes their children.
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00083](tickets/00083-TICKET.md) | Deliver managed review through verified PR handoff | [EPIC-00008](epics/00008-EPIC.md) | ready-for-agent |
-| [TICKET-00085](tickets/00085-TICKET.md) | Install and configure the versioned Harness | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00086](tickets/00086-TICKET.md) | Manage versioned Harness resources | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00087](tickets/00087-TICKET.md) | Discover and load trusted first-party Skills | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00088](tickets/00088-TICKET.md) | Resolve immutable Harness session snapshots | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00089](tickets/00089-TICKET.md) | Configure and qualify protected generative providers | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00090](tickets/00090-TICKET.md) | Run and recover authorized durable Agent conversations | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00091](tickets/00091-TICKET.md) | Prepare and explicitly apply structured Planning proposals | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00092](tickets/00092-TICKET.md) | Deliver the browser Planning Agent journey | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-| [TICKET-00093](tickets/00093-TICKET.md) | Operate the enrolled Runner and bounded dispatch | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
-| [TICKET-00094](tickets/00094-TICKET.md) | Retain and protect immutable execution evidence | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
-| [TICKET-00095](tickets/00095-TICKET.md) | Provide bounded first-party web research | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
-| [TICKET-00096](tickets/00096-TICKET.md) | Expose trustworthy Workflow history and live state | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
-| [TICKET-00097](tickets/00097-TICKET.md) | Inspect and control execution through the sessions Dashboard | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
-| [TICKET-00098](tickets/00098-TICKET.md) | Explain execution usage and completion estimates | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
-| [TICKET-00099](tickets/00099-TICKET.md) | Manage trusted immutable starter releases | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
-| [TICKET-00100](tickets/00100-TICKET.md) | Generate and prepare a fresh local project | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
-| [TICKET-00101](tickets/00101-TICKET.md) | Confirm and recover one durable creation attempt | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
-| [TICKET-00102](tickets/00102-TICKET.md) | Publish the confirmed initial project to GitHub | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
-| [TICKET-00103](tickets/00103-TICKET.md) | Register the created checkout and complete the handoff | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
-| [TICKET-00104](tickets/00104-TICKET.md) | Explain creation failures with bounded support assistance | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
-| [TICKET-00105](tickets/00105-TICKET.md) | Inspect effective repository instructions | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
-| [TICKET-00106](tickets/00106-TICKET.md) | Save and delete instruction files safely | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
-| [TICKET-00107](tickets/00107-TICKET.md) | Prepare bounded AI instruction suggestions | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
-| [TICKET-00108](tickets/00108-TICKET.md) | Publish an instruction change through a recoverable PR | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
-| [TICKET-00109](tickets/00109-TICKET.md) | Synchronize the designated checkout safely | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
+| None | — | — | — |
 <!-- /planning:frontier -->

@@ -93,10 +93,99 @@ An uncertain storage/delete outcome remains unresolved until its original operat
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00374](../tasks/00374-TASK.md) | Store and reconcile verified private Artifacts | ready-for-agent |
+| [TASK-00375](../tasks/00375-TASK.md) | Record attributable contribution provenance | ready-for-agent |
+| [TASK-00376](../tasks/00376-TASK.md) | Capture immutable Git evidence subjects | ready-for-agent |
+| [TASK-00377](../tasks/00377-TASK.md) | Retain exact check receipts | ready-for-agent |
+| [TASK-00378](../tasks/00378-TASK.md) | Inspect and retrieve protected evidence | ready-for-agent |
+| [TASK-00379](../tasks/00379-TASK.md) | Retain held evidence and purge eligible transient content | ready-for-agent |
+| [TASK-00380](../tasks/00380-TASK.md) | Redact prohibited content across retained copies | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved seven bounded delivery slices in the existing isolated planning worktree. Each owns
+application behavior, actual operational qualification and guidance; no proof-only TASK is added.
+
+| Slice | Accepted owner | Delivered boundary |
+|---|---|---|
+| A | [TASK-00374](../tasks/00374-TASK.md) | Verified private Artifact storage/recovery and early reference/hold participants |
+| B | [TASK-00375](../tasks/00375-TASK.md) | Attributable contribution/source lineage independently of completed roles |
+| C | [TASK-00376](../tasks/00376-TASK.md) | Exact immutable Git subjects, complete manifests and retained snapshots |
+| D | [TASK-00377](../tasks/00377-TASK.md) | Actual exact-subject check receipts, warnings and original outcomes |
+| E | [TASK-00378](../tasks/00378-TASK.md) | Current-authorized bounded evidence inspection, previews and downloads |
+| F | [TASK-00379](../tasks/00379-TASK.md) | Actual evidence/Planning/Pi hold participation and eligible transient cleanup |
+| G | [TASK-00380](../tasks/00380-TASK.md) | Controlled cross-copy redaction, safe tombstones and honest backup limits |
+
+TASK-00374 consumes TASK-00139/00234; TASK-00375 consumes TASK-00139/00348. TASK-00376 consumes
+TASK-00374/00375/00140; TASK-00377 consumes TASK-00376. TASK-00378 consumes TASK-00377/00117;
+TASK-00379 consumes TASK-00377/00087/00354; TASK-00380 consumes TASK-00378/00379. All seven are
+`ready-for-agent` behind unfinished suppliers, with blank order/pr; allocation is not operational qualification.
+
+TASK-00140 and TASK-00087 gain TASK-00374's early private Artifact/reference/hold contract. Storage integration
+extends TASK-00072/TICKET-00023's one installation with only the SeaweedFS capability needed for terminal evidence,
+not another stack or the full browser prerequisite chain. TASK-00087 retains Planning evidence/verdict/link ownership
+and supplies TASK-00379's actual active references; it never reverse-depends on completed retention purge.
+
+TASK-00250/00261/00264 gain TASK-00375's contribution/source-lineage participant, preserving `needs-info` for actual
+source coverage, authority, configured-base inclusion, creation, host, phase/fresh-session composition as applicable.
+No completed Team/role/Review journey reverse-blocks the primitive. An exact Git subject alone does not establish
+prerequisite inclusion on the configured base. Missing contribution provenance remains unknown, not independent.
+
+TASK-00141 and TASK-00373 gain TASK-00377, with exact subjects/contributions/Artifacts transitively. TASK-00141
+retains complete current handoff validation and entering Awaiting review; its existing real production TASK provides
+final handoff evidence, not another certification run. TASK-00445 gains TASK-00378 and retains its independent
+session/review-phase admission holds. No new Review verdict, acceptance, phase engine or cleanup authority is added.
+TASK-00139–00142 retain ownership and priority; the new TASK-00140/00141 edges name these precise early suppliers.
+
+Safe admission and disclosure apply from TASK-00374; later cross-copy redaction is not permission to expose secrets
+until TASK-00380 ships. TASK-00354 and TASK-00167 remain protected Pi/checkpoint owners, not an Artifact transcript
+store. Active/recoverable/held material survives; Awaiting review is not terminal cleanup. The initial 30-day grace
+applies only to eligible post-terminal transient/resume material, not durable project history. Missing reference,
+copy-owner, storage or backup participation blocks the affected destructive route/complete-removal claim. Future
+TICKET-00096/00097 writers must consume early restrictions/fences before exposure; whole journeys are not blockers.
+
+TASK-00350/00364 remain `needs-info`: evidence storage does not implement protected host/broker or prototype execution.
+TICKET-00095 now maps TASK-00381 exact-content Jev admission, independent TASK-00382/00383 search/retrieval and
+TASK-00384 retained/cached/resumed web delivery. The last consumes TASK-00374/00378 and TASK-00353 recovery without
+reverse-blocking their generic paths. Artifact read permission never authorizes model disclosure or waives current
+screening. Generic queries remain provider-free: new screening requires a separate authorized operation. Ordinary
+preview safety is not web-content screening qualification, and unqualified web-evidence routes stay unavailable.
+
+TICKET-00096 now maps TASK-00386's safe activity/evidence consumer, TASK-00387 history queries, TASK-00388 actual
+history-copy lifecycle participation and TASK-00389 live-publication fences. Existing evidence owners do not reverse-
+depend on completed history; early safe admission and unknown-copy cleanup holds remain mandatory.
+TICKET-00097 now maps TASK-00392's exact Changes/Evidence presentation and TASK-00393's safe Activity references,
+consuming these owners through TASK-00391/00389 without a second read policy or reverse dependency.
+This decomposition is complete, not implementation. Continue `/skill:next` for Board-based selection after TICKET-00109's approved final split. Preserve terminal-first Board priority and Markdown authority
+until separately approved verified cutover. Planning authorizes no storage/credential operation, source capture,
+check, private-content read, retention/redaction/purge, runtime effect, commit or publication.
+
+### Planning verification
+
+Prepared in `.runs/worktrees/ticket-00083-to-tasks` on `feature/ticket-00083-to-tasks`, preserving prior approved
+uncommitted planning. Before allocation, the live TASK ceiling was TASK-00373 and the archive contained no TASK
+records. TASK-00374–00380 metadata and exact dependencies match the approved proposal; all are feature records,
+ready behind unfinished suppliers, with blank order/pr.
+
+`./bin/planning-check --write` and `./bin/planning-check` passed with 507 records, 415 active and current generated
+views, reporting no invalid links or dependency cycles. Tracked `git diff --check` and all 72 new/untracked TASK
+whitespace checks passed, including these seven. Explicit checks confirmed independent consumer/host/prototype
+`needs-info` holds, unchanged TASK-00138/00139/00142/00226 records against this worktree's HEAD and preserved existing
+producer priority/status. TASK-00140/00141/00087 gained only the documented early suppliers and coordination;
+that historical split advanced the handoff to TICKET-00095. Active TASK-00138 and the terminal-first ordering remain unchanged.
+
+These are planning receipts, not fresh storage, provenance, check, retention/redaction, provider or runtime evidence.
+Full `./bin/build` was not run and remains required before commit/publication. All changes remain uncommitted;
+independent review and publication are separate. No implementation, storage/credential operation, check, private
+source/session read, upload, retention/redaction/purge, live Planning mutation, cutover, commit, push, PR or merge
+occurred. Unrelated main-checkout work was left untouched, not claimed clean. Earlier receipts remain historical.
+
+### Original requirement approval and supplier handoff
+
+The earlier allocation requests below are resolved only by the precise mappings above; qualification holds persist.
 
 Approved as area 2 of EPIC-00007's remaining six-TICKET split. Applies
 [WF-015](../wayfinder/tickets/WF-015-define-coordinated-task-authority-protocol.md),
@@ -108,6 +197,14 @@ Approved as area 2 of EPIC-00007's remaining six-TICKET split. Applies
 Early subject/receipt/Artifact contracts supply [TICKET-00032](00032-TICKET.md),
 [TICKET-00096](00096-TICKET.md) and later Review consumers without waiting for those completed journeys.
 TICKET-00064 retains independence decisions and live Team checks; TICKET-00083 retains managed Review/QA/landing.
+TICKET-00090 now maps TASK-00354's protected Pi retention/hold/redaction seam with TASK-00353 lifecycle and the
+existing TASK-00167 checkpoint owner. Consume that seam without another transcript store; actual Artifact/reference/
+hold writers must participate before affected cleanup is enabled. Missing participation preserves content; completed
+evidence/browser journeys are not reverse prerequisites of the conversation primitives.
+TICKET-00093 now maps TASK-00368–00373's Runner enrollment/admission/dispatch/consumer/control/recovery operations.
+Supply exact early Artifact/evidence/reference participants to TASK-00140/00141 and TASK-00373 where required;
+missing recovery evidence or retention/hold participation preserves content and blocks unsafe continuation/cleanup.
+Completed Runner or browser journeys never reverse-block these early evidence contracts.
 Map exact early contribution/subject suppliers separately during TASK decomposition, not a blanket dependency on
 this entire TICKET. Existing needs-info and qualified-host/current-authority holds remain. No evidence upload,
 redaction, purge, live storage or implementation TASK is authorized through this approval.

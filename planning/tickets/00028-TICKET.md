@@ -88,6 +88,22 @@ automatic fallback to Markdown writing.
 
 ## Decisions and progress
 
+### Incoming new-Repository authority capability gap
+
+TICKET-00103 now maps TASK-00422 early creation feasibility and TASK-00425 first configuration/context stages.
+Both retain `needs-info` for an exact new-Repository database-authority initialization supplier under this existing
+authority owner. TASK-00102 requires approved Markdown migration and TASK-00103 guards post-cutover consumers;
+neither currently supplies that distinct initialization operation. Allocate a bounded owner capability separately
+before qualifying these consumers; no supplier ID or new implementation TASK is invented by this coordination.
+
+The accepted creation requirement concerns only an exact newly generated registered subject, with explicit original
+consent, actual authoritative empty Planning state and existing central guards. It does not authorize migration of
+an existing Repository, fake rehearsal/approval, normal configuration mode edits, dual writers, a second mode engine,
+Planning import or changing this project's Markdown authority. Existing cutover/recovery policy, TASK metadata and
+execution priorities stay unchanged. Early feasibility cannot depend on completed creation/browser acceptance.
+
+### Original requirement handoff
+
 Implements [WF-011 — Prove the Markdown migration and authority switch](../wayfinder/tickets/WF-011-prove-markdown-migration-and-authority-switch.md).
 It depends on TICKET-00024 Repository identity, TICKET-00025 authority mode, TICKET-00026 complete Planning
 semantics and TICKET-00027 canonical ordering/eligibility. The accepted cutover is required for final

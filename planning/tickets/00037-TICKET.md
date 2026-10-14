@@ -164,3 +164,12 @@ is checkout-local at `.runs/build/TASK-00159/run-V3MunP/live-BqDtKP/evidence/`.
 The required live proof is now available for **fresh independent Review of R-02 and applicable QA**. TASK-00159
 remains in-progress, not done; this parent remains open. Qualification neither self-accepts the TASK nor authorizes
 further paid calls, managed credential enrollment, publication or merge.
+
+### Managed web-content consumer handoff
+
+TICKET-00095's approved TASK-00381 consumes TASK-00171's protected first-party judgment integration and this TICKET's
+shared evaluator transitively. It owns the web-injection rubric, conservative thresholds and PHP admission policy,
+not another provider client or broader local milestone. TASK-00184/00159 retain their accepted local scope/limits;
+local readiness does not qualify managed access. TASK-00382/00383/00384 own search, retrieval and retained/resumed
+web delivery; none reverse-blocks these primitives or makes universal screening a prerequisite. Exact runtime,
+endpoint and current authority still need fresh qualification. No credential/provider effect follows from planning.

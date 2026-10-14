@@ -96,10 +96,100 @@ state and the selected transcript runtime explicitly; no dual writer or claim of
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00348](../tasks/00348-TASK.md) | Record bounded assignments and conversation identities | ready-for-agent |
+| [TASK-00349](../tasks/00349-TASK.md) | Persist input and fence original attempts | ready-for-agent |
+| [TASK-00350](../tasks/00350-TASK.md) | Open and fence protected runtime sessions | needs-info |
+| [TASK-00351](../tasks/00351-TASK.md) | Execute admitted turns through one protected runtime | ready-for-agent |
+| [TASK-00352](../tasks/00352-TASK.md) | Attach and inspect the same conversation | ready-for-agent |
+| [TASK-00353](../tasks/00353-TASK.md) | Stop and recover original conversation work | ready-for-agent |
+| [TASK-00354](../tasks/00354-TASK.md) | Retain and narrowly redact protected conversation content | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved seven independently reviewable slices in the existing isolated planning worktree. Early
+identity, attempt and host contracts stay independent of completed provider-driven turns and final continuation.
+
+| Slice | Accepted owner | Delivered boundary |
+|---|---|---|
+| A | [TASK-00348](../tasks/00348-TASK.md) | Explicit bounded assignment and stable conversation identity without launch |
+| B | [TASK-00349](../tasks/00349-TASK.md) | Durable input/original attempts, single-owner fences and early cancellation/recovery state participants |
+| C | [TASK-00350](../tasks/00350-TASK.md) | Actual protected runtime/storage opening and session/host acting-window adapter |
+| D | [TASK-00351](../tasks/00351-TASK.md) | One production protected turn invocation path for independent provider integration |
+| E | [TASK-00352](../tasks/00352-TASK.md) | Same-conversation terminal/API attachment and owner-first history resynchronization |
+| F | [TASK-00353](../tasks/00353-TASK.md) | Actual stop/background-work/checkpoint/original-effect recovery and lineage primitives |
+| G | [TASK-00354](../tasks/00354-TASK.md) | Protected retention/holds, eligible cleanup and narrowly authorized redaction |
+
+TASK-00348 consumes TASK-00339/00253/00258/00234; TASK-00349 consumes TASK-00348/00340/00341. TASK-00350 consumes
+TASK-00349/00321/00138 and remains `needs-info` for precise reusable protected host/broker and operational storage/
+process participants under existing execution owners. TICKET-00093 now maps TASK-00368–00373's Runner operation,
+not the missing protected host/broker implementation; enrollment/capacity or completed consumers do not clear it.
+TASK-00138's qualification is not an
+implemented runtime. Do not replace the missing narrow contract with completed Workflow/Runner/role journeys or
+move sandbox/provisioner ownership here.
+
+TASK-00351 consumes TASK-00349/00350/00244/00336/00344/00345, not completed TASK-00346/00347. TASK-00352 consumes
+TASK-00351. TASK-00353 consumes TASK-00351/00164/00168, and TASK-00354 consumes TASK-00352/00353/00167. The six
+non-host TASKs are `ready-for-agent` behind unfinished dependencies, not claims of actual sessions. Selected-provider
+live acceptance for reconnect/recovery uses a qualified TASK-00346 or TASK-00347 path, never mandatory setup of both.
+All new orders remain unranked; the terminal-first Board priority and active TASK-00138 stay unchanged.
+
+TASK-00340 gains TASK-00348, and TASK-00344/00345 gain TASK-00349. Those three sole supplier-mapping holds are resolved
+and their statuses become `ready-for-agent` behind unfinished dependencies. TASK-00244 gains early TASK-00348/00349/
+00350, not completed TASK-00351. TASK-00336 gains TASK-00350, not its completed invocation consumer. TASK-00346/00347
+gain TASK-00351. TASK-00342 gains TASK-00351/00352/00353 and retains explicit snapshot-change/linked-successor
+integration. These consumers retain `needs-info` for TASK-00350's unresolved operational host/broker participants
+and applicable Team/creation/current-authority composition. Actual provider/runtime qualification is still required.
+
+TASK-00250 retains role integration and contribution holds; TASK-00247/00266 retain Explorer/Project Manager
+outcomes. TASK-00325 consumes continuation for terminal switching; TASK-00302/00304 consume actual protected
+proposal/custom-manual use through the existing owners. Their remaining scoped-read/Triage, proposal/browser,
+Feature/publication and contribution holds are not cleared. No final consumer reverse-blocks the primitives.
+TICKET-00091 now maps TASK-00355 early proposal admission/result/recovery, TASK-00356 human answers/operation
+boundaries and TASK-00357–00360 typed candidates, human Apply, atomic decomposition and reviewed reconciliation.
+TASK-00302 consumes TASK-00355 independently of Planning cutover; TASK-00266 consumes TASK-00360 while retaining
+TICKET-00092's browser capabilities, now mapped to TASK-00361–00367. TASK-00266 gains TASK-00362–00367, resolving
+browser allocation but retaining host/authority/role and TASK-00364 prototype-execution participant holds.
+Shared conversation/provider suppliers never depend on those completed consumers.
+TICKET-00094 now maps TASK-00374–00380's evidence/Artifact lifecycle. TASK-00379 consumes TASK-00354's protected
+Pi retention seam and early Artifact/reference participants; TASK-00380 adds cross-copy redaction, not another
+transcript store. These completed consumers never reverse-block early Pi lifecycle; actual participation and
+storage/backup coverage are required before destructive operations. TICKET-00095 now maps TASK-00384's web-evidence
+recovery consumer of TASK-00353: current exact-content screening is required at supported resumed-context ingress,
+without a reverse dependency or blanket web requirement on local-only recovery. Host/broker and authority holds persist.
+
+Pi Durable evaluation belongs inside TASK-00350 and actual integration/recovery, not a proof-only TASK. Pin exact
+source/runtime/extensions/storage and record concrete gaps before an alternative. Preserve the separately approved
+Pi 1.1.0 local checkpoint/compaction/retention scope of TASK-00164/00168/00167; managed compatibility needs fresh
+qualification, not a silent upgrade or duplicated policy. Runtime durability does not execute while powered off,
+renew approval, prove external exactly-once effects or grant cross-machine migration.
+
+This decomposition is complete, not runtime delivery. Following TICKET-00091–00099's approved proposal/browser/Runner/evidence/web-research/history/sessions/measurement/catalog splits,
+continue `/skill:next` for Board-based selection after TICKET-00109's approved final split. Preserve Markdown Planning authority and all unresolved owner
+holds. No live assignment, process, credential, provider call, transcript read or cleanup is authorized by planning.
+
+### Planning verification
+
+Prepared in `.runs/worktrees/ticket-00083-to-tasks` on `feature/ticket-00083-to-tasks`, preserving all prior approved
+uncommitted planning changes. Live and archived TASK identities were rechecked before allocating TASK-00348–00354;
+the archive contained no TASK records. `./bin/planning-check --write` and `./bin/planning-check` passed with
+481 records, 389 active and current generated views. Tracked `git diff --check` and all 46 new/untracked TASK
+whitespace checks passed, including these seven records. Validation reported no dependency cycles or invalid
+planning links. Existing Board priorities and active TASK-00138 remain unchanged; all new orders are unranked.
+
+These are planning receipts, not actual runtime, provider, host, checkpoint or retention qualification. The full
+`./bin/build` was not run and remains required before commit/publication. No implementation, package adoption,
+assignment/session launch, credential inspection, provider call, transcript read, cleanup, commit, push, PR or
+merge was performed. Changes remain uncommitted in the isolated worktree; independent review and delivery are
+separate. Concurrent Jev/Harness/build/planning changes observed in the main checkout were left untouched, not
+claimed clean or included in this planning scope.
+
+### Original requirement approval and prerequisite requests
+
+The requests below describe the earlier handoff; the approved mappings above supersede its allocation gaps,
+without claiming operational qualification.
 
 Approved as area 6 of the remaining eight-TICKET EPIC-00006 decomposition. Applies
 [WF-012](../wayfinder/tickets/WF-012-define-browser-planning-and-conversation-ownership.md),
@@ -112,5 +202,26 @@ Consumes early TICKET-00085–89 contracts, TICKET-00061's per-use authority and
 manual assignments do not wait for complete browser Planning. Supplies session/manual-admission/recovery primitives
 to TASK-00250 and TASK-00304, and delegated execution to TICKET-00091/TASK-00302. Do not reverse-block these
 primitives on final role/custom-template journeys, complete Workflow delivery or database Planning cutover.
-Exact TASK mappings, runtime compatibility and operational participants remain unqualified; existing needs-info
-holds stay intact. The accepted terminal-first Board milestone and existing Jev TASKs are unchanged.
+TICKET-00088 now maps TASK-00339–00342: early exact resolution, retained binding, currentness guard and final
+runtime/continuation integration. TASK-00340 remains `needs-info` for this TICKET's precise early authorized
+session-identity/intent and binding transaction contract. Map that independently of completed protected execution,
+TASK-00244's broker, TASK-00336's loader and TASK-00342's final continuation. Early assignment/identity facts may
+consume TASK-00339; final admission/activation consumes TASK-00340/00341 with live authority. A persisted binding
+is not a grant or a running session, and an arbitrary supplied identity cannot authorize it.
+
+TASK-00342 separately needs this TICKET's actual protected runtime/continuation/recovery participants. Those
+primitives may consume the early snapshot contracts but cannot depend on the completed consumer integration.
+TASK-00244/00336 retain their non-snapshot grant/host/acting-window holds.
+
+TICKET-00089 now maps TASK-00343's early provider/model catalog, TASK-00344's disclosure/budget admission,
+TASK-00345's original-outcome/accounting and independent TASK-00346/00347 OpenRouter/Codex paths. This TICKET must
+supply exact early authorized assignment/submission/attempt and shared-transaction participants to TASK-00344;
+original-attempt/cancellation/current-owner/recovery participants to TASK-00345; and protected invocation/host plus
+early real Planning consumption seams to TASK-00346/00347. Separate those primitives from completed provider-driven
+execution. They cannot depend on completed live adapters or final TASK-00342/00250/00302/00304 integration. Final
+execution uses the selected qualified provider with current admission; no fixture proves a live route and no
+provider is mandatory when the other is configured. Neither snapshot/catalog facts nor persisted intent is a grant.
+
+The approved split above now maps these session/attempt/invocation owners. TASK-00350's exact operational host/
+broker participant gap and actual runtime compatibility remain unqualified, with applicable consumer holds intact.
+The accepted terminal-first Board milestone and existing Jev TASKs are unchanged.

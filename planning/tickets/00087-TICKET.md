@@ -82,10 +82,83 @@ remain explicitly unavailable; do not materialize remote Skills as ordinary trus
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00333](../tasks/00333-TASK.md) | Establish explicit first-party Skill trust | ready-for-agent |
+| [TASK-00334](../tasks/00334-TASK.md) | Inspect effective Skill aliases and resolve collisions | ready-for-agent |
+| [TASK-00335](../tasks/00335-TASK.md) | Serve authorized static Skill manifests and bytes | ready-for-agent |
+| [TASK-00336](../tasks/00336-TASK.md) | Load verified Skills and supporting resources in Pi | needs-info |
+| [TASK-00337](../tasks/00337-TASK.md) | Reuse verified cached content safely | ready-for-agent |
+| [TASK-00338](../tasks/00338-TASK.md) | Remove first-party trust and reconcile owned cleanup | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved six delivery slices in the existing isolated planning worktree, normally one bounded PR
+each. Early trust/collision facts remain independent of completed publication/loading; actual qualification,
+documentation and owned tests stay inside their delivery outcomes rather than separate proof-only work.
+
+| Slice | Accepted owner | Delivered boundary |
+|---|---|---|
+| A | [TASK-00333](../tasks/00333-TASK.md) | Explicit first-party Skill trust bound to existing exact connection/origin authority |
+| B | [TASK-00334](../tasks/00334-TASK.md) | Bounded effective-alias observations, visible collision resolution and precise candidate-bound choices |
+| C | [TASK-00335](../tasks/00335-TASK.md) | Authorized static Skill catalog/manifests/bytes over the existing protected first-party MCP composition |
+| D | [TASK-00336](../tasks/00336-TASK.md) | Actual Pi activation, lazy verified supporting reads, origin-tagged context and current-use/host integration |
+| E | [TASK-00337](../tasks/00337-TASK.md) | Origin-separated verified cache, restart/offline limits and safe exact cleanup participation |
+| F | [TASK-00338](../tasks/00338-TASK.md) | Explicit origin removal with current-use denial, owned cache cleanup and existing credential lifecycle recovery |
+
+TASK-00333 consumes TASK-00322; TASK-00334 consumes TASK-00333/00327. TASK-00335 consumes TASK-00333/00327/00245,
+TASK-00336 consumes TASK-00334/00335 and TASK-00337 consumes TASK-00336. TASK-00338 consumes TASK-00337 plus
+TASK-00237/00240/00243 for actual revocation, eligible cleanup and enrollment/use holds. No dependency on completed
+interactive onboarding is introduced upstream. All orders remain unranked and existing Board priority is unchanged.
+
+TASK-00245 gains TASK-00333 and retains `needs-info` for lower-level current-use/session/host prerequisites.
+TASK-00328 gains TASK-00334, resolving its sole mapping hold; it is now `ready-for-agent` behind unfinished
+suppliers, not a delivered custom publisher. TASK-00332 gains TASK-00336/00337 and retains `needs-info` through the
+loader's unresolved lower-level contracts. TASK-00324 gains TASK-00338 rather than implementing another cleanup
+path; the latter uses lower-level credential owners, never completed onboarding as a reverse dependency.
+
+TICKET-00088's subsequent approved split maps TASK-00336's early snapshot binding/currentness to TASK-00340/00341.
+TICKET-00089 maps early model facts to TASK-00343; TICKET-00090 now supplies TASK-00350's protected session/host/
+acting-window adapter with early TASK-00348/00349 facts. The loader remains `needs-info` for TASK-00350's exact
+operational host/broker gap and actual supported scope; provider qualification is separate. TASK-00342 consumes the completed loader,
+never the reverse. Early resource/origin/choice facts support snapshot/admission
+bootstrap; final remote transport/loading must not reverse-block its prerequisites. Naming trust/loader owners
+does not qualify live authentication, session isolation, original-operation recovery or any missing host contract.
+Snapshot facts are not grants; current authority still applies to all protected reads, cached disclosure and use.
+
+### Current implementation evidence boundary
+
+The installed Pi 1.2.0 `docs/mcp.md`, `docs/skills.md` and `docs/security.md` were read during proposal preparation.
+They document built-in MCP tools/resources, project-configured overrides and first-discovered local Skill collision
+behavior. This supersedes the historical Pi 0.87.1 absence-of-generic-MCP observation as a current implementation
+starting point, not the accepted product requirements or historical WF-013 receipt. No runtime was exercised and
+these docs do not qualify the accepted Skills extension, protected Agent credentials, exact origin/manifest handling,
+acting-window controls or safe cache behavior. Revalidate selected official protocol/SDK/Pi capabilities at
+implementation, pin exact source/version/lock and qualify every reachable direct/resource/codemode path. Reuse
+conforming capabilities without building a second MCP platform or treating generic Resources support as Skills.
+
+This TICKET's decomposition is complete, not runtime delivery. Following TICKET-00088–00099's approved snapshot/
+provider/session/proposal/browser/Runner/evidence/web-research/history/sessions/measurement/catalog splits, continue `/skill:next` for Board-based selection after TICKET-00109's approved final split. Browser Planning and database Planning cutover are
+not prerequisites for these early capabilities. Preserve Markdown authority and all existing credential/session
+owners. This planning authorizes no connection, trust grant, provider call, cache deletion or credential mutation.
+
+### Planning verification
+
+Prepared in `.runs/worktrees/ticket-00083-to-tasks` on `feature/ticket-00083-to-tasks`, preserving the preceding
+approved planning changes. Live and archived TASK identities were inspected before allocating TASK-00333–00338;
+the archive contained no TASK records. `./bin/planning-check --write` and `./bin/planning-check` passed with
+465 records, 373 active and current generated views. Tracked `git diff --check` and all six new-record whitespace
+checks passed. Validation found no dependency cycles or invalid planning links. New orders remain unranked;
+existing priority and active TASK-00138 are unchanged. TASK-00328's documented status change resolves only its
+supplier-mapping hold and retains its unfinished dependencies.
+
+These are planning receipts, not application, host, protocol or credential qualification. The full `./bin/build`
+was not run and remains required before commit/publication. No implementation, connection, trust enrollment,
+Skill activation, provider call, cache/credential mutation, commit, push, PR or merge was performed. Changes remain
+uncommitted in the isolated worktree; independent review and delivery remain separate.
+
+### Original requirement approval
 
 Approved as area 3 of the remaining eight-TICKET EPIC-00006 decomposition. Consumes
 [WF-013](../wayfinder/tickets/WF-013-research-mcp-skills-and-pi-support.md),
@@ -94,6 +167,9 @@ Approved as area 3 of the remaining eight-TICKET EPIC-00006 decomposition. Consu
 
 Own the first-party origin/manifest/host capability, not TICKET-00061's current principal or per-use authorization.
 Map early origin contracts separately from final loader integration so TASK-00245 and this integration do not
-reverse-block each other. [TICKET-00088](00088-TICKET.md) consumes verified resource-selection provenance; it must
+reverse-block each other. TICKET-00086 maps managed Skill storage/exact manifests to TASK-00327. Its TASK-00328
+and TASK-00332 requested the early collision and qualified-loader mappings now supplied by the approved split above.
+Consume TASK-00322's connection facts without waiting for final onboarding or switching; TASK-00327 supplies database
+facts, not origin trust or live access. [TICKET-00088](00088-TICKET.md) consumes verified resource-selection provenance; it must
 not be a prerequisite for basic manifest validation. No connection, trust approval, cache cleanup or live MCP
 invocation occurs through this planning approval. Existing Jev requirements and TASKs remain unchanged.
