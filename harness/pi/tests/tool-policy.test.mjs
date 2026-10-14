@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, realpathSync,
-  rmSync, symlinkSync, writeFileSync } from 'node:fs';
+  readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
@@ -38,6 +38,119 @@ function fixture(t, change = () => {}) {
   return { base, root, script, source, config, policyPath, data, save, guard, runtime, start, begin };
 }
 const blocked = (action, code) => assert.throws(action, (error) => error.code === code && !error.message.includes('PRIVATE'));
+
+// Expectations come from actual fixture lookups, not a guessed Unicode/case-fold table.
+// The same cases must deny equivalent names on macOS and admit distinct names on Linux.
+for (const [name, alias] of [['private', 'PRIVATE'], ['privaté', 'private\u0301']]) {
+  test(`filesystem-equivalent protected and guard names: ${alias}`, async (t) => {
+    const f = fixture(t, (p) => { p.protectedPaths = [join(p.roots[0], name)]; });
+    mkdirSync(join(f.root, name)); writeFileSync(join(f.root, name, 'secret'), 'protected marker');
+    const equivalent = existsSync(join(f.root, alias, 'secret'));
+    f.start();
+    if (equivalent) {
+      blocked(() => f.begin('read', { path: alias + '/secret' }), 'protected-path');
+      blocked(() => f.begin('write', { path: alias + '/new/deep', content: 'PRIVATE' }), 'protected-path');
+      assert.equal(existsSync(join(f.root, name, 'new')), false);
+    } else {
+      const op = f.begin('write', { path: alias + '/new/deep', content: 'allowed distinct name' });
+      const ops = fileOperations(f.guard, op); await ops.mkdir();
+      await ops.writeFile(op.input.path, op.input.content); op.close();
+      assert.equal(readFileSync(join(f.root, alias, 'new/deep'), 'utf8'), 'allowed distinct name');
+    }
+    assert.equal(readFileSync(join(f.root, name, 'secret'), 'utf8'), 'protected marker');
+    const guardAlias = 'GUARD.MJS';
+    if (existsSync(join(f.root, guardAlias))) {
+      blocked(() => f.begin('write', { path: guardAlias, content: 'PRIVATE' }), 'protected-path');
+      assert.equal(readFileSync(f.source, 'utf8'), '// trusted source');
+    }
+  });
+
+  test(`nonexistent protected ancestors retain filesystem equivalence: ${alias}`, async (t) => {
+    const f = fixture(t, (p) => { p.protectedPaths = [join(p.roots[0], name, 'future')]; });
+    // Establish the volume's lookup result, then remove the target before activation.
+    mkdirSync(join(f.root, name));
+    const equivalent = existsSync(join(f.root, alias));
+    rmSync(join(f.root, name), { recursive: true });
+    assert.equal(f.start().state, 'active');
+    if (equivalent) {
+      blocked(() => f.begin('write', { path: alias + '/future/new/deep', content: 'PRIVATE' }), 'protected-path');
+      assert.equal(existsSync(join(f.root, name)), false);
+    } else {
+      const op = f.begin('write', { path: alias + '/future/new/deep', content: 'distinct allowed name' });
+      const ops = fileOperations(f.guard, op); await ops.mkdir();
+      await ops.writeFile(op.input.path, op.input.content); op.close();
+      assert.equal(existsSync(join(f.root, name)), false);
+    }
+  });
+}
+
+test('reserved names use filesystem lookup semantics even before creation', async (t) => {
+  const f = fixture(t);
+  writeFileSync(join(f.root, 'case-probe'), 'probe');
+  const equivalent = existsSync(join(f.root, 'CASE-PROBE'));
+  assert.equal(f.start().state, 'active');
+  for (const path of ['.ENV', 'nested/.ENV.local', '.GIT/config', '.PI/settings.json',
+    '.SSH/key', '.AWS/config', '.GNUPG/key', 'AUTH.JSON']) {
+    if (equivalent) {
+      blocked(() => f.begin('write', { path, content: 'PRIVATE' }), 'protected-path');
+      assert.equal(existsSync(join(f.root, path)), false);
+    } else {
+      const op = f.begin('write', { path, content: 'distinct allowed name' });
+      const ops = fileOperations(f.guard, op); await ops.mkdir();
+      await ops.writeFile(op.input.path, op.input.content); op.close();
+      assert.equal(readFileSync(join(f.root, path), 'utf8'), 'distinct allowed name');
+    }
+  }
+});
+
+test('allowed root aliases and final effect paths respect actual filesystem identity', async (t) => {
+  const f = fixture(t);
+  mkdirSync(join(f.root, 'private')); writeFileSync(join(f.root, 'private/secret'), 'protected marker');
+  const equivalent = existsSync(join(f.root, 'PRIVATE/secret'));
+  if (equivalent) f.data.roots = [f.root.replace('/workspace', '/WORKSPACE')];
+  f.save(); assert.equal(f.start().state, 'active');
+  const op = f.begin('write', { path: 'ordinary/new', content: 'allowed' });
+  const ops = fileOperations(f.guard, op);
+  if (equivalent) {
+    await assert.rejects(ops.writeFile(join(f.root, 'PRIVATE/secret'), 'PRIVATE'), { code: 'protected-path' });
+    assert.equal(readFileSync(join(f.root, 'private/secret'), 'utf8'), 'protected marker');
+  }
+  await ops.mkdir(); await ops.writeFile(op.input.path, op.input.content); op.close();
+  assert.equal(readFileSync(join(f.root, 'ordinary/new'), 'utf8'), 'allowed');
+});
+
+test('filesystem lookup resources are private and disposed on cancellation', async (t) => {
+  const f = fixture(t); assert.equal(f.start().state, 'active');
+  const privateDirectories = readdirSync(f.config).filter((name) => name.startsWith('.fight-policy-names-'));
+  assert.equal(privateDirectories.length, 1);
+  assert.equal(statSync(join(f.config, privateDirectories[0])).mode & 0o777, 0o700);
+  const op = f.begin('write', { path: 'never', content: 'PRIVATE' });
+  f.guard.cancel();
+  assert.equal(existsSync(join(f.config, privateDirectories[0])), false);
+  await assert.rejects(fileOperations(f.guard, op).mkdir(), /Fight policy blocked/);
+  assert.equal(existsSync(join(f.root, 'never')), false); op.close();
+  assert.equal(f.start().state, 'active');
+  chmodSync(f.config, 0o755); f.guard.cancel();
+  assert.equal(f.start().reason, 'unsafe-policy-directory');
+});
+
+test('lost filesystem lookup entries cannot turn a protected alias into an allow', async (t) => {
+  const f = fixture(t); assert.equal(f.start().state, 'active');
+  const op = f.begin('write', { path: 'ordinary/new', content: 'PRIVATE' });
+  const lookup = readdirSync(f.config).find((name) => name.startsWith('.fight-policy-names-'));
+  for (const bucket of readdirSync(join(f.config, lookup))) rmSync(join(f.config, lookup, bucket), { recursive: true });
+  await assert.rejects(fileOperations(f.guard, op).mkdir(), /Fight policy blocked/);
+  assert.equal(existsSync(join(f.root, 'ordinary')), false); op.close();
+});
+
+test('filesystem aliases cannot place an operator policy inside the workspace', (t) => {
+  const f = fixture(t);
+  const local = join(f.root, 'policy.json'); writeFileSync(local, JSON.stringify(f.data), { mode: 0o600 });
+  const alias = local.replace('/workspace/', '/WORKSPACE/');
+  if (!existsSync(alias)) return; // Distinct on this filesystem, not an alternate workspace location.
+  const guard = new ToolPolicy({ policyPath: alias, cwd: f.root });
+  assert.notEqual(guard.start('s', f.runtime).state, 'active');
+});
 
 test('explicit versioned policy and runtime qualifications are required, with redacted status', (t) => {
   const f = fixture(t);

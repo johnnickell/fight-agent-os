@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { lstatSync, realpathSync, readFileSync, statSync } from 'node:fs';
+import { lstatSync, realpathSync, readFileSync, statSync, mkdirSync, mkdtempSync, rmSync, statfsSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 
 /** @type {readonly ['read', 'write', 'edit', 'bash']} */
@@ -18,6 +18,71 @@ export class PolicyDenied extends Error {
   constructor(code) { super(`Fight policy blocked: ${code}`); this.code = code; }
 }
 
+/** Ask the selected volume about names, including names whose real targets do not exist */
+class PathNames {
+  #path; #identity; #names = new Map();
+  constructor(directory, paths) {
+    // Darwin APFS has volume-wide lookup semantics. Unknown filesystems/devices fail closed;
+    // Linux is used only by the owning tests, never a supported production runtime.
+    if (process.platform === 'darwin' && statfsSync(directory).type !== 26) fail('unsupported-filesystem');
+    const info = lstatSync(directory);
+    if (!info.isDirectory() || (info.mode & 0o077) !== 0 || info.uid !== process.getuid()) fail('unsafe-policy-directory');
+    this.#path = mkdtempSync(join(directory, '.fight-policy-names-'));
+    this.#identity = lstatSync(this.#path);
+    try {
+      const names = new Set(['.git', '.pi', '.ssh', '.aws', '.gnupg', 'auth.json', '.env',
+        ...paths.flatMap((path) => path.split(sep).filter(Boolean))]);
+      for (const name of names) {
+        const bucket = join(this.#path, String(this.#names.size));
+        mkdirSync(bucket, { mode: 0o700 });
+        mkdirSync(join(bucket, name), { mode: 0o700 });
+        this.#names.set(name, { bucket, path: join(bucket, name), identity: lstatSync(join(bucket, name)).ino });
+      }
+    } catch (error) { this.close(); throw error; }
+  }
+  check(path) {
+    let ancestor = path;
+    while (true) {
+      try {
+        if (statSync(ancestor).dev !== this.#identity.dev) fail('unsupported-filesystem');
+        break;
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        ancestor = dirname(ancestor);
+      }
+    }
+    const info = lstatSync(this.#path);
+    if (!info.isDirectory() || (info.mode & 0o077) !== 0 || info.uid !== process.getuid() ||
+        info.dev !== this.#identity.dev || info.ino !== this.#identity.ino) fail('filesystem-probe-changed');
+  }
+  equal(value, reference) {
+    if (value === reference) return true;
+    const entry = this.#names.get(reference);
+    if (!entry) fail('filesystem-probe-unavailable');
+    let referenceInfo;
+    try { referenceInfo = lstatSync(entry.path); } catch { fail('filesystem-probe-unavailable'); }
+    if (!referenceInfo.isDirectory() || referenceInfo.dev !== this.#identity.dev ||
+        referenceInfo.ino !== entry.identity) fail('filesystem-probe-changed');
+    try {
+      const info = lstatSync(join(entry.bucket, value));
+      return info.dev === referenceInfo.dev && info.ino === referenceInfo.ino;
+    } catch (error) { if (error.code === 'ENOENT') return false; fail('filesystem-probe-unavailable'); }
+  }
+  within(path, root) {
+    const parts = path.split(sep).filter(Boolean), roots = root.split(sep).filter(Boolean);
+    return roots.length <= parts.length && roots.every((part, index) => this.equal(parts[index], part));
+  }
+  reserved(path) {
+    return path.split(sep).filter(Boolean).some((part) => {
+      const dot = part.indexOf('.', 1);
+      const envName = dot < 0 ? part : part.slice(0, dot);
+      return ['.git', '.pi', '.ssh', '.aws', '.gnupg', 'auth.json'].some((name) => this.equal(part, name)) ||
+        this.equal(envName, '.env');
+    });
+  }
+  close() { rmSync(this.#path, { recursive: true, force: true }); }
+}
+
 /** Resolve existing ancestors and deliberately reject dangling links and special files */
 export function canonicalPath(value, cwd = '/') {
   if (typeof value !== 'string' || !value || value.length > 4096 || value.startsWith('@') || /[\x00-\x1f\x7f\\%~]/.test(value)) fail('invalid-path');
@@ -32,7 +97,9 @@ export function canonicalPath(value, cwd = '/') {
       if (error.code !== 'ENOENT') fail('path-unavailable');
       return join(current, ...parts.slice(i + 1));
     }
-    try { current = realpathSync(current); } catch { fail('dangling-link'); }
+    // On Darwin the JS realpath implementation preserves input case/normalization aliases.
+    // Native realpath returns the filesystem's stored spelling of each existing ancestor.
+    try { current = realpathSync.native(current); } catch { fail('dangling-link'); }
     const target = info.isSymbolicLink() ? statSync(current) : info;
     if (!target.isFile() && !target.isDirectory()) fail('special-file');
     if (target.isFile() && target.nlink !== 1) fail('hard-link');
@@ -102,11 +169,11 @@ function loadPolicy(path, cwd, resources) {
 
 /** Own fresh admission and cancellation; no reusable allow token escapes this module */
 export class ToolPolicy {
-  #path; #cwd; #resources; #sources; #policy; #session; #epoch = 0; #pending = new Set(); #reason = 'not-started';
+  #path; #cwd; #resources; #sources; #policy; #names; #session; #epoch = 0; #pending = new Set(); #reason = 'not-started';
   /** @param {{policyPath: string, cwd: string, resources?: string[], sources?: string[]}} options */
   constructor({ policyPath, cwd, resources = [], sources = [] }) {
     this.#path = policyPath;
-    this.#cwd = realpathSync(cwd);
+    this.#cwd = realpathSync.native(cwd);
     this.#resources = resources;
     this.#sources = sources.map((path) => ({ path, identity: fileIdentity(path) }));
   }
@@ -116,9 +183,17 @@ export class ToolPolicy {
       if (runtime.version !== '1.2.0' || runtime.platform !== 'darwin' || !runtime.hooks) fail('unsupported-runtime-or-hooks');
       if (!isAbsolute(this.#path) || canonicalPath(this.#path) !== this.#path) fail('invalid-policy-location');
       this.#policy = loadPolicy(this.#path, this.#cwd, this.#resources);
+      const paths = [...this.#policy.roots, ...this.#policy.protectedPaths]
+        .flatMap(({ configured, canonical }) => [resolve(configured), canonical]);
+      this.#names = new PathNames(dirname(this.#path), paths);
+      for (const root of this.#policy.roots) this.#names.check(root.canonical);
+      this.#names.check(this.#cwd);
       this.#session = session;
       this.#reason = undefined;
-    } catch (error) { this.#reason = error instanceof PolicyDenied ? error.code : 'invalid-policy'; }
+    } catch (error) {
+      this.#names?.close(); this.#names = undefined;
+      this.#reason = error instanceof PolicyDenied ? error.code : 'invalid-policy';
+    }
     return this.inspect();
   }
   cancel(reason = 'cancelled') {
@@ -126,6 +201,7 @@ export class ToolPolicy {
     this.#reason = reason;
     for (const controller of this.#pending) controller.abort();
     this.#pending.clear();
+    this.#names?.close(); this.#names = undefined;
   }
   inspect() {
     if (!this.#reason) {
@@ -142,6 +218,7 @@ export class ToolPolicy {
   #fresh() {
     if (this.#reason) fail(this.#reason);
     if (canonicalPath(this.#cwd) !== this.#cwd) fail('cwd-changed');
+    this.#names.check(this.#cwd);
     if (fileIdentity(this.#path, true) !== this.#policy.identity) fail('policy-changed');
     for (const source of this.#sources) if (fileIdentity(source.path) !== source.identity) fail('guard-source-changed');
     for (const root of this.#policy.roots) if (canonicalPath(root.configured) !== root.canonical) fail('root-changed');
@@ -154,7 +231,7 @@ export class ToolPolicy {
   }
   /** Clone final arguments after all Pi hooks; validate again at each effect */
   begin(tool, input, session, cwd, signal) {
-    if (session !== this.#session || realpathSync(cwd) !== this.#cwd) fail('session-or-cwd-changed');
+    if (session !== this.#session || realpathSync.native(cwd) !== this.#cwd) fail('session-or-cwd-changed');
     this.#fresh();
     if (!this.#policy.tools.includes(tool)) fail('disallowed-tool');
     if (!object(input)) fail('invalid-input');
@@ -187,11 +264,11 @@ export class ToolPolicy {
         (operation.tool === 'edit' && !this.#policy.effects.includes('read'))) fail('disallowed-effect');
     const canonical = canonicalPath(path, this.#cwd);
     const lexical = resolve(this.#cwd, path);
-    const reserved = (value) => value.split(sep).some((part) =>
-      ['.git', '.pi', '.ssh', '.aws', '.gnupg', 'auth.json'].includes(part) || /^\.env(?:\.|$)/.test(part));
-    if (reserved(lexical) || reserved(canonical)) fail('protected-path');
+    this.#names.check(canonical);
+    if (this.#names.reserved(lexical) || this.#names.reserved(canonical)) fail('protected-path');
     if (!this.#policy.roots.some((root) => within(canonical, root.canonical))) fail('out-of-root');
-    if (this.#policy.protectedPaths.some((root) => within(canonical, root.canonical) || within(lexical, resolve(root.configured)))) fail('protected-path');
+    if (this.#policy.protectedPaths.some((root) => this.#names.within(canonical, root.canonical) ||
+        this.#names.within(lexical, resolve(root.configured)))) fail('protected-path');
     // Never replace a root/ancestor directory as if it were a normal file.
     try {
       const info = statSync(canonical);

@@ -6,7 +6,10 @@ launcher. Installing the package without selecting a policy leaves ordinary sess
 
 ## Operator setup
 
-Qualified runtime: **Pi 1.2.0, macOS, Node 22.23.1**. Other Pi versions/platforms refuse activation. The package
+Qualified runtime: **Pi 1.2.0, macOS APFS, Node 22.23.1** (case-sensitive and case-insensitive APFS).
+Other Pi versions/platforms and unqualified filesystems refuse activation. The policy directory, working directory
+and all allowed roots must share one filesystem device; targets crossing a nested mount to another device are
+also refused. Keep a private operator directory on that volume, outside the repository and allowed roots. The package
 uses Pi's exported tool-definition factories and execution wrappers, not a patched Pi installation. Review and
 trust every loaded extension; they run as your OS user. Do not activate this profile in coordinator/delivery
 sessions that require unsupported tools, unrestricted shell or child launch.
@@ -65,8 +68,15 @@ named `.git`, `.pi`, `.ssh`, `.aws`, `.gnupg`, `auth.json`, or `.env`/`.env.*` a
 Other credentials/resources need explicit `protectedPaths`; this is not semantic credential detection. Choose
 minimal roots rather than granting an entire home directory. Pi's own credential use is outside file-tool access.
 
-Paths are canonicalized component by component, including existing ancestors of new write targets. Internal
-symlinks can reach allowed regular files; out-of-root and protected destinations, dangling symlinks, hardlinked
+Paths are canonicalized component by component using native filesystem spelling, including existing ancestors
+of new write targets. Case and Unicode aliases are compared using the selected volume's own directory lookups,
+not universal lowercasing or a guessed Unicode normalization table. At activation the guard creates a private
+`0700` `.fight-policy-names-*` directory beside the policy, containing empty lookup directories for policy/reserved
+name components. Admission only reads those lookup entries; it never creates a requested target to test equivalence.
+The guard removes its lookup directory on cancellation, reload or shutdown. An abrupt process kill can leave an
+inert directory there; the operator may remove that stopped session's directory. Missing/replaced lookup resources
+fail closed. Existing distinct names on case-sensitive APFS remain distinct, while equivalent Unicode spellings and
+nonexistent protected ancestors remain protected. Internal symlinks can reach allowed regular files; out-of-root and protected destinations, dangling symlinks, hardlinked
 files and special files are denied. Tilde, leading `@`, percent encodings, backslashes and control characters are
 rejected rather than interpreted ambiguously. Images retain Pi's renderer through checked PNG/JPEG/GIF/WebP/BMP
 reads. Reads/edits and existing write targets are limited to 1 MiB; new write content and aggregate edit inputs
@@ -166,7 +176,9 @@ only as a test launcher. Production uses direct script spawn, separately exercis
 for real runtime qualification. TASK-00160's retained evidence uses real Pi 1.2.0 SDK tool dispatch, actual hooks,
 wrapped filesystem/script effects, a late path-mutating hook, actual built-in codemode/tool-search denial,
 controlled helper/MCP-named/child tool and nested denial, script/policy/source drift, actual reload and obsolete
-closures. Guard copies in disposable fixtures are SHA-256 matched to the submitted implementation, allowing
+closures. R1 repair qualification additionally exercises case/Unicode aliases, reserved names, guard resources
+and nonexistent protected ancestors through real Pi calls on case-insensitive APFS; a disposable case-sensitive
+APFS image verifies distinct-name admission alongside Unicode alias denials. Guard copies in disposable fixtures are SHA-256 matched to the submitted implementation, allowing
 source-drift probes without modifying the checkout. No live MCP service or child execution is qualified. The real CLI RPC process also denies both context-included
 and excluded `bash` commands and keeps startup/inspection diagnostics off protocol stdout. Inputs are controlled; no provider call, user credential
 or live operator policy is used. Direct SDK calls to private pipeline entrypoints are qualification drivers,
