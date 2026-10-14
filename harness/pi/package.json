@@ -2,7 +2,7 @@
   "name": "@fight/agent-os-pi",
   "version": "0.1.0",
   "private": true,
-  "description": "Fight Agent OS terminal identity for Pi",
+  "description": "Fight Agent OS terminal identity and protected Jev readiness for Pi",
   "license": "MIT",
   "type": "module",
   "keywords": ["pi-package"],
@@ -13,5 +13,5 @@
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
   },
-  "pi": {"extensions": ["./src/extension.ts"]}
+  "pi": {"extensions": ["./src/extension.ts", "./src/jev-extension.ts"]}
 }
