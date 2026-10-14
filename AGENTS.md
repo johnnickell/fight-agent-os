@@ -29,6 +29,7 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
   directly; record evidence-backed target and required-evidence exceptions. Missing tool/policy is not activation
 - Keep PHP business logic in Domain, orchestration in Application, and framework/provider concerns in Adapter
 - Prefer capability-named interfaces without an Interface suffix, injected dependencies, and single-use-case HTTP Actions
+- For console entry points, bus pipelines and shared container services, follow [shared services and dispatch](docs/engineering/STANDARDS.md#shared-services-and-bus-dispatch)
 - Use final classes and readonly properties by default, with Doctrine entity exceptions; readonly value objects
 - Use multiline docblocks, capitalized active-verb summaries without periods, and inheritDoc for inherited behavior
 - Keep PHP properties camelCase and HTTP JSON/database fields snake_case; follow Fight helper conventions where available

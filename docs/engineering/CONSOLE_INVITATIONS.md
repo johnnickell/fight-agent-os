@@ -15,10 +15,10 @@ Supply the independent external `APP_CREDENTIAL_DELIVERY_KEY` and retain it whil
 The existing [credential recovery runbook](CREDENTIAL_RECOVERY.md) owns provider setup, safe status and recovery.
 Local/test null and memory providers do not send email; production provider enrollment remains separate.
 
-Use exactly this non-interactive argument order:
+Use the generic non-interactive Console entry point (option order is flexible):
 
 ```sh
-./bin/invite-user --internal --operator=OPERATOR_UUID --email=person@example.test
+./bin/console user:invite --internal --operator=OPERATOR_UUID --email=person@example.test
 ```
 
 Replace `OPERATOR_UUID` with the operator's explicitly enrolled, stable, lowercase UUID. Generate an operator ID
@@ -28,9 +28,13 @@ proof of a logged-in user, database User membership, or authorization. The packa
 `UserId` actor, so the same operator UUID occupies that typed field without claiming an authenticated User.
 Durable audit uses the distinct `console:UUID` namespace. Keep the trusted operator mapping outside this command.
 
-Only `--internal`, `--operator=...`, and `--email=...` are accepted. Missing, duplicated, reordered, positional,
-unknown or extra arguments fail before resolving runtime dependencies. There is no role, permission, password,
-user-ID, URL, provider or credential selector. Operator input must be a valid lowercase UUID. Email is at most
+The operation accepts `--internal`, `--operator=...`, and `--email=...`, plus standard Symfony options such as
+`--help`, `--no-interaction` and verbosity. Option order is flexible; `--operator UUID` and `--email EMAIL` also work.
+Missing, duplicated operation options, positional, unknown or extra arguments produce a controlled failure without
+dispatch. There is no role, permission, password, user-ID, URL, provider or credential selector. Use
+`./bin/console help user:invite` for help. `--quiet` suppresses successful output; `--silent` suppresses all output.
+When rendered, failures remain fixed and safe at every verbosity. Operator input must be a valid lowercase UUID.
+Email is at most
 254 ASCII bytes, contains no spaces/control bytes, passes Fight Common email parsing, and is lowercased before
 any package dispatch. Case-equivalent existing identities conflict; repeat invocation does not resend or replace
 an existing invitation.
@@ -40,14 +44,15 @@ Successful stdout is one JSON line containing only canonical `email`, package-ge
 or the user activated. A retryable/permanent provider outcome is safe persisted delivery state; provider exceptions
 are classified by the package, not printed. No password, credential/link, digest, ciphertext, claim token, private
 provider diagnostics, SQL or stack trace is printed. This CLI disables PHP engine logging/display and converts
-runtime warnings to its fixed error boundary. Docker can still report operational errors outside PHP; do not
-capture verbose configuration or secret-bearing engine diagnostics.
+runtime warnings to its fixed error boundary. Symfony parsing/unknown-option/unknown-command errors and verbose
+modes never render raw input, exception details or stack traces; interactive suggestions are disabled. Docker can
+still report operational errors outside PHP; do not capture verbose configuration or secret-bearing diagnostics.
 
 | Exit | Meaning |
 |---|---|
 | `0` | Originating invitation committed and immediate event dispatch returned; consult delivery status separately |
 | `1` | Setup/orchestration failed, or a post-commit outcome is uncertain; stderr is a fixed diagnostic |
-| `2` | Invalid input; stderr is fixed usage, with no runtime resolution or writes |
+| `2` | Invalid input; stderr is fixed usage or a fixed Console input diagnostic, with no dispatch or writes |
 
 Failure stdout is empty. Do not interpret a nonzero exit as proof of rollback: post-commit events, claim/outcome
 writes, output or process failure cannot undo an originating commit. Inspect trusted persisted identity and safe
@@ -58,11 +63,16 @@ uncertain result. Preserve evidence and restart failed Doctrine managers with a 
 
 The current lock remains Fight Access Control **v0.5.0**, source/lock reference
 `46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`, and Fight Common **v1.3.0**,
-`7de6cad6e8a9752973ad9f8e27e285b0c1510582`. No dependency or upstream source change is required.
+`7de6cad6e8a9752973ad9f8e27e285b0c1510582`. No Fight package version or upstream source changed.
+Symfony Console is now an explicit runtime dependency (`^8.1`), retaining the already-locked **v8.1.6**.
 
-`InviteOrdinaryUser` owns installation orchestration only. It directly calls public `InvitePendingUserHandler`
-and `AssignRoleToUserHandler` with their package commands. It does not copy identity, grant, assignment or delivery
-policy, insert assignments, or register consumer delivery intent. The target UUID comes from the package factory.
+The Adapter `InviteUserCommand` injects `CommandBus`/`QueryBus` and dispatches the owned `InviteOrdinaryUser`
+message. `InviteOrdinaryUserHandler` owns installation orchestration: it dispatches public `InvitePendingUser`
+and `AssignRoleToUser` messages through the same configured command pipeline, and policy/outcome reads through the
+query pipeline. It never injects/calls those handlers directly. It does not copy identity, grant, assignment or
+delivery policy, insert assignments, or register consumer delivery intent. This owned message is justified by the
+installation policy, atomic cross-package workflow and required operator audit, not a package forwarding alias.
+The target UUID comes from the package factory.
 The only role is the version-controlled `InstallationManagedPolicy::USER_ROLE_ID`; the package preview must show
 the complete managed policy unchanged under shared PostgreSQL permission/role-reference fences. Those fences
 remain held through commit, serializing ordinary repository policy changes/removal. Trusted out-of-band SQL is
@@ -70,11 +80,18 @@ not an authorized application writer or part of that concurrency guarantee.
 
 The canonical Doctrine unit of work rejects nested transactions. Calling the two handlers sequentially with it
 would permit a committed unassigned invitation, and wrapping those unchanged handlers in another transaction
-would fail. The **CLI-only** composition instead injects `PostgresInvitationTransaction` as a narrowly scoped
-participant into those two handlers. Its outer scope uses the canonical Doctrine commit. Participant callbacks
-require that active scope and reject nested participation; they cannot independently commit. The general
-application unit of work and delivery handlers remain unchanged. This is an explicitly owned transaction adapter,
-not a claim that the package's default transaction adapter supports nesting.
+would fail. Console composition registers `PostgresInvitationTransaction` as a narrowly scoped participant for
+the two routed package handlers. Its outer scope uses the canonical Doctrine commit. Participant callbacks require
+that active scope and reject nested participation; direct dispatch of either package operation outside the owned
+scope fails closed. The general application unit of work and delivery handlers remain unchanged. This is an
+explicitly owned transaction adapter, not a claim that the package default supports nesting.
+
+All stateless handlers, the Symfony command, buses, scoped participant and deferred dispatcher are shared
+registrations resolved from the same existing container. There is no private handler graph or competing invitation
+entry point. Invocation-local participant/event state is cleared on success and failure before post-commit dispatch.
+A rollback closes the canonical Doctrine manager: a subsequent operation on that failed container remains fail-closed;
+restart with a fresh process/container rather than resurrecting a failed manager. Successful commands can reuse
+the shared instances without replaying prior events.
 
 Within the originating transaction:
 
@@ -82,7 +99,9 @@ Within the originating transaction:
 2. Invoke package pending invitation behavior: identity/email reservation, seven-day activation grant,
    encrypted recoverable delivery generation, and `user.invited` audit attributed to `console:UUID`.
 3. Invoke package role assignment with the **operator**, never the target, as actor; assign only managed `ROLE_USER`.
-4. Append required `user.console_role_assigned` evidence for the same console actor and target, with empty,
+4. Require the safe queried target to match the requested pending email/identity and exactly `ROLE_USER`; a silent
+   nested filter veto or elevated-role transformation must roll back, not leave partial or elevated authority.
+   Append required `user.console_role_assigned` evidence for the same console actor and target, with empty,
    approved context. No arbitrary operator metadata enters audit.
 5. Commit all those effects together. Any originating write, audit, material preparation, assignment or commit
    failure rolls them back and discards deferred success events.
@@ -105,12 +124,14 @@ a duplicate delivery with the same stable delivery identity: this is honestly at
 ## Verification boundaries
 
 `tests/Unit/Invitation/OrdinaryInvitationTest.php` protects bounded input, canonicalization, command actors,
-fixed least authority, drift rejection, safe transport output/failures and random credential representation.
+fixed least authority, drift rejection, serialized messages, safe Symfony parsing/verbose rendering and random
+credential representation.
 `tests/Integration/Postgres/OrdinaryInvitationTest.php` runs real package handlers and the owned repositories:
 pending state, exact permissions, seven-day lifetime, console audit, duplicate conflict, missing/drifted/stale
 policy, material/write/audit/commit failures, shared reference fencing, lost immediate delivery, post-commit event
-failure, claim/outcome failures, provider exceptions and fresh-worker recovery. Markers in credentials, provider
-exceptions and originating errors are checked against output, safe success facts, audit and package status Views;
+failure, claim/outcome failures, provider exceptions and fresh-worker recovery. Real command/query filter vetoes
+and transformations prove pipeline effects at the owned workflow boundary; repeated shared invocations prove
+transaction/event isolation. Markers in credentials, provider exceptions and originating errors are checked against output, safe success facts, audit and package status Views;
 private database rows are inspected in tests but never copied to operator receipts. Existing delivery integration
 tests additionally cover successor/outcome fencing, cancellation, expiry and competing claims.
 

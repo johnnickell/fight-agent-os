@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
-use App\Adapter\Console\OrdinaryInvitationConsole;
+use App\Adapter\Console\InviteUserCommand;
+use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
-use App\Application\Invitation\InviteOrdinaryUser;
 use App\Domain\Authorization\InstallationManagedPolicy;
+use App\Domain\Invitation\Command\InviteOrdinaryUser;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -28,14 +29,23 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUser
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPermissionPlanItem;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyChangeAction;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Query\PreviewManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
+use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\Event\UserInvited;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Messaging\Command\CommandFilter;
 use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Messaging\Query\QueryFilter;
 use Fight\Common\Application\Service\Container;
+use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Messaging\Event\AllEvents;
 use Fight\Common\Domain\Messaging\Event\CommandFailedEvent;
 use Fight\Common\Domain\Messaging\Event\EventMessage;
@@ -43,6 +53,9 @@ use Fight\Common\Domain\Utility\ClassName;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Tests\Support\AccessClock;
 
 /**
@@ -190,7 +203,7 @@ SQL
         $auditCount = $this->connection->fetchOne('SELECT count(*) FROM audit_evidence');
         self::assertSame(1, $this->runConsole('USER@EXAMPLE.TEST'));
         self::assertSame('', $this->output);
-        self::assertSame(OrdinaryInvitationConsole::FAILURE, $this->error);
+        self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $this->error);
         self::assertSame($before, $this->connection->fetchAllAssociative('SELECT * FROM activation_grants'));
         self::assertSame($auditCount, $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
@@ -231,7 +244,7 @@ SQL
             'ALTER TABLE '.$table.' ADD CONSTRAINT invitation_test_abort CHECK ('.$check.')'
         );
         self::assertSame(1, $this->runConsole());
-        self::assertSame(OrdinaryInvitationConsole::FAILURE, $this->error);
+        self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $this->error);
         self::assertSame('', $this->output);
         $this->assertNoInvitation();
         self::assertSame([], $this->events);
@@ -265,7 +278,7 @@ CREATE CONSTRAINT TRIGGER invitation_test_commit_abort AFTER INSERT ON users
 DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION invitation_test_commit_abort()
 SQL);
         self::assertSame(1, $this->runConsole());
-        self::assertSame(OrdinaryInvitationConsole::FAILURE, $this->error);
+        self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $this->error);
         $this->assertNoInvitation();
         self::assertSame([], $this->events);
     }
@@ -285,7 +298,7 @@ SQL);
         self::assertSame(1, $this->runConsole());
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM user_role_assignments'));
-        self::assertSame(OrdinaryInvitationConsole::FAILURE, $this->error);
+        self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $this->error);
         self::assertSame('', $this->output);
         // Dispatcher attempts other subscribers even if one fails; durable state remains authoritative.
         self::assertContains($this->grant()['delivery_status'], ['pending', 'retry_pending']);
@@ -301,7 +314,7 @@ SQL);
             'ALTER TABLE activation_grants ADD CONSTRAINT invitation_test_abort CHECK ('.$check.')'
         );
         self::assertSame(1, $this->runConsole());
-        self::assertSame(OrdinaryInvitationConsole::FAILURE, $this->error);
+        self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $this->error);
         self::assertSame('', $this->output);
         self::assertSame($status, $this->grant()['delivery_status']);
         self::assertSame($calls, $this->providerCalls);
@@ -360,7 +373,7 @@ SQL);
         );
         $this->container->set($capability, static fn() => $failure);
         self::assertSame(1, $this->runConsole());
-        self::assertSame(OrdinaryInvitationConsole::FAILURE, $this->error);
+        self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $this->error);
         $this->assertNoInvitation();
         self::assertSame([], $this->events);
     }
@@ -409,6 +422,9 @@ SQL);
         $probe = $this->createMock(QueryBus::class);
         $probe->method('fetch')->willReturnCallback(function ($query) use ($real) {
             $plan = $real->fetch($query);
+            if (!$query instanceof PreviewManagedPolicy) {
+                return $plan;
+            }
             $this->connection->delete('roles', ['id' => InstallationManagedPolicy::USER_ROLE_ID]);
 
             return $plan;
@@ -435,6 +451,9 @@ SQL);
         self::assertNotNull($role);
         $probe = $this->createMock(QueryBus::class);
         $probe->method('fetch')->willReturnCallback(function ($query) use ($real, $role) {
+            if (!$query instanceof PreviewManagedPolicy) {
+                return $real->fetch($query);
+            }
             $other = DriverManager::getConnection($this->connection->getParams());
             try {
                 $other->beginTransaction();
@@ -459,11 +478,158 @@ SQL);
     }
 
     /**
+     * Honors throwing and silent filter vetoes without committing partial ordinary invitations
+     */
+    #[DataProvider('filterVetoes')]
+    public function testFilterVeto(string $commandClass, bool $throw): void
+    {
+        $filter = $this->createStub(CommandFilter::class);
+        $filter->method('process')->willReturnCallback(static function (
+            CommandMessage $message,
+            callable $next
+        ) use (
+            $commandClass,
+            $throw
+        ): void {
+            if ($message->payload() instanceof $commandClass) {
+                if ($throw) {
+                    throw new RuntimeException('private-filter-marker SQL password=secret');
+                }
+
+                return;
+            }
+            $next($message);
+        });
+        $this->container->get('messaging.command.bus')->addFilter($filter);
+        self::assertSame(1, $this->runConsole());
+        self::assertSame('', $this->output);
+        self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $this->error);
+        $this->assertNoInvitation();
+        self::assertSame([], $this->events);
+        self::assertFalse($this->connection->isTransactionActive());
+    }
+
+    /**
+     * Supplies outer and nested command vetoes
+     *
+     * @return iterable<array{class-string, bool}>
+     */
+    public static function filterVetoes(): iterable
+    {
+        foreach ([InviteOrdinaryUser::class, InvitePendingUser::class, AssignRoleToUser::class] as $command) {
+            yield [$command, true];
+            yield [$command, false];
+        }
+    }
+
+    /**
+     * Rolls back filter-transformed elevated authority instead of silently inviting a Super Admin
+     */
+    public function testFilterCannotTransformOrdinaryAuthority(): void
+    {
+        $filter = $this->createStub(CommandFilter::class);
+        $filter->method('process')->willReturnCallback(static function (
+            CommandMessage $message,
+            callable $next
+        ): void {
+            $command = $message->payload();
+            if ($command instanceof AssignRoleToUser) {
+                $message = CommandMessage::create(new AssignRoleToUser(
+                    $command->getActorId(),
+                    $command->getTargetUserId(),
+                    RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID)
+                ));
+            }
+            $next($message);
+        });
+        $this->container->get('messaging.command.bus')->addFilter($filter);
+        self::assertSame(1, $this->runConsole());
+        $this->assertNoInvitation();
+        self::assertSame([], $this->events);
+    }
+
+    /**
+     * Uses transformed query results from the configured query pipeline to refuse authority drift
+     */
+    public function testQueryFilterCanRefusePolicy(): void
+    {
+        $filter = $this->createStub(QueryFilter::class);
+        $filter->method('process')->willReturnCallback(static function ($message, callable $next) {
+            $result = $next($message);
+            if (!$message->payload() instanceof PreviewManagedPolicy) {
+                return $result;
+            }
+
+            self::assertInstanceOf(ManagedPolicyPlan::class, $result);
+
+            return new ManagedPolicyPlan(
+                array_map(
+                    static fn($item) => new ManagedPermissionPlanItem(
+                        $item->getDefinition(),
+                        ManagedPolicyChangeAction::RECONCILE
+                    ),
+                    $result->getPermissions()
+                ),
+                $result->getRoles()
+            );
+        });
+        $this->container->get('messaging.query.bus')->addFilter($filter);
+        self::assertSame(1, $this->runConsole());
+        $this->assertNoInvitation();
+    }
+
+    /**
+     * Reuses shared commands and transaction infrastructure without retaining prior success events
+     */
+    public function testRepeatedSharedInvocations(): void
+    {
+        $this->container->get(EventDispatcher::class)->unregister(
+            $this->container->get(InvitationDeliverySubscriber::class)
+        );
+        self::assertSame(0, $this->runConsole('first@example.test'));
+        self::assertSame(0, $this->runConsole('second@example.test'));
+        self::assertCount(4, $this->events);
+        self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
+        self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM activation_grants'));
+        self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM user_role_assignments'));
+        self::assertSame(4, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        self::assertFalse($this->connection->isTransactionActive());
+        self::assertSame(0, $this->providerCalls);
+    }
+
+    /**
+     * Fails closed after a rollback and recovers only through a fresh manager without replaying staged effects
+     */
+    public function testFailedSharedContainerRequiresFreshInvocation(): void
+    {
+        $this->connection->executeStatement(
+            'ALTER TABLE user_role_assignments ADD CONSTRAINT invitation_test_abort CHECK (FALSE)'
+        );
+        self::assertSame(1, $this->runConsole('failed@example.test'));
+        $this->assertNoInvitation();
+        self::assertSame([], $this->events);
+        self::assertFalse($this->connection->isTransactionActive());
+        $this->connection->executeStatement('ALTER TABLE user_role_assignments DROP CONSTRAINT invitation_test_abort');
+        self::assertSame(1, $this->runConsole('after.failure@example.test'));
+        $this->assertNoInvitation();
+        self::assertSame([], $this->events);
+        $this->container = $this->newContainer();
+        $this->provider(CredentialDeliveryOutcome::RETRYABLE_FAILURE);
+        self::assertSame(0, $this->runConsole('fresh@example.test'));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
+        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM user_role_assignments'));
+        self::assertSame(1, $this->providerCalls);
+        self::assertFalse($this->connection->isTransactionActive());
+    }
+
+    /**
      * Creates a fresh manager and package composition on the same guarded fixture connection
      */
     private function newContainer(): Container
     {
         $container = require dirname(__DIR__, 3).'/config/services.php';
+        $configure = require dirname(__DIR__, 3).'/config/application/console_invitation.php';
+        $configure($container);
         $container->set(Connection::class, fn(): Connection => $this->connection);
         $container->set(Clock::class, fn(): Clock => $this->clock);
         $container->set(InvitationDeliveryCipher::class, static fn(): InvitationDeliveryCipher =>
@@ -542,27 +708,30 @@ SQL);
     }
 
     /**
-     * Runs the actual adapter with fresh application composition
+     * Runs the shared Symfony application through real parsing and separate output streams
      */
     private function runConsole(string $email = 'user@example.test'): int
     {
-        $this->output = '';
-        $this->error = '';
-        $console = new OrdinaryInvitationConsole(function (): InviteOrdinaryUser {
-            $compose = require dirname(__DIR__, 3).'/config/application/console_invitation.php';
+        $output = new class extends ConsoleOutput {
+            public string $text = '';
 
-            return $compose($this->container);
-        });
-
-        return $console->run(
-            ['--internal', '--operator='.$this->operator, '--email='.$email],
-            function (string $text): void {
-                $this->output .= $text;
-            },
-            function (string $text): void {
-                $this->error .= $text;
+            /**
+             * @inheritDoc
+             */
+            protected function doWrite(string $message, bool $newline): void
+            {
+                $this->text .= $message.($newline ? "\n" : '');
             }
-        );
+        };
+        $error = new BufferedOutput();
+        $output->setErrorOutput($error);
+        $exit = $this->container->get(SafeConsoleApplication::class)->run(new ArgvInput([
+            'console', 'user:invite', '--internal', '--operator='.$this->operator, '--email='.$email
+        ]), $output);
+        $this->output = $output->text;
+        $this->error = $error->fetch();
+
+        return $exit;
     }
 
     /**
