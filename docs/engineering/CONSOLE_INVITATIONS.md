@@ -1,5 +1,68 @@
 # Trusted ordinary-user console invitations
 
+## Current owner-approved revision — blocked, not shipped
+
+[TASK-00037](../../planning/tasks/00037-TASK.md) now accepts independently committed invitation and normal
+managed `ROLE_USER` assignment, and requests trusted existing-role correction excluding authoritative Super Admin.
+**The current source still contains the earlier atomic participant and has no `user:role:add` command.**
+Canonical Review R2 remains REVISE; historical QA does not accept the revised behavior. Do not deploy the current
+participant as the approved two-step model or run the planned correction contract below as if it existed.
+
+The approved replacement must use normal package `TransactionalUnitOfWork` and `EventDispatcher`, with shared
+container/configured buses. Application owns sequencing/partial-result policy; Console only maps input/output.
+No outer/nested/joining transaction decorator, direct handler call, copied policy, repository audit hook or
+consumer delivery lifecycle workaround is authorized. ADR 0001/0002 remain unchanged.
+
+### Approved operation and recovery contract
+
+Invitation retains its input contract. Its first package commit creates the pending identity, seven-day grant,
+recoverable delivery state and package invitation audit. Normal events/delivery may run **before** the independent
+ordinary-role assignment. “Two transactions” means two independent business commits, not exactly two physical
+transactions across delivery claims/outcomes or audit. Assignment failure may leave an invitation committed and
+potentially emailed; it must return non-success, not claim rollback. After a postcommit exception, inspect safe
+actual persisted state before asserting what committed. Distinguish known invitation from missing/uncertain role,
+include a safe target UUID/corrective instruction, and never print private exceptions or credential material.
+Do not blindly reinvite an uncertain or existing identity.
+
+Planned correction contract (**unimplemented**):
+
+```sh
+./bin/console user:role:add --internal --operator=OPERATOR_UUID --user=EXISTING_USER_UUID --role=EXISTING_ROLE_UUID
+```
+
+Use enrolled lowercase operator UUID attribution and existing user/role UUID selectors, not names. Correction is
+additive/idempotent, retains existing roles and creates no identity, grant, credential delivery or role definition.
+No registration, resend, password, role removal, bootstrap or web access. Restart with a fresh process after a
+failed manager; correction must not duplicate originating work. Prohibit authoritative Super Admin by stable
+managed ID **and package meaning**, not label alone, checking the actual filtered payload before mutation while
+preserving actor/target and package protected-tier/reference rules. Unknown/malformed/stale identities fail safely.
+Operator/target audit remains mandatory evidence; disclose any separate postcommit audit/crash boundary and missing
+or uncertain evidence instead of claiming assignment/audit atomicity. No production audit boundary is implemented
+for this revision yet.
+
+### Safety prerequisite
+
+The locked Access Control v0.5.0 `AssignRoleToUser` accepts actor/target/role IDs but no expected-role snapshot or
+consumer transactional authorization callback. A terminal filter can inspect the actual payload and safe role View,
+but its check precedes the handler's transaction. Fresh guarded qualification validates even an exact installation
+preview, then interleaves two **public managed-policy commits** that retire the original designation and re-designate
+the selected ordinary managed ID as Super Admin. The unchanged assignment subsequently commits **19 protected
+permissions** and no assignment audit. Role-reference fencing checks current existence, not the prior non-Super-Admin
+snapshot. The one-commit transfer is correctly blocked by name-owner rules; the supported two-stage change succeeds.
+
+This is an API concurrency counterexample, **not a demonstrated exploit of the current CLI**: the controlled writer
+uses an alternate package policy, not the shipped fixed installation-policy CLI. Custom-role promotion/protected-tier
+rules still hold. Resolve whether this supported mutable-policy interleaving is in the required stale/alias threat
+model, or qualify an owning-package transactional authorization/expected-state capability under separate authority.
+Do not silently weaken the requirement or add consumer locks/transactions/upstream patches. See TASK-00037 for the
+exact probe/evidence and limits. The revision remains incomplete; green tests of the preserved implementation do
+not establish the new behavior.
+
+## Earlier implementation runbook — historical mechanism, not revision-5 acceptance
+
+The remainder documents the still-present earlier implementation. Its all-or-nothing/deferred-event mechanics
+and failure output below are **not** the owner-approved replacement. Retained commands describe current code only.
+
 This operation invites one ordinary user into this installation. It is not public registration, a web invitation,
 a Super Admin bootstrap, an arbitrary role assignment, or an activation journey. Restrict shell, checkout,
 Docker and database access to trusted operators. `--internal` acknowledges this boundary; it is not authentication
