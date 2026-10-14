@@ -1,0 +1,40 @@
+:focus-visible,
+.btn:focus-visible,
+.form-control:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 3px;
+}
+
+.form-control:focus-visible {
+  outline-color: var(--ui-form-focus);
+}
+
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.75rem;
+  background: var(--ui-surface);
+  color: var(--ui-action);
+  z-index: 10;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  [data-bs-theme] {
+    --ui-motion: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

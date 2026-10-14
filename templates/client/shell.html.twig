@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Application foundation — Fight Agent OS</title>
+    <script src="{{ assets.prepaint }}"></script>
+    <link rel="stylesheet" href="{{ assets.stylesheet }}">
+    <script type="module" src="{{ assets.script }}"></script>
+</head>
+<body>
+    {# Only JSON with HTML-significant characters hex-encoded may bypass HTML escaping here. #}
+    <script id="runtime-config" type="application/json">{{ config|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_THROW_ON_ERROR'))|raw }}</script>
+    <div id="app"><main><h1>Loading application</h1></main></div>
+    <noscript><p>JavaScript is required for the application foundation.</p></noscript>
+</body>
+</html>

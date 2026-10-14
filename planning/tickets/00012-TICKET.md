@@ -2,7 +2,7 @@
 id: TICKET-00012
 epic: EPIC-00003
 title: Establish the React and component-catalog foundation
-status: ready-for-agent
+status: done
 ---
 
 # Establish the React and component-catalog foundation
@@ -49,13 +49,18 @@ Only explicit non-sensitive presentation preferences may use browser persistence
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00025](../tasks/00025-TASK.md) | Accept the client-authority and runtime-state ADR | ready-for-agent |
-| [TASK-00026](../tasks/00026-TASK.md) | Establish the React and TypeScript application shell | ready-for-agent |
-| [TASK-00027](../tasks/00027-TASK.md) | Establish the typed shared API client boundary | ready-for-agent |
-| [TASK-00028](../tasks/00028-TASK.md) | Establish fail-closed client authority and guarded routing | ready-for-agent |
-| [TASK-00029](../tasks/00029-TASK.md) | Establish the production component catalog and state evidence | ready-for-agent |
+| [TASK-00025](../tasks/00025-TASK.md) | Accept the client-authority and runtime-state ADR | done |
+| [TASK-00026](../tasks/00026-TASK.md) | Establish the React and TypeScript application shell | done |
+| [TASK-00027](../tasks/00027-TASK.md) | Establish the typed shared API client boundary | done |
+| [TASK-00028](../tasks/00028-TASK.md) | Establish fail-closed client authority and guarded routing | done |
+| [TASK-00029](../tasks/00029-TASK.md) | Establish the production component catalog and state evidence | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+The approved follow-up [TICKET-00036](00036-TICKET.md) owns named public-safe PHP schema export/read and
+Formik integration with unified client/server errors, reset-on-change and stale-response protection. It reuses
+this TICKET's API/control/catalog foundations; their completion does not imply the follow-up is implemented.
+Existing product journeys retain end-to-end form adoption and server-security enforcement.
 
 Implements the client direction approved by [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md) and the client-authority gate selected by [WF-007](../wayfinder/tickets/WF-007-prepare-implementation-handoff.md). It follows [TICKET-00008](00008-TICKET.md) and integrates against [TICKET-00010](00010-TICKET.md)'s API contracts. Production visual work additionally depends on EPIC-00002 design capabilities.

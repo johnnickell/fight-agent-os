@@ -5,7 +5,17 @@ description: Use for a live decision interview that turns an idea into one appro
 
 # Grill
 
-Grill is the human-in-the-loop interview that settles the smallest useful destination before planning proceeds. In this repository, grill writes an EPIC and nothing below it.
+Grill is the human-in-the-loop interview that settles the smallest useful destination before planning proceeds.
+In this repository, this skill writes one approved EPIC and nothing below it.
+
+## Input
+
+- `/skill:grill <idea>` interviews one bounded EPIC destination.
+- `/skill:grill <map-path> "<destination title>"` consumes that map's named EPIC handoff. Reuse settled decisions;
+  ask only unresolved product choices. Resolve the real path and approved destination before proceeding.
+- If the supplied target is only an unresolved Wayfinder decision whose boundary excludes EPIC creation, route
+  it to `/skill:wayfinder work WF-NNN` using its real ID. Wayfinder owns that decision interview; do not create an
+  EPIC or repeat settled decisions just because the record's mode says grill.
 
 ## Operating rules
 
@@ -32,7 +42,7 @@ After the user answers, summarize settled decisions, recompute the frontier, and
 
 ## Completion
 
-When no frontier remains:
+When no interview frontier remains:
 
 1. Summarize the destination, boundaries, exclusions, and follow-up decisions.
 2. Ask the user to confirm shared understanding.
@@ -40,3 +50,8 @@ When no frontier remains:
 4. Run `./bin/planning-check --write` and `./bin/planning-check`.
 
 Do not create TICKETs, TASKs, implementation branches, prototypes, or database records from grill alone.
+
+Finish using the [handoff rules](../../../docs/engineering/HANDOFFS.md) with an explicit `Next:` command or pending
+human action. Follow [map-wide planning order](../../../planning/CONVENTIONS.md#map-wide-planning-order): after
+one EPIC, favor the map's remaining grills/EPICs before `to-tickets`, and all TICKET decompositions before TASKs.
+One invocation still handles one approved EPIC; a recommendation does not start the next one.

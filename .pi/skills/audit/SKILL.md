@@ -16,6 +16,20 @@ external effects and presentation. Read complete relevant methods and their cont
 Use [Graphify](../graphify/SKILL.md) for orientation when useful, then verify claims in current source. A graph,
 search hit or passing gate does not establish semantic correctness or coverage of unread code.
 
+Within the named boundary, apply the relevant [test, code and documentation checks](../../../docs/engineering/QUALITY.md).
+Sample tests for independent expectations and defect sensitivity; countercheck valid snapshots, boundary
+interactions and required ordering before flagging them. Inspect duplication, types, apparently dead paths and
+error handling against actual ownership and compatibility. Include affected AGENTS.md/linked instructions and
+README/CHANGELOG claims when they describe that boundary; separate factual drift, policy nonconformance and
+optional prose improvements. State which tests, code paths and documents were inspected and which remain
+unchecked. Recommend bounded replacements or corrections; do not delete tests, rewrite guidance, launch cleanup
+agents or expand to a repository-wide sweep as a side effect of this checklist.
+
+When the audit question includes verification or delivery guidance, assess [QA applicability](../../../docs/engineering/QA.md#applicability)
+and evidence in that sample: absence of UI is not a sufficient N/A reason, and a green build or screenshot alone
+does not prove behavior. Recommend concrete adversarial scenarios for missing proof; an audit does not issue a QA
+PASS or start runtime probes without an authorized QA scope.
+
 For each candidate finding, check the strongest counterexample: alternate entry paths, package ownership,
 accepted exceptions, transaction guarantees and existing tests. Use the severity meanings in
 [review standards](../../../docs/engineering/REVIEW.md), without turning this assessment into independent TASK

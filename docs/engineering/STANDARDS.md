@@ -2,6 +2,11 @@
 
 These are the minimum shared rules for application changes. `ARCHITECTURE.md`, accepted ADRs, and nearby owned code supply decisions that are specific to a use case.
 
+Review owns the detailed [quality checks](QUALITY.md) for changed code, tests and documentation. Work follows
+applicable standards and consults relevant detail when making an implementation decision; it need not load every
+checklist or duplicate review's assessment. Audit and architecture apply the checks within their declared scope.
+Use the instruction/documentation sections when maintaining AGENTS.md, README or CHANGELOG.
+
 ## Architecture
 
 Design architecture, domain language and capability interfaces for human readers first. Ordinary feature work
@@ -26,17 +31,54 @@ not a numeric limit. Prefer meaningful depth over flat miscellaneous buckets; av
 created only to satisfy a diagram. `Adapter/Persistence` is a candidate for this assessment (repositories, grant
 transitions, hydration, locking and infrastructure), not authorization to move it during unrelated work.
 
+### Module depth and interface simplicity
+
+Prefer a small, coherent domain-facing interface that hides substantial implementation complexity. A module's
+depth is how much useful work it encapsulates relative to what callers must understand; it is not namespace
+depth, class size or method count. An interface includes inputs, outputs, errors, configuration and required call
+ordering, not only method signatures. Keep necessary domain choices, failure contracts and effect guarantees
+explicit while hiding internal coordination and mechanisms.
+
+Challenge wide interfaces, mode flags, implementation-shaped parameters, caller-managed setup sequences and
+forwarding layers that leave callers carrying the complexity. Compare actual caller code before and after a
+proposal. Prefer fewer concepts and decisions for the same use case; one generic method with an opaque options
+bag is not simpler. Do not preserve an unwieldy interface merely because it already exists: propose a smaller
+contract with an explicit compatibility/migration path and affected consumers.
+
+Deepening must preserve DDD ownership, domain language, aggregate invariants and bounded-context/package
+boundaries, alongside inward dependencies and CQRS command/query/event semantics. Consolidate only cohesive
+responsibilities with the same owner and reason to change. Do not merge unrelated use cases into a broad service,
+move Domain policy into Application/Adapter, blur reads with mutations, or hide authorization, transaction and
+external-effect obligations. Honor accepted package contracts directly under ADR 0001; improvements to an owned
+interface or an upstream proposal do not authorize consumer aliases or speculative wrappers.
+
 ## CQRS and HTTP
 
 Commands express intent and may change state. Queries return data without business mutation. Events report facts that already happened. Messages carry use-case context, not transport details, and handlers do not reconstruct Domain policy from exposed state.
 
-Use Action–Domain–Responder for HTTP interactions:
+Use Action–Domain–Responder for HTTP interactions. Actions expose `handle()` as their sole entry point;
+Responders present through `respond()`. Register API Actions with Slim's `Class:handle` callable so
+post-routing validation examines the executed method; web routes call the injected Action's `handle()`.
 
 - One Action handles one interaction, maps validated transport input and authenticated actor/target context, dispatches one package or owned use case, and delegates presentation. Do not put business policy or transaction control in an Action.
 - Authentication middleware and transport permission checks provide an early server-side gate, not the sole authority: package or justified Agent OS Application policy must enforce target, ownership and permission decisions against authoritative state on every entry path, including non-HTTP callers. Do not infer authorization from role names, UI reachability or a request attribute. Do not duplicate package-owned invariants in handlers or adapters.
 - A Responder owns status, headers, response shape, and boundary mapping; it neither fetches missing business data nor decides policy. JSend is scoped to the documented API, not every HTTP path or other transport; an arbitrary lookup failure does not become a public 404 without explicit use-case context.
 - Cross presentation boundaries with explicit safe Views, not raw entities. Keep PHP properties camelCase and map HTTP JSON and database fields to snake_case.
 - Enforce authorization on the server. Sanitize public errors and keep secrets out of diagnostics.
+
+For API Action and Responder class/method declarations, group applicable attributes in source order:
+**OpenAPI → input source → Validation → access requirements → other applicable metadata**. Keep each
+attribute in its own block and on its supported target; Responders normally own only OpenAPI response
+metadata. Preserve deliberate order within repeatable groups. This is presentation, not middleware or
+permission execution order. See [API input sources and limits](../api/README.md#explicit-input-sources-task-00155).
+
+## Frontend conventions
+
+For frontend changes, follow the [client conventions](../../client/README.md#frontend-conventions): mirrored
+`client/tests/`, application-root imports, semantic/import lint and explicit formatting, with default SCSS
+separate in `client/styles/`. That document owns composition order, theme-extension limits, supported tooling
+and read-only check versus explicit fix/install commands. Preserve runtime behavior and accessibility when
+changing organization or tooling; verify the production shell and catalog through their actual builds/browsers.
 
 ## PHP and naming
 
@@ -52,7 +94,9 @@ Product suites test owned application behavior and important integration contrac
 
 Aim for 100% unit-test coverage of meaningful owned unit-testable behavior where practical. Report unit coverage
 separately from integration/functional coverage, with denominator, driver availability and justified gaps; a combined
-suite percentage is not a unit-coverage result. This is a quality goal, not an already enforced numeric gate.
+suite percentage is not a unit-coverage result. The [backend coverage phase](BACKEND_TESTS.md) enforces 100%
+meaningful Domain/Application line coverage across one all-suite execution and reports unit attribution separately;
+the [canonical gate](BUILD.md) includes it once. Adapter 100% remains a practical target, with gaps visible.
 Coverage remains a completeness aid, including Adapter behavior where practical. Report actual configured coverage and omissions without claiming that a percentage establishes correctness or protocol conformance. A covered line does not justify a test by itself: tests must assert an observable contract, outcome, or side effect. Exclude non-behavioral composition and generated code rather than manufacturing tests for percentages.
 
 For a bug, reproduce the behavior and make one regression test fail before repair when technically possible. Record why when it is not possible. Focused checks shorten the loop; only the repository canonical gate establishes complete local verification.

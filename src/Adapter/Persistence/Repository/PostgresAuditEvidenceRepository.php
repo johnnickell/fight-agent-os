@@ -61,10 +61,18 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
     }
 
     /**
-     * Validates canonical principal IDs or the package's anonymous reset actor
+     * Validates principal IDs and narrowly scoped anonymous or internal recovery actors
      */
     private function approvedActor(string $actor, string $action): bool
     {
+        if ($actor === 'credential-recovery') {
+            return in_array($action, [
+                'user.invitation_delivery.failed',
+                'user.invitation_delivery.confirmed',
+                'user.password_reset_delivery.failed',
+                'user.password_reset_delivery.confirmed'
+            ], true);
+        }
         if ($actor === 'anonymous') {
             return in_array($action, [
                 'user.password_reset_requested',

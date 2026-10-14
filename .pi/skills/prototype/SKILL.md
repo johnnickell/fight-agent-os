@@ -27,3 +27,7 @@ If the type is ambiguous, ask the user or record the assumption.
 ## Handoff
 
 Link the prototype evidence from the relevant EPIC, TICKET, TASK, or Wayfinder decision. Include run instructions and cleanup expectations.
+
+Finish with the useful `Next:` from the [handoff rules](../../../docs/engineering/HANDOFFS.md): return to the
+owning decision or planning phase using the actual target. A prototype is evidence, not permission to bypass
+remaining map decisions or start production work.

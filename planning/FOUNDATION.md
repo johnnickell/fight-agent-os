@@ -10,16 +10,21 @@ executable priority. Historical gate receipts remain historical.
 | PostgreSQL and managed migrations | Guarded development/test services, repositories, grant/session persistence; TASK-00012–00016 complete | Database Planning and runtime Workflow persistence are not implemented |
 | API/security foundation | Versioned JSend, input validation, correlated sanitized failures and CSRF code; TASK-00017–00020 complete | Full authenticated browser journeys and UI remain in their TASKs; do not infer completion from storage primitives |
 | Local Pi skills | `.pi/skills/` inventory includes planning/work/review/land, Graphify, Writing for Agents and audit/fix/architecture/adopt/security-audit | Skill instructions and bounded source walkthroughs are present; full Pi-session invocation is unverified and CLI installation remains separate |
-| Browser experience | Requirements/design exploration in planning | Production React application and complete browser Planning/observability remain planned |
+| Browser experience | Non-product React/TypeScript shell at `/app`, strict public boot config, Docker-pinned frontend checks; TASK-00026 accepted locally; typed API/CSRF service in TASK-00027 independently accepted with scoped non-visual QA; TASK-00029's original neutral production components and Storybook evidence have independent technical and scoped browser QA acceptance; TASK-00050's accepted semantic theme and local appearance selector are implemented pending independent review | The shell does not invoke the service or mount authority; TASK-00028's injected-loader cache, guard/action and safe navigation foundation has independent review and scoped behavioral/browser QA acceptance. Real `/me`, authentication integration, product journeys and complete browser Planning/observability remain planned |
 | Registered Planning | EPIC-00005 and TICKETs | Registered repository/checkout authority, verified import and database cutover remain planned; Markdown is authoritative now |
 | Managed Harness and SDLC team | EPIC-00006, team-template requirements; installable `harness/pi` terminal identity | Presentation does not imply managed Agent execution |
 | Isolated TASK execution | October 6 [tool-mediated strategy](../docs/engineering/TOOL_MEDIATED_EXECUTION.md) replaces the first root-VM profile; bounded two-session file/notes/correction prototype demonstrated, no candidate execution | Production authorization, file/message capabilities, restricted checks/protected results, accounting and recovery remain unimplemented/unqualified; historical VM receipts do not certify the new profile |
-| Independent review, QA and delivery | Local review/land guidance; EPIC-00008 and TICKET-00033 | Managed review/QA/publication phases remain planned; release/deployment need separate runbooks and implementation |
-| Verification | Current `scripts/build.php`: Composer validation, planning validation, Deptrac and PHPUnit | This is not proof of 100% unit coverage or browser acceptance; report each lane and unavailable coverage honestly |
+| Independent review, QA and delivery | Local review/QA/land guidance; EPIC-00008, completed local TICKET-00033, managed TICKET-00083 and local coordination TICKET-00084 | Managed review/QA/publication phases remain planned; local skill completion does not close that scope; release/deployment need separate runbooks and implementation |
+| Verification | Current `scripts/build.php`: read-only Composer/planning/metadata freshness, syntax/style/types/dependencies/Rector, one guarded all-suite backend coverage phase, frontend coverage/production/catalog/browser checks and source stability | TASK-00033 has current independent technical acceptance and scoped tooling/CLI QA PASS at `36d9a9c`, resolving LAND-01/R1/R2/R3 with actual clean native Linux wrapper install/write, cold-cache analysis, repeated normal-use reaping, receipt privacy/access and guarded cleanup/development-preservation evidence. Historical prepared-runtime acceptance is not substituted. TASK and TICKET-00013 close together; PR #69 publication/final verification remain pending at this checkpoint, with human merge separate. Combined coverage and automated browser observations are not universal accessibility certification |
 
 ## Accepted direction
 
-This is an independent application. Fight Common and Fight Access Control retain package ownership. Design
+This open-source application is a software factory: software to build software. Its planning, agent execution,
+review and delivery ambitions concern engineering work; they do not include a general-purpose personal AI
+operating system or an Internet homepage. The latter belong to a separate future project, not this roadmap.
+Current capabilities and outstanding integrations are distinguished above.
+
+Fight Common and Fight Access Control retain package ownership. Design
 architecture and interfaces for human maintainers; prefer cohesive deeper namespaces when flat directories mix
 unrelated responsibilities. Aim for meaningful 100% unit coverage without imposing TDD on ordinary feature work
 or adding tests of generated/configuration/tooling text.

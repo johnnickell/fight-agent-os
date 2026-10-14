@@ -23,22 +23,22 @@
 | [TASK-00018](00018-TASK.md) | Establish the versioned JSend API interaction boundary | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00019](00019-TASK.md) | Reject invalid API input before dispatch | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00020](00020-TASK.md) | Centralize correlated and sanitized API failures | done | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
-| [TASK-00023](00023-TASK.md) | Compose direct package credential delivery | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
-| [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | ready-for-agent | [TICKET-00011](../tickets/00011-TICKET.md) |
-| [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
-| [TASK-00026](00026-TASK.md) | Establish the React and TypeScript application shell | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
-| [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
-| [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
-| [TASK-00029](00029-TASK.md) | Establish the production component catalog and state evidence | ready-for-agent | [TICKET-00012](../tickets/00012-TICKET.md) |
+| [TASK-00021](00021-TASK.md) | Publish and restrict the representative OpenAPI contract | done | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00022](00022-TASK.md) | Establish secret-safe credential provider adapters | done | [TICKET-00011](../tickets/00011-TICKET.md) |
+| [TASK-00023](00023-TASK.md) | Compose direct package credential delivery | done | [TICKET-00011](../tickets/00011-TICKET.md) |
+| [TASK-00024](00024-TASK.md) | Recover and observe package credential delivery | done | [TICKET-00011](../tickets/00011-TICKET.md) |
+| [TASK-00025](00025-TASK.md) | Accept the client-authority and runtime-state ADR | done | [TICKET-00012](../tickets/00012-TICKET.md) |
+| [TASK-00026](00026-TASK.md) | Establish the React and TypeScript application shell | done | [TICKET-00012](../tickets/00012-TICKET.md) |
+| [TASK-00027](00027-TASK.md) | Establish the typed shared API client boundary | done | [TICKET-00012](../tickets/00012-TICKET.md) |
+| [TASK-00028](00028-TASK.md) | Establish fail-closed client authority and guarded routing | done | [TICKET-00012](../tickets/00012-TICKET.md) |
+| [TASK-00029](00029-TASK.md) | Establish the production component catalog and state evidence | done | [TICKET-00012](../tickets/00012-TICKET.md) |
 | [TASK-00030](00030-TASK.md) | Complete PHP style and static analysis | done | [TICKET-00013](../tickets/00013-TICKET.md) |
-| [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
-| [TASK-00032](00032-TASK.md) | Enforce deterministic frontend quality checks | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
-| [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | ready-for-agent | [TICKET-00013](../tickets/00013-TICKET.md) |
-| [TASK-00034](00034-TASK.md) | Explore the authentication and dashboard design language | ready-for-agent | [TICKET-00014](../tickets/00014-TICKET.md) |
-| [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | ready-for-agent | [TICKET-00014](../tickets/00014-TICKET.md) |
-| [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | ready-for-agent | [TICKET-00015](../tickets/00015-TICKET.md) |
+| [TASK-00031](00031-TASK.md) | Enforce backend behavior coverage and PostgreSQL verification | done | [TICKET-00013](../tickets/00013-TICKET.md) |
+| [TASK-00032](00032-TASK.md) | Enforce deterministic frontend quality checks | done | [TICKET-00013](../tickets/00013-TICKET.md) |
+| [TASK-00033](00033-TASK.md) | Make bin build the complete read-only application gate | done | [TICKET-00013](../tickets/00013-TICKET.md) |
+| [TASK-00034](00034-TASK.md) | Explore the authentication and dashboard design language | done | [TICKET-00014](../tickets/00014-TICKET.md) |
+| [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | done | [TICKET-00014](../tickets/00014-TICKET.md) |
+| [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | done | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | ready-for-agent | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | ready-for-agent | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
@@ -46,13 +46,13 @@
 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
-| [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
+| [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | done | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00045](00045-TASK.md) | Enforce browser authentication request controls | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00046](00046-TASK.md) | Deliver the canonical email and password login journey | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00047](00047-TASK.md) | Deliver rotating refresh and current-session logout | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
-| [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
+| [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
@@ -128,7 +128,7 @@
 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
-| [TASK-00126](00126-TASK.md) | Qualify the upstream v0.4.0 authorization contract and consumer update | needs-info | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | done | — |
@@ -146,4 +146,169 @@
 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | ready-for-agent | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00143](00143-TASK.md) | Add a resumable Pi package release skill | done | — |
+| [TASK-00144](00144-TASK.md) | Break the hosted-verification review and publication cycle | done | — |
+| [TASK-00145](00145-TASK.md) | Enable opt-in trusted local HTTPS | done | [TICKET-00022](../tickets/00022-TICKET.md) |
+| [TASK-00146](00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | done | [TICKET-00033](../tickets/00033-TICKET.md) |
+| [TASK-00147](00147-TASK.md) | Publish landing captures with GitHub CLI attachments | done | — |
+| [TASK-00148](00148-TASK.md) | Adopt separated frontend tests and consistent import and style conventions | done | — |
+| [TASK-00149](00149-TASK.md) | Adopt React-Bootstrap for standard frontend controls | done | — |
+| [TASK-00150](00150-TASK.md) | Strengthen engineering quality, adversarial QA and skill handoffs | done | — |
+| [TASK-00151](00151-TASK.md) | Export and serve public-safe form validation schemas | done | [TICKET-00036](../tickets/00036-TICKET.md) |
+| [TASK-00152](00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | done | [TICKET-00036](../tickets/00036-TICKET.md) |
+| [TASK-00153](00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00155](00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | done | — |
+| [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | done | — |
+| [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | done | — |
+| [TASK-00159](00159-TASK.md) | Evaluate bounded typed questions with usage receipts | ready-for-agent | [TICKET-00037](../tickets/00037-TICKET.md) |
+| [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
+| [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
+| [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | ready-for-agent | [TICKET-00039](../tickets/00039-TICKET.md) |
+| [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | ready-for-agent | [TICKET-00039](../tickets/00039-TICKET.md) |
+| [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00168](00168-TASK.md) | Enforce staged compaction at safe session boundaries | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00169](00169-TASK.md) | Evaluate compaction timing with Jev after each eligible turn | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00170](00170-TASK.md) | Inspect compaction history and annotate recovery incidents | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00171](00171-TASK.md) | Expose authenticated typed judgments through MCP | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
+| [TASK-00172](00172-TASK.md) | Investigate large evidence sets through resumable stages | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
+| [TASK-00173](00173-TASK.md) | Reuse judgments when evidence and authority still match | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
+| [TASK-00174](00174-TASK.md) | Gather MCP evidence under the invoking principal | ready-for-agent | [TICKET-00043](../tickets/00043-TICKET.md) |
+| [TASK-00175](00175-TASK.md) | Run qualified repository analysis for judgments | ready-for-agent | [TICKET-00043](../tickets/00043-TICKET.md) |
+| [TASK-00176](00176-TASK.md) | Inspect running applications for fresh judgments | ready-for-agent | [TICKET-00043](../tickets/00043-TICKET.md) |
+| [TASK-00177](00177-TASK.md) | Analyze data through constrained SQL access | ready-for-agent | [TICKET-00043](../tickets/00043-TICKET.md) |
+| [TASK-00178](00178-TASK.md) | Assess change quality automatically before Engineer handoff | ready-for-agent | [TICKET-00044](../tickets/00044-TICKET.md) |
+| [TASK-00179](00179-TASK.md) | Refresh assessments after changes with qualified reuse | ready-for-agent | [TICKET-00044](../tickets/00044-TICKET.md) |
+| [TASK-00180](00180-TASK.md) | Support independent reviewer follow-up judgments | ready-for-agent | [TICKET-00044](../tickets/00044-TICKET.md) |
+| [TASK-00181](00181-TASK.md) | Assess changed PHPUnit cases before Engineer handoff | ready-for-agent | [TICKET-00045](../tickets/00045-TICKET.md) |
+| [TASK-00182](00182-TASK.md) | Assess the owned PHPUnit suite during architectural review | ready-for-agent | [TICKET-00045](../tickets/00045-TICKET.md) |
+| [TASK-00183](00183-TASK.md) | Refresh test assessments when cases or contracts change | ready-for-agent | [TICKET-00045](../tickets/00045-TICKET.md) |
+| [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | ready-for-agent | [TICKET-00037](../tickets/00037-TICKET.md) |
+| [TASK-00185](00185-TASK.md) | Remember and curate an Agent's scoped private memory | ready-for-agent | [TICKET-00046](../tickets/00046-TICKET.md) |
+| [TASK-00186](00186-TASK.md) | Inspect private memory under scoped oversight | needs-info | [TICKET-00046](../tickets/00046-TICKET.md) |
+| [TASK-00187](00187-TASK.md) | Curate attributed lessons within a Workflow | ready-for-agent | [TICKET-00047](../tickets/00047-TICKET.md) |
+| [TASK-00188](00188-TASK.md) | Carry TASK summaries across Workflow attempts | ready-for-agent | [TICKET-00047](../tickets/00047-TICKET.md) |
+| [TASK-00189](00189-TASK.md) | Inspect retained lessons under historical authority | needs-info | [TICKET-00047](../tickets/00047-TICKET.md) |
+| [TASK-00190](00190-TASK.md) | Propose broader guidance from permitted memory | ready-for-agent | [TICKET-00048](../tickets/00048-TICKET.md) |
+| [TASK-00191](00191-TASK.md) | Review and publish guidance at an authorized target | needs-info | [TICKET-00048](../tickets/00048-TICKET.md) |
+| [TASK-00192](00192-TASK.md) | Reassess published guidance when a source changes | ready-for-agent | [TICKET-00048](../tickets/00048-TICKET.md) |
+| [TASK-00193](00193-TASK.md) | Ask typed questions about one permitted memory entry | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
+| [TASK-00194](00194-TASK.md) | Narrow a current memory scope to matching entry IDs | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
+| [TASK-00195](00195-TASK.md) | Extend selective lookup to published and historical scopes | ready-for-agent | [TICKET-00049](../tickets/00049-TICKET.md) |
+| [TASK-00196](00196-TASK.md) | Contain and remove prohibited private and shared memory | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
+| [TASK-00197](00197-TASK.md) | Remove prohibited content across published lineage | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
+| [TASK-00198](00198-TASK.md) | Inspect and correct authorized memory in the browser | ready-for-agent | [TICKET-00050](../tickets/00050-TICKET.md) |
+| [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | done | — |
+| [TASK-00200](00200-TASK.md) | Diagnose selected TASKs through a permission-limited Triage profile | needs-info | [TICKET-00051](../tickets/00051-TICKET.md) |
+| [TASK-00201](00201-TASK.md) | Classify every selected TASK with bounded Jev and safe fallback | ready-for-agent | [TICKET-00051](../tickets/00051-TICKET.md) |
+| [TASK-00202](00202-TASK.md) | Resolve material classification conflicts with human disposition | ready-for-agent | [TICKET-00051](../tickets/00051-TICKET.md) |
+| [TASK-00203](00203-TASK.md) | Configure and preview Repository branching and normal routes | ready-for-agent | [TICKET-00052](../tickets/00052-TICKET.md) |
+| [TASK-00204](00204-TASK.md) | Start classified normal work from the terminal | ready-for-agent | [TICKET-00052](../tickets/00052-TICKET.md) |
+| [TASK-00205](00205-TASK.md) | Start normal work from a Ready-card intent | ready-for-agent | [TICKET-00052](../tickets/00052-TICKET.md) |
+| [TASK-00206](00206-TASK.md) | Confirm and repair a direct hotfix | needs-info | [TICKET-00053](../tickets/00053-TICKET.md) |
+| [TASK-00207](00207-TASK.md) | Independently verify and hand off a hotfix PR | needs-info | [TICKET-00053](../tickets/00053-TICKET.md) |
+| [TASK-00208](00208-TASK.md) | Transfer an active normal bugfix to a linked hotfix | ready-for-agent | [TICKET-00053](../tickets/00053-TICKET.md) |
+| [TASK-00209](00209-TASK.md) | Offer a verified hotfix merge-back | needs-info | [TICKET-00054](../tickets/00054-TICKET.md) |
+| [TASK-00210](00210-TASK.md) | Authorize and reconcile the same-hotfix merge-back | ready-for-agent | [TICKET-00054](../tickets/00054-TICKET.md) |
+| [TASK-00211](00211-TASK.md) | Create standalone release TASKs with guarded completion | ready-for-agent | [TICKET-00055](../tickets/00055-TICKET.md) |
+| [TASK-00212](00212-TASK.md) | Configure and preview project release policy | ready-for-agent | [TICKET-00055](../tickets/00055-TICKET.md) |
+| [TASK-00213](00213-TASK.md) | Resolve supported release eligibility and route | ready-for-agent | [TICKET-00055](../tickets/00055-TICKET.md) |
+| [TASK-00214](00214-TASK.md) | Start one recoverable release Workflow | ready-for-agent | [TICKET-00056](../tickets/00056-TICKET.md) |
+| [TASK-00215](00215-TASK.md) | Prepare and certify the exact release candidate | needs-info | [TICKET-00056](../tickets/00056-TICKET.md) |
+| [TASK-00216](00216-TASK.md) | Approve a bounded exact-candidate release plan | ready-for-agent | [TICKET-00056](../tickets/00056-TICKET.md) |
+| [TASK-00217](00217-TASK.md) | Hand off human signing and verify its result | ready-for-agent | [TICKET-00056](../tickets/00056-TICKET.md) |
+| [TASK-00218](00218-TASK.md) | Verify the library candidate and publish its exact remote tag | ready-for-agent | [TICKET-00057](../tickets/00057-TICKET.md) |
+| [TASK-00219](00219-TASK.md) | Publish the project-required hosted library release | ready-for-agent | [TICKET-00057](../tickets/00057-TICKET.md) |
+| [TASK-00220](00220-TASK.md) | Verify library distribution against project policy | ready-for-agent | [TICKET-00057](../tickets/00057-TICKET.md) |
+| [TASK-00221](00221-TASK.md) | Finish library branch follow-through and release closeout | needs-info | [TICKET-00057](../tickets/00057-TICKET.md) |
+| [TASK-00222](00222-TASK.md) | Qualify and preflight an exact application deployment target | needs-info | [TICKET-00058](../tickets/00058-TICKET.md) |
+| [TASK-00223](00223-TASK.md) | Execute the approved application rollout and reconcile provider state | ready-for-agent | [TICKET-00058](../tickets/00058-TICKET.md) |
+| [TASK-00224](00224-TASK.md) | Verify production health and coordinate bounded recovery | ready-for-agent | [TICKET-00058](../tickets/00058-TICKET.md) |
+| [TASK-00225](00225-TASK.md) | Finish application branch follow-through and release closeout | needs-info | [TICKET-00058](../tickets/00058-TICKET.md) |
+| [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | done | — |
+| [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00228](00228-TASK.md) | Enforce shared cohort admission | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00229](00229-TASK.md) | Persist correlated issuance and credential retirement | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00230](00230-TASK.md) | Persist recoverable delivery and maintenance state | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00231](00231-TASK.md) | Fence every authority-changing writer | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00232](00232-TASK.md) | Operate controlled cohort changes and exclude old writers | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00233](00233-TASK.md) | Reconcile controlled restoration without resurrecting authority | ready-for-agent | [TICKET-00059](../tickets/00059-TICKET.md) |
+| [TASK-00234](00234-TASK.md) | Enroll protected holders destinations and worker authority | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00235](00235-TASK.md) | Protect Agent credentials with independent encryption and key admission | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00236](00236-TASK.md) | Stage immutable credentials in the fixed protected sink | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00237](00237-TASK.md) | Deliver authorized lifecycle intent and safe original-operation status | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00238](00238-TASK.md) | Deliver and reconcile one exact credential attempt | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00239](00239-TASK.md) | Schedule finite recovery independently of events and callers | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00240](00240-TASK.md) | Maintain original material and hold unsafe key retirement | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00241](00241-TASK.md) | Integrate fail-closed lifecycle readiness and operator recovery | ready-for-agent | [TICKET-00060](../tickets/00060-TICKET.md) |
+| [TASK-00242](00242-TASK.md) | Authenticate signed Agent requests with atomic replay protection | ready-for-agent | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00243](00243-TASK.md) | Activate only the exact currently authorized delivered credential | ready-for-agent | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00244](00244-TASK.md) | Authorize and broker each bounded Agent use | needs-info | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00245](00245-TASK.md) | Enforce current authority throughout first-party MCP discovery and invocation | needs-info | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00246](00246-TASK.md) | Deliver independently authorized self-profile read and rename Tools | ready-for-agent | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00247](00247-TASK.md) | Connect manual Explorer sessions to authenticated scoped tools | needs-info | [TICKET-00061](../tickets/00061-TICKET.md) |
+| [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | ready-for-agent | [TICKET-00034](../tickets/00034-TICKET.md) |
+| [TASK-00249](00249-TASK.md) | Resolve exact role profiles with truthful capability availability | needs-info | [TICKET-00034](../tickets/00034-TICKET.md) |
+| [TASK-00250](00250-TASK.md) | Bind role selections to isolated immutable Agent sessions | needs-info | [TICKET-00034](../tickets/00034-TICKET.md) |
+| [TASK-00251](00251-TASK.md) | Establish authorized Teams on registered Repositories | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00252](00252-TASK.md) | Manage Repository associations and preferred Teams | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00253](00253-TASK.md) | Enforce one-Team Agent membership and shared admission fences | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00254](00254-TASK.md) | Transfer idle Agents and remove associations safely | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00255](00255-TASK.md) | Operate Team and roster administration in the browser | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00256](00256-TASK.md) | Protect human Agent administration and name updates | ready-for-agent | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00257](00257-TASK.md) | Preview exact managed-Agent creation | ready-for-agent | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00258](00258-TASK.md) | Create one named Team-bound Agent from retained intent | needs-info | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00259](00259-TASK.md) | Inspect current Agents and manage lifecycle intent | ready-for-agent | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00260](00260-TASK.md) | Complete accessible managed-Agent administration | needs-info | [TICKET-00063](../tickets/00063-TICKET.md) |
+| [TASK-00261](00261-TASK.md) | Resolve current Agent eligibility for selected work | needs-info | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00262](00262-TASK.md) | Recommend fair default or alternate-Team intake | ready-for-agent | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00263](00263-TASK.md) | Bind Team selection at the authoritative start | needs-info | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00264](00264-TASK.md) | Enforce same-Team delegation and reviewer independence | needs-info | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00265](00265-TASK.md) | Operate withdrawable Pending start through existing entry paths | ready-for-agent | [TICKET-00064](../tickets/00064-TICKET.md) |
+| [TASK-00266](00266-TASK.md) | Connect Project Manager to human-governed browser Planning | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00267](00267-TASK.md) | Continue Team implementation into independent Senior Engineer review | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00268](00268-TASK.md) | Integrate separate QA Engineer verification | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00269](00269-TASK.md) | Integrate Release Manager PR publication and human handoff | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00270](00270-TASK.md) | Complete the named Hotfix Engineer's controlled handoff | ready-for-agent | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00271](00271-TASK.md) | Integrate managed Agents with a qualified library release | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00272](00272-TASK.md) | Integrate managed Agents with a qualified application release | needs-info | [TICKET-00065](../tickets/00065-TICKET.md) |
+| [TASK-00273](00273-TASK.md) | Qualify supported atomic notice coordination | needs-info | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00274](00274-TASK.md) | Record an old-mailbox notice with each accepted request | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00275](00275-TASK.md) | Record completion notices without losing the original recipient | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00276](00276-TASK.md) | Dispatch one notice with protected recoverable outcomes | ready-for-agent | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00277](00277-TASK.md) | Operate scheduled notice recovery and safe inspection | needs-info | [TICKET-00066](../tickets/00066-TICKET.md) |
+| [TASK-00278](00278-TASK.md) | Enforce current email-change authority | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00279](00279-TASK.md) | Inspect current pending changes safely | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00280](00280-TASK.md) | Request an own-address change through the account journey | needs-info | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00281](00281-TASK.md) | Cancel a pending change without affecting a successor | needs-info | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00282](00282-TASK.md) | Administer another user's email change from user detail | ready-for-agent | [TICKET-00067](../tickets/00067-TICKET.md) |
+| [TASK-00283](00283-TASK.md) | Protect email-change issuance material | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00284](00284-TASK.md) | Enroll one shared real mail transport | needs-info | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00285](00285-TASK.md) | Deliver one exact new-mailbox confirmation link | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00286](00286-TASK.md) | Recover and inspect email-change credential work | ready-for-agent | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00287](00287-TASK.md) | Operate scheduled new-mailbox delivery and recovery | needs-info | [TICKET-00068](../tickets/00068-TICKET.md) |
+| [TASK-00288](00288-TASK.md) | Open confirmation links without changing account state | ready-for-agent | [TICKET-00069](../tickets/00069-TICKET.md) |
+| [TASK-00289](00289-TASK.md) | Confirm explicitly and return to fresh login | needs-info | [TICKET-00069](../tickets/00069-TICKET.md) |
+| [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
+| [TASK-00291](00291-TASK.md) | Provision missing Features atomically through protected operations | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
+| [TASK-00292](00292-TASK.md) | Inspect fresh candidate preparation against the intended target | ready-for-agent | [TICKET-00070](../tickets/00070-TICKET.md) |
+| [TASK-00293](00293-TASK.md) | Guard matched HTTP Actions with current Feature availability | ready-for-agent | [TICKET-00071](../tickets/00071-TICKET.md) |
+| [TASK-00294](00294-TASK.md) | Enforce registered Feature checks outside HTTP Actions | ready-for-agent | [TICKET-00071](../tickets/00071-TICKET.md) |
+| [TASK-00295](00295-TASK.md) | Read a complete authenticated Feature catalog | ready-for-agent | [TICKET-00072](../tickets/00072-TICKET.md) |
+| [TASK-00296](00296-TASK.md) | Gate browser Feature presentation with current catalog availability | ready-for-agent | [TICKET-00072](../tickets/00072-TICKET.md) |
+| [TASK-00297](00297-TASK.md) | Manage the testing audience and rollout state for AI template proposals | needs-info | [TICKET-00073](../tickets/00073-TICKET.md) |
+| [TASK-00298](00298-TASK.md) | Retire Feature settings safely after deployed reference removal | needs-info | [TICKET-00074](../tickets/00074-TICKET.md) |
+| [TASK-00299](00299-TASK.md) | Initialize database-owned Agent templates without source overwrite | needs-info | [TICKET-00075](../tickets/00075-TICKET.md) |
+| [TASK-00300](00300-TASK.md) | Author and publish human-reviewed Agent templates | needs-info | [TICKET-00076](../tickets/00076-TICKET.md) |
+| [TASK-00301](00301-TASK.md) | Review ancestor updates and restore retained template revisions | ready-for-agent | [TICKET-00076](../tickets/00076-TICKET.md) |
+| [TASK-00302](00302-TASK.md) | Generate and review real AI template proposals behind controlled rollout | needs-info | [TICKET-00077](../tickets/00077-TICKET.md) |
+| [TASK-00303](00303-TASK.md) | Review and explicitly reconcile an Agent's template Permission drift | needs-info | [TICKET-00078](../tickets/00078-TICKET.md) |
+| [TASK-00304](00304-TASK.md) | Create and use a custom-template Agent for bounded manual work | needs-info | [TICKET-00079](../tickets/00079-TICKET.md) |
+| [TASK-00305](00305-TASK.md) | Establish qualified consumer coverage for the maintainer handoff | needs-info | [TICKET-00080](../tickets/00080-TICKET.md) |
+| [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | done | [TICKET-00084](../tickets/00084-TICKET.md) |
+| [TASK-00307](00307-TASK.md) | Document the qualified backend API and browser integration reference | ready-for-agent | [TICKET-00081](../tickets/00081-TICKET.md) |
+| [TASK-00308](00308-TASK.md) | Publish the immutable qualified reference bundle to the five starter maintainers | needs-info | [TICKET-00082](../tickets/00082-TICKET.md) |
 <!-- /planning:records -->

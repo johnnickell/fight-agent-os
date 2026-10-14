@@ -1,10 +1,84 @@
 # Landing Standards
 
-Land publishes an independently accepted TASK as a PR against `develop` and returns merge control to a human. Apply the shared [execution](EXECUTION.md) and [review](REVIEW.md) boundaries. Landing may reconcile a reviewed branch with an advancing base; a changed commit OID by itself is not a changed implementation.
+Land publishes an independently accepted TASK as a PR against `develop` and returns merge control to a human.
+The bounded draft-publication path below can obtain hosted evidence before final acceptance. Apply the shared [execution](EXECUTION.md) and [review](REVIEW.md) boundaries. Landing may reconcile a reviewed branch with an advancing base; a changed commit OID by itself is not a changed implementation.
 
 ## Intake and authority
 
-Read the TASK, parent, decisions, Board, and canonical review report. Confirm independence, `accept`, requirement coverage, findings and limitations, reviewed branch/base/head and status. Inspect local and remote branches, current base, PR, worktrees and unrelated changes. Choose the user's authorized checkout; preserve unrelated work. Confirm hosting credentials and push path before modifying the target. An explicit `land TASK-NNNNN` authorizes branch reconciliation, TASK/PR metadata, non-force push, PR publication and ownership-proven cleanup. It does not authorize implementation fixes, force push, approval, merge, remote-branch deletion, archive, release or deployment.
+Read the TASK, parent, decisions, Board, and canonical review report. Confirm independence, verdict, requirement coverage, findings and limitations, reviewed branch/base/head and status. Inspect local and remote branches, current base, PR, worktrees and unrelated changes. Choose the user's authorized checkout; preserve unrelated work. Confirm hosting credentials and push path before modifying the target. An explicit `land TASK-NNNNN` authorizes branch reconciliation, TASK/PR metadata, non-force push, PR publication and ownership-proven cleanup. It does not authorize implementation fixes, force push, approval, merge, remote-branch deletion, archive, release or deployment.
+
+Apply the [local-first verification policy](REVIEW.md#local-gate-and-optional-hosted-checks): require the local
+gate, and require hosted acceptance evidence only when the target explicitly calls for it. When hosted CI is
+optional, its absence or unavailability does not block technical acceptance or ordinary publication; disclose
+its state and preserve actual merge restrictions separately.
+
+Ordinary landing requires independent `accept`. Before that acceptance, a `revise` report with only unresolved
+required hosted checks can enter initial draft publication. For already-pushed administrative closeout B,
+resume [final delivery verification](#verify-and-publish) whether required proof is pending or available.
+Verify accepted A in the canonical report and the permitted closeout policy; land establishes the A → B bridge
+in its ignored receipt. An older delivery-only `revise` report can use this route only if it explicitly preserves
+independent acceptance of A and has no substantive or unresolved acceptance findings. Preserve that report;
+no delivery-only canonical update is needed. Missing or ambiguous acceptance still requires independent review.
+Do not reopen A, repeat initial draft intake or make another metadata commit solely to resume delivery.
+An explicit `land TASK-NNNNN` or request to publish for CI authorizes these bounded evidence paths; a review
+report or `work` invocation alone does not.
+
+## Acceptance candidate and administrative closeout
+
+Before using required hosted evidence, identify its scope in the accepted TASK/repository policy. Distinguish:
+
+- **Acceptance candidate A:** the implementation snapshot, with required local and hosted acceptance proof,
+  independently accepted before tracked completion is recorded.
+- **Administrative closeout B:** a later commit limited to truthful completion/review/PR metadata and regenerated
+  planning views. `done` records acceptance of A, not a claim that B's hosted checks or publication succeeded.
+  Requirements, instructions, code, dependencies and behavioral changes are not administrative closeout.
+- **Final delivery checks:** any required checks on the literal final published head B remain blocking for
+  successful landing and cleanup. They are not prerequisites for recording A's already-established acceptance.
+
+This split must be permitted by the target's accepted policy; it is not a CI waiver or an automatic reinterpretation
+of existing criteria. If a criterion makes literal-final-head hosted success a prerequisite for tracked `done`,
+the completion commit would move that head. Stop before completion mutation and ask the authorized requirement
+owner to amend the owning policy/TASK: accept a named implementation candidate, permit administrative closeout,
+and retain literal-final-head proof as a delivery gate. Ambiguous scope needs the same clarification. Publication
+permission alone does not authorize this amendment. If the owner declines, retain incomplete status and the
+worktree, and report the incompatible requirements; do not loop through status commits or change consumer policy.
+Independent review must use the recorded decision, not a builder's interpretation.
+
+With that contract established, the finite sequence is A → accepted A → closeout B → verified B → cleanup.
+Acceptance evidence identifies A; delivery evidence identifies B. No tracked commit is needed after B succeeds.
+An additional reconciliation or non-administrative change creates a new acceptance candidate, not an exception.
+
+## Draft publication to obtain hosted evidence
+
+Use this path only when an independent canonical review establishes that all other applicable requirements pass,
+local verification is sufficient for the current content, and the only unresolved items require hosted evidence.
+Older reports need no schema conversion if they establish these facts. Missing unrelated proof, implementation
+findings, an ambiguous report or a changed target without a valid provenance bridge cannot use this exception.
+
+1. Verify the clean reviewed branch/base/head, existing PR, remote identity, actual CI triggers and applicable
+   publication authority. Inspect intervening changes and any proven mechanical bridge; do not silently rebase
+   or repair the candidate just to obtain a run. Preserve the candidate when fresh substantive review is needed.
+2. Push the reviewed feature branch without force and create a draft PR against the intended base, or reuse the
+   existing TASK PR. Mark final acceptance and hosted verification pending in the PR body. Preserve its identity;
+   if an existing PR is ready, return it to draft within this publication authority. Use the ordinary TASK title
+   and PR template without claiming completion. A draft can disclose pending post-review behavioral QA; the normal
+   QA requirement still applies before accepted landing.
+3. Capture the run URL, event, source head/base, actual tested commit and required job results. Determine whether
+   CI tests the source head or a merge candidate, and establish its relationship to the reviewed change. Follow
+   the target's accepted evidence requirement; do not quietly weaken a literal exact-head condition. Drafts or
+   workflow filters may suppress runs: inspect the cause and report the next authorized action, rather than
+   marking ready, changing CI policy, or manufacturing commits to trigger a run.
+4. Keep the TASK incomplete, preserve `revise`/`Unverified`, and retain the worktree and review evidence. Store the
+   publication/run receipt in ignored TASK scratch and link it in the handoff. Do not make a tracked PR-metadata
+   commit during this phase merely to record the URL and thereby move the candidate awaiting CI.
+5. Return the PR link and evidence for focused independent review of acceptance candidate A. Pending or
+   infrastructure-failed checks remain evidence work; confirmed implementation failures route to `work`.
+   Tracked completion, applicable behavioral QA and closeout B follow the accepted landing path below.
+   Required final-head delivery checks must cover B, including metadata commits; A's run cannot substitute.
+   Do not waive required CI because a change was mechanical.
+
+This is an incomplete landing handoff, not successful acceptance, approval, merge or cleanup. Do not poll
+indefinitely; report queued/unavailable evidence and resume when new results or an explicit monitoring request arrive.
 
 ## Reconcile an advancing base
 
@@ -23,11 +97,42 @@ Landing can resolve mechanical conflicts but not repair an implementation defect
 
 ## Verify and publish
 
-Use the TASK completion notes to record the accepted report and any finding dispositions, reconciliation proof, fresh checks with counts/warnings, risks, and publication state. `done` means accepted implementation and required local verification, not PR approval or merge. Keep generated Board/indexes synchronized with authored planning changes.
+Use the TASK completion notes to record the accepted candidate/report and any finding dispositions, reconciliation
+proof, fresh checks with counts/warnings, risks, and publication state. `done` means accepted implementation and
+all required acceptance verification, including hosted proof when required, not successful delivery, PR approval
+or merge. For required hosted checks, first establish the [closeout contract](#acceptance-candidate-and-administrative-closeout).
+Record `done` in B only after A is independently accepted and required QA is complete; say explicitly that final
+publication/checks are pending. Close eligible TICKET and EPIC ancestors in this same administrative closeout
+under [automatic parent completion](../../planning/CONVENTIONS.md#automatic-parent-completion). Run
+`./bin/planning-check --write` and include the parent statuses and generated views in the same commit. No separate
+parent review, approval or closeout handoff is required.
 
 Run focused checks, `./bin/planning-check`, `git diff --check`, and `./bin/build` on the reconciled implementation before initial publication. Stage only owned planning or reconciliation files; inspect the staged diff and commit them if needed. Push the feature branch without force; create or update its PR against `develop`. For a TASK PR, set and verify the title `TASK-NNNNN — <TASK title>` (the body template cannot set a title), and use the editable [PR body template](../../.github/pull_request_template.md) for scope, behavior, verification, warnings, evidence, and outstanding review/merge status. Remove placeholder text and avoid implying a check passed if it was not run. Preserve an existing PR's identity when updating it; do not rename an unrelated or historical branch merely to match the new convention. Record the actual PR URL in the TASK and refresh generated views. Run focused checks, planning validation, diff check and the full gate on that final tree before committing/pushing the PR metadata. If a result changes, correct the evidence and rerun the affected checks. Avoid repeating gates for an unchanged tree merely to accumulate receipts.
 
-After final push, query the hosting service: PR open, base `develop`, intended head branch, remote head equal to local `HEAD`. Authentication, checks, publication, or remote-head mismatch blocks a successful landing; preserve the worktree. No approval or merge occurs here.
+Land owns final delivery verification after independent acceptance. Verify the A → B diff contains only
+permitted administrative closeout and preserve any mechanical-reconciliation bridge. For required final-head
+delivery checks, retain the draft PR and worktree after pushing B until proof covers B. Record the run URL,
+event, source head/base, actual tested commit, required job conclusions and warnings. Distinguish source-head
+runs from merge-candidate runs and verify the tested head/base relationship against the accepted requirement;
+a stale run, wrong target or skipped required job is not proof.
+
+Record the accepted A checkpoint, B, the administrative diff assessment, any reconciliation bridge and delivery
+proof in the ignored receipt and PR body. Once applicable QA, publication and required delivery checks are
+satisfied, mark the PR ready and proceed to ownership-proven cleanup without another tracked commit. No additional
+independent review or canonical review update is required solely for administrative closeout, changed commit IDs
+or newly available delivery CI results. Preserve the canonical acceptance report; do not rewrite it to claim B
+was independently reviewed. The tracked note remains a truthful checkpoint (accepted A, delivery pending at
+closeout), not a live run ledger. Missing required delivery proof blocks successful landing and cleanup without
+rescinding A's acceptance or requiring another review.
+
+A queued, unavailable or infrastructure-failed final run leaves delivery incomplete: retain B, draft status and
+resources, disclose the cause, and retry the same head when authorized. Do not toggle `done` just to record run
+state. A run demonstrating an implementation defect invalidates acceptance: stop landing, route to `work` to
+reopen the TASK and repair it, then require new verification and independent review. A non-administrative B or
+unproven interaction likewise stops for fresh review; it cannot inherit A's completion claim. Any later commit
+changes the delivery candidate and requires its own applicable final-head proof. Never use A's green run for B.
+
+After final push, query the hosting service: PR open, base `develop`, intended head branch, remote head equal to local `HEAD`. Authentication failure, failed required checks, publication failure, or remote-head mismatch blocks a successful landing; preserve the worktree. No approval or merge occurs here.
 
 ## Cleanup and handoff
 
@@ -35,8 +140,27 @@ Preview cleanup candidates before publication and recheck immediately before del
 
 Return the PR link, review provenance and any reconciliation bridge, final checks and warnings, cleanup result and remaining human actions. Publication, approval, merge, branch deletion, archive, release and deployment are distinct states.
 
+## QA report intake and publication
+
+Apply [QA applicability](QA.md#applicability) to the reviewed scope. Changed behavior requires QA even without a
+UI; verify criterion-specific N/A reasons in the technical handoff or canonical QA report for changes without
+behavioral consequences. Missing assessment routes to `qa`. Read the canonical
+`<base-worktree>/.runs/qa/<TASK-ID>/qa.md` for required or requested QA. Check current subject,
+independence, scenario coverage, artifact digests and any reconciliation bridge under [QA standards](QA.md).
+A current FAIL blocks accepted landing and routes to `work`; INCOMPLETE or missing required evidence routes to
+`qa` or its stated prerequisite. Do not select a historical PASS or treat requested QA as optional after it fails.
+Non-visual evidence can use real requests, command/driver outputs, state checks or instruction walkthroughs as
+appropriate. No screenshot requirement does not imply overall QA N/A.
+
+Publish sanitized captures through an available mechanism within the existing publication authority and verify
+access for the intended PR audience. A local behavioral PASS may have publication pending. No working upload
+path means an explicit human handoff and incomplete delivery, not invented URLs or product-source screenshot
+commits. Keep reports/captures outside disposable worktrees; retain resources while required QA or artifact
+publication is pending. Already-open PRs can receive QA before merge; this does not itself authorize PR updates.
+
 ## Visual evidence
 
 For UI/TUI changes consume current post-review QA evidence under [QA standards](QA.md) and include the PR
-Before/After table with accessible real captures. Non-visual work records N/A or omits that section. Do not run
+Before/After table with accessible real captures. Non-visual work records visual N/A or omits that section while
+retaining its behavioral QA results and relevant evidence in the PR verification summary. Do not run
 unnecessary screenshot steps on documentation-only changes. Missing required evidence remains visible.

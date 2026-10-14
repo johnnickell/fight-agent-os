@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ruleset name="Fight Agent OS">
-    <description>Apply the locked Fight Common 1.2 standard to owned PHP</description>
+    <description>Apply the locked Fight Common standard to owned PHP</description>
     <file>bootstrap</file>
     <file>cli-config.php</file>
     <file>config</file>

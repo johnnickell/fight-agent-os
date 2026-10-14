@@ -9,21 +9,9 @@ use Attribute;
 /**
  * Class JsonBody
  *
- * Declares the transport DTO for a JSON-object request body
- *
- * Constructor parameters are mapped from camelCase to snake_case input fields. Only
- * explicitly declared primitive types are accepted; nested values require a
- * separately reviewed contract on the first real body-bearing interaction.
+ * Selects a JSON object as the Action's sole declared input source
  */
 #[Attribute(Attribute::TARGET_METHOD)]
 final readonly class JsonBody
 {
-    /**
-     * Constructs JsonBody
-     *
-     * @param class-string $dto
-     */
-    public function __construct(public string $dto)
-    {
-    }
 }

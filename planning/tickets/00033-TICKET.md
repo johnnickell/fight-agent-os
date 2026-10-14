@@ -2,7 +2,7 @@
 id: TICKET-00033
 epic: EPIC-00008
 title: Verify reviewed behavior with independent QA before landing
-status: ready-for-agent
+status: done
 ---
 
 # Verify reviewed behavior with independent QA before landing
@@ -13,6 +13,11 @@ Technical review alone does not demonstrate that the UI works. John needs browse
 comparable before/after captures in the eventual PR without managing Engineers directly.
 
 ## Solution and boundaries
+
+**Completion scope corrected 2026-10-13:** `done` records TASK-00146's local QA skill and evidence handoff only.
+The managed phase requirements retained below are transferred, without waiver, to
+[TICKET-00083](00083-TICKET.md). They are not delivered by the local skill. That open owner prevents the EPIC's
+local-skill completion from representing managed Workflow completion.
 
 Implement the QA Engineer phase after Senior Engineer review and before Release Manager `land`, under
 [Team roles](../../docs/engineering/TEAM.md) and [QA standards](../../docs/engineering/QA.md). Browser execution
@@ -48,13 +53,14 @@ technical acceptance. New supporting QA artifacts alone do not. Capture publicat
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00146](../tasks/00146-TASK.md) | Add the local QA skill and behavioral evidence handoff | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
 
-Approved planning amendment; runtime QA and skill implementation remain for decomposition. Existing local
-review/land skills reference this contract without claiming automated QA is already available.
+Approved planning amendment. [TASK-00146](../tasks/00146-TASK.md) delivers the separately authorized local
+QA skill, canonical report and work/review/land routing. Managed QA dispatch, PHP verification of reports and
+Workflow phase enforcement remain for separate decomposition; local instructions do not implement those capabilities.
 
 Technical and QA repairs share the Workflow revision-cycle allowance; QA cannot create an unbounded second loop.
 Only persisted blocking findings consume a repair cycle; mechanical evidence reconciliation does not.

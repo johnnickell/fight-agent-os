@@ -24,6 +24,40 @@ The October 6 [tool-mediated strategy](../docs/engineering/TOOL_MEDIATED_EXECUTI
 Engineer-root VM profile: scoped files/notes and separate role sessions first, then fixed permission-gated checks
 in a qualified restricted environment. The file-only prototype is not production readiness or a completed TASK.
 
+John approved the [incremental Harness protection and retrieval milestone](epics/00006-EPIC.md#approved-incremental-harness-protection-and-retrieval--2026-10-07)
+on 2026-10-07 for existing human-operated Pi sessions. Prioritize deterministic controls plus Jev screening and
+required file relevance screening at an initial 0.70 positive-read threshold. This bounded Harness slice can
+proceed before full managed sandbox/browser/database delivery. Accepted [Jev access](tickets/00037-TICKET.md),
+[tool guard](tickets/00038-TICKET.md) and [file screening](tickets/00039-TICKET.md) requirements now own it;
+access is decomposed into approved [protected setup](tasks/00184-TASK.md) and dependent
+[typed judgments](tasks/00159-TASK.md). The guard is decomposed into independent
+[deterministic restrictions](tasks/00160-TASK.md) and [semantic screening](tasks/00161-TASK.md), which depends on
+those restrictions and the shared judgments. File screening is decomposed into
+[single-file screening and instructions](tasks/00162-TASK.md), dependent on shared judgments, followed by
+[bounded file sets and caching](tasks/00163-TASK.md). It proceeds independently of guard implementation.
+The selected three-TICKET milestone now has approved TASK decompositions; broader EPIC/map planning remains open.
+The accepted Jev follow-on now has requirements for [checkpoint/resume](tickets/00040-TICKET.md),
+[compaction timing and observability](tickets/00041-TICKET.md), [general judgments](tickets/00042-TICKET.md),
+[authorized analysis](tickets/00043-TICKET.md), [change quality](tickets/00044-TICKET.md) and
+[PHPUnit usefulness](tickets/00045-TICKET.md), consuming closed WF-029 through WF-031. Checkpoint/resume now has
+approved [required checkpoint](tasks/00164-TASK.md), [optional selection](tasks/00165-TASK.md),
+[selective repair](tasks/00166-TASK.md) and [retention/holds](tasks/00167-TASK.md) TASKs targeting Pi 1.1.0.
+Timing/observability now has approved [deterministic safe compaction](tasks/00168-TASK.md),
+[every-turn Jev evaluation](tasks/00169-TASK.md) and [history/incident inspection](tasks/00170-TASK.md) TASKs on Pi 1.1.0.
+General judgments now has approved [authenticated typed MCP judgments](tasks/00171-TASK.md),
+[many-file resumable stages](tasks/00172-TASK.md) and [qualified answer reuse](tasks/00173-TASK.md) TASKs on Pi 1.1.0.
+Authorized evidence now has approved [MCP composition](tasks/00174-TASK.md),
+[repository analysis](tasks/00175-TASK.md), [application inspection](tasks/00176-TASK.md) and
+[constrained SQL](tasks/00177-TASK.md) TASKs on Pi 1.1.0; analysis routes independently consume composition.
+Change quality now has approved [automatic pre-handoff assessment](tasks/00178-TASK.md),
+[qualified refresh/reuse](tasks/00179-TASK.md) and [independent reviewer follow-ups](tasks/00180-TASK.md) TASKs on
+Pi 1.1.0. PHPUnit usefulness now has approved [changed-case assessment](tasks/00181-TASK.md),
+[scoped whole-suite assessment](tasks/00182-TASK.md) and [context-sensitive refresh](tasks/00183-TASK.md) TASKs.
+All 20 follow-on TASKs target Pi 1.1.0 and remain unranked with explicit capability blockers. TASK decomposition
+is complete for the selected TICKET-00040 through TICKET-00045 scope; implementation and qualification remain pending.
+Older browser/Harness planning is not implicitly complete. Broader routing retains its separate triage-map decisions. TASK-00138 retains its qualification requirements, and the Board's
+current executable ordering is unchanged by this planning amendment.
+
 The next execution TASKs are [tool-mediated boundaries](tasks/00138-TASK.md), [authorized console start](tasks/00139-TASK.md),
 [recoverable preparation](tasks/00140-TASK.md), [Pi delegation](tasks/00141-TASK.md), and
 [parallel/recovery qualification](tasks/00142-TASK.md). They are incremental delivery slices, not a promise that
@@ -38,6 +72,23 @@ separate accepted implementation scope; self-learning awaits trustworthy metrics
 
 The [external architecture study](research/atomic-lessons.md) informs contracts without importing Atomic's runtime.
 
+## Current planning handoff
+
+The closed vision map's original EPIC-00005–00010 destinations now have accepted **TICKET coverage**; see the
+[requirement-phase coverage and next phase](wayfinder/complete-agent-os-vision-map.md#original-map-requirement-phase-coverage-and-next-phase)
+and [EPIC-00010's current handoff](epics/00010-EPIC.md#planning-phase-handoff-and-verification).
+Continue **TASK decomposition** with `/skill:to-tasks TICKET-00085`, then the remaining accepted map TICKETs,
+including TICKET-00083 and TICKET-00086–00109, under [map-wide phase order](CONVENTIONS.md#map-wide-planning-order).
+Each proposed split needs human approval before TASK records are written. This is planning sequence, not
+implementation authority or Board priority; an explicit narrower choice remains valid.
+
+[TASK-00249](tasks/00249-TASK.md) retains its exact Harness resource/model prerequisite-mapping hold;
+existing owners must resolve it, not another generic Wayfinder session. Use the Board for current execution
+priority. Refresh this handoff when the accepted planning phase changes; historical selected-slice handoffs
+do not supersede it or prove full decomposition.
+
+## EPIC status
+
 <!-- planning:epics -->
 | EPIC ID | Title | Target | Status |
 |---|---|---|---|
@@ -48,37 +99,61 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 | [EPIC-00005](epics/00005-EPIC.md) | Deliver the registered Planning workspace | registered-planning-workspace | ready-for-agent |
 | [EPIC-00006](epics/00006-EPIC.md) | Deliver browser Planning Agents and the trusted Harness | browser-planning-agents-harness | ready-for-agent |
 | [EPIC-00007](epics/00007-EPIC.md) | Coordinate one TASK through implementation | coordinator-builder-awaiting-review | ready-for-agent |
-| [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | review-publish-pr-handoff | ready-for-agent |
+| [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | review-publish-pr-handoff | in-progress |
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | deterministic-project-creation | ready-for-agent |
 | [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | repository-instruction-editing | ready-for-agent |
+| [EPIC-00011](epics/00011-EPIC.md) | Deliver durable scoped Agent memory | durable-agent-memory | ready-for-agent |
+| [EPIC-00012](epics/00012-EPIC.md) | Introduce TASK Triage and the direct hotfix route | task-triage-hotfix-routing | ready-for-agent |
+| [EPIC-00013](epics/00013-EPIC.md) | Support release TASKs and project-specific release Workflows | project-specific-release-workflows | ready-for-agent |
+| [EPIC-00014](epics/00014-EPIC.md) | Deliver the working managed Agent team | working-managed-agent-team | ready-for-agent |
+| [EPIC-00015](epics/00015-EPIC.md) | Deliver mailbox-confirmed human email change | human-email-address-change | ready-for-agent |
+| [EPIC-00016](epics/00016-EPIC.md) | Deliver usable Feature Flags management and enforcement | feature-flags-lifecycle | ready-for-agent |
+| [EPIC-00017](epics/00017-EPIC.md) | Author versioned Agent templates with human-approved AI assistance | browser-agent-template-authoring | ready-for-agent |
+| [EPIC-00018](epics/00018-EPIC.md) | Publish the qualified Agent OS AccessControl reference-consumer handoff | accesscontrol-reference-consumer-handoff | ready-for-agent |
 <!-- /planning:epics -->
 
 ## Planning Frontier
 
-This generated view keeps requirement decomposition and parent closeout visible without changing executable TASK
-priority on the [TASK Board](tasks/BOARD.md). Non-terminal EPICs and TICKETs remain listed until they receive their
-next-level records; parents with only terminal children remain listed until an explicit closeout.
+This generated view keeps requirement decomposition visible without changing executable TASK priority on the
+[TASK Board](tasks/BOARD.md). Non-terminal EPICs and TICKETs remain listed until they receive their next-level
+records. [Automatic parent completion](CONVENTIONS.md#automatic-parent-completion) closes eligible parents in
+the same operation that completes their children.
 
 <!-- planning:frontier -->
 ### EPICs without TICKETs
 
 | EPIC ID | Title | Status |
 |---|---|---|
-| [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | ready-for-agent |
-| [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | ready-for-agent |
+| None | — | — |
 
 ### TICKETs without TASKs
 
 | TICKET ID | Title | Parent EPIC | Status |
 |---|---|---|---|
-| [TICKET-00033](tickets/00033-TICKET.md) | Verify reviewed behavior with independent QA before landing | [EPIC-00008](epics/00008-EPIC.md) | ready-for-agent |
-| [TICKET-00034](tickets/00034-TICKET.md) | Define the SDLC team templates and role-specific capabilities | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
-
-### Parents ready for closeout review
-
-| Type | ID | Title | Status | Children |
-|---|---|---|---|---|
-| TICKET | [TICKET-00007](tickets/00007-TICKET.md) | Stabilize application dependencies and smoke baseline | ready-for-agent | 2/2 terminal |
-| TICKET | [TICKET-00008](tickets/00008-TICKET.md) | Establish application ownership and orchestration boundaries | ready-for-agent | 2/2 terminal |
-| TICKET | [TICKET-00009](tickets/00009-TICKET.md) | Establish authoritative PostgreSQL persistence | ready-for-agent | 6/6 terminal |
+| [TICKET-00083](tickets/00083-TICKET.md) | Deliver managed review through verified PR handoff | [EPIC-00008](epics/00008-EPIC.md) | ready-for-agent |
+| [TICKET-00085](tickets/00085-TICKET.md) | Install and configure the versioned Harness | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00086](tickets/00086-TICKET.md) | Manage versioned Harness resources | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00087](tickets/00087-TICKET.md) | Discover and load trusted first-party Skills | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00088](tickets/00088-TICKET.md) | Resolve immutable Harness session snapshots | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00089](tickets/00089-TICKET.md) | Configure and qualify protected generative providers | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00090](tickets/00090-TICKET.md) | Run and recover authorized durable Agent conversations | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00091](tickets/00091-TICKET.md) | Prepare and explicitly apply structured Planning proposals | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00092](tickets/00092-TICKET.md) | Deliver the browser Planning Agent journey | [EPIC-00006](epics/00006-EPIC.md) | ready-for-agent |
+| [TICKET-00093](tickets/00093-TICKET.md) | Operate the enrolled Runner and bounded dispatch | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00094](tickets/00094-TICKET.md) | Retain and protect immutable execution evidence | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00095](tickets/00095-TICKET.md) | Provide bounded first-party web research | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00096](tickets/00096-TICKET.md) | Expose trustworthy Workflow history and live state | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00097](tickets/00097-TICKET.md) | Inspect and control execution through the sessions Dashboard | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00098](tickets/00098-TICKET.md) | Explain execution usage and completion estimates | [EPIC-00007](epics/00007-EPIC.md) | ready-for-agent |
+| [TICKET-00099](tickets/00099-TICKET.md) | Manage trusted immutable starter releases | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00100](tickets/00100-TICKET.md) | Generate and prepare a fresh local project | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00101](tickets/00101-TICKET.md) | Confirm and recover one durable creation attempt | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00102](tickets/00102-TICKET.md) | Publish the confirmed initial project to GitHub | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00103](tickets/00103-TICKET.md) | Register the created checkout and complete the handoff | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00104](tickets/00104-TICKET.md) | Explain creation failures with bounded support assistance | [EPIC-00009](epics/00009-EPIC.md) | ready-for-agent |
+| [TICKET-00105](tickets/00105-TICKET.md) | Inspect effective repository instructions | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
+| [TICKET-00106](tickets/00106-TICKET.md) | Save and delete instruction files safely | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
+| [TICKET-00107](tickets/00107-TICKET.md) | Prepare bounded AI instruction suggestions | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
+| [TICKET-00108](tickets/00108-TICKET.md) | Publish an instruction change through a recoverable PR | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
+| [TICKET-00109](tickets/00109-TICKET.md) | Synchronize the designated checkout safely | [EPIC-00010](epics/00010-EPIC.md) | ready-for-agent |
 <!-- /planning:frontier -->

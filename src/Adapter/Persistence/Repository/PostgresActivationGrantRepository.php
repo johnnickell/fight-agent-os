@@ -6,6 +6,7 @@ namespace App\Adapter\Persistence\Repository;
 
 use App\Adapter\Persistence\ActivationGrantRecords;
 use App\Adapter\Persistence\ActivationGrantTransitions;
+use App\Adapter\Persistence\ExpiredCredentialDeliveryRecords;
 use App\Adapter\Persistence\PersistenceConflict;
 use App\Adapter\Persistence\PostgresAtomicOperation;
 use DateTimeImmutable;
@@ -95,6 +96,14 @@ SQL
                 CredentialDeliveryStatus::from((string) $row['delivery_status'])
             );
         }, $rows));
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function findExpired(DateTimeImmutable $at, int $limit): array
+    {
+        return ExpiredCredentialDeliveryRecords::find($this->connection, 'activation', $at, $limit);
     }
 
     /**

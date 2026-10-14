@@ -109,6 +109,11 @@ final class ActivationGrantTransitions
     {
         $oldDelivery = $before->getDelivery();
         $newDelivery = $after->getDelivery();
+        $expired = $before->expireDeliveryAt($newDelivery->getExpiresAt());
+        if (ActivationGrantRecords::same($expired, $after)) {
+            return $expired;
+        }
+        // Reclaimed work retains older failure history; only an exact full-state outcome may be replayed.
         if (
             $oldDelivery->getStatus() === CredentialDeliveryStatus::CLAIMED
             && $newDelivery->getLastOutcomeAt() instanceof DateTimeImmutable
@@ -121,6 +126,6 @@ final class ActivationGrantTransitions
             );
         }
 
-        return $before->expireDeliveryAt($newDelivery->getExpiresAt());
+        return $expired;
     }
 }

@@ -48,7 +48,9 @@ return static function (DeptracConfig $config): void {
                 ClassLikeConfig::create('^Fight\\Common\\Adapter\\')
             ),
             $infrastructure = Layer::withName('Infrastructure')->collectors(
-                ClassLikeConfig::create('^(?:Doctrine|GuzzleHttp|Lcobucci|League|Monolog|Psr|Slim|Symfony|Twig)\\')
+                ClassLikeConfig::create(
+                    '^(?:cebe|Doctrine|GuzzleHttp|JsonSchema|Lcobucci|League|Monolog|OpenApi|Psr|Slim|Symfony|Twig)\\'
+                )
             ),
             $phpInternals = Layer::withName('PHP internals')->collectors(
                 PhpInteralConfig::create('.*')

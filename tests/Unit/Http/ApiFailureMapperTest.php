@@ -21,6 +21,7 @@ use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpUnauthorizedException;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use Tests\Support\ApiContract;
 use Throwable;
 
 /**
@@ -79,7 +80,12 @@ final class ApiFailureMapperTest extends TestCase
     {
         $classification = (new ApiFailureMapper())->classify($failure);
 
-        self::assertSame([$status, $body], [$classification?->status, $classification?->envelope->toArray()]);
+        self::assertNotNull($classification);
+        self::assertSame([$status, $body], [$classification->status, $classification->envelope->toArray()]);
+        ApiContract::assertMappedBody(
+            $classification->envelope->toArray(),
+            $body['status'] === 'fail' ? 'ValidationFail' : 'Error'
+        );
     }
 
     /**

@@ -40,3 +40,7 @@ Research gathers facts so humans can make decisions and agents can plan without 
 ```
 
 Do not turn research into implementation without an approved planning handoff.
+
+When a planning owner is known, finish with an explicit `Next:` under the [handoff rules](../../../docs/engineering/HANDOFFS.md),
+returning evidence to that decision or planning phase. Use its actual WF ID/map/record, and name missing human
+judgment instead of inventing a destination or automatically invoking another skill.

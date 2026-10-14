@@ -1,0 +1,51 @@
+.theme-selector {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  color: var(--ui-text);
+}
+
+.theme-selector legend {
+  float: none;
+  font-size: 0.875rem;
+  margin: 0 0 0.25rem;
+}
+
+.theme-selector-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.theme-selector-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  cursor: pointer;
+}
+
+.theme-selector-option:has(input:checked) {
+  background: var(--ui-violet-tint);
+  border-color: var(--ui-violet);
+  font-weight: 700;
+}
+
+.theme-selector-option:has(input:focus-visible) {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 3px;
+}
+
+.theme-selector-option input {
+  accent-color: var(--ui-violet);
+}
+
+.theme-selector small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--ui-muted);
+}

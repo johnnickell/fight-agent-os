@@ -73,6 +73,16 @@ SQL
     }
 
     /**
+     * Releases the fixture connection independently of garbage collection
+     */
+    protected function tearDown(): void
+    {
+        if (isset($this->connection)) {
+            $this->connection->close();
+        }
+    }
+
+    /**
      * Verifies round trip delivery lifecycle due order and secret absence
      */
     public function testRoundTripDeliveryLifecycleDueOrderAndSecretAbsence(): void
@@ -479,6 +489,25 @@ SQL, [$otherUser->toString(), $this->userId->toString()]);
             $this->grants->getLatestByUserId($this->userId)?->getId()->toString()
         );
         self::assertSame(2, (int) $this->connection->fetchOne('SELECT COUNT(*) FROM password_reset_grants'));
+    }
+
+    /**
+     * Persists invalidation without admitting a non-pristine grant as initial authority
+     */
+    public function testInvalidatedMaterialRoundTripsAndCannotBeInsertedAsNew(): void
+    {
+        [$grant] = $this->grant();
+        $invalidated = $grant->invalidateDelivery();
+        self::assertFalse($this->commit(fn(): bool => $this->grants->add($invalidated)));
+        self::assertNull($this->grants->getById($grant->getId()));
+        self::assertTrue($this->commit(fn(): bool => $this->grants->add($grant)));
+        self::assertTrue($this->commit(fn(): bool => $this->grants->replace($grant, $invalidated)));
+        $stored = $this->grants->getById($grant->getId());
+        self::assertNotNull($stored);
+        self::assertSame(CredentialDeliveryStatus::INVALIDATED, $stored->getDelivery()->getStatus());
+        self::assertFalse($stored->getDelivery()->hasRecoverableMaterial());
+        $this->expectException(\LogicException::class);
+        $this->grants->replace($grant, $invalidated);
     }
 
     /**

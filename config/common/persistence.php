@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\Repository\PostgresActivationGrantRepository;
+use App\Adapter\Persistence\Repository\PostgresAgentRepository;
 use App\Adapter\Persistence\Repository\PostgresAuditEvidenceRepository;
 use App\Adapter\Persistence\Repository\PostgresEmailChangeGrantRepository;
+use App\Adapter\Persistence\Repository\PostgresFeatureRepository;
 use App\Adapter\Persistence\Repository\PostgresPasswordResetGrantRepository;
 use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
@@ -19,8 +21,10 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\Agent\AgentRepository;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\Feature\FeatureRepository;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
@@ -55,6 +59,18 @@ return static function (Container $container): void {
     });
     $container->set(PermissionRepository::class, static function (Container $container): PermissionRepository {
         return new PostgresPermissionRepository(
+            $container->get(Connection::class),
+            $container->get(AuthorizationReferenceFences::class)
+        );
+    });
+    $container->set(AgentRepository::class, static function (Container $container): AgentRepository {
+        return new PostgresAgentRepository(
+            $container->get(Connection::class),
+            $container->get(AuthorizationReferenceFences::class)
+        );
+    });
+    $container->set(FeatureRepository::class, static function (Container $container): FeatureRepository {
+        return new PostgresFeatureRepository(
             $container->get(Connection::class),
             $container->get(AuthorizationReferenceFences::class)
         );

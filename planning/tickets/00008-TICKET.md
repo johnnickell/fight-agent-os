@@ -2,7 +2,7 @@
 id: TICKET-00008
 epic: EPIC-00003
 title: Establish application ownership and orchestration boundaries
-status: ready-for-agent
+status: done
 ---
 
 # Establish application ownership and orchestration boundaries

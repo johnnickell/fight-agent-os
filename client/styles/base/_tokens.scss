@@ -1,0 +1,79 @@
+/* Recreated from TASK-00035's accepted C/round-4 handoff; no prototype source or assets. */
+:root,
+[data-bs-theme='light'] {
+  --ui-background: #f6f3ef;
+  --ui-rail: #f0eeeb;
+  --ui-surface: #fffdf9;
+  --ui-raised: #eeebea;
+  --ui-text: #25242a;
+  --ui-muted: #48464e;
+  --ui-quiet: #55525b;
+  --ui-border: #88828b;
+  --ui-action: #8e4930;
+  --ui-action-hover: #713922;
+  --ui-on-action: #fffaf5;
+  --ui-violet: #624e75;
+  --ui-violet-tint: #ece5ef;
+  --ui-focus: #784296;
+  --ui-form-focus: #624e75;
+  --ui-error-background: #f8e4df;
+  --ui-danger: #81392d;
+  --ui-info: #624e75;
+  --ui-success: #286442;
+  --ui-warning: #704900;
+  --bs-body-bg-rgb: 246, 243, 239;
+  --bs-body-color-rgb: 37, 36, 42;
+  --bs-primary-rgb: 142, 73, 48;
+  color-scheme: light;
+}
+
+[data-bs-theme='dark'] {
+  --ui-background: #121417;
+  --ui-rail: #17191d;
+  --ui-surface: #202228;
+  --ui-raised: #282a30;
+  --ui-text: #f2f0eb;
+  --ui-muted: #c3c0bd;
+  --ui-quiet: #a9a6a7;
+  --ui-border: #76737a;
+  --ui-action: #ebb08e;
+  --ui-action-hover: #f5c9ad;
+  --ui-on-action: #271c19;
+  --ui-violet: #c5b1d8;
+  --ui-violet-tint: #302b38;
+  --ui-focus: #f3d9aa;
+  --ui-form-focus: #c5b1d8;
+  --ui-error-background: #4c292a;
+  --ui-danger: #f5b8ad;
+  --ui-info: #c5b1d8;
+  --ui-success: #a6e3be;
+  --ui-warning: #f4cf91;
+  --bs-body-bg-rgb: 18, 20, 23;
+  --bs-body-color-rgb: 242, 240, 235;
+  --bs-primary-rgb: 235, 176, 142;
+  color-scheme: dark;
+}
+
+:root,
+[data-bs-theme] {
+  --ui-font: 'Open Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ui-heading-font: Ubuntu, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ui-space: 0.25rem;
+  --ui-radius: 0.375rem;
+  --ui-motion: 160ms;
+  --bs-body-bg: var(--ui-background);
+  --bs-body-color: var(--ui-text);
+  --bs-body-font-family: var(--ui-font);
+  --bs-secondary-color: var(--ui-muted);
+  --bs-secondary-bg: var(--ui-raised);
+  --bs-tertiary-bg: var(--ui-surface);
+  --bs-border-color: var(--ui-border);
+  --bs-border-radius: var(--ui-radius);
+  --bs-link-color: var(--ui-action);
+  --bs-link-hover-color: var(--ui-action-hover);
+  --bs-primary: var(--ui-action);
+  --bs-emphasis-color: var(--ui-text);
+  --bs-focus-ring-color: var(--ui-focus);
+  --bs-form-invalid-color: var(--ui-danger);
+  --bs-form-invalid-border-color: var(--ui-danger);
+}

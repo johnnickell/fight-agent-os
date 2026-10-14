@@ -1,11 +1,19 @@
 # Architecture
 
-Fight Agent OS starts with the Slim composition from `johnnickell/project-slim`.
+Fight Agent OS is an open-source software factory: software for planning, building, reviewing and delivering
+software. Its browser and Pi surfaces serve engineering workflows, not a general-purpose personal AI operating
+system or an Internet homepage. It starts with the Slim composition from `johnnickell/project-slim`.
 
 - `src/Domain/`: business state, invariants, value objects, and capability interfaces as introduced
 - `src/Application/`: command/query handlers and application coordination as introduced
 - `src/Adapter/`: HTTP Actions/Responders, persistence, external services, and runtime integrations
-- `client/`: reserved for the planned React/TypeScript application
+- `client/`: React/strict TypeScript non-product shell at `/app`; Routes/Layouts/Pages/Components, typed public
+  boot config, Docker-pinned tooling, typed API/CSRF service boundary, and a semantic production-component
+  Storybook catalog; injectable fail-closed authority cache, shared permissions, guarded outlets/actions and
+  bounded in-memory navigation intent are available but not mounted into the public shell; an independently
+  scoped semantic system/light/dark presentation selector and CSP-compatible prepaint are mounted; production `/me`,
+  authentication integration, product journeys and final visual design remain planned
+  (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)
 - `.pi/skills/`: local planning, engineering, Graphify and instruction-writing guidance; managed runtime execution remains planned
 - `harness/pi/`: installable terminal identity; future typed Workflow client capabilities remain separate
 

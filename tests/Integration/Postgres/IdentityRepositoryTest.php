@@ -71,6 +71,16 @@ SQL
     }
 
     /**
+     * Releases the fixture connection independently of garbage collection
+     */
+    protected function tearDown(): void
+    {
+        if (isset($this->connection)) {
+            $this->connection->close();
+        }
+    }
+
+    /**
      * Verifies add and resolve round trips pending identity with roles
      */
     public function testAddAndResolveRoundTripsPendingIdentityWithRoles(): void
@@ -610,6 +620,129 @@ SQL
         }
 
         self::assertTrue($this->users->hasRoleAssignment($roleId));
+    }
+
+    /**
+     * Maps duplicate identity and missing role failures without retaining partial users or claims
+     */
+    public function testRejectedIdentityInsertsLeaveNoPartialClaims(): void
+    {
+        $user = $this->pendingUser('original@example.test');
+        $this->commitAdd($user);
+        try {
+            $this->connection->transactional(fn() => $this->users->add($user));
+            self::fail('A duplicate identity must fail.');
+        } catch (\App\Adapter\Persistence\PersistenceConflict $exception) {
+            self::assertSame('The user identity is already in use.', $exception->getMessage());
+        }
+        $invalid = $this->pendingUser('invalid-role@example.test');
+        $invalid->assignRole(RoleId::generate(), $this->clock('2026-10-01T12:01:00Z'));
+        try {
+            $this->connection->transactional(fn() => $this->users->add($invalid));
+            self::fail('A missing role must fail.');
+        } catch (\App\Adapter\Persistence\PersistenceConflict $exception) {
+            self::assertSame('The user identity or role reference is invalid.', $exception->getMessage());
+        }
+        self::assertNull($this->users->getById($invalid->getId()));
+        self::assertNull($this->users->getByEmail($invalid->getEmail()));
+        self::assertUserEquals($user, $this->users->getById($user->getId()));
+    }
+
+    /**
+     * Checks authoritative role references without inventing a role assignment
+     */
+    public function testRoleReferenceValidationDistinguishesAbsentRoles(): void
+    {
+        $role = $this->role('ROLE_PRESENT');
+        self::assertTrue($this->connection->transactional(
+            fn(): bool => $this->users->validateRoleAssignmentReference($role)
+        ));
+        self::assertFalse($this->connection->transactional(
+            fn(): bool => $this->users->validateRoleAssignmentReference(RoleId::generate())
+        ));
+        self::assertFalse($this->users->hasRoleAssignment($role));
+    }
+
+    /**
+     * Rejects stale or wrong-purpose identity transitions without modifying authority
+     */
+    public function testInvalidAndStaleTransitionsDoNotMutateIdentity(): void
+    {
+        $user = $this->activeUser('stale-email@example.test');
+        $this->commitAdd($user);
+        foreach (
+            ['replaceRoleAssignments', 'replaceEmailChangeReservation', 'replaceEmailChangeConfirmation',
+            'replacePendingInvitationEmail', 'replaceLifecycleState'] as $method
+        ) {
+            self::assertFalse($this->connection->transactional(fn(): bool => $this->users->{$method}($user, $user)));
+        }
+        $reserved = clone $user;
+        $reserved->requestEmailChange(
+            EmailAddress::fromString('destination@example.test'),
+            $this->clock('2026-10-01T12:01:00Z')
+        );
+        self::assertTrue($this->connection->transactional(
+            fn(): bool => $this->users->replaceEmailChangeReservation($user, $reserved)
+        ));
+        self::assertFalse($this->connection->transactional(
+            fn(): bool => $this->users->replaceEmailChangeReservation($user, $reserved)
+        ));
+        $confirmed = clone $reserved;
+        $confirmed->confirmEmailChange($this->clock('2026-10-01T12:02:00Z'));
+        $confirmed->advanceAuthenticationAuthorityRevision();
+        self::assertTrue($this->connection->transactional(
+            fn(): bool => $this->users->replaceEmailChangeConfirmation($reserved, $confirmed)
+        ));
+        self::assertFalse($this->connection->transactional(
+            fn(): bool => $this->users->replaceEmailChangeConfirmation($reserved, $confirmed)
+        ));
+        self::assertUserEquals($confirmed, $this->users->getById($user->getId()));
+        self::assertNull($this->users->getByEmail($user->getEmail()));
+    }
+
+    /**
+     * Preserves invitation state when an email correction conflicts or repeats
+     */
+    public function testInvitationCorrectionCannotStealAnEmailClaim(): void
+    {
+        $taken = $this->pendingUser('taken@example.test');
+        $pending = $this->pendingUser('pending@example.test');
+        $this->commitAdd($taken);
+        $this->commitAdd($pending);
+        $conflicting = clone $pending;
+        $conflicting->correctPendingInvitationEmail($taken->getEmail(), $this->clock('2026-10-01T12:01:00Z'));
+        self::assertFalse($this->connection->transactional(
+            fn(): bool => $this->users->replacePendingInvitationEmail($pending, $conflicting)
+        ));
+        self::assertUserEquals($pending, $this->users->getById($pending->getId()));
+        $corrected = clone $pending;
+        $corrected->correctPendingInvitationEmail(
+            EmailAddress::fromString('available@example.test'),
+            $this->clock('2026-10-01T12:01:00Z')
+        );
+        self::assertTrue($this->connection->transactional(
+            fn(): bool => $this->users->replacePendingInvitationEmail($pending, $corrected)
+        ));
+        self::assertFalse($this->connection->transactional(
+            fn(): bool => $this->users->replacePendingInvitationEmail($pending, $corrected)
+        ));
+        self::assertUserEquals($corrected, $this->users->getById($pending->getId()));
+        self::assertUserEquals($taken, $this->users->getByEmail($taken->getEmail()));
+    }
+
+    /**
+     * Persists both canonical and pending claims when importing an already reserved identity
+     */
+    public function testAddReservedUserRetainsBothClaims(): void
+    {
+        $user = $this->activeUser('canonical@example.test');
+        $destination = EmailAddress::fromString('reserved@example.test');
+        $user->requestEmailChange($destination, $this->clock('2026-10-01T12:01:00Z'));
+        $this->commitAdd($user);
+        self::assertUserEquals($user, $this->users->getById($user->getId()));
+        self::assertNull($this->users->getByEmail($destination));
+        $this->expectException(DuplicateEmailException::class);
+        $this->connection->transactional(fn() => $this->users->add($this->pendingUser($destination->toString())));
     }
 
     /**

@@ -1,0 +1,183 @@
+---
+name: build
+description: Coordinate one approved TASK through Engineer work, fresh independent review, QA and automatic land to an open PR with applicable screenshots; accept an unambiguous TICKET input.
+disable-model-invocation: true
+---
+
+# Build
+
+Act as Team Lead for one TASK in the target project, using the role responsibilities in
+[Team roles](../../../docs/engineering/TEAM.md). Delegate implementation,
+independent technical review, behavioral QA and publication to their respective roles. Coordinate and inspect
+evidence; do not implement or issue an independent verdict yourself. Fresh Pi processes separate conversation
+context, not OS permissions or credentials. Managed PHP authority, durable execution and browser attachment
+remain separately planned. No subagent extension or global installation is needed with the qualified Pi 1.2.0 CLI.
+
+Use `/skill:build TASK-NNNNN` or `/skill:build TICKET-NNNNN`. Optional instructions may specify checkout, models
+and a positive revision allowance up to ten. The default is **five shared revision cycles** across technical
+review and QA. Invocation explicitly delegates work, review, QA and `land`, including owned commits, non-force
+push, PR creation/update and suitable capture uploads. Continue these stages without another approval prompt.
+Ask only for missing decisions or authority beyond that scope. Never merge, approve the PR, force-push, release,
+deploy or continue to another TASK. A question about planning does not invoke this workflow.
+
+## Resolve and record
+
+1. Resolve [target project context](../../../docs/engineering/PROJECT_CONTEXT.md) before reading planning or
+   dispatching a child. Read the supplied record, parent, Board and planning conventions from that target,
+   applying its documented bindings. Provider-relative links supply shared instructions, not a target checkout.
+   A TICKET input selects its sole eligible TASK only
+   when no other child is active or ambiguously owned. Inspect live/archived children and state the selected ID.
+   With zero or multiple candidates, ask for the missing prerequisite/choice; do not decompose, choose by lowest
+   number or build the entire TICKET. Check approved scope, readiness and integration of blockers on the base.
+2. Follow [execution standards](../../../docs/engineering/EXECUTION.md). Reuse the operator's selected checkout;
+   otherwise ask main checkout versus isolated worktree before implementation. Verify repository/remote, branch,
+   ancestry, ownership and existing work. Never switch, stage or publish unrelated changes. A shared branch
+   containing unrelated unaccepted commits needs branch/ownership resolution before dispatch, not a broad push.
+   Search existing PRs by branch and then uniquely evidenced TASK ownership; ambiguity holds.
+3. Resolve the canonical base worktree through Git common-dir/worktree metadata. Use `umask 077` and an ignored
+   run beneath `<base>/.runs/build/<TASK-ID>/`. Acquire an exclusive `mkdir` lock at that directory's `active`
+   child and record coordinator session, checkout, branch and run path. An existing lock requires inspecting
+   its owner/processes before continuation; never automatically delete it. This is advisory local coordination,
+   not a managed claim. Release only your lock after proving children stopped; uncertain liveness retains it.
+4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, resolved role models, effective/consumed/remaining
+   cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Check installed
+   `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools
+   is a prerequisite hold. Use existing provider authentication without printing credentials; do not change
+   global settings, install extensions or auto-trust unfamiliar project resources.
+
+Before first dispatch, inspect existing canonical Review/QA and any earlier build ledger. Resume from the phase
+warranted by current evidence; do not rebuild accepted implementation. Continue the original consumed allowance
+on resumed or repeated invocation for the same delivery, including after QA failure. A fresh process, directory
+or command does not reset the counter. An exhausted allowance needs an explicit human continuation grant.
+
+## Resolve phase models
+
+Resolve the model map before dispatch; the coordinator's model is **not** a child default. For each role,
+apply explicit invocation choices first, then role settings in the target's documented project binding, then
+these local defaults, resolving each field in that order. Resolve provider from the invocation role choice,
+then the target-bound role choice, otherwise retain the configured provider. Never switch providers to obtain a default model. These defaults apply to
+`openai-codex`; another provider needs an explicit or target-bound role map before dispatch.
+
+| Role | Default model family | Thinking | Verified available ID on 2026-10-13 |
+|---|---|---|---|
+| Team Lead | Sol | medium | `gpt-6.1-sol` |
+| Software Engineer, including repairs | Sol | high | `gpt-6.1-sol` |
+| Senior Engineer review | Sol | high | `gpt-6.1-sol` |
+| QA Engineer | Terra | high | `gpt-5.6-terra` |
+| Release Manager land | Luna | medium | `gpt-6-luna` |
+
+Team Lead is a recommendation when starting a coordinator, not a command to replace an active session.
+Astra is an explicit override, never an automatic fallback or escalation after failure. Model choice does not
+weaken stage responsibilities, independence, evidence gates or the shared repair allowance.
+
+For a fresh delivery, inspect `pi --list-models` and the installed provider's model metadata without sending a
+TASK prompt. For each default family choose its newest available stable numeric version (compare version
+components, not strings); exclude previews, dated snapshots and fuzzy/rolling aliases. The table records a
+qualification snapshot, not invented future IDs or permission to assume API availability equals Pi access.
+Explicit exact model pins remain exact. Verify the requested thinking level against provider metadata; missing
+models, unsupported thinking, ambiguous versions or unresolved configuration hold that phase with a specific
+prerequisite. Do not silently substitute a family, provider or reasoning level.
+
+Record the requested family/override, configuration source, resolved provider, exact model ID and thinking for
+each role in the ledger before any child starts. Pin these choices for repairs and resumed invocations; do not
+refresh to a newly released model mid-delivery. An explicit model-change request may amend subsequent attempts
+at a reconciled stage boundary, preserving prior identities, evidence and consumed cycles. A legacy ledger with
+only inherited coordinator settings must resolve and record its role map before the next child; never interrupt
+an active child merely to apply new defaults. Include the resolved selection in each child request and forbid
+the child from changing it. Record provider-reported identity separately; if unavailable, say so rather than
+presenting requested/configured identity or catalog availability as provider execution proof.
+
+## Dispatch fresh roles
+
+Launch one child at a time from the TASK checkout using the shell tool. Allocate a fresh attempt with `mktemp -d`
+under the private run directory. Never pass `--continue`, `--resume`, `--session`, `--fork`, the parent transcript
+or its session file. Each new empty session directory supplies fresh context; Review and QA must have no prior
+implementation contributions. Repairs receive the current findings and dispositions explicitly.
+
+Write `request.md` in the attempt directory before launching. Include role, TASK, exact checkout/base/head,
+absolute owning provider skill path, absolute project-context path, target instruction/binding paths, permitted
+effects, relevant evidence paths, original authorization, remaining repair allowance and expected handoff.
+Tell the child to verify the target Git identity and read the context, target instructions and binding before
+that skill and its nested references. Apply target substitutions throughout, execute only its stage, publish
+the required report, then stop without delegating other roles or invoking `build`. Do not copy Engineer dialogue
+into reviewer prompts or suggest a verdict. Explicitly carry delegated land and capture-publication authority
+into the Release Manager prompt.
+
+Use this supported dispatch shape. Populate quoted variables from the ledger; `attempt` is the fresh directory,
+`task_checkout` the selected checkout, and `task_id`/`role` the actual stage identity. Set `stage_provider`,
+`stage_model` and `stage_thinking` from that role's pinned ledger entry. Ambient `PI_MODEL` and
+`PI_REASONING_LEVEL` describe the coordinator and must not fill missing stage values. Exact IDs avoid Pi's
+fuzzy model selection. Require all stage values before launching and export them only inside the child subshell.
+
+```bash
+(
+  umask 077
+  cd "$task_checkout" || exit 1
+  : "${stage_provider:?Resolve the role provider first}"
+  : "${stage_model:?Resolve the role model first}"
+  : "${stage_thinking:?Resolve the role thinking level first}"
+  export PI_PROVIDER="$stage_provider" PI_MODEL="$stage_model" PI_REASONING_LEVEL="$stage_thinking"
+  if pi --print --session-dir "$attempt/sessions" --name "$task_id $role" \
+    --provider "$PI_PROVIDER" --model "$PI_MODEL" --thinking "$PI_REASONING_LEVEL" \
+    -- "@$attempt/request.md" > "$attempt/final.txt" 2> "$attempt/stderr.log"; then
+    stage_exit=0
+  else
+    stage_exit=$?
+  fi
+  printf '%s\n' "$stage_exit" > "$attempt/exit-code"
+  exit "$stage_exit"
+)
+```
+
+Use a bounded shell-tool timeout suitable for the stage. Observe the child; do not detach it into an unobserved
+background process. If the host yields a running process, wait and give useful progress updates without launching
+the next stage. Inspect exit code, stderr, persisted session and required artifacts. Exit zero or a reassuring
+final response is not acceptance. Compare the session's configured model/thinking with the pinned ledger entry;
+an unexpected selection holds advancement. Missing exit, timeout, cancellation, provider error, truncated output or
+uncertain liveness is incomplete. Reconcile/stop the original child before another attempt. Cancellation does
+not guarantee cancellation of remote effects. On restart, read the ledger and original Git/report/PR state;
+this skill does not guarantee unattended survival after terminal/host exit.
+
+## Advance by evidence
+
+| Stage | Owning skill and required result | Next action |
+|---|---|---|
+| Engineer | [work](../work/SKILL.md): owned committed implementation, full gate receipt, scope, head and limitations | Confirm identity; dispatch fresh Review |
+| Senior Engineer | [review](../review/SKILL.md): canonical independent report with separate Standards and Spec passes | `accept` to QA; confirmed blockers to repair; missing evidence to its owner |
+| QA Engineer | [qa](../qa/SKILL.md): current canonical PASS or justified criterion-specific N/A, scenarios and inspected applicable captures | Satisfied QA to land; FAIL defects to Engineer; INCOMPLETE to prerequisite recovery |
+| Release Manager | [land](../land/SKILL.md): eligibility, final checks, non-force publication, verified PR and capture access | Inspect original remote result; hand the open PR to the human |
+
+Read canonical `<base>/.runs/reviews/<TASK-ID>/review.md` and `<base>/.runs/qa/<TASK-ID>/qa.md`, including subject,
+independence, current verdict/disposition, evidence and limitations. Never prefer an older PASS over a newer
+failure. Retain per-attempt copies/digests. Compare actual Git/source/runtime identity before advancement;
+material repairs, changed requirements or stale subjects require fresh applicable evidence. Use the existing
+[landing provenance bridge](../../../docs/engineering/LANDING.md) for proven mechanical changes. Only explicitly
+required hosted proof can use land's authorized draft path; a draft awaiting proof is not final delivery.
+
+One repair cycle is one Engineer attempt addressing the current confirmed blocking set, then fresh Review and
+affected QA. Record consumption before repair dispatch; initial implementation is not a repair. Technical and
+QA findings share the counter: **QA FAIL never resets it**. Non-blocking preferences and missing evidence do not
+authorize speculative edits. After the effective allowance is consumed (five by default), allow that cycle's
+Review/QA and publication if it passes; remaining blockers require a human decision. Do not increase limits
+automatically. Evidence recovery consumes
+no repair cycle, but repeated unchanged failures are a prerequisite hold, not unlimited retries. Explicit larger
+allowances must be within the ceiling and recorded before use.
+
+For UI/TUI changes require comparable inspected Before/After captures through real interaction under
+[QA standards](../../../docs/engineering/QA.md). Release Manager uploads sanitized captures using
+[landing standards](../../../docs/engineering/LANDING.md), verifies references/audience access and reconciles
+partial uploads or uncertain PR creation before retrying. Local paths alone are not PR evidence. If terminal
+image capture is unavailable, retain real transcripts and report the image limitation; do not fabricate images
+or silently waive requested captures. Non-visual work uses appropriate behavioral evidence, not decorative
+screenshots. Missing required/requested proof holds delivery rather than weakening QA.
+
+## Hand off
+
+Success requires a verified open, ready PR against the correct base, exact published remote head, current
+review/QA provenance, required checks and accessible applicable captures. Return its clickable URL, concise
+verification/limitations and revision usage. End with `Next: Review and merge <actual PR URL> on GitHub` under
+[handoff rules](../../../docs/engineering/HANDOFFS.md), then stop after this TASK.
+
+If incomplete, retain useful resources and record phase, subject, remaining cycles and exact recovery action.
+Report the actual prerequisite or human decision. A child's suggested next skill is not a reason to stop when
+its evidence is complete and `build` already delegated that continuation.

@@ -29,7 +29,7 @@ Out of scope: public account creation, direct active email update, unrestricted 
 
 ## Validation and permissions
 
-All installation-wide permissions above are `SUPER_ADMIN_ONLY` in the managed catalog, initially granted only to `ROLE_SUPER_ADMIN`; the actual request check is current authoritative permission, never a role-name/JWT claim. Matched FQCN Actions use TASK-00117 route attributes as an early gate; a shared Agent OS Application authorization service checks permission, target lifecycle, last-admin/self-change and confirmation for every HTTP and non-HTTP entry adapter before invoking package commands; the rules are not copied into each adapter. v0.4.0 may remove package handler permission checks: never rely on duplicate handler authorization. Package session authorization callbacks still ask Agent OS whether actor may manage the target; user/role membership checks do not substitute for those ownership decisions.
+All installation-wide permissions above are `SUPER_ADMIN_ONLY` in the managed catalog, initially granted only to `ROLE_SUPER_ADMIN`; the actual request check is current authoritative permission, never a role-name/JWT claim. Matched FQCN Actions use TASK-00117 route attributes as an early gate; a shared Agent OS Application authorization service checks permission, target lifecycle, last-admin/self-change and confirmation for every HTTP and non-HTTP entry adapter before invoking package commands; the rules are not copied into each adapter. The selected qualified release may remove package handler permission checks: never rely on duplicate handler authorization or infer its contract from a prospective version number. Package session authorization callbacks still ask Agent OS whether actor may manage the target; user/role membership checks do not substitute for those ownership decisions.
 
 Only allowlisted route/body fields and validated IDs/revisions/reason enter use cases. Managed roles cannot be renamed/removed. Direct elevated assignment requires `MANAGE_USER_ROLES` **and** `ASSIGN_SUPER_ADMIN`; elevated removal instead requires `MANAGE_USER_ROLES` **and** `REMOVE_SUPER_ADMIN`. Both require confirmation and audit, with last-admin and self-lockout safeguards even when both permissions are present. Lifecycle and session failures avoid target enumeration; admin reasons/audit redact secrets. Future workspace/repository admin must have scoped actor/target capabilities and separately approved permission catalog; global rights never inherit from a local title.
 
@@ -40,7 +40,7 @@ Only allowlisted route/body fields and validated IDs/revisions/reason enter use 
 - Cross-user sessions require separate permissions and package actor/target callbacks; self-service endpoints never become admin backdoors.
 - Durable audit and request/response redaction cover actor, target, reason, outcome and timestamp without credentials or private session state.
 - Browser UI has truthful permission-aware links, accessible confirmations, failure/recovery states, and authoritative refetch.
-- Focused PostgreSQL/HTTP/application/client/security/accessibility checks and `./bin/build` pass; the upstream consumer contract gate is verified before depending on v0.4.0 behavior.
+- Focused PostgreSQL/HTTP/application/client/security/accessibility checks and `./bin/build` pass; TASK-00126 verifies the required upstream authorization/tier/persistence contracts and records the exact tested release and source commit before dependent behavior is enabled.
 
 ## TASKs
 
@@ -57,4 +57,4 @@ Only allowlisted route/body fields and validated IDs/revisions/reason enter use 
 
 ## Decisions and progress
 
-Human-approved TASK-00116 expansion of EPIC-00004. TICKET-00015 owns initial managed IDs, TICKET-00021 owns invitation/directory and TICKET-00020 owns **only** self-service sessions. TASK-00117 owns the common API-v1 security gate; package target callbacks and Agent OS Application permission checks are both required, without duplicate permission decisions in package handlers. No TASK in this TICKET claims the v0.4.0 API until the tagged release is inspected.
+Human-approved TASK-00116 expansion of EPIC-00004. TICKET-00015 owns initial managed IDs, TICKET-00021 owns invitation/directory and TICKET-00020 owns **only** self-service sessions. TASK-00117 owns the common API-v1 security gate; package target callbacks and Agent OS Application permission checks are both required, without duplicate permission decisions in package handlers. No TASK in this TICKET assumes a future version's API; dependent capabilities require inspection and consumer qualification of the actual tagged release.

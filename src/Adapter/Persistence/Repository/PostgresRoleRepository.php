@@ -11,7 +11,9 @@ use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
@@ -40,7 +42,7 @@ final readonly class PostgresRoleRepository implements RoleRepository
     public function add(Role $role): void
     {
         $this->referenceFences->holdPermissionReferences();
-        if (!$this->lockAuthoritativePermissions($role->getPermissionIds())) {
+        if (!$this->lockEligiblePermissions($role)) {
             throw new PersistenceConflict('Role permission membership is not authoritative.');
         }
 
@@ -172,17 +174,44 @@ SQL,
     /**
      * @inheritDoc
      */
+    public function validateCustomPermissionGrant(Permission $expected): bool
+    {
+        $this->referenceFences->holdPermissionReferences();
+        if ($expected->getTier() !== PermissionTier::ADMIN_SAFE) {
+            return false;
+        }
+
+        return $this->connection->fetchOne(
+            <<<'SQL'
+SELECT 1 FROM permissions WHERE id = :id AND name = :name AND tier = 'ADMIN_SAFE'
+    AND managed = :managed AND created_at = :created_at AND updated_at = :updated_at
+SQL,
+            [
+                'id'         => $expected->getId()->toString(),
+                'name'       => $expected->getName()->toString(),
+                'managed'    => $expected->isManaged(),
+                'created_at' => $this->date($expected->getCreatedAt()),
+                'updated_at' => $this->date($expected->getUpdatedAt())
+            ],
+            ['managed' => ParameterType::BOOLEAN]
+        ) !== false;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function replace(Role $expected, Role $replacement): bool
     {
         if (
             !$expected->getId()->equals($replacement->getId())
+            || $expected->isManaged() !== $replacement->isManaged()
             || $expected->getCreatedAt() != $replacement->getCreatedAt()
         ) {
             return false;
         }
 
         $this->referenceFences->holdPermissionReferences();
-        if (!$this->lockAuthoritativePermissions($replacement->getPermissionIds())) {
+        if (!$this->lockEligiblePermissions($replacement)) {
             return false;
         }
 
@@ -262,11 +291,22 @@ SQL
     }
 
     /**
+     * Validates current membership eligibility under the shared tier fence
+     */
+    private function lockEligiblePermissions(Role $role): bool
+    {
+        return $this->lockAuthoritativePermissions(
+            $role->getPermissionIds(),
+            $role->isManaged() && $role->getName()->toString() === 'ROLE_SUPER_ADMIN'
+        );
+    }
+
+    /**
      * Acquires reference locks on the role's permissions
      *
      * @phpstan-param list<PermissionId> $permissionIds
      */
-    private function lockAuthoritativePermissions(array $permissionIds): bool
+    private function lockAuthoritativePermissions(array $permissionIds, bool $allowProtected = true): bool
     {
         $ids = array_values(array_unique(array_map(
             static fn(PermissionId $id): string => $id->toString(),
@@ -279,9 +319,13 @@ SQL
 
         // DBAL QueryBuilder only supports FOR UPDATE; membership needs the weaker KEY SHARE lock.
         $found = $this->connection->fetchFirstColumn(
-            'SELECT id FROM permissions WHERE id IN (?) ORDER BY id FOR KEY SHARE',
-            [$ids],
-            [ArrayParameterType::STRING]
+            <<<'SQL'
+SELECT id FROM permissions WHERE id IN (?)
+    AND (tier = 'ADMIN_SAFE' OR (tier = 'SUPER_ADMIN_ONLY' AND ?))
+ORDER BY id FOR KEY SHARE
+SQL,
+            [$ids, $allowProtected],
+            [ArrayParameterType::STRING, ParameterType::BOOLEAN]
         );
 
         return count($found) === count($ids);

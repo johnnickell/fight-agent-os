@@ -61,6 +61,16 @@ SQL
     }
 
     /**
+     * Releases the fixture connection independently of garbage collection
+     */
+    protected function tearDown(): void
+    {
+        if (isset($this->connection)) {
+            $this->connection->close();
+        }
+    }
+
+    /**
      * Verifies session round trip and active pagination
      */
     public function testSessionRoundTripAndActivePagination(): void

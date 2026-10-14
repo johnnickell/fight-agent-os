@@ -65,6 +65,16 @@ final class ActivationGrantRepositoryTest extends TestCase
     }
 
     /**
+     * Releases the fixture connection independently of garbage collection
+     */
+    protected function tearDown(): void
+    {
+        if (isset($this->connection)) {
+            $this->connection->close();
+        }
+    }
+
+    /**
      * Verifies secret safe round trip and absence queries
      */
     public function testSecretSafeRoundTripAndAbsenceQueries(): void
@@ -74,6 +84,7 @@ final class ActivationGrantRepositoryTest extends TestCase
         self::assertNull($this->grants->getById($grant->getId()));
         self::assertNull($this->grants->getByDeliveryId($grant->getDelivery()->getId()));
         self::assertNull($this->grants->getLatestByUserId($user->getId()));
+        self::assertFalse($this->transaction(fn(): bool => $this->grants->addSuccessor($grant)));
         self::assertTrue($this->transaction(fn(): bool => $this->grants->add($grant)));
         foreach (
             [$this->grants->getById($grant->getId()),

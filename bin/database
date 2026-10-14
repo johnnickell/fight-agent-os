@@ -27,7 +27,7 @@ case "$command" in
     ;;
   test)
     docker compose run --rm -e APP_ENV=test web php scripts/guarded_test_database.php check
-    exec docker compose run --rm -e APP_ENV=test web php vendor/bin/phpunit --testsuite postgres
+    exec docker compose run --rm -e APP_ENV=test web php vendor/bin/phpunit --testsuite Postgres
     ;;
   *)
     echo "Usage: ./bin/database {start|check|migrate|status|test-reset|test-status|test}" >&2

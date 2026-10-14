@@ -1,0 +1,136 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Unit\Http;
+
+use App\Adapter\Http\Web\ClientShellResponder;
+use Fight\Common\Adapter\Templating\TwigEngine;
+use Fight\Common\Application\Templating\Exception\TemplatingException;
+use Fight\Common\Application\Templating\TemplateEngine;
+use PHPUnit\Framework\TestCase;
+use Slim\Psr7\Factory\ResponseFactory;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+
+/**
+ * Exercises public shell presentation and safe deployment failure
+ */
+final class ClientShellResponderTest extends TestCase
+{
+    /**
+     * Emits only the approved public configuration without authority hydration
+     */
+    public function test_that_shell_contains_only_the_approved_runtime_configuration(): void
+    {
+        $response = $this->responder()->respond((new ResponseFactory())->createResponse(), [
+            'prepaint'   => '/build/prepaint-CCCCCCCC.js',
+            'script'     => '/build/main-AAAAAAAA.js',
+            'stylesheet' => '/build/main-BBBBBBBB.css'
+        ]);
+        $html = (string) $response->getBody();
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
+        self::assertSame('no-referrer', $response->getHeaderLine('Referrer-Policy'));
+        self::assertStringContainsString("script-src 'self'", $response->getHeaderLine('Content-Security-Policy'));
+        self::assertStringContainsString("font-src 'self'", $response->getHeaderLine('Content-Security-Policy'));
+        self::assertStringNotContainsString('unsafe-inline', $response->getHeaderLine('Content-Security-Policy'));
+        self::assertSame('', $response->getHeaderLine('Set-Cookie'));
+        self::assertStringContainsString('<script type="module" src="/build/main-AAAAAAAA.js"></script>', $html);
+        self::assertStringContainsString('<script src="/build/prepaint-CCCCCCCC.js"></script>', $html);
+        self::assertLessThan(
+            strpos($html, '<link rel="stylesheet"'),
+            strpos($html, '<script src="/build/prepaint-CCCCCCCC.js"></script>')
+        );
+        self::assertLessThan(
+            strpos($html, '<script type="module"'),
+            strpos($html, '<link rel="stylesheet"')
+        );
+        self::assertStringNotContainsString('data-bs-theme="light"', $html);
+        self::assertStringContainsString('<link rel="stylesheet" href="/build/main-BBBBBBBB.css">', $html);
+        self::assertSame(
+            1,
+            preg_match('~<script id="runtime-config" type="application/json">(.*?)</script>~', $html, $match)
+        );
+        self::assertArrayHasKey(1, $match);
+        self::assertSame(
+            ['schema_version' => 1, 'api_base_path' => '/api/v1'],
+            json_decode($match[1] ?? '', true, 16, JSON_THROW_ON_ERROR)
+        );
+        self::assertStringContainsString('<html lang="en"', $html);
+        self::assertStringContainsString('<div id="app">', $html);
+        self::assertStringContainsString('<noscript>', $html);
+    }
+
+    /**
+     * Escapes asset attributes at the HTML boundary
+     */
+    public function test_that_asset_attributes_are_escaped(): void
+    {
+        $response = $this->responder()->respond((new ResponseFactory())->createResponse(), [
+            'prepaint'   => '/build/"<prepaint>',
+            'script'     => '/build/"<script>',
+            'stylesheet' => '/build/"<style>'
+        ]);
+
+        self::assertStringContainsString('src="/build/&quot;&lt;prepaint&gt;"', (string) $response->getBody());
+        self::assertStringContainsString('src="/build/&quot;&lt;script&gt;"', (string) $response->getBody());
+        self::assertStringContainsString('href="/build/&quot;&lt;style&gt;"', (string) $response->getBody());
+    }
+
+    /**
+     * Reports unavailable deployment without emitting config or broken scripts
+     */
+    public function test_that_missing_assets_return_safe_unavailable_presentation(): void
+    {
+        $response = $this->responder()->respond((new ResponseFactory())->createResponse(), null);
+        $html = (string) $response->getBody();
+
+        self::assertSame(503, $response->getStatusCode());
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertStringContainsString('<h1>Application unavailable</h1>', $html);
+        self::assertStringNotContainsString('<script', $html);
+        self::assertStringNotContainsString('runtime-config', $html);
+    }
+
+    /**
+     * Contains renderer failures without exposing engine diagnostics
+     */
+    public function test_that_engine_failures_return_safe_plain_text(): void
+    {
+        $templates = $this->createStub(TemplateEngine::class);
+        $templates->method('render')->willThrowException(new TemplatingException('private renderer detail'));
+        $response = (new ClientShellResponder($templates))->respond((new ResponseFactory())->createResponse(), [
+            'prepaint'   => '/build/prepaint-CCCCCCCC.js',
+            'script'     => '/build/main-AAAAAAAA.js',
+            'stylesheet' => '/build/main-BBBBBBBB.css'
+        ]);
+
+        self::assertSame(503, $response->getStatusCode());
+        self::assertSame('text/plain; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
+        self::assertSame('no-referrer', $response->getHeaderLine('Referrer-Policy'));
+        self::assertStringContainsString("default-src 'none'", $response->getHeaderLine('Content-Security-Policy'));
+        self::assertSame(
+            'Application unavailable. Please contact the installation operator.',
+            (string) $response->getBody()
+        );
+    }
+
+    /**
+     * Creates presentation with the real public templates
+     */
+    private function responder(): ClientShellResponder
+    {
+        $loader = new FilesystemLoader();
+        $loader->addPath(dirname(__DIR__, 3).'/templates/client', 'client');
+
+        $templates = new TwigEngine(new Environment($loader, ['autoescape' => 'name', 'strict_variables' => true]));
+
+        return new ClientShellResponder($templates);
+    }
+}

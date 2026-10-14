@@ -1,0 +1,9 @@
+// Shared decorative library spinner; accompanying button/status text carries meaning.
+.catalog-spinner {
+  --bs-spinner-width: 1em;
+  --bs-spinner-height: 1em;
+  --bs-spinner-border-width: 2px;
+  --bs-spinner-animation-speed: 1s;
+  margin-inline-end: 0.5rem;
+  vertical-align: baseline;
+}

@@ -9,6 +9,7 @@ $container = new Container();
 foreach (
     [
     'parameters/paths.php',
+    'parameters/templating.php',
     'common/security.php',
     'common/observability.php',
     'common/cache.php',
@@ -19,7 +20,10 @@ foreach (
     'common/system.php',
     'common/communication.php',
     'common/presentation.php',
+    'common/templating.php',
     'application/csrf.php',
+    'application/access_tokens.php',
+    'application/credential_delivery.php',
     'application/controller.php'
     ] as $manifestEntry
 ) {

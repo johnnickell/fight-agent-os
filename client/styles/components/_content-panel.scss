@@ -1,0 +1,27 @@
+.catalog-panel {
+  padding: clamp(1rem, 3vw, 2rem);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.catalog-panel-header,
+.catalog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space);
+}
+
+.catalog-panel-header {
+  justify-content: space-between;
+  margin-bottom: var(--ui-space);
+}
+
+.catalog-panel h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  min-width: 0;
+}

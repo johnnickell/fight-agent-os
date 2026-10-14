@@ -5,10 +5,19 @@ declare(strict_types=1);
 namespace Tests\Integration\Postgres;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
+use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\PersistenceConflict;
+use App\Adapter\Persistence\Repository\PostgresAgentRepository;
+use App\Adapter\Persistence\Repository\PostgresFeatureRepository;
 use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
+use App\Adapter\Persistence\Repository\PostgresUserRepository;
+use App\Application\Authorization\InstallationAuthority;
+use App\Application\Authorization\InvitationCorrectionAuthorization;
+use App\Application\Authorization\SessionAdministrationDecision;
+use App\Application\Authorization\UnavailableEmailChangeAdministration;
+use App\Application\Failure\PermissionDenied;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -16,15 +25,43 @@ use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
+use Fight\AccessControl\Application\AccessControl\Agent\CommandHandler\GrantPermissionToAgentHandler;
+use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\GrantPermissionToCustomRoleHandler;
+use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
+use Fight\AccessControl\Domain\AccessControl\Agent\Agent;
+use Fight\AccessControl\Domain\AccessControl\Agent\AgentCredentialId;
+use Fight\AccessControl\Domain\AccessControl\Agent\AgentId;
+use Fight\AccessControl\Domain\AccessControl\Agent\AgentName;
+use Fight\AccessControl\Domain\AccessControl\Agent\Command\GrantPermissionToAgent;
+use Fight\AccessControl\Domain\AccessControl\Agent\Exception\AgentOperationRejectedException;
+use Fight\AccessControl\Domain\AccessControl\Agent\Operation\AgentOperationFailure;
+use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\Exception\EmailChangeAdministrationAuthorizationException;
+use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureConflictException;
+use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureReferenceException;
+use Fight\AccessControl\Domain\AccessControl\Feature\Exception\FeatureStateException;
+use Fight\AccessControl\Domain\AccessControl\Feature\Feature;
+use Fight\AccessControl\Domain\AccessControl\Feature\FeatureId;
+use Fight\AccessControl\Domain\AccessControl\Feature\FeatureName;
+use Fight\AccessControl\Domain\AccessControl\Feature\FeatureStatus;
 use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\SessionAdministrationAuthorizationException;
+use Fight\AccessControl\Domain\AccessControl\Role\Command\GrantPermissionToCustomRole;
+use Fight\AccessControl\Domain\AccessControl\Role\Exception\CustomRoleException;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
+use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
+use Fight\AccessControl\Domain\AccessControl\User\User;
+use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Persistence\Doctrine\DoctrineTransactionalUnitOfWork;
+use Fight\Common\Application\Messaging\Event\EventDispatcher;
+use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Repository\Pagination;
+use Fight\Common\Domain\Value\Internet\EmailAddress;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -45,7 +82,7 @@ final class AuthorityRepositoryTest extends TestCase
     protected function setUp(): void
     {
         $this->connection = $this->connection();
-        $this->connection->executeStatement('TRUNCATE role_permissions, roles, permissions CASCADE');
+        $this->connection->executeStatement('TRUNCATE agents, role_permissions, roles, permissions CASCADE');
         $fences = new AuthorizationReferenceFences($this->connection);
         $this->permissions = new PostgresPermissionRepository($this->connection, $fences);
         $this->roles = new PostgresRoleRepository($this->connection, $fences);
@@ -53,6 +90,16 @@ final class AuthorityRepositoryTest extends TestCase
         $configuration->enableNativeLazyObjects(true);
         $entityManager = new EntityManager($this->connection, $configuration);
         $this->unitOfWork = new DoctrineTransactionalUnitOfWork($entityManager);
+    }
+
+    /**
+     * Releases the fixture connection independently of garbage collection
+     */
+    protected function tearDown(): void
+    {
+        if (isset($this->connection)) {
+            $this->connection->close();
+        }
     }
 
     /**
@@ -113,8 +160,12 @@ final class AuthorityRepositoryTest extends TestCase
             $current->getUpdatedAt()->modify('+1 second')
         );
 
-        self::assertTrue($this->permissions->replace($current, $replacement));
-        self::assertFalse($this->permissions->replace($current, $replacement));
+        self::assertTrue($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->permissions->replace($current, $replacement)
+        ));
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->permissions->replace($current, $replacement)
+        ));
         self::assertPermissionEquals($replacement, $this->permissions->getById($current->getId()));
     }
 
@@ -151,7 +202,7 @@ final class AuthorityRepositoryTest extends TestCase
         $this->permissions->add($second);
         $role = Role::defineManaged(
             RoleId::generate(),
-            RoleName::fromString('ROLE_ADMIN'),
+            RoleName::fromString('ROLE_SUPER_ADMIN'),
             [$second->getId(), $first->getId()],
             new DateTimeImmutable('2026-10-01T13:00:00+00:00')
         );
@@ -175,6 +226,726 @@ final class AuthorityRepositoryTest extends TestCase
                 $this->roles->getByIds([$role->getId(), RoleId::generate(), $role->getId()])
             )
         );
+    }
+
+    /**
+     * Preserves managed role reconciliation and safely rejects duplicate role identity
+     */
+    public function testManagedRoleReconciliationAndDuplicateIdentity(): void
+    {
+        $permission = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('MANAGE_USERS'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            new DateTimeImmutable('2026-10-01T12:00:00Z')
+        );
+        $this->permissions->add($permission);
+        $role = Role::defineManaged(
+            RoleId::generate(),
+            RoleName::fromString('ROLE_SUPER_ADMIN'),
+            [],
+            new DateTimeImmutable('2026-10-01T13:00:00Z')
+        );
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
+        $updated = $role->reconcileManaged(
+            $role->getName(),
+            [$permission->getId()],
+            new DateTimeImmutable('2026-10-01T13:01:00Z')
+        );
+        self::assertTrue($this->unitOfWork->commitTransactional(fn(): bool => $this->roles->replace($role, $updated)));
+        self::assertRoleEquals($updated, $this->roles->getById($role->getId()));
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->roles->validateCustomPermissionGrant($permission)
+        ));
+        $this->expectException(PersistenceConflict::class);
+        $this->expectExceptionMessage('The role identity or name is already in use.');
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
+    }
+
+    /**
+     * Exercises the tagged custom-role grant through the owned PostgreSQL adapters
+     */
+    public function testTaggedGrantAcceptsOnlyAuthoritativeAdminSafePermission(): void
+    {
+        $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
+        $eligible = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('READ_DASHBOARD'),
+            PermissionTier::ADMIN_SAFE,
+            $at
+        );
+        $protected = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('MANAGE_AUTHORITY'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at
+        );
+        $this->permissions->add($eligible);
+        $this->permissions->add($protected);
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_READER'), [], $at);
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
+
+        $clock = $this->createStub(Clock::class);
+        $clock->method('now')->willReturn($at->modify('+1 second'));
+        $handler = new GrantPermissionToCustomRoleHandler(
+            $this->roles,
+            $this->permissions,
+            $clock,
+            $this->unitOfWork,
+            $this->createStub(EventDispatcher::class)
+        );
+        $actor = UserId::generate();
+        $handler->handle(CommandMessage::create(new GrantPermissionToCustomRole(
+            $actor,
+            $role->getId(),
+            $eligible->getId()
+        )));
+        self::assertTrue($this->roles->getById($role->getId())->hasPermission($eligible->getId()));
+
+        // A repeated grant is a no-op, but must still validate current eligibility.
+        $handler->handle(CommandMessage::create(new GrantPermissionToCustomRole(
+            $actor,
+            $role->getId(),
+            $eligible->getId()
+        )));
+        self::assertEquals($at->modify('+1 second'), $this->roles->getById($role->getId())->getUpdatedAt());
+
+        try {
+            $handler->handle(CommandMessage::create(new GrantPermissionToCustomRole(
+                $actor,
+                $role->getId(),
+                $protected->getId()
+            )));
+            self::fail('A protected Permission must not be granted to a custom Role.');
+        } catch (CustomRoleException) {
+            self::assertFalse($this->roles->getById($role->getId())->hasPermission($protected->getId()));
+        }
+    }
+
+    /**
+     * Checks fresh actor membership and target scope against installed PostgreSQL authority
+     */
+    public function testInstallationAuthorityUsesCurrentPostgresAssignments(): void
+    {
+        $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
+        $permission = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('MANAGE_USER_INVITATIONS'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at
+        );
+        $sessionRead = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('READ_SESSIONS'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at
+        );
+        $sessionDelete = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('DELETE_SESSIONS'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at
+        );
+        $role = Role::defineManaged(
+            RoleId::generate(),
+            RoleName::fromString('ROLE_SUPER_ADMIN'),
+            [$permission->getId(), $sessionRead->getId()],
+            $at
+        );
+        $actorId = UserId::generate();
+        $actor = User::invite(
+            $actorId,
+            EmailAddress::fromString('actor-'.$actorId->toString().'@example.test'),
+            $at
+        );
+        $actor->activate(PasswordHash::fromString((string) password_hash('test-password', PASSWORD_BCRYPT)), $at);
+        $actor->assignRole($role->getId(), $at);
+        $target = User::invite(
+            UserId::generate(),
+            EmailAddress::fromString('target-'.$actorId->toString().'@example.test'),
+            $at
+        );
+        $users = new PostgresUserRepository(
+            $this->connection,
+            new AuthorizationReferenceFences($this->connection),
+            new AuthenticationAuthorityFences($this->connection)
+        );
+        $authority = new InstallationAuthority($users, $this->roles, $this->permissions);
+        $invitationCallback = new InvitationCorrectionAuthorization($authority);
+        $readCallback = SessionAdministrationDecision::forRead($authority);
+        $revokeCallback = SessionAdministrationDecision::forRevocation($authority);
+        $sharedCallback = SessionAdministrationDecision::forSharedFallback($authority);
+        $emailCallback = new UnavailableEmailChangeAdministration();
+
+        $this->connection->beginTransaction();
+        try {
+            $this->permissions->add($permission);
+            $this->permissions->add($sessionRead);
+            $this->roles->add($role);
+            $users->add($actor);
+            $users->add($target);
+            $authority->assertInstallationPermission($actorId, $permission->getName(), $target->getId());
+            $invitationCallback->assertCanCorrectInvitation($actorId, $target->getId());
+            $readCallback->assertCanManageSessions($actorId, $target->getId());
+            try {
+                $revokeCallback->assertCanManageSessions($actorId, $target->getId());
+                self::fail('A session read right must not authorize another user session revocation.');
+            } catch (SessionAdministrationAuthorizationException) {
+                self::assertTrue($role->hasPermission($sessionRead->getId()));
+            }
+            try {
+                $sharedCallback->assertCanManageSessions($actorId, $target->getId());
+                self::fail('A shared session port must require read and revoke authority together.');
+            } catch (SessionAdministrationAuthorizationException) {
+                self::assertTrue($role->hasPermission($sessionRead->getId()));
+            }
+            try {
+                $emailCallback->assertCanManageEmailChange($actorId, $target->getId());
+                self::fail('No cross-user email-change permission has been approved.');
+            } catch (EmailChangeAdministrationAuthorizationException) {
+                self::assertSame($target->getId()->toString(), $users->getById($target->getId())->getId()->toString());
+            }
+            $this->permissions->add($sessionDelete);
+            $roleWithDelete = $role->reconcileManaged(
+                $role->getName(),
+                [$permission->getId(), $sessionRead->getId(), $sessionDelete->getId()],
+                $at->modify('+1 second')
+            );
+            self::assertTrue($this->roles->replace($role, $roleWithDelete));
+            $revokeCallback->assertCanManageSessions($actorId, $target->getId());
+            $sharedCallback->assertCanManageSessions($actorId, $target->getId());
+            $updated = clone $actor;
+            $updated->removeRole($role->getId(), $at->modify('+1 second'));
+            self::assertTrue($users->replaceRoleAssignments($actor, $updated));
+            try {
+                $authority->assertInstallationPermission($actorId, $permission->getName(), $target->getId());
+                self::fail('Revoked membership must be observed on the next decision.');
+            } catch (PermissionDenied) {
+                self::assertSame([], $users->getById($actorId)->getRoleIds());
+            }
+            try {
+                $invitationCallback->assertCanCorrectInvitation($actorId, $target->getId());
+                self::fail('Revoked membership cannot authorize pending invitation correction.');
+            } catch (InvitationAdministrationAuthorizationException) {
+                self::assertSame([], $users->getById($actorId)->getRoleIds());
+            }
+            try {
+                $readCallback->assertCanManageSessions($actorId, $target->getId());
+                self::fail('Revoked role membership cannot read another user sessions.');
+            } catch (SessionAdministrationAuthorizationException) {
+                self::assertSame([], $users->getById($actorId)->getRoleIds());
+            }
+        } finally {
+            $this->connection->rollBack();
+        }
+    }
+
+    /**
+     * Persist and reconstruct Agent authority while leaving operation admission unavailable
+     */
+    public function testAgentAuthorityRoundTripsAndRetainsDirectPermissions(): void
+    {
+        $agents = new PostgresAgentRepository($this->connection, new AuthorizationReferenceFences($this->connection));
+        $permission = $this->customPermission('AGENT_READ');
+        $this->permissions->add($permission);
+        $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
+        $agent = Agent::provision(
+            AgentId::generate(),
+            AgentName::fromString('test-agent'),
+            AgentCredentialId::generate(),
+            'opaque-fixture-envelope',
+            $at
+        );
+        self::assertNull($agents->getById($agent->getId()));
+        self::assertFalse($agents->hasPermissionAssignment($permission->getId()));
+
+        $this->connection->beginTransaction();
+        try {
+            $agents->add($agent);
+            $loaded = $agents->getByCredentialId($agent->getCredentialId());
+            self::assertSame($agent->getId()->toString(), $loaded->getId()->toString());
+            self::assertSame('opaque-fixture-envelope', $loaded->getEncryptedHmacSharedSecretEnvelope());
+            self::assertSame(1, $agents->getAll(new Pagination())->totalRecords());
+            self::assertTrue($agents->validatePermissionAssignments([$permission]));
+            $granted = $loaded->grantPermission($permission->getId(), $at->modify('+1 second'));
+            self::assertTrue($agents->replacePermissionAssignments($loaded, $granted));
+            self::assertFalse($agents->replacePermissionAssignments($loaded, $granted));
+            self::assertTrue($agents->hasPermissionAssignment($permission->getId()));
+            self::assertSame(2, $agents->getById($agent->getId())->getPermissionAssignmentRevision());
+            self::assertFalse($this->permissions->remove($permission));
+            $renamedAt = $at->modify('+2 seconds');
+            self::assertEquals($renamedAt, $agents->rename(
+                $agent->getId(),
+                AgentName::fromString('renamed-agent'),
+                static fn(): DateTimeImmutable => $renamedAt
+            ));
+            self::assertSame('renamed-agent', $agents->getById($agent->getId())->getName()->toString());
+            self::assertFalse($agents->replace($granted, $granted->revoke($at->modify('+3 seconds'))));
+            $current = $agents->getById($agent->getId());
+            self::assertNull($agents->rename(
+                $agent->getId(),
+                $current->getName(),
+                static fn(): DateTimeImmutable => $renamedAt
+            ));
+            $successorId = AgentCredentialId::generate();
+            $rotated = $current->rotateRecoverableCredential(
+                $current->getCredentialId(),
+                $current->getCredentialRevision(),
+                $successorId,
+                'opaque-replacement-envelope',
+                $at->modify('+3 seconds')
+            );
+            self::assertTrue($agents->replace($current, $rotated));
+            self::assertNull($agents->getByCredentialId($agent->getCredentialId()));
+            self::assertSame(
+                $agent->getId()->toString(),
+                $agents->getByCredentialId($successorId)->getId()->toString()
+            );
+            self::assertFalse($agents->replace($current, $current->revoke($at->modify('+4 seconds'))));
+            $current = $agents->getById($agent->getId());
+            self::assertTrue($agents->replace($current, $current->revoke($at->modify('+4 seconds'))));
+            self::assertSame('revoked', $agents->getById($agent->getId())->getState()->value);
+            try {
+                $agents->getOperationContract();
+                self::fail('The missing operation cohort cannot be advertised as ready.');
+            } catch (AgentOperationRejectedException $failure) {
+                self::assertSame(AgentOperationFailure::UNAVAILABLE, $failure->getReason());
+                self::assertNull($failure->getPrevious());
+            }
+        } finally {
+            $this->connection->rollBack();
+        }
+        self::assertNull($agents->getById($agent->getId()));
+        self::assertFalse($agents->hasPermissionAssignment($permission->getId()));
+    }
+
+    /**
+     * Keep tagged Agent grant dispatch closed until its operation contract is available
+     */
+    public function testTaggedAgentGrantDoesNotAdmitRepositoryOnlyAuthority(): void
+    {
+        $permission = $this->customPermission('AGENT_NOT_ACTIVE');
+        $this->permissions->add($permission);
+        $agents = new PostgresAgentRepository($this->connection, new AuthorizationReferenceFences($this->connection));
+        $agent = Agent::provision(
+            AgentId::generate(),
+            AgentName::fromString('not-admitted'),
+            AgentCredentialId::generate(),
+            'opaque-fixture-envelope',
+            $permission->getCreatedAt()
+        );
+        $this->unitOfWork->commitTransactional(fn() => $agents->add($agent));
+        $handler = new GrantPermissionToAgentHandler(
+            $agents,
+            $this->permissions,
+            $this->createStub(Clock::class),
+            $this->unitOfWork,
+            $this->createStub(EventDispatcher::class)
+        );
+        try {
+            try {
+                $handler->handle(CommandMessage::create(new GrantPermissionToAgent(
+                    UserId::generate(),
+                    $agent->getId(),
+                    $permission->getId()
+                )));
+                self::fail('Direct package grant must not admit a storage-only Agent.');
+            } catch (AgentOperationRejectedException $failure) {
+                self::assertSame(AgentOperationFailure::UNAVAILABLE, $failure->getReason());
+                self::assertNull($failure->getPrevious());
+            }
+            self::assertFalse($agents->hasPermissionAssignment($permission->getId()));
+            self::assertSame(1, $agents->getById($agent->getId())->getPermissionAssignmentRevision());
+        } finally {
+            $this->connection->executeStatement('DELETE FROM agents WHERE id = ?', [$agent->getId()->toString()]);
+        }
+    }
+
+    /**
+     * Rejects duplicate credentials and direct protected Agent assignments without changing authority
+     */
+    public function testAgentAuthorityRejectsUnsafeOrDuplicateWrites(): void
+    {
+        $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
+        $protected = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('PROTECTED_AGENT_FIXTURE'),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at
+        );
+        $this->permissions->add($protected);
+        $agents = new PostgresAgentRepository($this->connection, new AuthorizationReferenceFences($this->connection));
+        $agent = Agent::provision(
+            AgentId::generate(),
+            AgentName::fromString('protected-fixture'),
+            AgentCredentialId::generate(),
+            'opaque-fixture-envelope',
+            $at
+        );
+        $duplicate = Agent::provision(
+            AgentId::generate(),
+            AgentName::fromString('another-fixture'),
+            $agent->getCredentialId(),
+            'different-opaque-envelope',
+            $at
+        );
+        $this->connection->beginTransaction();
+        try {
+            $agents->add($agent);
+            self::assertFalse($agents->validatePermissionAssignments([$protected]));
+            self::assertFalse($agents->replacePermissionAssignments(
+                $agent,
+                $agent->grantPermission($protected->getId(), $at->modify('+1 second'))
+            ));
+            self::assertFalse($agents->hasPermissionAssignment($protected->getId()));
+            try {
+                $agents->add($duplicate);
+                self::fail('A credential cannot identify two Agents.');
+            } catch (PersistenceConflict) {
+                self::assertNull($agents->getById($duplicate->getId()));
+                self::assertSame(1, $agents->getAll(new Pagination())->totalRecords());
+            }
+            $other = Agent::provision(
+                AgentId::generate(),
+                AgentName::fromString('second-fixture'),
+                AgentCredentialId::generate(),
+                'second-opaque-envelope',
+                $at
+            );
+            $agents->add($other);
+            $conflictingRotation = $agent->rotateRecoverableCredential(
+                $agent->getCredentialId(),
+                $agent->getCredentialRevision(),
+                $other->getCredentialId(),
+                'rotated-opaque-envelope',
+                $at->modify('+1 second')
+            );
+            self::assertFalse($agents->replace($agent, $conflictingRotation));
+            self::assertSame(
+                $agent->getCredentialId()->toString(),
+                $agents->getById($agent->getId())->getCredentialId()->toString()
+            );
+        } finally {
+            $this->connection->rollBack();
+        }
+    }
+
+    /**
+     * Serializes direct Agent grants and protected promotion in both winner orders
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('tierWinners')]
+    public function testAgentGrantAndPromotionCannotBothCommit(bool $grantWins): void
+    {
+        $permission = $this->managedPermission('AGENT_GRANT_RACE');
+        $this->permissions->add($permission);
+        $promoted = $permission->reconcileManaged(
+            $permission->getName(),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $permission->getCreatedAt()->modify('+1 second')
+        );
+        $agent = Agent::provision(
+            AgentId::generate(),
+            AgentName::fromString('racing-agent'),
+            AgentCredentialId::generate(),
+            'opaque-fixture-envelope',
+            $permission->getCreatedAt()
+        );
+        $agents = new PostgresAgentRepository($this->connection, new AuthorizationReferenceFences($this->connection));
+        $this->unitOfWork->commitTransactional(fn() => $agents->add($agent));
+        $granted = $agent->grantPermission($permission->getId(), $permission->getCreatedAt()->modify('+1 second'));
+        $second = $this->connection();
+        $secondAgents = new PostgresAgentRepository($second, new AuthorizationReferenceFences($second));
+        $secondPermissions = new PostgresPermissionRepository($second, new AuthorizationReferenceFences($second));
+        $this->connection->beginTransaction();
+        $second->beginTransaction();
+        $second->executeStatement("SET LOCAL lock_timeout = '100ms'");
+        try {
+            if ($grantWins) {
+                self::assertTrue($agents->validatePermissionAssignments([$permission]));
+                self::assertTrue($agents->replacePermissionAssignments($agent, $granted));
+            } else {
+                self::assertTrue($this->permissions->replace($permission, $promoted));
+            }
+            $compete = match ($grantWins) {
+                true => fn(): bool => $secondPermissions->replace($permission, $promoted),
+                false => fn(): bool => $secondAgents->validatePermissionAssignments([$permission])
+            };
+            try {
+                $compete();
+                self::fail('The competing tier operation must wait for the reference fence.');
+            } catch (DriverException $failure) {
+                self::assertSame('55P03', $failure->getSQLState());
+            }
+            $second->rollBack();
+            $this->connection->commit();
+            $second->beginTransaction();
+            if ($grantWins) {
+                self::assertFalse($secondPermissions->replace($permission, $promoted));
+                self::assertSame(
+                    PermissionTier::ADMIN_SAFE,
+                    $this->permissions->getById($permission->getId())->getTier()
+                );
+            } else {
+                self::assertFalse($secondAgents->validatePermissionAssignments([$permission]));
+                self::assertFalse($secondAgents->replacePermissionAssignments($agent, $granted));
+                self::assertFalse($secondAgents->hasPermissionAssignment($permission->getId()));
+            }
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($second->isTransactionActive()) {
+                $second->rollBack();
+            }
+            $second->close();
+        }
+    }
+
+    /**
+     * Block protected promotion across persisted direct Agent references
+     */
+    public function testUncorrelatedAgentAuthorityCannotEnableProtectedPromotion(): void
+    {
+        $agents = new PostgresAgentRepository($this->connection, new AuthorizationReferenceFences($this->connection));
+        $permission = $this->managedPermission('AGENT_SCOPE');
+        $this->permissions->add($permission);
+        $protected = $permission->reconcileManaged(
+            $permission->getName(),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $permission->getCreatedAt()->modify('+1 second')
+        );
+        $agentId = AgentId::generate();
+        $credentialId = AgentCredentialId::generate();
+        $at = new DateTimeImmutable('2026-10-10T12:00:00Z');
+
+        // Isolate the persisted-reference check from the repository's Agent creation path.
+        $this->connection->beginTransaction();
+        try {
+            $this->connection->insert('agents', [
+                'id'                                    => $agentId->toString(),
+                'name'                                  => 'uncorrelated',
+                'state'                                 => 'active',
+                'credential_id'                         => $credentialId->toString(),
+                'credential_revision'                   => 0,
+                'encrypted_hmac_shared_secret_envelope' => 'opaque-fixture-envelope',
+                'permission_assignment_revision'        => 1,
+                'created_at'                            => $at->format('Y-m-d H:i:s.uP'),
+                'updated_at'                            => $at->format('Y-m-d H:i:s.uP')
+            ]);
+            $this->connection->insert('agent_permission_assignments', [
+                'agent_id'      => $agentId->toString(),
+                'permission_id' => $permission->getId()->toString()
+            ]);
+            self::assertTrue($agents->hasPermissionAssignment($permission->getId()));
+            self::assertFalse($agents->hasPermissionAssignment(PermissionId::generate()));
+            self::assertFalse($this->permissions->replace($permission, $protected));
+            self::assertFalse($this->permissions->remove($permission));
+            self::assertSame($agentId->toString(), $agents->getById($agentId)->getId()->toString());
+            self::assertSame(1, $agents->getAll(new Pagination())->totalRecords());
+        } finally {
+            $this->connection->rollBack();
+        }
+        self::assertFalse($agents->hasPermissionAssignment($permission->getId()));
+        self::assertSame(PermissionTier::ADMIN_SAFE, $this->permissions->getById($permission->getId())->getTier());
+    }
+
+    /**
+     * Persists Feature settings and prevents removal of a referenced Permission
+     */
+    public function testFeatureReferenceFencesAndOptimisticWrites(): void
+    {
+        $first = $this->customPermission('FEATURE_FIRST');
+        $second = $this->customPermission('FEATURE_SECOND');
+        $this->permissions->add($first);
+        $this->permissions->add($second);
+        $features = new PostgresFeatureRepository(
+            $this->connection,
+            new AuthorizationReferenceFences($this->connection)
+        );
+        $feature = Feature::define(FeatureId::generate(), FeatureName::fromString('feature-first'), $first->getId());
+
+        $this->connection->beginTransaction();
+        try {
+            $features->add($feature);
+            self::assertTrue($this->permissions->hasFeatureReference($first->getId()));
+            self::assertFalse($this->permissions->remove($first));
+            self::assertSame(
+                $feature->getId()->toString(),
+                $features->getByName($feature->getName())->getId()->toString()
+            );
+            self::assertSame(1, $features->getAll(new Pagination(1, 10))->totalRecords());
+            self::assertTrue($features->replace($feature, $feature));
+            $intermediate = $feature->withPermission($second->getId());
+            $changed = $intermediate->withStatus(FeatureStatus::ON);
+            self::assertTrue($features->replace($feature, $intermediate));
+            self::assertFalse($features->replace($feature, $intermediate));
+            self::assertTrue($features->replace($intermediate, $changed));
+            self::assertSame(FeatureStatus::ON, $features->getById($feature->getId())->getStatus());
+            self::assertFalse($this->permissions->hasFeatureReference($first->getId()));
+            self::assertTrue($this->permissions->remove($first));
+            self::assertFalse($this->permissions->remove($second));
+            self::assertFalse($features->remove($feature));
+            self::assertTrue($features->remove($changed));
+            self::assertTrue($this->permissions->remove($second));
+            self::assertNull($features->getByName($feature->getName()));
+        } finally {
+            $this->connection->rollBack();
+        }
+        self::assertNull($features->getById($feature->getId()));
+        self::assertNotNull($this->permissions->getById($first->getId()));
+    }
+
+    /**
+     * Rejects duplicate Feature names and absent references without writing authority
+     */
+    public function testFeatureDuplicateAndMissingReferenceReject(): void
+    {
+        $permission = $this->customPermission('FEATURE_VALID');
+        $this->permissions->add($permission);
+        $features = new PostgresFeatureRepository(
+            $this->connection,
+            new AuthorizationReferenceFences($this->connection)
+        );
+        $feature = Feature::define(
+            FeatureId::generate(),
+            FeatureName::fromString('feature-valid'),
+            $permission->getId()
+        );
+        $this->connection->beginTransaction();
+        try {
+            $features->add($feature);
+            try {
+                $features->add(Feature::define(FeatureId::generate(), $feature->getName(), $permission->getId()));
+                self::fail('A duplicate Feature name cannot replace its stored identity.');
+            } catch (FeatureConflictException) {
+                self::assertSame(
+                    $feature->getId()->toString(),
+                    $features->getByName($feature->getName())->getId()->toString()
+                );
+            }
+            try {
+                $features->add(Feature::define(
+                    FeatureId::generate(),
+                    FeatureName::fromString('feature-missing'),
+                    PermissionId::generate()
+                ));
+                self::fail('A missing Permission cannot be referenced.');
+            } catch (FeatureReferenceException) {
+                self::assertNull($features->getByName(FeatureName::fromString('feature-missing')));
+            }
+            try {
+                $features->replace($feature, $feature->withPermission(PermissionId::generate()));
+                self::fail('A missing replacement Permission cannot be referenced.');
+            } catch (FeatureReferenceException) {
+                self::assertSame(
+                    $permission->getId()->toString(),
+                    $features->getById($feature->getId())->getPermissionId()->toString()
+                );
+            }
+        } finally {
+            $this->connection->rollBack();
+        }
+    }
+
+    /**
+     * Allows only one winner when Feature creation competes with Permission removal
+     */
+    public function testFeatureReferenceAndPermissionRemovalRace(): void
+    {
+        $permission = $this->customPermission('FEATURE_RACE');
+        $other = $this->customPermission('FEATURE_OTHER_RACE');
+        $this->permissions->add($permission);
+        $this->permissions->add($other);
+        $first = new PostgresFeatureRepository($this->connection, new AuthorizationReferenceFences($this->connection));
+        $secondConnection = $this->connection();
+        $second = new PostgresFeatureRepository(
+            $secondConnection,
+            new AuthorizationReferenceFences($secondConnection)
+        );
+        $secondPermissions = new PostgresPermissionRepository(
+            $secondConnection,
+            new AuthorizationReferenceFences($secondConnection)
+        );
+        $feature = Feature::define(
+            FeatureId::generate(),
+            FeatureName::fromString('feature-race'),
+            $permission->getId()
+        );
+        $otherFeature = Feature::define(FeatureId::generate(), FeatureName::fromString('other-race'), $other->getId());
+        try {
+            $this->connection->beginTransaction();
+            $first->add($feature);
+            $secondConnection->beginTransaction();
+            $secondConnection->executeStatement("SET LOCAL lock_timeout = '100ms'");
+            try {
+                $secondPermissions->remove($permission);
+                self::fail('A competing removal must wait for the reference writer.');
+            } catch (DriverException $failure) {
+                self::assertSame('55P03', $failure->getSQLState());
+            }
+            $secondConnection->rollBack();
+            $this->connection->commit();
+            $secondConnection->beginTransaction();
+            self::assertFalse($secondPermissions->remove($permission));
+            $secondConnection->rollBack();
+
+            $this->connection->beginTransaction();
+            self::assertTrue($this->permissions->remove($other));
+            $secondConnection->beginTransaction();
+            $secondConnection->executeStatement("SET LOCAL lock_timeout = '100ms'");
+            try {
+                $second->add($otherFeature);
+                self::fail('A competing reference writer must wait for removal.');
+            } catch (\Throwable $failure) {
+                self::assertInstanceOf(DriverException::class, $failure);
+                self::assertSame('55P03', $failure->getSQLState());
+            }
+            $secondConnection->rollBack();
+            $this->connection->commit();
+            $secondConnection->beginTransaction();
+            try {
+                $second->add($otherFeature);
+                self::fail('A removed Permission cannot be referenced after commit.');
+            } catch (FeatureReferenceException) {
+                self::assertNull($second->getById($otherFeature->getId()));
+            }
+            $secondConnection->rollBack();
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($secondConnection->isTransactionActive()) {
+                $secondConnection->rollBack();
+            }
+            $secondConnection->close();
+        }
+    }
+
+    /**
+     * Rejects invalid persisted Feature state instead of reporting the definition absent
+     */
+    public function testMalformedFeatureStateFailsClosed(): void
+    {
+        $permission = $this->customPermission('FEATURE_STATE');
+        $this->permissions->add($permission);
+        $features = new PostgresFeatureRepository(
+            $this->connection,
+            new AuthorizationReferenceFences($this->connection)
+        );
+        $feature = Feature::define(
+            FeatureId::generate(),
+            FeatureName::fromString('feature-state'),
+            $permission->getId()
+        );
+        $this->connection->beginTransaction();
+        try {
+            $features->add($feature);
+            $this->connection->update('features', ['name' => 'INVALID'], ['id' => $feature->getId()->toString()]);
+            $this->expectException(FeatureStateException::class);
+            $features->getById($feature->getId());
+        } finally {
+            $this->connection->rollBack();
+        }
     }
 
     /**
@@ -252,8 +1023,6 @@ final class AuthorityRepositoryTest extends TestCase
 
         $this->connection->beginTransaction();
         $competingConnection->beginTransaction();
-        $competingConnection->executeStatement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-
         try {
             self::assertNotNull($competingRepository->getById($loser->getId()));
             self::assertTrue($this->permissions->replace($winner, $winnerReplacement));
@@ -312,8 +1081,6 @@ final class AuthorityRepositoryTest extends TestCase
 
         $this->connection->beginTransaction();
         $competingConnection->beginTransaction();
-        $competingConnection->executeStatement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-
         try {
             self::assertNotNull($competingRepository->getById($loser->getId()));
             self::assertTrue($this->roles->replace($winner, $winnerReplacement));
@@ -420,6 +1187,141 @@ final class AuthorityRepositoryTest extends TestCase
     {
         $this->expectException(LogicException::class);
         $this->roles->validatePermissionReference(PermissionId::generate());
+    }
+
+    /**
+     * Rejects taking ownership of a custom Permission through a fabricated managed successor
+     */
+    public function testPermissionReplacementCannotClaimCustomOwnership(): void
+    {
+        $custom = $this->customPermission('VIEW_USERS');
+        $this->permissions->add($custom);
+        $claimed = Permission::defineManaged(
+            $custom->getId(),
+            $custom->getName(),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $custom->getCreatedAt()
+        );
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->permissions->replace($custom, $claimed)
+        ));
+        self::assertFalse($this->permissions->getById($custom->getId())->isManaged());
+    }
+
+    /**
+     * Rejects taking ownership of a custom Role through a fabricated managed successor
+     */
+    public function testRoleReplacementCannotClaimCustomOwnership(): void
+    {
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
+        $custom = Role::define(RoleId::generate(), RoleName::fromString('ROLE_EDITOR'), [], $at);
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($custom));
+        $claimed = Role::defineManaged($custom->getId(), $custom->getName(), [], $at);
+        self::assertFalse($this->unitOfWork->commitTransactional(
+            fn(): bool => $this->roles->replace($custom, $claimed)
+        ));
+        self::assertFalse($this->roles->getById($custom->getId())->isManaged());
+    }
+
+    /**
+     * Rejects tier writes from an isolation level whose old snapshot can miss committed membership
+     */
+    public function testTierFencesRejectStaleSnapshotIsolation(): void
+    {
+        $permission = $this->customPermission('VIEW_USERS');
+        $this->permissions->add($permission);
+        $this->connection->beginTransaction();
+        $this->connection->executeStatement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+        try {
+            $this->expectException(LogicException::class);
+            $this->roles->validateCustomPermissionGrant($permission);
+        } finally {
+            $this->connection->rollBack();
+        }
+    }
+
+    /**
+     * Serializes grant and protected promotion in both winner orders including unchanged membership validation
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('tierWinners')]
+    public function testGrantAndPromotionCannotBothCommit(bool $grantWins): void
+    {
+        $at = new DateTimeImmutable('2026-10-01T12:00:00Z');
+        $permission = Permission::defineManaged(
+            PermissionId::generate(),
+            PermissionName::fromString('MANAGE_USERS'),
+            PermissionTier::ADMIN_SAFE,
+            $at
+        );
+        $promoted = $permission->reconcileManaged(
+            $permission->getName(),
+            PermissionTier::SUPER_ADMIN_ONLY,
+            $at->modify('+1 second')
+        );
+        $this->permissions->add($permission);
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_EDITOR'), [], $at);
+        $this->unitOfWork->commitTransactional(fn() => $this->roles->add($role));
+        $granted = $role->grantPermissionToCustom($permission->getId(), $at->modify('+1 second'));
+        $second = $this->connection();
+        $secondPermissions = new PostgresPermissionRepository($second, new AuthorizationReferenceFences($second));
+        $secondRoles = new PostgresRoleRepository($second, new AuthorizationReferenceFences($second));
+        $this->connection->beginTransaction();
+        $second->beginTransaction();
+        $second->executeStatement("SET LOCAL lock_timeout = '100ms'");
+        try {
+            if ($grantWins) {
+                self::assertTrue($this->roles->validateCustomPermissionGrant($permission));
+                self::assertTrue($this->roles->replace($role, $granted));
+                // Already-granted validation must hold the same fence through commit.
+                self::assertTrue($this->roles->validateCustomPermissionGrant($permission));
+            } else {
+                self::assertTrue($this->permissions->replace($permission, $promoted));
+            }
+            $compete = match ($grantWins) {
+                true => fn(): bool => $secondPermissions->replace($permission, $promoted),
+                false => fn(): bool => $secondRoles->validateCustomPermissionGrant($permission)
+            };
+            try {
+                $compete();
+                self::fail('The competing tier operation must wait.');
+            } catch (DriverException $failure) {
+                self::assertSame('55P03', $failure->getSQLState());
+            }
+            $second->rollBack();
+            $this->connection->commit();
+            $second->beginTransaction();
+            if ($grantWins) {
+                self::assertFalse($secondPermissions->replace($permission, $promoted));
+                self::assertSame(
+                    PermissionTier::ADMIN_SAFE,
+                    $secondPermissions->getById($permission->getId())->getTier()
+                );
+            } else {
+                self::assertFalse($secondRoles->validateCustomPermissionGrant($permission));
+                self::assertFalse($secondRoles->replace($role, $granted));
+                self::assertSame([], $secondRoles->getById($role->getId())->getPermissionIds());
+            }
+            $second->commit();
+        } finally {
+            if ($this->connection->isTransactionActive()) {
+                $this->connection->rollBack();
+            }
+            if ($second->isTransactionActive()) {
+                $second->rollBack();
+            }
+            $second->close();
+        }
+    }
+
+    /**
+     * Supplies both tier writer orders
+     *
+     * @return iterable<array{bool}>
+     */
+    public static function tierWinners(): iterable
+    {
+        yield [true];
+        yield [false];
     }
 
     /**

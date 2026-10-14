@@ -5,13 +5,15 @@
 
 # Fight Agent OS
 
-A personal AI operating system, starting with software engineering: plan in the browser, build in a customized
-Pi terminal, and understand the work through a companion dashboard.
+An open-source software factory: software to build software. Plan engineering work, carry it through a
+customized Pi terminal and managed workflow, and inspect progress in a browser dashboard as those capabilities
+are delivered. This project is not a general-purpose personal AI operating system or an Internet homepage;
+those belong to a separate future project.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
-API validation/error handling and local engineering skills are present. These pieces do not yet constitute the
-complete authenticated browser journey. React UI, managed Pi execution and database-authoritative Planning remain
-planned. See the [capability inventory](planning/FOUNDATION.md).
+API validation/error handling, an empty public-safe form metadata catalog and local engineering skills are
+present. These pieces do not yet constitute the complete authenticated browser journey. A non-product React shell with local system/light/dark appearance is available at `/app`; product UI journeys,
+managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
 ## Start planning
 
@@ -40,32 +42,66 @@ enable managed TASK execution or sandbox access.
 Docker Compose is required. This is an application with committed Composer lockfiles:
 
 ```sh
+export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/up
 ./bin/database migrate
 ```
 
-The inherited root endpoint runs at http://localhost:18087. Override the port with `FIGHT_AGENT_OS_PORT`.
+The inherited root endpoint runs at http://localhost:18087. Build the browser foundation with
+`./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
+`/app`; see [client commands and boundaries](client/README.md).
+`./bin/build` is the [complete read-only gate](docs/engineering/BUILD.md), including backend coverage and
+frontend/browser checks without duplicate test executions. Dependencies and private OpenAPI/validation exports
+need explicit setup first; acceptance never installs or exports. `./bin/backend-tests` remains a focused command;
+see its [guarded lifecycle and reports](docs/engineering/BACKEND_TESTS.md). Override the port with `FIGHT_AGENT_OS_PORT`.
 Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTTPS origin and
 `APP_CSRF_MAC_KEY` as an independent, external hex-encoded 32-byte-or-stronger random key
 (e.g. generate with `openssl rand -hex 32`); do not commit either secret or use the JWT/HMAC signing key.
-The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. The inherited local
-HTTP port is **not** an authenticated browser deployment; HTTPS/proxy enrollment is separate work.
+Also configure the external `APP_ACCESS_TOKEN_CONFIG` HS256 keyring before boot; follow
+[access-token configuration](docs/engineering/ACCESS_TOKENS.md) for its exact shape and finite rotation bounds.
+JWT issuance/consumption and request-scoped PostgreSQL authentication are available, but no login/refresh/logout
+or protected resource endpoint is registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
+**https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
+`./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
+the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`
+for the separate HTTP listener. Neither local TLS nor the inherited HTTP port is a complete authenticated browser
+deployment; integrated security and production enrollment remain separate work.
 Development and test PostgreSQL identities are separate; override their local-only Compose defaults through the
 variables shown in `.env.example`. Destructive test operations require explicit test mode and a guarded `_test`
 database, role, and allowlisted host. PostgreSQL migrations live in `database/migrations/`; future database
 schemas and fixtures belong alongside `migrations/` under `database/`.
+Direct Fight Access Control invitation/reset delivery handlers now require an independent
+`APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
+for recoverable encrypted material. Keep it external to source control and preserve it while work is outstanding.
+Local/test delivery defaults to a retryable null provider; an in-memory provider is opt-in. A bounded internal
+`./bin/credential-delivery run --internal` runner, key-free `expire --internal` cleanup and safe generation status
+command are available. See [credential recovery](docs/engineering/CREDENTIAL_RECOVERY.md) for the v0.5.0 adoption
+migration, data guards, bounded downtime-expiry cleanup and exit codes. There is no production provider or enrolled recovery schedule, so this does not
+enable sending credentials or establish complete production recovery.
+
+Trusted operators can explicitly preview and apply the version-controlled installation authority with
+`./bin/managed-policy preview --internal` and `./bin/managed-policy apply --internal`. Read the
+[managed policy runbook](docs/engineering/MANAGED_POLICY.md) before applying: this reconciles the exact managed
+catalog, not users, bootstrap, Swagger routes or live Agent operations. It never runs automatically.
 
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services
 ./bin/database status      # Inspect development migration status
 ./bin/database test-reset  # Guard, reset, and migrate only the dedicated test database
 ./bin/database test        # Run focused PostgreSQL repository tests
+./bin/backend-tests        # Reset guarded test DB, run all backend suites once with coverage
 ./bin/planning-check --write  # Refresh planning views
 ./bin/planning-check          # Validate planning
-./bin/build                   # Complete gate in the running web service
+./bin/build                   # Complete gate: backend coverage + frontend/catalog in running web service
 ./bin/down                    # Stop the development service
 ```
+
+Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
+then validate freshness and real responses with `./bin/openapi check`. Generate the initially empty public-safe
+form catalog with `./bin/validations export` and verify it with `./bin/validations check`; see
+[validation metadata](docs/api/VALIDATIONS.md). Generated JSON stays under ignored `.runs/openapi/` and
+`.runs/validations/`, not public assets. Swagger UI, spec-serving and diagnostic routes are disabled in every environment.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots
