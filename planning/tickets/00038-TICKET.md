@@ -87,7 +87,7 @@ not a promise of universal interception. The complete initial Jev-enabled profil
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00160](../tasks/00160-TASK.md) | Enforce an operator-selected Pi tool policy | in-progress |
+| [TASK-00160](../tasks/00160-TASK.md) | Enforce an operator-selected Pi tool policy | done |
 | [TASK-00161](../tasks/00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | ready-for-agent |
 <!-- /planning:children -->
 
