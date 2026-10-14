@@ -3,21 +3,39 @@ import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-a
 import { connection, Readiness } from './jev/readiness.mjs';
 import { LocalSettings, SessionBudget } from './jev/local-store.mjs';
 import { DecisionsTransport, PiCredentials } from './jev/adapters.mjs';
+import { Judgments } from './jev/judgments.mjs';
+import { retainSessionRequests } from './jev/session-requests.mjs';
+
+type Dependencies = {
+  settings?: LocalSettings;
+  credentials?: (ctx: ExtensionContext) => PiCredentials;
+  transport?: DecisionsTransport;
+  budget?: (sessionId: string) => SessionBudget;
+  platform?: string;
+};
 
 /** Install operator-only setup and fixed synthetic readiness without changing Pi's model or tools */
-export default function jevExtension(pi: ExtensionAPI) {
-  const settings = new LocalSettings();
+export default function jevExtension(pi: ExtensionAPI) { installJev(pi); }
+
+/** Inject controlled host boundaries for qualification; normal loading always uses protected local adapters */
+export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
+  const settings = dependencies.settings ?? new LocalSettings();
   let readiness: Readiness | undefined;
+  let judgments: Judgments | undefined;
+  let retained: ReturnType<typeof retainSessionRequests> | undefined;
+  let disconnect: (() => void) | undefined;
 
   function refresh() {
     if (!readiness) return 'missing-session';
     try {
       const config = settings.load();
-      if (!config) { readiness.invalidate(); return 'missing-setup'; }
+      if (!config) { readiness.invalidate(); judgments?.invalidate(); return 'missing-setup'; }
+      const previous = readiness.inspect().configuration?.identity;
       readiness.configure(config);
+      if (previous !== readiness.inspect().configuration?.identity) judgments?.invalidate();
       return undefined;
     } catch {
-      readiness.invalidate();
+      readiness.invalidate(); judgments?.invalidate();
       return 'invalid-or-expired-setup';
     }
   }
@@ -26,14 +44,39 @@ export default function jevExtension(pi: ExtensionAPI) {
     const view = readiness?.inspect();
     ctx.ui.setStatus('fight-jev', `Jev: ${failure ?? view?.state ?? 'missing-session'}`);
   }
+  function cleanup() {
+    disconnect?.(); disconnect = undefined;
+    judgments?.close(); judgments = undefined;
+    readiness?.close(); readiness = undefined;
+    retained?.release(); retained = undefined;
+  }
   pi.on('session_start', async (_event, ctx) => {
-    readiness?.close();
-    readiness = new Readiness({ credentials: new PiCredentials(ctx.modelRegistry), transport: new DecisionsTransport(),
-      budget: new SessionBudget(ctx.sessionManager.getSessionId()) });
+    cleanup();
+    const sessionId = ctx.sessionManager.getSessionId();
+    retained = retainSessionRequests(sessionId);
+    const shared = { credentials: dependencies.credentials?.(ctx) ?? new PiCredentials(ctx.modelRegistry),
+      transport: dependencies.transport ?? new DecisionsTransport(),
+      budget: dependencies.budget?.(sessionId) ?? new SessionBudget(sessionId), scope: retained.scope,
+      platform: dependencies.platform ?? process.platform };
+    readiness = new Readiness(shared);
+    judgments = new Judgments({ ...shared, sessionId, configuration: () => settings.load() });
+    // In-process trusted extensions only. No model-callable tool, prompt/JSON command or credential access.
+    disconnect = pi.events.on('fight:jev:connect', (data: unknown) => {
+      const request = data as { callerId?: string; authorize?: (context: unknown) => boolean;
+        connected?: (capability: unknown) => void };
+      if (!request || typeof request.connected !== 'function' || typeof request.authorize !== 'function' ||
+        typeof request.callerId !== 'string') return;
+      const failure = refresh();
+      if (failure || !judgments) { request.connected({ state: failure ?? 'missing-session' }); return; }
+      try {
+        request.connected({ state: 'available', configuration: readiness?.inspect().configuration,
+          ...judgments.consumer(request.callerId, request.authorize) });
+      } catch { request.connected({ state: 'invalid-consumer' }); }
+    });
     present(ctx, refresh());
   });
   pi.on('session_shutdown', async (_event, ctx) => {
-    readiness?.close(); readiness = undefined;
+    cleanup();
     if (ctx.mode === 'tui') ctx.ui.setStatus('fight-jev', undefined);
   });
   pi.registerCommand('jev', {
@@ -53,13 +96,17 @@ export default function jevExtension(pi: ExtensionAPI) {
         if (request === undefined) return;
         const session = await ctx.ui.input('Session ceiling in integer micro-USD (reload preserves charges)');
         if (session === undefined) return;
+        const disclosure = await ctx.ui.select('Operator disclosure ceiling (consumer permission is also required)',
+          ['fixed-synthetic-only', 'authorized-supplied-state']);
+        if (!disclosure) return;
         if (!await ctx.ui.confirm('Disclosure and price permission (valid 24 hours)',
-          'Allow only the fixed synthetic kettle question to OpenRouter/TypeSafe; confirm current $0.042/M input, free output and 64000-token maximum at the model page. Real charges apply.')) return;
+          `Allow ${disclosure} to OpenRouter/TypeSafe; confirm current $0.042/M input, free output and 64000-token maximum at the model page. Real charges apply. No calls are authorized by setup alone.`)) return;
         try {
           const config = settings.save({ endpoint: connection.endpoint, model: connection.model, evaluator: connection.evaluator,
             price: connection.price,
-            requestMicroUsd: Number(request), sessionMicroUsd: Number(session), disclosure: 'fixed-synthetic-only',
+            requestMicroUsd: Number(request), sessionMicroUsd: Number(session), disclosure,
             priceConfirmedAt: Date.now(), revision: randomUUID() });
+          judgments?.invalidate();
           readiness?.configure(config);
           ctx.ui.notify('Jev settings saved; readiness unchecked. No credential was read and no request was sent.', 'info');
         } catch { ctx.ui.notify('Jev: invalid-setup. Settings require positive integer ceilings, with request no larger than session.', 'warning'); }

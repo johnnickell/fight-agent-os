@@ -212,7 +212,8 @@ try {
             'node',
             '--test',
             '../harness/pi/tests/header.test.mjs',
-            '../harness/pi/tests/jev.test.mjs'
+            '../harness/pi/tests/jev.test.mjs',
+            '../harness/pi/tests/judgments.test.mjs'
         ]
     ];
     $frontendChecks = [

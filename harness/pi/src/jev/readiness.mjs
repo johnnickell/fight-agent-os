@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { SessionRequests } from './session-requests.mjs';
 
 export const connection = Object.freeze({
   endpoint: 'https://openrouter.ai/api/alpha/decisions',
@@ -24,7 +25,7 @@ export function validateConfiguration(value, now = Date.now()) {
     throw new Unavailable('invalid-setup');
   }
   if (value.endpoint !== connection.endpoint || value.model !== connection.model || value.evaluator !== connection.evaluator ||
-    value.price !== connection.price || value.disclosure !== 'fixed-synthetic-only' ||
+    value.price !== connection.price || !['fixed-synthetic-only', 'authorized-supplied-state'].includes(value.disclosure) ||
     !/^[0-9a-f-]{36}$/.test(value.revision) ||
     !positiveInteger(value.requestMicroUsd) || !positiveInteger(value.sessionMicroUsd) ||
     value.requestMicroUsd > value.sessionMicroUsd || !Number.isSafeInteger(value.priceConfirmedAt)) {
@@ -87,7 +88,8 @@ export class Readiness {
   #outcome = null;
   #closed = false;
   #sequence = 0;
-  constructor({ credentials, transport, budget, now = Date.now, timeoutMs = limits.timeoutMs, platform = process.platform }) {
+  constructor({ credentials, transport, budget, scope = new SessionRequests(), now = Date.now, timeoutMs = limits.timeoutMs, platform = process.platform }) {
+    this.scope = scope;
     this.credentials = credentials; this.transport = transport; this.budget = budget; this.now = now;
     this.timeoutMs = Math.min(timeoutMs, limits.timeoutMs); this.platform = platform;
   }
@@ -115,9 +117,10 @@ export class Readiness {
     if (this.#closed) return fail('closed');
     if (this.platform !== 'darwin') return fail('unsupported-host');
     if (!this.#config) return fail('missing-setup');
-    if (this.#active.size >= limits.concurrent) return fail('concurrency-limit');
-    const config = this.#config, generation = this.#generation, sequence = ++this.#sequence;
+    const config = this.#config, generation = this.#generation;
     const started = this.now(), controller = new AbortController();
+    try { this.scope.acquire(controller); } catch { return fail('concurrency-limit'); }
+    const sequence = ++this.#sequence;
     this.#active.add(controller);
     let timer, dispatched = false, ticket;
     // Race even a collaborator that ignores AbortSignal; stale completions cannot update readiness.
@@ -141,7 +144,7 @@ export class Readiness {
     };
     // Keep the concurrency slot until the underlying collaborator settles, even if the caller times out.
     // An uncancellable credential command must not permit an unbounded series of overlapping resolutions.
-    const running = operation().finally(() => this.#active.delete(controller));
+    const running = operation().finally(() => { this.#active.delete(controller); this.scope.release(controller); });
     let outcome;
     try {
       const result = await Promise.race([running, cancelled]);
