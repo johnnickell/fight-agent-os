@@ -15,12 +15,13 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00138](00138-TASK.md) | Define and qualify tool-mediated execution boundaries | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | — | — |
 | 37 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | — | — |
 | 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | — | — |
 | 49 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | — | — |
@@ -36,7 +37,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00138](00138-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md) | — |
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
@@ -289,6 +289,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
+| 2 | [TASK-00138](00138-TASK.md) | Define and qualify tool-mediated execution boundaries | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | done | — | — |
 | 2 | [TASK-00145](00145-TASK.md) | Enable opt-in trusted local HTTPS | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | done | — | [PR #39](https://github.com/johnnickell/fight-agent-os/pull/39) |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |

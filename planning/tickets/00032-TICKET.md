@@ -143,7 +143,7 @@ The explicitly approved disposable experiment is limited evidence, not a second 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00138](../tasks/00138-TASK.md) | Define and qualify tool-mediated execution boundaries | in-progress |
+| [TASK-00138](../tasks/00138-TASK.md) | Define and qualify tool-mediated execution boundaries | done |
 | [TASK-00139](../tasks/00139-TASK.md) | Start and inspect an authorized TASK from the terminal | ready-for-agent |
 | [TASK-00140](../tasks/00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | ready-for-agent |
 | [TASK-00141](../tasks/00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | ready-for-agent |
