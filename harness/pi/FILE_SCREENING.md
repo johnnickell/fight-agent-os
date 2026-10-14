@@ -198,11 +198,28 @@ The first macOS filesystem attempt failed because Node cannot enumerate `/dev/fd
 helper passed direct boundary checks and the new glob inquiry. Later early-result source checks have fresh failing-
 then-passing regressions; earlier live manifests are not mislabeled as literal-final-source evidence.
 
-Two scripted nested-cache probes failed in their evidence drivers: `ctx.executeTool()` returned result metadata in
-`details`, not the driver's inspected `structuredContent`. The final-source probe performed four controlled evaluations
-and real reload/start/shutdown, but its cache/source-withdrawal assertions did not complete. Eight auxiliary identities
-were used; no ninth session or settled Jev inquiry was replayed to manufacture success. Owned behavior checks cover
-cache withdrawal, source changes, bounds and cancellation; the actual-SDK assertion gap remains explicit.
+The initial two scripted nested-cache probes failed in their evidence drivers; their cache/source-withdrawal assertions
+did not complete. The first recovery, separately authorized as a ninth identity, also failed: it inspected top-level
+`details`, but `ctx.executeTool()` returns an envelope whose screening metadata is **`outcome.result.details`**. Persisted
+`ToolResultMessage.details` is a different contract. All failures and consumed grants remain retained, not reconstructed
+as success. Owned behavior checks cover cache withdrawal, source changes, bounds and cancellation.
+
+John then authorized one tenth identity. After complete offline direct qualification of the scripted sequence, actual
+Pi 1.2.0/macOS SDK/json recovered the missing assertions on committed production source: **seven raw nested outcomes,
+eight controlled evaluations, 12 passing assertions**. The initial glob returned independent results with redacted
+protected-subtree/symlink skips. A repeat produced two cache hits, zero upstream attempts and six local checks/141 bytes;
+current disclosure withdrawal redacted prior metadata. Mutation after an early completion invalidated only that result.
+Two fresh cache seeds and two confirmed hits immediately preceded actual reload; afterward, two fresh evaluations and
+zero hits demonstrated clearing. Tool/shared-rule declarations, unchanged source/model, orderly shutdown and grant
+withdrawal were captured without duplicate reload subscriptions. See the
+[recovered TASK checkpoint](../../planning/tasks/00163-TASK.md#engineer-qualification-recovery--2026-10-14) for exact
+identity, source manifests, raw outcome paths and accounting.
+
+The tenth identity made **zero external Jev calls**, using controlled synthetic credentials/transport and real pinned
+Codex main requests. Controlled ledger amounts are simulations, not billed USD. Aggregate actual TASK Jev remains
+319 micro-USD settled, zero pending; all **ten identities** are consumed/disposed and grants closed. Remaining budget is
+not authorization to repeat an inquiry, resume a disposed identity or create an eleventh subject. This evidence recovers
+the SDK behavior checkpoint, not live accuracy, native CLI/TUI qualification, independent Review/QA or acceptance.
 
 All fifteen native Jev requests disclosed exact synthetic manifest inputs only and reported TypeSafe /
 `typesafe/jev-1.13-20260917`. Reported cost totaled $0.000312312; ledgers settled 319 micro-USD, pending/uncertain zero,
