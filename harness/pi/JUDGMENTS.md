@@ -1,8 +1,9 @@
 # Bounded typed judgments
 
 TASK-00159 implements the shared local capability for trusted TICKET-00038 tool guards and TICKET-00039 file
-screening. Controlled tests and real Pi 1.2.0 SDK integration are available; **live mixed-question qualification
-is outstanding**. TASK-00184's earlier fixed yes/no check is inherited evidence, not qualification of these forms.
+screening. Controlled tests, real Pi 1.2.0 SDK lifecycle evidence and **one authorized live synthetic mixed-form
+qualification** are available. Independent Review/QA remain pending. TASK-00184's earlier fixed yes/no check is
+inherited evidence, not qualification of these forms.
 No Agent-callable judgment tool is installed. No guard, file-read permission, relevance threshold, sandbox,
 Workflow transition, savings estimate or model-accuracy claim is supplied here.
 
@@ -70,8 +71,9 @@ Example score: three levels `['Cold', 'Warm', 'Hot']` with requested bounds -10 
 to -10, 0, 10. A native weighted index 1.5 maps to 5. This is a scale transformation, not a probability of
 correctness. Provider score probabilities and legend must cover every declared level, legend descriptions must
 match, and the weighted mean must agree with `score` within 0.000001. Distributions must sum to one within that
-same absolute tolerance. Unsupported/missing measures are invalid, not defaulted. Live compatibility of these
-strict requirements remains to be established. Provider-generated explanations/quotations are never returned.
+same absolute tolerance. Unsupported/missing measures are invalid, not defaulted. The pinned evaluator supplied
+these strict measures in the authorized synthetic batch below; future missing/malformed measures still fail closed.
+Provider-generated explanations/quotations are never returned.
 
 Identifiers are 1–128 characters in `[A-Za-z0-9._:/-]`, starting with an alphanumeric character. Inputs must be
 lossless plain JSON data: no non-finite numbers, undefined values, accessors, custom serializers, sparse arrays,
@@ -165,14 +167,39 @@ there were **zero external/paid requests**. The selected main model remained unc
 integration under synthetic injection, not the remote provider. No live native-terminal or pending-network
 cancellation capture is claimed.
 
-**Proposal only; do not dispatch without a new explicit authorization:** one mixed-question paid request in a
-fresh dedicated qualification session, request/session ceilings **$0.002688 / $0.002688**, no retries, no second
-readiness check and no alternative credential source. State: `{"statement":"The synthetic kettle is blue and warm."}`.
-Questions: `blue` asks whether that kettle is blue (`yes-no`); `color` selects `blue` or `unknown` with those declared
-descriptions; `warmth` rates `['Cold', 'Warm', 'Hot']` on [0,2]. All question/rubric, policy, source and authority
-versions must be explicitly synthetic v1 identities. The operator must reconfirm current public prices/build,
-authorize Pi-managed credential resolution and this exact disclosure, and enable the trusted synthetic consumer
-with its session-bound allocation. A failure/unknown still consumes the single-call allowance: stop and report.
-Retain only redacted result/usage and inspect actual output/session artifacts without printing credentials.
-Further calls, live cancellation probes or private-source tests require separate bounded approval. No such
-approval was available for TASK-00159 implementation; the prior TASK-00184 one-call allowance was exhausted.
+John approved the earlier proposal for **exactly one** mixed-question paid request in a fresh dedicated Pi
+session, request/session ceilings **$0.002688 / $0.002688**, zero retries, no extra readiness check and no alternate
+credential source. The exclusive `live-BqDtKP` grant is now **consumed; zero calls remain**. This documentation
+is not standing authorization. Further calls, live cancellation probes or private-source tests need new bounded
+approval; never rerun a dispatched/uncertain one-call attempt or reset its claims/accounting.
+
+On October 14, 2026, fresh public endpoint/schema/pricing checks reconfirmed the pinned build and reservation.
+Actual Pi **1.2.0/macOS SDK/json**, Node **v22.23.1**, loaded the production capability, resolved its configured
+Pi-managed OpenRouter source and forwarded the production request through **native HTTPS**, with no fabricated
+response, transport substitution or relaxed validation. Only private session-scoped settings/accounting were
+allocated; existing operator settings/accounting were unchanged. The trusted source owner checked the exact
+synthetic input digests, session, configuration revision and 2,688/2,688 micro-USD allocation at all current
+permission boundaries. Durable exclusive launch/dispatch claims precede possible provider effect.
+
+State was `{"statement":"The synthetic kettle is blue and warm."}`. `blue` asked `Is the synthetic kettle blue?`;
+`color` asked `Select its color.` with blue=`Blue`, unknown=`Unknown` and explicit unknown; `warmth` asked
+`Rate its warmth.` with Cold/Warm/Hot on [0,2]. Source/question/rubric/authority/policy identities were `synthetic-v1`.
+HTTP **200** reported **TypeSafe**, evaluator **typesafe/jev-1.13-20260917**, for requested **typesafe/jev-1.13**.
+Production validation returned **complete**: Yes probability **0.9**, color **blue** with confidence **0.98** and
+blue/unknown probabilities **0.99/0.01**, warmth score **1**, confidence **1**, distribution **0/1/0**, exact legend.
+The observation qualifies this pinned synthetic batch, not model accuracy or universal future response validity.
+
+Capability latency was **321 ms**; provider usage **366 input / 62 output tokens**, cost **$0.000015372**.
+The production ledger settled **16 micro-USD** once, rounded upward, with no pending reservation. Invoice,
+cache/reasoning usage and separate provider-reported Engineer identity are unavailable, not zero. Exact-key
+in-process scans found zero credential occurrences in actual output/session artifacts, native body and retained
+metadata, and zero source-body occurrences in production receipts. Raw auth files/keys/headers were not retained.
+Actual orderly start/shutdown kept the main model **openai-codex/gpt-6.1-sol/high** unchanged, with zero extension
+errors. Reload/pending cancellation above remains inherited controlled evidence; no live pending-network or TUI
+qualification/captures are claimed.
+
+[The TASK qualification checkpoint](../../planning/tasks/00159-TASK.md#authorized-r-02-live-evidence-recovery--2026-10-14)
+owns current acceptance limits. Redacted claims, native facts, production result/usage/accounting, actual in-memory
+session snapshot and disclosure inspection are retained in ignored checkout-local
+`.runs/build/TASK-00159/run-V3MunP/live-BqDtKP/evidence/`; they are not public PR evidence. Independent Review of
+R-02 and applicable QA remain pending, and the TASK is not done.

@@ -92,7 +92,7 @@ OpenRouter access; a missing key does not prevent bounded implementation with co
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00159](../tasks/00159-TASK.md) | Evaluate bounded typed questions with usage receipts | needs-info |
+| [TASK-00159](../tasks/00159-TASK.md) | Evaluate bounded typed questions with usage receipts | in-progress |
 | [TASK-00184](../tasks/00184-TASK.md) | Configure protected Jev access and verify Pi readiness | done |
 <!-- /planning:children -->
 
@@ -138,3 +138,29 @@ reload returned unchecked without dispatch, and the main Agent model remained un
 is separate from unexercised live pending-network cancellation; no native screenshots or persisted notification-only
 JSONL were obtained. Independent Review/QA and H-01's exact historical synthetic-item human cleanup remain pending.
 This evidence supersedes the earlier live authorization hold, not other acceptance or managed-credential boundaries.
+
+### Authorized mixed-question qualification — 2026-10-14
+
+John separately approved exactly one TASK-00159 synthetic mixed-question request with **$0.002688/$0.002688**
+request/session ceilings, a fresh actual Pi session, Pi-managed OpenRouter credentials, zero retries and no extra
+readiness call. Its exclusive `live-BqDtKP` grant is now consumed; **zero calls remain**. TASK-00184's allowance
+and existing operator settings/accounting were preserved, not inherited/reset.
+
+[TASK-00159's live checkpoint](../tasks/00159-TASK.md#authorized-r-02-live-evidence-recovery--2026-10-14) records
+actual Pi 1.2.0/macOS SDK/json production-capability qualification over native HTTPS after public build/price
+reconfirmation. HTTP 200 reported the expected **TypeSafe / typesafe/jev-1.13-20260917**; strict mixed-form
+validation returned complete: Yes probability **0.9**, blue choice/confidence **0.98** (blue/unknown **0.99/0.01**),
+warmth score/confidence **1/1** on [0,2], distribution **0/1/0** and exact legend. Capability latency **321 ms**,
+provider usage **366 input / 62 output tokens**, cost **$0.000015372**, ledger settled **16 micro-USD** once with
+no pending reservation. Source/question/rubric/authority/policy identities are synthetic v1, not repository content.
+
+In-process exact-key scans found zero credential occurrences in actual native/output/session/evidence artifacts;
+receipts omit source bodies. Exclusive durable claims and current source-owner checks bind the exact synthetic
+input, session, configuration revision and allocation. Actual orderly start/shutdown had zero extension errors and
+kept the main model unchanged. Reload/pending cancellation remains inherited controlled evidence, not fresh live
+network cancellation; no TUI captures, invoice verification or model-accuracy claim is supplied. Ignored evidence
+is checkout-local at `.runs/build/TASK-00159/run-V3MunP/live-BqDtKP/evidence/`.
+
+The required live proof is now available for **fresh independent Review of R-02 and applicable QA**. TASK-00159
+remains in-progress, not done; this parent remains open. Qualification neither self-accepts the TASK nor authorizes
+further paid calls, managed credential enrollment, publication or merge.
