@@ -29,9 +29,6 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUser
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
-use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPermissionPlanItem;
-use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyChangeAction;
-use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Query\PreviewManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
@@ -49,6 +46,7 @@ use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Messaging\Event\AllEvents;
 use Fight\Common\Domain\Messaging\Event\CommandFailedEvent;
 use Fight\Common\Domain\Messaging\Event\EventMessage;
+use Fight\Common\Domain\Messaging\Query\QueryMessage;
 use Fight\Common\Domain\Utility\ClassName;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -549,33 +547,34 @@ SQL);
     }
 
     /**
-     * Uses transformed query results from the configured query pipeline to refuse authority drift
+     * Refuses an invitation when a query filter silently vetoes the required policy preview
      */
-    public function testQueryFilterCanRefusePolicy(): void
+    public function testQueryFilterCanVetoPolicy(): void
     {
+        $vetoed = [];
         $filter = $this->createStub(QueryFilter::class);
-        $filter->method('process')->willReturnCallback(static function ($message, callable $next) {
-            $result = $next($message);
-            if (!$message->payload() instanceof PreviewManagedPolicy) {
-                return $result;
+        $filter->method('process')->willReturnCallback(static function (
+            QueryMessage $message,
+            callable $next
+        ) use (&$vetoed): void {
+            $query = $message->payload();
+            if ($query instanceof PreviewManagedPolicy) {
+                $vetoed[] = $query;
+
+                return;
             }
-
-            self::assertInstanceOf(ManagedPolicyPlan::class, $result);
-
-            return new ManagedPolicyPlan(
-                array_map(
-                    static fn($item) => new ManagedPermissionPlanItem(
-                        $item->getDefinition(),
-                        ManagedPolicyChangeAction::RECONCILE
-                    ),
-                    $result->getPermissions()
-                ),
-                $result->getRoles()
-            );
+            $next($message);
         });
         $this->container->get('messaging.query.bus')->addFilter($filter);
         self::assertSame(1, $this->runConsole());
+        // Keep decisive assertions outside callbacks caught by the Console failure boundary.
+        self::assertCount(1, $vetoed);
+        self::assertInstanceOf(PreviewManagedPolicy::class, $vetoed[0]);
+        self::assertSame('', $this->output);
+        self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $this->error);
         $this->assertNoInvitation();
+        self::assertSame([], $this->events);
+        self::assertFalse($this->connection->isTransactionActive());
     }
 
     /**

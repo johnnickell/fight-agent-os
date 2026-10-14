@@ -129,9 +129,12 @@ credential representation.
 `tests/Integration/Postgres/OrdinaryInvitationTest.php` runs real package handlers and the owned repositories:
 pending state, exact permissions, seven-day lifetime, console audit, duplicate conflict, missing/drifted/stale
 policy, material/write/audit/commit failures, shared reference fencing, lost immediate delivery, post-commit event
-failure, claim/outcome failures, provider exceptions and fresh-worker recovery. Real command/query filter vetoes
-and transformations prove pipeline effects at the owned workflow boundary; repeated shared invocations prove
-transaction/event isolation. Markers in credentials, provider exceptions and originating errors are checked against output, safe success facts, audit and package status Views;
+failure, claim/outcome failures, provider exceptions and fresh-worker recovery. Real command-filter vetoes and
+elevated-role message transformation prove rejection at the owned workflow boundary. A query filter intentionally
+withholds the required policy-preview message; assertions outside the Console-caught callback verify that the
+veto path ran, output stayed safe, and no originating, provider or event effects remained. The installed query-filter
+contract forwards messages through a void `$next` callback; these tests do not prove query-result transformation.
+Repeated shared invocations prove transaction/event isolation. Markers in credentials, provider exceptions and originating errors are checked against output, safe success facts, audit and package status Views;
 private database rows are inspected in tests but never copied to operator receipts. Existing delivery integration
 tests additionally cover successor/outcome fencing, cancellation, expiry and competing claims.
 
