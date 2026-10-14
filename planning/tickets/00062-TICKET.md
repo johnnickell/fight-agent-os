@@ -96,7 +96,10 @@ transaction or post-commit subscriber. A missing public seam blocks creation, no
 Agent, hidden audit side effect, vendor patch or inferred upstream approval. TICKET-00063 consumes the supported
 primitive and retains actual named-Agent creation.
 
-TASK-00254 retains `needs-info` for actual manual-session/applicable Workflow commitment/admission primitives.
+TICKET-00093 now maps TASK-00369's narrow applicable Workflow commitment/capacity/resource participants into
+TASK-00254 independently of final Team selectors, roles or consumer loops. TASK-00254 retains `needs-info` for
+actual manual-session writer participation and complete cross-owner release/recovery composition. This supplier
+mapping does not resolve TASK-00253's creation seam or qualify live transfer/admission safety.
 TICKET-00063's subsequent approved TASK-00258 now supplies TASK-00255's exact named creation blocker, resolving
 its direct mapping to `ready-for-agent` behind unfinished dependencies. Supported creation/membership and actual
 commitment-participant holds remain; this is neither implemented creation nor browser qualification. No unassign may leave a retained Agent with

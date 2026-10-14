@@ -94,6 +94,15 @@ execution. Unsupported guarantees block that route, not permission to use a more
 - Measure bounded useful answers, coverage, cost/latency and failure handling. Qualify infrastructure directly,
   test owned composition/authority behavior and run applicable gates; no production use occurs during planning.
 
+### First-party web evidence consumer mapping
+
+TICKET-00095 now allocates TASK-00382 protected search, TASK-00383 separately authorized SSRF-safe retrieval and
+TASK-00384 retained/cached/resumed web delivery, all using TASK-00381's exact-content admission through TASK-00171.
+TASK-00174 may compose only qualified declared routes under the original caller's current scope and separate egress
+permissions; source contents and Jev judgments cannot authorize a sub-call. These conditional capability requirements
+do not make all web research a blocker on generic composition or static/SQL analysis, and web suppliers never depend
+on completed TASK-00174. No duplicate client, evaluator, authority or provider credential path is introduced.
+
 ## Sequencing and TASK readiness
 
 Consume TICKET-00042's authenticated shared entrypoint, typed result/provenance and budget contracts, plus existing

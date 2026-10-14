@@ -93,10 +93,114 @@ On uncertain retry, inspect original effect ownership before deciding anything r
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| None | — | — |
+| [TASK-00406](../tasks/00406-TASK.md) | Inspect exact local-generation feasibility | ready-for-agent |
+| [TASK-00407](../tasks/00407-TASK.md) | Materialize pinned source into one owned destination | needs-info |
+| [TASK-00408](../tasks/00408-TASK.md) | Initialize and reconcile one fresh Git repository | ready-for-agent |
+| [TASK-00409](../tasks/00409-TASK.md) | Run and recover the declared preparation command | needs-info |
+| [TASK-00410](../tasks/00410-TASK.md) | Clean separately authorized local creation resources | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved TASK decomposition and current handoff
+
+The maintainer approved five slices in `.runs/worktrees/ticket-00083-to-tasks` on
+`feature/ticket-00083-to-tasks`. All are unranked features with blank PRs. Four local-generation capabilities carry
+their own reconciliation; the fifth executes separately authorized local cleanup, not deferred normal recovery.
+
+| Slice | Accepted owner | Exact known blockers | Delivered boundary |
+|---|---|---|---|
+| A | [TASK-00406](../tasks/00406-TASK.md) | TASK-00402, TASK-00073, TASK-00368 | Protected read-only exact input/path/Runner feasibility; no reservation or effects |
+| B | [TASK-00407](../tasks/00407-TASK.md) | TASK-00406, TASK-00412; protected local-operation supplier unallocated | Exact pinned-source materialization, ownership and original-effect reconciliation |
+| C | [TASK-00408](../tasks/00408-TASK.md) | TASK-00407 | Fresh selected branch and one reconciled initial commit, no inherited history/remotes |
+| D | [TASK-00409](../tasks/00409-TASK.md) | TASK-00408; protected preparation supplier unallocated | Exact contained optional command, honest process outcomes and visible tracked changes |
+| E | [TASK-00410](../tasks/00410-TASK.md) | TASK-00409, TASK-00413; actual reference composition and inherited host/process holds | Precise separately authorized local cleanup with ownership/quiescence/reference fences |
+
+TASK-00406/00408 are ready behind unfinished suppliers, not operationally qualified. TASK-00407 remains `needs-info`
+for the exact protected local-operation boundary under existing execution owners; TASK-00412 now supplies early
+stage participants with TASK-00411 admission transitively. TASK-00409 retains `needs-info` for actual protected
+process supervision, containment, dependency egress and credential isolation. TASK-00410 gains TASK-00413 cleanup
+authority but retains `needs-info` for actual reference composition and inherited host/process holds.
+Add only exact approved supplier IDs when allocated; no future blocker is invented or claimed cycle-checked.
+
+TASK-00368 provides enrolled identity/capability facts, TASK-00073 approved-root access and TASK-00138 qualification,
+not an implemented protected host or arbitrary deterministic execution authority. Reuse precise early participants
+without fabricating a Workflow, TASK claim, Repository or Agent, moving a provisioner into creation, or requiring
+completed Team/Agent/browser journeys. Existing terminal owners gain no reverse blocker or priority change.
+
+TICKET-00101 retains full preview/confirmation, attempt identity/transitions, delivery and explicit recovery/cleanup
+consent. Its early participants may consume TASK-00406/00402 first, but must not wait for completed effect adapters
+or final browser integration. TASK-00404 now gains TASK-00411 and becomes ready behind suppliers, resolving only
+its early attempt/reference allocation hold. Ordinary stage
+reconciliation stays in TASK-00407/00408/00409; final cleanup cannot become their reverse prerequisite.
+
+Generation consumes TASK-00402's immutable bytes/shared manifest and rechecks targets/matches/values independently.
+Its real managed-release prerequisite remains; actual generation evidence belongs within TASK-00407, while
+TICKET-00103 retains integrated create/register acceptance. Source release is a separately authorized maintainer
+action. No inherited credentials/history/remotes, broad replacement, model repair or source-defined grants.
+
+One initial commit precedes optional preparation. TICKET-00102 consumes TASK-00408's exact initial subject, never
+silently committed preparation changes; TICKET-00103 consumes the identified checkout and stage provenance.
+Explicitly skipping preparation requires no preparation network/credential capability. Public installed/local-only
+creation does not require private-source access, GitHub publication or completed managed roles. TASK-00410's full
+local-resource coverage does not require running preparation/cleanup before normal completion.
+
+Owned behavior tests, real PostgreSQL/Git/Runner/source integration, direct infrastructure qualification, guidance
+and `./bin/build` stay within each delivery. No product tests of generated layouts, tools, configuration or wrappers,
+and no proof-only TASKs. Current rights, complete expected state, real resource/reference fences and original-effect
+reconciliation remain mandatory; unknown state preserves resources rather than infers success or safe deletion.
+
+This completes this TICKET's split, not delivery or the rest of the map. Continue `/skill:next` for Board-based selection after TICKET-00109's approved final split. Preserve active TASK-00138, terminal-first priorities,
+independent holds and Markdown Planning authority until separately verified cutover. Implementation checkout,
+finite source/host/credential/destructive effects, full build, review and publication remain separate.
+
+### Planning verification
+
+This historical local-stage receipt predates TICKET-00101's attempt split and supplier mappings; latest planning
+verification is in TICKET-00109. The original counts and unresolved allocations below describe that earlier point.
+
+Recorded the approved five-slice split in `.runs/worktrees/ticket-00083-to-tasks` on
+`feature/ticket-00083-to-tasks`, preserving prior uncommitted planning. Before allocation the highest live TASK was
+TASK-00405 and the archive contained no TASK records. TASK-00406–00410 match the approved metadata, known blockers
+and all template sections; all are unranked features with blank PRs. A/C are ready behind unfinished suppliers and
+B/D/E retain their explicit early stage/host, preparation and cleanup participant gaps. Unallocated future supplier
+edges are not claimed verified; mapping alone will not establish operational qualification.
+
+`./bin/planning-check --write` and `./bin/planning-check` passed with 537 records, 445 active and current generated
+views, reporting no invalid links or dependency cycles. Tracked `git diff --check` and all 102 new/untracked TASK
+whitespace checks passed, including these five. Explicit checks confirmed preserved root/identity/Runner/catalog
+and terminal dependencies/priority, independent source-release/private-access/attempt-reference, profile/Triage,
+host/prototype/provider/current-authority and quota holds, and prior TASK-00387/00320 measurement/forecast mappings.
+TASK-00138/00139/00142/00159/00184/00226 remain byte-identical to this worktree's HEAD; TASK-00138 remains the sole
+active Board item, order 2. No existing supplier gains a reverse creation blocker.
+
+That split advanced handoffs to TICKET-00101, then TICKET-00102–00109; no stale current TICKET-00100 command remained.
+Incoming stage/initial-subject/cleanup coordination is recorded in TICKET-00101/00102/00103 without allocating their
+TASKs or completing their splits. Existing catalog and terminal ownership remains separate. Earlier receipts are
+historical, not fresh source-release, filesystem, Git, Runner, PostgreSQL-stage or browser evidence.
+
+Full `./bin/build` was not run and remains required before commit/publication. All planning changes remain
+uncommitted; implementation, independent review, live qualification and publication are outstanding. No external
+source/private-path/credential access, project generation, Git initialization/commit, preparation/process operation,
+cleanup, live Planning mutation, cutover, commit, push, PR or merge occurred. Unrelated main-checkout work was
+untouched and is not claimed clean. Implementation checkout and finite operational authority remain separate.
+
+### Incoming catalog supplier handoff before this split
+
+TICKET-00099 now maps TASK-00401's catalog, TASK-00402's immutable snapshot/shared manifest/early pin-reference
+participants, TASK-00403's optional protected private-source route, TASK-00404's actual lifecycle integration and
+TASK-00405's exact existing-template recommendations. Generation consumes pinned bytes and independently validates
+selected substitutions/targets/results; it must not duplicate the manifest schema, fetch another release or execute
+preparation during inspection. Public/local delivery does not require the private-source route.
+
+TASK-00402 retains its actual managed stable-release prerequisite; TASK-00403 its protected credential/access
+supplier gap; TASK-00404 the early attempt/reference mapping requested from TICKET-00101. Early stage/admission
+primitives use TASK-00402's shared fences, not completed lifecycle/browser acceptance. Preserve existing Runner,
+root, profile and current-authority holds. This incoming mapping creates no local effects or implementation TASKs
+for this TICKET at that point. The approved split above now supersedes that pending handoff; TICKET-00101–00109
+remain separate approved requirements awaiting decomposition.
+
+### Original requirement approval
 
 Approved as area 2 of EPIC-00009's six-TICKET split. Applies
 [WF-021](../wayfinder/tickets/WF-021-define-new-project-creation-and-registration.md),

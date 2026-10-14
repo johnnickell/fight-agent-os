@@ -312,4 +312,140 @@
 | [TASK-00307](00307-TASK.md) | Document the qualified backend API and browser integration reference | ready-for-agent | [TICKET-00081](../tickets/00081-TICKET.md) |
 | [TASK-00308](00308-TASK.md) | Publish the immutable qualified reference bundle to the five starter maintainers | needs-info | [TICKET-00082](../tickets/00082-TICKET.md) |
 | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | ready-for-agent | [TICKET-00039](../tickets/00039-TICKET.md) |
+| [TASK-00310](00310-TASK.md) | Execute bounded finding-driven revisions | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00311](00311-TASK.md) | Authorize exact-subject acceptance | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00312](00312-TASK.md) | Verify accepted behavior through managed QA | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00313](00313-TASK.md) | Preserve applicability across mechanical reconciliation | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00314](00314-TASK.md) | Prepare the exact publication candidate | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00315](00315-TASK.md) | Publish one recoverable GitHub PR | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00316](00316-TASK.md) | Verify evidence and finish human PR handoff | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00317](00317-TASK.md) | Reconcile trusted merge and downstream eligibility | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00318](00318-TASK.md) | Safely reconcile the enrolled local checkout | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00319](00319-TASK.md) | Inspect review-to-merge history in the Dashboard | needs-info | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00320](00320-TASK.md) | Forecast remaining work through PR handoff | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | ready-for-agent | [TICKET-00085](../tickets/00085-TICKET.md) |
+| [TASK-00322](00322-TASK.md) | Configure trusted machine-local connections | ready-for-agent | [TICKET-00085](../tickets/00085-TICKET.md) |
+| [TASK-00323](00323-TASK.md) | Manage revisioned user Harness profiles | ready-for-agent | [TICKET-00085](../tickets/00085-TICKET.md) |
+| [TASK-00324](00324-TASK.md) | Connect through qualified protected credential storage | ready-for-agent | [TICKET-00085](../tickets/00085-TICKET.md) |
+| [TASK-00325](00325-TASK.md) | Show unmistakable identity and switch through linked continuations | needs-info | [TICKET-00085](../tickets/00085-TICKET.md) |
+| [TASK-00326](00326-TASK.md) | Deliver guided Harness setup and diagnostics | ready-for-agent | [TICKET-00085](../tickets/00085-TICKET.md) |
+| [TASK-00327](00327-TASK.md) | Reconcile and inspect managed static Skills | ready-for-agent | [TICKET-00086](../tickets/00086-TICKET.md) |
+| [TASK-00328](00328-TASK.md) | Create and revise scoped custom Skills | ready-for-agent | [TICKET-00086](../tickets/00086-TICKET.md) |
+| [TASK-00329](00329-TASK.md) | Manage versioned prompts and personas | ready-for-agent | [TICKET-00086](../tickets/00086-TICKET.md) |
+| [TASK-00330](00330-TASK.md) | Manage versioned themes | ready-for-agent | [TICKET-00086](../tickets/00086-TICKET.md) |
+| [TASK-00331](00331-TASK.md) | Retire resources and select retained revisions | ready-for-agent | [TICKET-00086](../tickets/00086-TICKET.md) |
+| [TASK-00332](00332-TASK.md) | Deliver the attributed Writing for Agents Skill to real Planning | needs-info | [TICKET-00086](../tickets/00086-TICKET.md) |
+| [TASK-00333](00333-TASK.md) | Establish explicit first-party Skill trust | ready-for-agent | [TICKET-00087](../tickets/00087-TICKET.md) |
+| [TASK-00334](00334-TASK.md) | Inspect effective Skill aliases and resolve collisions | ready-for-agent | [TICKET-00087](../tickets/00087-TICKET.md) |
+| [TASK-00335](00335-TASK.md) | Serve authorized static Skill manifests and bytes | ready-for-agent | [TICKET-00087](../tickets/00087-TICKET.md) |
+| [TASK-00336](00336-TASK.md) | Load verified Skills and supporting resources in Pi | needs-info | [TICKET-00087](../tickets/00087-TICKET.md) |
+| [TASK-00337](00337-TASK.md) | Reuse verified cached content safely | ready-for-agent | [TICKET-00087](../tickets/00087-TICKET.md) |
+| [TASK-00338](00338-TASK.md) | Remove first-party trust and reconcile owned cleanup | ready-for-agent | [TICKET-00087](../tickets/00087-TICKET.md) |
+| [TASK-00339](00339-TASK.md) | Resolve and inspect exact Harness configuration | ready-for-agent | [TICKET-00088](../tickets/00088-TICKET.md) |
+| [TASK-00340](00340-TASK.md) | Retain immutable Harness snapshot bindings | ready-for-agent | [TICKET-00088](../tickets/00088-TICKET.md) |
+| [TASK-00341](00341-TASK.md) | Hold protected work on Harness drift | ready-for-agent | [TICKET-00088](../tickets/00088-TICKET.md) |
+| [TASK-00342](00342-TASK.md) | Resume and explicitly continue real sessions | needs-info | [TICKET-00088](../tickets/00088-TICKET.md) |
+| [TASK-00343](00343-TASK.md) | Configure and inspect allowed provider choices | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
+| [TASK-00344](00344-TASK.md) | Admit disclosure-approved budgeted generation | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
+| [TASK-00345](00345-TASK.md) | Inspect and reconcile original generation outcomes | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
+| [TASK-00346](00346-TASK.md) | Generate through protected OpenRouter | needs-info | [TICKET-00089](../tickets/00089-TICKET.md) |
+| [TASK-00347](00347-TASK.md) | Generate through protected local Codex | needs-info | [TICKET-00089](../tickets/00089-TICKET.md) |
+| [TASK-00348](00348-TASK.md) | Record bounded assignments and conversation identities | ready-for-agent | [TICKET-00090](../tickets/00090-TICKET.md) |
+| [TASK-00349](00349-TASK.md) | Persist input and fence original attempts | ready-for-agent | [TICKET-00090](../tickets/00090-TICKET.md) |
+| [TASK-00350](00350-TASK.md) | Open and fence protected runtime sessions | needs-info | [TICKET-00090](../tickets/00090-TICKET.md) |
+| [TASK-00351](00351-TASK.md) | Execute admitted turns through one protected runtime | ready-for-agent | [TICKET-00090](../tickets/00090-TICKET.md) |
+| [TASK-00352](00352-TASK.md) | Attach and inspect the same conversation | ready-for-agent | [TICKET-00090](../tickets/00090-TICKET.md) |
+| [TASK-00353](00353-TASK.md) | Stop and recover original conversation work | ready-for-agent | [TICKET-00090](../tickets/00090-TICKET.md) |
+| [TASK-00354](00354-TASK.md) | Retain and narrowly redact protected conversation content | ready-for-agent | [TICKET-00090](../tickets/00090-TICKET.md) |
+| [TASK-00355](00355-TASK.md) | Request inspect and recover protected proposals | ready-for-agent | [TICKET-00091](../tickets/00091-TICKET.md) |
+| [TASK-00356](00356-TASK.md) | Record human Planning answers and operation boundaries | ready-for-agent | [TICKET-00091](../tickets/00091-TICKET.md) |
+| [TASK-00357](00357-TASK.md) | Prepare and inspect typed Planning candidates | ready-for-agent | [TICKET-00091](../tickets/00091-TICKET.md) |
+| [TASK-00358](00358-TASK.md) | Explicitly create or apply reviewed Planning changes | ready-for-agent | [TICKET-00091](../tickets/00091-TICKET.md) |
+| [TASK-00359](00359-TASK.md) | Apply multi-record Planning proposals atomically | ready-for-agent | [TICKET-00091](../tickets/00091-TICKET.md) |
+| [TASK-00360](00360-TASK.md) | Reconcile rejected proposals without silent application | ready-for-agent | [TICKET-00091](../tickets/00091-TICKET.md) |
+| [TASK-00361](00361-TASK.md) | Start and continue repository Planning intake | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
+| [TASK-00362](00362-TASK.md) | Conduct Wayfinder interviews and create reviewed maps | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
+| [TASK-00363](00363-TASK.md) | Review and apply artifact Planning operations | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
+| [TASK-00364](00364-TASK.md) | Conduct bounded AFK Planning preparation | needs-info | [TICKET-00092](../tickets/00092-TICKET.md) |
+| [TASK-00365](00365-TASK.md) | Resume stop and abandon Planning conversations | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
+| [TASK-00366](00366-TASK.md) | Share and hand off protected Planning history | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
+| [TASK-00367](00367-TASK.md) | Explicitly continue after context or provider changes | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
+| [TASK-00368](00368-TASK.md) | Enroll and inspect the installation Runner | ready-for-agent | [TICKET-00093](../tickets/00093-TICKET.md) |
+| [TASK-00369](00369-TASK.md) | Admit work against shared capacity and commitments | ready-for-agent | [TICKET-00093](../tickets/00093-TICKET.md) |
+| [TASK-00370](00370-TASK.md) | Deliver and reconcile original Workflow dispatch intents | ready-for-agent | [TICKET-00093](../tickets/00093-TICKET.md) |
+| [TASK-00371](00371-TASK.md) | Execute bounded work through one-shot consumers | ready-for-agent | [TICKET-00093](../tickets/00093-TICKET.md) |
+| [TASK-00372](00372-TASK.md) | Drain or halt Runner admission explicitly | ready-for-agent | [TICKET-00093](../tickets/00093-TICKET.md) |
+| [TASK-00373](00373-TASK.md) | Reconcile Runner restart and expose safe recovery | ready-for-agent | [TICKET-00093](../tickets/00093-TICKET.md) |
+| [TASK-00374](00374-TASK.md) | Store and reconcile verified private Artifacts | ready-for-agent | [TICKET-00094](../tickets/00094-TICKET.md) |
+| [TASK-00375](00375-TASK.md) | Record attributable contribution provenance | ready-for-agent | [TICKET-00094](../tickets/00094-TICKET.md) |
+| [TASK-00376](00376-TASK.md) | Capture immutable Git evidence subjects | ready-for-agent | [TICKET-00094](../tickets/00094-TICKET.md) |
+| [TASK-00377](00377-TASK.md) | Retain exact check receipts | ready-for-agent | [TICKET-00094](../tickets/00094-TICKET.md) |
+| [TASK-00378](00378-TASK.md) | Inspect and retrieve protected evidence | ready-for-agent | [TICKET-00094](../tickets/00094-TICKET.md) |
+| [TASK-00379](00379-TASK.md) | Retain held evidence and purge eligible transient content | ready-for-agent | [TICKET-00094](../tickets/00094-TICKET.md) |
+| [TASK-00380](00380-TASK.md) | Redact prohibited content across retained copies | ready-for-agent | [TICKET-00094](../tickets/00094-TICKET.md) |
+| [TASK-00381](00381-TASK.md) | Admit exact web content through Jev | ready-for-agent | [TICKET-00095](../tickets/00095-TICKET.md) |
+| [TASK-00382](00382-TASK.md) | Search through protected Brave access | ready-for-agent | [TICKET-00095](../tickets/00095-TICKET.md) |
+| [TASK-00383](00383-TASK.md) | Retrieve separately authorized public pages | ready-for-agent | [TICKET-00095](../tickets/00095-TICKET.md) |
+| [TASK-00384](00384-TASK.md) | Retain and safely reuse web evidence | ready-for-agent | [TICKET-00095](../tickets/00095-TICKET.md) |
+| [TASK-00385](00385-TASK.md) | Inspect rebuildable authoritative Workflow history | ready-for-agent | [TICKET-00096](../tickets/00096-TICKET.md) |
+| [TASK-00386](00386-TASK.md) | Capture and inspect sanitized phase activity | ready-for-agent | [TICKET-00096](../tickets/00096-TICKET.md) |
+| [TASK-00387](00387-TASK.md) | Search stable history and scope-labelled summaries | ready-for-agent | [TICKET-00096](../tickets/00096-TICKET.md) |
+| [TASK-00388](00388-TASK.md) | Retain and redact history across derived copies | ready-for-agent | [TICKET-00096](../tickets/00096-TICKET.md) |
+| [TASK-00389](00389-TASK.md) | Follow committed Workflow updates through Mercure | ready-for-agent | [TICKET-00096](../tickets/00096-TICKET.md) |
+| [TASK-00390](00390-TASK.md) | Control Workflow visibility without hiding running work | ready-for-agent | [TICKET-00097](../tickets/00097-TICKET.md) |
+| [TASK-00391](00391-TASK.md) | Find and follow Workflows in the sessions Dashboard | ready-for-agent | [TICKET-00097](../tickets/00097-TICKET.md) |
+| [TASK-00392](00392-TASK.md) | Inspect immutable changes and retained evidence | ready-for-agent | [TICKET-00097](../tickets/00097-TICKET.md) |
+| [TASK-00393](00393-TASK.md) | Drill into sanitized phase activity | ready-for-agent | [TICKET-00097](../tickets/00097-TICKET.md) |
+| [TASK-00394](00394-TASK.md) | Intervene through existing Workflow and Runner controls | ready-for-agent | [TICKET-00097](../tickets/00097-TICKET.md) |
+| [TASK-00395](00395-TASK.md) | Follow existing Start and Pending start intents | ready-for-agent | [TICKET-00097](../tickets/00097-TICKET.md) |
+| [TASK-00396](00396-TASK.md) | Inspect attributable execution usage | ready-for-agent | [TICKET-00098](../tickets/00098-TICKET.md) |
+| [TASK-00397](00397-TASK.md) | Inspect known execution time | ready-for-agent | [TICKET-00098](../tickets/00098-TICKET.md) |
+| [TASK-00398](00398-TASK.md) | Explain usage and time in Workflow detail | ready-for-agent | [TICKET-00098](../tickets/00098-TICKET.md) |
+| [TASK-00399](00399-TASK.md) | Inspect independently scoped provider allowance | needs-info | [TICKET-00098](../tickets/00098-TICKET.md) |
+| [TASK-00400](00400-TASK.md) | Explain remaining time through Awaiting review | ready-for-agent | [TICKET-00098](../tickets/00098-TICKET.md) |
+| [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | ready-for-agent | [TICKET-00099](../tickets/00099-TICKET.md) |
+| [TASK-00402](00402-TASK.md) | Install verified immutable starter snapshots | needs-info | [TICKET-00099](../tickets/00099-TICKET.md) |
+| [TASK-00403](00403-TASK.md) | Install private starters through protected GitHub access | needs-info | [TICKET-00099](../tickets/00099-TICKET.md) |
+| [TASK-00404](00404-TASK.md) | Withdraw starters and resolve conflicts without losing attempts | ready-for-agent | [TICKET-00099](../tickets/00099-TICKET.md) |
+| [TASK-00405](00405-TASK.md) | Associate exact recommended development profiles | ready-for-agent | [TICKET-00099](../tickets/00099-TICKET.md) |
+| [TASK-00406](00406-TASK.md) | Inspect exact local-generation feasibility | ready-for-agent | [TICKET-00100](../tickets/00100-TICKET.md) |
+| [TASK-00407](00407-TASK.md) | Materialize pinned source into one owned destination | needs-info | [TICKET-00100](../tickets/00100-TICKET.md) |
+| [TASK-00408](00408-TASK.md) | Initialize and reconcile one fresh Git repository | ready-for-agent | [TICKET-00100](../tickets/00100-TICKET.md) |
+| [TASK-00409](00409-TASK.md) | Run and recover the declared preparation command | needs-info | [TICKET-00100](../tickets/00100-TICKET.md) |
+| [TASK-00410](00410-TASK.md) | Clean separately authorized local creation resources | needs-info | [TICKET-00100](../tickets/00100-TICKET.md) |
+| [TASK-00411](00411-TASK.md) | Preview and admit one immutable creation attempt | needs-info | [TICKET-00101](../tickets/00101-TICKET.md) |
+| [TASK-00412](00412-TASK.md) | Fence original stage admission delivery and outcomes | ready-for-agent | [TICKET-00101](../tickets/00101-TICKET.md) |
+| [TASK-00413](00413-TASK.md) | Bind and fence separately confirmed cleanup authority | ready-for-agent | [TICKET-00101](../tickets/00101-TICKET.md) |
+| [TASK-00414](00414-TASK.md) | Advance and inspect the actual creation stages | needs-info | [TICKET-00101](../tickets/00101-TICKET.md) |
+| [TASK-00415](00415-TASK.md) | Create from the complete browser preview | ready-for-agent | [TICKET-00101](../tickets/00101-TICKET.md) |
+| [TASK-00416](00416-TASK.md) | Inspect and recover the original attempt in the browser | ready-for-agent | [TICKET-00101](../tickets/00101-TICKET.md) |
+| [TASK-00417](00417-TASK.md) | Preview execute and reconcile explicit cleanup | needs-info | [TICKET-00101](../tickets/00101-TICKET.md) |
+| [TASK-00418](00418-TASK.md) | Inspect protected GitHub publication feasibility | needs-info | [TICKET-00102](../tickets/00102-TICKET.md) |
+| [TASK-00419](00419-TASK.md) | Create and reconcile the exact confirmed repository | ready-for-agent | [TICKET-00102](../tickets/00102-TICKET.md) |
+| [TASK-00420](00420-TASK.md) | Publish and verify the original initial commit | needs-info | [TICKET-00102](../tickets/00102-TICKET.md) |
+| [TASK-00421](00421-TASK.md) | Inspect and clean separately authorized remote resources | ready-for-agent | [TICKET-00102](../tickets/00102-TICKET.md) |
+| [TASK-00422](00422-TASK.md) | Inspect and bind registration/context feasibility | needs-info | [TICKET-00103](../tickets/00103-TICKET.md) |
+| [TASK-00423](00423-TASK.md) | Protect registration and context references from cleanup | ready-for-agent | [TICKET-00103](../tickets/00103-TICKET.md) |
+| [TASK-00424](00424-TASK.md) | Register and link the exact generated checkout | ready-for-agent | [TICKET-00103](../tickets/00103-TICKET.md) |
+| [TASK-00425](00425-TASK.md) | Initialize configuration and resolve the first database context | needs-info | [TICKET-00103](../tickets/00103-TICKET.md) |
+| [TASK-00426](00426-TASK.md) | Deliver the durable creation receipt and Dashboard handoff | ready-for-agent | [TICKET-00103](../tickets/00103-TICKET.md) |
+| [TASK-00427](00427-TASK.md) | Explain failures with versioned playbooks and safe diagnostics | ready-for-agent | [TICKET-00104](../tickets/00104-TICKET.md) |
+| [TASK-00428](00428-TASK.md) | Request and recover a bounded support explanation | needs-info | [TICKET-00104](../tickets/00104-TICKET.md) |
+| [TASK-00429](00429-TASK.md) | Ask for support safely from the creation browser | ready-for-agent | [TICKET-00104](../tickets/00104-TICKET.md) |
+| [TASK-00430](00430-TASK.md) | Inspect effective instructions through bounded designated-checkout queries | needs-info | [TICKET-00105](../tickets/00105-TICKET.md) |
+| [TASK-00431](00431-TASK.md) | Browse effective instructions in the repository Dashboard | ready-for-agent | [TICKET-00105](../tickets/00105-TICKET.md) |
+| [TASK-00432](00432-TASK.md) | Save, delete and reconcile exact instruction-file changes | needs-info | [TICKET-00106](../tickets/00106-TICKET.md) |
+| [TASK-00433](00433-TASK.md) | Edit and recover instruction changes in the Dashboard | ready-for-agent | [TICKET-00106](../tickets/00106-TICKET.md) |
+| [TASK-00434](00434-TASK.md) | Request and recover bounded instruction suggestions | ready-for-agent | [TICKET-00107](../tickets/00107-TICKET.md) |
+| [TASK-00435](00435-TASK.md) | Review instruction suggestions in the existing Dashboard form | ready-for-agent | [TICKET-00107](../tickets/00107-TICKET.md) |
+| [TASK-00436](00436-TASK.md) | Preview and admit exact instruction publication | needs-info | [TICKET-00108](../tickets/00108-TICKET.md) |
+| [TASK-00437](00437-TASK.md) | Create and recover the selected-file commit | needs-info | [TICKET-00108](../tickets/00108-TICKET.md) |
+| [TASK-00438](00438-TASK.md) | Push and reconcile one exact GitHub PR | needs-info | [TICKET-00108](../tickets/00108-TICKET.md) |
+| [TASK-00439](00439-TASK.md) | Return the published checkout safely to default | ready-for-agent | [TICKET-00108](../tickets/00108-TICKET.md) |
+| [TASK-00440](00440-TASK.md) | Publish and recover instruction changes in the Dashboard | ready-for-agent | [TICKET-00108](../tickets/00108-TICKET.md) |
+| [TASK-00441](00441-TASK.md) | Check and inspect designated-checkout update availability | needs-info | [TICKET-00109](../tickets/00109-TICKET.md) |
+| [TASK-00442](00442-TASK.md) | Fast-forward and reconcile the designated checkout safely | needs-info | [TICKET-00109](../tickets/00109-TICKET.md) |
+| [TASK-00443](00443-TASK.md) | Configure and run currently authorized scheduled synchronization | needs-info | [TICKET-00109](../tickets/00109-TICKET.md) |
+| [TASK-00444](00444-TASK.md) | Synchronize from the Dashboard and complete the instruction-change journey | ready-for-agent | [TICKET-00109](../tickets/00109-TICKET.md) |
+| [TASK-00445](00445-TASK.md) | Record independent managed Reviews | needs-info | [TICKET-00083](../tickets/00083-TICKET.md) |
 <!-- /planning:records -->
