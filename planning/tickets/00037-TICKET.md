@@ -2,7 +2,7 @@
 id: TICKET-00037
 epic: EPIC-00006
 title: Configure and qualify Jev access for the Harness
-status: ready-for-agent
+status: done
 ---
 
 # Configure and qualify Jev access for the Harness
@@ -92,7 +92,7 @@ OpenRouter access; a missing key does not prevent bounded implementation with co
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00159](../tasks/00159-TASK.md) | Evaluate bounded typed questions with usage receipts | in-progress |
+| [TASK-00159](../tasks/00159-TASK.md) | Evaluate bounded typed questions with usage receipts | done |
 | [TASK-00184](../tasks/00184-TASK.md) | Configure protected Jev access and verify Pi readiness | done |
 <!-- /planning:children -->
 

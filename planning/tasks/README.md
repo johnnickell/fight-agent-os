@@ -161,7 +161,7 @@
 | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | done | — |
 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | done | — |
 | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | done | — |
-| [TASK-00159](00159-TASK.md) | Evaluate bounded typed questions with usage receipts | in-progress | [TICKET-00037](../tickets/00037-TICKET.md) |
+| [TASK-00159](00159-TASK.md) | Evaluate bounded typed questions with usage receipts | done | [TICKET-00037](../tickets/00037-TICKET.md) |
 | [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
 | [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
 | [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | ready-for-agent | [TICKET-00039](../tickets/00039-TICKET.md) |
