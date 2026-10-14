@@ -39,7 +39,7 @@ provider access or net savings is presumed. No real-account setup or live reques
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Configure decision access | Set/revise explicit connection and credential-store reference | Inspect redacted effective connection, evaluator and limits | Local configuration revision fact; no Workflow transition | Protected local configuration; credential storage only through the selected secure capability |
+| Configure decision access | Set/revise explicit connection and limits; Pi owns local OpenRouter authentication | Inspect redacted effective connection, evaluator and limits | Local configuration revision fact; no Workflow transition | Protected nonsecret local configuration; no duplicate Jev credential store |
 | Verify readiness | Run a bounded synthetic decision check | Inspect readiness and categorized failure | Check succeeded/failed with configuration identity | Small provider request without repository/private content and an observed result |
 | Evaluate bounded questions | Submit authorized state and typed question block | Inspect typed answers, uncertainty and receipt | Evaluation completed/failed; observational only | Bounded upstream request and redacted usage/evidence |
 | Inspect usage and failures | N/A: inspection is read-only | Read available cost, latency, limits and failure reasons | N/A: no domain transition from inspection | Bounded local presentation; no invented billing facts |
@@ -56,8 +56,11 @@ Names describe semantic operations, not preselected PHP classes, MCP wire method
   double counting; unavailable cost is not zero. Account for uncertain request outcomes before retrying billed work.
 - Reject malformed/out-of-range/non-finite or mismatched answers, missing required measures, undeclared choices and
   stale configuration. Keep absence, refusal, timeout, denied access, billing failure and invalid response distinct.
-- Verify an existing Pi credential path before reuse; do not copy private auth files into a worktree or expose keys to
-  child Agents. A managed installation may later provide the protected service without per-Agent personal keys.
+- For the local slice, use an injected supported Pi model-registry API for OpenRouter authentication; no auth-file
+  reads/copies or independently selected ambient fallback. Resolve only after explicit operator approval. Pi 1.2.0
+  returns undefined for absent credentials and resolution errors: report opaque `credential-unavailable`, not
+  unobservable locked/denied distinctions. Provider denial stays distinct. A managed installation may later provide
+  infrastructure-owned protected credentials without per-Agent personal keys; local reuse is not isolation.
 - Missing initial setup makes the Jev-enabled profile unavailable. Consumers receive explicit failures; this layer
   cannot silently downgrade their protection, choose another provider or fabricate successful evaluation.
 
@@ -90,7 +93,7 @@ OpenRouter access; a missing key does not prevent bounded implementation with co
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00159](../tasks/00159-TASK.md) | Evaluate bounded typed questions with usage receipts | ready-for-agent |
-| [TASK-00184](../tasks/00184-TASK.md) | Configure protected Jev access and verify Pi readiness | ready-for-agent |
+| [TASK-00184](../tasks/00184-TASK.md) | Configure protected Jev access and verify Pi readiness | ready-for-human |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -110,3 +113,15 @@ eight questions, sixteen choices, two concurrent requests, fifteen seconds and z
 provider limits apply. Request/session monetary ceilings require explicit operator configuration and conservative
 reservation, with unknown charges retained. Both TASKs are unranked; current Board priority is unchanged.
 Implementation and live acceptance remain outstanding. No credentials or provider calls were used in planning.
+
+### Approved credential amendment — 2026-10-14
+
+John approved replacing TASK-00184's dedicated Keychain helper/setup with injected Pi-managed OpenRouter
+resolution (`ctx.modelRegistry.getApiKeyForProvider('openrouter')`) after qualification of its actual semantics.
+The 2026-10-07 Keychain choice above is historical and superseded for local access, including its TASK-00159
+consumer. Nonsecret operator settings, endpoint/evaluator, fixed synthetic disclosure, explicit monetary ceilings,
+conservative reservation, limits, validation and lifecycle guarantees remain required. Authentication stays Pi-owned;
+its configured source may prompt. Opaque credential unavailability is honest within this API's observability;
+upstream denial remains distinct. No duplicate Jev store, auth-file inspection/copy or silent alternate source.
+No real credential resolution or paid requests are authorized for automated implementation; live acceptance needs
+John's explicit ceilings and successful permitted check. Managed infrastructure-owned credentials remain future work.

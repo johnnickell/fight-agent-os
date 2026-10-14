@@ -27,7 +27,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 49 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | [TICKET-00038 — Guard Pi tool execution with deterministic restrictions and Jev](../tickets/00038-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | [TICKET-00037 — Configure and qualify Jev access for the Harness](../tickets/00037-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | [TICKET-00034 — Define the SDLC team templates and role-specific capabilities](../tickets/00034-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00283](00283-TASK.md) | Protect email-change issuance material | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | — | — |
@@ -270,6 +269,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 73 | [TASK-00076](00076-TASK.md) | Qualify supported local Planning operation | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-human | [TASK-00075](00075-TASK.md) | — |
 | 101 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-human | [TASK-00103](00103-TASK.md) | — |
 | 111 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-human | [TASK-00104](00104-TASK.md), [TASK-00113](00113-TASK.md) | — |
+| — | [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | [TICKET-00037 — Configure and qualify Jev access for the Harness](../tickets/00037-TICKET.md) | ready-for-human | — | — |
 
 ## Needs Triage
 

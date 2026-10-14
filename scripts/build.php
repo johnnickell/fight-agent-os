@@ -208,7 +208,12 @@ try {
         'Frontend Node version'           => ['node', '--version'],
         'Frontend npm version'            => ['npm', '--version'],
         'Frontend dependency versions'    => ['npm', 'ls', '--depth=0'],
-        'Pi presentation'                 => ['node', '--test', '../harness/pi/tests/header.test.mjs']
+        'Pi Harness behavior'             => [
+            'node',
+            '--test',
+            '../harness/pi/tests/header.test.mjs',
+            '../harness/pi/tests/jev.test.mjs'
+        ]
     ];
     $frontendChecks = [
         'typecheck', 'lint', 'format-check', 'coverage', 'build-check',
