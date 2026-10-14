@@ -7,7 +7,7 @@ macOS). Mixed typed forms have controlled Pi integration evidence, not live qual
 check succeeded on October 14, 2026; independent acceptance remains pending. A synthetic result does not establish
 model accuracy or another installation's account access. This is not the
 managed Runner, an execution sandbox or tool safeguards. TASK-00162 adds opt-in, instruction-based single-file
-screening; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
+screening; TASK-00163 extends it with bounded lists/globs and session-local metadata caching; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
 is activated by installing/updating this source.
 
 ## Install

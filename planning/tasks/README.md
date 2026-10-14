@@ -165,7 +165,7 @@
 | [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
 | [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
 | [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | done | [TICKET-00039](../tickets/00039-TICKET.md) |
-| [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | ready-for-agent | [TICKET-00039](../tickets/00039-TICKET.md) |
+| [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | in-progress | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
