@@ -5,6 +5,9 @@ description: Assess a named security boundary through safe read-only threat and 
 
 # Security Audit
 
+For discovery in a participating `jev_read_file` session, follow the shared
+[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
+
 Establish the repository/revision, selected boundary, protected assets, plausible actors and their existing
 privileges, entry points, deployment assumptions and permitted evidence methods. Read applicable local security
 requirements and [engineering standards](../../../docs/engineering/STANDARDS.md). Reuse authorized scope; clarify

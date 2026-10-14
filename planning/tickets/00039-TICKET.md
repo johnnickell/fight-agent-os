@@ -114,7 +114,7 @@ Mark an affected TASK needs-info if a necessary guarantee remains unresolved; do
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00162](../tasks/00162-TASK.md) | Screen individual files and require selective reads | ready-for-agent |
+| [TASK-00162](../tasks/00162-TASK.md) | Screen individual files and require selective reads | done |
 | [TASK-00163](../tasks/00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | ready-for-agent |
 <!-- /planning:children -->
 
