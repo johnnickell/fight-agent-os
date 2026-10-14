@@ -1,4 +1,4 @@
-# Single-file relevance screening
+# Bounded file relevance screening
 
 `jev_read_file` is an opt-in consumer of the [shared typed-judgment capability](JUDGMENTS.md), not another provider
 client. TASK-00162 supplies one regular UTF-8 file per call, controlled behavior and bounded live Pi SDK
@@ -52,7 +52,45 @@ hard interception of ordinary reads; positive relevance cannot override any acce
 
 ## Tool contract
 
-Inputs: `path`, `need` (1–4,096 UTF-8 bytes) and one `question`:
+Inputs: exactly one of `path`, `paths` (1–50 explicit files), or `glob`, plus `need` (1–4,096 UTF-8 bytes) and one `question`:
+
+Globs support `*` and `?` within segments and whole-segment `**` recursion. Braces, character classes and backslash
+patterns are refused; no shell expansion occurs. Narrow the literal directory prefix before requesting broad discovery.
+Enumeration reads directory entries through held no-follow descriptors, never following symlinks. Linux uses
+Node's descriptor-relative `/proc/self/fd` path with one-entry buffers. On macOS, Node cannot enumerate `/dev/fd`
+directories: the fixed `file-discovery.py` helper uses system `/usr/bin/python3` (qualified Python 3.9.6), isolated
+stdlib-only mode, `os.scandir(fd)`/`fdopendir` and descriptor-relative `O_NOFOLLOW` child opens. It receives only
+nonsecret policy/pattern data and the held directory descriptor, with a minimal environment, bounded I/O and a
+killable deadline. No shell, source execution, package installation or arbitrary command is involved. Missing helper
+runtime is an explicit incomplete enumeration, not fallback to a pathname/shell scan. This is a new macOS glob
+runtime prerequisite; single files/lists do not require Python. It stops at 50 candidates, 10,000 visited entries, depth 128 or 60 seconds; skipped protected directories are not explored.
+Counts describe only visited/enumerated scope. Count/entry/time stops report additional candidates may exist, not an
+invented total. Explicit lists deduplicate canonical paths, and unauthorized paths are redacted. Authorized batch results
+include bounded relative paths for follow-up (maximum 512 bytes); longer names are skipped without source disclosure.
+The single-file result keeps its existing hashed path identity.
+
+Batches consume at most 1 MiB total initial-source bytes and use at most two workers, still subject to the shared
+two-outstanding-request, fifteen-second request, encoded-payload and persisted spending ceilings. Initial reads consume
+the allowance even when decoding, stability checks or payload admission later fail; unread oversized/denied files
+consume no bytes. `coverage.totalSourceBytes` reports this consumption; `admittedSourceBytes` separately counts bytes
+in successful initial UTF-8 snapshots, not necessarily completed evaluations. Neither counter includes validation
+rereads. Each file gets an independent result. Partial failures preserve valid completions; cancellation stops new
+dispatch and rejects obsolete late answers. Results are
+bounded to 64 KiB: if judgment metadata does not fit, explicit `result-presentation-limit` markers replace it and
+coverage is incomplete. Full shared receipts remain in their owning bounded inspection buffer; batch receipts are compact.
+`providerAttempts` counts calls to the shared capability, including admission failures, not necessarily dispatched/billed
+calls. Available reported usage sums once; `unknownCosts` and retained reservations remain separate from known cost.
+
+A 128-entry LRU stores judgment metadata only, at most 8 KiB per entry (1 MiB retained metadata ceiling). Cache identity
+binds actual session, complete authority policy/allocation, exact content digest, need, declared question/choices,
+configuration/evaluator, rubric and policy. Complete positive and negative judgments may be reused; unknown/failure
+results are not cached. Every hit rechecks current policy, source access and exact digest, with fresh source revision.
+Hits have `receipt: null`, `cache.hit: true`, and no new provider usage. Local `sourceChecks` counts snapshot attempts;
+`sourceCheckBytes` counts all bytes actually read, including rejected snapshots and independent validation rereads.
+Authorization checks may reread the same bytes several times, so this local total can exceed the initial-source ceiling.
+No source body enters the cache; shutdown/reload and observed authority drift clear it. It is not shared with children.
+Current access is checked again before delivery, including early batch completions. This remains same-user trusted
+runtime protection, not enforced read interception or an OS sandbox.
 
 - `{ type: 'yes-no', instructions }` is preferred.
 - Classification uses `{ type: 'choice', instructions, choices, unknownChoice, otherChoice, relevantChoices }`.
@@ -70,9 +108,10 @@ bytes and sources >32 KiB are refused. The open itself prevents ancestor-symlink
 filesystem adapter used by focused checks uses descriptor-relative `/proc/self/fd` traversal with `O_NOFOLLOW`
 on every component. Other filesystem hosts fail closed, and the participating Jev runtime remains macOS-only.
 Before reading, the opened descriptor must match the authorized inode and metadata; reads are bounded to 32 KiB
-plus one detection byte. Metadata/path identity are checked again after the
-read. The source is re-resolved and compared before disclosure and after provider completion. Changed/replaced or
-unstable source discards the judgment. Same-user arbitrary filesystem mutation is not an OS security boundary.
+plus one detection byte, further capped by the remaining initial-source allowance for a batch candidate. When no
+detection byte fits, post-read size/metadata checks still reject growth rather than accepting a truncated snapshot.
+Metadata/path identity are checked again after the read. The source is re-resolved and compared before disclosure
+and after provider completion. Changed/replaced or unstable source discards the judgment. Same-user arbitrary filesystem mutation is not an OS security boundary.
 
 Results contain `status`, `threshold`, typed `judgment`, question digest and predeclared relevance set, raw-byte
 SHA-256/source revision/byte count, coverage and the shared redacted receipt. Source/path identifiers are hashes,
@@ -151,3 +190,50 @@ not an accuracy estimate. The baseline child read one irrelevant worksheet; sele
 The original concurrency rejection and undispatched unchanged retry remain visible. Live unknown-choice behavior
 was not observed; boundary/denial/failure cases rely on controlled behavior evidence, not invented live results.
 Independent Review/QA, TASK completion and delivery remain separate.
+
+## TASK-00163 implementation checkpoint
+
+Bounded lists/globs and the metadata LRU are implemented but not independently accepted. Fresh evidence is under
+ignored `.runs/tasks/TASK-00163/runs/engineer-scWR1F/`; see the
+[TASK checkpoint](../../planning/tasks/00163-TASK.md#engineer-implementation-checkpoint--2026-10-14) for exact
+runtime/source manifests, tests, comparisons, accounting and unresolved qualification.
+
+Real Pi 1.2.0/macOS SDK parent/child inquiries used lists, yes/no and predeclared classification with selective reads.
+A separate fresh pump inquiry used a glob and retained protected-subtree/symlink skips as incomplete coverage.
+The first macOS filesystem attempt failed because Node cannot enumerate `/dev/fd`; the fixed descriptor-relative
+helper passed direct boundary checks and the new glob inquiry. Later early-result source checks have fresh failing-
+then-passing regressions; earlier live manifests are not mislabeled as literal-final-source evidence.
+
+The initial two scripted nested-cache probes failed in their evidence drivers; their cache/source-withdrawal assertions
+did not complete. The first recovery, separately authorized as a ninth identity, also failed: it inspected top-level
+`details`, but `ctx.executeTool()` returns an envelope whose screening metadata is **`outcome.result.details`**. Persisted
+`ToolResultMessage.details` is a different contract. All failures and consumed grants remain retained, not reconstructed
+as success. Owned behavior checks cover cache withdrawal, source changes, bounds and cancellation.
+
+John then authorized one tenth identity. After complete offline direct qualification of the scripted sequence, actual
+Pi 1.2.0/macOS SDK/json recovered the missing assertions on committed production source: **seven raw nested outcomes,
+eight controlled evaluations, 12 passing assertions**. The initial glob returned independent results with redacted
+protected-subtree/symlink skips. A repeat produced two cache hits, zero upstream attempts and six local checks/141 bytes;
+current disclosure withdrawal redacted prior metadata. Mutation after an early completion invalidated only that result.
+Two fresh cache seeds and two confirmed hits immediately preceded actual reload; afterward, two fresh evaluations and
+zero hits demonstrated clearing. Tool/shared-rule declarations, unchanged source/model, orderly shutdown and grant
+withdrawal were captured without duplicate reload subscriptions. See the
+[recovered TASK checkpoint](../../planning/tasks/00163-TASK.md#engineer-qualification-recovery--2026-10-14) for exact
+identity, source manifests, raw outcome paths and accounting.
+
+The tenth identity made **zero external Jev calls**, using controlled synthetic credentials/transport and real pinned
+Codex main requests. Controlled ledger amounts are simulations, not billed USD. Aggregate actual TASK Jev remains
+319 micro-USD settled, zero pending; all **ten identities** are consumed/disposed and grants closed. Remaining budget is
+not authorization to repeat an inquiry, resume a disposed identity or create an eleventh subject. This evidence recovers
+the SDK behavior checkpoint, not live accuracy, native CLI/TUI qualification, independent Review/QA or acceptance.
+
+All fifteen native Jev requests disclosed exact synthetic manifest inputs only and reported TypeSafe /
+`typesafe/jev-1.13-20260917`. Reported cost totaled $0.000312312; ledgers settled 319 micro-USD, pending/uncertain zero,
+with 59,681 micro-USD of the Engineer allocation releasable. Main sessions stayed `openai-codex/gpt-6.1-sol/high`;
+auxiliary raw provider events reported `gpt-6.1-sol`. Main invoiced billing is unknown, not zero. No global activation.
+
+The initial selective parent/child pair avoided 319 serialized source-result bytes but increased total tool-result bytes,
+serialized sent-context bytes, known Pi-catalog-plus-Jev cost and latency compared with direct reads. The glob comparison
+also increased total overhead. No demonstrated false-negative in this small unblinded sample is not an accuracy or
+savings guarantee. Preserve negative screens, baseline irrelevant reads and per-file mandatory/known-target/exact-evidence
+exceptions. Controlled cases are not live accuracy evidence; native CLI/TUI children and external launchers remain unqualified.

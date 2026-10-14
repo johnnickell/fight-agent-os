@@ -118,7 +118,7 @@ Mark an affected TASK needs-info if a necessary guarantee remains unresolved; do
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00162](../tasks/00162-TASK.md) | Screen individual files and require selective reads | done |
-| [TASK-00163](../tasks/00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | ready-for-agent |
+| [TASK-00163](../tasks/00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | done |
 | [TASK-00309](../tasks/00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | ready-for-agent |
 <!-- /planning:children -->
 

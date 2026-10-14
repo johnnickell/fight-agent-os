@@ -4,6 +4,7 @@ import { isAbsolute, resolve, dirname, sep, basename } from 'node:path';
 import { prepareEvaluation } from './judgments.mjs';
 import { Unavailable, reservationMicroUsd } from './readiness.mjs';
 
+import { discoverFiles, batchLimits } from './file-discovery.mjs';
 export const filePolicyVersion = 'file-screen-v1';
 export const sourceByteLimit = 32768;
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -34,8 +35,13 @@ export function validateFilePolicy(value) {
 }
 
 function inputQuestion(input) {
-  if (!exact(input, ['path', 'need', 'question']) || typeof input.path !== 'string' || !input.path || input.path.length > 4096 ||
-    input.path.includes('\0') || typeof input.need !== 'string' || !input.need.trim() || Buffer.byteLength(input.need) > 4096) deny('invalid-input');
+  const selections = ['path', 'paths', 'glob'].filter(key => Object.hasOwn(input ?? {}, key));
+  const validPath = path => typeof path === 'string' && path.length > 0 && path.length <= 4096 && !path.includes('\0');
+  if (selections.length !== 1 || !exact(input, [selections[0], 'need', 'question']) ||
+    (input.path !== undefined && !validPath(input.path)) ||
+    (input.paths !== undefined && (!Array.isArray(input.paths) || !input.paths.length || input.paths.length > 50 || !input.paths.every(validPath))) ||
+    (input.glob !== undefined && (!validPath(input.glob) || /[\[\]{}\\]/.test(input.glob))) ||
+    Buffer.byteLength(JSON.stringify(input)) > 65536 || typeof input.need !== 'string' || !input.need.trim() || Buffer.byteLength(input.need) > 4096) deny('invalid-input');
   const q = input.question;
   if (!object(q) || typeof q.instructions !== 'string' || !q.instructions.trim() || Buffer.byteLength(q.instructions) > 4096) deny('invalid-input');
   if (q.type === 'yes-no' && exact(q, ['type', 'instructions'])) return { ...q };
@@ -70,7 +76,7 @@ function openContained(path) {
 
 /** Read a bounded regular UTF-8 snapshot only after canonical access and opened-inode checks */
 export class FileSource {
-  snapshot(path, policy) {
+  authorize(path, policy) {
     const lexical = resolve(path);
     const excluded = candidate => policy.excludedPaths.some(p => within(candidate, resolve(p))) ||
       candidate.split(sep).some(part => policy.excludedNames.includes(part)) ||
@@ -91,10 +97,22 @@ export class FileSource {
     for (let cursor = lexical; cursor !== root; cursor = dirname(cursor)) {
       if (lstatSync(cursor).isSymbolicLink()) deny('symlink-denied');
     }
+    return canonical;
+  }
+  openDirectory(path, policy) {
+    const canonical = this.authorize(path, policy), before = lstatSync(canonical, { bigint: true });
+    if (!before.isDirectory()) deny('unsupported-file');
+    const fd = openContained(canonical);
+    if (stamp(fstatSync(fd, { bigint: true })) !== stamp(before)) { closeSync(fd); deny('unstable-source'); }
+    return fd;
+  }
+  snapshot(path, policy, { maxBytes = sourceByteLimit + 1, onRead = () => {} } = {}) {
+    const canonical = this.authorize(path, policy), lexical = resolve(path);
     const before = lstatSync(canonical, { bigint: true });
     if (!before.isFile()) deny('unsupported-file');
     if (before.nlink !== 1n) deny('unsupported-hardlink');
     if (before.size > BigInt(sourceByteLimit)) deny('source-limit');
+    if (before.size > BigInt(maxBytes)) deny('batch-source-limit');
     let fd;
     try {
       try { fd = openContained(canonical); }
@@ -106,9 +124,13 @@ export class FileSource {
       // A replaced parent can redirect open(), but cannot cause a read of a different inode.
       if (!opened.isFile() || stamp(opened) !== stamp(before) || realpathSync(lexical) !== canonical ||
         stamp(lstatSync(canonical, { bigint: true })) !== stamp(before)) deny('unstable-source');
-      const bytes = Buffer.alloc(sourceByteLimit + 1);
+      // Never use the detection byte to exceed the remaining initial-source allowance.
+      const bytes = Buffer.alloc(Math.min(sourceByteLimit + 1, maxBytes));
       let count = 0, read;
-      while (count < bytes.length && (read = readSync(fd, bytes, count, bytes.length - count, null)) > 0) count += read;
+      while (count < bytes.length && (read = readSync(fd, bytes, count, bytes.length - count, null)) > 0) {
+        count += read;
+        onRead(read); // Consumption survives decoding, stability and I/O failures.
+      }
       if (count > sourceByteLimit) deny('source-limit');
       if (count !== Number(before.size) || stamp(fstatSync(fd, { bigint: true })) !== stamp(before) ||
         realpathSync(lexical) !== canonical || stamp(lstatSync(canonical, { bigint: true })) !== stamp(before)) deny('unstable-source');
@@ -123,47 +145,177 @@ export class FileSource {
 
 const localCodes = new Set(['invalid-input', 'invalid-file-policy', 'file-profile-unavailable', 'session-unallocated',
   'disclosure-denied', 'stale-file-policy', 'root-denied', 'sensitive-file', 'symlink-escape', 'symlink-denied',
-  'unsupported-file', 'unsupported-hardlink', 'source-limit', 'binary-source', 'unstable-source', 'payload-limit', 'choice-limit', 'unsupported-host']);
+  'unsupported-file', 'unsupported-hardlink', 'source-limit', 'binary-source', 'unstable-source', 'payload-limit', 'choice-limit', 'unsupported-host',
+  'cancelled', 'batch-time-limit', 'batch-source-limit']);
 
 /** Resolve one source and apply relevance policy over the shared capability, without another provider client */
 export class FileScreening {
+  #cache = new Map();
+  #authority;
+  #generation = 0;
+  #operations = new Set();
+  close() {
+    this.#generation++;
+    this.#cache.clear(); this.#authority = undefined;
+    for (const controller of this.#operations) controller.abort();
+    this.#operations.clear();
+  }
+  cacheInfo() { return { entries: this.#cache.size, bytes: [...this.#cache.values()].reduce((sum, value) => sum + Buffer.byteLength(JSON.stringify(value)), 0) }; }
   constructor({ settings, configuration, connect, sessionId, cwd, source = new FileSource(), now = Date.now, platform = process.platform }) {
     this.settings = settings; this.configuration = configuration; this.connect = connect; this.sessionId = sessionId; this.cwd = cwd; this.source = source; this.now = now; this.platform = platform;
   }
   #policy() {
-    if (this.platform !== 'darwin') deny('unsupported-host');
-    const value = this.settings.load();
-    if (!value) deny('file-profile-unavailable');
-    const policy = validateFilePolicy(value), allocation = policy.sessions[hash(this.sessionId)];
-    if (!allocation || allocation.expiresAt <= this.now()) deny('session-unallocated');
-    if (!allocation.providerDisclosure) deny('disclosure-denied');
-    return { policy, allocation, identity: hash(JSON.stringify(policy)) };
+    try {
+      if (this.platform !== 'darwin') deny('unsupported-host');
+      const value = this.settings.load();
+      if (!value) deny('file-profile-unavailable');
+      const policy = validateFilePolicy(value), allocation = policy.sessions[hash(this.sessionId)];
+      if (!allocation || allocation.expiresAt <= this.now()) deny('session-unallocated');
+      if (!allocation.providerDisclosure) deny('disclosure-denied');
+      const identity = hash(JSON.stringify(policy));
+      if (this.#authority && identity !== this.#authority) this.#cache.clear();
+      return { policy, allocation, identity };
+    } catch (error) { this.#cache.clear(); this.#authority = undefined; throw error; }
   }
   availability() {
     try {
       const { policy, allocation } = this.#policy(), capability = this.connect(() => false);
-      if (capability?.state !== 'available') return capability?.state ?? 'file-profile-unavailable';
-      if (capability.configuration.identity !== policy.configuration) return 'stale-file-policy';
-      if (capability.configuration.disclosure !== 'authorized-supplied-state') return 'disclosure-denied';
-      if (allocation.requestMicroUsd > capability.configuration.requestMicroUsd ||
-        allocation.sessionMicroUsd > capability.configuration.sessionMicroUsd) return 'session-unallocated';
-      return 'available';
-    } catch (error) { return localCodes.has(error.code) ? error.code : 'invalid-file-policy'; }
+      const status = capability?.state !== 'available' ? capability?.state ?? 'file-profile-unavailable' :
+        capability.configuration.identity !== policy.configuration ? 'stale-file-policy' :
+        capability.configuration.disclosure !== 'authorized-supplied-state' ? 'disclosure-denied' :
+        allocation.requestMicroUsd > capability.configuration.requestMicroUsd || allocation.sessionMicroUsd > capability.configuration.sessionMicroUsd ? 'session-unallocated' : 'available';
+      if (status !== 'available') this.#cache.clear();
+      return status;
+    } catch (error) { this.#cache.clear(); return localCodes.has(error.code) ? error.code : 'invalid-file-policy'; }
   }
   async screen(input, { signal } = {}) {
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    if (signal?.aborted) abort();
+    signal?.addEventListener('abort', abort, { once: true });
+    this.#operations.add(controller);
+    try {
+      if (input?.paths !== undefined || input?.glob !== undefined) return await this.#batch(input, { signal: controller.signal });
+      return await this.#single(input, { signal: controller.signal });
+    } finally { this.#operations.delete(controller); signal?.removeEventListener('abort', abort); }
+  }
+  async #batch(input, { signal }) {
+    const generation = this.#generation;
+    const start = this.now(), deadline = start + batchLimits.milliseconds, controller = new AbortController();
+    let timedOut = false;
+    const abort = () => controller.abort();
+    signal.addEventListener('abort', abort, { once: true });
+    if (signal.aborted) abort();
+    const timer = setTimeout(() => { timedOut = true; abort(); }, batchLimits.milliseconds);
+    const stopped = () => timedOut || this.now() >= deadline ? 'batch-time-limit' : controller.signal.aborted ? 'cancelled' : null;
+    try {
+      inputQuestion(input);
+      const bound = this.#policy(), available = this.availability();
+      if (available !== 'available') deny(available);
+      const discovered = await discoverFiles({ input, cwd: this.cwd, policy: bound.policy, source: this.source, stopped,
+        signal: controller.signal, remainingMs: Math.max(0, deadline - this.now()) });
+      const results = Array(discovered.candidates.length);
+      let cursor = 0, sourceBytes = 0, admittedSourceBytes = 0;
+      const accounting = { sourceChecks: 0, sourceCheckBytes: 0, cacheHits: 0, providerAttempts: 0,
+        reportedCostUsd: 0, unknownCosts: 0, retainedReservations: 0,
+        measuredUsage: null };
+      const worker = async () => {
+        while (cursor < results.length) {
+          const index = cursor++, candidate = discovered.candidates[index];
+          const stop = stopped();
+          if (stop || candidate.status) {
+            results[index] = { index, status: stop ?? candidate.status, threshold: 'unresolved', judgment: null, source: null, coverage: { complete: false } };
+            continue;
+          }
+          const result = await this.#single({ path: candidate.path, need: input.need, question: input.question }, {
+            signal: controller.signal, accounting, stopped, remainingSourceBytes: () => batchLimits.sourceBytes - sourceBytes,
+            consume: bytes => { sourceBytes += bytes; }, admitted: bytes => { admittedSourceBytes += bytes; },
+          });
+          if (result.cache?.hit) accounting.cacheHits++;
+          if (result.receipt) {
+            accounting.providerAttempts++;
+            if (result.receipt.usage?.costUsd === null || result.receipt.usage?.costUsd === undefined) accounting.unknownCosts++;
+            else {
+              const usage = result.receipt.usage;
+              accounting.reportedCostUsd += usage.costUsd;
+              accounting.measuredUsage ??= { inputTokens: 0, outputTokens: 0, costUsd: 0 };
+              accounting.measuredUsage.inputTokens += usage.inputTokens;
+              accounting.measuredUsage.outputTokens += usage.outputTokens;
+              accounting.measuredUsage.costUsd += usage.costUsd;
+            }
+            if (result.receipt.reservationRetained) accounting.retainedReservations++;
+          }
+          // Keep the full shared receipt in its owning bounded inspection buffer, not fifty copies in presentation.
+          const receipt = result.receipt ? { state: result.receipt.state, evaluator: result.receipt.evaluator,
+            usage: result.receipt.usage, reservationRetained: result.receipt.reservationRetained } : null;
+          const { accounting: _local, ...metadata } = result;
+          results[index] = { index, path: result.source ? candidate.display : undefined, ...metadata, receipt };
+        }
+      };
+      await Promise.all([worker(), worker()]);
+      // Current authority also applies to early completions retained while other candidates were running.
+      for (let index = 0; index < results.length; index++) {
+        if (!results[index].source) continue;
+        try {
+          if (generation !== this.#generation) deny('cancelled');
+          const freshPolicy = this.#policy();
+          if (freshPolicy.identity !== bound.identity) deny('stale-file-policy');
+          accounting.sourceChecks++;
+          const fresh = this.source.snapshot(discovered.candidates[index].path, freshPolicy.policy,
+            { onRead: bytes => { accounting.sourceCheckBytes += bytes; } });
+          const prior = results[index].source;
+          if (fresh.digest !== prior.digest || fresh.revision !== prior.revision || fresh.id !== prior.id) deny('unstable-source');
+        } catch (error) {
+          results[index] = { index, status: error instanceof Unavailable ? error.code : 'source-unavailable', threshold: 'unresolved', judgment: null, source: null, coverage: { complete: false } };
+          this.#cache.clear();
+        }
+      }
+      const completed = results.filter(result => result.coverage.complete).length;
+      const coverage = { ...discovered.coverage, complete: discovered.coverage.complete && completed === results.length,
+        completedFiles: completed, unresolvedFiles: results.length - completed, totalSourceBytes: sourceBytes, admittedSourceBytes,
+        stopReason: stopped(), evaluatedScope: 'enumerated-candidates-only', presentedJudgments: results.filter(result => result.judgment).length };
+      const output = { status: coverage.complete ? 'complete' : 'incomplete', threshold: 'unresolved', policyVersion: filePolicyVersion,
+        judgment: null, source: null, receipt: null, coverage, accounting, results, elapsedMs: Math.max(0, this.now() - start) };
+      // Metadata, never source, may exceed presentation capacity. Retain every file's unresolved marker.
+      for (let index = results.length - 1; Buffer.byteLength(JSON.stringify(output)) > batchLimits.resultBytes && index >= 0; index--) {
+        results[index] = { index, status: 'result-presentation-limit', threshold: 'unresolved', judgment: null, source: null, coverage: { complete: false } };
+        coverage.complete = false; output.status = 'incomplete'; coverage.presentationIncomplete = true;
+      }
+      coverage.presentedJudgments = results.filter(result => result.judgment).length;
+      return output;
+    } catch (error) {
+      return { status: error instanceof Unavailable ? error.code : 'invalid-input', threshold: 'unresolved', policyVersion: filePolicyVersion,
+        judgment: null, source: null, receipt: null, results: [], coverage: { complete: false } };
+    } finally { clearTimeout(timer); signal.removeEventListener('abort', abort); }
+  }
+  async #single(input, { signal, accounting = { sourceChecks: 0, sourceCheckBytes: 0 }, consume = () => {}, admitted = () => {}, stopped = () => null,
+    remainingSourceBytes = () => sourceByteLimit + 1 } = {}) {
     let snapshot, evaluation, prepared, bound;
+    const generation = this.#generation;
+    const read = (path, policy, maxBytes = sourceByteLimit + 1, initial = false) => {
+      accounting.sourceChecks++;
+      return this.source.snapshot(path, policy, { maxBytes, onRead: bytes => {
+        accounting.sourceCheckBytes += bytes;
+        if (initial) consume(bytes);
+      } });
+    };
     try {
       const question = inputQuestion(input);
+      if (stopped()) deny(stopped());
       if (signal?.aborted) deny('cancelled');
       bound = this.#policy();
       const availability = this.availability();
       if (availability !== 'available') deny(availability);
       const path = resolve(this.cwd, input.path);
-      snapshot = this.source.snapshot(path, bound.policy);
+      if (this.#authority !== bound.identity) { this.#cache.clear(); this.#authority = bound.identity; }
+      snapshot = read(path, bound.policy, remainingSourceBytes(), true);
+      admitted(snapshot.bytes);
       const current = () => {
+        if (stopped()) deny(stopped());
+        if (signal?.aborted || generation !== this.#generation) deny('cancelled');
         const policy = this.#policy();
         if (policy.identity !== bound.identity) deny('stale-file-policy');
-        const fresh = this.source.snapshot(path, policy.policy);
+        const fresh = read(path, policy.policy);
         if (fresh.digest !== snapshot.digest || fresh.revision !== snapshot.revision || fresh.canonical !== snapshot.canonical) deny('unstable-source');
       };
       let sourceFailure;
@@ -189,6 +341,15 @@ export class FileScreening {
         requestMicroUsd: bound.allocation.requestMicroUsd, sessionMicroUsd: bound.allocation.sessionMicroUsd };
       // Validate both encoded ceilings before admission; bind the authorizer to the identical wire request.
       prepared = prepareEvaluation(request, this.configuration());
+      const cacheKey = hash(JSON.stringify([this.sessionId, bound.identity, snapshot.digest, input.need, question,
+        prepared.questionDigest, bound.policy.configuration, filePolicyVersion]));
+      if (this.#cache.has(cacheKey)) {
+        current();
+        const cached = this.#cache.get(cacheKey);
+        this.#cache.delete(cacheKey); this.#cache.set(cacheKey, cached);
+        return { ...structuredClone(cached), source: { id: snapshot.id, digest: snapshot.digest, revision: snapshot.revision, bytes: snapshot.bytes },
+          receipt: null, cache: { hit: true, upstreamCalls: 0 }, accounting };
+      }
       evaluation = await capability.evaluate(request, { signal });
       if (sourceFailure) deny(sourceFailure);
       current();
@@ -196,17 +357,26 @@ export class FileScreening {
       const complete = evaluation.state === 'complete' && answer?.status === 'answered';
       const passes = complete && (answer.type === 'yes-no' ? answer.yesProbability >= 0.70 :
         question.relevantChoices.includes(answer.choice) && answer.confidence >= 0.70);
-      return { status: evaluation.state, threshold: passes ? 'positive' : complete ? 'not-positive' : 'unresolved',
+      const result = { status: evaluation.state, threshold: passes ? 'positive' : complete ? 'not-positive' : 'unresolved',
         policyVersion: filePolicyVersion, judgment: answer,
         question: { type: question.type, digest: prepared.questionDigest, relevantChoices: question.relevantChoices ?? null },
         source: { id: snapshot.id, digest: snapshot.digest, revision: snapshot.revision, bytes: snapshot.bytes },
         coverage: { complete: Boolean(complete), evaluatedBytes: evaluation.answers ? snapshot.bytes : 0, totalBytes: snapshot.bytes },
-        receipt: evaluation.receipt };
+        receipt: evaluation.receipt, cache: { hit: false, upstreamCalls: evaluation.receipt?.usage ? 1 : null }, accounting };
+      if (complete) {
+        const metadata = { ...result, receipt: null, accounting: undefined };
+        if (Buffer.byteLength(JSON.stringify(metadata)) <= batchLimits.cacheEntryBytes) {
+          this.#cache.set(cacheKey, structuredClone(metadata));
+          while (this.#cache.size > batchLimits.cacheEntries) this.#cache.delete(this.#cache.keys().next().value);
+        }
+      }
+      return result;
     } catch (error) {
+      this.#cache.clear();
       const status = error instanceof Unavailable ? error.code : error.code === 'ENOENT' ? 'source-missing' : 'source-unavailable';
       return { status, threshold: 'unresolved', policyVersion: filePolicyVersion, judgment: null,
-        source: snapshot ? { id: snapshot.id, digest: snapshot.digest, revision: snapshot.revision, bytes: snapshot.bytes } : null,
-        coverage: { complete: false, evaluatedBytes: 0, totalBytes: snapshot?.bytes ?? null }, receipt: evaluation?.receipt ?? null };
+        source: null,
+        coverage: { complete: false, evaluatedBytes: 0, totalBytes: null }, receipt: evaluation?.receipt ?? null, accounting };
     }
   }
 }
