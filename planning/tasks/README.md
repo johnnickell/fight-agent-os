@@ -165,7 +165,7 @@
 | [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
 | [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
 | [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | done | [TICKET-00039](../tickets/00039-TICKET.md) |
-| [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | in-progress | [TICKET-00039](../tickets/00039-TICKET.md) |
+| [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
@@ -311,4 +311,5 @@
 | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | done | [TICKET-00084](../tickets/00084-TICKET.md) |
 | [TASK-00307](00307-TASK.md) | Document the qualified backend API and browser integration reference | ready-for-agent | [TICKET-00081](../tickets/00081-TICKET.md) |
 | [TASK-00308](00308-TASK.md) | Publish the immutable qualified reference bundle to the five starter maintainers | needs-info | [TICKET-00082](../tickets/00082-TICKET.md) |
+| [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | ready-for-agent | [TICKET-00039](../tickets/00039-TICKET.md) |
 <!-- /planning:records -->

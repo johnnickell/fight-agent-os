@@ -15,7 +15,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -124,7 +124,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00169](00169-TASK.md) | Evaluate compaction timing with Jev after each eligible turn | [TICKET-00041 — Schedule and observe safe session compaction](../tickets/00041-TICKET.md) | ready-for-agent | [TASK-00168](00168-TASK.md) | — |
 | — | [TASK-00170](00170-TASK.md) | Inspect compaction history and annotate recovery incidents | [TICKET-00041 — Schedule and observe safe session compaction](../tickets/00041-TICKET.md) | ready-for-agent | [TASK-00168](00168-TASK.md) | — |
 | — | [TASK-00171](00171-TASK.md) | Expose authenticated typed judgments through MCP | [TICKET-00042 — Answer typed questions across bounded evidence](../tickets/00042-TICKET.md) | ready-for-agent | [TASK-00245](00245-TASK.md) | — |
-| — | [TASK-00172](00172-TASK.md) | Investigate large evidence sets through resumable stages | [TICKET-00042 — Answer typed questions across bounded evidence](../tickets/00042-TICKET.md) | ready-for-agent | [TASK-00171](00171-TASK.md), [TASK-00163](00163-TASK.md) | — |
+| — | [TASK-00172](00172-TASK.md) | Investigate large evidence sets through resumable stages | [TICKET-00042 — Answer typed questions across bounded evidence](../tickets/00042-TICKET.md) | ready-for-agent | [TASK-00171](00171-TASK.md) | — |
 | — | [TASK-00173](00173-TASK.md) | Reuse judgments when evidence and authority still match | [TICKET-00042 — Answer typed questions across bounded evidence](../tickets/00042-TICKET.md) | ready-for-agent | [TASK-00172](00172-TASK.md) | — |
 | — | [TASK-00174](00174-TASK.md) | Gather MCP evidence under the invoking principal | [TICKET-00043 — Gather judgment evidence through authorized tools and analysis](../tickets/00043-TICKET.md) | ready-for-agent | [TASK-00171](00171-TASK.md), [TASK-00161](00161-TASK.md) | — |
 | — | [TASK-00175](00175-TASK.md) | Run qualified repository analysis for judgments | [TICKET-00043 — Gather judgment evidence through authorized tools and analysis](../tickets/00043-TICKET.md) | ready-for-agent | [TASK-00174](00174-TASK.md) | — |
@@ -207,6 +207,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00296](00296-TASK.md) | Gate browser Feature presentation with current catalog availability | [TICKET-00072 — Show a complete authenticated Feature catalog and availability](../tickets/00072-TICKET.md) | ready-for-agent | [TASK-00295](00295-TASK.md), [TASK-00051](00051-TASK.md) | — |
 | — | [TASK-00301](00301-TASK.md) | Review ancestor updates and restore retained template revisions | [TICKET-00076 — Author and publish reviewed template revisions](../tickets/00076-TICKET.md) | ready-for-agent | [TASK-00300](00300-TASK.md) | — |
 | — | [TASK-00307](00307-TASK.md) | Document the qualified backend API and browser integration reference | [TICKET-00081 — Document reproducible backend API and browser references](../tickets/00081-TICKET.md) | ready-for-agent | [TASK-00305](00305-TASK.md) | — |
+| — | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | ready-for-agent | [TASK-00160](00160-TASK.md) | — |
 
 ## Needs Info
 
@@ -350,6 +351,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | — (standalone chore) | done | — | [PR #81](https://github.com/johnnickell/fight-agent-os/pull/81) |
 | — | [TASK-00159](00159-TASK.md) | Evaluate bounded typed questions with usage receipts | [TICKET-00037 — Configure and qualify Jev access for the Harness](../tickets/00037-TICKET.md) | done | — | [PR #91](https://github.com/johnnickell/fight-agent-os/pull/91) |
 | — | [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | done | — | [PR #93](https://github.com/johnnickell/fight-agent-os/pull/93) |
+| — | [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | done | — | — |
 | — | [TASK-00184](00184-TASK.md) | Configure protected Jev access and verify Pi readiness | [TICKET-00037 — Configure and qualify Jev access for the Harness](../tickets/00037-TICKET.md) | done | — | [PR #89](https://github.com/johnnickell/fight-agent-os/pull/89) |
 | — | [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | — (standalone bug) | done | — | [PR #77](https://github.com/johnnickell/fight-agent-os/pull/77) |
 | — | [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | — (standalone chore) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
