@@ -93,7 +93,7 @@ OpenRouter access; a missing key does not prevent bounded implementation with co
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00159](../tasks/00159-TASK.md) | Evaluate bounded typed questions with usage receipts | ready-for-agent |
-| [TASK-00184](../tasks/00184-TASK.md) | Configure protected Jev access and verify Pi readiness | ready-for-human |
+| [TASK-00184](../tasks/00184-TASK.md) | Configure protected Jev access and verify Pi readiness | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
