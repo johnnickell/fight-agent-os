@@ -208,6 +208,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00296](00296-TASK.md) | Gate browser Feature presentation with current catalog availability | [TICKET-00072 — Show a complete authenticated Feature catalog and availability](../tickets/00072-TICKET.md) | ready-for-agent | [TASK-00295](00295-TASK.md), [TASK-00051](00051-TASK.md) | — |
 | — | [TASK-00301](00301-TASK.md) | Review ancestor updates and restore retained template revisions | [TICKET-00076 — Author and publish reviewed template revisions](../tickets/00076-TICKET.md) | ready-for-agent | [TASK-00300](00300-TASK.md) | — |
 | — | [TASK-00307](00307-TASK.md) | Document the qualified backend API and browser integration reference | [TICKET-00081 — Document reproducible backend API and browser references](../tickets/00081-TICKET.md) | ready-for-agent | [TASK-00305](00305-TASK.md) | — |
+| — | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | ready-for-agent | [TASK-00160](00160-TASK.md) | — |
 
 ## Needs Info
 
