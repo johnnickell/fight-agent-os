@@ -110,7 +110,7 @@ async function enumerateMacDirectory({ root, pattern, policy, source, signal, re
   const unavailable = () => ({ paths: [], visitedEntries: null, skips: { 'enumeration-unavailable': 1 }, complete: false, reason: 'enumeration-unavailable' });
   try {
     fd = source.openDirectory(root, policy);
-    const payload = JSON.stringify({ root, pattern, excludedPaths: policy.excludedPaths, excludedNames: policy.excludedNames });
+    const payload = JSON.stringify({ root, pattern, excludedPaths: policy.excludedPaths.map(path => resolve(path)), excludedNames: policy.excludedNames });
     if (Buffer.byteLength(payload) > 65536 || signal?.aborted || remainingMs <= 0) return unavailable();
     return await new Promise(resolveResult => {
       // Fixed packaged helper, isolated stdlib, descriptor 3 only. No shell, source code execution or ambient Python paths.
