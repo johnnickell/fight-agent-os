@@ -24,7 +24,8 @@ Require Agents and sub-agents using the participating Harness profile to screen 
 batches. Deliver shared system instructions and relevant skill guidance together with the available tool; do not
 activate instructions requiring a missing tool. Start with metadata/frontmatter, paths, symbols or graph candidates
 when they can narrow the search without loading full files. Prompt compliance is the initial requirement;
-hard interception requiring screening receipts is excluded from this delivery.
+hard interception requiring screening receipts is excluded from the initial TASK-00162/00163 delivery. The
+approved activation/enforcement follow-up below extends this boundary through TASK-00309.
 
 The initial full-file read threshold is a positive Yes probability `noul >= 0.70`, or a predeclared relevant
 classification with reported confidence at least 0.70. A confident No/irrelevant answer does not pass. Preserve
@@ -50,7 +51,8 @@ silently use these exceptions. Report outage degradation and use only these boun
 than silently reverting to unrestricted bulk reads.
 
 Exclude memory ingestion/promotion, replacement of graph search, compaction, workflow routing, arbitrary command
-execution and hard read interception. The managed first-party MCP integration direction remains; TASK decomposition
+execution. Hard read interception is outside TASK-00162/00163; TASK-00309 adds the qualified local boundary.
+The managed first-party MCP integration direction remains; TASK decomposition
 must identify the supported local tool delivery for the interim profile without requiring full managed services.
 
 ## Use cases
@@ -104,7 +106,8 @@ must identify the supported local tool delivery for the interim profile without 
 ## Sequencing and TASK readiness
 
 Consume TICKET-00037's access, validation and usage capability. This work can proceed independently of guard
-implementation after its shared dependencies are available. It does not wait for WF-024 through WF-026 memory
+implementation after its shared dependencies are available for TASK-00162/00163. TASK-00309 additionally consumes
+TASK-00160's deterministic interception boundary. It does not wait for WF-024 through WF-026 memory
 contracts, database Planning, browser delivery or sandbox qualification. At TASK decomposition, pin the local tool
 registration, parent/sub-agent instruction propagation, supported root/disclosure policy and bounded defaults.
 Mark an affected TASK needs-info if a necessary guarantee remains unresolved; do not silently widen scope.
@@ -116,6 +119,7 @@ Mark an affected TASK needs-info if a necessary guarantee remains unresolved; do
 |---|---|---|
 | [TASK-00162](../tasks/00162-TASK.md) | Screen individual files and require selective reads | done |
 | [TASK-00163](../tasks/00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | ready-for-agent |
+| [TASK-00309](../tasks/00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -144,3 +148,24 @@ acceptance, including the 0.70 rule, known-target/required-evidence exceptions a
 
 The selected first-milestone TICKETs 00037–00039 now have approved TASK decompositions. This does not complete the
 rest of EPIC-00006 or its follow-on maps, activate runtime tools/instructions, or authorize implementation/publication.
+
+
+### Approved activation and enforcement follow-up — 2026-10-14
+
+John approved [TASK-00309](../tasks/00309-TASK.md) after observing ordinary file reads without visible Jev
+activity. The current single-file tool is hidden without a separately configured policy and actual-session
+allocation; instruction-based participation and SDK qualification do not deliver an automatically enrolled native
+Pi/build workflow. Fix setup, automatic authorized parent/child activation, visible status and receipt-enforced
+content admission together, using TASK-00160 and TASK-00162. TASK-00163 is compatible but not a prerequisite.
+
+John also pre-approved **$10 USD per calendar month**, shared across enrolled projects and parent/child processes,
+with America/Chicago boundaries and no rollover. TASK-00309 owns durable concurrent accounting and bounded
+session allocation so restarts, retries and new roles cannot multiply that allowance. Existing request/connection
+limits still bind. Project roots, source disclosure and credentials remain explicit operator policy; approval of
+this plan does not activate a provider or grant access to every repository.
+
+The follow-up supersedes the initial hard-interception exclusion only for the declared, qualified local profile.
+Retain the 0.70 rule, independently checked permissions, current-source receipts and bounded evidence-backed
+exceptions. Make setup failures and every screening/cache/exception/blocked path visible. No universal sandbox,
+external-harness coverage, batch implementation or managed Workflow completion is implied. Existing decomposition
+history and execution priorities remain intact; TASK-00309 is unranked and awaits its recorded dependencies.
