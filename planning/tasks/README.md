@@ -119,7 +119,7 @@
 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | ready-for-human | [TICKET-00029](../tickets/00029-TICKET.md) |
 | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | done | — |
 | [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | done | — |
-| [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | in-progress | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |

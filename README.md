@@ -60,8 +60,10 @@ Before application boot, configure `APP_BROWSER_ORIGIN` as the exact trusted HTT
 (e.g. generate with `openssl rand -hex 32`); do not commit either secret or use the JWT/HMAC signing key.
 Also configure the external `APP_ACCESS_TOKEN_CONFIG` HS256 keyring before boot; follow
 [access-token configuration](docs/engineering/ACCESS_TOKENS.md) for its exact shape and finite rotation bounds.
-JWT issuance/consumption and request-scoped PostgreSQL authentication are available, but no login/refresh/logout
-or protected resource endpoint is registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
+JWT issuance/consumption, request-scoped PostgreSQL authentication and a JWT-by-default matched-Action
+API-v1 gate are available. The protected `GET /api/v1/me` returns safe identity and current role/permission
+names without a dashboard permission prerequisite. No login/refresh/logout journey or permission-protected
+business operation is registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`

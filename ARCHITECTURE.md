@@ -11,8 +11,8 @@ system or an Internet homepage. It starts with the Slim composition from `johnni
   boot config, Docker-pinned tooling, typed API/CSRF service boundary, and a semantic production-component
   Storybook catalog; injectable fail-closed authority cache, shared permissions, guarded outlets/actions and
   bounded in-memory navigation intent are available but not mounted into the public shell; an independently
-  scoped semantic system/light/dark presentation selector and CSP-compatible prepaint are mounted; production `/me`,
-  authentication integration, product journeys and final visual design remain planned
+  scoped semantic system/light/dark presentation selector and CSP-compatible prepaint are mounted; the server `/api/v1/me` safe identity/current-authority query and JWT-by-default matched-Action gate are
+  available; typed client `/me` integration, authentication journeys, product UI and final visual design remain planned
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)
 - `.pi/skills/`: local planning, engineering, Graphify and instruction-writing guidance; managed runtime execution remains planned
 - `harness/pi/`: installable terminal identity; future typed Workflow client capabilities remain separate

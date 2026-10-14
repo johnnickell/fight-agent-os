@@ -51,13 +51,15 @@ use OpenApi\Attributes as OA;
     version: '0.1.0',
     title: 'Fight Agent OS representative API',
     description: <<<'TEXT'
-        Only GET /api/v1/auth/csrf and GET /api/v1/validations/{form_name} are
-        implemented here. Both reads are public; the validation catalog is explicitly
+        GET /api/v1/auth/csrf, GET /api/v1/validations/{form_name} and GET /api/v1/me
+        are implemented here. The first two reads are public; /me requires current Bearer
+        authority and projects safe identity and current role/permission names without credentials.
+        The validation catalog is explicitly
         allowlisted and does not authorize any form operation. This document is repository-only;
         no OpenAPI, Swagger UI or diagnostic route is enabled in any environment.
         JSON responses use exactly application/json, JSend and snake_case data fields.
         Safe correlation is exposed only in X-Correlation-ID, not in the JSON envelope.
-        No login, refresh, logout, invitation, authenticated resource or persistence API
+        No login, refresh, logout, invitation or other resource/persistence API
         is implied by the reusable schemas or the reusable Bearer scheme.
         CORS is absent: no approved cross-origin client or credentialed preflight exists.
         See planning/adr/0003-browser-authentication-security-profile.md in this repository.
@@ -70,8 +72,8 @@ use OpenApi\Attributes as OA;
     scheme: 'bearer',
     bearerFormat: 'JWT',
     description: <<<'TEXT'
-        Reusable authentication boundary, not applied to public reads; no protected operation
-        is registered yet. Exactly one Authorization: Bearer compact JWT, at most 2048 token
+        Authentication boundary applied to GET /api/v1/me, not to approved public reads.
+        Exactly one Authorization: Bearer compact JWT, at most 2048 token
         bytes; no repeated/comma-folded headers, extra whitespace or alternative query/body/cookie
         credentials. Access tokens stay in volatile memory, never persistent browser storage.
         Pinned HS256 with configured kid and finite prior-key overlap; exact issuer, single audience,

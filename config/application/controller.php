@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
+use App\Adapter\Http\Action\Api\V1\Me\ReadCurrentPrincipalAction;
 use App\Adapter\Http\Action\Api\V1\Validations\ReadValidationAction;
 use App\Adapter\Http\Action\ClientShellAction;
 use App\Adapter\Http\Action\IndexAction;
 use App\Adapter\Http\Middleware\Api\Validation\ApiInputValidation;
 use App\Adapter\Http\Responder\Api\V1\Auth\CsrfBootstrapResponder;
+use App\Adapter\Http\Responder\Api\V1\Me\ReadCurrentPrincipalResponder;
 use App\Adapter\Http\Responder\Api\V1\Validations\ReadValidationResponder;
 use App\Adapter\Http\Web\ClientAssetManifest;
 use App\Adapter\Http\Web\ClientShellResponder;
@@ -43,6 +45,17 @@ return static function (Container $container): void {
             $container->get(CsrfBootstrapResponder::class)
         );
     });
+    $container->set(ReadCurrentPrincipalResponder::class, static fn(
+        Container $container
+    ): ReadCurrentPrincipalResponder => new ReadCurrentPrincipalResponder(
+        $container->get(JSendResponseFactory::class)
+    ));
+    $container->set(ReadCurrentPrincipalAction::class, static fn(
+        Container $container
+    ): ReadCurrentPrincipalAction => new ReadCurrentPrincipalAction(
+        $container->get(QueryBus::class),
+        $container->get(ReadCurrentPrincipalResponder::class)
+    ));
     $container->set(Catalog::class, static function (): Catalog {
         return new Catalog(
             dirname(__DIR__, 2).'/.runs/validations/catalog.json',

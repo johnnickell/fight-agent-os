@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Validations;
 
+use App\Adapter\Http\Attribute\PublicAccess;
 use App\Adapter\Http\Responder\Api\V1\Validations\ReadValidationResponder;
 use App\Adapter\Validation\Catalog;
 use OpenApi\Attributes as OA;
@@ -17,6 +18,7 @@ use Slim\Exception\HttpNotFoundException;
  *
  * Reads only the explicitly published public schema for one bounded name
  */
+#[PublicAccess]
 final readonly class ReadValidationAction
 {
     /**

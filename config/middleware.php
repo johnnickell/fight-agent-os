@@ -10,7 +10,7 @@ use Slim\App;
 
 /** @var App $app */
 /** @var ContainerInterface $container */
-// Slim executes middleware last-in, first-out: API failure middleware -> routing -> API validation -> route.
+// Slim executes last-in, first-out: API failures -> routing -> group security -> validation -> route.
 // The API middleware passes non-API paths through unchanged.
 $app->addRoutingMiddleware();
 $app->add(new ApiFailureMiddleware(

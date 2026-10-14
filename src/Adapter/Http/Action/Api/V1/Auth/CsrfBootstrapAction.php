@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Adapter\Http\Action\Api\V1\Auth;
 
 use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
+use App\Adapter\Http\Attribute\PublicAccess;
 use App\Adapter\Http\Responder\Api\V1\Auth\CsrfBootstrapResponder;
 use App\Adapter\Security\HmacCsrfProofs;
 use App\Domain\Security\Csrf\Query\CsrfProofView;
@@ -20,6 +21,7 @@ use Slim\Exception\HttpBadRequestException;
  *
  * Maps the public CSRF cookie to one application query
  */
+#[PublicAccess]
 final readonly class CsrfBootstrapAction
 {
     /**
