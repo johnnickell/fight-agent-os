@@ -656,7 +656,125 @@ Supported complete lifecycle, unknown daemon effects, aggregate host/retained-st
 actual durable authority remain open. R1/R3 receive no new qualification. TASK-00139 remains blocked; TASK-00140
 owns production composition, not a transfer of these still-missing minimum proofs out of TASK-00138.
 
+## Owned execution-domain retirement — Q4 qualification
+
+The [finite completion contract](../../planning/tasks/00138-TASK.md#completion-contract-and-resume-plan--2026-10-13)
+requires a measured independent fence, not another missing-socket or empty-inventory sample. Run
+`ada70cfc-fe45-46fa-ba93-0b6ac5056fa0` in `.runs/tasks/TASK-00138/engine-fence/` passed **25 scoped observations**
+on October 13, 23:39:30–23:39:51 UTC. It closes the prior full-store retirement gap for a **pre-owned private
+execution domain with a healthy outer control plane**, not for an arbitrary unavailable host.
+
+### Selected minimum profile and predeclared bounds
+
+Select non-root fixed check containers in an installation-controlled, pre-owned private Engine domain, with an
+independently armed host retirement capability outside ordinary application/artifact storage. Agents still receive
+no shell, root, socket, VM administration or mutable check policy. The disposable VM below is a **trusted fault
+injection domain**, not reinstatement of the superseded Engineer-root workspace profile. Actual deployment of the
+combined ledger/checker/fence remains TASK-00140; production check readiness stays disabled until that composition
+and its actual activation source are verified.
+
+| Profile element | Fixed input and supported boundary |
+|---|---|
+| Host/lifecycle | macOS 26.6.2 arm64, logged-in GUI session, available host storage and healthy outer sandbox service. Logout/reboot/suspend and outer-service failure are unsupported here |
+| Check capabilities | The six fixed phases below, read-only source/vendor/policy, private loopback test DB, no Agent keys/socket. Existing measured PHP/Node ceilings are 0.5 CPU, 256 MiB/no extra swap, 64 PIDs; DB is 0.5 CPU, 512 MiB, 128 PIDs; 90-second phase deadline and 65,536-byte output cap |
+| Owned fault domain | One VM, one CPU, 1 GiB RAM, 20 GiB logical root plus 2 GiB private Docker disk; no workspace/skills/SSH-agent forwarding. Cached pinned shell template, `--pull never`, deny-all network policy |
+| Inert fault workload | At most one running container: UID 65534, read-only, network none, no capabilities, no-new-privileges, disabled logging, 0.25 CPU, 64 MiB/no extra swap, 16 PIDs, bounded tmpfs and finite 180-second loop. One additional create request was queued, not launched |
+| Admission/retention witnesses | Earlier durable ledger: two runtime units, 131,072 retained bytes, four lifetime history rows; exact retries and exhaustion preserve holds/cancellation intent across replacement. Separate fixed-image witness: 64 MiB retention pool, whole-image reservation rather than live-file sums. These are measured fixture thresholds, **not a deployed aggregate ledger or freely interchangeable units** |
+| Cancellation | Host manifest armed before faults, with a 120-second trigger deadline and 90-second owning-tool call timeouts. The sample requests retirement before expiry and observes it within that window. This is not a universal hard-latency SLA or proof of the deadline-only fallback; missed/uncertain completion cannot release holds |
+| Emergency custody | Read-only exact VM name/UUID manifest and separate host reaper/receipt location, outside the deliberately full application store. This budget must not be charged to an exhaustible artifact allowance |
+
+The private-domain apparatus used retained, natively signature-verified Docker Sandboxes **0.45.1**, revision
+`9d79d90…`, binary SHA-256 `f007d36533f5b8af4b0347c859443ca884276cf04bb61e366aa3aa30e47f6981`, and pinned ARM64
+shell template `b2c007bb…`. The exact full template identity is in `setup.json`/the kit. An already retained
+PostgreSQL image archive was transferred offline solely to supply the inert shell workload. No database server,
+Agent/model, provider request or personal credential was enrolled inside that domain.
+
+### Actual failure and retirement sequence
+
+1. Record the VM UUID, outer container ID, private Engine/boot identities, workload ID/PID and matching native
+   `containerd-shim-nerdbox-v1` process. Arm a distinct launchd-owned reaper with the immutable domain manifest.
+2. Exhaust a separate 64 MiB HFS+ application-control image down to small allocations. A new control write returns
+   ENOSPC. Kill a synthetic controller client (`sbx exec … sleep 180`, observed exit -9); do not renew or release
+   the fixture hold. This client is a stand-in, not an implemented application controller.
+3. Through an already established diagnostic channel, suspend **only the owned private `dockerd`** with SIGSTOP.
+   Its process reports stopped; a real Engine query times out. Direct guest process observation shows the workload's
+   counter still increasing. Engine unavailability and client death therefore do not establish cancellation.
+4. Send a bounded create request into that Engine's Unix socket. No response arrives and the socket remains open.
+   This is **kernel-queued/unacknowledged**, not evidence that the daemon accepted the create or entered a particular
+   internal transaction. The distinction is retained in the instrument and result.
+5. The independent host reaper rechecks UUID ownership, stops and then removes that entire domain through the
+   outer service. Stop alone explicitly retains restartable state. Removal completes at 23:39:49 UTC; the pending
+   diagnostic client exits 137, the exact native shim disappears, and both recorded backing files are absent.
+   A subsequent `exec` of the retired name fails without recreating it. The full application store and hold remain
+   unchanged throughout; the retirement path does not need its next write to succeed.
+
+This supplies a bounded **whole-domain retirement primitive** for guest-local late effects. It is stronger than
+scanning the private Engine: its process boundary and retained execution state are removed. The fixture has one
+serialized outer owner; it does not qualify a race with another outer provisioner recreating the same name, unknown
+**outer VM** creation, package claim release or durable fence-certificate publication. Those need TASK-00140's
+actual authority/ledger/provisioner composition. The trusted experiment driver remained alive and requested the
+pre-armed reaper; autonomous application-controller failure detection was **not** demonstrated. The Q4 retirement
+claim is supported by the actual full-store condition, not a claim that killing this stand-in qualified a complete
+controller lifecycle. An already-issued external provider effect would not be cancelled
+by removing this domain; the sample is mountless/deny-all with no such effect. No shared Docker Engine was stopped.
+
+### Failures and retirement receipts
+
+The first setup (`9c06ffab…`) rejected `--deny-network '*'` before creation; the documented pattern is `**`.
+The first created-domain run (`5c7956aa…`) reached the full-store/client-death/frozen-daemon condition, then failed
+because a **fresh** `sbx exec` required Engine readiness and returned a start error instead of running the intended
+query. The corrected instrument opens one observation channel before the fault. The first domain also stopped
+between preparatory inspections; those observations are not uninterrupted-availability evidence. Exact failed
+sources/results remain. Unneeded main-service configuration fields were discarded from the initial setup capture;
+only identity/start-time metadata was retained, without displaying environment values.
+
+Both created domains, their known workload resources and two backing images each were retired; both HFS+ images
+were normally detached/deleted; both temporary reaper jobs were unloaded. `rm --force` skips the owning tool's
+confirmation, not filesystem force-detach. Causally associated image paths and shim identity support cleanup;
+no anonymous-volume label inference or global prune was used. The sandbox daemon was initially stopped, was started
+by this experiment, and was returned to stopped only after empty inventory/backing verification. Shared main
+service starts were unchanged. Cached templates/images and bounded receipts remain; historical anonymous-volume
+retirement is still unverified and was not inspected or mutated.
+
+## Frozen required-check manifest — Q5 qualification
+
+The qualification manifest is **exactly** policy `e304da2c…` from fixed-gate run `eb09b54c…`, source `59f406a…`,
+source manifest `a257d82d…` and vendor manifest `a2c2d19c…` (full identities above). Its pinned instrument and protected
+file hashes are retained in `policy/policy.json`. An installation-owned selector, not candidate source or an Agent,
+chooses this manifest. It contains the following complete finite phase set:
+
+| Required phase ID | Fixed capability / what the protected result establishes |
+|---|---|
+| `database-prepare` | PHP Doctrine migration invocation against its disposable private DB; selected preparation completed, not production schema/restore acceptance |
+| `harness` | Node's selected Pi presentation tests ran on the frozen input; no qualification of managed Agent identities |
+| `composer` | Strict manifest validation with plugins/scripts disabled; not installation or dependency supply-chain certification |
+| `planning` | Trusted read-only Planning validator completed against the subject; no publication or TASK acceptance |
+| `architecture` | Protected Deptrac selection completed; not independent semantic architecture approval |
+| `phpunit` | Protected runner/config/bootstrap executed the selected suite; process outcome, not proof hostile PHP ran every assertion |
+
+All six have measured successful capabilities. Each omitted phase, duplicates, unsigned/modified receipts and
+cross-attempt/source/vendor/policy replay were rejected. Extra-phase success could not fill a required slot. Reuse
+those exact-subject observations; do not relabel them as fresh final-head receipts. Subsequent branch changes are
+Markdown-only; the final repository build separately checks the actual candidate's changed Planning/docs.
+
+Verification-surface changes (tests, bootstrap, tooling, dependencies, configuration and selected expectations)
+require independent review and a newly authorized policy/source binding. Candidate-controlled semantic claims are
+not accepted merely from counts/JUnit/exit zero. The four HTTP contracts observed externally at `b5e15f3…` establish
+that selected out-of-process behavioral capability on **that** subject; they are supplemental evidence, not a seventh
+receipt silently rebound into the `59f406a…` manifest. Additional product contracts need named observations or review
+when the production policy selects them; universal PHP attestation is not required.
+
+No manifest phase lacks a supportable mechanism for this exact qualification source. Durable signing-key custody,
+actual selector/collector/domain composition and qualification of newer develop's frontend/coverage/export phases
+are explicit TASK-00140 activation blockers, not unmeasured phases hidden in this frozen manifest. The disposable
+HMAC key was not retained, so later review can correlate recorded bytes but cannot replay HMAC verification. No
+production check-ready or Awaiting review state follows from Q5 qualification alone.
+
 ## Qualification disposition and next owners
+
+The following historical inventories retain risks and activation obligations. The approved finite Q1–Q6 mapping
+in the TASK now owns qualification closeout; these lists do not create additional experiment queues. Q4/Q5 are
+builder-supported at the bounded mechanism level above, not independently accepted or production-composed.
 
 - **R1 / AC-1:** see [current authority decisions](TERMINAL_AUTHORITY.md#current-authority-decisions--2026-10-06).
   The catalog, explicit `SUPER_ADMIN` seed and storage qualification candidate are now owner-approved. Package

@@ -180,7 +180,35 @@ retirement (or explicitly retained accounting); lease expiry, a worker note and 
 Restore invalidates admission outside the restored dataset before replacement; preserve operation/receipt/source
 history and prove a newer reconciled generation before use. These are production obligations, not probe outcomes.
 
+### Q1 contract reconciliation and downstream activation
+
+Under the approved [finite completion contract](../../planning/tasks/00138-TASK.md#completion-contract-and-resume-plan--2026-10-13),
+Q1 is a **settled design contract**, not package adoption. Its authoritative choices are the execution catalog and
+operator confirmation above, immutable Markdown publication, PostgreSQL claim/intent fences, protected delivery
+storage and broker-held signing. There is no remaining design choice needed to implement authorized start/inspect.
+Tagged capability qualification and actual composition remain mandatory in the named implementation owners.
+
+The inspected `614c34b…` public composition map supplies these capability requirements, not a guessed future release:
+
+| Package entry | Consumer obligation / implementation owner |
+|---|---|
+| `AgentProvisioningService::provision`, `AgentCredentialRotationService::rotate` | TASK-00139 persists the original operation key/request and authorizes retries; no enclosing consumer transaction, replacement key or name-based correlation |
+| `GetAgentOperationHandler` | TASK-00139 uses freshly authorized, secret-free status; unknown outcomes keep enrollment disabled |
+| `AgentCredentialDeliveryService::deliver`, `ListDueAgentDeliveriesHandler`, `AgentDeliveryRecoveryService` | TASK-00140/00141 compose independently admitted delivery and scheduled recovery; discovery is not authority |
+| `AgentCredentialLifecycleService::revoke` | TASK-00139/00141 protect every entry and preserve atomic retirement without requiring key/sink availability |
+| `AgentDeliveryMaintenanceService::rewrap/expire/cleanup`, maintenance/reference-count handlers | TASK-00140 owns retained versions, exact terminal cleanup and protected storage; counts do not authorize key destruction |
+| Package cohort/restoration/authorization ports | TASK-00139–00141 qualify all real writers, adapters and activation/use; TASK-00142 proves integrated recovery |
+
+Unavailable authentication/enrollment, package recovery, source publication, custody, current authority fences or
+required check capability denies its operation. `SourceUnavailable`, `RevisionChanged`, unavailable custody and
+`EffectUncertain` remain distinct from successful dispatch/delivery. A claim, key read, receipt or phase exit never
+creates permission. No current fixture enables a production operation or silently installs the catalog extension.
+The historical tag/lock observations above retain their dates; adoption must inspect then-available tagged releases.
+
 ### Remaining authority decisions and proof
+
+The following is the historical pre-reconciliation R1 inventory. Its actual implementation/activation obligations
+remain assigned above; it is not a second qualification queue or a new unresolved design decision.
 
 R1 is advanced, **not closed**: the catalog extension and four-permission `SUPER_ADMIN` seed are owner-approved;
 concrete identities and managed assignments remain downstream prerequisites. A released recoverable package must

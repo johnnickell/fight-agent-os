@@ -466,9 +466,77 @@ recovery, installer/role coverage for every real writer, physical incarnation ve
 remain required. Separate encrypted-storage and gate experiments cannot be combined into a conformance claim.
 TASK-00139 remains blocked; no production check or credential use becomes ready from `fixture-published`.
 
+## Combined custody and schema admission — Q2 qualification
+
+The October 13 [finite completion contract](../../planning/tasks/00138-TASK.md#completion-contract-and-resume-plan--2026-10-13)
+limits this TASK to a selected, bounded mechanism—not the complete package adapter. Run
+`af917ace-37b2-492e-b5bf-ab979e013752` in `.runs/tasks/TASK-00138/q2-composition/` passed **86 scoped observations**.
+Unlike the earlier separate samples, this probe puts key custody, PHP/libsodium encryption, guarded PostgreSQL
+staging/reads/retirement and schema restoration through the **same runtime path**.
+
+### Selected service and lifecycle
+
+The qualification identity is the trusted `credential-store` container role, **UID/GID 10001**, with its private
+installation-owned key volume mounted read-only at `/keys`. Directory mode is `0700`; regular, single-link,
+32-byte files `delivery`, `authentication` and `fingerprint` are `0400`, owned by that identity. `delivery` represents
+fixed key version `delivery-v1`; purpose-separated keys are initialized only by the explicit operator. Agents/checks
+receive no custody volume, broker database namespace or mount-selection authority. The actual denied different-UID
+probe used 10002; the same-UID/no-mount check also returned unavailable. The earlier same-UID/**with**-mount positive
+control remains a mandatory warning, not an OS-isolation claim.
+
+Supported lifecycle here is controlled startup, fresh PHP invocations, database-container replacement on the same
+owned volume, and operator-controlled **payload-schema-only** restoration. The trusted database is PostgreSQL 17.10
+image `742f40…`; PHP/PDO/libsodium uses image `a41935…`, both pinned in the instrument. Runtime operations use the
+restricted `fixture_writer` role, not the operator's SQL privileges. Only the trusted PHP process joins the database's
+private loopback namespace. The database never mounts keys. Service deployment must register these exact role/path/
+mount responsibilities outside Agent roots; this selects the arrangement without installing a host account/service.
+Logout, boot, suspend, whole-cluster restore and native host ACL operation are not supported by this qualification.
+
+### One combined path
+
+Every runtime operation reads current safe key files and enters a transaction. The SQL gate holds the protected
+singleton row lock and now also validates retained history before admitting the operation. Reads use the same guard.
+The stage path compares original binding/plaintext under that exclusion, returns the original receipt for an exact
+retry, rejects different bytes, and never replaces stored ciphertext to manufacture idempotency. Only booleans and
+opaque fixture IDs/receipts leave the probe; keys and plaintext never enter host arguments, logs or evidence.
+
+- Two original random values were encrypted with XChaCha20-Poly1305, version/context/twelve-field associated data
+  and a separate keyed continuity fingerprint. The same invocation verified original-byte recovery and retry.
+- A first-entry schema dump was followed by a second issuance and first-entry retirement. Independent `control`
+  history retained exact encrypted after-images, receipts and tombstones outside that dump target.
+- Committed gate closure preceded actual `pg_restore --clean`. The older payload resurrected the first encrypted
+  row, but service reads and publication remained unavailable. It was not decrypted or authorized while closed.
+- A deleted journal event denied repair. Explicit transaction rollback during repair left the old payload and closed
+  gate; rollback during publication also left admission closed. Earlier backend-death/locking observations remain
+  supporting evidence, not freshly replayed crash tests here.
+- Forward repair copied original retained encrypted facts, not regenerated credentials or receipts. Only subsequent
+  successful publication admitted the new incarnation/generation. The old subject stayed unavailable. Missing keys
+  denied the actual service path both before reconciliation and after database publication; no key was recreated.
+- Current recovery returned the second original receipt and matching plaintext fingerprint; the retired first entry
+  retained its receipt with null material. Losing a journal event after publication also denied the SQL guard.
+  A different database container preserved both outcomes and high-water 20.
+
+| Fixture field | Package responsibility represented / remaining adapter proof |
+|---|---|
+| `namespace`, `caller_type`, `caller_id`, `operation_id` | Retained `AgentOperationKey` scope/correlation; production must use package canonical request validation and authenticated context, not this synthetic encoder |
+| `agent_id`, `credential_id`, `credential_revision` | Original Agent credential identity; fixture revision 1 is a sample, not the package's initial revision default (0) |
+| `delivery_id` / entry ID | Globally stable original delivery identity, retained through retry/retirement |
+| `destination_id`, `destination_revision`, `destination_write_version`, `issued_at` | Original issuance binding; production must validate actual destination/slot/cohort semantics. This fixture's aggregate order is not multi-slot conformance |
+| Cipher/nonce/version/fingerprint | Separate delivery-key encryption and original-byte continuity; authentication-envelope compatibility, version retention and rewrap remain actual-adapter obligations |
+| Receipt, `retired`, null material, journal/high-water | Original receipt and terminal identity survive restoration. UUID receipts and the protected sink projection are synthetic, not package receipt-verifier or external-sink conformance |
+| Gate incarnation/generation/history | Controlled schema restore exclusion and publication. Whole-control-plane rollback remains disabled; the non-dumped schema shares a database failure domain and is not an off-host recovery service |
+
+The initial run `ffcf4a3a-3f5f-4860-afb6-a4c96423f60c` stopped because Docker refused `cp` into a read-only rootfs.
+The correction mounted the exact SQL instrument read-only at creation; it did not relax rootfs protection. Both
+attempts retain exact sources/results and owned cleanup. The combined sample is sequential; earlier concurrency,
+AEAD mutation/rewrap and custody-denial evidence is reused only for those separate properties. No complete concurrent
+encrypted adapter, real external delivery, activation/use or production service-manager integration is claimed.
+
 ## Disposition and remaining proof
 
-Continue the protected-file candidate without Keychain enrollment. Minimum qualification still needs:
+Q2's bounded qualification is now builder-supported by the combined path above and the explicitly retained primitive
+checks, subject to independent review. Under the approved finite contract, the following are **production activation
+prerequisites for TASK-00139–00142**, not an additional unbounded TASK-00138 experiment queue:
 
 1. Effective file/ACL/parent-path protection and installation-owned mount exclusion with the actual service identity;
    supported automatic service/runtime lifecycle, unsafe-state cache invalidation and recoverable provisioning.
