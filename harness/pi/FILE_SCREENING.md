@@ -1,9 +1,11 @@
 # Single-file relevance screening
 
 `jev_read_file` is an opt-in consumer of the [shared typed-judgment capability](JUDGMENTS.md), not another provider
-client. TASK-00162 supplies one regular UTF-8 file per call, controlled behavior and Pi SDK integration qualification.
-Live file screening and unscripted model compliance remain **unverified** pending fresh bounded operator authority.
-Previous TASK-00159/00184 live allocations are exhausted. Do not reuse their grants or reset ledgers.
+client. TASK-00162 supplies one regular UTF-8 file per call, controlled behavior and bounded live Pi SDK
+qualification. Synthetic parent/child investigations, fresh evidence synthesis and an unscripted direct-read
+comparison are retained; these are not independent acceptance, general accuracy evidence or global activation.
+Previous TASK-00159/00184 allocations and TASK-00162 qualification session grants are closed. Do not reuse grants
+or reset ledgers; a later session requires its own explicit operator allocation.
 
 ## Operator activation (not automatic)
 
@@ -95,10 +97,12 @@ buckets, so zero cache buckets are accounting placeholders, not evidence of repo
 
 The supported integration path is Pi 1.2.0/macOS SDK: the host explicitly loads this package's Jev extension in
 both parent and child, binds session lifecycle, uses the standard system prompt and supplies distinct operator
-allocations for their actual session IDs. Direct qualification creates real Pi parent/child runtimes and executes
-controlled tool calls; the child is a bounded synthetic investigation, **not** an independent workflow role.
+allocations for their actual session IDs. Qualification includes controlled tool calls and unscripted live
+parent/child investigations; the child is a bounded synthetic investigation, **not** an independent workflow role.
+A fresh evidence-only SDK parent/child also receives actual allocation/root/disclosure facts in its prompts;
+its inherited observations are explicitly external evidence, not resumed history or fresh screens.
 No managed launcher is added. CLI sessions using default prompts are expected to use the same extension, but a
-native CLI/TUI child and unscripted model investigation are not qualified by this SDK evidence.
+native CLI/TUI child is not qualified by this SDK evidence.
 
 Pi's example subagent launcher, external harnesses, missing/filtered/disabled extensions, hidden declarations,
 custom/forced prompts omitting tool guidelines, concurrent processes resuming one session and automatic grant
@@ -111,20 +115,39 @@ and their combined account exposure; no aggregate parent guarantee is advertised
 Owned behavior tests exercise probability/classification boundaries, input/access/disclosure, encoded bounds,
 changed-source/policy, redaction and failures. Filesystem handling, actual tool/rule loading, lifecycle, parent/child
 and instruction walkthroughs are qualified directly under ignored `.runs/tasks/TASK-00162/initial/`.
-Controlled transport is not remote-provider evidence or a model-accuracy/recall/savings experiment. The initial
-direct-read comparison reports exact source/result bytes and latency under fixtures; main-Agent cost and actual
-live misses/unnecessary reads remain unavailable, never zero. TASK completion, independent Review/QA and delivery
-remain separate; see [the TASK checkpoint](../../planning/tasks/00162-TASK.md#implementation-checkpoint).
+Controlled transport is not remote-provider evidence or a model-accuracy/recall/savings experiment. Live
+qualification is separately retained under `.runs/build/TASK-00162/run-r3ZyZd/live-VCA2d5/` and
+`evidence-recovery-517dvl/`, with exact drivers, actual session snapshots, request/prompt inspections, disclosure
+manifests and durable accounting. See [the qualification checkpoint](../../planning/tasks/00162-TASK.md#live-qualification-checkpoint)
+for source identity, gate binding and the distinction between initial, inherited live and fresh evidence.
 
-Proposed fresh live approval: **at most four** synthetic-only single-file requests, no retries/readiness call,
-`POST https://openrouter.ai/api/alpha/decisions`, requested `typesafe/jev-1.13`, required TypeSafe build
-`typesafe/jev-1.13-20260917`. Parent receives two yes/no inquiries (relevant and irrelevant synthetic files);
-child receives two classifications (relevant and irrelevant), separate actual Pi IDs and source roots. Each file
-is <=1 KiB and contains only artificial kettle/color facts and unrelated arithmetic, no repository/private source.
-Request ceiling **2,688 micro-USD ($0.002688)**; each parent/child session ceiling **5,376 ($0.005376)**; combined
-maximum reserved exposure **10,752 ($0.010752)**. Credential access is **only** production Pi-managed
-`modelRegistry.getApiKeyForProvider('openrouter')` through `PiCredentials`, without key printing, auth-file reads,
-new fallback sources or auth/global settings edits. Require renewed price confirmation and private run-scoped
-settings/ledgers; preserve all prior grants/accounting. This is a proposal, not authorization. Unscripted parent/
-child model-compliance evidence additionally requires authorized main-Agent requests, not fabricated controlled
-responses; keep configured openai-codex/gpt-6.1-sol/high and record provider-reported identity only if supplied.
+The operator's later `$0.10` TASK-wide Jev grant superseded the initial four-call proposal. Eight paid effects
+settled at **159 micro-USD**, no pending reservations; closed stages release **99,841 micro-USD** to the coordinator,
+not automatically to later sessions. Seven original inquiries were preserved without replay. The original parent
+final response failed; a **fresh**, explicitly labeled synthesis completed the answer and one-line exact-evidence
+quote after the inherited negative screen. One new supplemental child fixture received a fresh screen/read.
+The original prompts omitted explicit operator allocation metadata; the fresh parent/child prompts expose it.
+This is combined provenance, not an uninterrupted historical investigation or universal compliance claim.
+
+Only <=1 KiB artificial files were disclosed through production `PiCredentials`/modelRegistry and
+`DecisionsTransport` at `POST https://openrouter.ai/api/alpha/decisions`, requested `typesafe/jev-1.13`, returned
+TypeSafe / `typesafe/jev-1.13-20260917`. No repository/private source, raw auth-file access, installation,
+auto-trust, global activation or auth/settings edits were performed. The policy permits the union of the
+explicit parent/child synthetic roots, not separate per-session source confinement. Main sessions remain
+`openai-codex/gpt-6.1-sol/high`; fresh provider stream observations report `gpt-6.1-sol`.
+
+The unscripted zero-Jev baseline chose 12 source reads. Original selective follow-up plus the required quote
+returned **2,168** serialized source-result bytes versus **2,506** baseline bytes (**338** avoided). All tool
+results including recovery were **25,371** versus **3,275** baseline bytes: an increase, not net savings.
+Recovery also includes inherited evidence replay, mandatory-instruction reloads and a supplemental objective.
+Full original parent sent-context bytes were lost on its error path; complete net-context savings are unknown.
+Successful selective/recovery main tokens priced by Pi plus reported Jev cost total **$0.164883066**, versus
+baseline main catalog cost **$0.0358668**; these are not billed USD. Original failed-request billing is unknown,
+not zero. Baseline parent/child elapsed **65.42/25.88 s**; fresh recovery **87.23/43.78 s** (children included in
+parents), in addition to the failed original investigation. No speed/cost advantage is established.
+
+No demonstrated false-negative occurred among eight completed artificial candidate/need pairs; this is unblinded,
+not an accuracy estimate. The baseline child read one irrelevant worksheet; selective ordinary reads did not.
+The original concurrency rejection and undispatched unchanged retry remain visible. Live unknown-choice behavior
+was not observed; boundary/denial/failure cases rely on controlled behavior evidence, not invented live results.
+Independent Review/QA, TASK completion and delivery remain separate.
