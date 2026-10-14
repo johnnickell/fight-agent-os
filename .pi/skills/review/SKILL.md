@@ -5,6 +5,9 @@ description: Independently challenge an implemented TASK or PR against its requi
 
 # Review
 
+For discovery in a participating `jev_read_file` session, follow the shared
+[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
+
 Read [review standards](../../../docs/engineering/REVIEW.md) before starting and [engineering standards](../../../docs/engineering/STANDARDS.md) for application changes. The standards own report format, verdict rules and publication; keep those definitions there.
 
 1. **Frame the target.** Read the TASK, parent, decisions and completion claims. Identify the exact base/head, branch, status and all reviewed changes. Disclose contributions to implementation or its evidence; a contributor cannot independently accept. Resolve the base worktree through Git metadata and use only its canonical ignored `.runs/reviews/<TASK-ID>/review.md` for the report. Review is read-only over implementation and planning.

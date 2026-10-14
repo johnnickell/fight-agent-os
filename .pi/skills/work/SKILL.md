@@ -5,6 +5,9 @@ description: Implement or revise an approved TASK on a feature branch, verify it
 
 # Work
 
+For discovery in a participating `jev_read_file` session, follow the shared
+[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
+
 Read the TASK, parent and [execution standards](../../../docs/engineering/EXECUTION.md). Work owns implementation,
 focused verification and a truthful handoff. Independent review owns the full quality assessment. Load the
 relevant sections of [engineering standards](../../../docs/engineering/STANDARDS.md) when an implementation

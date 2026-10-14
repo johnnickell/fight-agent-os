@@ -4,8 +4,9 @@ TASK-00159 implements the shared local capability for trusted TICKET-00038 tool 
 screening. Controlled tests, real Pi 1.2.0 SDK lifecycle evidence and **one authorized live synthetic mixed-form
 qualification** are available. Independent Review/QA remain pending. TASK-00184's earlier fixed yes/no check is
 inherited evidence, not qualification of these forms.
-No Agent-callable judgment tool is installed. No guard, file-read permission, relevance threshold, sandbox,
-Workflow transition, savings estimate or model-accuracy claim is supplied here.
+No generic Agent-callable judgment tool is installed. The [single-file consumer](FILE_SCREENING.md) separately
+owns `jev_read_file`, its access/disclosure policy and relevance threshold. This shared layer supplies no guard,
+file-read permission, relevance threshold, sandbox, Workflow transition, savings estimate or model-accuracy claim.
 
 ## Configure and connect
 

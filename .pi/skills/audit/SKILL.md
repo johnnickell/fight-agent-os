@@ -5,6 +5,9 @@ description: Assess a named code boundary against accepted project standards wit
 
 # Audit
 
+For discovery in a participating `jev_read_file` session, follow the shared
+[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
+
 Use for a scoped code assessment beyond one implementation diff. Establish the repository, revision or dirty-tree
 identity, selected modules/use cases, question and evidence limits from the request. Read its applicable instructions
 and accepted decisions. For Agent OS use [engineering standards](../../../docs/engineering/STANDARDS.md) and

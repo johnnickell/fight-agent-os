@@ -5,6 +5,9 @@ description: Challenge a reviewed TASK or PR with adversarial UI, API, CLI or im
 
 # QA
 
+For discovery in a participating `jev_read_file` session, follow the shared
+[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
+
 Read [QA standards](../../../docs/engineering/QA.md). They own dispositions, report location, independence,
 runtime identity and evidence requirements. Use `/skill:qa TASK-NNNNN` or `/skill:qa <PR URL>`; an optional
 scenario narrows investigation but cannot silently waive the TASK's remaining required QA.

@@ -5,16 +5,19 @@ import { LocalSettings, SessionBudget } from './jev/local-store.mjs';
 import { DecisionsTransport, PiCredentials } from './jev/adapters.mjs';
 import { Judgments } from './jev/judgments.mjs';
 import { retainSessionRequests } from './jev/session-requests.mjs';
+import { installFileScreening } from './file-screening-extension.ts';
+import { FileScreeningSettings } from './jev/local-store.mjs';
 
 type Dependencies = {
   settings?: LocalSettings;
   credentials?: (ctx: ExtensionContext) => PiCredentials;
   transport?: DecisionsTransport;
   budget?: (sessionId: string) => SessionBudget;
-  platform?: string;
+  platform?: NodeJS.Platform;
+  fileSettings?: FileScreeningSettings;
 };
 
-/** Install operator-only setup and fixed synthetic readiness without changing Pi's model or tools */
+/** Install operator setup, shared judgments and opt-in file screening without changing Pi's model */
 export default function jevExtension(pi: ExtensionAPI) { installJev(pi); }
 
 /** Inject controlled host boundaries for qualification; normal loading always uses protected local adapters */
@@ -138,4 +141,5 @@ export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
       present(ctx);
     },
   });
+  installFileScreening(pi, { settings: dependencies.fileSettings, configuration: () => settings.load() });
 }

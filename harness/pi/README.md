@@ -6,7 +6,9 @@ macOS). Mixed typed forms have controlled Pi integration evidence, not live qual
 [bounded typed judgments](JUDGMENTS.md). One authorized live Decisions
 check succeeded on October 14, 2026; independent acceptance remains pending. A synthetic result does not establish
 model accuracy or another installation's account access. This is not the
-managed Runner, an execution sandbox, tool safeguards or required file screening.
+managed Runner, an execution sandbox or tool safeguards. TASK-00162 adds opt-in, instruction-based single-file
+screening; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
+is activated by installing/updating this source.
 
 ## Install
 
@@ -70,7 +72,8 @@ rendering still varies; a browser design mockup must not be presented as a nativ
 
 Load the trusted package through the installation above, or explicitly for one invocation with
 `pi --extension ./harness/pi`. Nothing resolves Jev credentials or sends a Decisions request on load/reload.
-Commands are TUI-only; no Agent-callable judgment or credential tool is registered. Never pass a key in a command,
+Setup commands are TUI-only; no generic Agent-callable judgment or credential tool is registered.
+`jev_read_file` is exposed only with its shared rule and a separately configured operator/session file policy. Never pass a key in a command,
 prompt, environment, argv, transcript or receipt. Keep the main Agent provider/model unchanged.
 
 1. If OpenRouter is already configured in Pi, reuse it; no separate Jev key or Keychain helper is needed.

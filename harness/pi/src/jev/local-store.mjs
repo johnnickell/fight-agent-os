@@ -67,6 +67,16 @@ export class LocalSettings {
   }
 }
 
+/** Load nonsecret file authority only from the operator location; no Agent-facing setter */
+export class FileScreeningSettings {
+  constructor(directory = operatorDirectory()) { this.directory = directory; }
+  load() {
+    if (!existsSync(this.directory)) return null;
+    privateDirectory(this.directory);
+    return readPrivate(join(this.directory, 'file-screening.json'), null);
+  }
+}
+
 /** Persist conservative session charges before credential retrieval; reload never resets spending */
 export class SessionBudget {
   constructor(sessionId, directory = operatorDirectory()) {
