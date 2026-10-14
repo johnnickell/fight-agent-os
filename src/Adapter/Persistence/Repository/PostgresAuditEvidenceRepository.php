@@ -103,6 +103,12 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
         if ($context === []) {
             return true;
         }
+        if ($action === 'user.console_role_assigned') {
+            return array_keys($context) === ['role_id', 'result']
+                && is_string($context['role_id'])
+                && preg_match('/\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $context['role_id']) === 1
+                && $context['result'] === 'membership_confirmed';
+        }
         if (
             $action !== 'refresh_session.administratively_revoked'
             || array_keys($context) !== ['refresh_session_id', 'reason']

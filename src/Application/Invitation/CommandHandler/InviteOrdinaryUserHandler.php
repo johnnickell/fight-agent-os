@@ -4,38 +4,28 @@ declare(strict_types=1);
 
 namespace App\Application\Invitation\CommandHandler;
 
-use App\Application\Invitation\InvitationTransaction;
+use App\Application\Invitation\ConsoleUserOperation;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\Command\InviteOrdinaryUser;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
-use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Query\PreviewManagedPolicy;
-use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
+use App\Domain\Invitation\ConsoleRoleInput;
 use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
-use Fight\AccessControl\Domain\AccessControl\User\Query\GetUserById;
-use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Command\CommandHandler;
-use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use InvalidArgumentException;
 
 /**
  * Class InviteOrdinaryUserHandler
  *
- * Coordinates installation policy, package behavior and required operator audit atomically
+ * Sequences independent package commits and separately committed operator evidence
  */
 final readonly class InviteOrdinaryUserHandler implements CommandHandler
 {
     /**
      * Constructs InviteOrdinaryUserHandler
      */
-    public function __construct(
-        private InvitationTransaction $transaction,
-        private QueryBus $queries,
-        private CommandBus $commands,
-        private AuditEvidenceRepository $audit
-    ) {
+    public function __construct(private ConsoleUserOperation $operation)
+    {
     }
 
     /**
@@ -56,20 +46,14 @@ final readonly class InviteOrdinaryUserHandler implements CommandHandler
             throw new InvalidArgumentException('Unexpected ordinary invitation.');
         }
         $input = $command->input;
-        $userId = $command->userId;
-        $this->transaction->commit(function () use ($input, $userId): void {
-            InstallationManagedPolicy::requireReconciled($this->queries->fetch(
-                new PreviewManagedPolicy(InstallationManagedPolicy::create())
-            ));
-            $this->commands->execute(new InvitePendingUser($input->actorId(), $userId, $input->email));
-            $this->commands->execute(new AssignRoleToUser(
-                $input->operatorId,
-                $userId,
-                RoleId::fromString(InstallationManagedPolicy::USER_ROLE_ID)
-            ));
-            // A void bus may be vetoed or transformed: do not commit an incomplete/elevated workflow.
-            $input->requireOrdinaryOutcome($this->queries->fetch(new GetUserById($userId)), $userId);
-            $this->audit->add(AuditEvidence::record($input->actorId(), 'user.console_role_assigned', $userId));
-        });
+        $this->operation->dispatch(new InvitePendingUser($input->actorId(), $command->userId, $input->email));
+        $role = new ConsoleRoleInput(
+            $input->operatorId->toString(),
+            $command->userId->toString(),
+            InstallationManagedPolicy::USER_ROLE_ID
+        );
+        $before = $this->operation->requireEligibleAssignment($role);
+        $this->operation->dispatch(new AssignRoleToUser($role->operatorId, $role->userId, $role->roleId));
+        $this->operation->confirmAndAudit($role, $before);
     }
 }

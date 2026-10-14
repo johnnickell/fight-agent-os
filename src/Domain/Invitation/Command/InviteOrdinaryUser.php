@@ -12,7 +12,7 @@ use InvalidArgumentException;
 /**
  * Class InviteOrdinaryUser
  *
- * Requests an atomic ordinary invitation attributed to a trusted operator
+ * Requests independently committed ordinary invitation steps attributed to a trusted operator
  */
 final readonly class InviteOrdinaryUser implements Command
 {

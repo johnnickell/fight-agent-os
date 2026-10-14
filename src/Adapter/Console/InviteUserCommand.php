@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Adapter\Console;
 
+use App\Application\Invitation\ConsoleUserOperation;
+use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\Command\InviteOrdinaryUser;
 use App\Domain\Invitation\ConsoleInvitationInput;
-use Fight\AccessControl\Domain\AccessControl\User\Query\GetUserById;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\Common\Application\Messaging\Command\CommandBus;
-use Fight\Common\Application\Messaging\Query\QueryBus;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -33,7 +32,7 @@ final class InviteUserCommand extends Command
     /**
      * Constructs InviteUserCommand
      */
-    public function __construct(private readonly CommandBus $commands, private readonly QueryBus $queries)
+    public function __construct(private readonly ConsoleUserOperation $operation)
     {
         parent::__construct();
     }
@@ -70,8 +69,18 @@ final class InviteUserCommand extends Command
 
         try {
             $userId = UserId::generate();
-            $this->commands->execute(new InviteOrdinaryUser($invitation, $userId));
-            $invitation->requireOrdinaryOutcome($this->queries->fetch(new GetUserById($userId)), $userId);
+            $outcome = $this->operation->run(new InviteOrdinaryUser($invitation, $userId));
+            if (!$outcome->success) {
+                ConsoleUserOutput::failure(
+                    $error,
+                    $outcome,
+                    $invitation->operatorId->toString(),
+                    InstallationManagedPolicy::USER_ROLE_ID,
+                    self::FAILURE_MESSAGE
+                );
+
+                return self::FAILURE;
+            }
             $output->writeln(json_encode([
                 'email'   => $invitation->email->toString(),
                 'user_id' => $userId->toString(),

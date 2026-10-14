@@ -1,210 +1,169 @@
-# Trusted ordinary-user console invitations
+# Trusted console invitations and role correction
 
-## Current owner-approved revision — blocked, not shipped
+TASK-00037 implements two independent package business steps and a narrowly trusted corrective command.
+Implementation verification is separate from fresh independent Review and behavioral QA; historical QA at
+`2227c4b` does not cover this revision. No public HTTP or browser role-administration surface is introduced.
 
-[TASK-00037](../../planning/tasks/00037-TASK.md) now accepts independently committed invitation and normal
-managed `ROLE_USER` assignment, and requests trusted existing-role correction excluding authoritative Super Admin.
-**The current source still contains the earlier atomic participant and has no `user:role:add` command.**
-Canonical Review R2 remains REVISE; historical QA does not accept the revised behavior. Do not deploy the current
-participant as the approved two-step model or run the planned correction contract below as if it existed.
+## Prepare the intended installation
 
-The approved replacement must use normal package `TransactionalUnitOfWork` and `EventDispatcher`, with shared
-container/configured buses. Application owns sequencing/partial-result policy; Console only maps input/output.
-No outer/nested/joining transaction decorator, direct handler call, copied policy, repository audit hook or
-consumer delivery lifecycle workaround is authorized. ADR 0001/0002 remain unchanged.
+Restrict shell, checkout, Docker and database access to trusted operators. `--internal` acknowledges that trust
+boundary; it is not authentication or an end-user permission check. Verify the intended Compose project/database
+through private configuration without printing connection strings. Apply approved migrations through
+`./bin/database migrate`. Preview and explicitly reconcile the exact version-controlled catalog using the
+[managed policy runbook](MANAGED_POLICY.md). Both operations reject missing/drifted installation authority; neither
+repairs it automatically. Keep the independent external `APP_CREDENTIAL_DELIVERY_KEY` while work is outstanding.
+The [credential recovery runbook](CREDENTIAL_RECOVERY.md) owns provider configuration and safe delivery recovery.
+Local null/memory providers send no email; production provider/scheduler enrollment remains separate.
 
-### Approved operation and recovery contract
+Enroll a stable lowercase operator UUID once through the owning ID factory or a UUID library, and keep its trusted
+identity mapping outside the command. Do not substitute the target ID or infer an operator from environment input.
+This bounded attribution does not require a database User or claim a logged-in principal. Package assignment uses
+the typed operator UUID as actor; durable console audit uses the distinct `console:UUID` namespace.
 
-Invitation retains its input contract. Its first package commit creates the pending identity, seven-day grant,
-recoverable delivery state and package invitation audit. Normal events/delivery may run **before** the independent
-ordinary-role assignment. “Two transactions” means two independent business commits, not exactly two physical
-transactions across delivery claims/outcomes or audit. Assignment failure may leave an invitation committed and
-potentially emailed; it must return non-success, not claim rollback. After a postcommit exception, inspect safe
-actual persisted state before asserting what committed. Distinguish known invitation from missing/uncertain role,
-include a safe target UUID/corrective instruction, and never print private exceptions or credential material.
-Do not blindly reinvite an uncertain or existing identity.
-
-Planned correction contract (**unimplemented**):
-
-```sh
-./bin/console user:role:add --internal --operator=OPERATOR_UUID --user=EXISTING_USER_UUID --role=EXISTING_ROLE_UUID
-```
-
-Use enrolled lowercase operator UUID attribution and existing user/role UUID selectors, not names. Correction is
-additive/idempotent, retains existing roles and creates no identity, grant, credential delivery or role definition.
-No registration, resend, password, role removal, bootstrap or web access. Restart with a fresh process after a
-failed manager; correction must not duplicate originating work. Prohibit authoritative Super Admin by stable
-managed ID **and package meaning**, not label alone, checking the actual filtered payload before mutation while
-preserving actor/target and package protected-tier/reference rules. Unknown/malformed/stale identities fail safely.
-Operator/target audit remains mandatory evidence; disclose any separate postcommit audit/crash boundary and missing
-or uncertain evidence instead of claiming assignment/audit atomicity. No production audit boundary is implemented
-for this revision yet.
-
-### Safety prerequisite
-
-The locked Access Control v0.5.0 `AssignRoleToUser` accepts actor/target/role IDs but no expected-role snapshot or
-consumer transactional authorization callback. A terminal filter can inspect the actual payload and safe role View,
-but its check precedes the handler's transaction. Fresh guarded qualification validates even an exact installation
-preview, then interleaves two **public managed-policy commits** that retire the original designation and re-designate
-the selected ordinary managed ID as Super Admin. The unchanged assignment subsequently commits **19 protected
-permissions** and no assignment audit. Role-reference fencing checks current existence, not the prior non-Super-Admin
-snapshot. The one-commit transfer is correctly blocked by name-owner rules; the supported two-stage change succeeds.
-
-This is an API concurrency counterexample, **not a demonstrated exploit of the current CLI**: the controlled writer
-uses an alternate package policy, not the shipped fixed installation-policy CLI. Custom-role promotion/protected-tier
-rules still hold. Resolve whether this supported mutable-policy interleaving is in the required stale/alias threat
-model, or qualify an owning-package transactional authorization/expected-state capability under separate authority.
-Do not silently weaken the requirement or add consumer locks/transactions/upstream patches. See TASK-00037 for the
-exact probe/evidence and limits. The revision remains incomplete; green tests of the preserved implementation do
-not establish the new behavior.
-
-## Earlier implementation runbook — historical mechanism, not revision-5 acceptance
-
-The remainder documents the still-present earlier implementation. Its all-or-nothing/deferred-event mechanics
-and failure output below are **not** the owner-approved replacement. Retained commands describe current code only.
-
-This operation invites one ordinary user into this installation. It is not public registration, a web invitation,
-a Super Admin bootstrap, an arbitrary role assignment, or an activation journey. Restrict shell, checkout,
-Docker and database access to trusted operators. `--internal` acknowledges this boundary; it is not authentication
-or an end-user permission check.
-
-## Preparation and command
-
-Confirm the intended Compose project and database through trusted private configuration, without printing its
-connection strings. Install the committed Composer lock and apply the installation's approved migrations through
-`./bin/database migrate`. Preview and explicitly reconcile the complete managed policy using the
-[managed policy runbook](MANAGED_POLICY.md). Invitation refuses missing or drifted policy; it never repairs it.
-Supply the independent external `APP_CREDENTIAL_DELIVERY_KEY` and retain it while invitations are outstanding.
-The existing [credential recovery runbook](CREDENTIAL_RECOVERY.md) owns provider setup, safe status and recovery.
-Local/test null and memory providers do not send email; production provider enrollment remains separate.
-
-Use the generic non-interactive Console entry point (option order is flexible):
+## Invite an ordinary pending user
 
 ```sh
 ./bin/console user:invite --internal --operator=OPERATOR_UUID --email=person@example.test
 ```
 
-Replace `OPERATOR_UUID` with the operator's explicitly enrolled, stable, lowercase UUID. Generate an operator ID
-once with a UUID library/owning package ID factory and retain its trusted local identity mapping; do not use the
-invited user's ID or infer an actor from environment variables. The UUID is bounded identity evidence, **not**
-proof of a logged-in user, database User membership, or authorization. The package role command accepts a typed
-`UserId` actor, so the same operator UUID occupies that typed field without claiming an authenticated User.
-Durable audit uses the distinct `console:UUID` namespace. Keep the trusted operator mapping outside this command.
+Email is at most 254 ASCII bytes, contains no spaces/control characters and passes Fight Common parsing. It is
+lowercased before dispatch. Case-equivalent identities conflict without replacing grants or resending. There is no
+role, permission, user-ID, password, provider or credential selector on invitation.
 
-The operation accepts `--internal`, `--operator=...`, and `--email=...`, plus standard Symfony options such as
-`--help`, `--no-interaction` and verbosity. Option order is flexible; `--operator UUID` and `--email EMAIL` also work.
-Missing, duplicated operation options, positional, unknown or extra arguments produce a controlled failure without
-dispatch. There is no role, permission, password, user-ID, URL, provider or credential selector. Use
-`./bin/console help user:invite` for help. `--quiet` suppresses successful output; `--silent` suppresses all output.
-When rendered, failures remain fixed and safe at every verbosity. Operator input must be a valid lowercase UUID.
-Email is at most
-254 ASCII bytes, contains no spaces/control bytes, passes Fight Common email parsing, and is lowercased before
-any package dispatch. Case-equivalent existing identities conflict; repeat invocation does not resend or replace
-an existing invitation.
+Application dispatches public `InvitePendingUser`, then public `AssignRoleToUser` for the stable installed
+`ROLE_USER`. Each normal package handler owns its independent canonical Doctrine transaction and normal postcommit
+events. The first commit atomically records the pending/passwordless identity, email claim, seven-day activation
+grant, encrypted recoverable delivery state and `user.invited` audit. Its delivery subscriber may attempt email
+**before assignment**. The second business commit adds `ROLE_USER`; it cannot roll back the first.
 
-Successful stdout is one JSON line containing only canonical `email`, package-generated `user_id`, and
-`status: "invited"`. This status means the complete originating invitation committed, **not** that email arrived
-or the user activated. A retryable/permanent provider outcome is safe persisted delivery state; provider exceptions
-are classified by the package, not printed. No password, credential/link, digest, ciphertext, claim token, private
-provider diagnostics, SQL or stack trace is printed. This CLI disables PHP engine logging/display and converts
-runtime warnings to its fixed error boundary. Symfony parsing/unknown-option/unknown-command errors and verbose
-modes never render raw input, exception details or stack traces; interactive suggestions are disabled. Docker can
-still report operational errors outside PHP; do not capture verbose configuration or secret-bearing diagnostics.
+Success stdout is one JSON line: canonical `email`, safe `user_id`, and `status: "invited"`. It means both business
+steps, ordinary pending-state verification and separate role evidence completed, not email arrival or activation.
+Provider retryable/permanent outcomes are safe persisted state; provider exceptions are classified by the package.
+
+## Correct existing membership without reinvitation
+
+```sh
+./bin/console user:role:add --internal --operator=OPERATOR_UUID --user=EXISTING_USER_UUID --role=EXISTING_ROLE_UUID
+```
+
+All selectors are lowercase UUIDs, not names. Both user and role must already exist. The operation is additive and
+membership-idempotent: existing roles remain, and repeated addition creates no extra membership. An existing
+eligible custom role, including its ADMIN_SAFE permissions, is permitted. This command creates no identity, grant,
+credential delivery, password, role definition or permission, and removes nothing. It is not bootstrap, resend,
+registration, elevation or general web/custom-role administration.
+
+The stable installed Super Admin ID is always refused, including if renamed. Package-semantic `ROLE_SUPER_ADMIN`
+and unknown managed-catalog roles are also refused. Exact installation reconciliation rejects aliased/drifted
+managed definitions. Actual user/role/permission query identities are checked; unavailable or protected permission
+memberships are refused. Package role consistency, protected-tier and current-reference checks remain in force.
+
+Success stdout contains `user_id`, `role_id`, `status: "role_present"` and `audit: "confirmed"`. This includes a
+safe repeat: it confirms observed membership, not that this invocation necessarily created it.
+
+## Failure, uncertainty and recovery
 
 | Exit | Meaning |
 |---|---|
-| `0` | Originating invitation committed and immediate event dispatch returned; consult delivery status separately |
-| `1` | Setup/orchestration failed, or a post-commit outcome is uncertain; stderr is a fixed diagnostic |
-| `2` | Invalid input; stderr is fixed usage or a fixed Console input diagnostic, with no dispatch or writes |
+| `0` | Requested state verified and this invocation's role confirmation audit committed |
+| `1` | Rejection, execution failure or uncertain completion; never proof of rollback |
+| `2` | Invalid input, with fixed usage/parser diagnostic and no operation dispatch |
 
-Failure stdout is empty. Do not interpret a nonzero exit as proof of rollback: post-commit events, claim/outcome
-writes, output or process failure cannot undo an originating commit. Inspect trusted persisted identity and safe
-delivery status before taking further action. Do not blindly reinvite or create a replacement user to clear an
-uncertain result. Preserve evidence and restart failed Doctrine managers with a fresh invocation.
+Failure stdout is empty. If Application can inspect the intended target safely after failure, stderr is a JSON
+line with `status: "partial_or_uncertain"`, `user_id`, `role_id`, `assignment: "confirmed"` or `"missing"`, and
+`audit: "confirmed"` or `"unconfirmed"`. A failed invitation also includes an exact `correction` command for that
+known target and managed ROLE_USER. A failed correction reports state but does not recommend a rejected role.
+No target is asserted when the authoritative read fails, returns absent/wrong identity, or does not match the
+invited pending email/state: stderr instead uses a fixed failure/uncertainty diagnostic. Inspect trusted state in
+that case; absence of a target in output does **not** prove the invitation failed to commit.
 
-## Ownership and coherent commit
+A postcommit event exception can leave invitation or membership committed. Application reads public safe state
+before reporting it; it does not infer rollback from an exception. Assignment failure retains first-step audit,
+grant and delivery, even if mail was already offered. Audit failure retains membership. Preserve the safe output,
+inspect intended persisted state, correct reconciled authority if necessary through its owning operation, then use
+the existing target's corrective command in a **fresh process**. Never blindly reinvite, regenerate credentials or
+create a replacement identity. A Doctrine rollback closes that container's manager; successful invocations may
+reuse shared instances, but a failed manager must not be resurrected.
 
-The current lock remains Fight Access Control **v0.5.0**, source/lock reference
-`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`, and Fight Common **v1.3.0**,
-`7de6cad6e8a9752973ad9f8e27e285b0c1510582`. No Fight package version or upstream source changed.
-Symfony Console is now an explicit runtime dependency (`^8.1`), retaining the already-locked **v8.1.6**.
+Delivery recovery is independent of role correction. The package's bounded due-work runner finds the same durable
+generation after lost events, failed claims/outcomes or restart. Provider invocation occurs outside transactions.
+A provider acceptance followed by lost outcome commit can be retried with the same delivery identity: the guarantee
+is durable at-least-once attempts, not exactly once.
 
-The Adapter `InviteUserCommand` injects `CommandBus`/`QueryBus` and dispatches the owned `InviteOrdinaryUser`
-message. [`App\Application\Invitation\CommandHandler\InviteOrdinaryUserHandler`](../../src/Application/Invitation/CommandHandler/InviteOrdinaryUserHandler.php)
-owns installation orchestration: it dispatches public `InvitePendingUser`
-and `AssignRoleToUser` messages through the same configured command pipeline, and policy/outcome reads through the
-query pipeline. It never injects/calls those handlers directly. It does not copy identity, grant, assignment or
-delivery policy, insert assignments, or register consumer delivery intent. This owned message is justified by the
-installation policy, atomic cross-package workflow and required operator audit, not a package forwarding alias.
-The target UUID comes from the package factory.
-The only role is the version-controlled `InstallationManagedPolicy::USER_ROLE_ID`; the package preview must show
-the complete managed policy unchanged under shared PostgreSQL permission/role-reference fences. Those fences
-remain held through commit, serializing ordinary repository policy changes/removal. Trusted out-of-band SQL is
-not an authorized application writer or part of that concurrency guarantee.
+## Audit boundary and repeat semantics
 
-The canonical Doctrine unit of work rejects nested transactions. Calling the two handlers sequentially with it
-would permit a committed unassigned invitation, and wrapping those unchanged handlers in another transaction
-would fail. Console composition registers
-[`App\Adapter\Persistence\Invitation\PostgresInvitationTransaction`](../../src/Adapter/Persistence/Invitation/PostgresInvitationTransaction.php)
-as a narrowly scoped participant for
-the two routed package handlers. Its outer scope uses the canonical Doctrine commit. Participant callbacks require
-that active scope and reject nested participation; direct dispatch of either package operation outside the owned
-scope fails closed. The general application unit of work and delivery handlers remain unchanged. This is an
-explicitly owned transaction adapter, not a claim that the package default supports nesting.
+`user.invited` remains atomic with invitation/grant/delivery material in the first package transaction.
+The installed package assignment handler has no AuditEvidenceRepository. Application therefore verifies additive
+membership after the independent assignment returns, then uses a **third, separate audit transaction** to append
+`user.console_role_assigned`, with actor `console:OPERATOR_UUID`, subject target UUID and bounded context
+`{role_id: ROLE_UUID, result: "membership_confirmed"}`. This records an observed confirmation, not an atomic
+assignment/audit fact. Extra delivery claim/outcome bookkeeping transactions are separate too: “two steps” means
+two business transactions, not exactly two physical commits overall.
 
-All stateless handlers, the Symfony command, buses, scoped participant and deferred dispatcher are shared
-registrations resolved from the same existing container. There is no private handler graph or competing invitation
-entry point. Invocation-local participant/event state is cleared on success and failure before post-commit dispatch.
-A rollback closes the canonical Doctrine manager: a subsequent operation on that failed container remains fail-closed;
-restart with a fresh process/container rather than resurrecting a failed manager. Successful commands can reuse
-the shared instances without replaying prior events.
+A crash or postcommit exception between assignment and audit can leave membership with no role evidence. A failed
+or uncertain audit is non-success; no automatic rollback, audit replay or exactly-once evidence claim is made.
+A fresh corrective invocation dispatches the idempotent package assignment, verifies retained membership and
+appends its own attributed confirmation. **Every successful repeat adds one confirmation audit row**, even if no
+membership changed. It does not backfill a historical actor or assert that an interrupted earlier assignment was
+audited. An audit commit whose acknowledgement is lost may produce duplicate confirmation evidence on repeat;
+trusted investigation, not this CLI, resolves historical gaps. No repository hook, participant, deferred-event
+buffer or transaction decorator manufactures atomicity.
 
-Within the originating transaction:
+## Dispatch, filter safety and supported writer boundary
 
-1. Acquire the existing permission and role reference fences and require exact reconciled managed authority.
-2. Invoke package pending invitation behavior: identity/email reservation, seven-day activation grant,
-   encrypted recoverable delivery generation, and `user.invited` audit attributed to `console:UUID`.
-3. Invoke package role assignment with the **operator**, never the target, as actor; assign only managed `ROLE_USER`.
-4. Require the safe queried target to match the requested pending email/identity and exactly `ROLE_USER`; a silent
-   nested filter veto or elevated-role transformation must roll back, not leave partial or elevated authority.
-   Append required `user.console_role_assigned` evidence for the same console actor and target, with empty,
-   approved context. No arbitrary operator metadata enters audit.
-5. Commit all those effects together. Any originating write, audit, material preparation, assignment or commit
-   failure rolls them back and discards deferred success events.
+[`ConsoleUserOperation`](../../src/Application/Invitation/ConsoleUserOperation.php) owns invocation isolation,
+sequencing, partial-state inspection and separate audit coordination. Symfony adapters only validate/map transport
+and render safe results. Owned commands/handlers are justified by this real installation policy and evidence
+boundary, not aliases for the package role API. All messages use the existing configured buses and shared
+container-managed handlers; package handlers receive normal `TransactionalUnitOfWork` and `EventDispatcher`.
+No direct handler injection/call, outer/nested/joining UoW or copied package business policy exists.
 
-Only safe `UserInvited` and `RoleAssignedToUser` facts are retained locally until commit. Originating package
-`CommandFailedEvent` payloads can contain private exception text and are deliberately not forwarded. After commit,
-the normal dispatcher receives success facts and the existing package invitation subscriber starts delivery.
-The current console composition has no private-event logging/presentation subscriber; never attach an unredacted
-failure-event logger. Delivery's internal package failures are not an operator output contract. There is no durable
-event outbox/replay guarantee: if event dispatch fails, inspect persisted state and use recovery. A failing subscriber
-may prevent subsequent success facts from being published, but cannot remove the required committed audit.
+[`ConsoleCommandIntent`](../../src/Application/Invitation/ConsoleCommandIntent.php) retains each intended payload
+outside configurable transformations and detects silent vetoes, including when membership already existed.
+The terminal [`ConsoleUserCommandGuard`](../../src/Application/Invitation/ConsoleUserCommandGuard.php) checks
+actual routed class/actor/target/role/email against that intent before mutation and rechecks current eligible
+references immediately before package assignment. It is the innermost filter, installed first in Common's LIFO
+pipeline; configured later filters run outside it. Invocation frames are removed in `finally` on success/failure.
+Do not insert a transforming stage between this guard and routing or bypass public buses. Queries also traverse
+their configured pipeline; returned IDs and the exact desired preview definitions must match, not merely claim
+an empty unchanged plan. QueryFilter's void continuation supports message veto/transformation, not a claimed
+query-result-transformation API.
 
-The committed target is pending activation with exactly `ROLE_USER` (dashboard and own-session permissions), no
-password and no elevated role. Normal delivery commits a claim first, calls the provider outside any transaction,
-and commits its outcome/audit afterward. Failed claim writes leave pending work; failed outcome writes leave a
-recoverable claim until lease expiry. The originating identity/assignment/audit remain committed in both cases,
-and the console reports failure/uncertainty rather than apparent success. Provider-success/outcome-loss can cause
-a duplicate delivery with the same stable delivery identity: this is honestly at-least-once, not exactly-once.
+The supported installation writer supplies only `InstallationManagedPolicy::create()` via the shipped
+preview/apply CLI. Reapplying that fixed catalog cannot redesignate ordinary ROLE_USER as Super Admin. Stable
+identity, package semantics, current-state checks and package reference fences establish the supported boundary;
+this is not a guarantee against arbitrary newly authored runtime writers or out-of-band authority corruption.
+Existing corrupted/alternate catalog state fails reconciliation rather than being accepted as valid.
 
-## Verification boundaries
+Historical revision-5 qualification demonstrated a **conditional** gap: two alternate public managed policies can
+retire the original designation and redesignate an earlier ordinary managed ID between a preflight and unrestricted
+package assignment. A terminal preflight is not atomic against such arbitrary alternate catalog writers. Independent
+Review reproduced that diagnostic and counterchecked the shipped fixed writer. It found no in-scope prerequisite
+requiring a new product decision or upstream release. The old unconditional qualification hold is superseded.
+If a future feature introduces alternate catalog writers, qualify that expanded boundary before claiming safety;
+do not import that hypothetical writer as a blocker or silently broaden this implementation's guarantee.
 
-`tests/Unit/Invitation/OrdinaryInvitationTest.php` protects bounded input, canonicalization, command actors,
-fixed least authority, drift rejection, serialized messages, safe Symfony parsing/verbose rendering and random
-credential representation.
-`tests/Integration/Postgres/OrdinaryInvitationTest.php` runs real package handlers and the owned repositories:
-pending state, exact permissions, seven-day lifetime, console audit, duplicate conflict, missing/drifted/stale
-policy, material/write/audit/commit failures, shared reference fencing, lost immediate delivery, post-commit event
-failure, claim/outcome failures, provider exceptions and fresh-worker recovery. Real command-filter vetoes and
-elevated-role message transformation prove rejection at the owned workflow boundary. A query filter intentionally
-withholds the required policy-preview message; assertions outside the Console-caught callback verify that the
-veto path ran, output stayed safe, and no originating, provider or event effects remained. The installed query-filter
-contract forwards messages through a void `$next` callback; these tests do not prove query-result transformation.
-Repeated shared invocations prove transaction/event isolation. Markers in credentials, provider exceptions and originating errors are checked against output, safe success facts, audit and package status Views;
-private database rows are inspected in tests but never copied to operator receipts. Existing delivery integration
-tests additionally cover successor/outcome fencing, cancellation, expiry and competing claims.
+## Safe operation and verification
 
-Use `./bin/database test-reset` before focused PostgreSQL tests, then `./bin/phpunit --filter OrdinaryInvitation`.
-`./bin/backend-tests` measures all backend suites; `./bin/build` remains the mandatory complete local gate.
-No new HTTP route or UI exists. Automated implementation evidence is not independent technical acceptance,
-behavioral QA, real-provider qualification, deployed scheduling or production privilege certification.
+Both commands require `--internal` and explicit operator attribution. Missing/repeated operation options, positional
+or unknown selectors fail safely. Option order and `--option VALUE` forms work. Standard help and verbosity remain;
+`--quiet` suppresses success and `--silent` suppresses everything. No password, credential/link, digest, ciphertext,
+claim token, cookie/token, provider secret, SQL, stack trace or raw exception is rendered at any verbosity. The CLI
+suppresses PHP engine display/logging and interactive suggestions. Docker can report operational errors outside
+PHP: never capture verbose private configuration. Normal package `CommandFailedEvent` remains private diagnostic
+material; no operator-facing logging subscriber is registered, and one must not be added without sanitization.
+
+The unchanged lock is Access Control **v0.5.0** (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`), Common **v1.3.0**
+(`7de6cad6e8a9752973ad9f8e27e285b0c1510582`) and Symfony Console **v8.1.6**. No package/upstream/ADR edit is required.
+Unit tests protect input, policy, scoped dispatch, uncertainty and rendering. PostgreSQL integration tests exercise
+real package commits/rollback, early provider timing, retained invitations, assignment/audit failures, postcommit
+inspection, correction/repeats, ordinary/custom roles, current drift/stale references and actual configured
+actor/target/role transformations/vetoes. Secret markers are checked only against safe output/events/audit/status,
+not copied from private rows into evidence. Old all-or-nothing tests were replaced with independent-boundary
+assertions, not silently removed. Owning tools validate wiring/source paths directly, not product-suite tests.
+
+Serialize `./bin/database test-reset` then `./bin/phpunit --filter OrdinaryInvitation` for focused PostgreSQL work.
+`./bin/backend-tests` measures backend coverage; `./bin/build` remains the mandatory full local gate. Fresh-process
+recovery evidence and counts/warnings belong to [TASK-00037](../../planning/tasks/00037-TASK.md). No real email,
+scheduler, production certification, crash-kill testing, hosted CI, independent acceptance or publication follows
+from an Engineer gate. Fresh independent Review and affected behavioral QA remain required; visual screenshots
+are N/A for these non-interactive commands.

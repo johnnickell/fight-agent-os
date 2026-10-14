@@ -39,7 +39,7 @@ final readonly class ConsoleInvitationInput
     }
 
     /**
-     * Requires the exact ordinary outcome before commit or success presentation
+     * Requires the exact ordinary outcome before success presentation
      */
     public function requireOrdinaryOutcome(?UserView $view, UserId $userId): void
     {

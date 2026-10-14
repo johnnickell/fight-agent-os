@@ -57,6 +57,22 @@ final class InstallationManagedPolicy
      */
     public static function requireReconciled(ManagedPolicyPlan $plan): void
     {
+        $policy = self::create();
+        $actual = [
+            array_map(static fn($item): array => $item->getDefinition()->toArray(), $plan->getPermissions()),
+            array_map(static fn($item): array => $item->getDefinition()->toArray(), $plan->getRoles())
+        ];
+        $expected = [
+            array_map(static fn($item): array => $item->toArray(), $policy->getPermissions()),
+            array_map(static fn($item): array => $item->toArray(), $policy->getRoles())
+        ];
+        foreach ([0, 1] as $index) {
+            sort($actual[$index]);
+            sort($expected[$index]);
+        }
+        if ($actual !== $expected) {
+            throw new LogicException('The installation policy preview changed.');
+        }
         foreach ([...$plan->getPermissions(), ...$plan->getRoles()] as $item) {
             if ($item->getAction() !== ManagedPolicyChangeAction::UNCHANGED) {
                 throw new LogicException('Managed installation authority requires reconciliation.');
