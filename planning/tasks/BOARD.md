@@ -7,6 +7,8 @@ Use [lightweight routing](../CONVENTIONS.md#lightweight-work-routing) for valida
 [Wayfinder status and frontiers](../wayfinder/README.md) answer the decision-routing question.
 Use the [current planning handoff](../ROADMAP.md#current-planning-handoff) for planning phases; do not infer full decomposition from closed maps.
 Read the referenced current section, not the full historical record. Missing handoff/phase needs owner input.
+The [blended delivery strategy](../ROADMAP.md#approved-blended-delivery-strategy) permits terminal, browser and
+shared-foundation interleaving; it does not override active work, TASK orders, dependencies or readiness holds below.
 
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 

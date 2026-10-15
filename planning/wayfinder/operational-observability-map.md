@@ -22,11 +22,13 @@ observability or authorize EPIC, TICKET or TASK creation automatically.
 ### Approved planning scope and historical ownership
 
 John approved this focused map and isolated worktree after inspecting existing ownership. The map adds a named
-operator diagnosis outcome, not a prerequisite for the current terminal-first milestone. No backend or source
+operator diagnosis outcome, not a prerequisite for the then-prioritized terminal milestone. No backend or source
 set was selected by that charting approval. WF-036–042 are now resolved; this map has no open decision frontier.
 Loki and native Super Admin-only Logs are planning choices, not production qualification. The separately invoked,
 confirmed grill has written [EPIC-00019](../epics/00019-EPIC.md), and its seven-TICKET requirement split is now accepted.
-TASK decomposition is the current planning handoff below. Map closure alone created no implementation records.
+TASK decomposition is now complete; the current handoff below routes to the Board. Map closure alone created
+no implementation records. The [blended roadmap](../ROADMAP.md#approved-blended-delivery-strategy) governs current
+sequencing; the original scope approval does not impose global terminal-first precedence.
 
 During WF-036, John explicitly included all application commands, application queries and application events,
 not just failures. All application Monolog records, channels and levels must reach the logging/collection pipeline;
@@ -237,14 +239,16 @@ transitively consumes every earlier observability TASK and owns the mandatory wo
 Actual preservation/privacy and managed-execution inputs remain gated where missing. Naming suppliers grants no
 privilege and qualifies no resource fit, fence, current output authority or storage/restore mechanism.
 
-Fetched `origin/develop` remains `58b087b`; this branch remains `ac41c28` without rebase. Live/archive/concurrent
-inventories across 17 refs/four worktrees ended at TASK-00480 before allocating TASK-00481–00487. All thirty-seven
-are unranked; only the sixteen named receivers gained early supplier metadata in this operation. Existing local
-execution priorities/unrelated work are unchanged. No implementation, deployment, grant or runtime experiment follows.
+At the final allocation checkpoint, fetched `origin/develop` was `58b087b` and the planning branch remained
+`ac41c28` without another rebase. Live/archive/concurrent inventories across 17 refs/four worktrees ended at
+TASK-00480 before allocating TASK-00481–00487. All thirty-seven were unranked; only the sixteen named receivers
+gained early supplier metadata in that operation. These are historical allocation facts, not current checkout state.
+The planning is now merged into `develop`; the
+[Roadmap's current handoff](../ROADMAP.md#current-planning-handoff) reconciles that baseline and blended strategy.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/` for read-only Board-based work selection.
-No execution is invoked. Recheck IDs/upstream before future allocation/publication; full build, review/QA,
-publication and operational qualification/enrollment remain distinct outstanding work.
+Next: `/skill:next` from the current checkout for read-only Board-based work selection.
+No execution is invoked. Recheck IDs/upstream before future allocation. Implementation, full application
+verification, independent review/QA and operational qualification/enrollment remain separate from merged planning.
 
 ## Outstanding delivery qualification — handed off
 
@@ -266,7 +270,7 @@ publication and operational qualification/enrollment remain distinct outstanding
   deployment authority.
 - Reopening the vision map, redefining Workflow/audit authority, importing agent transcripts/prompts/thinking,
   replacing existing evidence ownership or shortening existing preservation without explicit approval.
-- Automatically making observability a terminal-first prerequisite or changing Board execution priority.
+- Automatically making the complete observability journey a managed-execution prerequisite or changing Board execution priority.
 - Collecting runtime/service logs from registered applications/projects managed by Agent OS and browser
   JavaScript-error ingestion are explicitly excluded by John, not deferred delivery promises. This does not
   exclude Agent OS's own project-linked activity, server HTTP diagnostics or managed check/run output.
@@ -277,7 +281,11 @@ publication and operational qualification/enrollment remain distinct outstanding
 
 ## Planning verification and delivery
 
-The isolated planning branch is `feature/observability-planning`, now rebased onto `ac41c28`, at
+The following preserves the original planning checkpoint, not current publication status or fresh application
+verification. See the [EPIC's publication record](../epics/00019-EPIC.md#authorized-planning-publication-and-local-gate-exception)
+and [current Roadmap](../ROADMAP.md#current-planning-handoff) for the later handoff.
+
+The original isolated planning branch was `feature/observability-planning`, rebased onto `ac41c28`, at
 `.runs/worktrees/observability-planning/` in the base checkout. Before rebase/EPIC creation, `./bin/planning-check --write`
 and `./bin/planning-check` passed with 572 records, 473 active, and `git diff --check` passed. Those counts are historical;
 the [EPIC progress](../epics/00019-EPIC.md#progress) records the new planning handoff and reconciliation.

@@ -34,8 +34,9 @@ pi install ./harness/pi
 
 Restart Pi, then use `/fight-header` to choose a presentation or `off` to restore its default header.
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
-The [terminal-first workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation; branding does not
-enable managed TASK execution or sandbox access. The optional [deterministic tool policy](harness/pi/TOOL_POLICY.md)
+The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
+browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
+Branding does not enable managed TASK execution or sandbox access. The optional [deterministic tool policy](harness/pi/TOOL_POLICY.md)
 requires separate operator selection on the qualified runtime; it is not Jev screening or sandbox isolation.
 
 ## Development
