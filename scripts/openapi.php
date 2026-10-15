@@ -21,7 +21,7 @@ $temporary = null;
 $stage = 'generation and validation';
 try {
     $json = Document::generate();
-    $directory = dirname(__DIR__).'/.runs/openapi';
+    $directory = dirname(__DIR__).'/var/openapi';
     $artifact = $directory.'/openapi.json';
     $stage = 'private artifact directory';
     if ($mode === 'export' && !is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
@@ -65,7 +65,7 @@ try {
         }
     }
 
-    fwrite(STDOUT, sprintf("OpenAPI %s passed: .runs/openapi/openapi.json sha256=%s\n", $mode, hash('sha256', $json)));
+    fwrite(STDOUT, sprintf("OpenAPI %s passed: var/openapi/openapi.json sha256=%s\n", $mode, hash('sha256', $json)));
 } catch (Throwable) {
     // Do not echo exception text, source contents, environment values or machine paths.
     fwrite(STDERR, sprintf(

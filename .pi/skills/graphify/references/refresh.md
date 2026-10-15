@@ -26,6 +26,6 @@ preserve their ownership, and inspect the exact changes first. Explain whether a
 code only. Never replace project hooks or broaden scope as a consequence of installing this local skill.
 
 For this repository, absent an established graph-output policy, use an explicitly selected disposable source
-scope under `.runs/graphify/` for qualification. Do not redirect a real project scan to an output location using
+scope under `.runs/prototypes/<TASK-ID>/graphify/` for qualification. Do not redirect a real project scan to an output location using
 an unverified flag or claim that a copied sample represents the entire project. Establish full-project output
 and ignore policy in its authorized maintenance operation.

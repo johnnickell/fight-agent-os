@@ -113,8 +113,10 @@ This is not bootstrap/public registration; local delivery adapters send no email
 Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
 then validate freshness and real responses with `./bin/openapi check`. Generate the initially empty public-safe
 form catalog with `./bin/validations export` and verify it with `./bin/validations check`; see
-[validation metadata](docs/api/VALIDATIONS.md). Generated JSON stays under ignored `.runs/openapi/` and
-`.runs/validations/`, not public assets. Swagger UI, spec-serving and diagnostic routes are disabled in every environment.
+[validation metadata](docs/api/VALIDATIONS.md). Generated JSON stays under ignored `var/openapi/` and
+`var/validations/`, not public assets. Compiled browser assets live in `var/client/build/` and local TLS state
+in `var/https/`. Application runtime never depends on `.runs/`. Swagger UI, spec-serving and diagnostic routes
+are disabled in every environment.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots

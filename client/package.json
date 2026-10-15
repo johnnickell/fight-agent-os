@@ -18,7 +18,7 @@
     "coverage": "vitest run --coverage",
     "build": "node scripts/build.mjs",
     "build-check": "node scripts/build.mjs --check",
-    "storybook-build": "storybook build --disable-telemetry --output-dir ../.runs/client/storybook && node scripts/finalize-catalog-build.mjs",
+    "storybook-build": "storybook build --disable-telemetry --output-dir ../.runs/build/reports/client/storybook && node scripts/finalize-catalog-build.mjs",
     "storybook-dev": "storybook dev --ci --no-open --disable-telemetry --host 0.0.0.0 --port 6006",
     "storybook-test": "vitest run --config vitest.storybook.config.ts",
     "storybook-capture": "node scripts/capture-catalog.mjs"

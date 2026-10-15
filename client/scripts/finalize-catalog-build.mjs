@@ -4,13 +4,13 @@ import { URL } from 'node:url';
 
 // Storybook emits a wall-clock telemetry timestamp even with telemetry disabled.
 // Keep useful tool metadata, but omit that non-runtime field for reproducible output.
-const path = new URL('../../.runs/client/storybook/project.json', import.meta.url);
+const path = new URL('../../.runs/build/reports/client/storybook/project.json', import.meta.url);
 const metadata = JSON.parse(await readFile(path, 'utf8'));
 delete metadata.generatedAt;
 await writeFile(path, `${JSON.stringify(metadata)}\n`);
 
 // Inspect the static catalog directly; tool bundles are not production /app assets.
-const root = new URL('../../.runs/client/storybook/', import.meta.url);
+const root = new URL('../../.runs/build/reports/client/storybook/', import.meta.url);
 // The disposable catalog also distributes the selected font bytes with their notices.
 for (const family of ['ubuntu', 'open-sans']) {
   await writeFile(
@@ -44,7 +44,7 @@ async function inspect(directory, prefix = '') {
 await inspect(root);
 artifacts.sort((a, b) => a.name.localeCompare(b.name));
 await writeFile(
-  new URL('../../.runs/client/storybook-artifacts.json', import.meta.url),
+  new URL('../../.runs/build/reports/client/storybook-artifacts.json', import.meta.url),
   `${JSON.stringify(artifacts, null, 2)}\n`
 );
 console.log(

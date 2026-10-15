@@ -2,7 +2,7 @@
 set -eu
 
 cd "$(dirname "$0")/.."
-certs=.runs/https/certs
+certs=var/https/certs
 origin=https://localhost:18443
 
 case "${1:-}" in
@@ -21,7 +21,7 @@ case "${1:-}" in
     mkcert -install
     umask 077
     mkdir -p "$certs"
-    chmod 700 .runs/https "$certs"
+    chmod 700 var/https "$certs"
     mkcert -cert-file "$certs/localhost.pem" -key-file "$certs/localhost-key.pem" localhost
     chmod 600 "$certs/localhost.pem" "$certs/localhost-key.pem"
     python3 scripts/local_https.py configure

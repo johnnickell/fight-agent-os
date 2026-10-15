@@ -26,7 +26,7 @@ final class PublicValidationTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->directory = dirname(__DIR__, 3).'/.runs/test-validations/'.bin2hex(random_bytes(8));
+        $this->directory = dirname(__DIR__, 3).'/.runs/build/tmp/test-validations/'.bin2hex(random_bytes(8));
         mkdir($this->directory, 0700, true);
     }
 

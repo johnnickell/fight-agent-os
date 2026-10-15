@@ -29,8 +29,8 @@ services:
       - .:/app:ro
       - ./.runs:/app/.runs
       - ./var:/app/var
-      - ./.runs/client/dependency-cache:/app/client/node_modules/.cache
-      - ./.runs/client/vite-temp:/app/client/node_modules/.vite-temp
+      - ./.runs/cache/client/dependency-cache:/app/client/node_modules/.cache
+      - ./.runs/cache/client/vite-temp:/app/client/node_modules/.vite-temp
     shm_size: 256mb
     read_only: true
     tmpfs: ["/tmp:rw,nosuid,size=256m"]
@@ -72,8 +72,8 @@ services:
     ports: ["127.0.0.1:18443:8443"]
     volumes:
       - type: bind
-        source: ./public/build
-        target: /app/public/build
+        source: ./var/client/build
+        target: /app/var/client/build
         read_only: true
       - type: bind
         source: ./etc/docker/https/default.conf
@@ -82,7 +82,7 @@ services:
         bind:
           create_host_path: false
       - type: bind
-        source: ./.runs/https/certs
+        source: ./var/https/certs
         target: /etc/nginx/certs
         read_only: true
         bind:

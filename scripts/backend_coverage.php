@@ -7,7 +7,7 @@ use SebastianBergmann\CodeCoverage\CodeCoverage;
 require dirname(__DIR__).'/vendor/autoload.php';
 
 $root = dirname(__DIR__);
-$reports = $root.'/.runs/backend-coverage';
+$reports = $root.'/.runs/build/reports/backend';
 // This is a locally generated PHPUnit artifact, never an externally supplied PHP file.
 $coverage = require $reports.'/coverage.php';
 if (!$coverage instanceof CodeCoverage) {

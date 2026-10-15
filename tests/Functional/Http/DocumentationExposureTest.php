@@ -23,7 +23,9 @@ final class DocumentationExposureTest extends TestCase
         foreach (['local', 'development', 'test', 'production'] as $environment) {
             $paths = [
                 '/swagger', '/openapi.yaml', '/docs/api/openapi.yaml', '/openapi.json',
-                '/.runs/openapi/openapi.json', '/diagnostics', '/api/v1/diagnostics'
+                '/.runs/openapi/openapi.json', '/var/openapi/openapi.json', '/var/validations/catalog.json',
+                '/var/client/build/manifest.json', '/var/https/certs/localhost-key.pem',
+                '/diagnostics', '/api/v1/diagnostics'
             ];
             foreach ($paths as $path) {
                 yield $environment.$path => [$environment, $path];

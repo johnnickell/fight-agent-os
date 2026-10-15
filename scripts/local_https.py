@@ -11,7 +11,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 ENV = ROOT / ".env"
-STATE = ROOT / ".runs" / "https"
+STATE = ROOT / "var" / "https"
 ORIGIN = "https://localhost:18443"
 
 

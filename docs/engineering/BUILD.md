@@ -112,9 +112,12 @@ new evidence is owned by that selected user. Tool `home/` stays private (`0700`)
 permission change or upload includes it or unrelated scratch. Existing historical run permissions are unchanged.
 These diagnostics must remain free of secrets; host readability is not permission to publish arbitrary logs.
 
-Coverage/count/exclusion details remain in `.runs/backend-coverage/` and `.runs/client/coverage/`. Production check
-assets remain in `.runs/client/production/`, never replacing live `public/build/`; catalog output and captures stay
-under `.runs/client/`. Ignored reports/caches are intentionally retained for review, not automatically archived.
+Coverage/count/exclusion details remain in `.runs/build/reports/backend/` and
+`.runs/build/reports/client/coverage/`. Generated production-check assets live in `var/client/check/production/`,
+never replacing live `var/client/build/`; catalog output and captures stay under `.runs/build/reports/client/`.
+Disposable tool caches live under `.runs/cache/`. Retain active/required evidence; explicitly archive completed,
+inactive runs with a reversible manifest and repaired current locators rather than accumulating loose output.
+Application-generated JSON and TLS state live under `var/`, never `.runs/`.
 Do not delete another TASK's evidence. No gate checks test the gate, tools, configuration or seeded violations.
 
 Warnings are preserved, not suppressed. PHP/tool/test warning failures remain mandatory; existing disclosed
