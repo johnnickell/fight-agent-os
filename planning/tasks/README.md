@@ -452,5 +452,5 @@
 | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
-| [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | in-progress | — |
+| [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | done | — |
 <!-- /planning:records -->

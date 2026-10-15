@@ -16,7 +16,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | in-progress | — | [PR #75](https://github.com/johnnickell/fight-agent-os/pull/75) |
-| — | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -496,4 +495,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | — (standalone bug) | done | — | [PR #77](https://github.com/johnnickell/fight-agent-os/pull/77) |
 | — | [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | — (standalone chore) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
 | — | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | [TICKET-00084 — Coordinate local TASK delivery through an open reviewed PR](../tickets/00084-TICKET.md) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
+| — | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | — (standalone chore) | done | — | — |
 <!-- /planning:board -->
