@@ -227,17 +227,32 @@ for (const permission of [false, undefined, 'true', Promise.resolve(true)]) {
     assert.equal(f.calls(), 0); assert.equal(f.reads(), 0);
   });
 }
-test('fixed-synthetic setup, stale config, expired pricing and unsupported host refuse supplied state', async t => {
+test('fixed-synthetic setup, stale config, future confirmation and unsupported host refuse supplied state', async t => {
   const f = fixture(t);
   f.config = config({ disclosure: 'fixed-synthetic-only' });
   assert.equal((await f.consumer.evaluate(request(f.config))).state, 'disclosure-denied');
   f.config = config(); const stale = request(f.config); f.config = config();
   assert.equal((await f.consumer.evaluate(stale)).state, 'stale-configuration');
-  f.config = config({ priceConfirmedAt: 0 });
+  f.config = config({ priceConfirmedAt: Date.now() + 86400000 });
   assert.equal((await f.consumer.evaluate(request(f.config))).state, 'price-unqualified');
   const other = fixture(t, { platform: 'linux' });
   assert.equal((await other.consumer.evaluate(request(other.config))).state, 'unsupported-host'); assert.equal(other.calls(), 0);
   assert.equal(f.calls(), 0); assert.equal(f.reads(), 0);
+});
+
+test('standing setup admits authorized judgments years later but never replaces current consumer permission', async t => {
+  const f = fixture(t);
+  f.config = config({ priceConfirmedAt: Date.UTC(2020, 0, 1) });
+  const original = { ...f.config };
+  let allowed = true;
+  const consumer = f.engine.consumer('standing-v1', () => allowed);
+  assert.equal((await consumer.evaluate(request(f.config))).state, 'complete');
+  f.engine.invalidate();
+  assert.equal((await consumer.evaluate(request(f.config))).state, 'complete');
+  allowed = false;
+  assert.equal((await consumer.evaluate(request(f.config))).state, 'disclosure-denied');
+  assert.equal(f.calls(), 2); assert.equal(f.reads(), 2);
+  assert.deepEqual(f.config, original);
 });
 
 test('permission and configuration are rechecked after credential resolution, before dispatch', async t => {

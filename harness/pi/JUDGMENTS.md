@@ -11,7 +11,10 @@ file-read permission, relevance threshold, sandbox, Workflow transition, savings
 ## Configure and connect
 
 The operator uses [Jev setup](README.md#jev-setup-and-readiness-operator-only) to select the pinned connection,
-confirm current pricing and set explicit request/session ceilings. Existing `fixed-synthetic-only` settings
+confirm pricing once for that connection and set explicit request/session ceilings. This setup has no time-based
+expiry: the confirmation timestamp is provenance, not a lease. Existing settings keep their timestamp and identity;
+changing connection/price pins requires explicit setup, never automatic adoption of higher prices. Consumer
+permission remains current and independently revocable. Existing `fixed-synthetic-only` settings
 continue to refuse consumer-supplied state. Enabling `authorized-supplied-state` sets the operator's maximum
 permitted disclosure; it does **not** grant a consumer permission to disclose any particular source or authorize
 a paid qualification. Setup never resolves credentials or dispatches requests.
@@ -90,8 +93,9 @@ ordinary positive/negative classification. Missing, duplicate, mismatched, undec
 or otherwise invalid answers yield `invalid-result` and **no partial answers**. Provider state/text is untrusted
 data, never permission, a tool instruction or a reason to select another provider.
 
-Admission distinguishes invalid input, count/payload limits, stale configuration, denied disclosure, expired
-price confirmation, request/session budgets, unavailable accounting, unsupported host and concurrency exhaustion.
+Admission distinguishes invalid input, count/payload limits, stale configuration, denied disclosure, invalid
+price-confirmation timestamps (negative or future, not merely old), request/session budgets, unavailable accounting,
+unsupported host and concurrency exhaustion.
 Authentication is opaque `credential-unavailable`; HTTP denial, billing, provider rejection, timeout and service
 unavailability remain distinct. Absent responses, explicit refusal, cancellation and invalid results do not become
 No, low scores or fabricated judgments. The `refusal: true` response convention is controlled evidence only;

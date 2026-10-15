@@ -31,7 +31,8 @@ export function validateConfiguration(value, now = Date.now()) {
     value.requestMicroUsd > value.sessionMicroUsd || !Number.isSafeInteger(value.priceConfirmedAt)) {
     throw new Unavailable('invalid-setup');
   }
-  if (value.priceConfirmedAt > now || now - value.priceConfirmedAt > 86400000) throw new Unavailable('price-unqualified');
+  // Confirmation is standing approval for these exact pins, not a time-limited lease.
+  if (value.priceConfirmedAt < 0 || value.priceConfirmedAt > now) throw new Unavailable('price-unqualified');
   return Object.freeze({ ...value });
 }
 
