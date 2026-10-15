@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Application\Authorization\AuthenticatedRoleAssignmentGuard;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\DeliverUserInvitationHandler;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\ExpireInvitationDeliveryHandler;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
@@ -38,22 +37,16 @@ use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 
-return [
-    'services' => [
+return static function (Container $container): void {
+    $services = [
         'messaging.command.router'                => static function (Container $container): ServiceAwareCommandRouter {
             return new ServiceAwareCommandRouter($container);
         },
         'messaging.command.routing'               => static function (Container $container): RoutingCommandBus {
             return new RoutingCommandBus($container->get('messaging.command.router'));
         },
-        'messaging.command.authorized_routing'    => static function (Container $container): CommandPipeline {
-            $routing = new CommandPipeline($container->get('messaging.command.routing'));
-            $routing->addFilter($container->get(AuthenticatedRoleAssignmentGuard::class));
-
-            return $routing;
-        },
         'messaging.command.bus'                   => static fn(Container $container): CommandPipeline =>
-            new CommandPipeline($container->get('messaging.command.authorized_routing')),
+            new CommandPipeline($container->get('messaging.command.routing')),
         CommandBus::class                         => static function (Container $container): CommandBus {
             return $container->get('messaging.command.bus');
         },
@@ -132,8 +125,11 @@ return [
                 $container->get(EventDispatcher::class)
             );
         }
-    ],
-    'handlers' => [
+    ];
+    foreach ($services as $id => $factory) {
+        $container->set($id, $factory);
+    }
+    $container->get('messaging.command.router')->registerHandlers([
         AssignRoleToUser::class            => AssignRoleToUserHandler::class,
         ReconcileManagedPolicy::class      => ReconcileManagedPolicyHandler::class,
         ExpireInvitationDelivery::class    => ExpireInvitationDeliveryHandler::class,
@@ -141,6 +137,5 @@ return [
         ExpireEmailChange::class           => ExpireEmailChangeHandler::class,
         DeliverUserInvitation::class       => DeliverUserInvitationHandler::class,
         DeliverPasswordReset::class        => DeliverPasswordResetHandler::class
-    ],
-    'filters'  => []
-];
+    ]);
+};

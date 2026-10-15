@@ -6,15 +6,10 @@ namespace Tests\Unit\Bootstrap;
 
 use App\Adapter\Console\BootstrapSuperAdminCommand;
 use App\Adapter\Console\SafeConsoleApplication;
-use App\Application\Bootstrap\BootstrapClaimScope;
-use App\Application\Bootstrap\BootstrapCommandGuard;
 use App\Application\Bootstrap\BootstrapOperation;
-use App\Application\Bootstrap\CommandHandler\BootstrapSuperAdminHandler;
-use App\Application\Invitation\ConsoleAssignmentPolicy;
-use App\Application\Invitation\ConsoleCommandIntent;
 use App\Domain\Authorization\InstallationManagedPolicy;
-use App\Domain\Bootstrap\BootstrapClaims;
 use App\Domain\Bootstrap\BootstrapEvidence;
+use App\Domain\Bootstrap\BootstrapProgress;
 use App\Domain\Bootstrap\BootstrapState;
 use App\Domain\Bootstrap\Command\BootstrapSuperAdmin;
 use App\Domain\Invitation\ConsoleInvitationInput;
@@ -25,19 +20,15 @@ use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedPolicyPlan;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\ManagedRolePlanItem;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
-use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
 use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\Common\Adapter\Messaging\Command\Sync\CommandPipeline;
-use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
+use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Domain\Messaging\Command\Command;
-use Fight\Common\Domain\Messaging\Command\CommandMessage;
-use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
-use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -46,18 +37,19 @@ use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * Protects permanent claim sequencing, failure facts, bounded attribution and explicit confirmation
+ * Protects manual admission, retained partial outcomes, attribution and explicit confirmation
  */
 final class BootstrapTest extends TestCase
 {
     private BootstrapState $state;
+    private bool $superAdmin = false;
     /** @var list<class-string> */
     private array $effects = [];
 
     /**
-     * Sequences only the winning claim and exact managed elevation through guarded buses
+     * Refuses a second invocation only once authoritative Super Admin membership exists
      */
-    public function testSuccessAndPermanentRefusal(): void
+    public function testSuccessAndExistingAdminRefusal(): void
     {
         $command = $this->command();
         $operation = $this->operation();
@@ -65,84 +57,66 @@ final class BootstrapTest extends TestCase
         self::assertSame([
             ReconcileManagedPolicy::class, InvitePendingUser::class, AssignRoleToUser::class
         ], $this->effects);
-        self::assertSame('unavailable', $operation->run($command)->claim);
-        self::assertCount(4, $this->effects); // Policy may still reconcile; invitation/assignment never repeat.
+        self::assertSame('refused', $operation->run($this->command())->admission);
+        self::assertCount(3, $this->effects);
         self::assertSame($command->toArray(), BootstrapSuperAdmin::fromArray($command->toArray())->toArray());
-        self::assertSame('bootstrap:'.$command->input->operatorId, BootstrapEvidence::claimed($command)->actorId());
-        self::assertSame('user.bootstrap_claimed', BootstrapEvidence::claimed($command)->action());
-        self::assertSame('user.bootstrap_completed', BootstrapEvidence::completed($command)->action());
-        self::assertTrue(BootstrapEvidence::completed($command)->subjectId()->equals($command->userId));
-        self::assertSame([], BootstrapEvidence::completed($command)->context());
+        $evidence = BootstrapEvidence::completed($command);
+        self::assertSame('bootstrap:'.$command->input->operatorId, $evidence->actorId());
+        self::assertSame('user.bootstrap_completed', $evidence->action());
+        self::assertTrue($evidence->subjectId()->equals($command->userId));
+        self::assertSame([], $evidence->context());
     }
 
     /**
-     * Reports independently retained steps instead of inferring rollback from exceptions
+     * Refuses a failed presence query without attempting policy, invitation or assignment
+     */
+    public function testPresenceQueryFailure(): void
+    {
+        $operation = $this->operation('presence');
+        self::assertSame('unknown', $operation->run($this->command())->admission);
+        self::assertSame([], $this->effects);
+    }
+
+    /**
+     * Reports retained independent steps rather than inferring rollback from exceptions
      */
     #[DataProvider('failures')]
-    public function testFailures(string $phase, string $claim, string $invitation, string $assignment): void
+    public function testFailures(string $phase, string $invitation, string $assignment): void
     {
-        $operation = $this->operation($phase);
-        $result = $operation->run($this->command());
+        $result = $this->operation($phase)->run($this->command());
         self::assertFalse($result->isComplete());
-        self::assertSame($claim, $result->claim);
+        self::assertSame('admitted', $result->admission);
         self::assertSame($invitation, $result->invitation);
         self::assertSame($assignment, $result->assignment);
         self::assertSame('unconfirmed', $result->audit);
     }
 
     /**
-     * Supplies precommit and postcommit interruptions at each owned boundary
+     * Supplies precommit and postcommit failures at the supported effect boundaries
      *
-     * @return iterable<array{string, string, string, string}>
+     * @return iterable<array{string, string, string}>
      */
     public static function failures(): iterable
     {
-        yield ['policy', 'absent', 'unknown', 'unknown'];
-        yield ['role', 'absent', 'unknown', 'unknown'];
-        yield ['claim', 'absent', 'unknown', 'unknown'];
-        yield ['claim_ack', 'claimed', 'missing', 'missing'];
-        yield ['invite', 'claimed', 'missing', 'missing'];
-        yield ['invite_event', 'claimed', 'confirmed', 'missing'];
-        yield ['assign', 'claimed', 'confirmed', 'missing'];
-        yield ['assign_event', 'claimed', 'confirmed', 'confirmed'];
-        yield ['audit', 'claimed', 'confirmed', 'confirmed'];
-        yield ['inspection', 'unknown', 'unknown', 'unknown'];
-        yield ['wrong_outcome', 'claimed', 'confirmed', 'missing'];
+        yield ['policy', 'missing', 'missing'];
+        yield ['role', 'missing', 'missing'];
+        yield ['invite', 'missing', 'missing'];
+        yield ['invite_event', 'confirmed', 'missing'];
+        yield ['assign', 'confirmed', 'missing'];
+        yield ['assign_event', 'confirmed', 'confirmed'];
+        yield ['audit', 'confirmed', 'confirmed'];
+        yield ['inspection', 'unknown', 'unknown'];
     }
 
     /**
-     * Rejects reuse outside scoped invocation and overlapping invocations without dispatch
+     * Admits another manual request after a partial attempt without Super Admin membership
      */
-    public function testInvocationIsolation(): void
+    public function testPartialAttemptDoesNotConsumeAdmission(): void
     {
-        $command = $this->command();
-        $operation = $this->operation();
-        try {
-            $operation->perform($command);
-            self::fail('Unscoped bootstrap must refuse.');
-        } catch (LogicException) {
-            self::assertSame([], $this->effects);
-        }
-        $operation = $this->operation(observer: static function (BootstrapOperation $operation) use ($command): void {
-            try {
-                $operation->run($command);
-                self::fail('Overlapping bootstrap must refuse.');
-            } catch (LogicException) {
-                // The outer invocation remains usable and its own claim is the only winner.
-            }
-        });
-        self::assertTrue($operation->run($command)->isComplete());
-    }
-
-    /**
-     * Rejects untrusted message types and invalid serialized authority
-     */
-    public function testInvalidMessages(): void
-    {
-        $handler = new BootstrapSuperAdminHandler($this->operation());
-        self::assertSame(BootstrapSuperAdmin::class, $handler::commandRegistration());
-        $this->expectException(InvalidArgumentException::class);
-        $handler->handle(CommandMessage::create(new ReconcileManagedPolicy(InstallationManagedPolicy::create())));
+        $operation = $this->operation('assign');
+        self::assertSame('missing', $operation->run($this->command())->assignment);
+        self::assertSame('admitted', $operation->run($this->command())->admission);
+        self::assertCount(6, $this->effects);
     }
 
     /**
@@ -165,7 +139,7 @@ final class BootstrapTest extends TestCase
     }
 
     /**
-     * Requires explicit confirmation even in interactive invocations and sanitizes arbitrary parser input
+     * Requires explicit confirmation and sanitizes arbitrary parser input
      *
      * @phpstan-param list<string> $extra
      */
@@ -200,11 +174,11 @@ final class BootstrapTest extends TestCase
     }
 
     /**
-     * Presents safe success, partial and unknown state with a permanent recovery limitation
+     * Presents safe step facts and manual retry guidance without a permanent claim
      */
     public function testConsoleOutcomes(): void
     {
-        foreach (['', 'assign', 'inspection'] as $phase) {
+        foreach (['', 'assign', 'inspection', 'presence'] as $phase) {
             $tester = new CommandTester(new BootstrapSuperAdminCommand($this->operation($phase)));
             self::assertSame($phase === '' ? 0 : 1, $tester->execute([
                 '--internal'          => true,
@@ -214,106 +188,29 @@ final class BootstrapTest extends TestCase
             ]));
             $result = json_decode($tester->getDisplay(), true, flags: JSON_THROW_ON_ERROR);
             self::assertSame($phase === '' ? 'bootstrap_complete' : 'partial_or_uncertain', $result['status']);
-            self::assertSame($phase !== 'inspection', isset($result['user_id']));
+            self::assertSame($phase === 'presence' ? 'unknown' : 'admitted', $result['admission']);
+            self::assertSame(in_array($phase, ['', 'assign'], true), isset($result['user_id']));
+            self::assertArrayNotHasKey('claim', $result);
             self::assertStringNotContainsString('private-marker', $tester->getDisplay());
         }
     }
 
     /**
-     * Rejects bootstrap mutation without this invocation's acknowledged claim
+     * Observes owned policy and safe outcomes without copying package transaction behavior
      */
-    public function testClaimScopeIsolation(): void
+    private function operation(string $failure = ''): BootstrapOperation
     {
-        $scope = new BootstrapClaimScope();
-        foreach (['requireClaim', 'acknowledgeClaim'] as $method) {
-            try {
-                $scope->$method();
-                self::fail('Closed scope must refuse.');
-            } catch (LogicException $error) {
-                self::assertNull($error->getPrevious());
-            }
-        }
-        $scope->open($this->command());
-        try {
-            $scope->open($this->command());
-            self::fail('Overlapping scope must refuse.');
-        } catch (LogicException $error) {
-            self::assertNull($error->getPrevious());
-        }
-        try {
-            $scope->requireClaim();
-            self::fail('Unacknowledged scope must refuse.');
-        } catch (LogicException $error) {
-            self::assertNull($error->getPrevious());
-        }
-        $scope->acknowledgeClaim();
-        $scope->requireClaim();
-        $scope->close();
-        $this->expectException(LogicException::class);
-        $scope->requireClaim();
-    }
-
-    /**
-     * Rejects changed claimed references, out-of-order assignment and repeated package mutations
-     */
-    #[DataProvider('scopeMutations')]
-    public function testExactClaimScope(string $case): void
-    {
-        $command = $this->command();
-        $scope = new BootstrapClaimScope();
-        $scope->open($command);
-        $scope->acknowledgeClaim();
-        $invitation = new InvitePendingUser($command->input->actorId(), $command->userId, $command->input->email);
-        if (str_starts_with($case, 'assign_') || $case === 'repeat_invite') {
-            $scope->authorizeInvitation($invitation);
-        }
-        $assignment = new AssignRoleToUser(
-            $command->input->operatorId,
-            $command->userId,
-            RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID)
-        );
-        if ($case === 'assign_repeat') {
-            $scope->authorizeAssignment($assignment);
-        }
-        $this->expectException(LogicException::class);
-        if (str_starts_with($case, 'invite_') || $case === 'repeat_invite') {
-            $scope->authorizeInvitation(new InvitePendingUser(
-                $case === 'invite_actor' ? 'console:'.UserId::generate() : $invitation->getActorId(),
-                $case === 'invite_target' ? UserId::generate() : $invitation->getUserId(),
-                $case === 'invite_email' ? EmailAddress::fromString('wrong@example.test') : $invitation->getEmail()
-            ));
-        } else {
-            $scope->authorizeAssignment(new AssignRoleToUser(
-                $case === 'assign_actor' ? UserId::generate() : $assignment->getActorId(),
-                $case === 'assign_target' ? UserId::generate() : $assignment->getTargetUserId(),
-                $case === 'assign_role' ? RoleId::generate() : $assignment->getRoleId()
-            ));
-        }
-    }
-
-    /**
-     * Supplies claim-bound payload changes and single-use ordering violations
-     *
-     * @return iterable<array{string}>
-     */
-    public static function scopeMutations(): iterable
-    {
-        $cases = ['invite_actor', 'invite_target', 'invite_email', 'repeat_invite', 'before_invite',
-            'assign_actor', 'assign_target', 'assign_role', 'assign_repeat'];
-        foreach ($cases as $case) {
-            yield [$case];
-        }
-    }
-
-    /**
-     * Builds a behavior seam without reimplementing upstream identity or transaction logic
-     *
-     * @phpstan-param (callable(BootstrapOperation): void)|null $observer
-     */
-    private function operation(string $failure = '', ?callable $observer = null): BootstrapOperation
-    {
-        $this->state = new BootstrapState('absent');
+        $this->state = new BootstrapState('admitted', 'missing', 'missing');
+        $this->superAdmin = false;
         $this->effects = [];
+        $users = $this->createStub(UserRepository::class);
+        $users->method('hasRoleAssignment')->willReturnCallback(function () use ($failure): bool {
+            if ($failure === 'presence') {
+                throw new RuntimeException('private-marker');
+            }
+
+            return $this->superAdmin;
+        });
         $queries = $this->createStub(QueryBus::class);
         $queries->method('fetch')->willReturnCallback(static function ($query) use ($failure) {
             if ($query instanceof GetRoleById) {
@@ -337,62 +234,31 @@ final class BootstrapTest extends TestCase
                 )
             );
         });
-        $claims = $this->createStub(BootstrapClaims::class);
-        $claims->method('claim')->willReturnCallback(function () use ($failure): void {
-            if ($failure === 'claim' || $this->state->claim !== 'absent') {
-                throw new RuntimeException('private-marker');
-            }
-            $this->state = new BootstrapState('claimed', 'missing', 'missing');
-            if ($failure === 'claim_ack') {
-                throw new RuntimeException('private-marker');
-            }
-        });
-        $claims->method('complete')->willReturnCallback(function () use ($failure): void {
+        $progress = $this->createStub(BootstrapProgress::class);
+        $progress->method('complete')->willReturnCallback(function () use ($failure): void {
             if ($failure === 'audit') {
                 throw new RuntimeException('private-marker');
             }
-            $this->state = new BootstrapState('claimed', 'confirmed', 'confirmed', 'confirmed');
+            $this->state = new BootstrapState('admitted', 'confirmed', 'confirmed', 'confirmed');
         });
-        $claims->method('inspect')->willReturnCallback(function () use ($failure): BootstrapState {
+        $progress->method('inspect')->willReturnCallback(function () use ($failure): BootstrapState {
             if ($failure === 'inspection') {
                 throw new RuntimeException('private-marker');
             }
 
             return $this->state;
         });
-        $intent = new ConsoleCommandIntent();
-        $router = $this->createStub(SynchronousCommandBus::class);
-        $bus = new CommandPipeline($router);
-        $scope = new BootstrapClaimScope();
-        $bus->addFilter(new BootstrapCommandGuard($intent, new ConsoleAssignmentPolicy($queries), $scope));
-        $operation = new BootstrapOperation($bus, $queries, $claims, $intent, $scope);
-        $router->method('dispatch')->willReturnCallback(function (CommandMessage $message) use (
-            $operation,
-            $failure,
-            $observer
-        ): void {
-            $command = $message->payload();
-            if ($command instanceof BootstrapSuperAdmin) {
-                new BootstrapSuperAdminHandler($operation)->handle($message);
-
-                return;
-            }
-            assert($command instanceof Command);
+        $bus = $this->createStub(CommandBus::class);
+        $bus->method('execute')->willReturnCallback(function (Command $command) use ($failure): void {
             $this->effects[] = $command::class;
-            if ($command instanceof ReconcileManagedPolicy) {
-                if ($observer !== null) {
-                    $observer($operation);
-                }
-                if ($failure === 'policy') {
-                    throw new RuntimeException('private-marker');
-                }
+            if ($command instanceof ReconcileManagedPolicy && $failure === 'policy') {
+                throw new RuntimeException('private-marker');
             }
             if ($command instanceof InvitePendingUser) {
                 if ($failure === 'invite') {
                     throw new RuntimeException('private-marker');
                 }
-                self::assertSame('claimed', $this->state->claim);
-                $this->state = new BootstrapState('claimed', 'confirmed', 'missing');
+                $this->state = new BootstrapState('admitted', 'confirmed', 'missing');
                 if ($failure === 'invite_event') {
                     throw new RuntimeException('private-marker');
                 }
@@ -402,18 +268,15 @@ final class BootstrapTest extends TestCase
                 if ($failure === 'assign') {
                     throw new RuntimeException('private-marker');
                 }
-                $this->state = new BootstrapState(
-                    'claimed',
-                    'confirmed',
-                    $failure === 'wrong_outcome' ? 'missing' : 'confirmed'
-                );
+                $this->superAdmin = true;
+                $this->state = new BootstrapState('admitted', 'confirmed', 'confirmed');
                 if ($failure === 'assign_event') {
                     throw new RuntimeException('private-marker');
                 }
             }
         });
 
-        return $operation;
+        return new BootstrapOperation($bus, $queries, $users, $progress);
     }
 
     /**

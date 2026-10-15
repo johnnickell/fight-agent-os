@@ -15,7 +15,7 @@ final readonly class BootstrapState
      * Constructs BootstrapState
      */
     public function __construct(
-        public string $claim,
+        public string $admission,
         public string $invitation = 'unknown',
         public string $assignment = 'unknown',
         public string $audit = 'unconfirmed'
@@ -27,7 +27,7 @@ final readonly class BootstrapState
      */
     public function isComplete(): bool
     {
-        return $this->claim === 'claimed' && $this->invitation === 'confirmed'
+        return $this->admission === 'admitted' && $this->invitation === 'confirmed'
             && $this->assignment === 'confirmed' && $this->audit === 'confirmed';
     }
 }

@@ -22,7 +22,7 @@ use Throwable;
  *
  * Translates explicit trusted-console confirmation without exposing private diagnostics
  */
-#[AsCommand(name: 'user:bootstrap-super-admin', description: 'Permanently claim and bootstrap the first Super Admin')]
+#[AsCommand(name: 'user:bootstrap-super-admin', description: 'Bootstrap the first Super Admin when none exists')]
 final class BootstrapSuperAdminCommand extends Command
 {
     public const string USAGE = 'Required: --internal --confirm-bootstrap --operator=UUID --email=EMAIL';
@@ -45,7 +45,7 @@ final class BootstrapSuperAdminCommand extends Command
             'confirm-bootstrap',
             null,
             InputOption::VALUE_NONE,
-            'Confirm permanent claim even if later steps fail'
+            'Confirm initial elevation and independently committed steps'
         );
         $this->addOption('operator', null, InputOption::VALUE_REQUIRED, 'Enrolled operator UUID');
         $this->addOption('email', null, InputOption::VALUE_REQUIRED, 'Pending Super Admin email');
@@ -75,19 +75,16 @@ final class BootstrapSuperAdminCommand extends Command
             $state = $this->operation->run($command);
             $result = [
                 'status'     => $state->isComplete() ? 'bootstrap_complete' : 'partial_or_uncertain',
-                'claim'      => $state->claim,
+                'admission'  => $state->admission,
                 'invitation' => $state->invitation,
                 'assignment' => $state->assignment,
                 'audit'      => $state->audit
             ];
-            if ($state->claim === 'claimed') {
+            if ($state->invitation === 'confirmed') {
                 $result['user_id'] = $command->userId->toString();
             }
             if (!$state->isComplete()) {
-                $result['recovery'] = 'Do not retry or reinvite; interrupted-claim recovery is separately planned.';
-                if ($state->claim === 'absent') {
-                    $result['recovery'] = 'No claim observed; verify pre-claim failure before a fresh invocation.';
-                }
+                $result['recovery'] = 'Inspect state; retry only without a Super Admin. Email conflicts stay failures.';
                 $error->writeln(
                     json_encode($result, JSON_THROW_ON_ERROR),
                     OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_QUIET
@@ -100,7 +97,7 @@ final class BootstrapSuperAdminCommand extends Command
             return self::SUCCESS;
         } catch (Throwable) {
             $error->writeln(
-                'Bootstrap outcome is uncertain; inspect trusted state. Do not retry or reinvite.',
+                'Bootstrap outcome is uncertain; inspect trusted state before another manual attempt.',
                 OutputInterface::OUTPUT_RAW | OutputInterface::VERBOSITY_QUIET
             );
 

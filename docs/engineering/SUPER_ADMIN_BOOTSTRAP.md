@@ -1,128 +1,120 @@
-# One-time trusted Super Admin bootstrap
+# Trusted Super Admin bootstrap
 
-**A committed bootstrap claim is permanent, even if no user is created. There is no reset, resume, second-target
-or bootstrap retry command. Recovery of an interrupted claimed bootstrap is separately planned and is not
-available in this release. Do not use ordinary invitation or `user:role:add` as an elevation workaround.**
+Run this manually, **one trusted operator at a time**. Bootstrap refuses if any assignment to the installed
+Super Admin role exists, regardless of user lifecycle, or if the authoritative presence query fails. There is no
+bootstrap lock, concurrency guarantee or permanent admission claim. After failure/partial completion, another
+manual attempt is permitted when no Super Admin exists. Inspect retained state first; an existing email remains
+a normal invitation conflict, not an implicit resend, reset or resume.
 
-This is a trusted installation console capability, not authentication, public registration or a web permission
-bypass. Restrict shell, checkout, Docker and database access. Verify the intended Compose project/database privately;
-never print connection strings. Apply approved migrations with `./bin/database migrate`. Preserve the independent
-external delivery key for outstanding work. Local null/memory providers send no email; production provider and
-scheduler enrollment remain separate. See [credential recovery](CREDENTIAL_RECOVERY.md).
+This TASK-00446 policy supersedes TASK-00038/TICKET-00015's permanent-claim/no-retry, concurrent admission and
+command-specific composition requirements. Their old implementation reports remain historical evidence.
 
-## Confirm the permanent claim
+## Prepare and confirm
+
+Restrict shell, checkout, Docker and database access to trusted operators. Verify the intended Compose project
+and database privately; never print connection strings. Apply approved migrations with `./bin/database migrate`.
+Preserve the independent external delivery key for outstanding work. Local null/memory providers send no email;
+production provider/scheduler enrollment is separate. See [credential recovery](CREDENTIAL_RECOVERY.md).
 
 Enroll an operator UUID using the owning ID factory or a UUID library and retain its trusted identity mapping
-outside the command. It need not identify a database User. Do not substitute the invited target as operator.
+outside the command. It need not identify a database User. Do not substitute the target ID as operator.
 
 ```sh
 ./bin/console user:bootstrap-super-admin --internal --confirm-bootstrap --operator=OPERATOR_UUID --email=person@example.test
 ```
 
-Both acknowledgements are mandatory, including interactive shells and `--no-interaction`. There is no default-yes
-prompt. `--confirm-bootstrap` deliberately accepts permanent consumption before invitation and possible early mail
-delivery. Operator input is a lowercase UUID. Email follows ordinary console validation (at most 254 ASCII bytes,
-no whitespace/control characters, Fight Common parsing) and is canonicalized to lowercase. There are no role,
-target-ID, password, credential, provider or reset selectors. Repeated/unknown/positional options fail safely.
+Both acknowledgements are mandatory, including interactive and non-interactive invocations. Neither a flag nor an
+operator UUID authenticates a person. Email uses the ordinary console validation and lowercase canonicalization;
+repeated, unknown and positional options fail safely. No role, password, target-ID, provider or credential selector
+is available. The pending user must complete normal activation.
 
-The operation first dispatches the fixed `ReconcileManagedPolicy`, verifies its exact public preview and resolves
-the stable managed Super Admin ID. Policy failure alone cannot consume bootstrap. Reconciliation may also run for
-a refused later invocation; it creates no second invitation or success audit.
+## Independent steps, not an atomic result
 
-## Commit boundaries and guard semantics
+1. Query authoritative assignments to the stable installed Super Admin ID. Any assignment or lookup failure
+   refuses **before mutation**, including policy reconciliation. Assume no simultaneous bootstrap operator.
+2. Reconcile the fixed `InstallationManagedPolicy`, verify its exact public preview and stable managed role.
+3. Dispatch package `InvitePendingUser`. Its transaction owns pending/passwordless identity, seven-day activation
+   grant, encrypted recoverable delivery and `user.invited` audit. Postcommit delivery may start **before elevation**.
+4. Dispatch package `AssignRoleToUser` for the stable Super Admin ID with the explicit typed operator as actor.
+   Package transaction, reference checks and events are unchanged.
+5. Independently inspect the exact pending target/email and exact Super Admin membership, then append
+   `user.bootstrap_completed` in a separate audit transaction. Fresh inspection must confirm all required facts
+   before success is reported.
 
-1. A short, independent **READ COMMITTED PostgreSQL transaction** takes advisory transaction lock `(24121, 1)`
-   and the existing role-reference fence. It rechecks `installation_bootstrap` and authoritative assignments to
-   the stable Super Admin role, without lifecycle filtering. Pending, active, disabled and deleted users all count.
-   It atomically inserts the singleton claim and `user.bootstrap_claimed` audit, then commits.
-2. Only the invocation acknowledging that commit dispatches normal package `InvitePendingUser`. Its independent
-   transaction owns the pending/passwordless user, seven-day activation grant, encrypted recoverable delivery and
-   `user.invited` audit. Package delivery can start immediately after this commit, **before elevation**.
-3. That invocation dispatches normal package `AssignRoleToUser` for the hardcoded stable Super Admin ID, with
-   the explicit operator UUID as typed package actor. The package owns its own commit, reference checks and event.
-4. After independent safe-state inspection confirms the exact pending target/email and exact Super Admin
-   membership, a separate transaction appends mandatory `user.bootstrap_completed`. Final fresh inspection must
-   confirm membership and both required bootstrap audits before success is reported.
+Completion audit uses `bootstrap:OPERATOR_UUID`; package invitation/delivery audit uses `console:OPERATOR_UUID`.
+The assignment event carries the typed operator UUID, never the pending target as its own authorizer. No new
+`user.bootstrap_claimed` evidence or singleton claim is written. Existing `installation_bootstrap` rows and old
+audit records remain untouched as historical evidence; runtime neither reads them for admission nor deletes them.
+The historical migration and its immutable table remain for database compatibility, not as an active retry blocker.
 
-The singleton claim contains immutable operator UUID, target UUID, canonical email and database claim time.
-It deliberately has no user foreign key: it precedes identity creation and survives user/role lifecycle changes.
-Database UPDATE/DELETE are rejected; schema rollback is irreversible. Privileged database/schema operations are
-not an application recovery API. Never truncate, delete or edit this record to reopen bootstrap.
+No outer/joining transaction, direct package handler/repository write, deferred event buffer, consumer delivery
+queue, compensation or automatic retry is added. Package transaction/reference machinery remains normal; removing
+bootstrap-specific locking does not remove package-owned consistency protections.
 
-Claim/completion audit actors are `bootstrap:OPERATOR_UUID`; package invitation/delivery audit uses
-`console:OPERATOR_UUID`. The package assignment event carries the typed operator UUID, never the pending target
-as an authenticated authorizer. Audit contexts contain no email, credential or private diagnostic payload.
-
-There is no outer/nested/joining unit of work, deferred event buffer, identity/assignment repository bypass,
-consumer delivery queue/participant, compensation or uncertain-mutation retry. The durable claim is bootstrap
-eligibility state, not credential delivery intent. Policy and delivery transactions are additional independent
-transactions, not part of an atomic four-step result.
-
-## Results, partial state and uncertainty
+## Results and manual decisions
 
 | Exit | Meaning |
 |---|---|
-| `0` | Exact pending target, elevated membership, permanent claim and required audit independently verified |
-| `1` | Refusal, partial execution or uncertainty; never proof that earlier steps rolled back |
-| `2` | Invalid input or absent deliberate confirmation; no operation dispatched |
+| `0` | Exact pending target, elevated membership and separate completion audit independently verified |
+| `1` | Refusal, partial execution or uncertainty; never proof of rollback |
+| `2` | Invalid input or missing confirmation; no operation executed |
 
-Success stdout is one safe JSON line (`status: bootstrap_complete`, `claim`, `invitation`, `assignment`, `audit`,
-`user_id`). Failure stdout is empty; stderr reports the same bounded step facts with
-`status: partial_or_uncertain` and recovery guidance. A target ID is shown only for a claim matching this invocation.
-No previous contender's target/email/operator is disclosed. `claim: absent` means a fresh read observed no claim;
-verify a known pre-claim failure before starting a new invocation. `claim: unavailable` means another claim owns
-bootstrap; `unknown` is not permission to retry. `invitation`/`assignment` are `confirmed`, `missing` or `unknown`;
-`audit` is `confirmed` or `unconfirmed`. Quiet/silent behavior follows Symfony Console.
+Success stdout is one JSON line with `status: bootstrap_complete`, `admission`, `invitation`, `assignment`, `audit`
+and `user_id`. Failure stdout is empty; stderr reports bounded step facts with `status: partial_or_uncertain` and
+inspection/retry guidance. `admission` is `admitted`, `refused` or `unknown`; it is a presence-check result, not a
+stored claim or an authentication credential. A target ID is shown only when this invocation's intended pending
+invitation is confirmed. Invitation/assignment facts are `confirmed`, `missing` or `unknown`; audit is `confirmed`
+or `unconfirmed`. Quiet/silent behavior follows Symfony Console.
 
-Exceptions may follow commits. Inspection uses a separately composed connection, not a failed/closed Doctrine
-manager or a stale identity map. An acknowledged claim whose invitation fails remains consumed. Invitation failure
-can retain its target/grant/delivery; assignment failure retains the invited identity; completion-audit failure
-retains membership. A process exit between any steps retains everything already committed. A claim commit whose
-acknowledgement is lost **does not dispatch invitation**, even when subsequent inspection finds the claim.
-A completion commit whose acknowledgement is lost can be verified from its durable required evidence.
+Exceptions can follow commits. Inspection uses an independent connection rather than a failed Doctrine manager.
+Invitation/assignment/completion-audit failures retain every earlier committed step, including delivery work.
+A crash between assignment and completion audit can leave a Super Admin without completion evidence; later
+bootstrap then refuses. This command does not repair that audit gap. A failed invitation/assignment with **no**
+Super Admin permits a later manual attempt in a fresh process. A retained same-email invitation still conflicts;
+there is no automatic recovery, reinvitation, rollback, reset or resume. Normal package delivery recovery can
+process an existing generation independently of bootstrap. Do not use ordinary role correction as an elevation
+workaround.
 
-There is an explicit assignment-to-completion-audit crash window. No success is reported without required audit.
-Do not blindly reinvite, choose a replacement target, replay bootstrap or infer that a failed command rolled back.
-Preserve safe output and inspect trusted persisted state. **Interrupted-claim recovery requires separately planned
-work; this release intentionally supplies no command to complete it.** Normal package delivery recovery can still
-process the existing generation without changing bootstrap, membership or claim state.
+## Composition and authenticated callers
 
-## Composition and normal authenticated assignment
+`config/services.php` deterministically loads all parameter/common/application modules. Command, query and event
+modules register one shared bus graph. `config/application/console_invitation.php` registers the Console
+application with all three commands; `bootstrap_super_admin.php` registers the bootstrap dependencies lazily.
+`scripts/console.php` only boots that container and runs the registered application. HTTP uses the same graph;
+registration does not execute a command, reconcile policy, require the unused delivery key or grant authority.
+See [shared services and dispatch](STANDARDS.md#shared-services-and-bus-dispatch).
 
-Only the exact dedicated console selection loads `config/application/bootstrap_super_admin.php`. Normal HTTP and
-ordinary console containers register no bootstrap operation, scope, handler or claim capability. The dedicated
-terminal guard runs after configured transformations, checks retained exact class/actor/target/email/role intent,
-and binds exactly one invitation and one hardcoded elevation to this invocation's claimed operator, target and email.
-It runs in a separate routing pipeline behind configurable filters, as do the normal and ordinary-console guards:
-Common's mutable outer execution stack cannot consume the terminal guard through nested filter dispatch. Unsupported
-continuation reentry may safely interrupt the invocation; it never authorizes another target or reopens the claim.
-Transient scope is cleared in `finally`; it never resets durable state. Ordinary `user:role:add` continues to refuse Super Admin.
-The supported policy writer remains the fixed installation catalog, not arbitrary alternate catalog writers or
-out-of-band database redesignation; see [ordinary console boundaries](CONSOLE_INVITATIONS.md).
+**Raw package bus dispatch is trusted in-process infrastructure, not an authenticated API.** TASK-00446 removes
+the old raw `AssignRoleToUser` authentication filter, not merely its name. Authenticated/nontrusted assignment
+must invoke `AuthenticatedRoleAssignment::assign()`: it freshly resolves the authoritative principal, matches
+actor, requires exact `MANAGE_USER_ROLES`, and additionally exact `ASSIGN_SUPER_ADMIN` for stable or
+package-semantic Super Admin. Unknown, stale, revoked, absent or mismatched authority fails before dispatch.
+Role names identify a protected target, never grant authority. The default authentication provider refuses;
+a future authenticated adapter must inject verified invocation-bound context, not mutate a shared global principal.
 
-Normal `AssignRoleToUser` dispatch has its own innermost Application authorization filter. It resolves a fresh
-package authoritative principal for **each mutation**, using a verified invocation-bound
-`AuthenticationContextProvider`; it does not reuse a cached permission projection. The default shared provider
-denies authentication. Future authenticated adapters must bind verified context in their invocation-scoped graph
-before resolving the bus. Current login/HTTP assignment UI and explicit web confirmation remain unimplemented.
-The guard requires exact `MANAGE_USER_ROLES` and, for stable or package-semantic Super Admin, exact
-`ASSIGN_SUPER_ADMIN`. Unknown, stale, revoked or actor-mismatched authority fails closed. A role name only identifies
-the protected target; it never grants authority. The bootstrap console does not install a permanent exception in
-this normal guard. Package assignment policy/reference fences remain unchanged.
+There is currently no HTTP/Agent assignment consumer, raw-message forwarding endpoint or role-administration UI.
+The existing `/me` and authentication middleware are read/security paths, not assignment entry points. Tests that
+previously dispatched raw assignments as authenticated callers now invoke this explicit use case. Trusted console
+orchestration dispatches package messages through the same bus without fabricating a browser principal. Installed
+filters/handlers are trusted code, not a separate hostile-caller boundary; no terminal intent scope protects
+arbitrary transformations of package messages. Never forward untrusted raw messages into this graph.
+
+The future managed no-Agent-shell/CLI boundary is **not implemented here**. Do not expose these operator use cases
+through HTTP, Agent tools or arbitrary-process capabilities. Hiding commands or registering separate containers
+would not enforce that boundary.
 
 ## Diagnostics and verification
 
-Parsing and handler failures never render raw input, exceptions, stack traces, SQL, private configuration,
-passwords, credential URLs/digests/ciphertext, tokens or provider secrets, including verbose output. Package
-`CommandFailedEvent` is private diagnostic material, not an operator log; no operator-facing failure subscriber is
-added. Do not enroll one without sanitization. Docker operational errors outside PHP remain a separate boundary.
+Parsing and execution failures never render arbitrary input, exceptions, SQL, private configuration, credentials,
+credential URLs, tokens or provider secrets, including at verbose levels. Package `CommandFailedEvent` remains
+private diagnostic material; no operator-facing failure subscriber is installed. Docker errors outside PHP remain
+a separate operational boundary.
 
-The unchanged lock qualifies Access Control v0.5.0 (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`) and Common v1.3.0
-(`7de6cad6e8a9752973ad9f8e27e285b0c1510582`). The owner-approved separate-commit contract needs no upstream edit.
-Run focused checks serially after `./bin/database test-reset`; `./bin/build` remains the full gate.
-Unit/PostgreSQL tests cover attribution, explicit confirmation, retained partial steps, postcommit events,
-claim/audit rollback, provider and delivery bookkeeping failures, exact transformed payloads, concurrent console
-claim contenders synchronized by real locks without sleeps, abrupt claimed-process exit, normal current-permission
-authorization and seeded redaction. Validate migration/composition directly with their owning tools, not product
-configuration tests. Actual counts, coverage, warnings and evidence belong to [TASK-00038](../../planning/tasks/00038-TASK.md).
-Independent Review/QA, hosted verification, publication and production enrollment are separate.
+Access Control remains v0.5.0 (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`) and Common v1.3.0
+(`7de6cad6e8a9752973ad9f8e27e285b0c1510582`). Tests protect authoritative admission/refusal, fresh permissions,
+independent commits and retained partial steps, manual retry, historical evidence, delivery recovery and safe output.
+Concurrent admission and intent/claim-guard tests are deliberately removed with their superseded mechanics.
+Validate loader/aliases/discovery directly with owning tools, never product wiring tests. Serialize focused
+PostgreSQL checks after `./bin/database test-reset`; `./bin/build` remains mandatory. Fresh counts, coverage,
+warnings and limits belong to [TASK-00446](../../planning/tasks/00446-TASK.md). Independent Review/QA and publication
+remain separate.

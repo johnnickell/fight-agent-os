@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Authorization;
 
 use App\Adapter\Security\UnauthenticatedContextProvider;
-use App\Application\Authorization\AuthenticatedRoleAssignmentGuard;
+use App\Application\Authorization\AuthenticatedRoleAssignment;
 use App\Application\Failure\AuthenticationRequired;
 use App\Application\Failure\PermissionDenied;
 use App\Domain\Authorization\InstallationManagedPolicy;
@@ -31,7 +31,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
-use Fight\Common\Domain\Messaging\Command\CommandMessage;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -52,6 +52,7 @@ final class AuthenticatedRoleAssignmentTest extends TestCase
         $permissionNames = match ($case) {
             'missing-elevate', 'prefix-only' => ['MANAGE_USER_ROLES', 'ASSIGN_SUPER_ADMINS'],
             'missing-parent' => ['ASSIGN_SUPER_ADMIN'],
+            'ordinary', 'alias', 'renamed-stable' => ['MANAGE_USER_ROLES'],
             'role-only' => [],
             default => ['ASSIGN_SUPER_ADMIN', 'MANAGE_USER_ROLES']
         };
@@ -93,24 +94,37 @@ final class AuthenticatedRoleAssignmentTest extends TestCase
         $roles = $this->createStub(RoleRepository::class);
         $roles->method('getByIds')->willReturn([$role]);
         $roles->method('getByName')->willReturn($role);
-        $roles->method('getById')->willReturn($case === 'missing-role' ? null : $role);
+        $targetRole = match ($case) {
+            'ordinary' => Role::define(RoleId::generate(), RoleName::fromString('ROLE_CUSTOM'), [], $now),
+            'alias' => Role::defineManaged(RoleId::generate(), RoleName::fromString('ROLE_SUPER_ADMIN'), [], $now),
+            'renamed-stable' => Role::defineManaged($role->getId(), RoleName::fromString('ROLE_RENAMED'), [], $now),
+            default => $role
+        };
+        $roles->method('getById')->willReturn(match ($case) {
+            'missing-role' => null,
+            'wrong-role' => Role::define(RoleId::generate(), RoleName::fromString('ROLE_OTHER'), [], $now),
+            default => $targetRole
+        });
         $permissionStore = $this->createStub(PermissionRepository::class);
         $permissionStore->method('getByIds')->willReturn($permissions);
-        $guard = new AuthenticatedRoleAssignmentGuard(
-            $authentication,
+        $routed = 0;
+        $bus = $this->createStub(CommandBus::class);
+        $bus->method('execute')->willReturnCallback(static function () use (&$routed): void {
+            $routed++;
+        });
+        $assignment = new AuthenticatedRoleAssignment(
+            $case === 'unauthenticated' ? new UnauthenticatedContextProvider() : $authentication,
             new AuthoritativePrincipalResolver($users, $sessions, $roles, $permissionStore, new AccessClock($now)),
-            $roles
+            $roles,
+            $bus
         );
-        $message = CommandMessage::create(new AssignRoleToUser(
+        $command = new AssignRoleToUser(
             $case === 'wrong-actor' ? UserId::generate() : $actor->getId(),
             UserId::generate(),
-            $role->getId()
-        ));
-        $routed = 0;
+            $targetRole->getId()
+        );
         try {
-            $guard->process($message, static function () use (&$routed): void {
-                $routed++;
-            });
+            $assignment->assign($command);
             self::assertTrue($allowed);
             self::assertSame(1, $routed);
         } catch (PermissionDenied $error) {
@@ -120,12 +134,9 @@ final class AuthenticatedRoleAssignmentTest extends TestCase
         }
         if ($allowed) {
             // An earlier successful projection is not authorization for a later mutation.
-            $role->getId();
             $actor->disable($now);
             $this->expectException(PermissionDenied::class);
-            $guard->process($message, static function (): never {
-                self::fail('Stale active-authority projection must not route.');
-            });
+            $assignment->assign($command);
         }
     }
 
@@ -138,9 +149,10 @@ final class AuthenticatedRoleAssignmentTest extends TestCase
     {
         foreach (
             ['allowed', 'missing-elevate', 'missing-parent', 'role-only', 'prefix-only', 'stale-version',
-            'revoked', 'unknown', 'wrong-actor', 'missing-role'] as $case
+            'revoked', 'unknown', 'wrong-actor', 'missing-role', 'wrong-role', 'unauthenticated',
+            'ordinary', 'alias', 'renamed-stable'] as $case
         ) {
-            yield $case => [$case, $case === 'allowed'];
+            yield $case => [$case, in_array($case, ['allowed', 'ordinary'], true)];
         }
     }
 

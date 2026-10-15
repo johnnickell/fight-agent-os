@@ -15,14 +15,6 @@ use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidence;
 final class BootstrapEvidence extends AuditEvidence
 {
     /**
-     * Records the permanently consumed one-time claim
-     */
-    public static function claimed(BootstrapSuperAdmin $command): self
-    {
-        return new self('bootstrap:'.$command->input->operatorId, 'user.bootstrap_claimed', $command->userId);
-    }
-
-    /**
      * Records verified bootstrap membership in a separate mandatory completion transaction
      */
     public static function completed(BootstrapSuperAdmin $command): self

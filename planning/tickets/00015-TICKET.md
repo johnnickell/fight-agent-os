@@ -7,6 +7,19 @@ status: done
 
 # Establish managed authority and guarded bootstrap
 
+## Current bootstrap/composition amendment — TASK-00446
+
+The maintainer's approved [TASK-00446](../tasks/00446-TASK.md) supersedes this record's permanent claim/no-retry,
+concurrent-bootstrap and dedicated-container/terminal-intent requirements. Trusted operators run one bootstrap
+at a time: existing Super Admin or failed authoritative lookup refuses; otherwise proceed. Partial/failure
+without a Super Admin permits another manual attempt, not automatic retry/reset/resume or implicit reinvitation.
+All commands share one glob-loaded graph/bus. Raw package messages are trusted infrastructure; authenticated
+assignment uses an explicit Application use case preserving fresh actor/exact permission checks. Filters are
+trusted composition code, not hostile message-transformer isolation. Historical claim/audit rows and the earlier
+reports below are preserved, not current proof. Independent acceptance of the new implementation belongs to
+TASK-00446; package commits, ordinary/additive role policy, audit/activation and external permission obligations
+remain in force.
+
 ## Problem statement
 
 A new private installation needs deterministic managed authority and a safe first Super Admin path. A permanent bootstrap bypass, role-name authorization, or administrator-selected password would undermine the package authorization model.

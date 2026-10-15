@@ -33,8 +33,8 @@ use Fight\Common\Adapter\Messaging\Query\RoutingQueryBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 
-return [
-    'services' => [
+return static function (Container $container): void {
+    $services = [
         'messaging.query.router'                                    => static function (
             Container $container
         ): ServiceAwareQueryRouter {
@@ -119,8 +119,11 @@ return [
 
             return new ListPermissionsHandler($permissionRepository);
         }
-    ],
-    'handlers' => [
+    ];
+    foreach ($services as $id => $factory) {
+        $container->set($id, $factory);
+    }
+    $container->get('messaging.query.router')->registerHandlers([
         GetUserById::class                     => GetUserByIdHandler::class,
         PreviewManagedPolicy::class            => PreviewManagedPolicyHandler::class,
         ListPermissions::class                 => ListPermissionsHandler::class,
@@ -128,6 +131,5 @@ return [
         FindDueCredentialDeliveries::class     => FindDueCredentialDeliveriesHandler::class,
         FindExpiredCredentialDeliveries::class => DeliveryQuery\FindExpiredCredentialDeliveriesHandler::class,
         FindCredentialDeliveryStatus::class    => FindCredentialDeliveryStatusHandler::class
-    ],
-    'filters'  => []
-];
+    ]);
+};
