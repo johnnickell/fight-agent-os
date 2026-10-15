@@ -43,8 +43,38 @@ for (const [name, changes] of Object.entries({ endpoint: { endpoint: 'https://ev
     assert.throws(() => validateConfiguration(config(changes)), error => error.code === 'invalid-setup' && error.message === 'invalid-setup');
   });
 }
-test('price confirmation expires after 24 hours and rejects future timestamp', () => {
-  for (const stamp of [0, Date.now() + 100000]) assert.throws(() => validateConfiguration(config({ priceConfirmedAt: stamp })), { code: 'price-unqualified' });
+test('price confirmation has no age limit for unchanged pins and retains its original identity', () => {
+  const confirmed = Date.UTC(2020, 0, 1), value = config({ priceConfirmedAt: confirmed });
+  for (const elapsed of [0, 86400000, 86400001, 10 * 366 * 86400000]) {
+    assert.deepEqual(validateConfiguration(value, confirmed + elapsed), value);
+  }
+});
+test('invalid or future confirmation timestamps still fail closed', () => {
+  const now = Date.now();
+  for (const stamp of [-1, now + 1]) {
+    assert.throws(() => validateConfiguration(config({ priceConfirmedAt: stamp }), now), { code: 'price-unqualified' });
+  }
+  for (const stamp of [undefined, null, '0', NaN, Infinity, 0.5]) {
+    assert.throws(() => validateConfiguration(config({ priceConfirmedAt: stamp }), now), { code: 'invalid-setup' });
+  }
+});
+test('old protected settings reload unchanged and readiness does not require renewal', async t => {
+  const f = fixture(t), value = config({ priceConfirmedAt: Date.UTC(2020, 0, 1) });
+  // Simulate an existing installation, without saving/migrating through the current validator.
+  const path = join(f.directory, 'connection.json');
+  const original = JSON.stringify(value);
+  writeFileSync(path, original, { mode: 0o600 });
+  const loaded = new LocalSettings(f.directory).load();
+  assert.deepEqual(loaded, value);
+  f.readiness.configure(loaded);
+  const before = f.readiness.inspect().configuration;
+  assert.equal((await f.readiness.check()).state, 'ready');
+  f.readiness.invalidate();
+  f.readiness.configure(new LocalSettings(f.directory).load());
+  assert.deepEqual(f.readiness.inspect().configuration, before);
+  assert.equal((await f.readiness.check()).state, 'ready');
+  assert.equal(readFileSync(path, 'utf8'), original);
+  assert.equal(f.calls(), 2);
 });
 test('success is configuration-bound, usage is measured and credentials are absent from inspection', async t => {
   const f = fixture(t); const result = await f.readiness.check();

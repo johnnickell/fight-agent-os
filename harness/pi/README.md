@@ -93,7 +93,11 @@ prompt, environment, argv, transcript or receipt. Keep the main Agent provider/m
    micro-USD (1 USD = 1,000,000), choose `fixed-synthetic-only` for readiness alone (or explicitly enable
    `authorized-supplied-state` for [trusted consumers](JUDGMENTS.md)), then confirm disclosure and current price.
    No credential is read and no provider request is sent by setup. No monetary ceiling is selected for you.
-   Price confirmation expires after 24 hours; run setup again after expiry or any connection/price change.
+   Setup is one-time for the pinned connection and approved limits: there is no daily or periodic renewal.
+   Existing settings, including older confirmations, remain valid without migration or timestamp refresh.
+   Use setup again only to change your choices or approve changed connection/price pins; missing, corrupt or
+   removed settings need repair. Setup is not project permission: [TASK-00309](../../planning/tasks/00309-TASK.md)
+   separately owns standing project enrollment until revocation or authority changes, not periodic renewal.
 4. Use `/jev inspect` for redacted effective settings and configuration-bound readiness. Inspection does not
    resolve authentication. Use `/jev check` only when you authorize one billed synthetic request and Pi's
    credential resolution, whose configured source may itself prompt for access. Cancel the confirmation to send nothing.
@@ -101,7 +105,8 @@ prompt, environment, argv, transcript or receipt. Keep the main Agent provider/m
 The October 14 public endpoint lists $0.042 per million input tokens, free output, 64,000 context tokens and a
 32,000 prompt-token maximum. We conservatively reserve the entire 64,000 context: **$0.002688 (2,688 micro-USD)**
 per attempt, not an estimated kettle-token count. Both explicit ceilings must accommodate the reservation;
-request must not exceed session. Reconfirm pricing before use. Provider routing preferences request no fallback,
+request must not exceed session. Confirm pricing at setup, not before each use. Elapsed time never increases
+approved prices or budgets; changed pins or a reported price breach need explicit action. Provider routing preferences request no fallback,
 TypeSafe only and the published token-price maxima; they are not proof of server-side billing enforcement.
 An unknown or uncertain billed outcome retains the reservation; reported actual cost settles it once, rounded
 up to micro-USD. Missing cost is unknown, never zero. There are no automatic retries. A price-bound breach is a

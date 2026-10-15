@@ -96,7 +96,7 @@ export type Connection = { state: 'available'; configuration: {
 export type ConsumerConnection = {
   callerId: string;
   authorize(context: DisclosureContext): boolean;
-  connected(capability: Connection | { state: 'missing-session' | 'missing-setup' | 'invalid-or-expired-setup' | 'invalid-consumer' }): void;
+  connected(capability: Connection | { state: 'missing-session' | 'missing-setup' | 'invalid-setup' | 'invalid-consumer' }): void;
 };
 export declare function prepareEvaluation(input: unknown, config: OperatorConfiguration, ceilings?: Ceilings): {
   request: EvaluationRequest; payload: Record<string, unknown>; sourceDigest: string; requestDigest: string; questionDigest: string;
