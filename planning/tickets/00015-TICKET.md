@@ -2,7 +2,7 @@
 id: TICKET-00015
 epic: EPIC-00004
 title: Establish managed authority and guarded bootstrap
-status: ready-for-agent
+status: done
 ---
 
 # Establish managed authority and guarded bootstrap
@@ -56,7 +56,7 @@ Bootstrap is a separately audited trusted-console capability, not anonymous web 
 |---|---|---|
 | [TASK-00036](../tasks/00036-TASK.md) | Reconcile the exact managed authority policy | done |
 | [TASK-00037](../tasks/00037-TASK.md) | Deliver trusted ordinary-user console invitations | done |
-| [TASK-00038](../tasks/00038-TASK.md) | Guard the one-time Super Admin bootstrap | in-progress |
+| [TASK-00038](../tasks/00038-TASK.md) | Guard the one-time Super Admin bootstrap | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
