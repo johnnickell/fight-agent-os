@@ -74,6 +74,11 @@ Development and test PostgreSQL identities are separate; override their local-on
 variables shown in `.env.example`. Destructive test operations require explicit test mode and a guarded `_test`
 database, role, and allowlisted host. PostgreSQL migrations live in `database/migrations/`; future database
 schemas and fixtures belong alongside `migrations/` under `database/`.
+The shared [password-setting boundary](docs/engineering/PASSWORDS.md) enforces Unicode code-point composition,
+checks a pinned local hashed common-password list and uses explicit Argon2id parameters. Application startup
+verifies the corpus and platform support before use. Include `resources/passwords/` and its CC BY-SA 4.0 notice
+in deployment artifacts. Activation/reset/change consumers remain planned; this is not a public password endpoint.
+
 Direct Fight Access Control invitation/reset delivery handlers now require an independent
 `APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
 for recoverable encrypted material. Keep it external to source control and preserve it while work is outstanding.

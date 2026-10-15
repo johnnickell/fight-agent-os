@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Security\Password\Argon2idPasswords;
 use App\Adapter\Security\UnauthenticatedContextProvider;
 use App\Application\Authorization\AuthenticatedRoleAssignment;
 use App\Application\Authorization\InstallationAuthority;
@@ -17,8 +18,6 @@ use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Auth\Hmac\HmacRequestService;
-use Fight\Common\Adapter\Auth\Security\PhpPasswordHasher;
-use Fight\Common\Adapter\Auth\Security\PhpPasswordValidator;
 use Fight\Common\Application\Auth\RequestService;
 use Fight\Common\Application\Auth\Security\PasswordHasher;
 use Fight\Common\Application\Auth\Security\PasswordValidator;
@@ -72,12 +71,10 @@ return static function (Container $container): void {
         EmailChangeAdministrationAuthorization::class,
         static fn(): EmailChangeAdministrationAuthorization => new UnavailableEmailChangeAdministration()
     );
-    $container->set(PasswordHasher::class, static function (): PasswordHasher {
-        return new PhpPasswordHasher(PASSWORD_ARGON2ID);
-    });
-    $container->set(PasswordValidator::class, static function (): PasswordValidator {
-        return new PhpPasswordValidator(PASSWORD_ARGON2ID);
-    });
+    $container->set(PasswordHasher::class, static fn(Container $container): PasswordHasher =>
+        $container->get(Argon2idPasswords::class));
+    $container->set(PasswordValidator::class, static fn(Container $container): PasswordValidator =>
+        $container->get(Argon2idPasswords::class));
     $container->set(
         RequestService::class,
         static function () use ($requiredEnvironmentValue): RequestService {

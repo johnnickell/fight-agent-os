@@ -1,0 +1,38 @@
+{
+  "format_version": 1,
+  "source": {
+    "project": "berzerk0/Probable-Wordlists",
+    "author": "berzerk0",
+    "version": "probable-v2",
+    "commit": "2df55facf06c7742f2038a8f6607ea9071596128",
+    "path": "Real-Passwords/Top12Thousand-probable-v2.txt",
+    "url": "https://raw.githubusercontent.com/berzerk0/Probable-Wordlists/2df55facf06c7742f2038a8f6607ea9071596128/Real-Passwords/Top12Thousand-probable-v2.txt",
+    "retrieved_utc": "2026-10-15",
+    "bytes": 100206,
+    "sha256": "ea4c906ebb0b26790c549a047962573f72ccc26f42212b83d70165d9c03fb72b",
+    "lines": 12645,
+    "license": "CC-BY-SA-4.0",
+    "license_declaration_url": "https://github.com/berzerk0/Probable-Wordlists/blob/2df55facf06c7742f2038a8f6607ea9071596128/README.md#disclaimer-and-license",
+    "license_declaration_sha256": "afbce7c1c6b3d04810d0d69eed8ebd4be36fd31be7fdf1fcea711457c39bf471"
+  },
+  "transformation": {
+    "version": 1,
+    "script": "scripts/password_corpus.php",
+    "normalization": "ASCII A-Z to a-z only; no trimming or Unicode normalization",
+    "index": "SHA-256 of each folded source line; deduplicate; bytewise ascending lowercase hex; one 64-byte hex entry plus LF per line"
+  },
+  "output": {
+    "path": "resources/passwords/common.sha256",
+    "sha256": "03e2cbdce73b1aac0d667fd2ba18899141c3456b1f7c82be333f39d3e939cc04",
+    "bytes": 817765,
+    "entries": 12581,
+    "license": "CC-BY-SA-4.0"
+  },
+  "license_text": {
+    "path": "resources/passwords/CC-BY-SA-4.0.txt",
+    "url": "https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt",
+    "retrieved_sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5",
+    "packaging": "Remove one trailing blank line; preserve the complete license text",
+    "sha256": "23ee78c8bae49cf08ea2f0c84945c66b987ebe4520881fb51b3dad4fb43d07c2"
+  }
+}
