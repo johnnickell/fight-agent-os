@@ -40,7 +40,8 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Before task publication, record completed implementation and verification; keep formal review and merge status separate
 - Ask for checkout/worktree choice before implementation unless already provided. Use `feature/*` from `develop`
 - Preserve source projects and unrelated local work. Commit and publish only within the authorized scope
-- Keep all scratch under ignored `.runs/` subfolders. Never put worktrees directly in `.runs/`
+- Keep application-generated files and local runtime state under ignored `var/`; application runtime must never depend on `.runs/`
+- Keep all execution scratch under ignored `.runs/` subfolders. Never put worktrees directly in `.runs/`
 - Keep Markdown authoritative until an approved, verified database cutover; no automatic removal or archiving
 
 ## Learnings

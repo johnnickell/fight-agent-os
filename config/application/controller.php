@@ -26,7 +26,7 @@ return static function (Container $container): void {
     });
     $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {
         return new ClientShellAction(
-            new ClientAssetManifest($container['app.public_dir'].'/build'),
+            new ClientAssetManifest(dirname(__DIR__, 2).'/var/client/build'),
             $container->get(ClientShellResponder::class)
         );
     });
@@ -58,7 +58,7 @@ return static function (Container $container): void {
     ));
     $container->set(Catalog::class, static function (): Catalog {
         return new Catalog(
-            dirname(__DIR__, 2).'/.runs/validations/catalog.json',
+            dirname(__DIR__, 2).'/var/validations/catalog.json',
             array_column(PublicForms::registrations(), 'name')
         );
     });

@@ -22,7 +22,7 @@ final class ValidationCatalogTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->directory = dirname(__DIR__, 3).'/.runs/test-catalog/'.bin2hex(random_bytes(8));
+        $this->directory = dirname(__DIR__, 3).'/.runs/build/tmp/test-catalog/'.bin2hex(random_bytes(8));
         mkdir($this->directory, 0700, true);
         $this->file = $this->directory.'/catalog.json';
     }

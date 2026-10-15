@@ -17,7 +17,7 @@ set_error_handler(static function (): never {
     throw new RuntimeException('Validation export warning.');
 });
 $root = dirname(__DIR__);
-$directory = $root.'/.runs/validations';
+$directory = $root.'/var/validations';
 $file = $directory.'/catalog.json';
 $temporary = null;
 $stage = 'projection';

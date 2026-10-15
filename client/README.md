@@ -16,7 +16,7 @@ Use Docker and the repository wrapper; no host Node installation or global front
 ./bin/client versions
 ./bin/client check        # Complete focused frontend checks; no network or dependency changes
 ./bin/client build        # Publish inspected assets for the local /app (check uses scratch output)
-./bin/client coverage     # Scoped client unit/component coverage under .runs/client/coverage/
+./bin/client coverage     # Scoped client unit/component coverage under .runs/build/reports/client/coverage/
 ./bin/client audit        # Optional live registry vulnerability report
 ./bin/up
 # Open http://localhost:18087/app, or use the existing opt-in HTTPS setup below
@@ -25,11 +25,12 @@ Use Docker and the repository wrapper; no host Node installation or global front
 
 Individual read-only acceptance commands: `typecheck`, `lint`, `format-check`, `test`, `coverage`,
 `build-check`, `storybook-build`, `storybook-test`, `storybook-capture`. `build` additionally publishes assets
-under ignored `public/build/`, preserving old hashes.
+under ignored `var/client/build/`, preserving old hashes.
 `format` explicitly rewrites formatting; `lint-fix` explicitly applies semantic/import autofixes. `lock` deliberately regenerates the lock after an authorized dependency change; routine checks
 never install or update packages. Commit `package.json` and `package-lock.json` together. Installation disables
-package lifecycle scripts; ESBuild uses its locked platform binary dependency. Caches/reports live in ignored
-`.runs/client/`, dependencies in ignored `client/node_modules/`, and assets in ignored `public/build/`.
+package lifecycle scripts; ESBuild uses its locked platform binary dependency. Caches live under ignored
+`.runs/cache/client/`, reports under `.runs/build/reports/client/`, dependencies under `client/node_modules/`,
+and application-generated assets under `var/client/build/`. Application runtime never reads `.runs/`.
 Setup records hashes of the manifest, committed lock and npm's installed lock in
 `node_modules/.fight-install.json`. Every tooling invocation verifies this receipt and exact Node/npm versions;
 a missing/stale receipt fails with an explicit setup instruction, never an automatic install. The receipt
@@ -73,7 +74,7 @@ focused repository wrapper owns orchestration across the two pinned container en
 canonical gate. Both use Node 24.21.0
 and npm 11.19.0. There is no percentage-only frontend gate or seeded-failure/product test of these tools.
 
-Production check output is `.runs/client/production/`, rebuilt clean without pruning live `public/build/`.
+Production check output is `var/client/check/production/`, rebuilt clean without pruning live `var/client/build/`.
 `production-metafile.json` and `production-artifacts.json` record the actual ESBuild/Sass input graph and
 output sizes/SHA-256 hashes. `build` applies the same inspection before publishing assets/manifest and writes
 `build-*` reports. The three-field manifest is published last; no extra private configuration is serialized.
@@ -98,7 +99,7 @@ Coverage includes **all** `src/**/*.{ts,tsx}`, including unimported source. Exac
 `src/**/*.d.ts` (declarations) and `src/main.tsx` (browser root/CSS/boot composition). Type-only modules have no
 executable denominator. Tests, stories, configuration, scripts, SCSS and dependencies are outside this owned
 TypeScript behavior measure, not secretly counted as covered. Reports (`text`, JSON summary, HTML) are under
-`.runs/client/coverage/`; read uncovered branches alongside their contracts. Unit/component coverage is not
+`.runs/build/reports/client/coverage/`; read uncovered branches alongside their contracts. Unit/component coverage is not
 browser-story, backend or end-to-end coverage. Narrow checks remain available for iteration; the full repository
 `./bin/build` remains mandatory and already includes this sequence. Screenshot evidence is not visual approval or universal accessibility certification.
 
@@ -229,13 +230,13 @@ server-owned, including dotted paths.
 
 For production-like local HTTPS, follow [local HTTPS setup](../docs/engineering/LOCAL_HTTPS.md), then run
 `./bin/https up` after building assets to refresh the gateway configuration. Open **https://localhost:18443/app**.
-The gateway mounts only `public/build/` for static delivery, with immutable caching of hashed assets. HTML is
+The gateway mounts only `var/client/build/` for static delivery, with immutable caching of hashed assets. HTML is
 no-store with a restrictive self-only script/style/font CSP, no inline executable code/eval, no-referrer and nosniff.
 The inert config JSON is not executable. A blocking, self-hosted prepaint script runs before the stylesheet
 and deferred React ESM, sharing its preference mapping source with the runtime. This shell policy is not the
 integrated production security certification.
 
-Deploy the PHP release, `templates/` and complete `public/build/` output, including both hashed font license
+Deploy the PHP release, `templates/` and complete `var/client/build/` output, including both hashed font license
 notices. Generated build output is **not committed**; the pinned source font files and licenses are committed.
 The build publishes the manifest last by rename and retains old hashes for already-open documents. A real
 deployment should atomically switch complete release directories and retain old assets for its supported
@@ -420,8 +421,9 @@ focus, reduced-motion overrides and wrapping do not establish universal accessib
 Tests prove observable route/landmark/title/keyboard behavior, controlled pending/failed imports, render failures
 and strict config decoding. V8 coverage measures client unit/component behavior, excludes declarations and the
 browser-only root composition, and is not backend or end-to-end coverage. Verify build/install/manifest/static
-wiring directly rather than testing tooling in the product suite. Builder browser captures live under ignored
-`.runs/notes/TASK-00026/`; independent technical review and interactive QA remain separate acceptance steps.
+wiring directly rather than testing tooling in the product suite. Builder browser captures are retained under ignored
+`.runs/archive/20261014T220249Z-root-consolidation/original/notes/TASK-00026/`; independent technical review
+and interactive QA remain separate acceptance steps.
 
 ## Component catalog
 
@@ -463,7 +465,7 @@ do not write real browser preferences or perform production prepaint.
 ./bin/client setup              # Clean locked frontend install
 ./bin/client storybook-setup    # Explicit pinned Playwright + Node image build, once per Docker host
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
-./bin/client storybook-build    # Offline static output: .runs/client/storybook/
+./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
 ./bin/client storybook-capture  # Built artifact: all 39 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
@@ -485,7 +487,7 @@ container. It renders every story, blocks/records external requests, runs axe-co
 and sets the addon to manual only in each capture URL to prevent overlapping axe scans (browser story tests
 retain automatic addon checks),
 records violations/incomplete checks, geometry, native target sizes, focus outline, motion and actual heading
-font, and writes screenshots/`receipt.json` to `.runs/client/catalog-evidence/`. Captures use Linux Chromium,
+font, and writes screenshots/`receipt.json` to `.runs/build/reports/client/catalog-evidence/`. Captures use Linux Chromium,
 DPR 1, en-US/UTC, light OS preference and reduced motion; explicit dark stories override the OS. The receipt also
 observes the system preview switching light/dark with normal motion. Four additional captures record a native
 Tab walk through the narrow dark composition, and one captures the static Storybook manager. These are evidence, not golden-image tests
@@ -511,5 +513,5 @@ Playwright base, never an install script or on-demand download.
 Builds disclose Storybook's >500 kB tool-chunk warnings (not production `/app` chunks), React-Bootstrap
 `use client` directive-preservation warnings in the browser-only catalog, and Rolldown plugin-timing warnings
 when emitted. None is suppressed. The inherited ESLint 9 installation deprecation remains. Caches, static output, coverage, browser failure screenshots and captures are
-ignored under `.runs/client/`. The otherwise read-only install's `node_modules/.cache/` and `.vite-temp/`
-mount `.runs/client/dependency-cache/` and `.runs/client/vite-temp/` respectively during checks.
+ignored under `.runs/build/reports/client/`. The otherwise read-only install's `node_modules/.cache/` and `.vite-temp/`
+mount `.runs/cache/client/dependency-cache/` and `.runs/cache/client/vite-temp/` respectively during checks.

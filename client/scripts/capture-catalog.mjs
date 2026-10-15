@@ -9,8 +9,8 @@ import { URL } from 'node:url';
 import { chromium } from 'playwright';
 
 const require = createRequire(import.meta.url);
-const root = resolve('../.runs/client/storybook');
-const output = resolve('../.runs/client/catalog-evidence');
+const root = resolve('../.runs/build/reports/client/storybook');
+const output = resolve('../.runs/build/reports/client/catalog-evidence');
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 const types = {

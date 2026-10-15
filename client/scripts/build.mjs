@@ -12,7 +12,7 @@ import { inspectArtifacts } from './inspect-artifacts.mjs';
 // Keep old hashed assets for pages still open during a deployment. Deployments
 // should publish a complete release directory atomically, not prune live assets.
 const checking = process.argv.includes('--check');
-const outdir = checking ? '../.runs/client/production' : '../public/build';
+const outdir = checking ? '../var/client/check/production' : '../var/client/build';
 // Quality checks start clean without deleting hashes needed by an open local /app page.
 if (checking) await rm(outdir, { recursive: true, force: true });
 await mkdir(outdir, { recursive: true });
@@ -87,10 +87,13 @@ const report = await inspectArtifacts(
 );
 const reportPrefix = checking ? 'production' : 'build';
 await writeFile(
-  `../.runs/client/${reportPrefix}-metafile.json`,
+  `../.runs/build/reports/client/${reportPrefix}-metafile.json`,
   JSON.stringify({ application: result.metafile, prepaint: prepaint.metafile }, null, 2)
 );
-await writeFile(`../.runs/client/${reportPrefix}-artifacts.json`, JSON.stringify(report, null, 2));
+await writeFile(
+  `../.runs/build/reports/client/${reportPrefix}-artifacts.json`,
+  JSON.stringify(report, null, 2)
+);
 const entry = Object.entries(result.metafile.outputs).find(
   ([, output]) => output.entryPoint === 'src/main.tsx'
 );

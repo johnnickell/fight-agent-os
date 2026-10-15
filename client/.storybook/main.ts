@@ -11,7 +11,7 @@ const config: StorybookConfig = {
   core: { disableTelemetry: true, enableCrashReports: false },
   viteFinal(config, { configType }) {
     return mergeConfig(config, {
-      cacheDir: '../.runs/client/storybook-vite',
+      cacheDir: '../.runs/cache/client/storybook-vite',
       build: { sourcemap: false, assetsInlineLimit: 0 },
       resolve: applicationResolve,
       // Only Storybook's middleware server uses bin/client's published 16006 port.

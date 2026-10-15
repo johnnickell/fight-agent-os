@@ -27,7 +27,7 @@ final class ClientShellTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->directory = dirname(__DIR__, 3).'/.runs/test-client-assets/'.bin2hex(random_bytes(8));
+        $this->directory = dirname(__DIR__, 3).'/.runs/build/tmp/test-client-assets/'.bin2hex(random_bytes(8));
         mkdir($this->directory, 0700, true);
         file_put_contents($this->directory.'/prepaint-CCCCCCCC.js', '');
         file_put_contents($this->directory.'/main-AAAAAAAA.js', '');

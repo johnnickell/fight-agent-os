@@ -11,7 +11,7 @@ if (getenv('APP_ENV') !== 'test' || phpversion('xdebug') !== '3.5.0' || getenv('
 }
 
 $root = dirname(__DIR__);
-$reports = $root.'/.runs/backend-coverage';
+$reports = $root.'/.runs/build/reports/backend';
 if (!is_dir($reports) && !mkdir($reports, 0777, true) && !is_dir($reports)) {
     throw new RuntimeException('Cannot create backend report directory.');
 }

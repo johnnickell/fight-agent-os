@@ -32,7 +32,7 @@ sign certificates for other names, even though this setup issues a leaf for **lo
 machine-level decision, not trust restricted to this application. The CA and its private key remain in mkcert's
 user-controlled directory outside Git and are never mounted into containers.
 
-Leaf certificate/key files live under ignored `.runs/https/certs/`, with directory mode 700 and file mode 600.
+Leaf certificate/key files live under ignored `var/https/certs/`, with directory mode 700 and file mode 600.
 Setup regenerates those leaves, sets `.env` mode 600 and updates only `APP_BROWSER_ORIGIN` to
 `https://localhost:18443`; other settings, including the CSRF key, remain unchanged. A conflicting shell origin
 override is rejected rather than silently ignored. Compose shell variables take precedence over `.env`.
@@ -57,7 +57,7 @@ The Nginx listener binds to `127.0.0.1:18443`. Use `localhost`, not `127.0.0.1`,
 canonical authority itself; it does not convert client forwarding headers into trusted scheme/host information.
 Hidden-file paths are rejected at Nginx. Only content-hashed client JS/CSS/license files under `/build/` are
 served statically; manifests, maps and other build paths return 404. Other paths go through the front controller.
-The repository is mounted read-only in the FPM service; Nginx mounts only the generated `public/build/` directory,
+The repository is mounted read-only in the FPM service; Nginx mounts only the generated `var/client/build/` directory,
 not the source tree. Client HTML has its own restrictive CSP and no-store policy; static hashes are immutable. This is a trusted
 local development stack, not an isolation boundary against other local Docker users or untrusted application code.
 

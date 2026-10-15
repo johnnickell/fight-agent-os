@@ -21,7 +21,7 @@ Install locked development tools explicitly and start Docker first:
 ```
 
 `export` generates and validates a complete JSON document, writes and checks identical temporary bytes, then
-atomically replaces **`.runs/openapi/openapi.json`**. The directory is ignored and outside `public/`; the file
+atomically replaces **`var/openapi/openapi.json`**. The directory is ignored and outside `public/`; the file
 is mode 0600 and a newly created output directory is 0700. Source and artifact locations are fixed, symlinks
 are rejected, and the command accepts no arbitrary scan/output path. Export neither installs dependencies nor
 rewrites source, loads application configuration, connects to services, or enables an HTTP route.
@@ -48,7 +48,7 @@ installed 3.0 meta-schema. It uses the validator library API in memory: the lock
 resolve local references without an absolute base. Direct file validation remains available:
 
 ```sh
-./bin/exec php -d allow_url_fopen=0 vendor/bin/php-openapi validate .runs/openapi/openapi.json
+./bin/exec php -d allow_url_fopen=0 vendor/bin/php-openapi validate var/openapi/openapi.json
 ```
 
 ### Qualified dependencies

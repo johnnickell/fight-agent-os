@@ -24,7 +24,7 @@ come from the specified order, not generation timing. These are not byte-identic
 
 ## Reports and policy
 
-One execution writes ignored `.runs/backend-coverage/coverage.php`, `clover.xml`, `junit.xml`, `summary.json`,
+One execution writes ignored `.runs/build/reports/backend/coverage.php`, `clover.xml`, `junit.xml`, `summary.json`,
 `domain-application.json`, and `adapter.json`.
 Old reports are removed before execution. A failed phase is incomplete even if PHPUnit emitted report files;
 only a successful complete command is a verification receipt. The PHP coverage artifact is trusted local

@@ -46,7 +46,7 @@ The shared SCSS is compiled by ESBuild for production and Vite for Storybook. ES
 WOFF2 beside the hashed CSS in `/build/`; its artifact policy admits only inventoried font inputs/bytes and
 CSS references to that build's emitted fonts. The build copies both license/notices to hashed
 `ubuntu-<hash>.LEGAL.txt` and `open-sans-<hash>.LEGAL.txt` in the same release. Keep these when distributing
-`public/build/`. The static catalog finalizer also includes both notices at its output root. Source-tree
+`var/client/build/`. The static catalog finalizer also includes both notices at its output root. Source-tree
 distributions retain this directory and its notices.
 
 HTTP development and the HTTPS gateway serve only the qualified hashed font filename shapes as `font/woff2`,

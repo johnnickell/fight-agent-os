@@ -43,7 +43,7 @@ $receipt = [
     'xdebug'         => phpversion('xdebug'),
     'packages'       => [],
     'phases'         => [],
-    'reports'        => ['.runs/backend-coverage/', '.runs/client/'],
+    'reports'        => ['.runs/build/reports/backend/', '.runs/build/reports/client/'],
     'limits'         => 'Local acceptance, not independent review, QA, merge or deployment'
 ];
 foreach (InstalledVersions::getInstalledPackages() as $package) {
@@ -199,7 +199,7 @@ try {
         'TZ'                          => 'UTC',
         'STORYBOOK_DISABLE_TELEMETRY' => '1',
         'PLAYWRIGHT_BROWSERS_PATH'    => '/ms-playwright',
-        'npm_config_cache'            => $root.'/.runs/client/npm',
+        'npm_config_cache'            => $root.'/.runs/cache/client/npm',
         'npm_config_update_notifier'  => 'false',
         'npm_config_offline'          => 'true'
     ]);
@@ -232,9 +232,9 @@ try {
     }
     // Counts, coverage and explicit exclusions remain in the owning tools' reports.
     $reports = [
-        'backend'  => '.runs/backend-coverage/summary.json',
-        'frontend' => '.runs/client/coverage/coverage-summary.json',
-        'catalog'  => '.runs/client/catalog-evidence/receipt.json'
+        'backend'  => '.runs/build/reports/backend/summary.json',
+        'frontend' => '.runs/build/reports/client/coverage/coverage-summary.json',
+        'catalog'  => '.runs/build/reports/client/catalog-evidence/receipt.json'
     ];
     foreach ($reports as $name => $path) {
         $bytes = file_get_contents($root.'/'.$path);

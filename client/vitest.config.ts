@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 import { applicationResolve } from './vite.resolve.ts';
 
 export default defineConfig({
-  cacheDir: '../.runs/client/vite',
+  cacheDir: '../.runs/cache/client/vite',
   resolve: applicationResolve,
   test: {
     environment: 'jsdom',
@@ -14,7 +14,7 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.d.ts', 'src/main.tsx'],
-      reportsDirectory: '../.runs/client/coverage',
+      reportsDirectory: '../.runs/build/reports/client/coverage',
       reporter: ['text', 'json-summary', 'html']
     }
   }
