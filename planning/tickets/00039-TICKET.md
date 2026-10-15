@@ -2,7 +2,7 @@
 id: TICKET-00039
 epic: EPIC-00006
 title: Require relevance screening before loading file contents
-status: ready-for-agent
+status: done
 ---
 
 # Require relevance screening before loading file contents
@@ -119,7 +119,7 @@ Mark an affected TASK needs-info if a necessary guarantee remains unresolved; do
 |---|---|---|
 | [TASK-00162](../tasks/00162-TASK.md) | Screen individual files and require selective reads | done |
 | [TASK-00163](../tasks/00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | done |
-| [TASK-00309](../tasks/00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | ready-for-agent |
+| [TASK-00309](../tasks/00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -164,7 +164,18 @@ session allocation so restarts, retries and new roles cannot multiply that allow
 limits still bind. Project roots, source disclosure and credentials remain explicit operator policy; approval of
 this plan does not activate a provider or grant access to every repository.
 
-The follow-up supersedes the initial hard-interception exclusion only for the declared, qualified local profile.
+The follow-up supersedes the initial hard-interception exclusion only for the declared, qualified explicit-file-tool profile.
+
+**Approved interim correction — 2026-10-15:** TASK-00309 uses standing project enrollment until revocation or
+authority change, with explicit conversion of deliberately bounded historical enrollments. Useful authorized
+shell remains available with separate shared-Jev dangerous-command assessment; `rg`, `cat`, Git/checks/delivery
+within task/role authority need no bespoke replacement executor. Shell can bypass relevance admission and access
+same-user state: universal enforcement/containment is not claimed. Restrictive shell/MCP replacements are deferred;
+TASK-00160's optional deterministic profile is unchanged. No model judgment grants authority. Preserve explicit
+file receipts, shared accounting/liabilities, bounded historical test grants, safe observations and independent
+canonical workflows. AC8 representative-work and applicable visual evidence are not waived. TASK-00450's shared
+price-confirmation persistence is integrated from approved `develop` after PR #103 merged; connection setup and
+project enrollment have no periodic renewal. Existing timestamps, finite grants and disclosure limits are preserved.
 Retain the 0.70 rule, independently checked permissions, current-source receipts and bounded evidence-backed
 exceptions. Make setup failures and every screening/cache/exception/blocked path visible. No universal sandbox,
 external-harness coverage, batch implementation or managed Workflow completion is implied. Existing decomposition

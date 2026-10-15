@@ -1,5 +1,18 @@
 # Bounded file relevance screening
 
+**TASK-00309 implementation candidate:** the [enrolled profile](FILE_SCREENING_PROFILE.md) adds operator preview,
+automatic actual-session allocation, shared monthly accounting, trusted evidence intake and local receipt admission.
+The amended standing profile keeps ordinary authorized shell with separate command-risk assessment; shell can
+bypass relevance admission and is not OS-confined. Use normal Pi/provider-owned Build, not a replacement executor.
+Historical bounded native/build dispatch and synthetic live screening/admission have recorded evidence, including
+one explicitly approved corrected recovery pair; parent screens were not replayed. The child final omitted the
+requested formula. John later approved the narrow [AC8/E1 comparative-evaluation deferral](../../planning/tasks/00309-TASK.md#approved-comparative-evaluation-deferral--2026-10-15)
+after bounded evidence remained incomplete: no effectiveness, recall or net context/latency/billed-cost savings
+claim follows. Real baseline/current wide/narrow degraded-status PNGs are retained, but independent acceptance and
+remaining behavioral/visual QA are pending; see the TASK's current checkpoint and historical recovery evidence.
+The manual activation/SDK limitations below remain the supplier/legacy path and historical evidence; they are not
+a claim about complete profile delivery.
+
 `jev_read_file` is an opt-in consumer of the [shared typed-judgment capability](JUDGMENTS.md), not another provider
 client. TASK-00162 supplies one regular UTF-8 file per call, controlled behavior and bounded live Pi SDK
 qualification. Synthetic parent/child investigations, fresh evidence synthesis and an unscripted direct-read

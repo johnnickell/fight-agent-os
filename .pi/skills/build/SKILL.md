@@ -34,11 +34,13 @@ deploy or continue to another TASK. A question about planning does not invoke th
    ancestry, ownership and existing work. Never switch, stage or publish unrelated changes. A shared branch
    containing unrelated unaccepted commits needs branch/ownership resolution before dispatch, not a broad push.
    Search existing PRs by branch and then uniquely evidenced TASK ownership; ambiguity holds.
-3. Resolve the canonical base worktree through Git common-dir/worktree metadata. Use `umask 077` and an ignored
-   run beneath `<base>/.runs/build/<TASK-ID>/`. Acquire an exclusive `mkdir` lock at that directory's `active`
-   child and record coordinator session, checkout, branch and run path. An existing lock requires inspecting
-   its owner/processes before continuation; never automatically delete it. This is advisory local coordination,
-   not a managed claim. Release only your lock after proving children stopped; uncertain liveness retains it.
+3. Resolve the canonical base worktree through Git common-dir/worktree metadata. For enrolled and unenrolled
+   coordinators alike, use ordinary authorized shell/Git/checks and this provider-owned monitor. Enrollment is not
+   a recurring execution grant; the existing Build authorization and shared revision ledger remain binding.
+   Use `umask 077`, an ignored run beneath `<base>/.runs/build/<TASK-ID>/` and an exclusive `mkdir` lock at its
+   `active` child. Record coordinator session, checkout, branch and run path. Inspect an existing lock's ownership
+   before continuation; release only your lock after proving children stopped. These are local coordination,
+   not managed Workflow claims.
 4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, resolved role models, effective/consumed/remaining
    cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Check installed
    `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools
@@ -89,12 +91,13 @@ presenting requested/configured identity or catalog availability as provider exe
 
 ## Dispatch fresh roles
 
-Launch one child at a time from the TASK checkout using the shell tool. Allocate a fresh attempt with `mktemp -d`
-under the private run directory. Never pass `--continue`, `--resume`, `--session`, `--fork`, the parent transcript
-or its session file. Each new empty session directory supplies fresh context; Review and QA must have no prior
-implementation contributions. Repairs receive the current findings and dispositions explicitly.
+Launch one child at a time from the TASK checkout. Allocate a fresh attempt with `mktemp -d` under the private
+run directory, then write `request.md` before launching, using ordinary authorized shell in either profile.
+Never pass `--continue`, `--resume`, `--session`, `--fork`, the parent transcript or its session file. Each empty
+session directory supplies fresh context; Review and QA must have no prior implementation contributions.
+Repairs receive current findings through exact prior-role handoffs, not the Engineer conversation.
 
-Write `request.md` in the attempt directory before launching. Include role, TASK, exact checkout/base/head,
+Write the stage request using the existing authorization and verified current Git identity. Include role, TASK, exact checkout/base/head,
 absolute owning provider skill path, absolute project-context path, target instruction/binding paths, permitted
 effects, relevant evidence paths, original authorization, remaining repair allowance and expected handoff.
 Tell the child to verify the target Git identity and read the context, target instructions and binding before
@@ -107,6 +110,29 @@ Use the bundled [stage monitor](scripts/run-stage.py) (Python 3.9+) to launch Pi
 path beside the **owning provider skill**, even when the TASK checkout belongs to another project; do not assume
 the target contains this script. Check installed Pi supports `--mode json` and `agent_settled` events; the monitor
 uses the installed Pi 1.2.0 event contract. Missing support is a prerequisite hold, not a silent return to hidden output.
+For an explicitly enrolled [file-screening profile](../../../harness/pi/FILE_SCREENING_PROFILE.md), the monitor
+preflights the target through its owning provider package, explicitly loads that package in the child and binds
+its actual identity under the shared monthly cap. It relays safe screening diagnostics promptly, not raw stderr.
+Use the ordinary native `/skill:build TASK-NNNNN` entrypoint from the owning provider (or explicitly load that
+provider skill when a target has a different/missing binding). Standing project enrollment plus existing Build
+and task/role authority permits normal shell operations, including checks and owned Git/handoffs. No replacement
+executor, `/screened-build`, stage/report tool or recurring per-child grant is required. Pin models and preserve
+consumed revision counters in the existing coordinator ledger, including any older candidate grant history;
+never start at zero merely because the transport changed.
+
+Final native Agent bash and user-bash operations receive separate shared-Jev command-risk assessment with bounded
+nonsecret command/context disclosure approved during setup. An ordinary judgment is neither new permission nor
+a safety guarantee. Risky, uncertain, denied or unavailable judgments visibly hold for the relevant operator
+decision; missing decision support holds the command. Do not paste secrets or source into commands for assessment.
+Shell source reads can bypass relevance screening and same-user shell can access operator state: this interim
+profile is not universal admission enforcement or a sandbox. Supported explicit file tools retain their receipts
+and bounded exceptions. The monitor's own process launch and descendants inside scripts are not recursively
+intercepted; preflighted children independently load the reviewed profile and bind their actual identities.
+
+Roles write their ordinary canonical reports under their owning skills. Coordinator intake must verify actual
+TASK/branch/base/head/status, independence, evidence and verdict before advancement, preserve prior reports, and
+hold malformed/wrong-subject/stale evidence. No host stamp or successful shell/risk result makes a report current
+or independently accepted. The same shell example below is usable by enrolled coordinators within existing authority.
 
 Populate the quoted variables from the ledger: `attempt` is fresh and already contains `request.md`,
 `task_checkout` is the selected checkout, `task_id`/`role` identify the stage, and model fields are exact pins.

@@ -146,7 +146,7 @@ export function parseEvaluation(body, request, config) {
 const safeCodes = new Set(['invalid-input', 'payload-limit', 'question-limit', 'choice-limit', 'stale-configuration', 'disclosure-denied',
   'invalid-setup', 'price-unqualified', 'request-budget', 'session-budget', 'budget-unavailable', 'credential-unavailable',
   'provider-denied', 'billing', 'timeout', 'refusal', 'provider-rejected', 'provider-unavailable', 'invalid-result', 'absent-result',
-  'cancelled', 'price-bound-exceeded', 'unsupported-host', 'closed', 'concurrency-limit']);
+  'cancelled', 'price-bound-exceeded', 'unsupported-host', 'closed', 'concurrency-limit', 'monthly-budget']);
 
 /** Evaluate only trusted consumers' supplied state; consumer authorization never comes from provider content */
 export class Judgments {
@@ -218,6 +218,7 @@ export class Judgments {
       const credential = await this.credentials.read(controller.signal);
       try {
         currentPermission();
+        this.budget.dispatch?.(ticket);
         dispatched = true;
         const response = await this.transport.submit(config.endpoint, prepared.payload, credential, controller.signal);
         currentPermission();

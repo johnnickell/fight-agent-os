@@ -7,6 +7,8 @@ import { Judgments } from './jev/judgments.mjs';
 import { retainSessionRequests } from './jev/session-requests.mjs';
 import { installFileScreening } from './file-screening-extension.ts';
 import { FileScreeningSettings } from './jev/local-store.mjs';
+import { ScreeningProfiles } from './jev/screening-profile.mjs';
+import { ProfileBudget } from './jev/monthly-budget.mjs';
 
 type Dependencies = {
   settings?: LocalSettings;
@@ -15,6 +17,8 @@ type Dependencies = {
   budget?: (sessionId: string) => SessionBudget;
   platform?: NodeJS.Platform;
   fileSettings?: FileScreeningSettings;
+  profiles?: ScreeningProfiles;
+  credentialConfigured?: (ctx: ExtensionContext) => boolean;
 };
 
 /** Install operator setup, shared judgments and opt-in file screening without changing Pi's model */
@@ -23,6 +27,7 @@ export default function jevExtension(pi: ExtensionAPI) { installJev(pi); }
 /** Inject controlled host boundaries for qualification; normal loading always uses protected local adapters */
 export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
   const settings = dependencies.settings ?? new LocalSettings();
+  const profiles = dependencies.profiles ?? new ScreeningProfiles();
   let readiness: Readiness | undefined;
   let judgments: Judgments | undefined;
   let retained: ReturnType<typeof retainSessionRequests> | undefined;
@@ -59,7 +64,8 @@ export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
     retained = retainSessionRequests(sessionId);
     const shared = { credentials: dependencies.credentials?.(ctx) ?? new PiCredentials(ctx.modelRegistry),
       transport: dependencies.transport ?? new DecisionsTransport(),
-      budget: dependencies.budget?.(sessionId) ?? new SessionBudget(sessionId), scope: retained.scope,
+      budget: dependencies.budget?.(sessionId) ?? (profiles.load() !== null ?
+        new ProfileBudget(sessionId, profiles.directory) : new SessionBudget(sessionId)), scope: retained.scope,
       platform: dependencies.platform ?? process.platform };
     readiness = new Readiness(shared);
     judgments = new Judgments({ ...shared, sessionId, configuration: () => settings.load() });
@@ -141,5 +147,6 @@ export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
       present(ctx);
     },
   });
-  installFileScreening(pi, { settings: dependencies.fileSettings, configuration: () => settings.load() });
+  installFileScreening(pi, { settings: dependencies.fileSettings, configuration: () => settings.load(), profiles,
+    credentialConfigured: dependencies.credentialConfigured ?? (ctx => ctx.modelRegistry.getProviderAuthStatus('openrouter').configured) });
 }

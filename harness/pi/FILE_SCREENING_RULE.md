@@ -44,6 +44,10 @@ savings. The bounded metadata-only LRU is local to this session and clears on sh
 children receive no cache, judgments, permissions or spending allocation automatically.
 
 A supported child must load this tool **and rule** independently and receive operator roots/disclosure plus an
-explicit allocation for its own Pi session. Do not promise participation for a missing tool/rule/policy path. No
-automatic child grants or aggregate parent budget exists; operator allocations must bound their combined exposure.
+allocation for its own Pi session. The manual supplier profile requires explicit allocations; the separately
+[enrolled profile](FILE_SCREENING_PROFILE.md) binds actual child identities automatically under standing project
+authority and the shared monthly account. No new root/disclosure/task authority follows. Do not promise participation
+for a missing tool/rule/policy path. The enrolled profile admits supported explicit file reads; ordinary authorized
+shell has separate dangerous-command assessment and can bypass relevance screening. Do not claim universal
+admission enforcement, OS containment or protection from all same-user access to operator state.
 Unsupported launchers, disabled extensions, forced prompts or hidden declarations must be reported, not assumed covered.

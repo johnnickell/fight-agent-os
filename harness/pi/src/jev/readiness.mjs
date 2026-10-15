@@ -136,6 +136,7 @@ export class Readiness {
       const credential = await this.credentials.read(controller.signal);
       try {
         if (controller.signal.aborted) throw new Unavailable('cancelled');
+        this.budget.dispatch?.(ticket);
         dispatched = true;
         const response = await this.transport.submit(config.endpoint, payload, credential, controller.signal);
         if (controller.signal.aborted || generation !== this.#generation) throw new Unavailable('cancelled');
@@ -159,7 +160,7 @@ export class Readiness {
       outcome = { ...fail(result.yesProbability >= 0.70 ? 'ready' : 'synthetic-negative'), ...result };
     } catch (error) {
       const safeCodes = ['invalid-setup', 'price-unqualified', 'request-budget', 'session-budget', 'budget-unavailable',
-        'credential-unavailable', 'provider-denied',
+        'credential-unavailable', 'provider-denied', 'monthly-budget',
         'billing', 'timeout', 'refusal', 'provider-rejected', 'provider-unavailable', 'invalid-result', 'cancelled', 'price-bound-exceeded'];
       outcome = fail(error instanceof Unavailable && safeCodes.includes(error.code) ? error.code : 'provider-unavailable');
     } finally {

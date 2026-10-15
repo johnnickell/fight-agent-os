@@ -215,6 +215,10 @@ try {
             '../harness/pi/tests/jev.test.mjs',
             '../harness/pi/tests/judgments.test.mjs',
             '../harness/pi/tests/file-screening.test.mjs',
+            '../harness/pi/tests/file-admission.test.mjs',
+            '../harness/pi/tests/monthly-budget.test.mjs',
+            '../harness/pi/tests/command-risk.test.mjs',
+            '../harness/pi/tests/screening-profile.test.mjs',
             '../harness/pi/tests/tool-policy.test.mjs'
         ]
     ];

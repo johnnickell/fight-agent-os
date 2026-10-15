@@ -7,7 +7,7 @@ import { Unavailable, validateConfiguration } from './readiness.mjs';
 
 export function operatorDirectory() { return join(homedir(), 'Library', 'Application Support', 'Fight Agent OS', 'jev'); }
 
-function privateDirectory(path) {
+export function privateDirectory(path) {
   // Reject symlinked path components. Permissions protect against other users, not this same-user Agent.
   const absolute = resolve(path);
   let cursor = sep;
@@ -22,12 +22,12 @@ function privateDirectory(path) {
   }
 }
 
-function readPrivate(path, missing) {
+export function readPrivate(path, missing) {
   let fd;
   try {
     fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
     const info = fstatSync(fd);
-    if (!info.isFile() || info.uid !== process.getuid() || (info.mode & 0o077) !== 0 || info.size > 65536) {
+    if (!info.isFile() || info.nlink !== 1 || info.uid !== process.getuid() || (info.mode & 0o077) !== 0 || info.size > 65536) {
       throw new Unavailable('invalid-setup');
     }
     return JSON.parse(readFileSync(fd, 'utf8'));
@@ -37,13 +37,15 @@ function readPrivate(path, missing) {
   } finally { if (fd !== undefined) closeSync(fd); }
 }
 
-function writePrivate(path, value) {
+export function writePrivate(path, value) {
   const temp = join(dirname(path), `.pending-${randomUUID()}`);
   let fd;
   try {
     fd = openSync(temp, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
     writeFileSync(fd, JSON.stringify(value)); fsyncSync(fd); closeSync(fd); fd = undefined;
     renameSync(temp, path);
+    const directory = openSync(dirname(path), constants.O_RDONLY);
+    try { fsyncSync(directory); } finally { closeSync(directory); }
   } finally {
     if (fd !== undefined) closeSync(fd);
     if (existsSync(temp)) unlinkSync(temp);

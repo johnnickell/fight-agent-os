@@ -1,12 +1,14 @@
-import { createHash } from 'node:crypto';
-import { constants, openSync, closeSync, fstatSync, lstatSync, realpathSync, readSync } from 'node:fs';
-import { isAbsolute, resolve, dirname, sep, basename } from 'node:path';
+import { createHash, randomUUID } from 'node:crypto';
+import { constants, openSync, closeSync, fstatSync, lstatSync, realpathSync, readSync, existsSync } from 'node:fs';
+import { isAbsolute, resolve, dirname, sep } from 'node:path';
 import { prepareEvaluation } from './judgments.mjs';
 import { Unavailable, reservationMicroUsd } from './readiness.mjs';
 
 import { discoverFiles, batchLimits } from './file-discovery.mjs';
 export const filePolicyVersion = 'file-screen-v1';
 export const sourceByteLimit = 32768;
+// Local exact-evidence intake is not Jev disclosure; its returned ranges remain 32 KiB.
+export const evidenceByteLimit = 1048576;
 const hash = value => createHash('sha256').update(value).digest('hex');
 const deny = code => { throw new Unavailable(code); };
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -29,7 +31,7 @@ export function validateFilePolicy(value) {
   for (const [id, a] of Object.entries(value.sessions)) {
     if (!/^[a-f0-9]{64}$/.test(id) || !exact(a, ['requestMicroUsd', 'sessionMicroUsd', 'expiresAt', 'providerDisclosure']) ||
       !positive(a.requestMicroUsd) || !positive(a.sessionMicroUsd) || a.requestMicroUsd > a.sessionMicroUsd ||
-      !Number.isSafeInteger(a.expiresAt) || typeof a.providerDisclosure !== 'boolean') deny('invalid-file-policy');
+      (a.expiresAt !== null && !Number.isSafeInteger(a.expiresAt)) || typeof a.providerDisclosure !== 'boolean') deny('invalid-file-policy');
   }
   return structuredClone(value);
 }
@@ -76,26 +78,37 @@ function openContained(path) {
 
 /** Read a bounded regular UTF-8 snapshot only after canonical access and opened-inode checks */
 export class FileSource {
-  authorize(path, policy) {
+  authorize(path, policy, { allowMissing = false } = {}) {
     const lexical = resolve(path);
-    const excluded = candidate => policy.excludedPaths.some(p => within(candidate, resolve(p))) ||
-      candidate.split(sep).some(part => policy.excludedNames.includes(part)) ||
-      candidate.split(sep).some(part => ['.git', '.ssh', '.aws', '.gnupg'].includes(part)) ||
-      /^(\.env($|\.)|auth\.json$|id_(rsa|ed25519)($|\.)|.*\.(pem|key|p12|pfx)$)/i.test(basename(candidate));
+    const excluded = (candidate, fold = false) => {
+      const key = fold ? candidate.toLowerCase() : candidate;
+      return policy.excludedPaths.some(p => within(key, fold ? resolve(p).toLowerCase() : resolve(p))) ||
+        key.split(sep).some(part => policy.excludedNames.some(name => (fold ? name.toLowerCase() : name) === part)) ||
+        key.split(sep).some(part => ['.git', '.ssh', '.aws', '.gnupg'].includes(part) ||
+          /^(\.env($|\.)|auth\.json$|id_(rsa|ed25519)($|\.)|.*\.(pem|key|p12|pfx)$)/i.test(part));
+    };
     if (excluded(lexical)) deny('sensitive-file');
     // Check lexical containment first: no metadata probing of unrelated caller paths.
     const roots = policy.allowedRoots.map(root => resolve(root));
     if (!roots.some(root => within(lexical, root))) deny('root-denied');
-    const canonicalRoots = roots.map(root => realpathSync(root));
+    const canonicalRoots = roots.map(root => realpathSync.native(root));
     // Authority roots must be canonical operator paths, not mutable symlink pointers.
     if (canonicalRoots.some((root, index) => root !== roots[index])) deny('invalid-file-policy');
-    const canonical = realpathSync(lexical);
+    // Historical Git evidence may name a deleted path. Validate its entire lexical name and every
+    // surviving ancestor; this authorizes only that historical identity, never an ordinary missing-file read.
+    let ancestor = lexical;
+    if (allowMissing) while (!existsSync(ancestor) && ancestor !== dirname(ancestor)) ancestor = dirname(ancestor);
+    const canonical = resolve(realpathSync.native(ancestor), lexical.slice(ancestor.length).replace(/^\//, ''));
+    // Deleted components cannot be canonicalized on APFS. Conservatively reject exclusion aliases,
+    // including a wholly deleted protected subtree, rather than infer case-sensitive permission.
+    if (ancestor !== lexical && (excluded(lexical, true) || excluded(canonical, true))) deny('sensitive-file');
     if (!canonicalRoots.some(root => within(canonical, root))) deny('symlink-escape');
     if (excluded(canonical)) deny('sensitive-file');
     // Refuse all symlinks below the selected lexical root, including in-root aliases.
     const root = roots.filter(r => within(lexical, r)).sort((a, b) => b.length - a.length)[0];
     for (let cursor = lexical; cursor !== root; cursor = dirname(cursor)) {
-      if (lstatSync(cursor).isSymbolicLink()) deny('symlink-denied');
+      try { if (lstatSync(cursor).isSymbolicLink()) deny('symlink-denied'); }
+      catch (error) { if (!allowMissing || error.code !== 'ENOENT') throw error; }
     }
     return canonical;
   }
@@ -106,12 +119,14 @@ export class FileSource {
     if (stamp(fstatSync(fd, { bigint: true })) !== stamp(before)) { closeSync(fd); deny('unstable-source'); }
     return fd;
   }
-  snapshot(path, policy, { maxBytes = sourceByteLimit + 1, onRead = () => {} } = {}) {
+  snapshot(path, policy, { sourceLimit = sourceByteLimit, maxBytes = sourceLimit + 1, onRead = () => {} } = {}) {
+    if (!Number.isSafeInteger(sourceLimit) || sourceLimit < 1 || sourceLimit > evidenceByteLimit ||
+      !Number.isSafeInteger(maxBytes) || maxBytes < 0 || maxBytes > evidenceByteLimit + 1) deny('source-limit');
     const canonical = this.authorize(path, policy), lexical = resolve(path);
     const before = lstatSync(canonical, { bigint: true });
     if (!before.isFile()) deny('unsupported-file');
     if (before.nlink !== 1n) deny('unsupported-hardlink');
-    if (before.size > BigInt(sourceByteLimit)) deny('source-limit');
+    if (before.size > BigInt(sourceLimit)) deny('source-limit');
     if (before.size > BigInt(maxBytes)) deny('batch-source-limit');
     let fd;
     try {
@@ -122,18 +137,18 @@ export class FileSource {
       }
       const opened = fstatSync(fd, { bigint: true });
       // A replaced parent can redirect open(), but cannot cause a read of a different inode.
-      if (!opened.isFile() || stamp(opened) !== stamp(before) || realpathSync(lexical) !== canonical ||
+      if (!opened.isFile() || stamp(opened) !== stamp(before) || realpathSync.native(lexical) !== canonical ||
         stamp(lstatSync(canonical, { bigint: true })) !== stamp(before)) deny('unstable-source');
       // Never use the detection byte to exceed the remaining initial-source allowance.
-      const bytes = Buffer.alloc(Math.min(sourceByteLimit + 1, maxBytes));
+      const bytes = Buffer.alloc(Math.min(sourceLimit + 1, maxBytes));
       let count = 0, read;
       while (count < bytes.length && (read = readSync(fd, bytes, count, bytes.length - count, null)) > 0) {
         count += read;
         onRead(read); // Consumption survives decoding, stability and I/O failures.
       }
-      if (count > sourceByteLimit) deny('source-limit');
+      if (count > sourceLimit) deny('source-limit');
       if (count !== Number(before.size) || stamp(fstatSync(fd, { bigint: true })) !== stamp(before) ||
-        realpathSync(lexical) !== canonical || stamp(lstatSync(canonical, { bigint: true })) !== stamp(before)) deny('unstable-source');
+        realpathSync.native(lexical) !== canonical || stamp(lstatSync(canonical, { bigint: true })) !== stamp(before)) deny('unstable-source');
       const data = bytes.subarray(0, count);
       let text;
       try { text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(data); } catch { deny('binary-source'); }
@@ -161,8 +176,8 @@ export class FileScreening {
     this.#operations.clear();
   }
   cacheInfo() { return { entries: this.#cache.size, bytes: [...this.#cache.values()].reduce((sum, value) => sum + Buffer.byteLength(JSON.stringify(value)), 0) }; }
-  constructor({ settings, configuration, connect, sessionId, cwd, source = new FileSource(), now = Date.now, platform = process.platform }) {
-    this.settings = settings; this.configuration = configuration; this.connect = connect; this.sessionId = sessionId; this.cwd = cwd; this.source = source; this.now = now; this.platform = platform;
+  constructor({ settings, configuration, connect, sessionId, cwd, source = new FileSource(), now = Date.now, platform = process.platform, observe = () => {} }) {
+    this.settings = settings; this.configuration = configuration; this.connect = connect; this.sessionId = sessionId; this.cwd = cwd; this.source = source; this.now = now; this.platform = platform; this.observe = observe;
   }
   #policy() {
     try {
@@ -170,7 +185,7 @@ export class FileScreening {
       const value = this.settings.load();
       if (!value) deny('file-profile-unavailable');
       const policy = validateFilePolicy(value), allocation = policy.sessions[hash(this.sessionId)];
-      if (!allocation || allocation.expiresAt <= this.now()) deny('session-unallocated');
+      if (!allocation || (allocation.expiresAt !== null && allocation.expiresAt <= this.now())) deny('session-unallocated');
       if (!allocation.providerDisclosure) deny('disclosure-denied');
       const identity = hash(JSON.stringify(policy));
       if (this.#authority && identity !== this.#authority) this.#cache.clear();
@@ -247,8 +262,9 @@ export class FileScreening {
           }
           // Keep the full shared receipt in its owning bounded inspection buffer, not fifty copies in presentation.
           const receipt = result.receipt ? { state: result.receipt.state, evaluator: result.receipt.evaluator,
-            usage: result.receipt.usage, reservationRetained: result.receipt.reservationRetained } : null;
-          const { accounting: _local, ...metadata } = result;
+            evaluationId: result.receipt.evaluationId, usage: result.receipt.usage, reservationRetained: result.receipt.reservationRetained } : null;
+          // Common session/policy scope is bound once on the trusted batch envelope.
+          const { accounting: _local, authority: _authority, ...metadata } = result;
           results[index] = { index, path: result.source ? candidate.display : undefined, ...metadata, receipt };
         }
       };
@@ -274,7 +290,9 @@ export class FileScreening {
       const coverage = { ...discovered.coverage, complete: discovered.coverage.complete && completed === results.length,
         completedFiles: completed, unresolvedFiles: results.length - completed, totalSourceBytes: sourceBytes, admittedSourceBytes,
         stopReason: stopped(), evaluatedScope: 'enumerated-candidates-only', presentedJudgments: results.filter(result => result.judgment).length };
-      const output = { status: coverage.complete ? 'complete' : 'incomplete', threshold: 'unresolved', policyVersion: filePolicyVersion,
+      const output = { authority: { policyDigest: bound.identity, revision: bound.policy.revision,
+        configuration: bound.policy.configuration, sessionDigest: hash(this.sessionId) },
+        status: coverage.complete ? 'complete' : 'incomplete', threshold: 'unresolved', policyVersion: filePolicyVersion,
         judgment: null, source: null, receipt: null, coverage, accounting, results, elapsedMs: Math.max(0, this.now() - start) };
       // Metadata, never source, may exceed presentation capacity. Retain every file's unresolved marker.
       for (let index = results.length - 1; Buffer.byteLength(JSON.stringify(output)) > batchLimits.resultBytes && index >= 0; index--) {
@@ -291,6 +309,7 @@ export class FileScreening {
   async #single(input, { signal, accounting = { sourceChecks: 0, sourceCheckBytes: 0 }, consume = () => {}, admitted = () => {}, stopped = () => null,
     remainingSourceBytes = () => sourceByteLimit + 1 } = {}) {
     let snapshot, evaluation, prepared, bound;
+    const operationId = randomUUID();
     const generation = this.#generation;
     const read = (path, policy, maxBytes = sourceByteLimit + 1, initial = false) => {
       accounting.sourceChecks++;
@@ -347,9 +366,10 @@ export class FileScreening {
         current();
         const cached = this.#cache.get(cacheKey);
         this.#cache.delete(cacheKey); this.#cache.set(cacheKey, cached);
-        return { ...structuredClone(cached), source: { id: snapshot.id, digest: snapshot.digest, revision: snapshot.revision, bytes: snapshot.bytes },
+        return { ...structuredClone(cached), operationId, source: { id: snapshot.id, digest: snapshot.digest, revision: snapshot.revision, bytes: snapshot.bytes },
           receipt: null, cache: { hit: true, upstreamCalls: 0 }, accounting };
       }
+      this.observe({ kind: 'screen-start', operationId, pathId: snapshot.id, needId: hash(input.need) });
       evaluation = await capability.evaluate(request, { signal });
       if (sourceFailure) deny(sourceFailure);
       current();
@@ -357,7 +377,8 @@ export class FileScreening {
       const complete = evaluation.state === 'complete' && answer?.status === 'answered';
       const passes = complete && (answer.type === 'yes-no' ? answer.yesProbability >= 0.70 :
         question.relevantChoices.includes(answer.choice) && answer.confidence >= 0.70);
-      const result = { status: evaluation.state, threshold: passes ? 'positive' : complete ? 'not-positive' : 'unresolved',
+      const result = { operationId, authority: { policyDigest: bound.identity, revision: bound.policy.revision,
+        configuration: bound.policy.configuration, sessionDigest: hash(this.sessionId) }, status: evaluation.state, threshold: passes ? 'positive' : complete ? 'not-positive' : 'unresolved',
         policyVersion: filePolicyVersion, judgment: answer,
         question: { type: question.type, digest: prepared.questionDigest, relevantChoices: question.relevantChoices ?? null },
         source: { id: snapshot.id, digest: snapshot.digest, revision: snapshot.revision, bytes: snapshot.bytes },
@@ -374,7 +395,7 @@ export class FileScreening {
     } catch (error) {
       this.#cache.clear();
       const status = error instanceof Unavailable ? error.code : error.code === 'ENOENT' ? 'source-missing' : 'source-unavailable';
-      return { status, threshold: 'unresolved', policyVersion: filePolicyVersion, judgment: null,
+      return { operationId, status, threshold: 'unresolved', policyVersion: filePolicyVersion, judgment: null,
         source: null,
         coverage: { complete: false, evaluatedBytes: 0, totalBytes: null }, receipt: evaluation?.receipt ?? null, accounting };
     }
