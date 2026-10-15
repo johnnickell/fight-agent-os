@@ -7,7 +7,7 @@ import { privateDirectory, readPrivate, writePrivate } from './local-store.mjs';
 import { hash } from './screening-profile.mjs';
 import { ScreeningDispatch, buildMonitor } from './screening-dispatch.mjs';
 import { Unavailable } from './readiness.mjs';
-import { sourceSubject, validateRoleReport } from './screening-subject.mjs';
+import { sourceSubject, subjectGit, validateRoleReport } from './screening-subject.mjs';
 import { roleWork, completeRoleWork, pendingRoleWork } from './screening-work.mjs';
 
 const fail = code => { throw new Unavailable(code); };
@@ -29,6 +29,13 @@ function identity(cwd) {
   if (root !== cwd) fail('build-requires-checkout-root');
   const branch = git(cwd, 'branch', '--show-current');
   if (!branch.startsWith('feature/')) fail('build-requires-feature-branch');
+  // Even read-only working-tree Git queries can invoke configured filters. This finite route qualifies
+  // no project callbacks or nested repositories; inspect names/index metadata only, never execute them.
+  let filters = '';
+  try { filters = subjectGit(cwd, 'config', '--name-only', '--get-regexp', '^filter\\..*\\.(clean|smudge|process)$'); }
+  catch (error) { if (error.status !== 1) fail('build-git-configuration-unqualified'); }
+  if (filters.trim()) fail('build-external-git-filters-unsupported');
+  if (/(^|\0)160000 /.test(subjectGit(cwd, 'ls-files', '--stage', '-z'))) fail('build-submodules-unsupported');
   const common = realpathSync.native(resolve(cwd, git(cwd, 'rev-parse', '--git-common-dir')));
   const base = realpathSync.native(git(cwd, 'worktree', 'list', '--porcelain').match(/^worktree (.+)$/m)?.[1] ?? '');
   if (realpathSync.native(resolve(base, git(base, 'rev-parse', '--git-common-dir'))) !== common) fail('build-base-unresolved');

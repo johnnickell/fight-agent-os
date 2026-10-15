@@ -172,6 +172,10 @@ TASK-00160's limitations. Installing a package is not independent runtime qualif
 
 The host's finite `file_screening_work({build, operation})` interface is tied to the active role ticket; it cannot
 accept a command, caller path, prompt, model or permission override. The coordinator can obtain `identity` only.
+Git metadata queries disable fsmonitor/external diff/textconv and never qualify project callbacks: configured
+clean/smudge/process filters or indexed submodules hold Build before working-tree queries. No filter is executed
+or silently disabled, and no nested checkout is traversed. Such a repository needs an explicitly qualified trusted
+Git path; do not alter global configuration or claim universal Git support to bypass that hold.
 Children use:
 
 - `identity`: trusted checkout/origin/branch, assigned base, actual full head, exact porcelain status and source digest.

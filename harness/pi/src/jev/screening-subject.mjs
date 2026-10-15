@@ -14,8 +14,8 @@ export function subjectGit(cwd, ...args) {
 /** Bind tracked and untracked review bytes, not merely a head OID or dirty marker */
 export function sourceSubject(cwd, base, settings) {
   const head = subjectGit(cwd, 'rev-parse', 'HEAD').trim();
-  const status = subjectGit(cwd, 'status', '--porcelain=v1', '--untracked-files=all').replace(/\n$/, '');
-  const changed = subjectGit(cwd, 'diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', base, '--').split('\0').filter(Boolean);
+  const status = subjectGit(cwd, 'status', '--porcelain=v1', '--untracked-files=all', '--ignore-submodules=all').replace(/\n$/, '');
+  const changed = subjectGit(cwd, 'diff', '--no-ext-diff', '--no-textconv', '--ignore-submodules=all', '--name-only', '-z', base, '--').split('\0').filter(Boolean);
   const untracked = subjectGit(cwd, 'ls-files', '--others', '--exclude-standard', '-z').split('\0').filter(Boolean);
   const paths = [...new Set([...changed, ...untracked])].sort();
   if (paths.length > 128 || Buffer.byteLength(status) > 16384) throw new Unavailable('build-subject-limit');
