@@ -103,7 +103,7 @@ class Progress:
         try:
             if line.startswith(prefix):
                 item = json.loads(line[len(prefix):])
-                kinds = {"screen-start", "screen-complete", "cache-reuse", "receipt-admission", "exception", "blocked-read", "blocked-write", "session-bound"}
+                kinds = {"screen-start", "screen-complete", "cache-reuse", "receipt-admission", "exception", "blocked-read", "blocked-write", "session-bound", "work-required", "work-complete"}
                 if item.get("version") != "fight-file-screen-observation-v1" or item.get("kind") not in kinds:
                     return
                 session = item.get("session", "")

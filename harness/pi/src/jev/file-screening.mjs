@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { constants, openSync, closeSync, fstatSync, lstatSync, realpathSync, readSync } from 'node:fs';
+import { constants, openSync, closeSync, fstatSync, lstatSync, realpathSync, readSync, existsSync } from 'node:fs';
 import { isAbsolute, resolve, dirname, sep } from 'node:path';
 import { prepareEvaluation } from './judgments.mjs';
 import { Unavailable, reservationMicroUsd } from './readiness.mjs';
@@ -78,12 +78,15 @@ function openContained(path) {
 
 /** Read a bounded regular UTF-8 snapshot only after canonical access and opened-inode checks */
 export class FileSource {
-  authorize(path, policy) {
+  authorize(path, policy, { allowMissing = false } = {}) {
     const lexical = resolve(path);
-    const excluded = candidate => policy.excludedPaths.some(p => within(candidate, resolve(p))) ||
-      candidate.split(sep).some(part => policy.excludedNames.includes(part)) ||
-      candidate.split(sep).some(part => ['.git', '.ssh', '.aws', '.gnupg'].includes(part) ||
-        /^(\.env($|\.)|auth\.json$|id_(rsa|ed25519)($|\.)|.*\.(pem|key|p12|pfx)$)/i.test(part));
+    const excluded = (candidate, fold = false) => {
+      const key = fold ? candidate.toLowerCase() : candidate;
+      return policy.excludedPaths.some(p => within(key, fold ? resolve(p).toLowerCase() : resolve(p))) ||
+        key.split(sep).some(part => policy.excludedNames.some(name => (fold ? name.toLowerCase() : name) === part)) ||
+        key.split(sep).some(part => ['.git', '.ssh', '.aws', '.gnupg'].includes(part) ||
+          /^(\.env($|\.)|auth\.json$|id_(rsa|ed25519)($|\.)|.*\.(pem|key|p12|pfx)$)/i.test(part));
+    };
     if (excluded(lexical)) deny('sensitive-file');
     // Check lexical containment first: no metadata probing of unrelated caller paths.
     const roots = policy.allowedRoots.map(root => resolve(root));
@@ -91,13 +94,21 @@ export class FileSource {
     const canonicalRoots = roots.map(root => realpathSync.native(root));
     // Authority roots must be canonical operator paths, not mutable symlink pointers.
     if (canonicalRoots.some((root, index) => root !== roots[index])) deny('invalid-file-policy');
-    const canonical = realpathSync.native(lexical);
+    // Historical Git evidence may name a deleted path. Validate its entire lexical name and every
+    // surviving ancestor; this authorizes only that historical identity, never an ordinary missing-file read.
+    let ancestor = lexical;
+    if (allowMissing) while (!existsSync(ancestor) && ancestor !== dirname(ancestor)) ancestor = dirname(ancestor);
+    const canonical = resolve(realpathSync.native(ancestor), lexical.slice(ancestor.length).replace(/^\//, ''));
+    // Deleted components cannot be canonicalized on APFS. Conservatively reject exclusion aliases,
+    // including a wholly deleted protected subtree, rather than infer case-sensitive permission.
+    if (ancestor !== lexical && (excluded(lexical, true) || excluded(canonical, true))) deny('sensitive-file');
     if (!canonicalRoots.some(root => within(canonical, root))) deny('symlink-escape');
     if (excluded(canonical)) deny('sensitive-file');
     // Refuse all symlinks below the selected lexical root, including in-root aliases.
     const root = roots.filter(r => within(lexical, r)).sort((a, b) => b.length - a.length)[0];
     for (let cursor = lexical; cursor !== root; cursor = dirname(cursor)) {
-      if (lstatSync(cursor).isSymbolicLink()) deny('symlink-denied');
+      try { if (lstatSync(cursor).isSymbolicLink()) deny('symlink-denied'); }
+      catch (error) { if (!allowMissing || error.code !== 'ENOENT') throw error; }
     }
     return canonical;
   }

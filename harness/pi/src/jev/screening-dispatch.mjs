@@ -16,7 +16,7 @@ export function safeChildObservation(line) {
   try {
     if (line.startsWith('Fight screening: ')) {
       const item = JSON.parse(line.slice('Fight screening: '.length));
-      if (item.version !== 'fight-file-screen-observation-v1' || !['screen-start', 'screen-complete', 'cache-reuse', 'receipt-admission', 'exception', 'blocked-read', 'blocked-write', 'session-bound'].includes(item.kind) || !/^[a-f0-9]{64}$/.test(item.session)) return null;
+      if (item.version !== 'fight-file-screen-observation-v1' || !['screen-start', 'screen-complete', 'cache-reuse', 'receipt-admission', 'exception', 'blocked-read', 'blocked-write', 'session-bound', 'work-required', 'work-complete'].includes(item.kind) || !/^[a-f0-9]{64}$/.test(item.session)) return null;
       const safe = { kind: item.kind, session: item.session };
       if (Number.isSafeInteger(item.sequence) && item.sequence > 0) safe.sequence = item.sequence;
       if (typeof item.phase === 'string' && /^[A-Za-z0-9-]{1,48}$/.test(item.phase)) safe.phase = item.phase;

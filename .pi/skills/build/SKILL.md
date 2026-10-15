@@ -122,8 +122,9 @@ An enrolled coordinator's shell and generic child launchers stay denied. The sup
 `/screened-build TASK-NNNNN` in the selected enrolled feature-checkout root. It collects the already resolved
 project-context file and exact TASK path, verifies/pins the four role models, finite runtime and shared repair
 allowance, and previews this one Build authorization. It never enrolls roots, resolves credentials or calls a
-provider. Exact provider skills outside target roots must already have instruction authority; missing authority
-holds setup, not a wider source grant. The command queues this Build skill with the protected Build ID.
+provider. Exact provider skills and the provider `harness/pi/FILE_SCREENING_PROFILE.md` work/report contract must
+already have instruction authority; missing authority holds setup, not a wider source grant. The command queues
+this Build skill with the protected Build ID.
 
 Use `file_screening_status` to inspect the Build, then `file_screening_stage({build, role})` with `engineer`,
 `review`, `qa` or `land`. Production host code prepares the immutable ticket/request/attempt from its fixed role
@@ -131,8 +132,19 @@ instruction and current Git head, carries the selected skill and exact TASK assi
 monitor. No model-supplied prompt, path, command, model or runtime override is accepted. Subsequent roles require
 the preceding completed handoff: Engineer → Review; accepted Review → QA; PASS/N/A QA → land; demonstrated
 Review `revise`/QA `FAIL` → a shared bounded repair. Missing/INCOMPLETE/malformed reports or head drift hold.
+The host validates the role/report envelope and declared TASK/branch/base/head/exact status before writing any
+report bytes. It retains declared identity and dirty-source binding, never stamps current HEAD over another subject.
 This mechanical routing does not independently validate a verdict, waive evidence or authorize speculative repair.
 The coordinator still inspects the full report and criteria before choosing a permitted stage.
+
+For required role work, use `file_screening_work` under this Build: `identity` gives trusted Git metadata;
+`changes` establishes the exact assigned effective diff; `evidence` admits bounded base/current ranges by returned
+per-file ID, not caller path. `check`, `commit` and land-only `publication` wait for the protected external executor.
+Follow [the work/report contract](../../../harness/pi/FILE_SCREENING_PROFILE.md#required-role-work-and-external-execution):
+the already-authorized host services the exact request and completes it with source-bound metadata/evidence digest,
+never raw output, new authority or a per-child approval. Missing executor/unknown effects hold, not permission to
+use shell or claim a completed check. Reviewer/QA read-only roles cannot request commits/publication. Use the
+enrolled report envelopes there plus the complete canonical report bodies; format alone is not acceptance.
 
 A repeated native invocation resumes the same grant/counters. Unknown liveness holds its active claim. The default
 five repairs permit at most nineteen roles, each at most 1,800 seconds; grant expiry is at most 24 hours/profile

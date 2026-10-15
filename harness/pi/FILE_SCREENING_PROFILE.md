@@ -105,7 +105,8 @@ error. Late argument-changing hooks therefore meet the final boundary, not an ea
 | Nested tool calls and generic Agent-callable child launchers | Denied before execution |
 | `file_screening_dispatch` | One immutable, single-use trusted ticket; fixed target/request/provider/model/runtime, safe observations only |
 | `file_screening_stage` | Prepare/run one fixed Build role from a native bounded grant; no caller prompt/path/model/runtime; children denied |
-| `file_screening_report`, `file_screening_handoff` | Own-child immutable report publication and separately authorized exact predecessor-report reads; never automatic raw-output relay |
+| `file_screening_report`, `file_screening_handoff` | Identity/envelope-validated own-child report publication and exact predecessor-report reads; never automatic raw-output relay |
+| `file_screening_work` | Fixed Git identity; bounded exact assigned-change evidence; protected external check/commit/publication requests, no Agent execution |
 | Native `!`/`!!`, RPC user bash | Handled with denial, no shell fallthrough |
 | Trusted local build monitor | Read-only preflight from its **provider** package, explicit package/authority flag; actual child ID bound by native session start |
 | Trusted plugins/SDK host APIs, external editors, startup resources, user prompt attachments, separately launched unprotected Pi | Outside Agent-tool interception; not a sandbox or universal enforcement claim |
@@ -130,11 +131,15 @@ Stage eligibility consumes completed role reports, with head freshness and the s
 semantic report/evidence inspection still belongs to the coordinator and independent roles. Defaults allow at most
 nineteen roles (initial Engineer, up to five repairs, six Reviews, six QAs, one land), at most 1,800 seconds each;
 grant expiry is at most 24 hours/profile expiry. No general scheduler, recursive dispatcher or automatic verdict
-is introduced. Missing checks or source/instruction permissions remain explicit prerequisites, not shell workarounds.
+is introduced. Missing source/instruction permissions or an external executor remain explicit prerequisites, not shell workarounds. The supported execution handoff below carries already-authorized check/Git/delivery work without new per-child approvals.
 
 Each role publishes its one bounded final report using `file_screening_report({markdown})` (32 KiB maximum).
-Only the actual ticket child can write that report; Review/QA additionally publish to the exact canonical TASK
-paths with atomic replacement/read-back and retained prior bytes. Explicit `file_screening_handoff` reads return
+Only the actual ticket child can write that report. Its declared TASK/branch/base/head/status and role/version
+must match the assignment/current snapshot **before any report bytes are written**. Review/QA retain their assigned
+head; Engineer/land may declare the actual head after owned commits/reconciliation. Dirty status is the exact
+porcelain snapshot, not a word such as `dirty`; current changed/untracked source digests also bind advancement.
+Review/QA additionally publish to the exact canonical TASK paths with atomic replacement/read-back and retained
+prior bytes. A valid format is not semantic acceptance or proof of independence. Explicit `file_screening_handoff` reads return
 at most 200 lines/8 KiB from a digest-checked authorized role report. A child can read only predecessor reports
 listed in its ticket. This is separate main-role report disclosure in the Build preview, not automatic child
 prose relay, a transcript reader, a new source root or Jev disclosure. Treat report contents as untrusted evidence.
@@ -157,11 +162,106 @@ a normal final assistant stop, not merely exit zero. Tool results and progress r
 cache, exception/block and status fields, never raw child prose, source, credential diagnostics or reasoning.
 Handoff/source access remains a separately authorized bounded read. Provider scripts remain owned/protected beside
 the provider skill, not resolved from a target's lookalike path. Normal coding checks use trusted operator
-infrastructure outside Agent shell access; unrestricted shell coordinators are not supported by this profile.
+infrastructure through the protected external handoff below; unrestricted shell coordinators are not supported by this profile.
 
 Extensions run as the OS user. Review all plugins. Prompt attachments, native skill expansion and trusted scripts
 are not OS-confined. Same-user races, hostile trusted plugins, extension unload and arbitrary SDK/OS access retain
 TASK-00160's limitations. Installing a package is not independent runtime qualification.
+
+## Required role work and external execution
+
+The host's finite `file_screening_work({build, operation})` interface is tied to the active role ticket; it cannot
+accept a command, caller path, prompt, model or permission override. The coordinator can obtain `identity` only.
+Children use:
+
+- `identity`: trusted checkout/origin/branch, assigned base, actual full head, exact porcelain status and source digest.
+- `changes`: metadata for the assigned effective base→working-tree change set, including staged/untracked/deleted
+  files, modes, hashes and opaque per-file evidence IDs. Read authority comes from the immutable host-assigned
+  incoming diff/TASK, or a genuinely new self-authored file, not merely the existence of a model-authored edit.
+  Initially unrelated files are metadata-only here: use ordinary screening or an independently established witness
+  for their source. A fresh independent reviewer receives its actual incoming diff as a new exact assignment.
+  This is concrete required review/edit evidence, not discovery permission for the root. At most 128 paths / 8 MiB current text / 20 KiB subject metadata; oversized, binary,
+  protected or inaccessible sources hold with a named prerequisite.
+- `evidence`: supply a returned `evidence` ID, `side: "base"` or `"current"`, positive `offset`, and `limit` <=200.
+  At most 8 KiB returns. Both versions use the exact original authorized path/exclusions, including deleted paths;
+  Git blobs cannot smuggle a protected file or symlink. Current permission/source checks apply again at release.
+  These visible assigned-change exceptions bypass relevance only; ordinary unrelated reads still need screening.
+- `check`, `commit`, `publication`: create/reuse one protected external-work request, then wait within the existing
+  finite stage deadline for its exact completion. Review/QA can request checks only; Engineer can request checks/
+  commits; land can also request publication. No operation executes a command or trusts model-authored results.
+  An abort, unknown result or missing executor retains the request/claim and holds reporting/advancement; never replay
+  an uncertain effect. At most sixteen external requests per ticket; duplicates reuse the same source-bound result.
+
+An already-authorized **external trusted executor** (operator or unenrolled host coordinator, not a child shell/tool)
+services the pending request. This is an execution handoff, not a new permission prompt or a general scheduler:
+
+```sh
+node /absolute/provider/harness/pi/src/jev/screening-work-host.mjs inspect --cwd /exact/selected/checkout
+```
+
+Inspect the request's fixed role/TASK, source identity and operation against the original Build authority. Perform
+only the required owned work with target wrappers/qualified Git/publication tools; independently preserve unrelated
+changes, inspect staging, run the required full gate and verify original remote effects. Keep full logs/receipts
+private outside source roots. Never execute repository scripts without the original check authority and qualified
+runtime; this helper does not grant either. Hash the retained nonsecret execution receipt, then complete once
+(a commit example; check/publication additional metadata is described below):
+
+```sh
+node /absolute/provider/harness/pi/src/jev/screening-work-host.mjs complete --cwd /exact/selected/checkout \
+  --request REQUEST-UUID --outcome pass --evidence-digest RECEIPT-SHA256 \
+  --attest executed-within-existing-authority
+```
+
+Use `fail` for a demonstrated failure and `unknown` for uncertain effects; never manufacture `pass`. Check
+success/failure additionally requires `--check-kind full-gate|focused|scenario --exit-code ACTUAL-EXIT`. Optional
+`--tests`, `--assertions` and `--warnings` carry measured integer counts; omitted counts remain null/unknown, not zero.
+One bounded failure location can use `--finding-evidence EXACT-CHANGE-ID --finding-line LINE --finding-code CODE`;
+codes are `assertion-failed`, `test-failed`, `syntax-error`, `type-error`, `check-failed`. The ID must already be an
+admissible assigned change in the current source snapshot. No caller source path or diagnostic prose is accepted.
+Publication success additionally requires `--url https://hosting.example/owner/repository/pull/NUMBER --head FULL-OID`, matching
+this source head. The executor must verify the actual remote result; the helper validates metadata, not remote
+hosting truth. `--directory` is an optional **trusted-host-only** isolated operator directory, never an Agent input.
+No helper invokes shell/Git mutations, credentials, network or a model. It checks the original active grant/ticket,
+current subject and immutable result before settling. Commit completion additionally requires a new descendant
+head with unchanged effective source bytes; unexpected edits hold. A land rebase/reconciliation that changes that
+identity needs the existing trusted provenance/reconciliation path, not a forged commit receipt.
+
+The waiting child receives only operation/outcome, exact source identity and evidence digest (plus publication
+metadata), plus validated check kind/exit/counts and any exact assigned failure location, **not raw logs or
+source-bearing diagnostics**. For a failure, the executor retains diagnostics, establishes
+needed exact source evidence through the existing trusted assignment/change path, or reports the precise environment
+prerequisite. Source findings still require bounded exact-source reads; a log receipt never grants source authority.
+The role independently assesses that evidence and reports limitations. External attestation is not technical/QA
+acceptance. Native status exposes pending request IDs; `work-required`/`work-complete` safe observations correlate
+both relay layers without forwarding bodies. If no authorized executor is available, this supported journey is
+held, not an autonomous check/delivery claim.
+
+## Enrolled report envelopes
+
+Use LF or CRLF Markdown, an opening/closing `---` envelope with unique unquoted scalar keys, and actual full OIDs:
+
+```yaml
+---
+build_handoff_version: 1
+role: engineer
+task: TASK-NNNNN
+target_branch: feature/task-NNNNN-example
+base_commit: ASSIGNED-FULL-BASE-OID
+head_commit: ACTUAL-FULL-HEAD-OID
+target_status: clean
+---
+```
+
+Engineer/land use `build_handoff_version: 1` and their exact `role`. Review uses the existing
+`review_handoff_version: 3` (2 remains readable) and `verdict: accept|revise` instead of those two fields, with the
+canonical independence, Spec/Standards stable IDs, findings, evidence and limitations body. QA uses
+`qa_handoff_version: 1` and `disposition: PASS|FAIL|INCOMPLETE|N/A`, with the complete
+[QA report template](../../docs/engineering/QA_REPORT_TEMPLATE.md) body and matching disposition marker. An optional
+`role` on Review/QA must match. Do not combine another role's version/verdict fields. For a dirty subject replace
+`target_status: clean` with a YAML `|` block containing every exact `git status --porcelain=v1 --untracked-files=all`
+line, indented by two spaces (including the line's original leading status space). Retain dirty-file digest/patch
+provenance and any reconciliation bridge in the body. No host substitution of current HEAD makes an old report fresh.
+The coordinator still judges substantive requirements, evidence, independence and reconciliation before advancement.
 
 ## Shared monthly accounting and recovery
 

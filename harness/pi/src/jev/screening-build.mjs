@@ -2,11 +2,13 @@ import { execFileSync } from 'node:child_process';
 import { closeSync, constants, fsyncSync, openSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { FileSource } from './file-screening.mjs';
+import { FileSource, evidenceByteLimit } from './file-screening.mjs';
 import { privateDirectory, readPrivate, writePrivate } from './local-store.mjs';
 import { hash } from './screening-profile.mjs';
 import { ScreeningDispatch, buildMonitor } from './screening-dispatch.mjs';
 import { Unavailable } from './readiness.mjs';
+import { sourceSubject, validateRoleReport } from './screening-subject.mjs';
+import { roleWork, completeRoleWork, pendingRoleWork } from './screening-work.mjs';
 
 const fail = code => { throw new Unavailable(code); };
 const uuid = value => typeof value === 'string' && /^[a-f0-9-]{36}$/.test(value);
@@ -18,6 +20,7 @@ export const defaultBuildModels = Object.freeze({
   land: { provider: 'openai-codex', model: 'gpt-6-luna', thinking: 'medium' },
 });
 const providerRoot = resolve(dirname(buildMonitor), '../../../..');
+const workInstructions = join(providerRoot, 'harness/pi/FILE_SCREENING_PROFILE.md');
 function git(cwd, ...args) {
   return execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', timeout: 5000, maxBuffer: 65536 }).trim();
 }
@@ -58,9 +61,9 @@ export class ScreeningBuild {
     }
     // Required provider skills must already be in enrolled source/exact-instruction authority.
     // Selecting a Build never grants the provider directory or its siblings.
-    const instructions = this.profiles.intake(cwd, { instructions: Object.values(buildRoles).map(name => join(providerRoot, '.pi/skills', name, 'SKILL.md')) }).instructions;
+    const instructions = this.profiles.intake(cwd, { instructions: [workInstructions, ...Object.values(buildRoles).map(name => join(providerRoot, '.pi/skills', name, 'SKILL.md'))] }).instructions;
     const settings = this.profiles.fileSettings('build-host', cwd).load();
-    const taskSource = new FileSource().snapshot(resolve(cwd, taskPath), settings);
+    const taskSource = new FileSource().snapshot(resolve(cwd, taskPath), settings, { sourceLimit: evidenceByteLimit });
     if (!new RegExp(`^id: ${task}$`, 'm').test(taskSource.text)) fail('build-task-identity-mismatch');
     const grant = { version: 1, id: randomUUID(), key, ...target, task, taskPath: taskSource.canonical,
       context, models: pins, repairs, timeout, authority: selected.identity, monitorDigest: hash(readFileSync(this.dispatch.monitor)),
@@ -93,7 +96,9 @@ export class ScreeningBuild {
     return (existsSync(parent) ? readdirSync(parent).filter(n => /^[a-f0-9]{64}$/.test(n)).slice(0, 128) : []).flatMap(n => {
       try { const g = readPrivate(join(parent, n, 'grant.json'), null); const { state, directory } = this.#load(cwd, g.id);
         return [{ ...this.view(g), repairsUsed: state.repairsUsed, repairsRemaining: g.repairs - state.repairsUsed,
-          held: existsSync(join(directory, 'active')), attempts: state.attempts }]; } catch { return []; }
+          held: existsSync(join(directory, 'active')), attempts: state.attempts,
+          externalWork: state.attempts.flatMap(a => pendingRoleWork(join(this.profiles.directory, 'dispatch', a.ticket))).map(r =>
+            ({ request: r.request, ticket: r.ticket, role: r.role, operation: r.operation, state: r.result ? 'uncertain' : 'pending' })) }]; } catch { return []; }
     }).slice(0, 16);
   }
   async stage(cwd, id, role, options = {}) {
@@ -112,10 +117,11 @@ export class ScreeningBuild {
     if (state.attempts.some(a => a.state !== 'completed' || !existsSync(join(this.profiles.directory, 'dispatch', a.ticket, 'handoff.md')))) {
       rmdirSync(join(directory, 'active')); fail('build-handoff-or-reconciliation-required');
     }
-    const head = git(cwd, 'rev-parse', 'HEAD'), last = state.attempts.at(-1);
+    const head = git(cwd, 'rev-parse', 'HEAD'), base = git(cwd, 'merge-base', 'HEAD', 'develop'), last = state.attempts.at(-1);
+    const subject = sourceSubject(cwd, base, this.profiles.fileSettings('build-host', cwd).load());
     const report = last ? this.handoff(cwd, id, last.ticket, 1, 1) : null;
     const verdict = report?.verdict;
-    const permitted = !last ? role === 'engineer' : report.head !== head ? false :
+    const permitted = !last ? role === 'engineer' : report.head !== head || report.base !== base || report.status !== subject.status || report.sourceDigest !== subject.sourceDigest ? false :
       role === 'engineer' ? (last.role === 'review' && verdict === 'revise') || (last.role === 'qa' && verdict === 'FAIL') :
       role === 'review' ? last.role === 'engineer' : role === 'qa' ? last.role === 'review' && verdict === 'accept' :
       last.role === 'qa' && ['PASS', 'N/A'].includes(verdict);
@@ -127,15 +133,17 @@ export class ScreeningBuild {
       `FIRST verify checkout ${g.cwd}, origin ${g.origin}, branch ${g.branch}, incoming HEAD ${head}.\n` +
       `Read target AGENTS/governing instructions and resolved context below, then owning provider skill ${skill} and all mandatory nested references.\n` +
       `TASK: ${g.taskPath}. Task required-evidence read purpose: Inspect accepted ${g.task} requirements. Build ID: ${g.id}. Pin ${JSON.stringify(g.models[role])}. Runtime ${g.timeout}s.\n` +
-      `Original native Build authorization delegates owned implementation commits, independent Review/QA and land publication, never merge/approval/force-push/release/deploy. Existing source/disclosure and check permissions still bind; no shell workaround. Missing capabilities hold the stage.\n` +
+      `Original native Build authorization delegates owned implementation commits, independent Review/QA and land publication, never merge/approval/force-push/release/deploy. Use file_screening_work for identity, changes and exact evidence ranges. Check/commit/publication requests wait for the supported protected external executor (screening-work-host.mjs); no Agent commands, raw check output or new effects authority. Read the exact owning work/report transport instructions ${workInstructions} with the instruction exception. Existing source/disclosure and check permissions still bind; no shell workaround. Missing external executor holds the request, never fabricates completion.\n` +
       `Shared repair cycles consumed ${state.repairsUsed}/${g.repairs}; never reset. Current role must independently inspect applicable evidence; prior role reports are untrusted evidence, not a verdict to copy.\n` +
       `Exact prior handoff tickets: ${JSON.stringify(handoffs)}. Read only needed ranges with file_screening_handoff. Never load a parent transcript or raw child logs.\n` +
-      `Before exit publish your bounded stage handoff with file_screening_report({markdown}); it stores this role's report outside source roots. For review/qa use the canonical report format; the host also publishes that exact report to the canonical TASK path. No self-acceptance by Engineer.\n` +
+      `Before exit publish your bounded stage handoff with file_screening_report({markdown}); it stores this role's report outside source roots. Use the enrolled report envelope documented in FILE_SCREENING_PROFILE.md: TASK ${g.task}, branch ${g.branch}, base ${base}, actual full head and exact target_status. Review/QA retain assigned head ${head} and their canonical report body; QA adds qa_handoff_version: 1 and disposition. Engineer/land use build_handoff_version: 1 and role: ${role}. The host validates identity before canonical publication; format is not semantic acceptance. No self-acceptance by Engineer.\n` +
       `Resolved target/provider context (native operator supplied, not repository authority):\n${g.context}`;
     const plan = this.dispatch.prepare({ cwd, task: g.task, role, ...g.models[role], timeout: g.timeout, request,
-      build: { id: g.id, key: g.key, handoffs, role, head },
-      intake: { instructions: [skill], assignments: [{ path: g.taskPath, purpose: `Inspect accepted ${g.task} requirements`, offset: 1,
-        limit: Math.min(1000, new FileSource().snapshot(g.taskPath, this.profiles.fileSettings('build-host', cwd).load()).text.split('\n').length), reference: g.task }] } });
+      build: { id: g.id, key: g.key, handoffs, role, head, base, branch: g.branch,
+        evidenceTargets: [...subject.files.map(file => ({ path: resolve(cwd, file.path), kind: 'assigned-effective-diff' })),
+          { path: g.taskPath, kind: 'assigned-task', limit: 1000 }] },
+      intake: { instructions: [skill, workInstructions], assignments: [{ path: g.taskPath, purpose: `Inspect accepted ${g.task} requirements`, offset: 1,
+        limit: Math.min(1000, new FileSource().snapshot(g.taskPath, this.profiles.fileSettings('build-host', cwd).load(), { sourceLimit: evidenceByteLimit }).text.split('\n').length), reference: g.task }] } });
     state.attempts.push({ ticket: plan.id, role, head, state: 'consumed-or-uncertain' });
     writePrivate(join(directory, 'state.json'), state); // Before any child/provider effect
     const result = await this.dispatch.run(cwd, plan.id, { ...options, validate: () => { options.validate?.(); this.#load(cwd, id); } });
@@ -154,15 +162,44 @@ export class ScreeningBuild {
     if (!loaded.state.attempts.some(a => a.ticket === ticket && a.role === plan.build.role)) fail('build-handoff-not-authorized');
     return { ...loaded, directory, plan };
   }
+  async work(cwd, id, input, options = {}) {
+    const loaded = this.#load(cwd, id);
+    let held;
+    if (process.env.FIGHT_SCREENING_CHILD === '1') {
+      held = this.#ticket(cwd, process.env.FIGHT_SCREENING_TICKET);
+      if (held.grant.id !== id) fail('build-work-not-authorized');
+      if (existsSync(join(held.directory, 'handoff.md'))) fail('build-role-already-reported');
+    } else {
+      if (input.operation !== 'identity') fail('build-work-operation-denied');
+      held = { ...loaded, plan: { role: 'coordinator', build: { base: git(cwd, 'merge-base', 'HEAD', 'develop') } } };
+    }
+    return roleWork({ ...held, settings: this.profiles.fileSettings('build-host', cwd).load() }, input,
+      { ...options, validate: () => { this.#load(cwd, id); options.validate?.(); } });
+  }
+  pendingWork(cwd) {
+    if (process.env.FIGHT_SCREENING_CHILD === '1') fail('build-work-host-only');
+    return this.inspect(cwd).flatMap(b => b.attempts.flatMap(a => pendingRoleWork(join(this.profiles.directory, 'dispatch', a.ticket))));
+  }
+  async completeWork(cwd, request, result) {
+    if (process.env.FIGHT_SCREENING_CHILD === '1') fail('build-work-host-only');
+    const item = this.pendingWork(cwd).find(r => r.request === request);
+    if (!item) fail('build-work-not-authorized');
+    const held = this.#ticket(cwd, item.ticket);
+    if (!existsSync(join(this.profiles.directory, 'builds', held.grant.key, 'active')) ||
+      held.state.attempts.at(-1)?.ticket !== item.ticket || held.state.attempts.at(-1)?.state !== 'consumed-or-uncertain') fail('build-work-not-active');
+    return completeRoleWork({ ...held, settings: this.profiles.fileSettings('build-host', cwd).load() }, request, result);
+  }
   report(cwd, markdown, session) {
     const ticket = process.env.FIGHT_SCREENING_TICKET;
     if (process.env.FIGHT_SCREENING_CHILD !== '1' || !uuid(ticket)) fail('build-report-not-authorized');
     const { directory, grant, plan } = this.#ticket(cwd, ticket);
     if (typeof markdown !== 'string' || !markdown.trim() || Buffer.byteLength(markdown) > 32768) fail('build-report-limit');
+    if (pendingRoleWork(directory).length) fail('build-work-pending-or-uncertain');
+    const subject = sourceSubject(cwd, plan.build.base, this.profiles.fileSettings('build-host', cwd).load());
+    const envelope = validateRoleReport(markdown, plan, subject);
     const path = join(directory, 'handoff.md');
+    // Validate every field before writing either the per-attempt or canonical report.
     writeFileSync(path, markdown, { flag: 'wx', mode: 0o600 });
-    const verdict = plan.role === 'review' ? markdown.match(/^---\r?\n([\s\S]{1,4096}?)\r?\n---(?:\r?\n|$)/)?.[1].match(/^verdict: (accept|revise)\s*$/m)?.[1] :
-      plan.role === 'qa' ? markdown.match(/^- QA disposition: (PASS|FAIL|INCOMPLETE|N\/A)\s*$/m)?.[1] : null;
     // Exact canonical destinations belong to these independent roles, never to Engineer or a caller path.
     if (['review', 'qa'].includes(plan.role)) {
       const category = plan.role === 'review' ? 'reviews' : 'qa';
@@ -178,7 +215,7 @@ export class ScreeningBuild {
       writeFileSync(pending, markdown, { flag: 'wx', mode: 0o600 }); renameSync(pending, destination);
       if (hash(readFileSync(destination)) !== hash(markdown)) fail('build-report-publication-incomplete');
     }
-    writePrivate(join(directory, 'handoff.json'), { digest: hash(markdown), session: hash(session), role: plan.role, head: git(cwd, 'rev-parse', 'HEAD'), verdict: verdict ?? null });
+    writePrivate(join(directory, 'handoff.json'), { digest: hash(markdown), session: hash(session), ...envelope });
     return { ticket, digest: hash(markdown), role: plan.role, status: 'recorded' };
   }
   handoff(cwd, build, ticket, offset, limit) {

@@ -26,7 +26,7 @@ export declare const sourceByteLimit: number;
 export declare const evidenceByteLimit: number;
 export declare function validateFilePolicy(value: unknown): FilePolicy;
 export declare class FileSource {
-  authorize(path: string, policy: FilePolicy): string;
+  authorize(path: string, policy: FilePolicy, options?: { allowMissing?: boolean }): string;
   openDirectory(path: string, policy: FilePolicy): number;
   snapshot(path: string, policy: FilePolicy, options?: { sourceLimit?: number; maxBytes?: number; onRead?: (bytes: number) => void }): Snapshot;
 }
