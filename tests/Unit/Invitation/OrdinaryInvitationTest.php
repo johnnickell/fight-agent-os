@@ -8,11 +8,7 @@ use App\Adapter\Console\AddUserRoleCommand;
 use App\Adapter\Console\InviteUserCommand;
 use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\CredentialDelivery\RandomActivationCredentialGenerator;
-use App\Application\Invitation\CommandHandler\AddUserRoleHandler;
-use App\Application\Invitation\CommandHandler\InviteOrdinaryUserHandler;
 use App\Application\Invitation\ConsoleAssignmentPolicy;
-use App\Application\Invitation\ConsoleCommandIntent;
-use App\Application\Invitation\ConsoleUserCommandGuard;
 use App\Application\Invitation\ConsoleUserOperation;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\Command\AddUserRole;
@@ -324,54 +320,6 @@ final class OrdinaryInvitationTest extends TestCase
     }
 
     /**
-     * Rejects unsupported handler messages before any state or evidence mutation
-     */
-    public function testUnexpectedHandlerMessages(): void
-    {
-        $operation = $this->operation();
-        foreach ([new AddUserRoleHandler($operation), new InviteOrdinaryUserHandler($operation)] as $handler) {
-            try {
-                $handler->handle(CommandMessage::create(new InvitePendingUser(
-                    'console:'.UserId::generate(),
-                    UserId::generate(),
-                    EmailAddress::fromString('user@example.test')
-                )));
-                self::fail('Unexpected messages must fail closed.');
-            } catch (InvalidArgumentException) {
-                self::assertSame([], $this->effects);
-                self::assertSame([], $this->evidence);
-            }
-        }
-    }
-
-    /**
-     * Isolates unscoped and overlapping invocation state without poisoning the next operation
-     */
-    public function testInvocationScopeIsolation(): void
-    {
-        $operation = $this->operation();
-        try {
-            $operation->dispatch($this->invitation());
-            self::fail('An invocation scope is mandatory.');
-        } catch (LogicException) {
-            self::assertSame([], $this->effects);
-        }
-        $overlap = null;
-        $operation = $this->operation(function () use (&$operation, &$overlap): void {
-            try {
-                $operation->run($this->invitation());
-            } catch (LogicException $error) {
-                $overlap = $error;
-            }
-        });
-        self::assertTrue($operation->run($this->invitation())->success);
-        self::assertInstanceOf(LogicException::class, $overlap);
-        self::assertCount(1, $this->evidence);
-        self::assertTrue($operation->run($this->invitation())->success);
-        self::assertCount(2, $this->evidence);
-    }
-
-    /**
      * Withholds confirmation evidence when the target disappears or existing membership is lost
      */
     #[DataProvider('incompleteMembership')]
@@ -381,7 +329,7 @@ final class OrdinaryInvitationTest extends TestCase
         $this->user = $this->view($target, roles: [RoleId::generate()]);
         $reads = 0;
         $operation = $this->operation(null, static function ($query, $normal) use ($absent, &$reads) {
-            if ($query instanceof GetUserById && ++$reads >= 3 && $absent) {
+            if ($query instanceof GetUserById && ++$reads >= 2 && $absent) {
                 return null;
             }
 
@@ -489,7 +437,7 @@ final class OrdinaryInvitationTest extends TestCase
     }
 
     /**
-     * Creates a unit boundary with real owned handlers and filters, but no package business implementation
+     * Observes package effects and owned policy without reimplementing upstream business transactions
      *
      * @phpstan-param (callable(Command): void)|null $effect
      * @phpstan-param (callable(mixed, mixed): mixed)|null $queryResult
@@ -519,34 +467,21 @@ final class OrdinaryInvitationTest extends TestCase
         $audit->method('add')->willReturnCallback(function (AuditEvidence $evidence): void {
             $this->evidence[] = $evidence;
         });
-        $intent = new ConsoleCommandIntent();
         $policy = new ConsoleAssignmentPolicy($queries);
         $router = $this->createStub(SynchronousCommandBus::class);
         $bus = new CommandPipeline($router);
-        $bus->addFilter(new ConsoleUserCommandGuard($intent, $policy));
-        $operation = new ConsoleUserOperation($bus, $queries, $transactions, $audit, $intent, $policy);
-        $router->method('dispatch')->willReturnCallback(function (
-            CommandMessage $message
-        ) use (
-            $operation,
-            $effect
-        ): void {
+        $operation = new ConsoleUserOperation($bus, $queries, $transactions, $audit, $policy);
+        $router->method('dispatch')->willReturnCallback(function (CommandMessage $message) use ($effect): void {
             $command = $message->payload();
             assert($command instanceof Command);
-            if ($command instanceof InviteOrdinaryUser) {
-                (new InviteOrdinaryUserHandler($operation))->handle($message);
-            } elseif ($command instanceof AddUserRole) {
-                (new AddUserRoleHandler($operation))->handle($message);
-            } else {
-                if ($effect !== null) {
-                    $effect($command);
-                }
-                $this->effects[] = $command;
-                if ($command instanceof InvitePendingUser) {
-                    $this->user = $this->view($command->getUserId(), $command->getEmail()->toString(), roles: []);
-                } elseif ($command instanceof AssignRoleToUser) {
-                    $this->user = $this->view($command->getTargetUserId(), $this->user->getEmail()->toString());
-                }
+            if ($effect !== null) {
+                $effect($command);
+            }
+            $this->effects[] = $command;
+            if ($command instanceof InvitePendingUser) {
+                $this->user = $this->view($command->getUserId(), $command->getEmail()->toString(), roles: []);
+            } elseif ($command instanceof AssignRoleToUser) {
+                $this->user = $this->view($command->getTargetUserId(), $this->user->getEmail()->toString());
             }
         });
 

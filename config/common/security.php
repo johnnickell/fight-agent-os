@@ -2,22 +2,26 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Security\Password\Argon2idPasswords;
+use App\Adapter\Security\UnauthenticatedContextProvider;
+use App\Application\Authorization\AuthenticatedRoleAssignment;
 use App\Application\Authorization\InstallationAuthority;
 use App\Application\Authorization\InvitationCorrectionAuthorization;
 use App\Application\Authorization\SessionAdministrationDecision;
 use App\Application\Authorization\UnavailableEmailChangeAdministration;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationAdministrationAuthorization;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContextProvider;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\EmailChangeGrant\Service\EmailChangeAdministrationAuthorization;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionAdministrationAuthorization;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Auth\Hmac\HmacRequestService;
-use Fight\Common\Adapter\Auth\Security\PhpPasswordHasher;
-use Fight\Common\Adapter\Auth\Security\PhpPasswordValidator;
 use Fight\Common\Application\Auth\RequestService;
 use Fight\Common\Application\Auth\Security\PasswordHasher;
 use Fight\Common\Application\Auth\Security\PasswordValidator;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Service\Container;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -33,6 +37,15 @@ return static function (Container $container): void {
         return $value;
     };
 
+    $container->set(AuthenticationContextProvider::class, static fn(): AuthenticationContextProvider =>
+        new UnauthenticatedContextProvider());
+    $container->set(AuthenticatedRoleAssignment::class, static fn(Container $c) =>
+        new AuthenticatedRoleAssignment(
+            $c->get(AuthenticationContextProvider::class),
+            $c->get(AuthoritativePrincipalResolver::class),
+            $c->get(RoleRepository::class),
+            $c->get(CommandBus::class)
+        ));
     $container->set(ValidatorInterface::class, static function (): ValidatorInterface {
         return Validation::createValidator();
     });
@@ -58,12 +71,10 @@ return static function (Container $container): void {
         EmailChangeAdministrationAuthorization::class,
         static fn(): EmailChangeAdministrationAuthorization => new UnavailableEmailChangeAdministration()
     );
-    $container->set(PasswordHasher::class, static function (): PasswordHasher {
-        return new PhpPasswordHasher(PASSWORD_ARGON2ID);
-    });
-    $container->set(PasswordValidator::class, static function (): PasswordValidator {
-        return new PhpPasswordValidator(PASSWORD_ARGON2ID);
-    });
+    $container->set(PasswordHasher::class, static fn(Container $container): PasswordHasher =>
+        $container->get(Argon2idPasswords::class));
+    $container->set(PasswordValidator::class, static fn(Container $container): PasswordValidator =>
+        $container->get(Argon2idPasswords::class));
     $container->set(
         RequestService::class,
         static function () use ($requiredEnvironmentValue): RequestService {

@@ -40,8 +40,8 @@
 | [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | done | [TICKET-00014](../tickets/00014-TICKET.md) |
 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | done | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | done | [TICKET-00015](../tickets/00015-TICKET.md) |
-| [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | ready-for-agent | [TICKET-00015](../tickets/00015-TICKET.md) |
-| [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
+| [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | done | [TICKET-00015](../tickets/00015-TICKET.md) |
+| [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | done | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
@@ -448,4 +448,9 @@
 | [TASK-00443](00443-TASK.md) | Configure and run currently authorized scheduled synchronization | needs-info | [TICKET-00109](../tickets/00109-TICKET.md) |
 | [TASK-00444](00444-TASK.md) | Synchronize from the Dashboard and complete the instruction-change journey | ready-for-agent | [TICKET-00109](../tickets/00109-TICKET.md) |
 | [TASK-00445](00445-TASK.md) | Record independent managed Reviews | needs-info | [TICKET-00083](../tickets/00083-TICKET.md) |
+| [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | done | — |
+| [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | done | — |
 <!-- /planning:records -->

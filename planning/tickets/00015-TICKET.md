@@ -2,10 +2,23 @@
 id: TICKET-00015
 epic: EPIC-00004
 title: Establish managed authority and guarded bootstrap
-status: ready-for-agent
+status: done
 ---
 
 # Establish managed authority and guarded bootstrap
+
+## Current bootstrap/composition amendment — TASK-00446
+
+The maintainer's approved [TASK-00446](../tasks/00446-TASK.md) supersedes this record's permanent claim/no-retry,
+concurrent-bootstrap and dedicated-container/terminal-intent requirements. Trusted operators run one bootstrap
+at a time: existing Super Admin or failed authoritative lookup refuses; otherwise proceed. Partial/failure
+without a Super Admin permits another manual attempt, not automatic retry/reset/resume or implicit reinvitation.
+All commands share one glob-loaded graph/bus. Raw package messages are trusted infrastructure; authenticated
+assignment uses an explicit Application use case preserving fresh actor/exact permission checks. Filters are
+trusted composition code, not hostile message-transformer isolation. Historical claim/audit rows and the earlier
+reports below are preserved, not current proof. Independent acceptance of the new implementation belongs to
+TASK-00446; package commits, ordinary/additive role policy, audit/activation and external permission obligations
+remain in force.
 
 ## Problem statement
 
@@ -15,7 +28,7 @@ A new private installation needs deterministic managed authority and a safe firs
 
 Use `ReconcileManagedPolicy` to maintain `ROLE_USER`, `ROLE_SUPER_ADMIN`, and the exact catalog: `VIEW_DASHBOARD`, `READ_OWN_SESSIONS`, `DELETE_OWN_SESSIONS`, `READ_USERS`, `INVITE_USERS`, `MANAGE_USER_INVITATIONS`, `ASSIGN_SUPER_ADMIN`, `REMOVE_SUPER_ADMIN`, `DISABLE_USERS`, `ENABLE_USERS`, `DELETE_USERS`, `RESTORE_USERS`, `MANAGE_USER_ROLES`, `READ_SESSIONS`, `DELETE_SESSIONS`, `READ_ROLES`, `CREATE_ROLES`, `UPDATE_ROLES`, `DELETE_ROLES`, `READ_PERMISSIONS`, `MANAGE_ROLE_PERMISSIONS`, and `READ_SWAGGER`. The former planned `LIST_USERS` becomes `READ_USERS` before policy implementation; pending invitation remains `INVITE_USERS`, not unrestricted `CREATE_USERS`. `ROLE_USER` gets only dashboard and own-session permissions. `ROLE_SUPER_ADMIN` gets all approved permissions; installation-wide ones are marked `SUPER_ADMIN_ONLY`, with current authoritative checks, not role-name bypasses. Do not define unused generic create/update user or profile permissions until a concrete supported operation exists.
 
-Provide a one-time guarded console bootstrap that reconciles policy, verifies no Super Admin authority exists, creates a pending identity through `InvitePendingUser`, assigns `ROLE_SUPER_ADMIN` through package behavior, records a distinct bootstrap actor and durable audit evidence, and requires normal activation. Provide a trusted console path for ordinary invitations with managed `ROLE_USER` as the normal second, independently committed package step. Accept a committed/potentially emailed invitation after assignment failure, with truthful partial/uncertain output and safe correction guidance. Provide trusted additive/idempotent `user:role:add` for an existing user and existing role, excluding authoritative Super Admin; require explicit internal acknowledgement/operator attribution and no registration, resend, role creation/removal or web access. Later elevated invitation/assignment remains a distinct capability requiring authenticated `ASSIGN_SUPER_ADMIN`, explicit confirmation, and audit evidence.
+Provide a one-time guarded console bootstrap that reconciles policy, verifies no Super Admin assignment exists, and durably claims bootstrap with distinct operator/target attribution before dispatching package behavior. Then create a pending identity through `InvitePendingUser`, assign `ROLE_SUPER_ADMIN` in a separate package commit, record distinct bootstrap audit evidence, and require normal activation. Accept early delivery and retained partial/uncertain results, with no claim reset or second bootstrap after the claim commits; interrupted claimed bootstrap recovery remains separately planned. This is not atomic invitation/assignment/audit. Provide a trusted console path for ordinary invitations with managed `ROLE_USER` as the normal second, independently committed package step. Accept a committed/potentially emailed invitation after assignment failure, with truthful partial/uncertain output and safe correction guidance. Provide trusted additive/idempotent `user:role:add` for an existing user and existing role, excluding authoritative Super Admin; require explicit internal acknowledgement/operator attribution and no registration, resend, role creation/removal or web access. Later elevated invitation/assignment remains a distinct capability requiring authenticated `ASSIGN_SUPER_ADMIN`, explicit confirmation, and audit evidence.
 
 Out of scope: public registration, `ROLE_ADMIN`, implementation of custom-role/permission administration (TICKET-00031), role-name bypasses, multi-workspace authority, administrator-chosen passwords, and enforcing tier grants merely by storing a tier label.
 
@@ -24,13 +37,13 @@ Out of scope: public registration, `ROLE_ADMIN`, implementation of custom-role/p
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
 | Reconcile managed authority | `ReconcileManagedPolicy` | `PreviewManagedPolicy`, role/permission repository reads | `ManagedPolicyReconciled` | Managed roles, permissions, and grants match version-controlled policy idempotently |
-| Bootstrap the first Super Admin | Explicit Agent OS console orchestrator using `InvitePendingUser` and `AssignRoleToUser` | Query whether effective Super Admin authority already exists | `UserInvited`, `RoleAssignedToUser`, safe audited bootstrap evidence | One pending elevated identity and package-owned recoverable invitation state are committed; later bootstrap is refused |
+| Bootstrap the first Super Admin | Explicit Agent OS console orchestrator using `InvitePendingUser` and `AssignRoleToUser` | Query whether effective Super Admin authority already exists | `UserInvited`, `RoleAssignedToUser`, safe audited bootstrap evidence | One durable claim precedes independent invitation/assignment commits and separate completion audit; truthful partial outcomes retain committed state, and later bootstrap is refused even after interruption |
 | Invite an ordinary user from console | Public `InvitePendingUser`, then managed `ROLE_USER` assignment through configured buses | Existing-user/pending-state/policy lookup; safe postcommit inspection | Normal package events after each commit | Independent invitation/assignment commits; early recoverable delivery; partial completion is safe non-success, never false rollback or blind reinvitation |
 | Correct an existing user's role from console | `user:role:add --internal --operator=UUID --user=UUID --role=UUID`, public `AssignRoleToUser` | Public existing-user/role safe queries and authoritative non-Super-Admin policy | `RoleAssignedToUser` when applicable | Additive/idempotent eligible assignment retaining existing roles; no new identity/grant/delivery or role definition |
 
 ## Validation and permissions
 
-Canonical email, managed identifiers, exact policy membership, pending lifecycle, and one-time bootstrap guard are authoritative and race-safe in PostgreSQL. Reconciliation is idempotent and reports drift safely. Bootstrap must fail closed after any effective Super Admin exists, including competing attempts.
+Canonical email, managed identifiers, exact policy membership, pending lifecycle, and one-time bootstrap guard are authoritative and race-safe in PostgreSQL. Reconciliation is idempotent and reports drift safely. Bootstrap must fail closed after any authoritative managed Super Admin assignment exists, regardless of user lifecycle, or after a bootstrap claim commits, including competing attempts and interrupted claims. The eligibility/claim transaction owns its PostgreSQL transaction-duration guard and mandatory claim audit; package commands retain independent transactions. Failure before a known uncommitted claim permits retry; after claim commit no second target, reinvitation, reset or resume is included. Safe actual-state inspection distinguishes partial completion from uncertainty, and missing mandatory completion audit is non-success. See TASK-00038's owner amendment for exact boundaries.
 
 Bootstrap is a separately audited trusted-console capability, not anonymous web authority. Ordinary console invitation and corrective role addition require explicit trusted operator access. Sequencing/partial policy belongs in Application; Console transports input/output only. Package transactions/events remain normal, with no consumer participant/deferred buffer, outer/nested/joining transaction, direct handler call or repository audit hook. Prohibit Super Admin correction by stable managed identity and package meaning against the actual dispatched payload before mutation, preserving actor/target and protected-tier/reference guarantees under filters and stale/renamed/aliased state. If the supported contract cannot guarantee this, stop with concrete evidence. Mandatory operator/target audit remains explicit; separate postcommit audit boundaries/crash uncertainty must not be presented as atomic assignment plus audit. Web elevated invitation requires `INVITE_USERS` and `ASSIGN_SUPER_ADMIN`; direct managed-role assignment also requires `MANAGE_USER_ROLES`; removing managed Super Admin requires `MANAGE_USER_ROLES` plus separate `REMOVE_SUPER_ADMIN`, with last-admin/self-change safeguards in Agent OS Application, regardless of package handler permission checks. All other authorization is permission- or ownership-based. Package ownership authorization callbacks for invitation, session and email-change workflows remain distinct from global permission grants.
 
@@ -42,7 +55,8 @@ Bootstrap is a separately audited trusted-console capability, not anonymous web 
 - `READ_SWAGGER` is managed, `SUPER_ADMIN_ONLY`, and granted only to managed `ROLE_SUPER_ADMIN`; the qualified protected-tier contract prevents custom-role and direct-Agent delegation.
 - Repeat reconciliation is idempotent; drift preview and repair have deterministic tests.
 - Fresh-install bootstrap succeeds once, creates a pending Super Admin, emits no raw grant, and uses normal delivery/activation.
-- Existing-authority and competing-bootstrap tests prove later attempts fail safely.
+- Existing-assignment and competing-bootstrap tests prove one durable claim winner, no loser dispatch and permanent refusal after claim commit, including interrupted operations and later lifecycle/role changes.
+- Bootstrap failures retain independently committed state and may leave a pending unelevated user or unconfirmed completion audit. Output distinguishes known partial state from uncertainty, never claims cross-step rollback or blindly reinvites, and discloses separately planned interrupted-claim recovery. No outer/joining transaction, deferred event buffer or consumer credential-delivery workaround is introduced.
 - Normal ordinary invitation assigns only `ROLE_USER` and uses recoverable delivery. Each business step owns its package commit/rollback; assignment failure retains invitation, which may already have begun delivery. Postcommit exceptions require safe actual-state inspection and truthful partial/uncertain output with target ID/correction instruction, never blind reinvitation.
 - Trusted existing-user/existing-role correction is additive/idempotent, retains other roles, works in a fresh process after manager failure, creates no identity/grant/delivery, and rejects authoritative Super Admin/wrong target/changed actor before mutation, including relevant filter transformations and stale/renamed/aliased role state.
 - Audit evidence distinguishes bootstrap, console operator, target and later authenticated actor without secrets; separate postcommit role-audit boundaries/missing evidence/uncertainty are explicit.
@@ -55,10 +69,18 @@ Bootstrap is a separately audited trusted-console capability, not anonymous web 
 |---|---|---|
 | [TASK-00036](../tasks/00036-TASK.md) | Reconcile the exact managed authority policy | done |
 | [TASK-00037](../tasks/00037-TASK.md) | Deliver trusted ordinary-user console invitations | done |
-| [TASK-00038](../tasks/00038-TASK.md) | Guard the one-time Super Admin bootstrap | ready-for-agent |
+| [TASK-00038](../tasks/00038-TASK.md) | Guard the one-time Super Admin bootstrap | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+HOSTED-01 (2026-10-15): reopened this TICKET with TASK-00038 for its confirmed bootstrap test-fixture dependency
+on an externally supplied delivery key. The same 21 hosted failures reproduce on the clean guarded task runtime
+without that key; the separate development database remains empty/unmigrated. The scoped fixture correction and
+fresh verification are recorded in TASK-00038. Earlier Review/QA acceptance is historical pending independent
+assessment of the repaired candidate; other children remain done and EPIC-00004 remains ready-for-agent.
+
+On 2026-10-15 the owner directed that TASK-00038 be fixed as part of its build after comparing TASK-00037's separate-commit approach with the package atomicity blocker. TASK-00038 now accepts a durably consumed one-time claim followed by independent package invitation/assignment commits and separate completion audit, truthful partial/uncertain results, early package delivery and explicit interrupted-claim recovery limitations. The claim remains closed after any later failure: no reset, second identity or resume is included. This supersedes that TASK's original atomic-result/complete-rollback requirements, not package ownership ADRs or normal permission requirements. TASK-00038 now implements the permanent claim, independent package steps, separate completion audit, dedicated console isolation and fresh normal assignment authorization in its selected worktree; Engineer verification is complete (897 backend tests / 6474 assertions; full gate pass in 182.09s), while independent Review/QA remain pending. Interrupted-claim recovery is explicitly unavailable and separately planned.
 
 Revision-5 owner amendment under TASK-00037 accepts independent invitation/ordinary-role commits and narrowly requests trusted existing-role correction excluding Super Admin. It does not expand TICKET-00031/web administration or amend ADRs. Revision 6 implements the amended path, pending fresh independent Review/QA: normal package transactions/events, terminal actual-payload protection, truthful inspected partial outcomes, additive existing-role correction and separately committed attributed membership-confirmation audit (including successful repeats). Assignment and role audit are not atomic; a fresh correction confirms current membership without reinvitation or retroactively attributing an interrupted earlier action. The supported writer is the fixed installation catalog. Revision-5's alternate-policy probe remains a conditional diagnostic for future expanded writers, not a demonstrated in-scope upstream/product prerequisite; independent Review supplied the fixed-writer countercheck. Historical acceptance applies only to earlier candidates.
 

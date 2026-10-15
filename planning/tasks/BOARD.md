@@ -23,8 +23,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | — | — |
-| 38 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | ready-for-agent | — | — |
-| 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | — | — |
+| 40 | [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | — | — |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 | 118 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | [TICKET-00038 — Guard Pi tool execution with deterministic restrictions and Jev](../tickets/00038-TICKET.md) | ready-for-agent | — | — |
@@ -35,6 +34,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00283](00283-TASK.md) | Protect email-change issuance material | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -43,10 +43,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00377](00377-TASK.md) | — |
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
-| 40 | [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00038](00038-TASK.md) | — |
 | 41 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00040](00040-TASK.md) | — |
 | 42 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00041](00041-TASK.md) | — |
-| 43 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00039](00039-TASK.md), [TASK-00042](00042-TASK.md) | — |
+| 43 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00042](00042-TASK.md) | — |
 | 45 | [TASK-00045](00045-TASK.md) | Enforce browser authentication request controls | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00043](00043-TASK.md) | — |
 | 46 | [TASK-00046](00046-TASK.md) | Deliver the canonical email and password login journey | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00045](00045-TASK.md) | — |
 | 47 | [TASK-00047](00047-TASK.md) | Deliver rotating refresh and current-session logout | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00046](00046-TASK.md) | — |
@@ -310,6 +309,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00439](00439-TASK.md) | Return the published checkout safely to default | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | ready-for-agent | [TASK-00438](00438-TASK.md) | — |
 | — | [TASK-00440](00440-TASK.md) | Publish and recover instruction changes in the Dashboard | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | ready-for-agent | [TASK-00439](00439-TASK.md), [TASK-00433](00433-TASK.md) | — |
 | — | [TASK-00444](00444-TASK.md) | Synchronize from the Dashboard and complete the instruction-change journey | [TICKET-00109 — Synchronize the designated checkout safely](../tickets/00109-TICKET.md) | ready-for-agent | [TASK-00443](00443-TASK.md), [TASK-00435](00435-TASK.md), [TASK-00440](00440-TASK.md) | — |
+| — | [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | [TASK-00447](00447-TASK.md) | — |
+| — | [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | [TASK-00447](00447-TASK.md) | — |
 
 ## Needs Info
 
@@ -420,6 +421,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify tool-mediated execution boundaries | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | done | — | [PR #88](https://github.com/johnnickell/fight-agent-os/pull/88) |
 | 2 | [TASK-00145](00145-TASK.md) | Enable opt-in trusted local HTTPS | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | done | — | [PR #39](https://github.com/johnnickell/fight-agent-os/pull/39) |
+| 2 | [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | — (standalone chore) | done | — | [PR #100](https://github.com/johnnickell/fight-agent-os/pull/100) |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |
@@ -466,6 +468,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 35 | [TASK-00035](00035-TASK.md) | Independently accept the authentication and dashboard production handoff | [TICKET-00014 — Accept the authentication and dashboard design language](../tickets/00014-TICKET.md) | done | — | [PR #72](https://github.com/johnnickell/fight-agent-os/pull/72) |
 | 36 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | done | — | [PR #80](https://github.com/johnnickell/fight-agent-os/pull/80) |
 | 37 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | done | — | [PR #95](https://github.com/johnnickell/fight-agent-os/pull/95) |
+| 38 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | done | — | [PR #100](https://github.com/johnnickell/fight-agent-os/pull/100) |
+| 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | done | — | [PR #102](https://github.com/johnnickell/fight-agent-os/pull/102) |
 | 44 | [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | done | — | [PR #87](https://github.com/johnnickell/fight-agent-os/pull/87) |
 | 49 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #92](https://github.com/johnnickell/fight-agent-os/pull/92) |
 | 50 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | done | — | [PR #73](https://github.com/johnnickell/fight-agent-os/pull/73) |
@@ -491,4 +495,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | — (standalone bug) | done | — | [PR #77](https://github.com/johnnickell/fight-agent-os/pull/77) |
 | — | [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | — (standalone chore) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
 | — | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | [TICKET-00084 — Coordinate local TASK delivery through an open reviewed PR](../tickets/00084-TICKET.md) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
+| — | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | — (standalone chore) | done | — | [PR #103](https://github.com/johnnickell/fight-agent-os/pull/103) |
 <!-- /planning:board -->

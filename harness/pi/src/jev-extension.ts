@@ -44,7 +44,7 @@ export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
       return undefined;
     } catch {
       readiness.invalidate(); judgments?.invalidate();
-      return 'invalid-or-expired-setup';
+      return 'invalid-setup';
     }
   }
   function present(ctx: ExtensionContext, failure?: string) {
@@ -108,8 +108,8 @@ export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
         const disclosure = await ctx.ui.select('Operator disclosure ceiling (consumer permission is also required)',
           ['fixed-synthetic-only', 'authorized-supplied-state']);
         if (!disclosure) return;
-        if (!await ctx.ui.confirm('Disclosure and price permission (valid 24 hours)',
-          `Allow ${disclosure} to OpenRouter/TypeSafe; confirm current $0.042/M input, free output and 64000-token maximum at the model page. Real charges apply. No calls are authorized by setup alone.`)) return;
+        if (!await ctx.ui.confirm('One-time disclosure and price setup (no periodic renewal)',
+          `Allow ${disclosure} to OpenRouter/TypeSafe at $0.042/M input, free output and 64000-token maximum; confirm these prices at the model page. Saved until you change or remove setup; changed connection/price pins require setup again. Consumer/project permission is separate. Real charges apply. No calls are authorized by setup alone.`)) return;
         try {
           const config = settings.save({ endpoint: connection.endpoint, model: connection.model, evaluator: connection.evaluator,
             price: connection.price,

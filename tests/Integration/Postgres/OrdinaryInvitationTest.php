@@ -11,9 +11,6 @@ use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use App\Domain\Authorization\InstallationManagedPolicy;
-use App\Domain\Invitation\Command\AddUserRole;
-use App\Domain\Invitation\Command\InviteOrdinaryUser;
-use App\Domain\Invitation\ConsoleRoleInput;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -535,96 +532,9 @@ SQL);
      */
     public static function filterVetoes(): iterable
     {
-        foreach ([InviteOrdinaryUser::class, InvitePendingUser::class, AssignRoleToUser::class] as $command) {
+        foreach ([InvitePendingUser::class, AssignRoleToUser::class] as $command) {
             yield [$command, true];
             yield [$command, false];
-        }
-    }
-
-    /**
-     * Rejects filter-transformed elevation before assignment while retaining the ordinary invitation
-     */
-    public function testFilterCannotTransformOrdinaryAuthority(): void
-    {
-        $filter = $this->createStub(CommandFilter::class);
-        $filter->method('process')->willReturnCallback(static function (
-            CommandMessage $message,
-            callable $next
-        ): void {
-            $command = $message->payload();
-            if ($command instanceof AssignRoleToUser) {
-                $message = CommandMessage::create(new AssignRoleToUser(
-                    $command->getActorId(),
-                    $command->getTargetUserId(),
-                    RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID)
-                ));
-            }
-            $next($message);
-        });
-        $this->container->get('messaging.command.bus')->addFilter($filter);
-        self::assertSame(1, $this->runConsole());
-        $this->assertPartial('missing');
-        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
-        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM user_role_assignments'));
-        self::assertCount(1, $this->events);
-    }
-
-    /**
-     * Refuses actual filtered invitation actor, target and email changes before the first commit
-     */
-    #[DataProvider('invitationTransformations')]
-    public function testInvitationFilteredPayload(bool $outer, string $field): void
-    {
-        $reached = 0;
-        $filter = $this->createStub(CommandFilter::class);
-        $filter->method('process')->willReturnCallback(static function (
-            CommandMessage $message,
-            callable $next
-        ) use (
-            $outer,
-            $field,
-            &$reached
-        ): void {
-            $command = $message->payload();
-            if (
-                ($outer && $command instanceof InviteOrdinaryUser)
-                || (!$outer && $command instanceof InvitePendingUser)
-            ) {
-                $reached++;
-                $data = $command->toArray();
-                $key = match ($field) {
-                    'actor' => $outer ? 'operator_id' : 'actor_id',
-                    'target' => 'user_id',
-                    default => 'email'
-                };
-                $data[$key] = match ($field) {
-                    'actor' => ($outer ? '' : 'console:').UserId::generate()->toString(),
-                    'target' => UserId::generate()->toString(),
-                    default => 'changed@example.test'
-                };
-                $message = CommandMessage::create($command::fromArray($data));
-            }
-            $next($message);
-        });
-        $this->container->get('messaging.command.bus')->addFilter($filter);
-        self::assertSame(1, $this->runConsole());
-        self::assertSame(1, $reached);
-        self::assertSame(InviteUserCommand::FAILURE_MESSAGE."\n", $this->error);
-        $this->assertNoInvitation();
-        self::assertSame([], $this->events);
-    }
-
-    /**
-     * Supplies actual owned and package invitation transformations
-     *
-     * @return iterable<array{bool, string}>
-     */
-    public static function invitationTransformations(): iterable
-    {
-        foreach ([true, false] as $outer) {
-            foreach (['actor', 'target', 'email'] as $field) {
-                yield [$outer, $field];
-            }
         }
     }
 
@@ -744,70 +654,6 @@ SQL);
     }
 
     /**
-     * Rejects changed actual actor, target and role before package writes
-     */
-    #[DataProvider('correctionTransformations')]
-    public function testCorrectionFilteredPayload(string $stage, string $field): void
-    {
-        [$user, $role] = $this->existingUserAndRole();
-        $reached = 0;
-        $filter = $this->createStub(CommandFilter::class);
-        $filter->method('process')->willReturnCallback(static function (
-            CommandMessage $message,
-            callable $next
-        ) use (
-            $stage,
-            $field,
-            &$reached
-): void {
-            $command = $message->payload();
-            if (
-                ($stage === 'outer' && $command instanceof AddUserRole)
-                || ($stage === 'package' && $command instanceof AssignRoleToUser)
-            ) {
-                $reached++;
-                $actor = $command instanceof AddUserRole ? $command->input->operatorId : $command->getActorId();
-                $target = $command instanceof AddUserRole ? $command->input->userId : $command->getTargetUserId();
-                $roleId = $command instanceof AddUserRole ? $command->input->roleId : $command->getRoleId();
-                $actor = $field === 'actor' ? UserId::generate() : $actor;
-                $target = $field === 'target' ? UserId::generate() : $target;
-                if ($field === 'role') {
-                    $roleId = RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID);
-                }
-                $replacement = new AssignRoleToUser($actor, $target, $roleId);
-                if ($stage === 'outer') {
-                    $replacement = new AddUserRole(new ConsoleRoleInput(
-                        $actor->toString(),
-                        $target->toString(),
-                        $roleId->toString()
-                    ));
-                }
-                $message = CommandMessage::create($replacement);
-            }
-            $next($message);
-        });
-        $this->container->get('messaging.command.bus')->addFilter($filter);
-        self::assertSame(1, $this->runRole($user, $role));
-        self::assertSame(1, $reached);
-        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM user_role_assignments'));
-        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
-    }
-
-    /**
-     * Supplies actual transformed command payloads at both owned and package boundaries
-     *
-     * @return iterable<array{string, string}>
-     */
-    public static function correctionTransformations(): iterable
-    {
-        foreach (['outer', 'package'] as $stage) {
-            foreach (['actor', 'target', 'role'] as $field) {
-                yield [$stage, $field];
-            }
-        }
-    }
-
-    /**
      * Inspects committed membership after a package postcommit event failure without claiming missing role audit
      */
     public function testAssignmentPostcommitFailure(): void
@@ -916,26 +762,6 @@ SQL);
     }
 
     /**
-     * Does not mistake existing membership for completion when an assignment filter vetoes the request
-     */
-    public function testCorrectionVetoWithExistingMembership(): void
-    {
-        [$user, $role] = $this->existingUserAndRole();
-        self::assertSame(0, $this->runRole($user, $role));
-        $filter = $this->createStub(CommandFilter::class);
-        $filter->method('process')->willReturnCallback(static function (CommandMessage $message, callable $next): void {
-            if (!$message->payload() instanceof AssignRoleToUser) {
-                $next($message);
-            }
-        });
-        $this->container->get('messaging.command.bus')->addFilter($filter);
-        self::assertSame(1, $this->runRole($user, $role));
-        self::assertSame('confirmed', json_decode($this->error, true)['assignment']);
-        self::assertSame('unconfirmed', json_decode($this->error, true)['audit']);
-        self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
-    }
-
-    /**
      * Seeds existing public aggregates without creating invitation grants
      *
      * @return array{string, string}
@@ -988,8 +814,6 @@ SQL);
     private function newContainer(): Container
     {
         $container = require dirname(__DIR__, 3).'/config/services.php';
-        $configure = require dirname(__DIR__, 3).'/config/application/console_invitation.php';
-        $configure($container);
         $container->set(Connection::class, fn(): Connection => $this->connection);
         $container->set(Clock::class, fn(): Clock => $this->clock);
         $container->set(InvitationDeliveryCipher::class, static fn(): InvitationDeliveryCipher =>

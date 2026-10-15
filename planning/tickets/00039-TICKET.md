@@ -173,8 +173,9 @@ within task/role authority need no bespoke replacement executor. Shell can bypas
 same-user state: universal enforcement/containment is not claimed. Restrictive shell/MCP replacements are deferred;
 TASK-00160's optional deterministic profile is unchanged. No model judgment grants authority. Preserve explicit
 file receipts, shared accounting/liabilities, bounded historical test grants, safe observations and independent
-canonical workflows. AC8 representative-work and applicable visual evidence are not waived. Shared price-confirmation
-persistence is separately owned by TASK-00450, not an enrollment renewal requirement.
+canonical workflows. AC8 representative-work and applicable visual evidence are not waived. TASK-00450's shared
+price-confirmation persistence is integrated from approved `develop` after PR #103 merged; connection setup and
+project enrollment have no periodic renewal. Existing timestamps, finite grants and disclosure limits are preserved.
 Retain the 0.70 rule, independently checked permissions, current-source receipts and bounded evidence-backed
 exceptions. Make setup failures and every screening/cache/exception/blocked path visible. No universal sandbox,
 external-harness coverage, batch implementation or managed Workflow completion is implied. Existing decomposition

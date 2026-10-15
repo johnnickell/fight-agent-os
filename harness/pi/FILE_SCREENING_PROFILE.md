@@ -21,9 +21,11 @@ occurs by reading these instructions.
    TASK-00160's optional deterministic policy remains separate and unchanged, including its exact-script shell policy.
 2. Reuse [Pi-managed OpenRouter setup](README.md#jev-setup-and-readiness-operator-only), with the pinned Jev
    evaluator and `authorized-supplied-state` disclosure. Setup resolves no credential and makes no request.
-   **This branch still has the shared 24-hour price-confirmation check.** TASK-00450 separately owns removing
-   that timer; its unmerged implementation is not imported here. That shared price limitation is not an enrollment
-   lease. `/jev check` is a separately confirmed billed synthetic request, not source/command disclosure authority.
+   Shared connection/price setup is standing for the approved pins and limits, with no periodic renewal.
+   TASK-00450's timer removal is integrated from approved `develop`; existing timestamps/identities need no refresh.
+   Changed pins or invalid settings need explicit repair/setup, not automatic higher-price approval. Project/source/
+   command authority remains separate. `/jev check` is a separately confirmed billed synthetic request, not
+   source/command disclosure authority.
 3. Run `/file-screening setup` in the intended canonical project root. Enter extra protected paths and exact
    governing/selected-skill instruction files (semicolon-separated). Explicitly consent to source and bounded
    nonsecret final-command/context disclosure, then inspect the full effective preview before confirmation.
