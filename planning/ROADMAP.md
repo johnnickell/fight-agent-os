@@ -74,6 +74,11 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 
 ## Current planning handoff
 
+The approved [local Pi terminal workspace split](tickets/00110-TICKET.md#approved-decomposition--2026-10-15)
+is complete: TASK-00447 has no external blockers; TASK-00448 and TASK-00449 depend only on it. The log pane
+reads the existing shared main-checkout runtime; isolated containers and full observability remain separate.
+These unranked additions preserve existing Board priorities and other maps' planning handoffs.
+
 The closed vision map's original EPIC-00005–00010 destinations now have accepted **TICKET coverage**; see the
 [requirement-phase coverage and next phase](wayfinder/complete-agent-os-vision-map.md#original-map-requirement-phase-coverage-and-next-phase)
 and [TICKET-00109's approved final split](tickets/00109-TICKET.md#approved-task-decomposition-and-current-handoff).
