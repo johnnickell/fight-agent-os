@@ -11,6 +11,14 @@
 | [usable-web-application-foundation-map](usable-web-application-foundation-map.md) | Closed |
 <!-- /planning:maps -->
 
+## Current routing
+
+Use the [Roadmap's current planning handoff](../ROADMAP.md#current-planning-handoff) and
+[blended delivery strategy](../ROADMAP.md#approved-blended-delivery-strategy) after the planning merges.
+The maps below retain their accepted scope and historical approvals; closed maps have no decision frontier.
+Consult the [Board](../tasks/BOARD.md) for active work and executable priority, not historical map snapshots or
+retired planning-worktree paths. A missing implementation supplier remains a hold, not a reason to reopen every map.
+
 ## Observability planning handoff
 
 [Operational logs and failure diagnostics](operational-observability-map.md) is **Closed**, with WF-036–042 resolved
@@ -37,6 +45,7 @@ mandatory collection/storage/authority/browser/resource qualification gates. Gen
 alerting and error grouping are deferred; independent health/loss visibility remains required. No implementation,
 permission assignment, production deployment or ongoing runtime grant follows from planning closure.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/` for read-only Board-based work selection.
-No implementation, runtime experiment or publication is invoked. Recheck upstream/IDs before future allocation or
-publication; terminal-first/Board priority and other maps' handoffs are unchanged.
+Next: `/skill:next` from the current checkout for read-only Board-based work selection.
+No implementation, runtime experiment or publication is invoked. Recheck upstream/IDs before future allocation;
+TASK priorities and qualification holds are unchanged. Earlier branch/worktree snapshots record planning history,
+not the current delivery route.

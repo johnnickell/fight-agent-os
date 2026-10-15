@@ -215,10 +215,13 @@ EPIC-00008's retained managed TICKET-00083 rather than its historical local-only
 The selected original EPIC-00005–00010 planning phases are complete with
 [TICKET-00109's approved final split](../tickets/00109-TICKET.md#approved-task-decomposition-and-current-handoff).
 Next: `/skill:next` for Board-based selection, not implementation. Unrelated maps retain their own handoffs.
-Publication reconciliation preserves upstream TASK-00138 completion: no active TASK remains and TASK-00139 is first
-ready. Upstream local screening TASK-00309 is distinct; our managed Review is now TASK-00445. Earlier active-work/
-counts in this map's decomposition checkpoints are historical. Current publication evidence is in
-[TICKET-00109](../tickets/00109-TICKET.md#authorized-planning-publication-checkpoint).
+Use the [Board](../tasks/BOARD.md) for current active work and ready ordering, and the
+[Roadmap](../ROADMAP.md#approved-blended-delivery-strategy) for blended delivery strategy. TASK-00138's completed
+qualification is not production orchestration. Upstream local screening TASK-00309 is distinct; managed Review
+is TASK-00445. Earlier active-work/counts and terminal-first priority statements in this map's decomposition
+checkpoints are historical; accepted scope and supplier constraints remain. The
+[TICKET-00109 publication checkpoint](../tickets/00109-TICKET.md#authorized-planning-publication-checkpoint)
+retains its original evidence, not a live Board snapshot.
 TICKET-00083 has approved TASK-00445 and TASK-00310–00320 coverage, TICKET-00085 TASK-00321–00326,
 TICKET-00086 TASK-00327–00332, TICKET-00087 TASK-00333–00338, TICKET-00088 TASK-00339–00342 and TICKET-00089
 TASK-00343–00347. TICKET-00090 adds TASK-00348–00354, TICKET-00091 TASK-00355–00360 and TICKET-00092
@@ -261,7 +264,7 @@ creation/managed publication are not whole-journey prerequisites and no prior ow
 TICKET-00109 adds TASK-00441–00444 for explicit check/status, exact fast-forward/recovery, currently authorized
 scheduling and the focused Dashboard/final real journey. Protected fetch/custody, conditional Git/physical-exclusion
 and scheduled actor/delegation/runtime mappings remain held. Planning completion is not executable priority or
-runtime qualification; preserve accepted TASKs, unmet suppliers and the Board's terminal-first order. Do not launch
+runtime qualification; preserve accepted TASKs, unmet suppliers and the Board's authored execution order. Do not launch
 implementation or reopen closed decisions. Latest planning checks are in
 [TICKET-00109](../tickets/00109-TICKET.md#authorized-planning-publication-checkpoint); the publication-stage full build
 passed, with final documented-tree verification/publication pending at that checkpoint.
