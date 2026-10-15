@@ -2,10 +2,11 @@ import type { ScreeningProfiles, IntakeRequest } from './screening-profile.mjs';
 export declare const buildMonitor: string;
 export declare function safeChildObservation(line: string): Record<string, unknown> | null;
 export type DispatchInput = { cwd: string; request: string; task: string; role: string; provider: string; model: string;
-  thinking: string; timeout?: number; intake?: IntakeRequest | null };
+  thinking: string; timeout?: number; intake?: IntakeRequest | null;
+  build?: { id: string; key: string; handoffs: string[]; role: string; head: string } | null };
 export type DispatchPlan = { version: 1; id: string; cwd: string; authority: string; task: string; role: string; provider: string;
   model: string; thinking: string; timeout: number; expiresAt: number; monitor: string; monitorDigest: string;
-  requestDigest: string; intake: string | null };
+  requestDigest: string; intake: string | null; build: { id: string; key: string; handoffs: string[]; role: string; head: string } | null };
 export type DispatchResult = { ticket: string; state: 'completed' | 'incomplete'; observations: number; childOutput: string;
   provider: string; model: string; thinking: string };
 export declare class ScreeningDispatch {

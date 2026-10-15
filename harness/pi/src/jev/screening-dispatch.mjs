@@ -18,10 +18,14 @@ export function safeChildObservation(line) {
       const item = JSON.parse(line.slice('Fight screening: '.length));
       if (item.version !== 'fight-file-screen-observation-v1' || !['screen-start', 'screen-complete', 'cache-reuse', 'receipt-admission', 'exception', 'blocked-read', 'blocked-write', 'session-bound'].includes(item.kind) || !/^[a-f0-9]{64}$/.test(item.session)) return null;
       const safe = { kind: item.kind, session: item.session };
+      if (Number.isSafeInteger(item.sequence) && item.sequence > 0) safe.sequence = item.sequence;
       if (typeof item.phase === 'string' && /^[A-Za-z0-9-]{1,48}$/.test(item.phase)) safe.phase = item.phase;
       for (const key of ['reason', 'decision']) if (typeof item[key] === 'string' && /^[a-z-]{1,80}$/.test(item[key])) safe[key] = item[key];
       for (const key of ['pathId', 'needId']) if (typeof item[key] === 'string' && /^[a-f0-9]{64}$/.test(item[key])) safe[key] = item[key];
       if (identifier(item.operationId)) safe.operationId = item.operationId;
+      for (const [key, max] of [['elapsedMs', 1800000], ['offset', 1000000000], ['lines', 1000]]) {
+        if (Number.isSafeInteger(item[key]) && item[key] >= 0 && item[key] <= max) safe[key] = item[key];
+      }
       safe.costUsd = typeof item.costUsd === 'number' && Number.isFinite(item.costUsd) && item.costUsd >= 0 ? item.costUsd : null;
       if (item.kind === 'cache-reuse') safe.providerCalls = 0;
       return safe;
@@ -29,8 +33,16 @@ export function safeChildObservation(line) {
     if (line.startsWith('Fight screening status: ')) {
       const item = JSON.parse(line.slice('Fight screening status: '.length));
       if (!['active', 'degraded', 'disabled'].includes(item.state)) return null;
-      return { kind: 'dispatch-progress', decision: item.state,
-        reason: typeof item.reason === 'string' && /^[a-z-]{1,80}$/.test(item.reason) ? item.reason : undefined };
+      const safe = { kind: 'dispatch-progress', decision: item.state,
+        reason: typeof item.reason === 'string' && /^[a-z-]{1,80}$/.test(item.reason) ? item.reason : undefined, budget: {} };
+      if (typeof item.session === 'string' && /^[a-f0-9]{64}$/.test(item.session)) safe.session = item.session;
+      if (typeof item.phase === 'string' && /^[A-Za-z0-9-]{1,48}$/.test(item.phase)) safe.phase = item.phase;
+      for (const key of ['availableMicroUsd', 'reservedMicroUsd', 'settledMicroUsd']) {
+        if (Number.isSafeInteger(item.budget?.[key]) && item.budget[key] >= 0) safe.budget[key] = item.budget[key];
+      }
+      if (typeof item.budget?.resetsAt === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(item.budget.resetsAt) && Number.isFinite(Date.parse(item.budget.resetsAt)) && new Date(item.budget.resetsAt).toISOString() === item.budget.resetsAt) safe.budget.resetsAt = item.budget.resetsAt;
+      if (['enroll-project', 'reconcile-legacy', 'configure-credentials', 'wait-month-reset', 'inspect-reload', 'screen-then-read'].includes(item.nextActionCode)) safe.nextActionCode = item.nextActionCode;
+      return safe;
     }
   } catch { /* Nonprotocol diagnostics never become Agent-visible source */ }
   return null;
@@ -39,7 +51,7 @@ export function safeChildObservation(line) {
 /** Dispatch only immutable, single-use operator/host-prepared build requests; never accept shell or prompt input */
 export class ScreeningDispatch {
   constructor(profiles, { now = Date.now, monitor = buildMonitor } = {}) { this.profiles = profiles; this.now = now; this.monitor = monitor; }
-  prepare({ cwd, request, task, role, provider, model, thinking, timeout = 300, intake = null }) {
+  prepare({ cwd, request, task, role, provider, model, thinking, timeout = 300, intake = null, build = null }) {
     const selected = this.profiles.selection(cwd);
     if (!selected || process.env.FIGHT_SCREENING_CHILD === '1') fail('dispatch-not-authorized');
     if (typeof request !== 'string' || !request.trim() || Buffer.byteLength(request) > 32768 ||
@@ -53,7 +65,7 @@ export class ScreeningDispatch {
     const requestPath = join(attempt, 'request.md');
     const manifest = { version: 1, id, cwd: realpathSync.native(cwd), authority: selected.identity,
       task, role, provider, model, thinking, timeout, expiresAt: Math.min(selected.profile.expiresAt, this.now() + 3600000),
-      monitor: this.monitor, monitorDigest: hash(readFileSync(this.monitor)), requestDigest: hash(request), intake };
+      monitor: this.monitor, monitorDigest: hash(readFileSync(this.monitor)), requestDigest: hash(request), intake, build };
     if (intake) {
       // Only already established, digest-bound authority may be carried into a child.
       const established = this.profiles.intake(cwd, intake);
@@ -102,7 +114,7 @@ export class ScreeningDispatch {
     const args = [plan.monitor, '--attempt', plan.attempt, '--task', plan.task, '--role', plan.role,
       '--provider', plan.provider, '--model', plan.model, '--thinking', plan.thinking, '--timeout', String(plan.timeout), '--screening-dispatch'];
     const child = spawn('python3', args, { cwd: plan.cwd, shell: false, detached: true,
-      stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, FIGHT_SCREENING_CHILD: '1',
+      stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, FIGHT_SCREENING_CHILD: '1', FIGHT_SCREENING_TICKET: id,
         FIGHT_SCREENING_INTAKE: plan.intake ? join(plan.directory, 'intake.json') : '' } });
     let timer, watchdog, stopping = false, output = '', observations = 0;
     const stop = () => {

@@ -1,4 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +9,8 @@ import type { ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-w
 import { FileSource, FileScreening, type ScreenResult } from './jev/file-screening.mjs';
 import { FileScreeningSettings, readPrivate } from './jev/local-store.mjs';
 import { ScreeningDispatch, buildMonitor } from './jev/screening-dispatch.mjs';
+import { ScreeningBuild, defaultBuildModels, type BuildRole } from './jev/screening-build.mjs';
+import { getSupportedThinkingLevels } from '@earendil-works/pi-ai';
 import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
 import { FileAdmission } from './jev/file-admission.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
@@ -16,8 +19,9 @@ import { fileOperations } from './tool-policy/effects.mjs';
 import type { ConsumerConnection, Connection, OperatorConfiguration, Json } from './jev/judgments.mjs';
 
 const sourceDir = dirname(fileURLToPath(import.meta.url));
+const buildInstructions = resolve(dirname(buildMonitor), '../SKILL.md');
 const rule = readFileSync(new URL('../FILE_SCREENING_RULE.md', import.meta.url), 'utf8');
-const enforcedRule = `Enrolled file screening is enforced. Discovery content needs a current positive Jev receipt. Call jev_read_file with an information need and typed question; then read with its admission receipt, questionDigest, identical need and explicit offset/limit. Ordinary reads without evidence return no source. Instruction exceptions require a trusted exact operator/host instruction witness; required-evidence exceptions require a trusted operator/host assignment or verified required-reference path/purpose/range. file_locate establishes bounded verified-symbol targets without returning source. Never invent evidence, infer batch permission or bypass a rejection through another tool. Shell, content search, alternate/nested tools and generic child launchers are denied. file_screening_dispatch accepts only a preauthorized immutable single-use ticket; no shell, prompt, path, model or authority overrides. Trusted native/build processes independently bind actual sessions under the same monthly cap. Child output stays private; dispatch returns safe status, not source or prose. Mandatory native context and trusted host assignment/reference intake establish exact per-file witnesses, never model claims. Inspect file_screening_status or /file-screening for precise setup/recovery actions. This qualified Harness boundary is not an OS sandbox.`;
+const enforcedRule = `Enrolled file screening is enforced. Discovery content needs a current positive Jev receipt. Call jev_read_file with an information need and typed question; then read with its admission receipt, questionDigest, identical need and explicit offset/limit. Ordinary reads without evidence return no source. Instruction exceptions require a trusted exact operator/host instruction witness; required-evidence exceptions require a trusted operator/host assignment or verified required-reference path/purpose/range. file_locate establishes bounded verified-symbol targets without returning source. Never invent evidence, infer batch permission or bypass a rejection through another tool. Shell, content search, alternate/nested tools and generic child launchers are denied. For an ordinary Build the native /screened-build command records one bounded authorization; file_screening_stage prepares/runs only its pinned fixed roles. file_screening_dispatch accepts only a preauthorized immutable single-use ticket; neither tool accepts shell, prompt, path, model or authority overrides. file_screening_report records only the actual child's bounded final report; file_screening_handoff separately admits exact predecessor-report ranges, never a transcript or source permission. Trusted native/build processes independently bind actual sessions under the same monthly cap. Child output stays private; dispatch returns safe status, not source or prose. Mandatory native context and trusted host assignment/reference intake establish exact per-file witnesses, never model claims. Inspect file_screening_status or /file-screening for precise setup/recovery actions. This qualified Harness boundary is not an OS sandbox.`;
 const parameters = Type.Object({
   path: Type.Optional(Type.String({ minLength: 1, maxLength: 4096 })),
   paths: Type.Optional(Type.Array(Type.String({ minLength: 1, maxLength: 4096 }), { minItems: 1, maxItems: 50 })),
@@ -32,10 +36,10 @@ const parameters = Type.Object({
   ]),
 }, { additionalProperties: false });
 const textResult = (value: unknown, isError = false) => ({ content: [{ type: 'text' as const, text: typeof value === 'string' ? value : JSON.stringify(value) }], details: value, isError });
-const allowed = ['read', 'write', 'edit', 'jev_read_file', 'file_locate', 'file_screening_status', 'file_screening_dispatch'];
+const allowed = ['read', 'write', 'edit', 'jev_read_file', 'file_locate', 'file_screening_status', 'file_screening_dispatch', 'file_screening_stage', 'file_screening_handoff', 'file_screening_report'];
 // Pin every executable admission/evaluator dependency, not only this entry module.
 const sources = [fileURLToPath(import.meta.url), ...['jev', 'tool-policy'].flatMap(dir => readdirSync(join(sourceDir, dir))
-  .filter(name => /\.(mjs|py)$/.test(name)).map(name => join(sourceDir, dir, name))), join(sourceDir, 'jev-extension.ts'), buildMonitor, join(sourceDir, 'screening-bootstrap.mjs')];
+  .filter(name => /\.(mjs|py)$/.test(name)).map(name => join(sourceDir, dir, name))), join(sourceDir, 'jev-extension.ts'), buildMonitor, buildInstructions, join(sourceDir, 'screening-bootstrap.mjs')];
 
 type Dependencies = { settings?: FileScreeningSettings; configuration: () => OperatorConfiguration | null;
   profiles: ScreeningProfiles; credentialConfigured: (ctx: ExtensionContext) => boolean };
@@ -52,6 +56,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0;
   const ledger = new MonthlyLedger(profiles.directory);
   const dispatch = new ScreeningDispatch(profiles);
+  const build = new ScreeningBuild(profiles, { dispatch });
   const safeCode = (error: unknown) => error instanceof Error && 'code' in error && typeof error.code === 'string' && /^[a-z-]{1,80}$/.test(error.code) ? error.code : 'profile-unavailable';
   function observe(event: Record<string, unknown>) {
     if (!live || !context) return;
@@ -104,11 +109,14 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (!reason && (budget?.session.availableMicroUsd ?? 0) < 2688) reason = 'session-budget';
     }
     return { state: selected ? reason ? 'degraded' : 'active' : 'disabled', enforcement: selected ? reason ? 'held-with-bounded-exceptions' : 'receipt-enforced' : 'not-enrolled',
-      reason: reason ?? (selected ? null : 'not-enrolled'), session: hash(sessionId), budget, allocation,
+      reason: reason ?? (selected ? null : 'not-enrolled'), session: hash(sessionId),
+      phase: /^[A-Za-z0-9-]{1,48}$/.test(process.env.FIGHT_SCREENING_PHASE ?? '') ? process.env.FIGHT_SCREENING_PHASE : 'local', budget, allocation,
       credential: selected && dependencies.credentialConfigured(ctx) ? 'configured-resolution-unchecked' : 'not-configured',
       bindingLimit: budget ? budget.availableMicroUsd <= budget.session.availableMicroUsd ? 'monthly' : 'session' : 'unavailable',
       coverage: selected ? 'Pi 1.2.0 native Agent tools and external build children; wrapped read/write/edit; shell/search/nested/generic-child denied; single-use operator/host-pinned build dispatch; generic child launchers denied' : 'none',
       dispatch: selected ? dispatch.inspect(ctx.cwd) : [],
+      builds: selected ? build.inspect(ctx.cwd) : [],
+      nextActionCode: !selected ? 'enroll-project' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'screen-then-read',
       nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce legacy writers and conservatively import all undated liabilities; never reset accounting' : reason === 'credential-unavailable' ? 'Operator: configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' :
         reason === 'monthly-budget' ? 'Wait until reset or inspect pending liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct the named setup/coverage failure and reload. Bounded established exceptions remain available where access permits.' :
           'Use jev_read_file then receipt-bound read; configured credentials and live provider readiness are not proved by status' };
@@ -166,6 +174,31 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           return textResult(result, result.state !== 'completed');
         } catch (error) { return textResult({ blocked: safeCode(error) }, true); }
       } });
+    pi.registerTool({ name: 'file_screening_stage', label: 'Run authorized Build role', exposure: 'model-only',
+      description: 'Host prepares a fresh immutable attempt and runs one fixed role under the native screened-build authorization listed in status. No prompt/path/model/runtime overrides. Shared finite repair allowance, one role at a time, no recursive children. Read reports separately with file_screening_handoff.',
+      parameters: Type.Object({ build: Type.String({ pattern: '^[a-f0-9-]{36}$' }), role: Type.Union([Type.Literal('engineer'), Type.Literal('review'), Type.Literal('qa'), Type.Literal('land')]) }, { additionalProperties: false }),
+      async execute(_id, input, signal, onUpdate) {
+        try { const result = await build.stage(ctx.cwd, input.build, input.role, { signal,
+          validate: () => { if (currentEpoch !== epoch) throw new PolicyDenied('stale-operation'); checkBoundary(); },
+          observe: event => { observe(event); onUpdate?.(textResult(event)); } }); return textResult(result, result.state !== 'completed'); }
+        catch (error) { return textResult({ blocked: safeCode(error) }, true); }
+      } });
+    pi.registerTool({ name: 'file_screening_handoff', label: 'Read exact authorized role report', exposure: 'model-only',
+      description: 'Separately authorized bounded report read, not automatic child output relay or discovery permission. Only a report ticket from this Build; children may read only predecessor reports. Role-authored untrusted evidence; no transcript/stderr/path access. At most 200 lines/8 KiB per read.',
+      parameters: Type.Object({ build: Type.String(), ticket: Type.String(), offset: Type.Integer({ minimum: 1 }), limit: Type.Integer({ minimum: 1, maximum: 200 }) }, { additionalProperties: false }),
+      async execute(_id, input) {
+        try { if (currentEpoch !== epoch) throw new PolicyDenied('stale-operation'); checkBoundary();
+          const result = build.handoff(ctx.cwd, input.build, input.ticket, input.offset, input.limit);
+          observe({ kind: 'exception', reason: 'build-handoff', pathId: hash(input.ticket), needId: hash('inspect-role-handoff'), operationId: randomUUID() });
+          return textResult(result); } catch (error) { return textResult({ blocked: safeCode(error) }, true); }
+      } });
+    pi.registerTool({ name: 'file_screening_report', label: 'Record own Build role handoff', exposure: 'model-only',
+      description: 'Child only: record ONE final Markdown report (at most 32 KiB) at the host-pinned stage handoff. Independent Review/QA also publish to their exact canonical TASK report path. No caller path or other role write. Never include credentials, source bodies or private reasoning.',
+      parameters: Type.Object({ markdown: Type.String({ minLength: 1, maxLength: 32768 }) }, { additionalProperties: false }),
+      async execute(_id, input) {
+        try { if (currentEpoch !== epoch) throw new PolicyDenied('stale-operation'); checkBoundary(); return textResult(build.report(ctx.cwd, input.markdown, sessionId)); }
+        catch (error) { return textResult({ blocked: safeCode(error) }, true); }
+      } });
     pi.registerTool({ name: 'read', label: 'Admit file contents', description: 'Read only an explicit useful range after current screening or verified exception. Missing need/evidence returns no source. Supply admission.receipt, questionDigest and identical need from jev_read_file; or a trusted operator/native instruction, host assignment/required-reference exception or file_locate evidence.',
       parameters: Type.Object({ path: Type.String(), need: Type.Optional(Type.String()), offset: Type.Optional(Type.Integer({ minimum: 1 })), limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 1000 })),
         receipt: Type.Optional(Type.String()), questionDigest: Type.Optional(Type.String()), evidence: Type.Optional(Type.String()),
@@ -177,7 +210,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           checkBoundary();
           const value = admission!.read(input);
           return { content: [{ type: 'text', text: value.text }], details: value.admission };
-        } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-read', reason }); return textResult({ blocked: reason, nextAction: 'Supply need, explicit offset/limit and a current screening receipt or independently established exception; no source released' }, true); }
+        } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
+          pathId: hash(resolve(ctx.cwd, input.path)), needId: hash(input.need ?? '') }); return textResult({ blocked: reason, nextAction: 'Supply need, explicit offset/limit and a current screening receipt or independently established exception; no source released' }, true); }
       },
     });
     function registerMutation<T extends TSchema, D, S>(name: 'write' | 'edit', base: ToolDefinition<T, D | undefined, S>) {
@@ -255,12 +289,59 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     if (!selected) return;
     // Visibility is not a boundary. Every alternate/nested tool is denied before execution.
     const reason = event.parentToolCallId ? 'unsupported-nested-route' : !allowed.includes(event.toolName) ? 'uncovered-content-route' : undefined;
-    if (reason) { observe({ kind: 'blocked-read', reason }); return { block: true, reason: `File screening: ${reason}` }; }
+    if (reason) { observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
+      pathId: hash('path' in event.input && typeof event.input.path === 'string' ? resolve(context!.cwd, event.input.path) : `tool:${event.toolName}`),
+      needId: hash('need' in event.input && typeof event.input.need === 'string' ? event.input.need : '') }); return { block: true, reason: `File screening: ${reason}` }; }
   });
   pi.on('user_bash', () => selected ? { result: { output: 'File screening: unsupported-user-shell-route', exitCode: 1, cancelled: false, truncated: false } } : undefined);
   const invalidate = () => { epoch++; failure = 'session-changed-reload-required'; admission?.close(); screening?.close(); guard?.cancel('session-changed'); };
   pi.on('session_before_switch', invalidate); pi.on('session_before_fork', invalidate); pi.on('session_before_tree', invalidate);
   pi.on('session_shutdown', (_event, ctx) => { live = false; invalidate(); if (ctx.mode === 'tui') ctx.ui.setStatus('fight-file-screen', undefined); });
+  pi.registerCommand('screened-build', { description: 'Authorize/resume one bounded enrolled Build TASK using native host preparation; no per-child approval', handler: async (args, ctx) => {
+    // Only an explicit native command can establish this grant; never an Agent tool or extension message.
+    if (ctx.mode !== 'tui' || process.env.FIGHT_SCREENING_CHILD === '1') return;
+    try {
+      checkBoundary();
+      if (!selected || !/^TASK-\d{5}$/.test(args.trim())) throw new PolicyDenied('build-requires-enrolled-task');
+      const task = args.trim(), existing = build.inspect(ctx.cwd).find(item => item.task === task);
+      if (existing) { ctx.ui.notify(JSON.stringify(existing), 'info'); return; }
+      const contextPath = await ctx.ui.input('Exact resolved project-context Markdown path (main-role disclosure only, never sent to Jev)');
+      if (!contextPath) return;
+      const configuration = profiles.fileSettings(sessionId, ctx.cwd).load();
+      if (!configuration) throw new PolicyDenied('profile-unavailable');
+      const path = resolve(ctx.cwd, contextPath);
+      const contextText = new FileSource().snapshot(path, { ...configuration, allowedRoots: [dirname(path)] }).text;
+      const taskDefault = `planning/tasks/${task.slice(5)}-TASK.md`;
+      const taskAnswer = await ctx.ui.input(`Exact accepted TASK record path (blank: ${taskDefault})`, taskDefault);
+      if (taskAnswer === undefined) return;
+      const taskPath = taskAnswer.trim() || taskDefault;
+      const models = structuredClone(defaultBuildModels);
+      if (ctx.model?.provider !== 'openai-codex') throw new PolicyDenied('build-role-model-map-required');
+      for (const role of Object.keys(models) as BuildRole[]) {
+        const model = await ctx.ui.input(`Pinned ${role} model ID, openai-codex (blank: ${models[role].model})`, models[role].model);
+        if (model === undefined) return;
+        models[role].model = model.trim() || models[role].model;
+        const selectedModel = ctx.modelRegistry.find(models[role].provider, models[role].model);
+        if (!selectedModel || !getSupportedThinkingLevels(selectedModel).some(level => level === models[role].thinking)) throw new PolicyDenied('build-role-model-unavailable');
+      }
+      const repairAnswer = await ctx.ui.input('Shared repair allowance (1-10; blank uses 5; repeated invocation never resets it)', '5');
+      const timeoutAnswer = await ctx.ui.input('Maximum seconds per role (1-1800; blank uses 1800)', '1800');
+      if (repairAnswer === undefined || timeoutAnswer === undefined) return;
+      const repairs = repairAnswer.trim() || '5', timeout = timeoutAnswer.trim() || '1800';
+      if (!await ctx.ui.confirm('Authorize ONE TASK Build under existing source authority', JSON.stringify({ task, taskPath, contextDigest: hash(contextText), models,
+        repairs: Number(repairs), timeout: Number(timeout), maxRoles: 3 * (Number(repairs) + 1) + 1,
+        reportDisclosure: 'Exact bounded stage reports to coordinator and subsequent independent roles; Review/QA canonical report writes only',
+        effects: 'Main-role inference, owned implementation commits, independent Review/QA and land publication. No merge/approval/force-push/release/deploy. No source-root, Jev disclosure or check capability expansion. Unknown effects hold, never replay.' }, null, 2))) return;
+      checkBoundary(); // Dialog time cannot retain a stale instruction/profile boundary.
+      const view = build.authorize({ cwd: ctx.cwd, task, taskPath, context: `Resolved project-context path: ${path}\n${contextText}`, models, repairs: Number(repairs), timeout: Number(timeout) });
+      ctx.ui.notify(`Build ${view.build} ready; use file_screening_stage. No role launched.`, 'info');
+      observe({ kind: 'exception', reason: 'mandatory-instruction', pathId: hash(buildInstructions), needId: hash('execute-authorized-build'), operationId: randomUUID() });
+      observe({ kind: 'exception', reason: 'trusted-assignment', pathId: hash(path), needId: hash('load-resolved-project-context'), operationId: randomUUID() });
+      // sendUserMessage does not expand skills by default; load this provider's selected instruction asset,
+      // not a target checkout's potentially absent or colliding /skill:build alias.
+      pi.sendUserMessage(`Owning provider Build instructions: ${buildInstructions}\n${readFileSync(buildInstructions, 'utf8')}\n\nExecute ${task} using authorized screened Build ${view.build}. Host owns attempt/request preparation; use file_screening_status, file_screening_stage and bounded file_screening_handoff. Never use mktemp/write outside roots or shell. Pinned role map: ${JSON.stringify(models)}.\nResolved project context from ${path} (already loaded verbatim; no new file/disclosure authority):\n${contextText}`, { deliverAs: 'followUp' });
+    } catch (error) { ctx.ui.notify(`Screened Build: ${safeCode(error)}. Existing authority and counters retained.`, 'warning'); }
+  } });
   pi.registerCommand('file-screening', { description: 'Inspect screening or trusted operator setup/preview (no provider calls, no key entry)', handler: async (args, ctx) => {
     const action = args.trim();
     if (!['setup', 'inspect', '', 'instruction', 'target', 'reconcile', 'legacy', 'dispatch'].includes(action)) { if (ctx.mode === 'tui') ctx.ui.notify('Use /file-screening inspect, setup, instruction, target, reconcile, legacy or dispatch. Never pass credentials.', 'warning'); return; }

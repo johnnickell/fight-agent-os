@@ -2,6 +2,7 @@
 """Run one Pi role with visible progress and private evidence (Python 3.9+)."""
 
 import argparse
+from datetime import datetime
 import json
 import math
 import os
@@ -127,6 +128,9 @@ class Progress:
                 self.emit(" ".join(fields))
                 if self.safe:
                     safe = {"version": item["version"], "kind": item["kind"], "session": session}
+                    sequence = item.get("sequence")
+                    if isinstance(sequence, int) and not isinstance(sequence, bool) and 0 < sequence <= 9007199254740991:
+                        safe["sequence"] = sequence
                     if isinstance(item.get("phase"), str) and re.fullmatch(r"[A-Za-z0-9-]{1,48}", item["phase"]):
                         safe["phase"] = item["phase"]
                     for key in ("reason", "decision"):
@@ -137,6 +141,10 @@ class Progress:
                             safe[key] = item[key]
                     if isinstance(operation, str) and re.fullmatch(r"[a-f0-9-]{36}", operation):
                         safe["operationId"] = operation
+                    for key, maximum in (("elapsedMs", 1800000), ("offset", 1000000000), ("lines", 1000)):
+                        value = item.get(key)
+                        if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= maximum:
+                            safe[key] = value
                     safe["costUsd"] = cost if isinstance(cost, (int, float)) and not isinstance(cost, bool) and math.isfinite(cost) and cost >= 0 else None
                     print(prefix + json.dumps(safe), flush=True)
             elif line.startswith(status_prefix):
@@ -148,7 +156,7 @@ class Progress:
                 if isinstance(reason, str) and re.fullmatch(r"[a-z-]{1,80}", reason):
                     fields.append(f"reason={reason}")
                 budget = item.get("budget") or {}
-                for key in ("availableMicroUsd", "reservedMicroUsd"):
+                for key in ("availableMicroUsd", "reservedMicroUsd", "settledMicroUsd"):
                     value = budget.get(key)
                     if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
                         fields.append(f"{key}={value}")
@@ -160,7 +168,16 @@ class Progress:
                 self.emit(" ".join(fields))
                 if self.safe:
                     safe = {"state": state, "reason": reason if isinstance(reason, str) and re.fullmatch(r"[a-z-]{1,80}", reason) else None}
-                    safe["budget"] = {key: budget[key] for key in ("availableMicroUsd", "reservedMicroUsd") if isinstance(budget.get(key), int) and not isinstance(budget[key], bool) and budget[key] >= 0}
+                    safe["budget"] = {key: budget[key] for key in ("availableMicroUsd", "reservedMicroUsd", "settledMicroUsd") if isinstance(budget.get(key), int) and not isinstance(budget[key], bool) and 0 <= budget[key] <= 9007199254740991}
+                    if isinstance(reset, str) and re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z", reset):
+                        datetime.strptime(reset, "%Y-%m-%dT%H:%M:%S.%fZ")
+                        safe["budget"]["resetsAt"] = reset
+                    if isinstance(item.get("session"), str) and re.fullmatch(r"[a-f0-9]{64}", item["session"]):
+                        safe["session"] = item["session"]
+                    if isinstance(item.get("phase"), str) and re.fullmatch(r"[A-Za-z0-9-]{1,48}", item["phase"]):
+                        safe["phase"] = item["phase"]
+                    if item.get("nextActionCode") in ("enroll-project", "reconcile-legacy", "configure-credentials", "wait-month-reset", "inspect-reload", "screen-then-read"):
+                        safe["nextActionCode"] = item["nextActionCode"]
                     print(status_prefix + json.dumps(safe), flush=True)
         except (ValueError, TypeError, AttributeError):
             return

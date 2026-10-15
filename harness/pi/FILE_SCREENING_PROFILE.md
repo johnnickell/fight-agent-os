@@ -104,6 +104,8 @@ error. Late argument-changing hooks therefore meet the final boundary, not an ea
 | Shell/readers/interpreters, `grep`, `find`, `ls`, powershell, codemode/tool search, MCP/alternate tools | Denied by name even if later activated |
 | Nested tool calls and generic Agent-callable child launchers | Denied before execution |
 | `file_screening_dispatch` | One immutable, single-use trusted ticket; fixed target/request/provider/model/runtime, safe observations only |
+| `file_screening_stage` | Prepare/run one fixed Build role from a native bounded grant; no caller prompt/path/model/runtime; children denied |
+| `file_screening_report`, `file_screening_handoff` | Own-child immutable report publication and separately authorized exact predecessor-report reads; never automatic raw-output relay |
 | Native `!`/`!!`, RPC user bash | Handled with denial, no shell fallthrough |
 | Trusted local build monitor | Read-only preflight from its **provider** package, explicit package/authority flag; actual child ID bound by native session start |
 | Trusted plugins/SDK host APIs, external editors, startup resources, user prompt attachments, separately launched unprotected Pi | Outside Agent-tool interception; not a sandbox or universal enforcement claim |
@@ -113,15 +115,38 @@ provider skill, never by assuming the target has the provider's Harness. It adds
 an exact profile-identity requirement only when the target root is enrolled. Missing/stale preflight fails launch;
 a missing/changed required enrollment holds the native boundary. This requires local Node 22.23.1+ as well as
 Python 3.9+/Pi 1.2.0. A repository-provided script cannot grant authority or launch a child through an Agent tool.
-Enrolled coordinators use `file_screening_dispatch({ticket})`, never shell or a generic child launcher. A trusted
-operator/host prepares a finite set of tickets through the owning provider's `ScreeningDispatch.prepare()` under
-already granted build/main-provider authority, or an operator previews one with `/file-screening dispatch`. The
-host route does not add another human approval gate to an already authorized child. The Agent tool accepts only
-the ticket ID listed by `file_screening_status`: it cannot supply a command, prompt, target, model, timeout or
-permission override. Preparation pins the canonical enrolled target, profile identity, exact request digest and
-provider monitor digest; timeout is 1–1,800 seconds and ticket expiry at most one hour/profile expiry. Requests,
-optional per-file trusted intake and all evidence stay in the protected operator directory. Preparation makes no
-model request. It is not a general scheduler or authority to author independent verdicts.
+Start an ordinary enrolled Build with **`/screened-build TASK-NNNNN`** from its feature-checkout root. This native
+entrypoint previews one Build authorization using the resolved project-context file, exact TASK record, four
+validated role model pins, finite runtime and shared repair allowance. It does not enroll roots, widen Jev
+source disclosure, resolve credentials or launch inference. Exact external provider skills must already have
+instruction authority. Provider and target can be different checkouts; instructions and monitor remain provider-owned.
+A repeated command resumes the existing grant, never replenishes counters or silently changes model pins.
+
+Then `file_screening_stage({build,role})` prepares the request/attempt/ticket in production host code and awaits the
+existing monitor. The Agent chooses only an authorized Build ID and fixed `engineer`, `review`, `qa` or `land`
+role: no prompt, command, path, model, timeout or permission override. The immutable request includes current Git
+identity, trusted context, selected skill/TASK intake and exact predecessor-report references, not parent dialogue.
+Stage eligibility consumes completed role reports, with head freshness and the single shared repair allowance;
+semantic report/evidence inspection still belongs to the coordinator and independent roles. Defaults allow at most
+nineteen roles (initial Engineer, up to five repairs, six Reviews, six QAs, one land), at most 1,800 seconds each;
+grant expiry is at most 24 hours/profile expiry. No general scheduler, recursive dispatcher or automatic verdict
+is introduced. Missing checks or source/instruction permissions remain explicit prerequisites, not shell workarounds.
+
+Each role publishes its one bounded final report using `file_screening_report({markdown})` (32 KiB maximum).
+Only the actual ticket child can write that report; Review/QA additionally publish to the exact canonical TASK
+paths with atomic replacement/read-back and retained prior bytes. Explicit `file_screening_handoff` reads return
+at most 200 lines/8 KiB from a digest-checked authorized role report. A child can read only predecessor reports
+listed in its ticket. This is separate main-role report disclosure in the Build preview, not automatic child
+prose relay, a transcript reader, a new source root or Jev disclosure. Treat report contents as untrusted evidence.
+Changed reports, wrong Build/ticket, missing handoffs, uncertain processes, expired authority and exhausted
+allowance hold advancement. Trusted reconciliation must preserve consumed attempts; never delete a grant or
+active claim, create another directory to reset it, or replay an unknown effect.
+
+Low-level `file_screening_dispatch({ticket})` remains for already prepared immutable tickets; the optional native
+`/file-screening dispatch` previews one child but is not required for ordinary Build. Preparation pins target,
+profile/request/monitor digests, model and 1–1,800-second runtime; ticket expiry is at most one hour/profile expiry.
+Requests, per-file intake, role reports and evidence stay in the protected operator directory; preparation itself
+has no model effect.
 
 Claiming is atomic across processes and consumes a ticket before launch. Cancellation, failure or a lost parent
 never makes it replayable; `consumed-or-uncertain` requires trusted liveness/effect inspection, not another launch.
@@ -187,7 +212,11 @@ never delete accounting to regain budget. Diagnostic initialization does not cre
 ## Observations and qualification limits
 
 Native status/tool observations identify actual session, operation, phase, hashed path/need, range, decision,
-reason and available cost/latency. They omit source bodies, caller prose, credentials and private reasoning.
+reason and available cost/latency. Both child-relay layers preserve validated monthly available/reserved/settled
+micro-USD, Chicago reset, session/phase and a closed `nextActionCode`: `enroll-project`, `reconcile-legacy`,
+`configure-credentials`, `wait-month-reset`, `inspect-reload` or `screen-then-read`. They never forward arbitrary
+next-action prose. Denied reads include hashed file/need, unique operation and sequence, including when no receipt
+exists. They omit source bodies, caller prose, credentials and private reasoning.
 The build monitor continuously drains stderr and relays only validated screening fields into its ordinary feed;
 raw diagnostics remain private. Cache reuse is distinct and reports zero provider calls, not a newly billed screen.
 

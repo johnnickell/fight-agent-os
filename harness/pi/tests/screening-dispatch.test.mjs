@@ -74,6 +74,28 @@ test('child observations preserve cache/exception/block identity without returni
   assert.equal(safeChildObservation('Fight screening: {not-json}'), null);
 });
 
+test('safe status retains bounded monthly diagnostics and an actionable code, never caller prose', () => {
+  const status = { state: 'degraded', reason: 'monthly-budget', session: 'a'.repeat(64),
+    budget: { availableMicroUsd: 12, reservedMicroUsd: 2688, settledMicroUsd: 33, resetsAt: '2026-11-01T05:00:00.000Z' },
+    nextActionCode: 'wait-month-reset', nextAction: 'PRIVATE-CHILD-PROSE', privateReasoning: 'PRIVATE-REASONING' };
+  const safe = safeChildObservation('Fight screening status: ' + JSON.stringify(status));
+  assert.deepEqual(safe.budget, status.budget); assert.equal(safe.session, status.session);
+  assert.equal(safe.nextActionCode, 'wait-month-reset'); assert.equal(JSON.stringify(safe).includes('PRIVATE'), false);
+  const malformed = safeChildObservation('Fight screening status: ' + JSON.stringify({ ...status,
+    budget: { availableMicroUsd: -1, reservedMicroUsd: 1e100, settledMicroUsd: true, resetsAt: 'PRIVATE-SOURCE' },
+    nextActionCode: 'PRIVATE-SOURCE' }));
+  assert.deepEqual(malformed.budget, {}); assert.equal(malformed.nextActionCode, undefined);
+});
+
+test('safe blocked reads preserve distinct file, need, operation and sequence identity', () => {
+  const base = { version: 'fight-file-screen-observation-v1', kind: 'blocked-read', session: 'a'.repeat(64),
+    reason: 'unambiguous-evidence-required', phase: 'review', costUsd: null };
+  const first = safeChildObservation('Fight screening: ' + JSON.stringify({ ...base, pathId: 'b'.repeat(64), needId: 'c'.repeat(64), operationId: randomUUID(), sequence: 1 }));
+  const second = safeChildObservation('Fight screening: ' + JSON.stringify({ ...base, pathId: 'd'.repeat(64), needId: 'e'.repeat(64), operationId: randomUUID(), sequence: 2 }));
+  assert.notEqual(first.pathId, second.pathId); assert.notEqual(first.needId, second.needId);
+  assert.notEqual(first.operationId, second.operationId); assert.equal(first.sequence, 1); assert.equal(second.sequence, 2);
+});
+
 test('competing coordinator processes cannot claim the same paid child twice', async t => {
   const f = fixture(t), plan = f.dispatch.prepare(f.input);
   const module = new URL('../src/jev/screening-dispatch.mjs', import.meta.url).href;

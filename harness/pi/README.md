@@ -14,8 +14,12 @@ TASK-00162 adds opt-in, instruction-based single-file
 screening; TASK-00163 extends it with bounded lists/globs and session-local metadata caching; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
 is activated by installing/updating this source. TASK-00309's [enrolled-profile implementation candidate](FILE_SCREENING_PROFILE.md)
 adds a stable `/file-screening` diagnostic, explicit enrollment preview, shared monthly accounting and local
-receipt admission, with locally qualified bounded native/build dispatch and conservative legacy reconciliation.
-Live Jev workflow proof and independent acceptance remain pending; local checks do not establish production readiness.
+receipt admission, with bounded native/build dispatch and conservative legacy reconciliation. For an enrolled
+ordinary Build use `/screened-build TASK-NNNNN`: one native Build preview supplies protected host preparation,
+pinned finite roles and exact bounded role-report handoffs without per-child approvals or Agent shell access.
+See the profile's [launcher contract](FILE_SCREENING_PROFILE.md#coverage-and-launchers). Limited live synthetic
+boundary evidence exists; representative investigations, visual proof and independent acceptance remain pending.
+Local checks do not establish production readiness.
 
 ## Install
 
