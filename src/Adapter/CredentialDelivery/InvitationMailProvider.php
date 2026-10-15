@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Adapter\CredentialDelivery;
 
 use App\Application\Mail\MailDelivery;
+use App\Application\Mail\MailMessage;
 use App\Application\Mail\MailOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
+use Fight\Common\Application\Templating\TemplateEngine;
 use SensitiveParameter;
 use Throwable;
 
@@ -22,8 +24,11 @@ final readonly class InvitationMailProvider implements CredentialDeliveryProvide
     /**
      * Constructs InvitationMailProvider
      */
-    public function __construct(private InvitationMailTemplate $template, private MailDelivery $mail)
-    {
+    public function __construct(
+        private CanonicalActivationLink $link,
+        private TemplateEngine $templates,
+        private MailDelivery $mail
+    ) {
     }
 
     /**
@@ -37,7 +42,16 @@ final readonly class InvitationMailProvider implements CredentialDeliveryProvide
         }
 
         try {
-            return match ($this->mail->deliver($this->template->render($invocation))) {
+            $context = ['activationUrl' => $this->link->forCredential($invocation->getCredential())];
+            $message = new MailMessage(
+                $invocation->getIdempotencyId(),
+                $invocation->getEmail(),
+                'Your Fight Agent OS invitation',
+                $this->templates->render('mail/invitation.txt.twig', $context),
+                $this->templates->render('mail/invitation.html.twig', $context)
+            );
+
+            return match ($this->mail->deliver($message)) {
                 MailOutcome::DELIVERED => CredentialDeliveryOutcome::DELIVERED,
                 MailOutcome::RETRYABLE_FAILURE => CredentialDeliveryOutcome::RETRYABLE_FAILURE,
                 MailOutcome::PERMANENT_FAILURE => CredentialDeliveryOutcome::PERMANENT_FAILURE

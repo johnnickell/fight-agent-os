@@ -6,18 +6,22 @@ namespace Tests\Unit\CredentialDelivery;
 
 use App\Adapter\CredentialDelivery\CanonicalActivationLink;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
-use App\Adapter\CredentialDelivery\InvitationMailTemplate;
 use App\Application\Mail\MailDelivery;
 use App\Application\Mail\MailMessage;
 use App\Application\Mail\MailOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
+use Fight\Common\Adapter\Templating\TwigEngine;
+use Fight\Common\Application\Templating\TemplateEngine;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Twig\Environment;
+use Twig\Loader\ArrayLoader;
+use Twig\Loader\FilesystemLoader;
 
 /**
  * Proves canonical, deterministic and transient invitation mail mapping without network access
@@ -76,36 +80,80 @@ final class InvitationMailTest extends TestCase
     }
 
     /**
-     * Produces deterministic safe alternatives with explicit issuance-relative expiry and recovery copy
+     * Delivers byte-compatible version-one alternatives through real Twig without retaining message bodies
      */
     public function testRendersVersionOneWithoutPrivateOrRemoteContent(): void
     {
-        $template = $this->template();
+        $observations = [];
+        $mail = $this->createMock(MailDelivery::class);
+        $mail->method('deliver')->willReturnCallback(static function (MailMessage $message) use (
+            &$observations
+        ): MailOutcome {
+            [$destination, $subject, $text, $html] = $message->content();
+            $expectedText = <<<TEXT
+You have been invited to Fight Agent OS.
+
+Activate your account:
+https://example.test/activate#credential=synthetic%3C%26%22credential
+
+This single-use link expires seven days after the invitation was issued, not after this email arrives.
+If it has expired or no longer works, ask your administrator for a new invitation.
+If you did not expect this invitation, ignore it. Do not forward or share this link.
+TEXT;
+            $expectedHtml = <<<HTML
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src &apos;none&apos;">
+<title>Fight Agent OS invitation</title></head><body>
+<h1>You have been invited to Fight Agent OS</h1>
+<p><a href="https://example.test/activate#credential=synthetic%3C%26%22credential">Activate your account</a></p>
+<p>This single-use link expires seven days after the invitation was issued, not after this email arrives.</p>
+<p>If it has expired or no longer works, ask your administrator for a new invitation.</p>
+<p>If you did not expect this invitation, ignore it. Do not forward or share this link.</p>
+</body></html>
+HTML;
+            $observations[] = [
+                'id'          => $message->idempotencyId,
+                'destination' => $destination->toString() === 'private@example.test',
+                'subject'     => $subject === 'Your Fight Agent OS invitation',
+                'text'        => $text === $expectedText,
+                'html'        => $html === $expectedHtml,
+                'digest'      => hash('sha256', $text.$html)
+            ];
+
+            return MailOutcome::DELIVERED;
+        });
+        $provider = $this->provider($mail);
         $invocation = $this->invocation('activation', 'synthetic<&"credential');
-        $first = $template->render($invocation);
-        [$destination, $subject, $text, $html] = $first->content();
-        self::assertSame($invocation->getIdempotencyId(), $first->idempotencyId);
-        self::assertTrue($destination->toString() === 'private@example.test');
-        self::assertSame('Your Fight Agent OS invitation', $subject);
-        self::assertTrue($first->content() === $template->render($invocation)->content());
-        self::assertTrue(str_contains($text, 'https://example.test/activate#credential=synthetic%3C%26%22credential'));
+        $outcomes = [$provider->deliver($invocation), $provider->deliver($invocation)];
+        self::assertSame(array_fill(0, 2, CredentialDeliveryOutcome::DELIVERED), $outcomes);
+        self::assertCount(2, $observations);
+        self::assertSame($observations[0], $observations[1]);
+        self::assertSame($invocation->getIdempotencyId(), $observations[0]['id']);
+        foreach (['destination', 'subject', 'text', 'html'] as $check) {
+            self::assertTrue($observations[0][$check], $check);
+        }
+        $diagnostics = print_r($provider, true);
+        self::assertFalse(str_contains($diagnostics, $invocation->getCredential()));
+        self::assertFalse(str_contains($diagnostics, rawurlencode($invocation->getCredential())));
+    }
+
+    /**
+     * Escapes HTML metacharacters without corrupting the plain-text alternative
+     */
+    public function testAlternativesUseTheirOwnEscapingRules(): void
+    {
+        $templates = $this->templates();
+        $context = ['activationUrl' => 'https://example.test/activate#credential=a&b<>"\''];
+        $text = $templates->render('mail/invitation.txt.twig', $context);
+        $html = $templates->render('mail/invitation.html.twig', $context);
+        self::assertTrue(str_contains($text, "\nhttps://example.test/activate#credential=a&b<>\"'\n"));
         self::assertTrue(str_contains(
             $html,
-            'href="https://example.test/activate#credential=synthetic%3C%26%22credential"'
+            'href="https://example.test/activate#credential=a&amp;b&lt;&gt;&quot;&#039;"'
         ));
-        foreach ([$text, $html] as $body) {
-            self::assertTrue(str_contains($body, 'seven days after the invitation was issued'));
-            self::assertTrue(str_contains($body, 'ask your administrator for a new invitation'));
-            self::assertTrue(str_contains($body, 'Do not forward or share this link'));
-            $forbidden = [
-                'private@example.test', '<img', '<script', '<style', '<iframe', 'utm_', 'src=', 'synthetic<&'
-            ];
-            foreach ($forbidden as $bad) {
-                self::assertFalse(str_contains($body, $bad));
-            }
-        }
-        self::assertTrue(str_contains($html, 'name="referrer" content="no-referrer"'));
-        self::assertTrue(str_contains($html, 'default-src &apos;none&apos;'));
+        self::assertFalse(str_contains($html, $context['activationUrl']));
+        self::assertFalse(str_contains($text, '&amp;'));
     }
 
     /**
@@ -126,7 +174,7 @@ final class InvitationMailTest extends TestCase
 
             return $mailOutcome;
         });
-        $provider = new InvitationMailProvider($this->template(), $mail);
+        $provider = $this->provider($mail);
         $invocation = $this->invocation();
         $outcomes = [$provider->deliver($invocation), $provider->deliver($invocation)];
         self::assertSame([$expected, $expected], $outcomes);
@@ -153,8 +201,56 @@ final class InvitationMailTest extends TestCase
     {
         $mail = $this->createMock(MailDelivery::class);
         $mail->method('deliver')->willThrowException(new RuntimeException('synthetic-private-link'));
-        $provider = new InvitationMailProvider($this->template(), $mail);
+        $provider = $this->provider($mail);
         self::assertSame(CredentialDeliveryOutcome::RETRYABLE_FAILURE, $provider->deliver($this->invocation()));
+    }
+
+    /**
+     * Refuses partial mail when either rendered alternative fails with private diagnostics
+     */
+    #[DataProvider('failedAlternatives')]
+    public function testRenderingFailureIsSafeAndRetryable(string $failedAlternative): void
+    {
+        $templates = $this->createMock(TemplateEngine::class);
+        $templates->method('render')->willReturnCallback(static function (
+            string $template,
+            array $context
+        ) use ($failedAlternative): string {
+            if ($template === $failedAlternative) {
+                throw new RuntimeException($context['activationUrl']);
+            }
+
+            return 'transient rendered alternative';
+        });
+        $mail = $this->createMock(MailDelivery::class);
+        $mail->expects(self::never())->method('deliver');
+        $provider = $this->provider($mail, $templates);
+        self::assertSame(CredentialDeliveryOutcome::RETRYABLE_FAILURE, $provider->deliver($this->invocation()));
+    }
+
+    /**
+     * Supplies each alternative whose failure must prevent any external effect
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function failedAlternatives(): iterable
+    {
+        yield 'text' => ['mail/invitation.txt.twig'];
+        yield 'html after text' => ['mail/invitation.html.twig'];
+    }
+
+    /**
+     * Handles a real Twig loader failure without sending or exposing templating diagnostics
+     */
+    public function testMissingTemplateIsRetryableWithoutMailEffect(): void
+    {
+        $templates = new TwigEngine(new Environment(new ArrayLoader(), ['strict_variables' => true]));
+        $mail = $this->createMock(MailDelivery::class);
+        $mail->expects(self::never())->method('deliver');
+        self::assertSame(
+            CredentialDeliveryOutcome::RETRYABLE_FAILURE,
+            $this->provider($mail, $templates)->deliver($this->invocation())
+        );
     }
 
     /**
@@ -162,21 +258,37 @@ final class InvitationMailTest extends TestCase
      */
     public function testDoesNotSendUnimplementedCredentialFamilies(): void
     {
+        $templates = $this->createMock(TemplateEngine::class);
+        $templates->expects(self::never())->method('render');
         $mail = $this->createMock(MailDelivery::class);
         $mail->expects(self::never())->method('deliver');
-        $provider = new InvitationMailProvider($this->template(), $mail);
         self::assertSame(
             CredentialDeliveryOutcome::RETRYABLE_FAILURE,
-            $provider->deliver($this->invocation('password_reset'))
+            $this->provider($mail, $templates)->deliver($this->invocation('password_reset'))
         );
     }
 
     /**
-     * Constructs the configured fixed template
+     * Constructs the provider with configured canonical links and no network transport
      */
-    private function template(): InvitationMailTemplate
+    private function provider(MailDelivery $mail, ?TemplateEngine $templates = null): InvitationMailProvider
     {
-        return new InvitationMailTemplate(new CanonicalActivationLink('https://example.test', '/activate'));
+        return new InvitationMailProvider(
+            new CanonicalActivationLink('https://example.test', '/activate'),
+            $templates ?? $this->templates(),
+            $mail
+        );
+    }
+
+    /**
+     * Constructs real Twig presentation for the shipped alternatives
+     */
+    private function templates(): TemplateEngine
+    {
+        return new TwigEngine(new Environment(
+            new FilesystemLoader(dirname(__DIR__, 3).'/templates'),
+            ['autoescape' => 'name', 'strict_variables' => true]
+        ));
     }
 
     /**

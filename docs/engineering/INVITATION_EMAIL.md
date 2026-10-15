@@ -160,8 +160,15 @@ backslashes and double/trailing path slashes (root `/` is allowed). No request h
 the origin/path. Credential bytes are RFC3986-encoded entirely inside the fragment. Fragment placement avoids
 request-line/referrer transmission, **not** mailbox/history/extension access or arbitrary future UI leakage.
 
-The deterministic alternatives omit the recipient from the body, escape the URL, include expiry/recovery and
-non-forwarding guidance, and use no remote images/fonts/scripts or tracking. HTML declares `no-referrer` and a
+The fixed `templates/mail/invitation.txt.twig` and `templates/mail/invitation.html.twig` alternatives use the
+existing shared Fight Common `TemplateEngine`/Twig registration. The provider builds the canonical URL and
+assembles `MailMessage` in PHP; only the transient activation URL enters render context, never the invocation or
+recipient. Plain text preserves the already URL-encoded link; HTML applies HTML escaping. Render failures send
+nothing and return a safe retryable outcome without logging or retaining the exception/context. Templates are
+fixed by composition, never selected from persisted work; Twig debug and template caching remain disabled.
+
+The deterministic alternatives omit the recipient from the body, include expiry/recovery and non-forwarding
+guidance, and use no remote images/fonts/scripts or tracking. HTML declares `no-referrer` and a
 restrictive CSP; MIME adds automatic-response suppression and `Referrer-Policy`. Mail clients need not enforce
 these headers. The fixed sender is `invitations@example.test`, not a verified production sender.
 

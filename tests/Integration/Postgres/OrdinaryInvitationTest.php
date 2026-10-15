@@ -8,7 +8,6 @@ use App\Adapter\Console\InviteUserCommand;
 use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\CredentialDelivery\CanonicalActivationLink;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
-use App\Adapter\CredentialDelivery\InvitationMailTemplate;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
@@ -52,6 +51,7 @@ use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Messaging\Query\QueryFilter;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
+use Fight\Common\Application\Templating\TemplateEngine;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Messaging\Event\AllEvents;
 use Fight\Common\Domain\Messaging\Event\CommandFailedEvent;
@@ -253,7 +253,8 @@ SQL
             return count($observations) === 1 ? MailOutcome::RETRYABLE_FAILURE : MailOutcome::DELIVERED;
         });
         $provider = new InvitationMailProvider(
-            new InvitationMailTemplate(new CanonicalActivationLink('https://example.test', '/activate')),
+            new CanonicalActivationLink('https://example.test', '/activate'),
+            $this->container->get(TemplateEngine::class),
             $mail
         );
         $this->container->set(CredentialDeliveryProvider::class, static fn(): CredentialDeliveryProvider => $provider);

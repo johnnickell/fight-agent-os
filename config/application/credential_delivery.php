@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Adapter\CredentialDelivery\CanonicalActivationLink;
 use App\Adapter\CredentialDelivery\InMemoryCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
-use App\Adapter\CredentialDelivery\InvitationMailTemplate;
 use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\CredentialDelivery\SystemDeliveryClock;
@@ -16,6 +15,7 @@ use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\Cre
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\Common\Application\Service\Container;
+use Fight\Common\Application\Templating\TemplateEngine;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 use Symfony\Component\Mailer\Transport\Smtp\SmtpTransport;
 use Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream;
@@ -40,8 +40,6 @@ return static function (Container $container): void {
         getenv('APP_ACTIVATION_ORIGIN') ?: '',
         getenv('APP_ACTIVATION_PATH') ?: ''
     ));
-    $container->set(InvitationMailTemplate::class, static fn(Container $c): InvitationMailTemplate =>
-        new InvitationMailTemplate($c->get(CanonicalActivationLink::class)));
     $container->set(SmtpTransport::class, static function (): SmtpTransport {
         // This fixed, private Compose endpoint is not a user-selectable DSN or production fallback.
         $transport = new EsmtpTransport('mailcatcher', 1025, false);
@@ -57,7 +55,11 @@ return static function (Container $container): void {
         $environment === false ? '' : $environment
     ));
     $container->set(InvitationMailProvider::class, static fn(Container $c): InvitationMailProvider =>
-        new InvitationMailProvider($c->get(InvitationMailTemplate::class), $c->get(MailDelivery::class)));
+        new InvitationMailProvider(
+            $c->get(CanonicalActivationLink::class),
+            $c->get(TemplateEngine::class),
+            $c->get(MailDelivery::class)
+        ));
     $container->set(CredentialDeliveryProvider::class, static function (Container $c) use (
         $environment,
         $selection
