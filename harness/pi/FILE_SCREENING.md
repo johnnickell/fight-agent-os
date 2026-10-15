@@ -6,8 +6,10 @@ The amended standing profile keeps ordinary authorized shell with separate comma
 bypass relevance admission and is not OS-confined. Use normal Pi/provider-owned Build, not a replacement executor.
 Historical bounded native/build dispatch and synthetic live screening/admission have recorded evidence, including
 one explicitly approved corrected recovery pair; parent screens were not replayed. The child final omitted the
-requested formula. Representative investigations, terminal screenshots and independent acceptance remain pending;
-see the [historical recovery checkpoint](../../planning/tasks/00309-TASK.md#engineer-approved-corrected-recovery-pair--2026-10-15).
+requested formula. John later approved the narrow [AC8/E1 comparative-evaluation deferral](../../planning/tasks/00309-TASK.md#approved-comparative-evaluation-deferral--2026-10-15)
+after bounded evidence remained incomplete: no effectiveness, recall or net context/latency/billed-cost savings
+claim follows. Real baseline/current wide/narrow degraded-status PNGs are retained, but independent acceptance and
+remaining behavioral/visual QA are pending; see the TASK's current checkpoint and historical recovery evidence.
 The manual activation/SDK limitations below remain the supplier/legacy path and historical evidence; they are not
 a claim about complete profile delivery.
 

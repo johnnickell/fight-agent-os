@@ -9,9 +9,10 @@ protected paths do not provide OS containment. Restrictive shell containment/MCP
 
 The [TASK amendment](../../planning/tasks/00309-TASK.md#approved-interim-scope-correction--2026-10-15) supersedes
 the earlier candidate's blanket shell denial and finite enrollment. Historical checks are not current acceptance.
-Representative useful investigations (AC8/E1), comparable actual terminal images and independent Review/QA remain
-required; green controlled checks do not waive them. No global installation/trust/settings or real enrollment
-occurs by reading these instructions.
+John subsequently approved the narrow [AC8/E1 evaluation deferral](../../planning/tasks/00309-TASK.md#approved-comparative-evaluation-deferral--2026-10-15):
+comparative usefulness remains unestablished, with no effectiveness, recall or net context/latency/billed-cost
+savings claims. Independent Review and remaining behavioral/visual QA still apply; green controlled checks do not
+replace them. No global installation/trust/settings or real enrollment occurs by reading these instructions.
 
 ## Operator setup and inspection
 
@@ -178,6 +179,11 @@ dispatch relay is removed; the normal Python monitor retains the safe monthly/co
 Earlier four paid synthetic Jev attempts are **exhausted**, 66 micro-USD settled / zero reserved plus legacy13;
 both authorized main qualification pairs are consumed. Prior process/receipt evidence is historical, not current
 useful-work, savings, recall or command-risk live qualification. The original child omitted its requested formula.
-The frozen new E1 experiment is unexecuted and needs precise new source/disclosure/economic authority, not unused
-dollars or a counter reset. Native PTY text is not a screenshot or visual layout certification. Comparable owned-
-terminal Before/After images need scoped capture capability; no unrelated desktop capture or fabricated images.
+The separately authorized E1 experiment stopped after its original screened parent used two main responses and
+zero Jev requests: its private guard blocked the mandatory shared instruction. The final private correction admits
+the exact hash-bound main-only instruction, but native admission correctly rejects the original call's competing
+exception/evidence arguments. Full corrected composition remains unqualified; no additional live pair was run.
+The approved AC8/E1 deferral applies, not another automatic recovery or counter reset. No product defect or
+comparative benefit is inferred. Real baseline/current wide/narrow terminal PNGs now cover bounded degraded status;
+full behavioral/visual QA remains independent. PTY text is not a screenshot. If future captures are unavailable,
+use the operator-approved fallback with explicit limits; never fabricate images or claim visual certification.
