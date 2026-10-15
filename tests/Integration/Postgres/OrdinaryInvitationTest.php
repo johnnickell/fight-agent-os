@@ -6,10 +6,16 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Console\InviteUserCommand;
 use App\Adapter\Console\SafeConsoleApplication;
+use App\Adapter\CredentialDelivery\CanonicalActivationLink;
+use App\Adapter\CredentialDelivery\InvitationMailProvider;
+use App\Adapter\CredentialDelivery\InvitationMailTemplate;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
+use App\Application\Mail\MailDelivery;
+use App\Application\Mail\MailMessage;
+use App\Application\Mail\MailOutcome;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -206,6 +212,86 @@ SQL
         self::assertSame('delivered', $this->grant()['delivery_status']);
         self::assertNull($this->grant()['delivery_ciphertext']);
         self::assertSame(2, $this->providerCalls);
+    }
+
+    /**
+     * Delivers mapped mail only after independently visible origin and claim commits and recovers the same link
+     */
+    public function testMailMappingObservesCommittedInvitationAndRecoversStableContent(): void
+    {
+        $observer = DriverManager::getConnection($this->connection->getParams());
+        $observations = [];
+        $mail = $this->createMock(MailDelivery::class);
+        $mail->method('deliver')->willReturnCallback(function (MailMessage $message) use (
+            $observer,
+            &$observations
+        ): MailOutcome {
+            [$destination, , $text, $html] = $message->content();
+            $row = $observer->fetchAssociative('SELECT * FROM activation_grants');
+            $observations[] = [
+                'id'                  => $message->idempotencyId,
+                'transaction_active'  => $this->connection->isTransactionActive(),
+                'user_count'          => (int) $observer->fetchOne('SELECT count(*) FROM users'),
+                'origin_audit_count'  => (int) $observer->fetchOne(
+                    "SELECT count(*) FROM audit_evidence WHERE action = 'user.invited'"
+                ),
+                'claim_visible'       => is_array($row) && $row['delivery_status'] === 'claimed',
+                'destination_matches' => $destination->toString() === 'user@example.test',
+                'text_link_matches'   => str_contains(
+                    $text,
+                    'https://example.test/activate#credential='.self::RAW_MARKER
+                ),
+                'html_link_matches'   => str_contains(
+                    $html,
+                    'href="https://example.test/activate#credential='.self::RAW_MARKER.'"'
+                ),
+                'protected_at_rest'   => is_array($row)
+                    && !str_contains(json_encode($row, JSON_THROW_ON_ERROR), self::RAW_MARKER),
+                'content_digest'      => hash('sha256', $text.$html)
+            ];
+
+            return count($observations) === 1 ? MailOutcome::RETRYABLE_FAILURE : MailOutcome::DELIVERED;
+        });
+        $provider = new InvitationMailProvider(
+            new InvitationMailTemplate(new CanonicalActivationLink('https://example.test', '/activate')),
+            $mail
+        );
+        $this->container->set(CredentialDeliveryProvider::class, static fn(): CredentialDeliveryProvider => $provider);
+        try {
+            self::assertSame(0, $this->runConsole());
+            $grant = $this->grant();
+            self::assertSame('retry_pending', $grant['delivery_status']);
+            $audit = $this->connection->fetchAllAssociative('SELECT * FROM audit_evidence');
+            $this->assertRedacted($grant, $audit);
+            $this->clock->time = $this->clock->now()->modify('+1 minute');
+            $worker = $this->newContainer();
+            $worker->set(CredentialDeliveryProvider::class, static fn(): CredentialDeliveryProvider => $provider);
+            $due = $worker->get(QueryBus::class)->fetch(new FindDueCredentialDeliveries($this->clock->now(), 1));
+            self::assertCount(1, $due);
+            $worker->get(SynchronousCommandBus::class)->execute(new DeliverUserInvitation(
+                'credential-recovery',
+                $due[0]->getUserId(),
+                $due[0]->getDeliveryId()
+            ));
+            self::assertSame('delivered', $this->grant()['delivery_status']);
+            self::assertNull($this->grant()['delivery_ciphertext']);
+            self::assertCount(2, $observations);
+            self::assertSame($observations[0]['content_digest'], $observations[1]['content_digest']);
+            foreach ($observations as $observation) {
+                self::assertSame($grant['delivery_id'], $observation['id']);
+                self::assertFalse($observation['transaction_active']);
+                self::assertSame(1, $observation['user_count']);
+                self::assertSame(1, $observation['origin_audit_count']);
+                foreach (
+                    ['claim_visible', 'destination_matches', 'text_link_matches', 'html_link_matches',
+                        'protected_at_rest'] as $check
+                ) {
+                    self::assertTrue($observation[$check], $check);
+                }
+            }
+        } finally {
+            $observer->close();
+        }
     }
 
     /**

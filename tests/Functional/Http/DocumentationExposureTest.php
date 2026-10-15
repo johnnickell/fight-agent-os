@@ -14,13 +14,15 @@ use Slim\Psr7\Factory\ServerRequestFactory;
 final class DocumentationExposureTest extends TestCase
 {
     /**
-     * Supplies unavailable documentation and diagnostic URLs in each environment
+     * Supplies unavailable documentation and diagnostic URLs in bootable local environments
      *
      * @return iterable<string, array{string, string}>
      */
     public static function unavailable_urls(): iterable
     {
-        foreach (['local', 'development', 'test', 'production'] as $environment) {
+        // Production HTTP boot now refuses the absent real mail provider before routes are available.
+        // Its fail-closed composition is validated directly, not by this product HTTP suite.
+        foreach (['local', 'development', 'test'] as $environment) {
             $paths = [
                 '/swagger', '/openapi.yaml', '/docs/api/openapi.yaml', '/openapi.json',
                 '/.runs/openapi/openapi.json', '/var/openapi/openapi.json', '/var/validations/catalog.json',

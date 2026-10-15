@@ -14,12 +14,14 @@ services:
       postgres_test:
         condition: service_healthy
     environment: &application-environment
-      APP_ENV: development
+      APP_ENV: ${APP_ENV:-development}
       APP_ACCESS_TOKEN_CONFIG: ${APP_ACCESS_TOKEN_CONFIG:-}
       APP_BROWSER_ORIGIN: ${APP_BROWSER_ORIGIN:-}
       APP_CSRF_MAC_KEY: ${APP_CSRF_MAC_KEY:-}
       APP_CREDENTIAL_DELIVERY_KEY: ${APP_CREDENTIAL_DELIVERY_KEY:-}
       APP_CREDENTIAL_DELIVERY_ADAPTER: ${APP_CREDENTIAL_DELIVERY_ADAPTER:-null}
+      APP_ACTIVATION_ORIGIN: ${APP_ACTIVATION_ORIGIN:-}
+      APP_ACTIVATION_PATH: ${APP_ACTIVATION_PATH:-}
       DATABASE_URL: postgresql://${POSTGRES_USER:-agent_os}:${POSTGRES_PASSWORD:-agent_os_local}@postgres:5432/${POSTGRES_DB:-agent_os}
       TEST_DATABASE_ALLOWED_HOST: postgres_test
       TEST_DATABASE_URL: postgresql://${POSTGRES_TEST_USER:-agent_os_test}:${POSTGRES_TEST_PASSWORD:-agent_os_test_local}@postgres_test:5432/${POSTGRES_TEST_DB:-agent_os_test}
@@ -87,6 +89,23 @@ services:
         read_only: true
         bind:
           create_host_path: false
+
+  # Explicit opt-in; mailbox is disposable and SMTP is never published to the host.
+  mailcatcher:
+    profiles: [mail]
+    image: axllent/mailpit:v1.27.10@sha256:b1f1be18af530d939a11ee8820b379e0c88eeec204d904bfad68862adced3a5a
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: 100
+      MP_DISABLE_VERSION_CHECK: "true"
+    ports: ["127.0.0.1:${FIGHT_AGENT_OS_MAIL_PORT:-18088}:8025"]
+    read_only: true
+    tmpfs: ["/data:rw,nosuid,noexec,size=64m", "/tmp:rw,nosuid,noexec,size=16m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 64
 
   postgres:
     image: postgres:17-bookworm

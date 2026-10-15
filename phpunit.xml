@@ -2,6 +2,8 @@
 <phpunit bootstrap="tests/bootstrap.php" cacheDirectory="var/cache/phpunit" colors="true">
     <php>
         <env name="APP_ENV" value="test" force="true"/>
+        <!-- Never inherit an opt-in developer transport into deterministic product suites. -->
+        <env name="APP_CREDENTIAL_DELIVERY_ADAPTER" value="null" force="true"/>
     </php>
     <testsuites>
         <testsuite name="Unit">

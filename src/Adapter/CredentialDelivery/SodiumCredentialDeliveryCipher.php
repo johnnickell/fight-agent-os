@@ -28,7 +28,7 @@ final readonly class SodiumCredentialDeliveryCipher implements InvitationDeliver
     {
         $decoded = preg_match('/\A[0-9a-fA-F]{64}\z/D', $hexKey) ? hex2bin($hexKey) : false;
         if (
-            $decoded === false || strlen($decoded) !== 32
+            $decoded === false || strlen($decoded) !== 32 || count(array_unique(str_split($decoded))) < 16
             || !in_array($purpose, ['activation', 'password_reset'], true)
         ) {
             throw new InvalidArgumentException('Invalid credential delivery cipher configuration.');
