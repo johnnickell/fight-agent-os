@@ -533,6 +533,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00199](00199-TASK.md) | Keep expected HTTP-failure logs out of PHPUnit console | — (standalone bug) | done | — | [PR #77](https://github.com/johnnickell/fight-agent-os/pull/77) |
 | — | [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | — (standalone chore) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
 | — | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | [TICKET-00084 — Coordinate local TASK delivery through an open reviewed PR](../tickets/00084-TICKET.md) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
-| — | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | done | — | — |
+| — | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | done | — | [PR #107](https://github.com/johnnickell/fight-agent-os/pull/107) |
 | — | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | — (standalone chore) | done | — | [PR #103](https://github.com/johnnickell/fight-agent-os/pull/103) |
 <!-- /planning:board -->
