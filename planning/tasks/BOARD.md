@@ -16,7 +16,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | in-progress | — | [PR #75](https://github.com/johnnickell/fight-agent-os/pull/75) |
-| 2 | [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | — (standalone chore) | in-progress | — | [PR #100](https://github.com/johnnickell/fight-agent-os/pull/100) |
 
 ## Ready Frontier
 
@@ -420,6 +419,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify tool-mediated execution boundaries | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | done | — | [PR #88](https://github.com/johnnickell/fight-agent-os/pull/88) |
 | 2 | [TASK-00145](00145-TASK.md) | Enable opt-in trusted local HTTPS | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | done | — | [PR #39](https://github.com/johnnickell/fight-agent-os/pull/39) |
+| 2 | [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | — (standalone chore) | done | — | [PR #100](https://github.com/johnnickell/fight-agent-os/pull/100) |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |

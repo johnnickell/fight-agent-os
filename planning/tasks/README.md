@@ -448,5 +448,5 @@
 | [TASK-00443](00443-TASK.md) | Configure and run currently authorized scheduled synchronization | needs-info | [TICKET-00109](../tickets/00109-TICKET.md) |
 | [TASK-00444](00444-TASK.md) | Synchronize from the Dashboard and complete the instruction-change journey | ready-for-agent | [TICKET-00109](../tickets/00109-TICKET.md) |
 | [TASK-00445](00445-TASK.md) | Record independent managed Reviews | needs-info | [TICKET-00083](../tickets/00083-TICKET.md) |
-| [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | in-progress | — |
+| [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | done | — |
 <!-- /planning:records -->
