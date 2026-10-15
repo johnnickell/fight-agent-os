@@ -17,6 +17,8 @@ Local null/memory providers send no email; production provider/scheduler enrollm
 
 Enroll a stable lowercase operator UUID once through the owning ID factory or a UUID library, and keep its trusted
 identity mapping outside the command. Do not substitute the target ID or infer an operator from environment input.
+For the separate permanently guarded first Super Admin operation, read the
+[bootstrap runbook](SUPER_ADMIN_BOOTSTRAP.md); neither ordinary command can resume a claimed bootstrap.
 This bounded attribution does not require a database User or claim a logged-in principal. Package assignment uses
 the typed operator UUID as actor; durable console audit uses the distinct `console:UUID` namespace.
 
@@ -121,9 +123,11 @@ No direct handler injection/call, outer/nested/joining UoW or copied package bus
 outside configurable transformations and detects silent vetoes, including when membership already existed.
 The terminal [`ConsoleUserCommandGuard`](../../src/Application/Invitation/ConsoleUserCommandGuard.php) checks
 actual routed class/actor/target/role/email against that intent before mutation and rechecks current eligible
-references immediately before package assignment. It is the innermost filter, installed first in Common's LIFO
-pipeline; configured later filters run outside it. Invocation frames are removed in `finally` on success/failure.
-Do not insert a transforming stage between this guard and routing or bypass public buses. Queries also traverse
+references immediately before package assignment. It runs in a separately registered routing pipeline behind the
+configurable outer pipeline. A nested configured filter must not consume the terminal guard through Common's mutable
+outer execution stack; unsupported continuation reentry fails closed rather than reaching unguarded routing.
+Invocation frames are removed in `finally` on success/failure. Do not insert a transforming stage between this guard
+and routing or bypass public buses. Queries also traverse
 their configured pipeline; returned IDs and the exact desired preview definitions must match, not merely claim
 an empty unchanged plan. QueryFilter's void continuation supports message veto/transformation, not a claimed
 query-result-transformation API.

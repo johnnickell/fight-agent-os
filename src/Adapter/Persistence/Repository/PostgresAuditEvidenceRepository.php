@@ -65,6 +65,10 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
      */
     private function approvedActor(string $actor, string $action): bool
     {
+        if (str_starts_with($actor, 'bootstrap:')) {
+            return preg_match('/\Abootstrap:[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $actor) === 1
+                && in_array($action, ['user.bootstrap_claimed', 'user.bootstrap_completed'], true);
+        }
         if (str_starts_with($actor, 'console:')) {
             return preg_match('/\Aconsole:[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $actor) === 1
                 && in_array($action, [

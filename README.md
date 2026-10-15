@@ -97,6 +97,11 @@ this is additive/idempotent and excludes authoritative Super Admin. Role confirm
 with disclosed crash/uncertainty boundaries. TASK-00037 implementation awaits fresh independent Review/QA;
 the earlier alternate-policy probe is conditional history, not a shipped fixed-catalog prerequisite.
 This is not bootstrap/public registration; local delivery adapters send no email.
+The separate `./bin/console user:bootstrap-super-admin --internal --confirm-bootstrap --operator=OPERATOR_UUID --email=person@example.test`
+permanently claims the one-time initial elevation before independently committed invitation/assignment.
+**A claimed interruption cannot be reset or resumed in this release.** Read the
+[bootstrap runbook](docs/engineering/SUPER_ADMIN_BOOTSTRAP.md) before confirming; early delivery, retained partial
+state and a separate completion-audit boundary are deliberate, not an atomic rollback guarantee.
 
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services

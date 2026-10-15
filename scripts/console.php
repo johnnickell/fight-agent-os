@@ -12,7 +12,11 @@ set_error_handler(static function (): never {
 try {
     require dirname(__DIR__).'/vendor/autoload.php';
     $container = require dirname(__DIR__).'/config/services.php';
-    $configure = require dirname(__DIR__).'/config/application/console_invitation.php';
+    $composition = 'console_invitation.php';
+    if (in_array('user:bootstrap-super-admin', array_slice($_SERVER['argv'] ?? [], 1), true)) {
+        $composition = 'bootstrap_super_admin.php';
+    }
+    $configure = require dirname(__DIR__).'/config/application/'.$composition;
     $configure($container);
     exit($container->get(SafeConsoleApplication::class)->run());
 } catch (Throwable) {

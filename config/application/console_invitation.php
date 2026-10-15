@@ -17,13 +17,11 @@ use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\Invita
 use Fight\AccessControl\Application\AccessControl\Permission\QueryHandler\GetPermissionByIdHandler;
 use Fight\AccessControl\Application\AccessControl\Role\QueryHandler\GetRoleByIdHandler;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Application\AccessControl\User\CommandHandler\AssignRoleToUserHandler;
 use Fight\AccessControl\Application\AccessControl\User\CommandHandler\InvitePendingUserHandler;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
-use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Messaging\Command\Sync\CommandPipeline;
@@ -48,14 +46,6 @@ return static function (Container $container): void {
             $c->get(Clock::class),
             $c->get(EventDispatcher::class)
         ));
-    $container->set(AssignRoleToUserHandler::class, static fn(Container $c): AssignRoleToUserHandler =>
-        new AssignRoleToUserHandler(
-            $c->get(UserRepository::class),
-            $c->get(RoleRepository::class),
-            $c->get(Clock::class),
-            $c->get(TransactionalUnitOfWork::class),
-            $c->get(EventDispatcher::class)
-        ));
     $container->set(ConsoleUserOperation::class, static fn(Container $c): ConsoleUserOperation =>
         new ConsoleUserOperation(
             $c->get(CommandBus::class),
@@ -77,8 +67,7 @@ return static function (Container $container): void {
     $container->get('messaging.command.router')->registerHandlers([
         InviteOrdinaryUserHandler::commandRegistration() => InviteOrdinaryUserHandler::class,
         AddUserRoleHandler::commandRegistration()        => AddUserRoleHandler::class,
-        InvitePendingUser::class                         => InvitePendingUserHandler::class,
-        AssignRoleToUser::class                          => AssignRoleToUserHandler::class
+        InvitePendingUser::class                         => InvitePendingUserHandler::class
     ]);
     $container->set(GetRoleByIdHandler::class, static fn(Container $c): GetRoleByIdHandler =>
         new GetRoleByIdHandler($c->get(RoleRepository::class)));
@@ -100,12 +89,14 @@ return static function (Container $container): void {
 
         return $application;
     });
-    // First pushed means last executed before routing in Common's LIFO pipeline. Configured
-    // filters are added outside this guard by the registrar or callers before dispatch.
-    $container->set('messaging.command.bus', static function (Container $c): CommandPipeline {
-        $bus = new CommandPipeline($c->get('messaging.command.routing'));
-        $bus->addFilter($c->get(ConsoleUserCommandGuard::class));
+    // Keep the terminal guard in its own routing stage: a nested configurable filter must not
+    // consume or replace its continuation in Common's mutable outer execution stack.
+    $container->set('console.command.routing', static function (Container $c): CommandPipeline {
+        $routing = new CommandPipeline($c->get('messaging.command.routing'));
+        $routing->addFilter($c->get(ConsoleUserCommandGuard::class));
 
-        return $bus;
+        return $routing;
     });
+    $container->set('messaging.command.bus', static fn(Container $c): CommandPipeline =>
+        new CommandPipeline($c->get('console.command.routing')));
 };

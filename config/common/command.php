@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Application\Authorization\AuthenticatedRoleAssignmentGuard;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\DeliverUserInvitationHandler;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\ExpireInvitationDeliveryHandler;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
@@ -13,6 +14,7 @@ use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\CommandHand
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\CommandHandler\ExpirePasswordResetDeliveryHandler;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Application\AccessControl\User\CommandHandler\AssignRoleToUserHandler;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ExpireInvitationDelivery;
@@ -25,6 +27,7 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\ExpirePa
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Messaging\Command\Sync\CommandPipeline;
 use Fight\Common\Adapter\Messaging\Command\Sync\Routing\ServiceAwareCommandRouter;
@@ -43,15 +46,28 @@ return [
         'messaging.command.routing'               => static function (Container $container): RoutingCommandBus {
             return new RoutingCommandBus($container->get('messaging.command.router'));
         },
-        'messaging.command.bus'                   => static function (Container $container): CommandPipeline {
-            return new CommandPipeline($container->get('messaging.command.routing'));
+        'messaging.command.authorized_routing'    => static function (Container $container): CommandPipeline {
+            $routing = new CommandPipeline($container->get('messaging.command.routing'));
+            $routing->addFilter($container->get(AuthenticatedRoleAssignmentGuard::class));
+
+            return $routing;
         },
+        'messaging.command.bus'                   => static fn(Container $container): CommandPipeline =>
+            new CommandPipeline($container->get('messaging.command.authorized_routing')),
         CommandBus::class                         => static function (Container $container): CommandBus {
             return $container->get('messaging.command.bus');
         },
         SynchronousCommandBus::class              => static function (Container $container): SynchronousCommandBus {
             return $container->get('messaging.command.bus');
         },
+        AssignRoleToUserHandler::class            => static fn(Container $c): AssignRoleToUserHandler =>
+            new AssignRoleToUserHandler(
+                $c->get(UserRepository::class),
+                $c->get(RoleRepository::class),
+                $c->get(Clock::class),
+                $c->get(TransactionalUnitOfWork::class),
+                $c->get(EventDispatcher::class)
+            ),
         ReconcileManagedPolicyHandler::class      => static function (
             Container $container
         ): ReconcileManagedPolicyHandler {
@@ -118,6 +134,7 @@ return [
         }
     ],
     'handlers' => [
+        AssignRoleToUser::class            => AssignRoleToUserHandler::class,
         ReconcileManagedPolicy::class      => ReconcileManagedPolicyHandler::class,
         ExpireInvitationDelivery::class    => ExpireInvitationDeliveryHandler::class,
         ExpirePasswordResetDelivery::class => ExpirePasswordResetDeliveryHandler::class,
