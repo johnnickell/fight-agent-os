@@ -35,6 +35,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -309,6 +310,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00439](00439-TASK.md) | Return the published checkout safely to default | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | ready-for-agent | [TASK-00438](00438-TASK.md) | — |
 | — | [TASK-00440](00440-TASK.md) | Publish and recover instruction changes in the Dashboard | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | ready-for-agent | [TASK-00439](00439-TASK.md), [TASK-00433](00433-TASK.md) | — |
 | — | [TASK-00444](00444-TASK.md) | Synchronize from the Dashboard and complete the instruction-change journey | [TICKET-00109 — Synchronize the designated checkout safely](../tickets/00109-TICKET.md) | ready-for-agent | [TASK-00443](00443-TASK.md), [TASK-00435](00435-TASK.md), [TASK-00440](00440-TASK.md) | — |
+| — | [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | [TASK-00447](00447-TASK.md) | — |
+| — | [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | [TASK-00447](00447-TASK.md) | — |
 
 ## Needs Info
 
