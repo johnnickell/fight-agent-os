@@ -14,7 +14,8 @@ command-specific composition requirements. Their old implementation reports rema
 Restrict shell, checkout, Docker and database access to trusted operators. Verify the intended Compose project
 and database privately; never print connection strings. Apply approved migrations with `./bin/database migrate`.
 Preserve the independent external delivery key for outstanding work. Local null/memory providers send no email;
-production provider/scheduler enrollment is separate. See [credential recovery](CREDENTIAL_RECOVERY.md).
+production provider/scheduler enrollment is separate. The opt-in [local invitation catcher](INVITATION_EMAIL.md)
+can store test mail without a real inbox or activation UI. See [credential recovery](CREDENTIAL_RECOVERY.md).
 
 Enroll an operator UUID using the owning ID factory or a UUID library and retain its trusted identity mapping
 outside the command. It need not identify a database User. Do not substitute the target ID as operator.

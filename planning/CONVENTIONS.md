@@ -73,10 +73,14 @@ Package API coverage, hypothetical reuse, demonstration screens and proving that
 sufficient reasons for new work. Keep necessary safety, reliability and verification within the real delivery
 path; this rule does not waive them. Reuse existing owners and defer optional surface area without a current use.
 
-Preserve the Board's execution priorities and the accepted terminal-first milestone: one approved TASK through
-Team Lead and Software Engineer to durable Awaiting review. A later accepted product use does not automatically
-become a prerequisite to that milestone. Scope changes need recorded human approval; do not silently delete
-existing requirements or mass-close planned work. No TASK should be created merely to demonstrate this rule.
+Follow the [approved blended delivery strategy](ROADMAP.md#approved-blended-delivery-strategy): terminal,
+browser and shared-foundation work may interleave through their real dependencies. The Board's TASK metadata
+still owns execution priority; strategy prose does not reorder it. Preserve the first managed implementation
+proof: one approved TASK through Team Lead and Software Engineer to durable Awaiting review. Later product
+uses do not automatically become prerequisites to earlier outcomes, and early suppliers must not depend on
+completed downstream journeys. Scope, priority or dependency changes need recorded human approval; do not
+silently remove requirements, clear qualification holds or mass-close planned work. No TASK should be created
+merely to demonstrate this rule.
 
 ## Upstream capability qualification
 

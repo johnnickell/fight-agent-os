@@ -1,9 +1,12 @@
-# Terminal-first execution contract
+# Terminal execution contract
 
 Implementation handoff for [TICKET-00032](../../planning/tickets/00032-TICKET.md) and
-[TASK-00138](../../planning/tasks/00138-TASK.md). The sequence is approved; the October 6
-[tool-mediated boundary](TOOL_MEDIATED_EXECUTION.md) replaces the first Engineer-root VM strategy. Its file-only
-prototype is demonstrated, not a production Workflow. Managed TASK execution and candidate checks remain unavailable.
+[TASK-00138](../../planning/tasks/00138-TASK.md). The
+[approved blended roadmap](../../planning/ROADMAP.md#approved-blended-delivery-strategy) supersedes global
+terminal-first ordering; this contract retains the terminal outcome, its internal dependencies and safety gates.
+The October 6 [tool-mediated boundary](TOOL_MEDIATED_EXECUTION.md) replaces the first Engineer-root VM strategy.
+Its file-only prototype is demonstrated, not a production Workflow. Managed TASK execution and candidate checks
+remain unavailable.
 
 ## Ownership and entry points
 

@@ -34,8 +34,9 @@ pi install ./harness/pi
 
 Restart Pi, then use `/fight-header` to choose a presentation or `off` to restore its default header.
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
-The [terminal-first workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation; branding does not
-enable managed TASK execution or sandbox access. The optional [deterministic tool policy](harness/pi/TOOL_POLICY.md)
+The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
+browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
+Branding does not enable managed TASK execution or sandbox access. The optional [deterministic tool policy](harness/pi/TOOL_POLICY.md)
 requires separate operator selection on the qualified runtime; it is not Jev screening or sandbox isolation.
 
 ## Development
@@ -82,11 +83,16 @@ in deployment artifacts. Activation/reset/change consumers remain planned; this 
 Direct Fight Access Control invitation/reset delivery handlers now require an independent
 `APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
 for recoverable encrypted material. Keep it external to source control and preserve it while work is outstanding.
-Local/test delivery defaults to a retryable null provider; an in-memory provider is opt-in. A bounded internal
+Local/test delivery defaults to a retryable null provider; an in-memory provider is opt-in. Invitation email can
+explicitly use the disposable loopback Mailpit catcher with `APP_CREDENTIAL_DELIVERY_ADAPTER=catcher` and validated
+`APP_ACTIVATION_ORIGIN`/`APP_ACTIVATION_PATH`; see [local invitation email](docs/engineering/INVITATION_EMAIL.md)
+for exact `.env`, start/send/recovery/cleanup commands. No real inbox or activation UI is supplied.
+A bounded internal
 `./bin/credential-delivery run --internal` runner, key-free `expire --internal` cleanup and safe generation status
 command are available. See [credential recovery](docs/engineering/CREDENTIAL_RECOVERY.md) for the v0.5.0 adoption
 migration, data guards, bounded downtime-expiry cleanup and exit codes. There is no production provider or enrolled recovery schedule, so this does not
-enable sending credentials or establish complete production recovery.
+enable real-inbox delivery or establish complete production recovery. Production-like HTTP boot and delivery
+preflight fail closed; Compose now consumes `APP_ENV` rather than hardcoding development.
 
 Trusted operators can explicitly preview and apply the version-controlled installation authority with
 `./bin/managed-policy preview --internal` and `./bin/managed-policy apply --internal`. Read the
@@ -101,7 +107,8 @@ an existing eligible role with `./bin/console user:role:add --internal --operato
 this is additive/idempotent and excludes authoritative Super Admin. Role confirmation audit commits separately,
 with disclosed crash/uncertainty boundaries. TASK-00037 implementation awaits fresh independent Review/QA;
 the earlier alternate-policy probe is conditional history, not a shipped fixed-catalog prerequisite.
-This is not bootstrap/public registration; local delivery adapters send no email.
+This is not bootstrap/public registration; null/memory adapters send no email, while the opt-in catcher stores
+local test invitations only.
 The separate `./bin/console user:bootstrap-super-admin --internal --confirm-bootstrap --operator=OPERATOR_UUID --email=person@example.test`
 checks authoritative Super Admin presence and refuses if one exists or lookup fails. Run it manually, one operator
 at a time; no concurrent admission guarantee is provided. Another manual attempt is allowed after partial/failure

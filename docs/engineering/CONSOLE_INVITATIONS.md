@@ -13,7 +13,8 @@ through private configuration without printing connection strings. Apply approve
 [managed policy runbook](MANAGED_POLICY.md). Both operations reject missing/drifted installation authority; neither
 repairs it automatically. Keep the independent external `APP_CREDENTIAL_DELIVERY_KEY` while work is outstanding.
 The [credential recovery runbook](CREDENTIAL_RECOVERY.md) owns provider configuration and safe delivery recovery.
-Local null/memory providers send no email; production provider/scheduler enrollment remains separate.
+Local null/memory providers send no email; the opt-in [invitation catcher](INVITATION_EMAIL.md) stores disposable
+local test mail only. Production provider/scheduler enrollment remains separate.
 
 Enroll a stable lowercase operator UUID once through the owning ID factory or a UUID library, and keep its trusted
 identity mapping outside the command. Do not substitute the target ID or infer an operator from environment input.
@@ -171,7 +172,7 @@ assertions, not silently removed. Owning tools validate wiring/source paths dire
 Serialize `./bin/database test-reset` then `./bin/phpunit --filter OrdinaryInvitation` for focused PostgreSQL work.
 `./bin/backend-tests` measures backend coverage; `./bin/build` remains the mandatory full local gate. Fresh-process
 recovery history belongs to [TASK-00037](../../planning/tasks/00037-TASK.md); current refactor evidence and
-counts/warnings belong to [TASK-00446](../../planning/tasks/00446-TASK.md). No real email,
+counts/warnings belong to [TASK-00446](../../planning/tasks/00446-TASK.md). No real-inbox delivery,
 scheduler, production certification, crash-kill testing, hosted CI, independent acceptance or publication follows
 from an Engineer gate. Fresh independent Review and affected behavioral QA remain required; visual screenshots
 are N/A for these non-interactive commands.

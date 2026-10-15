@@ -166,3 +166,13 @@ for TASK execution/testing. A constrained installation-owned provisioner creates
 containers and required private services on deterministic PHP requests. Agent sessions have no Docker authority.
 Public preview URLs, arbitrary stacks and deployment remain excluded; local browser QA may access only its owned
 private application. Installation profile selection must prove isolation on supported hosts before managed launch.
+
+## Approved operational-observability planning follow-on
+
+John approved the focused [Operational logs and failure diagnostics map](../operational-observability-map.md)
+after requesting the concrete journey from a failed operation or managed run to relevant logs, useful redacted
+exception details and surrounding events. The historical observability-service deferral above remains intact.
+The new map owns source selection, backend/viewer qualification, diagnostics, collection, search/archive lifecycle
+and the delivery-boundary evaluation. It does not select or install an observability service, change this runtime
+or grant Docker access. Structured stdout/stderr remains preferred. Existing Workflow, Artifact and privacy
+ownership remains with WF-017 and its consumers; the terminal-first milestone and Board priority are unchanged.

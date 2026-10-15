@@ -2,7 +2,7 @@
 id: TICKET-00039
 epic: EPIC-00006
 title: Require relevance screening before loading file contents
-status: ready-for-agent
+status: done
 ---
 
 # Require relevance screening before loading file contents
@@ -119,7 +119,7 @@ Mark an affected TASK needs-info if a necessary guarantee remains unresolved; do
 |---|---|---|
 | [TASK-00162](../tasks/00162-TASK.md) | Screen individual files and require selective reads | done |
 | [TASK-00163](../tasks/00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | done |
-| [TASK-00309](../tasks/00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | in-progress |
+| [TASK-00309](../tasks/00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

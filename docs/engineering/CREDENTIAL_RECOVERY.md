@@ -47,7 +47,12 @@ database without separate authority. Tests use only the explicitly guarded test 
 `run` validates the provider and both delivery ciphers before any mutation, performs bounded cleanup, then offers one
 bounded live-delivery page. It requires the original external `APP_CREDENTIAL_DELIVERY_KEY`. Local/test defaults to the
 retryable null adapter; `APP_CREDENTIAL_DELIVERY_ADAPTER=memory` selects deterministic simulation. Neither sends credentials.
-Production-like composition fails closed without a real provider. **`expire` and `status` do not resolve keys, ciphers or
+`APP_CREDENTIAL_DELIVERY_ADAPTER=catcher` maps activation invitations to the opt-in private development Mailpit service;
+password-reset mapping remains unimplemented and retryable. Follow [local invitation email](INVITATION_EMAIL.md) for
+canonical HTTPS configuration, `.env`, mailbox access and cleanup. The delivery key also rejects repeated/low-diversity
+bytes (fewer than 16 distinct decoded bytes); this is not proof of entropy. Generate random material, never a password.
+Production-like HTTP boot and delivery preflight fail closed without a real provider. Compose consumes `APP_ENV`;
+setting it to production never permits a catcher fallback. **`expire` and `status` do not resolve keys, ciphers or
 providers**; cleanup can remove expired bytes even when the delivery key is unavailable.
 
 ## Bounds and results

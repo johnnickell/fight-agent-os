@@ -42,7 +42,7 @@
 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | done | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | done | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | done | [TICKET-00016](../tickets/00016-TICKET.md) |
-| [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
+| [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | done | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
@@ -311,7 +311,7 @@
 | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | done | [TICKET-00084](../tickets/00084-TICKET.md) |
 | [TASK-00307](00307-TASK.md) | Document the qualified backend API and browser integration reference | ready-for-agent | [TICKET-00081](../tickets/00081-TICKET.md) |
 | [TASK-00308](00308-TASK.md) | Publish the immutable qualified reference bundle to the five starter maintainers | needs-info | [TICKET-00082](../tickets/00082-TICKET.md) |
-| [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | in-progress | [TICKET-00039](../tickets/00039-TICKET.md) |
+| [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00310](00310-TASK.md) | Execute bounded finding-driven revisions | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
 | [TASK-00311](00311-TASK.md) | Authorize exact-subject acceptance | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
 | [TASK-00312](00312-TASK.md) | Verify accepted behavior through managed QA | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
@@ -453,4 +453,41 @@
 | [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | done | — |
+| [TASK-00451](00451-TASK.md) | Emit useful native diagnostics without disrupting operations | needs-info | [TICKET-00111](../tickets/00111-TICKET.md) |
+| [TASK-00452](00452-TASK.md) | Explain HTTP failures without changing public responses | ready-for-agent | [TICKET-00111](../tickets/00111-TICKET.md) |
+| [TASK-00453](00453-TASK.md) | Observe every command query and event dispatch | ready-for-agent | [TICKET-00111](../tickets/00111-TICKET.md) |
+| [TASK-00454](00454-TASK.md) | Attribute console and worker failures to the correct operation | needs-info | [TICKET-00111](../tickets/00111-TICKET.md) |
+| [TASK-00455](00455-TASK.md) | Resolve native collection and privilege blockers | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
+| [TASK-00456](00456-TASK.md) | Expose collection degradation independently of logging | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
+| [TASK-00457](00457-TASK.md) | Preserve pending deliveries within bounded hold-aware queues | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
+| [TASK-00458](00458-TASK.md) | Capture and recover enrolled operational sources | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
+| [TASK-00459](00459-TASK.md) | Deliver captured logs to private search with truthful receipts | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
+| [TASK-00460](00460-TASK.md) | Deliver captured logs independently to verified archives | needs-info | [TICKET-00112](../tickets/00112-TICKET.md) |
+| [TASK-00461](00461-TASK.md) | Provide private Loki ingestion with truthful receipt contracts | needs-info | [TICKET-00113](../tickets/00113-TICKET.md) |
+| [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | ready-for-agent | [TICKET-00113](../tickets/00113-TICKET.md) |
+| [TASK-00463](00463-TASK.md) | Search current logs in the native workspace | needs-info | [TICKET-00113](../tickets/00113-TICKET.md) |
+| [TASK-00464](00464-TASK.md) | Inspect exact diagnostic content and surrounding context | ready-for-agent | [TICKET-00113](../tickets/00113-TICKET.md) |
+| [TASK-00465](00465-TASK.md) | Follow live logs with bounded pause and recovery | needs-info | [TICKET-00113](../tickets/00113-TICKET.md) |
+| [TASK-00466](00466-TASK.md) | Navigate from real failures and runs into diagnosis | ready-for-agent | [TICKET-00113](../tickets/00113-TICKET.md) |
+| [TASK-00467](00467-TASK.md) | Bind operational logs to preservation and disclosure authority | needs-info | [TICKET-00114](../tickets/00114-TICKET.md) |
+| [TASK-00468](00468-TASK.md) | Write and verify immutable operational archives | needs-info | [TICKET-00114](../tickets/00114-TICKET.md) |
+| [TASK-00469](00469-TASK.md) | Preview and apply independent log-retention policies | needs-info | [TICKET-00114](../tickets/00114-TICKET.md) |
+| [TASK-00470](00470-TASK.md) | Inspect authorized archive coverage and availability | ready-for-agent | [TICKET-00114](../tickets/00114-TICKET.md) |
+| [TASK-00471](00471-TASK.md) | Expire eligible live and archived copies safely | needs-info | [TICKET-00114](../tickets/00114-TICKET.md) |
+| [TASK-00472](00472-TASK.md) | Apply authorized exposure-response purge across log copies | needs-info | [TICKET-00114](../tickets/00114-TICKET.md) |
+| [TASK-00473](00473-TASK.md) | Recover archive coverage without reconstructing authority | needs-info | [TICKET-00114](../tickets/00114-TICKET.md) |
+| [TASK-00474](00474-TASK.md) | Admit requester-owned restores with bounded lifecycle authority | needs-info | [TICKET-00115](../tickets/00115-TICKET.md) |
+| [TASK-00475](00475-TASK.md) | Prepare verified isolated archive-search scopes | needs-info | [TICKET-00115](../tickets/00115-TICKET.md) |
+| [TASK-00476](00476-TASK.md) | Investigate restored incidents in native Logs | ready-for-agent | [TICKET-00115](../tickets/00115-TICKET.md) |
+| [TASK-00477](00477-TASK.md) | Retire and reclaim temporary restore scopes safely | needs-info | [TICKET-00115](../tickets/00115-TICKET.md) |
+| [TASK-00478](00478-TASK.md) | Export selected live diagnostics with bounded current-authority output | needs-info | [TICKET-00116](../tickets/00116-TICKET.md) |
+| [TASK-00479](00479-TASK.md) | Download verified archives through the native authorized catalog | needs-info | [TICKET-00116](../tickets/00116-TICKET.md) |
+| [TASK-00480](00480-TASK.md) | Export selected requester-owned restored diagnostics | ready-for-agent | [TICKET-00116](../tickets/00116-TICKET.md) |
+| [TASK-00481](00481-TASK.md) | Bind and preflight authorized observability operations | needs-info | [TICKET-00117](../tickets/00117-TICKET.md) |
+| [TASK-00482](00482-TASK.md) | Enroll isolated operational storage with enforced physical limits | needs-info | [TICKET-00117](../tickets/00117-TICKET.md) |
+| [TASK-00483](00483-TASK.md) | Supervise enrolled capture and lifecycle workers | needs-info | [TICKET-00117](../tickets/00117-TICKET.md) |
+| [TASK-00484](00484-TASK.md) | Launch and reclaim bounded temporary restore runtimes | needs-info | [TICKET-00117](../tickets/00117-TICKET.md) |
+| [TASK-00485](00485-TASK.md) | Support bounded authenticated log streaming and extraction | needs-info | [TICKET-00117](../tickets/00117-TICKET.md) |
+| [TASK-00486](00486-TASK.md) | Inspect and recover observability through the existing operator guide | ready-for-agent | [TICKET-00117](../tickets/00117-TICKET.md) |
+| [TASK-00487](00487-TASK.md) | Complete the supported live-and-archived operator journey | ready-for-agent | [TICKET-00117](../tickets/00117-TICKET.md) |
 <!-- /planning:records -->

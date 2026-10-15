@@ -59,7 +59,7 @@ final class SodiumCredentialDeliveryCipherTest extends TestCase
      */
     public function testRejectsEmptyCredential(): void
     {
-        $cipher = new SodiumCredentialDeliveryCipher(str_repeat('ab', 32), 'activation');
+        $cipher = new SodiumCredentialDeliveryCipher(bin2hex(random_bytes(32)), 'activation');
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Credential material must not be empty.');
         $cipher->encrypt('');
@@ -70,7 +70,7 @@ final class SodiumCredentialDeliveryCipherTest extends TestCase
      */
     public function testRequiresIndependentKeyAndRedactsDiagnostics(): void
     {
-        foreach (['', bin2hex(random_bytes(16))] as $key) {
+        foreach (['', bin2hex(random_bytes(16)), str_repeat('ab', 32)] as $key) {
             try {
                 new SodiumCredentialDeliveryCipher($key, 'activation');
                 self::fail('Weak keys must be rejected.');

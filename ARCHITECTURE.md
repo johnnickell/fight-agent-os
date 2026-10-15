@@ -33,5 +33,7 @@ See [engineering standards](docs/engineering/STANDARDS.md), [Team roles](docs/en
 [isolated TASK startup](planning/tickets/00032-TICKET.md). PHP owns deterministic workflow transitions and
 sandbox provisioning requests; model-generated instructions cannot expand permissions or container policy.
 
-The [terminal execution contract](docs/engineering/TERMINAL_EXECUTION.md) records the approved terminal-first
-sequence, measured local sandbox primitives and remaining launch blockers.
+The [terminal execution contract](docs/engineering/TERMINAL_EXECUTION.md) records the managed execution
+boundary, measured local sandbox primitives and remaining launch blockers. The
+[Roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy) governs blended terminal, browser and
+shared-foundation delivery; interface choice does not bypass an operation's authority or qualification gates.

@@ -41,7 +41,7 @@
 | [TICKET-00036](00036-TICKET.md) | Share server-owned form validation with the browser | done | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00037](00037-TICKET.md) | Configure and qualify Jev access for the Harness | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00038](00038-TICKET.md) | Guard Pi tool execution with deterministic restrictions and Jev | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
-| [TICKET-00039](00039-TICKET.md) | Require relevance screening before loading file contents | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00039](00039-TICKET.md) | Require relevance screening before loading file contents | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00040](00040-TICKET.md) | Preserve context through verified compaction and resume | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00041](00041-TICKET.md) | Schedule and observe safe session compaction | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00042](00042-TICKET.md) | Answer typed questions across bounded evidence | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
@@ -113,4 +113,11 @@
 | [TICKET-00108](00108-TICKET.md) | Publish an instruction change through a recoverable PR | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |
 | [TICKET-00109](00109-TICKET.md) | Synchronize the designated checkout safely | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |
 | [TICKET-00110](00110-TICKET.md) | Work in a Pi terminal workspace with agent activity and live Docker logs | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00111](00111-TICKET.md) | Explain application activity and failures with useful diagnostics | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
+| [TICKET-00112](00112-TICKET.md) | Collect operational logs with bounded recovery and visible loss | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
+| [TICKET-00113](00113-TICKET.md) | Diagnose current failures through authorized native Logs | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
+| [TICKET-00114](00114-TICKET.md) | Preserve and expire verified operational logs safely | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
+| [TICKET-00115](00115-TICKET.md) | Investigate older incidents through temporary archive search | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
+| [TICKET-00116](00116-TICKET.md) | Export and download authorized diagnostic material | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
+| [TICKET-00117](00117-TICKET.md) | Operate and recover the observability installation | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
 <!-- /planning:records -->
