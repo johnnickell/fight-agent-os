@@ -23,13 +23,35 @@ Dependencies point `Adapter → Application → Domain`.
 
 Keep `App\` mapped directly to `src/`: `App\Domain`, `App\Application`, and `App\Adapter`. Organize below each layer by the responsibility actually owned, then by capability or transport where useful. `Middleware` holds only code that implements a middleware pipeline; HTTP failure classification, mapped representations, validation values, and response mapping belong in the appropriate `Adapter/Http/Api/` or other transport home, not `Middleware`. Responders and safe transport representations belong in Adapter; Domain policy stays with the concept that knows the rule. Do not create speculative `Service`, `Manager`, `Helper`, `Value`, or protocol-neutral buckets for types without a demonstrated boundary. Review an existing exception against its actual role, callers and accepted contract; move it only when the scoped work owns the change and can prove compatibility. Do not bulk-move unrelated source to conform to a diagram.
 
-[Fight Access Control ownership](../../planning/adr/0001-application-ownership-and-orchestration.md) governs identity and authorization. Dispatch its public package messages, handlers and safe Views directly for package-owned use cases; do not recreate them behind Agent OS aliases. Introduce owned Application orchestration only when a missing package behavior enforces Agent OS policy or coordinates real ownership boundaries with observable input, result/failure and injected inward capabilities. Place state-based business decisions with their Domain owner; a handler coordinates them and an adapter translates them, not the other way around. A repository-backed condition may need an injected capability or application policy rather than a getter-based replica of entity policy. Assess each use case against the accepted ownership ADR before extracting a specification or adding a handler.
+[Fight Access Control ownership](../../planning/adr/0001-application-ownership-and-orchestration.md) governs identity and authorization. Dispatch its public package commands and queries through the configured Fight Common buses and consume its safe Views directly; do not recreate them behind Agent OS aliases or invoke handlers to bypass routing and filters. Introduce owned Application orchestration only when a missing package behavior enforces Agent OS policy or coordinates real ownership boundaries with observable input, result/failure and injected inward capabilities. Place state-based business decisions with their Domain owner; a handler coordinates them and an adapter translates them, not the other way around. A repository-backed condition may need an injected capability or application policy rather than a getter-based replica of entity policy. Assess each use case against the accepted ownership ADR before extracting a specification or adding a handler.
 
 Review namespace cohesion as a project taste criterion: when a directory combines unrelated responsibilities,
 propose deeper capability-based subnamespaces with examples of callers and ownership. Class count is a signal,
 not a numeric limit. Prefer meaningful depth over flat miscellaneous buckets; avoid one-class folders or layers
 created only to satisfy a diagram. `Adapter/Persistence` is a candidate for this assessment (repositories, grant
 transitions, hydration, locking and infrastructure), not authorization to move it during unrelated work.
+
+### Shared services and bus dispatch
+
+Use the existing container's shared registrations for stateless services, command/query handlers, buses and
+framework command instances. Construct each registered service in a composition-root factory from references to
+other registered services in that same container. Do not construct unregistered parallel service graphs in an
+adapter, handler or factory, and do not use a container as an Application/Domain service locator. Shared means
+one instance per container, not PHP static globals. Fresh messages, values and results remain appropriate;
+request/invocation-scoped stateful infrastructure must have explicit isolation and cleanup on success and failure.
+
+Every command/query dispatch, including nested package work inside owned orchestration, traverses its configured
+bus pipeline. Inject buses, not handlers, for dispatch. An empty filter list is not permission to bypass it.
+Preserve use-case transaction, authorization, audit and recovery guarantees when composing package handlers;
+if the installed transaction contract cannot support them, report the concrete blocker rather than call handlers
+privately or weaken the contract. Void command dispatch alone does not prove a filter allowed all required effects.
+
+For new or revised console entry points, use an Adapter Symfony Console Command registered with the existing
+container and exposed through generic `bin/console`. The command validates/maps transport input, dispatches a
+package or justified owned use case through injected buses, and presents safe output/exit status. Business and
+transaction orchestration stay with their Domain/Application owners. Sanitize parsing/unknown-option errors,
+interactive suggestions and verbose rendering as well as handler failures; never echo private input or exceptions.
+This does not authorize migrating unrelated entry points or replacing the application's framework.
 
 ### Module depth and interface simplicity
 

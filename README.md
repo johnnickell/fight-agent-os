@@ -86,6 +86,16 @@ Trusted operators can explicitly preview and apply the version-controlled instal
 `./bin/managed-policy preview --internal` and `./bin/managed-policy apply --internal`. Read the
 [managed policy runbook](docs/engineering/MANAGED_POLICY.md) before applying: this reconciles the exact managed
 catalog, not users, bootstrap, Swagger routes or live Agent operations. It never runs automatically.
+After reconciliation, trusted operators can invite an ordinary pending user with
+`./bin/console user:invite --internal --operator=OPERATOR_UUID --email=person@example.test`.
+Read the [console invitation runbook](docs/engineering/CONSOLE_INVITATIONS.md) before use. Invitation and
+`ROLE_USER` assignment commit independently: delivery may begin before assignment, and a later failure retains
+the invitation. Safe partial output identifies the known target and corrective command. Trusted operators can add
+an existing eligible role with `./bin/console user:role:add --internal --operator=OPERATOR_UUID --user=USER_UUID --role=ROLE_UUID`;
+this is additive/idempotent and excludes authoritative Super Admin. Role confirmation audit commits separately,
+with disclosed crash/uncertainty boundaries. TASK-00037 implementation awaits fresh independent Review/QA;
+the earlier alternate-policy probe is conditional history, not a shipped fixed-catalog prerequisite.
+This is not bootstrap/public registration; local delivery adapters send no email.
 
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services

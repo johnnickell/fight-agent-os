@@ -65,6 +65,15 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
      */
     private function approvedActor(string $actor, string $action): bool
     {
+        if (str_starts_with($actor, 'console:')) {
+            return preg_match('/\Aconsole:[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $actor) === 1
+                && in_array($action, [
+                    'user.invited',
+                    'user.console_role_assigned',
+                    'user.invitation_delivery.failed',
+                    'user.invitation_delivery.confirmed'
+                ], true);
+        }
         if ($actor === 'credential-recovery') {
             return in_array($action, [
                 'user.invitation_delivery.failed',
@@ -93,6 +102,12 @@ final readonly class PostgresAuditEvidenceRepository implements AuditEvidenceRep
     {
         if ($context === []) {
             return true;
+        }
+        if ($action === 'user.console_role_assigned') {
+            return array_keys($context) === ['role_id', 'result']
+                && is_string($context['role_id'])
+                && preg_match('/\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/D', $context['role_id']) === 1
+                && $context['result'] === 'membership_confirmed';
         }
         if (
             $action !== 'refresh_session.administratively_revoked'
