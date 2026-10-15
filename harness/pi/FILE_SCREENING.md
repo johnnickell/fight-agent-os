@@ -2,10 +2,12 @@
 
 **TASK-00309 implementation candidate:** the [enrolled profile](FILE_SCREENING_PROFILE.md) adds operator preview,
 automatic actual-session allocation, shared monthly accounting, trusted evidence intake and local receipt admission.
-Bounded native/build dispatch and synthetic live parent/child screening/admission have recorded evidence, including
+The amended standing profile keeps ordinary authorized shell with separate command-risk assessment; shell can
+bypass relevance admission and is not OS-confined. Use normal Pi/provider-owned Build, not a replacement executor.
+Historical bounded native/build dispatch and synthetic live screening/admission have recorded evidence, including
 one explicitly approved corrected recovery pair; parent screens were not replayed. The child final omitted the
 requested formula. Representative investigations, terminal screenshots and independent acceptance remain pending;
-see the [current recovery checkpoint](../../planning/tasks/00309-TASK.md#engineer-approved-corrected-recovery-pair--2026-10-15).
+see the [historical recovery checkpoint](../../planning/tasks/00309-TASK.md#engineer-approved-corrected-recovery-pair--2026-10-15).
 The manual activation/SDK limitations below remain the supplier/legacy path and historical evidence; they are not
 a claim about complete profile delivery.
 

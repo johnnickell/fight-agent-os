@@ -31,7 +31,7 @@ export function validateFilePolicy(value) {
   for (const [id, a] of Object.entries(value.sessions)) {
     if (!/^[a-f0-9]{64}$/.test(id) || !exact(a, ['requestMicroUsd', 'sessionMicroUsd', 'expiresAt', 'providerDisclosure']) ||
       !positive(a.requestMicroUsd) || !positive(a.sessionMicroUsd) || a.requestMicroUsd > a.sessionMicroUsd ||
-      !Number.isSafeInteger(a.expiresAt) || typeof a.providerDisclosure !== 'boolean') deny('invalid-file-policy');
+      (a.expiresAt !== null && !Number.isSafeInteger(a.expiresAt)) || typeof a.providerDisclosure !== 'boolean') deny('invalid-file-policy');
   }
   return structuredClone(value);
 }
@@ -185,7 +185,7 @@ export class FileScreening {
       const value = this.settings.load();
       if (!value) deny('file-profile-unavailable');
       const policy = validateFilePolicy(value), allocation = policy.sessions[hash(this.sessionId)];
-      if (!allocation || allocation.expiresAt <= this.now()) deny('session-unallocated');
+      if (!allocation || (allocation.expiresAt !== null && allocation.expiresAt <= this.now())) deny('session-unallocated');
       if (!allocation.providerDisclosure) deny('disclosure-denied');
       const identity = hash(JSON.stringify(policy));
       if (this.#authority && identity !== this.#authority) this.#cache.clear();

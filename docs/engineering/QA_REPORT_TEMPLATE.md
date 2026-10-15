@@ -1,25 +1,5 @@
 # QA report: TASK-NNNNN
 
-For the enrolled `file_screening_report` transport, prepend this machine envelope to the completed report
-(see [enrolled report contracts](../../harness/pi/FILE_SCREENING_PROFILE.md#enrolled-report-envelopes)).
-Other canonical QA writers retain the body contract below; existing reports are not retroactively rewritten.
-
-```yaml
----
-qa_handoff_version: 1
-task: TASK-NNNNN
-target_branch: feature/task-NNNNN-example
-base_commit: ASSIGNED-FULL-BASE-OID
-head_commit: ASSIGNED-FULL-HEAD-OID
-target_status: clean
-disposition: INCOMPLETE
----
-```
-
-Use actual full OIDs, the exact assigned subject/status, and the same disposition as the body. A dirty status uses
-the exact porcelain lines in a two-space-indented `|` block; record file-version evidence below. Mechanical envelope
-validation does not establish independence, technical acceptance, runtime provenance or a behavioral PASS.
-
 ## Identity and disposition
 
 - Report version: 1

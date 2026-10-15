@@ -2,7 +2,7 @@ import type { Connection, ConsumerConnection, OperatorConfiguration, Receipt, An
 export type FilePolicy = {
   version: 'file-screen-v1'; revision: string; configuration: string;
   allowedRoots: string[]; excludedPaths: string[]; excludedNames: string[];
-  sessions: Record<string, { requestMicroUsd: number; sessionMicroUsd: number; expiresAt: number; providerDisclosure: boolean }>;
+  sessions: Record<string, { requestMicroUsd: number; sessionMicroUsd: number; expiresAt: number | null; providerDisclosure: boolean }>;
 };
 export type Snapshot = { canonical: string; text: string; bytes: number; digest: string; revision: string; id: string };
 export type FileQuestion = { type: 'yes-no'; instructions: string } | {

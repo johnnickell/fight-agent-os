@@ -14,10 +14,11 @@ TASK-00162 adds opt-in, instruction-based single-file
 screening; TASK-00163 extends it with bounded lists/globs and session-local metadata caching; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
 is activated by installing/updating this source. TASK-00309's [enrolled-profile implementation candidate](FILE_SCREENING_PROFILE.md)
 adds a stable `/file-screening` diagnostic, explicit enrollment preview, shared monthly accounting and local
-receipt admission, with bounded native/build dispatch and conservative legacy reconciliation. For an enrolled
-ordinary Build use `/screened-build TASK-NNNNN`: one native Build preview supplies protected host preparation,
-pinned finite roles and exact bounded role-report handoffs without per-child approvals or Agent shell access.
-See the profile's [launcher contract](FILE_SCREENING_PROFILE.md#coverage-and-launchers). Limited live synthetic
+explicit-file receipt admission and conservative legacy reconciliation. Project enrollment stands until revocation/
+authority change, with explicit conversion of historical timeboxed profiles. Use ordinary Pi and the owning provider's
+`/skill:build TASK-NNNNN`: authorized shell/Git/checks remain useful with separate shared-Jev final-command risk
+assessment, not a replacement executor. Shell can bypass relevance screening and same-user state is not confined.
+See the profile's [launcher contract](FILE_SCREENING_PROFILE.md#coverage-and-normal-build). Limited live synthetic
 boundary evidence exists; representative investigations, visual proof and independent acceptance remain pending.
 Local checks do not establish production readiness.
 

@@ -189,7 +189,9 @@ file effects, **not visual clipping/font/layout correctness**. Independent Revie
 
 Jev-enabled tool-effect screening remains TASK-00161. TASK-00309's separate
 [enrolled file-screening candidate](FILE_SCREENING_PROFILE.md) reuses these final-argument write/edit operations
-with receipt-bound reads and locally qualified single-use native/build dispatch. Live Jev workflow proof and
-independent acceptance remain pending; the bounded dispatch route does not add shell access to either profile.
+with receipt-bound explicit reads and separate final-command Jev risk assessment for useful authorized shell.
+Shell relevance bypass and same-user access are accepted interim limitations, not containment. This does not change
+this standalone optional policy's exact-script shell restrictions. Current workflow proof/independent acceptance
+remain pending.
 Do not combine its enrollment with `--fight-tool-policy`: that conflict holds activation. This standalone
 profile continues to deny Jev tools. Neither profile establishes TASK-00138 sandbox qualification.

@@ -6,7 +6,7 @@ import { configurationIdentity, reservationMicroUsd, Unavailable, validateConfig
 import { FileSource, evidenceByteLimit } from './file-screening.mjs';
 import { canonicalPath } from '../tool-policy/policy.mjs';
 
-export const profileVersion = 'screening-profile-v1';
+export const profileVersion = 'screening-profile-v2';
 export const hash = value => createHash('sha256').update(value).digest('hex');
 const fail = code => { throw new Unavailable(code); };
 const within = (path, root) => path === root || path.startsWith(root + sep);
@@ -17,14 +17,16 @@ const bounded = v => Number.isSafeInteger(v) && v >= reservationMicroUsd;
 
 /** Keep enrollment separate from connection setup, repository instructions and model-authored requests */
 export function validateProfile(v, now = Date.now()) {
-  if (!exact(v, ['version', 'revision', 'configuration', 'projects', 'excludedNames', 'providerDisclosure', 'expiresAt', 'requestMicroUsd', 'sessionMicroUsd']) ||
-    v.version !== profileVersion || !/^[a-f0-9-]{36}$/.test(v.revision) || !/^[a-f0-9]{64}$/.test(v.configuration) ||
+  const legacy = v?.version === 'screening-profile-v1';
+  if (!exact(v, ['version', 'revision', 'configuration', 'projects', 'excludedNames', 'providerDisclosure', 'expiresAt', 'requestMicroUsd', 'sessionMicroUsd', ...(legacy ? [] : ['commandDisclosure', 'revoked'])]) ||
+    ![profileVersion, 'screening-profile-v1'].includes(v.version) || !/^[a-f0-9-]{36}$/.test(v.revision) || !/^[a-f0-9]{64}$/.test(v.configuration) ||
     !list(v.projects, p => exact(p, ['root', 'excludedPaths', 'instructions', 'targets']) && path(p.root) && p.root !== sep &&
       list(p.excludedPaths, path, 48) && list(p.instructions, i => exact(i, ['path', 'digest']) && path(i.path) && /^[a-f0-9]{64}$/.test(i.digest), 48) &&
       list(p.targets, t => exact(t, ['path', 'digest', 'purpose', 'offset', 'limit']) && path(t.path) && /^[a-f0-9]{64}$/.test(t.digest) && typeof t.purpose === 'string' && t.purpose.trim().length > 0 &&
         Buffer.byteLength(t.purpose) <= 512 && Number.isSafeInteger(t.offset) && t.offset > 0 && Number.isSafeInteger(t.limit) && t.limit > 0 && t.limit <= 1000, 48), 16) || !v.projects.length ||
     !list(v.excludedNames, n => typeof n === 'string' && n.length > 0 && n.length <= 128 && !/[\/\\\0]/.test(n)) ||
-    typeof v.providerDisclosure !== 'boolean' || !Number.isSafeInteger(v.expiresAt) || v.expiresAt <= now ||
+    typeof v.providerDisclosure !== 'boolean' ||
+    (legacy ? !Number.isSafeInteger(v.expiresAt) || v.expiresAt <= now : v.expiresAt !== null || typeof v.commandDisclosure !== 'boolean' || typeof v.revoked !== 'boolean') ||
     !bounded(v.requestMicroUsd) || !bounded(v.sessionMicroUsd) || v.requestMicroUsd > v.sessionMicroUsd) fail('invalid-or-expired-profile');
   return structuredClone(v);
 }
@@ -39,11 +41,13 @@ export class ScreeningProfiles {
   selection(cwd) {
     const value = this.load();
     if (value === null) return null;
-    // A corrupt/expired enrolled file is a held profile, never an implicit opt-out.
-    const profile = validateProfile(value);
+    // Deliberately timeboxed historical disclosure is never silently promoted or silently disabled.
+    const profile = validateProfile(value, 0);
     const canonical = realpathSync.native(cwd);
     const project = profile.projects.filter(p => within(canonical, p.root)).sort((a, b) => b.root.length - a.root.length)[0];
     if (!project) return null;
+    if (profile.version !== profileVersion) fail('historical-profile-conversion-required');
+    if (profile.revoked) fail('enrollment-revoked');
     for (const p of profile.projects) {
       if (realpathSync.native(p.root) !== p.root || !lstatSync(p.root).isDirectory()) fail('profile-root-changed');
       if (p.excludedPaths.some(path => canonicalPath(path) !== path)) fail('profile-exclusion-changed');
@@ -62,12 +66,18 @@ export class ScreeningProfiles {
     } };
   }
   /** Prepare a visible candidate without storing authority or resolving credentials */
-  preview({ cwd, configuration, excludedPaths = [], instructions = [], targets = [], providerDisclosure, days = 30 }) {
+  preview({ cwd, configuration, excludedPaths = [], instructions = [], targets = [], providerDisclosure, commandDisclosure = false, days }) {
+    // An old caller explicitly requesting bounded disclosure must not accidentally create standing authority.
+    if (days !== undefined) fail('timeboxed-enrollment-no-longer-supported');
     const config = validateConfiguration(configuration);
     const root = realpathSync.native(resolve(cwd));
-    if (root === sep || within(this.directory, root) || !Number.isSafeInteger(days) || days < 1 || days > 90) fail('invalid-profile-location');
+    if (root === sep || within(this.directory, root)) fail('invalid-profile-location');
     const previous = this.load();
-    if (previous) validateProfile(previous, 0); // An operator can renew expiry, never erase a malformed enrollment.
+    if (previous) {
+      validateProfile(previous, 0);
+      if (previous.version !== profileVersion) fail('historical-profile-conversion-required');
+      if (previous.configuration !== configurationIdentity(config) && previous.projects.some(p => p.root !== root)) fail('authority-change-requires-project-review');
+    }
     const policy = { allowedRoots: [root], excludedPaths: [...excludedPaths.map(p => canonicalPath(resolve(root, p))),
       ...['settings.json', 'models.json', 'mcp.json'].map(name => canonicalPath(join(root, '.pi', name))), this.directory], excludedNames: ['.env', 'auth.json'] };
     const source = new FileSource();
@@ -79,9 +89,26 @@ export class ScreeningProfiles {
       targets: targets.map(t => { const s = source.snapshot(resolve(root, t.path), policy, { sourceLimit: evidenceByteLimit }); return { ...t, path: s.canonical, digest: s.digest }; }) };
     const candidate = { version: profileVersion, revision: randomUUID(), configuration: configurationIdentity(config),
       projects: [...(previous?.projects ?? []).filter(p => p.root !== root), project], excludedNames: ['.env', 'auth.json'],
-      providerDisclosure: providerDisclosure === true, expiresAt: Date.now() + days * 86400000,
-      requestMicroUsd: Math.min(config.requestMicroUsd, reservationMicroUsd), sessionMicroUsd: Math.min(config.sessionMicroUsd, 100000) };
+      providerDisclosure: providerDisclosure === true, expiresAt: null, commandDisclosure: commandDisclosure === true, revoked: false,
+      requestMicroUsd: Math.min(config.requestMicroUsd, reservationMicroUsd, previous?.requestMicroUsd ?? Infinity),
+      sessionMicroUsd: Math.min(config.sessionMicroUsd, 100000, previous?.sessionMicroUsd ?? Infinity) };
     return validateProfile(candidate);
+  }
+  /** Preview an explicit conversion of all previously bounded roots; never touch any accounting */
+  convert() {
+    const previous = validateProfile(this.load(), 0);
+    if (previous.version !== 'screening-profile-v1') fail('historical-profile-required');
+    return validateProfile({ ...previous, version: profileVersion, revision: randomUUID(), expiresAt: null,
+      commandDisclosure: true, revoked: false });
+  }
+  /** Retain the last revoked roots as a durable hold instead of turning removal into an implicit opt-out */
+  revoke(cwd) {
+    const current = this.selection(cwd);
+    if (!current) fail('profile-unavailable');
+    const profile = current.profile;
+    // Revocation covers this enrollment, including every root shown in its preview.
+    profile.revoked = true; profile.revision = randomUUID();
+    this.save(profile, []);
   }
   addWitness(cwd, kind, input) {
     const current = this.selection(cwd);

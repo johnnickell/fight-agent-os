@@ -103,13 +103,17 @@ class Progress:
         try:
             if line.startswith(prefix):
                 item = json.loads(line[len(prefix):])
-                kinds = {"screen-start", "screen-complete", "cache-reuse", "receipt-admission", "exception", "blocked-read", "blocked-write", "session-bound", "work-required", "work-complete"}
+                kinds = {"screen-start", "screen-complete", "cache-reuse", "receipt-admission", "exception", "blocked-read", "blocked-write", "session-bound", "command-risk-start", "command-risk-complete", "command-held", "command-approved"}
                 if item.get("version") != "fight-file-screen-observation-v1" or item.get("kind") not in kinds:
                     return
                 session = item.get("session", "")
                 if not re.fullmatch(r"[a-f0-9]{64}", session):
                     return
                 fields = [f"Screening {item['kind']}", f"session={session[:12]}"]
+                if isinstance(item.get("phase"), str) and re.fullmatch(r"[A-Za-z0-9-]{1,48}", item["phase"]):
+                    fields.append(f"phase={item['phase']}")
+                if isinstance(item.get("sequence"), int) and not isinstance(item["sequence"], bool) and 0 < item["sequence"] <= 9007199254740991:
+                    fields.append(f"sequence={item['sequence']}")
                 for key in ("reason", "decision"):
                     value = item.get(key)
                     if isinstance(value, str) and re.fullmatch(r"[a-z-]{1,80}", value):
@@ -153,6 +157,12 @@ class Progress:
                 if state not in ("active", "degraded", "disabled"):
                     return
                 fields = [f"Screening status={state}"]
+                if isinstance(item.get("session"), str) and re.fullmatch(r"[a-f0-9]{64}", item["session"]):
+                    fields.append(f"session={item['session'][:12]}")
+                if isinstance(item.get("phase"), str) and re.fullmatch(r"[A-Za-z0-9-]{1,48}", item["phase"]):
+                    fields.append(f"phase={item['phase']}")
+                if item.get("nextActionCode") in ("enroll-project", "reconcile-legacy", "configure-credentials", "wait-month-reset", "inspect-reload", "screen-then-read"):
+                    fields.append(f"action={item['nextActionCode']}")
                 if isinstance(reason, str) and re.fullmatch(r"[a-z-]{1,80}", reason):
                     fields.append(f"reason={reason}")
                 budget = item.get("budget") or {}

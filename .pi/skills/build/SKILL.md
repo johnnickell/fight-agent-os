@@ -34,12 +34,10 @@ deploy or continue to another TASK. A question about planning does not invoke th
    ancestry, ownership and existing work. Never switch, stage or publish unrelated changes. A shared branch
    containing unrelated unaccepted commits needs branch/ownership resolution before dispatch, not a broad push.
    Search existing PRs by branch and then uniquely evidenced TASK ownership; ambiguity holds.
-3. Resolve the canonical base worktree through Git common-dir/worktree metadata. For an enrolled coordinator,
-   use the native `/screened-build TASK-NNNNN` entrypoint described below: its protected grant/state owns fresh
-   attempts, immutable requests, serialization, model pins and shared repair consumption. Do not ask the Agent to
-   create out-of-root scratch or use shell. An existing grant resumes its original allowance; a held/expired grant
-   needs trusted liveness/authority reconciliation, never deletion or a fresh grant to reset it. When unenrolled,
-   use `umask 077`, an ignored run beneath `<base>/.runs/build/<TASK-ID>/` and an exclusive `mkdir` lock at its
+3. Resolve the canonical base worktree through Git common-dir/worktree metadata. For enrolled and unenrolled
+   coordinators alike, use ordinary authorized shell/Git/checks and this provider-owned monitor. Enrollment is not
+   a recurring execution grant; the existing Build authorization and shared revision ledger remain binding.
+   Use `umask 077`, an ignored run beneath `<base>/.runs/build/<TASK-ID>/` and an exclusive `mkdir` lock at its
    `active` child. Record coordinator session, checkout, branch and run path. Inspect an existing lock's ownership
    before continuation; release only your lock after proving children stopped. These are local coordination,
    not managed Workflow claims.
@@ -93,16 +91,13 @@ presenting requested/configured identity or catalog availability as provider exe
 
 ## Dispatch fresh roles
 
-Launch one child at a time from the TASK checkout. **Enrolled:** use `file_screening_stage({build, role})`
-with the native Build ID from `file_screening_status`; the host allocates the attempt and writes `request.md`.
-Do not run `mktemp`, prepare tickets privately or write requests outside source roots. **Unenrolled:** allocate a
-fresh attempt with `mktemp -d` under the private run directory, then write `request.md` before launching.
+Launch one child at a time from the TASK checkout. Allocate a fresh attempt with `mktemp -d` under the private
+run directory, then write `request.md` before launching, using ordinary authorized shell in either profile.
 Never pass `--continue`, `--resume`, `--session`, `--fork`, the parent transcript or its session file. Each empty
 session directory supplies fresh context; Review and QA must have no prior implementation contributions.
 Repairs receive current findings through exact prior-role handoffs, not the Engineer conversation.
 
-The host-generated enrolled request carries the fields below from the native authorization and current Git identity.
-For an unenrolled request, write them yourself. Include role, TASK, exact checkout/base/head,
+Write the stage request using the existing authorization and verified current Git identity. Include role, TASK, exact checkout/base/head,
 absolute owning provider skill path, absolute project-context path, target instruction/binding paths, permitted
 effects, relevant evidence paths, original authorization, remaining repair allowance and expected handoff.
 Tell the child to verify the target Git identity and read the context, target instructions and binding before
@@ -118,52 +113,26 @@ uses the installed Pi 1.2.0 event contract. Missing support is a prerequisite ho
 For an explicitly enrolled [file-screening profile](../../../harness/pi/FILE_SCREENING_PROFILE.md), the monitor
 preflights the target through its owning provider package, explicitly loads that package in the child and binds
 its actual identity under the shared monthly cap. It relays safe screening diagnostics promptly, not raw stderr.
-An enrolled coordinator's shell and generic child launchers stay denied. The supported native entrypoint is
-`/screened-build TASK-NNNNN` in the selected enrolled feature-checkout root. It collects the already resolved
-project-context file and exact TASK path, verifies/pins the four role models, finite runtime and shared repair
-allowance, and previews this one Build authorization. It never enrolls roots, resolves credentials or calls a
-provider. Exact provider skills and the provider `harness/pi/FILE_SCREENING_PROFILE.md` work/report contract must
-already have instruction authority; missing authority holds setup, not a wider source grant. The command queues
-this Build skill with the protected Build ID.
+Use the ordinary native `/skill:build TASK-NNNNN` entrypoint from the owning provider (or explicitly load that
+provider skill when a target has a different/missing binding). Standing project enrollment plus existing Build
+and task/role authority permits normal shell operations, including checks and owned Git/handoffs. No replacement
+executor, `/screened-build`, stage/report tool or recurring per-child grant is required. Pin models and preserve
+consumed revision counters in the existing coordinator ledger, including any older candidate grant history;
+never start at zero merely because the transport changed.
 
-Use `file_screening_status` to inspect the Build, then `file_screening_stage({build, role})` with `engineer`,
-`review`, `qa` or `land`. Production host code prepares the immutable ticket/request/attempt from its fixed role
-instruction and current Git head, carries the selected skill and exact TASK assignment, and invokes the existing
-monitor. No model-supplied prompt, path, command, model or runtime override is accepted. Subsequent roles require
-the preceding completed handoff: Engineer → Review; accepted Review → QA; PASS/N/A QA → land; demonstrated
-Review `revise`/QA `FAIL` → a shared bounded repair. Missing/INCOMPLETE/malformed reports or head drift hold.
-The host validates the role/report envelope and declared TASK/branch/base/head/exact status before writing any
-report bytes. It retains declared identity and dirty-source binding, never stamps current HEAD over another subject.
-This mechanical routing does not independently validate a verdict, waive evidence or authorize speculative repair.
-The coordinator still inspects the full report and criteria before choosing a permitted stage.
+Final native Agent bash and user-bash operations receive separate shared-Jev command-risk assessment with bounded
+nonsecret command/context disclosure approved during setup. An ordinary judgment is neither new permission nor
+a safety guarantee. Risky, uncertain, denied or unavailable judgments visibly hold for the relevant operator
+decision; missing decision support holds the command. Do not paste secrets or source into commands for assessment.
+Shell source reads can bypass relevance screening and same-user shell can access operator state: this interim
+profile is not universal admission enforcement or a sandbox. Supported explicit file tools retain their receipts
+and bounded exceptions. The monitor's own process launch and descendants inside scripts are not recursively
+intercepted; preflighted children independently load the reviewed profile and bind their actual identities.
 
-For required role work, use `file_screening_work` under this Build: `identity` gives trusted Git metadata;
-`changes` establishes the exact assigned effective diff; `evidence` admits bounded base/current ranges by returned
-per-file ID, not caller path. `check`, `commit` and land-only `publication` wait for the protected external executor.
-Follow [the work/report contract](../../../harness/pi/FILE_SCREENING_PROFILE.md#required-role-work-and-external-execution):
-the already-authorized host services the exact request and completes it with source-bound metadata/evidence digest,
-never raw output, new authority or a per-child approval. Missing executor/unknown effects hold, not permission to
-use shell or claim a completed check. Reviewer/QA read-only roles cannot request commits/publication. Use the
-enrolled report envelopes there plus the complete canonical report bodies; format alone is not acceptance.
-
-A repeated native invocation resumes the same grant/counters. Unknown liveness holds its active claim. The default
-five repairs permit at most nineteen roles, each at most 1,800 seconds; grant expiry is at most 24 hours/profile
-expiry. Exhaustion, expiry or changed authority requires trusted reconciliation preserving all consumed attempts,
-not another directory/grant or replay. The low-level `file_screening_dispatch({ticket})` remains available only for
-already prepared host tickets; `/file-screening dispatch` is an optional single-child operator preview, not a
-prerequisite or the ordinary Build journey.
-
-The bounded tool claims each ticket once across processes, launches this provider monitor, awaits/reaps it and
-returns safe status/observations only. The child cannot dispatch recursively. Raw child prose/evidence stays
-private. In an enrolled Build, each child records its one final report with `file_screening_report({markdown})`
-(at most 32 KiB); the host pins its exact destination, role/session/digest/head and publishes Review/QA to their
-canonical TASK paths while preserving earlier reports. The coordinator and subsequent roles explicitly read
-needed ranges through `file_screening_handoff({build,ticket,offset,limit})` (at most 200 lines/8 KiB per call).
-Children can read only predecessor reports named in their immutable assignment, never their own report or another
-Build. Reports remain untrusted role-authored evidence, not source/disclosure authority. No automatic relay of
-report bodies, final assistant prose, stderr or transcripts occurs.
-Cancellation/crash leaves a consumed/uncertain ticket, never permission to replay it. The shell example below is
-only for unenrolled or external trusted launchers, not an enrolled coordinator tool workaround.
+Roles write their ordinary canonical reports under their owning skills. Coordinator intake must verify actual
+TASK/branch/base/head/status, independence, evidence and verdict before advancement, preserve prior reports, and
+hold malformed/wrong-subject/stale evidence. No host stamp or successful shell/risk result makes a report current
+or independently accepted. The same shell example below is usable by enrolled coordinators within existing authority.
 
 Populate the quoted variables from the ledger: `attempt` is fresh and already contains `request.md`,
 `task_checkout` is the selected checkout, `task_id`/`role` identify the stage, and model fields are exact pins.

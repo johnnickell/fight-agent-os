@@ -164,7 +164,17 @@ session allocation so restarts, retries and new roles cannot multiply that allow
 limits still bind. Project roots, source disclosure and credentials remain explicit operator policy; approval of
 this plan does not activate a provider or grant access to every repository.
 
-The follow-up supersedes the initial hard-interception exclusion only for the declared, qualified local profile.
+The follow-up supersedes the initial hard-interception exclusion only for the declared, qualified explicit-file-tool profile.
+
+**Approved interim correction — 2026-10-15:** TASK-00309 uses standing project enrollment until revocation or
+authority change, with explicit conversion of deliberately bounded historical enrollments. Useful authorized
+shell remains available with separate shared-Jev dangerous-command assessment; `rg`, `cat`, Git/checks/delivery
+within task/role authority need no bespoke replacement executor. Shell can bypass relevance admission and access
+same-user state: universal enforcement/containment is not claimed. Restrictive shell/MCP replacements are deferred;
+TASK-00160's optional deterministic profile is unchanged. No model judgment grants authority. Preserve explicit
+file receipts, shared accounting/liabilities, bounded historical test grants, safe observations and independent
+canonical workflows. AC8 representative-work and applicable visual evidence are not waived. Shared price-confirmation
+persistence is separately owned by TASK-00450, not an enrollment renewal requirement.
 Retain the 0.70 rule, independently checked permissions, current-source receipts and bounded evidence-backed
 exceptions. Make setup failures and every screening/cache/exception/blocked path visible. No universal sandbox,
 external-harness coverage, batch implementation or managed Workflow completion is implied. Existing decomposition
