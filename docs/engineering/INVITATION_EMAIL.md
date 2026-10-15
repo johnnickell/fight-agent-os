@@ -24,26 +24,54 @@ APP_ACTIVATION_PATH=/activate
 ```
 
 Also set `APP_CREDENTIAL_DELIVERY_KEY` to an independent random 32-byte hex key. This command fills only an
-absent/empty setting without printing it; it refuses duplicates and preserves an existing key. Run it only in
-the selected checkout. Losing/changing the key while work is outstanding makes existing encrypted work unreadable.
+absent or literally empty setting (unquoted, `''` or `""`) without printing it. It recognizes single-line whitespace and
+`export` assignments, preserves nonempty values and all unrelated bytes, and refuses duplicates before writing.
+It deliberately refuses multiline, escaped, interpolated or otherwise unsupported syntax anywhere in `.env`;
+resolve such input privately, preserving any existing effective key, rather than deleting it to bypass refusal.
+Preservation does not validate an existing key's strength. Run only in the selected checkout, with no concurrent
+`.env` edits. Losing/changing the key while work is outstanding makes existing encrypted work unreadable.
 
 ```sh
 python3 - <<'PY'
 from pathlib import Path
-import os, secrets
+import os, re, secrets
 path = Path('.env')
-lines = path.read_text().splitlines() if path.exists() else []
-name = 'APP_CREDENTIAL_DELIVERY_KEY='
-positions = [i for i, line in enumerate(lines) if line.startswith(name)]
+if path.is_symlink():
+    raise SystemExit('Refusing a symlink; .env unchanged.')
+data = path.read_bytes() if path.exists() else b''
+if b'\r' in data.replace(b'\r\n', b''):
+    raise SystemExit('Unsupported line endings; .env unchanged.')
+name = b'APP_CREDENTIAL_DELIVERY_KEY'
+# A deliberately limited single-line Compose subset; never guess about quoting/interpolation.
+assignment = re.compile(
+    rb'''[ \t]*(?:export[ \t]+)?([A-Za-z_][A-Za-z0-9_]*)[ \t]*=[ \t]*?'''
+    rb'''([^ \t\r\n'"\\$#]*|'[^'\\$\r\n]*'|"[^"\\$\r\n]*")(?:[ \t]+\#.*)?[ \t]*'''
+)
+positions = []
+offset = 0
+for line in data.splitlines(keepends=True):
+    body = line.removesuffix(b'\n').removesuffix(b'\r')
+    if body.strip(b' \t') and not body.lstrip(b' \t').startswith(b'#'):
+        match = assignment.fullmatch(body)
+        if not match:
+            raise SystemExit('Unsupported .env syntax; file unchanged. Resolve privately.')
+        if match[1] == name:
+            positions.append((offset + match.start(2), offset + match.end(2), match[2]))
+    offset += len(line)
 if len(positions) > 1:
-    raise SystemExit('Resolve duplicate delivery-key settings privately before continuing.')
-if not positions:
-    lines.append(name + secrets.token_hex(32))
-elif not lines[positions[0]][len(name):].strip().strip("'\""):
-    lines[positions[0]] = name + secrets.token_hex(32)
-else:
+    raise SystemExit('Duplicate delivery-key settings; file unchanged. Resolve privately.')
+if positions and positions[0][2] not in (b'', b"''", b'""'):
     raise SystemExit('Existing delivery key preserved; no update needed.')
-path.write_text('\n'.join(lines) + '\n')
+key = secrets.token_hex(32).encode('ascii')
+if positions:
+    start, end, _ = positions[0]
+    updated = data[:start] + key + data[end:]
+else:
+    newline = b'\r\n' if b'\r\n' in data else b'\n'
+    separator = newline if data and not data.endswith(b'\n') else b''
+    updated = data + separator + name + b'=' + key + newline
+os.umask(0o077)
+path.write_bytes(updated)
 os.chmod(path, 0o600)
 PY
 ```
