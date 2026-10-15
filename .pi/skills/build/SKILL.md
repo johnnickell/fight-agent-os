@@ -89,7 +89,8 @@ presenting requested/configured identity or catalog availability as provider exe
 
 ## Dispatch fresh roles
 
-Launch one child at a time from the TASK checkout using the shell tool. Allocate a fresh attempt with `mktemp -d`
+Launch one child at a time from the TASK checkout using the shell tool when unenrolled, or the bounded ticket tool
+below when an enrolled profile denies shell. Allocate a fresh attempt with `mktemp -d`
 under the private run directory. Never pass `--continue`, `--resume`, `--session`, `--fork`, the parent transcript
 or its session file. Each new empty session directory supplies fresh context; Review and QA must have no prior
 implementation contributions. Repairs receive the current findings and dispositions explicitly.
@@ -107,6 +108,23 @@ Use the bundled [stage monitor](scripts/run-stage.py) (Python 3.9+) to launch Pi
 path beside the **owning provider skill**, even when the TASK checkout belongs to another project; do not assume
 the target contains this script. Check installed Pi supports `--mode json` and `agent_settled` events; the monitor
 uses the installed Pi 1.2.0 event contract. Missing support is a prerequisite hold, not a silent return to hidden output.
+For an explicitly enrolled [file-screening profile](../../../harness/pi/FILE_SCREENING_PROFILE.md), the monitor
+preflights the target through its owning provider package, explicitly loads that package in the child and binds
+its actual identity under the shared monthly cap. It relays safe screening diagnostics promptly, not raw stderr.
+An enrolled coordinator's shell and generic child launchers stay denied. Use `file_screening_status` to inspect
+host-prepared immutable tickets, then `file_screening_dispatch({ticket})` for the exact authorized stage. The trusted
+host prepares tickets through the owning provider's `ScreeningDispatch.prepare()` under the existing build grant;
+it pins target, request, profile/monitor digest, model and finite runtime, and may carry exact trusted instruction,
+assignment and required-reference intake. This preparation is trusted infrastructure, not a new Agent shell route
+or another human approval gate for already authorized role inference. If the required ticket is missing, name the
+host preparation prerequisite; do not disable screening or invent a generic launcher. Native operator preview of
+one ticket is `/file-screening dispatch`. No profile or authority is created by invoking this skill.
+
+The bounded tool claims each ticket once across processes, launches this provider monitor, awaits/reaps it and
+returns safe status/observations only. The child cannot dispatch recursively. Raw child prose/evidence stays
+private; use a separately established bounded handoff read rather than treating child output as permission.
+Cancellation/crash leaves a consumed/uncertain ticket, never permission to replay it. The shell example below is
+only for unenrolled or external trusted launchers, not an enrolled coordinator tool workaround.
 
 Populate the quoted variables from the ledger: `attempt` is fresh and already contains `request.md`,
 `task_checkout` is the selected checkout, `task_id`/`role` identify the stage, and model fields are exact pins.

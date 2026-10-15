@@ -31,7 +31,8 @@ def display(value, limit=320):
 
 
 class Progress:
-    def __init__(self, role, log):
+    def __init__(self, role, log, safe=False):
+        self.safe = safe
         self.role, self.log = display(role, 60), log
         self.started = time.monotonic()
         self.last_output = self.started
@@ -48,7 +49,8 @@ class Progress:
         line = f"[{self.role} {elapsed // 60:02d}:{elapsed % 60:02d}] {display(message, 480)}"
         self.log.write(line + "\n")
         self.log.flush()
-        print(line, flush=True)
+        if not self.safe:
+            print(line, flush=True)
 
     def event(self, event):
         kind = event.get("type")
@@ -93,6 +95,76 @@ class Progress:
             self.aborted = event.get("aborted") is not False
             self.activity = "Pi settled; waiting for process exit"
 
+    def screening(self, line):
+        """Relay only declared safe fields, never arbitrary child stderr or source bodies."""
+        prefix = "Fight screening: "
+        status_prefix = "Fight screening status: "
+        try:
+            if line.startswith(prefix):
+                item = json.loads(line[len(prefix):])
+                kinds = {"screen-start", "screen-complete", "cache-reuse", "receipt-admission", "exception", "blocked-read", "blocked-write", "session-bound"}
+                if item.get("version") != "fight-file-screen-observation-v1" or item.get("kind") not in kinds:
+                    return
+                session = item.get("session", "")
+                if not re.fullmatch(r"[a-f0-9]{64}", session):
+                    return
+                fields = [f"Screening {item['kind']}", f"session={session[:12]}"]
+                for key in ("reason", "decision"):
+                    value = item.get(key)
+                    if isinstance(value, str) and re.fullmatch(r"[a-z-]{1,80}", value):
+                        fields.append(f"{key}={value}")
+                for key in ("pathId", "needId"):
+                    value = item.get(key)
+                    if isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value):
+                        fields.append(f"{key}={value[:12]}")
+                operation = item.get("operationId")
+                if isinstance(operation, str) and re.fullmatch(r"[a-f0-9-]{36}", operation):
+                    fields.append(f"operation={operation[:12]}")
+                if item["kind"] == "cache-reuse":
+                    fields.append("provider_calls=0")
+                cost = item.get("costUsd")
+                fields.append(f"cost_usd={cost}" if isinstance(cost, (int, float)) and not isinstance(cost, bool) and math.isfinite(cost) and cost >= 0 else "cost_usd=unknown")
+                self.emit(" ".join(fields))
+                if self.safe:
+                    safe = {"version": item["version"], "kind": item["kind"], "session": session}
+                    if isinstance(item.get("phase"), str) and re.fullmatch(r"[A-Za-z0-9-]{1,48}", item["phase"]):
+                        safe["phase"] = item["phase"]
+                    for key in ("reason", "decision"):
+                        if isinstance(item.get(key), str) and re.fullmatch(r"[a-z-]{1,80}", item[key]):
+                            safe[key] = item[key]
+                    for key in ("pathId", "needId"):
+                        if isinstance(item.get(key), str) and re.fullmatch(r"[a-f0-9]{64}", item[key]):
+                            safe[key] = item[key]
+                    if isinstance(operation, str) and re.fullmatch(r"[a-f0-9-]{36}", operation):
+                        safe["operationId"] = operation
+                    safe["costUsd"] = cost if isinstance(cost, (int, float)) and not isinstance(cost, bool) and math.isfinite(cost) and cost >= 0 else None
+                    print(prefix + json.dumps(safe), flush=True)
+            elif line.startswith(status_prefix):
+                item = json.loads(line[len(status_prefix):])
+                state, reason = item.get("state"), item.get("reason")
+                if state not in ("active", "degraded", "disabled"):
+                    return
+                fields = [f"Screening status={state}"]
+                if isinstance(reason, str) and re.fullmatch(r"[a-z-]{1,80}", reason):
+                    fields.append(f"reason={reason}")
+                budget = item.get("budget") or {}
+                for key in ("availableMicroUsd", "reservedMicroUsd"):
+                    value = budget.get(key)
+                    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+                        fields.append(f"{key}={value}")
+                reset = budget.get("resetsAt")
+                if isinstance(reset, str) and re.fullmatch(r"[0-9TZ:.+-]{20,32}", reset):
+                    fields.append(f"reset={reset}")
+                if state == "degraded":
+                    fields.append("next=operator-/file-screening-inspect")
+                self.emit(" ".join(fields))
+                if self.safe:
+                    safe = {"state": state, "reason": reason if isinstance(reason, str) and re.fullmatch(r"[a-z-]{1,80}", reason) else None}
+                    safe["budget"] = {key: budget[key] for key in ("availableMicroUsd", "reservedMicroUsd") if isinstance(budget.get(key), int) and not isinstance(budget[key], bool) and budget[key] >= 0}
+                    print(status_prefix + json.dumps(safe), flush=True)
+        except (ValueError, TypeError, AttributeError):
+            return
+
     def heartbeat(self):
         if self.tools:
             label, started = next(iter(self.tools.values()))
@@ -111,10 +183,21 @@ def run(args):
     names = ("events.jsonl", "progress.log", "stderr.log", "final.txt", "exit-code", "pi-exit-code", "process.json")
     if any((attempt / name).exists() for name in names) or (attempt / "sessions").exists():
         raise ValueError("attempt already contains execution evidence; use a fresh attempt")
-    command = ["pi", "--mode", "json", "--session-dir", str(attempt / "sessions"),
+    # Resolve resources beside the owning provider skill, not in a downstream target checkout.
+    bootstrap = Path(__file__).resolve().parents[4] / "harness/pi/src/screening-bootstrap.mjs"
+    prepared = subprocess.run(["node", str(bootstrap), "prepare", str(Path.cwd())],
+                              stdin=subprocess.DEVNULL, capture_output=True, timeout=15)
+    if prepared.returncode:
+        print("Screening launcher unavailable: inspect /file-screening and the owning provider package before dispatch", file=sys.stderr)
+        raise ValueError("screening preflight failed")
+    screening = json.loads(prepared.stdout)
+    resource_args = (["-e", screening["extension"], "--fight-screening-required", screening["profileIdentity"]]
+                     if screening.get("enrolled") else [])
+    command = ["pi", *resource_args, "--mode", "json", "--session-dir", str(attempt / "sessions"),
                "--name", f"{args.task} {args.role}", "--provider", args.provider,
                "--model", args.model, "--thinking", args.thinking, "--", f"@{attempt / 'request.md'}"]
-    env = dict(os.environ, PI_PROVIDER=args.provider, PI_MODEL=args.model, PI_REASONING_LEVEL=args.thinking)
+    env = dict(os.environ, PI_PROVIDER=args.provider, PI_MODEL=args.model, PI_REASONING_LEVEL=args.thinking,
+               FIGHT_SCREENING_PHASE=re.sub(r"[^A-Za-z0-9-]", "-", args.role)[:48])
     cancelled = [0]
     def on_signal(signum, _frame):
         cancelled[0] = 128 + signum
@@ -122,17 +205,19 @@ def run(args):
         signal.signal(signum, on_signal)
 
     with (attempt / "events.jsonl").open("xb", buffering=0) as raw, (attempt / "stderr.log").open("xb") as errors, (attempt / "progress.log").open("x") as log:
-        progress = Progress(args.role, log)
+        progress = Progress(args.role, log, args.screening_dispatch)
         progress.emit(f"Starting {args.task} — {args.provider}/{args.model}, thinking={args.thinking}")
         child = None
         code = 1
         try:
             child = subprocess.Popen(command, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                     stderr=errors, start_new_session=True)
+                                     stderr=subprocess.PIPE, start_new_session=True)
             (attempt / "process.json").write_text(json.dumps({"monitor_pid": os.getpid(), "pi_pid": child.pid}) + "\n")
             selector = selectors.DefaultSelector()
-            selector.register(child.stdout, selectors.EVENT_READ)
+            selector.register(child.stdout, selectors.EVENT_READ, "events")
+            selector.register(child.stderr, selectors.EVENT_READ, "diagnostics")
             buffer = b""
+            diagnostic_buffer = b""
             stop_at = progress.started + args.timeout
             termination_at = None
             forced_code = 0
@@ -151,6 +236,17 @@ def run(args):
                     chunk = os.read(key.fd, 65536)
                     if not chunk:
                         selector.unregister(key.fileobj)
+                        continue
+                    if key.data == "diagnostics":
+                        errors.write(chunk)
+                        errors.flush()
+                        diagnostic_buffer += chunk
+                        while b"\n" in diagnostic_buffer:
+                            line, diagnostic_buffer = diagnostic_buffer.split(b"\n", 1)
+                            if len(line) <= 65536:
+                                progress.screening(line.decode("utf-8", errors="replace"))
+                        if len(diagnostic_buffer) > 65536:
+                            diagnostic_buffer = b""
                         continue
                     raw.write(chunk)
                     buffer += chunk
@@ -193,6 +289,8 @@ def run(args):
                     stop_group(child, signal.SIGKILL)
                 if child.stdout:
                     child.stdout.close()
+                if child.stderr:
+                    child.stderr.close()
                 if not (attempt / "pi-exit-code").exists():
                     (attempt / "pi-exit-code").write_text(str(child.returncode) + "\n")
             (attempt / "final.txt").write_text(progress.final)
@@ -218,13 +316,14 @@ def main():
     parser.add_argument("--thinking", required=True)
     parser.add_argument("--timeout", type=positive_seconds, default=1800)
     parser.add_argument("--heartbeat", type=positive_seconds, default=30)
+    parser.add_argument("--screening-dispatch", action="store_true", help="Relay safe screening observations only; keep child prose private")
     args = parser.parse_args()
     for value in (args.task, args.role, args.provider, args.model, args.thinking):
         if not value.strip():
             parser.error("stage identity and model fields must not be empty")
     try:
         return run(args)
-    except (OSError, ValueError) as error:
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
         print(f"Cannot start stage ({type(error).__name__}); verify fresh attempt and request.md", file=sys.stderr)
         return 1
 

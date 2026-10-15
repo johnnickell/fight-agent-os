@@ -7,7 +7,7 @@
   "type": "module",
   "keywords": ["pi-package"],
   "engines": {"node": ">=22"},
-  "files": ["src/", "README.md", "JUDGMENTS.md", "FILE_SCREENING.md", "FILE_SCREENING_RULE.md", "TOOL_POLICY.md", "LICENSE"],
+  "files": ["src/", "README.md", "JUDGMENTS.md", "FILE_SCREENING.md", "FILE_SCREENING_PROFILE.md", "FILE_SCREENING_RULE.md", "TOOL_POLICY.md", "LICENSE"],
   "scripts": {"test": "node --test tests/*.test.mjs"},
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",

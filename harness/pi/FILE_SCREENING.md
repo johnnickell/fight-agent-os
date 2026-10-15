@@ -1,5 +1,10 @@
 # Bounded file relevance screening
 
+**TASK-00309 implementation candidate:** the [enrolled profile](FILE_SCREENING_PROFILE.md) adds operator preview,
+automatic actual-session allocation, shared monthly accounting, trusted evidence intake and local receipt admission.
+Bounded native/build dispatch is locally qualified; live Jev workflow proof and independent acceptance remain pending. The manual activation/SDK limitations below
+remain the supplier/legacy path and historical evidence; they are not a claim about complete profile delivery.
+
 `jev_read_file` is an opt-in consumer of the [shared typed-judgment capability](JUDGMENTS.md), not another provider
 client. TASK-00162 supplies one regular UTF-8 file per call, controlled behavior and bounded live Pi SDK
 qualification. Synthetic parent/child investigations, fresh evidence synthesis and an unscripted direct-read

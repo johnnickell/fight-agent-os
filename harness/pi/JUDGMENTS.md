@@ -103,6 +103,11 @@ must remain unresolved under the consumer's policy, not silently bypass its prot
 
 ## Session limits and accounting
 
+The [TASK-00309 enrolled-profile candidate](FILE_SCREENING_PROFILE.md) supplies shared durable monthly accounting
+and automatic actual-session limits for explicitly enrolled roots. The independent session-ledger behavior below
+remains the legacy consumer contract; it is not an aggregate guarantee for arbitrary clients. No provider client
+or judgment cache is duplicated by the profile, and existing legacy exposure is preserved.
+
 The participating Pi session has **two shared outstanding requests**, including `/jev check`, across all connected
 consumers. A fifteen-second deadline includes credential resolution, and there are **zero automatic retries**.
 Trusted host embeddings may lower bytes, questions, choices or timeout through `Judgments`' injected `ceilings`,

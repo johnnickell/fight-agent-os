@@ -187,6 +187,9 @@ not a supported external launch API. Separate real CLI PTYs exercise policy insp
 presentation-only package. Native terminal images are unavailable: ANSI transcripts demonstrate interaction and
 file effects, **not visual clipping/font/layout correctness**. Independent Review and QA remain separate.
 
-Jev-enabled screening remains TASK-00161; file-screening enforcement remains TASK-00309. Their tools are denied
-in this profile until a separately implemented, qualified policy composition explicitly admits them. Deterministic
-protection is neither those features nor TASK-00138 sandbox qualification.
+Jev-enabled tool-effect screening remains TASK-00161. TASK-00309's separate
+[enrolled file-screening candidate](FILE_SCREENING_PROFILE.md) reuses these final-argument write/edit operations
+with receipt-bound reads and locally qualified single-use native/build dispatch. Live Jev workflow proof and
+independent acceptance remain pending; the bounded dispatch route does not add shell access to either profile.
+Do not combine its enrollment with `--fight-tool-policy`: that conflict holds activation. This standalone
+profile continues to deny Jev tools. Neither profile establishes TASK-00138 sandbox qualification.

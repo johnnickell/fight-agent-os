@@ -12,7 +12,10 @@ digest-bound script/argv admission and denial of unsupported helper/nested/child
 protection only**, not Jev screening or process isolation; installation alone never activates it.
 TASK-00162 adds opt-in, instruction-based single-file
 screening; TASK-00163 extends it with bounded lists/globs and session-local metadata caching; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
-is activated by installing/updating this source.
+is activated by installing/updating this source. TASK-00309's [enrolled-profile implementation candidate](FILE_SCREENING_PROFILE.md)
+adds a stable `/file-screening` diagnostic, explicit enrollment preview, shared monthly accounting and local
+receipt admission, with locally qualified bounded native/build dispatch and conservative legacy reconciliation.
+Live Jev workflow proof and independent acceptance remain pending; local checks do not establish production readiness.
 
 ## Install
 

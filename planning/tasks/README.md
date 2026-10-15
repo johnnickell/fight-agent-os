@@ -311,7 +311,7 @@
 | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | done | [TICKET-00084](../tickets/00084-TICKET.md) |
 | [TASK-00307](00307-TASK.md) | Document the qualified backend API and browser integration reference | ready-for-agent | [TICKET-00081](../tickets/00081-TICKET.md) |
 | [TASK-00308](00308-TASK.md) | Publish the immutable qualified reference bundle to the five starter maintainers | needs-info | [TICKET-00082](../tickets/00082-TICKET.md) |
-| [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | ready-for-agent | [TICKET-00039](../tickets/00039-TICKET.md) |
+| [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | in-progress | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00310](00310-TASK.md) | Execute bounded finding-driven revisions | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
 | [TASK-00311](00311-TASK.md) | Authorize exact-subject acceptance | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |
 | [TASK-00312](00312-TASK.md) | Verify accepted behavior through managed QA | ready-for-agent | [TICKET-00083](../tickets/00083-TICKET.md) |

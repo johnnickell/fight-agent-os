@@ -16,6 +16,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | in-progress | — | [PR #75](https://github.com/johnnickell/fight-agent-os/pull/75) |
+| — | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -33,7 +34,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00278](00278-TASK.md) | Enforce current email-change authority | [TICKET-00067 — Request inspect and cancel a pending human email change](../tickets/00067-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00283](00283-TASK.md) | Protect email-change issuance material | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
