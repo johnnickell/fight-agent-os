@@ -41,7 +41,7 @@
 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | done | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | done | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | done | [TICKET-00015](../tickets/00015-TICKET.md) |
-| [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | in-progress | [TICKET-00016](../tickets/00016-TICKET.md) |
+| [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | done | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |

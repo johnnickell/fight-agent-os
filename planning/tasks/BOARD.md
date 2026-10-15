@@ -16,7 +16,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | in-progress | — | [PR #75](https://github.com/johnnickell/fight-agent-os/pull/75) |
-| 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -46,7 +45,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
 | 41 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00040](00040-TASK.md) | — |
 | 42 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00041](00041-TASK.md) | — |
-| 43 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00039](00039-TASK.md), [TASK-00042](00042-TASK.md) | — |
+| 43 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | [TASK-00042](00042-TASK.md) | — |
 | 45 | [TASK-00045](00045-TASK.md) | Enforce browser authentication request controls | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00043](00043-TASK.md) | — |
 | 46 | [TASK-00046](00046-TASK.md) | Deliver the canonical email and password login journey | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00045](00045-TASK.md) | — |
 | 47 | [TASK-00047](00047-TASK.md) | Deliver rotating refresh and current-session logout | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | [TASK-00046](00046-TASK.md) | — |
@@ -470,6 +469,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 36 | [TASK-00036](00036-TASK.md) | Reconcile the exact managed authority policy | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | done | — | [PR #80](https://github.com/johnnickell/fight-agent-os/pull/80) |
 | 37 | [TASK-00037](00037-TASK.md) | Deliver trusted ordinary-user console invitations | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | done | — | [PR #95](https://github.com/johnnickell/fight-agent-os/pull/95) |
 | 38 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | [TICKET-00015 — Establish managed authority and guarded bootstrap](../tickets/00015-TICKET.md) | done | — | [PR #100](https://github.com/johnnickell/fight-agent-os/pull/100) |
+| 39 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | done | — | — |
 | 44 | [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | done | — | [PR #87](https://github.com/johnnickell/fight-agent-os/pull/87) |
 | 49 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #92](https://github.com/johnnickell/fight-agent-os/pull/92) |
 | 50 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | done | — | [PR #73](https://github.com/johnnickell/fight-agent-os/pull/73) |
