@@ -74,6 +74,25 @@ The [external architecture study](research/atomic-lessons.md) informs contracts 
 
 ## Current planning handoff
 
+The separately approved [operational observability map](wayfinder/operational-observability-map.md#approved-epic-handoff)
+is decision-complete, and its sole destination is written/approved as [EPIC-00019](epics/00019-EPIC.md).
+Its [seven-TICKET requirement split](epics/00019-EPIC.md#approved-ticket-decomposition-and-current-handoff) is now
+written/accepted as TICKET-00111–00117. EPIC/TICKET phases are complete. TICKET-00111's
+[four-TASK split](tickets/00111-TICKET.md#approved-task-decomposition-and-current-handoff) is accepted/written as
+TASK-00451–00454. TICKET-00112's [six-TASK split](tickets/00112-TICKET.md#approved-task-decomposition-and-current-handoff)
+is accepted/written as TASK-00455–00460. TICKET-00113's [six-TASK split](tickets/00113-TICKET.md#approved-task-decomposition-and-current-handoff)
+is accepted/written as TASK-00461–00466. TICKET-00114's [seven-TASK split](tickets/00114-TICKET.md#approved-task-decomposition-and-current-handoff)
+is accepted/written as TASK-00467–00473. TICKET-00115's [four-TASK split](tickets/00115-TICKET.md#approved-task-decomposition-and-current-handoff)
+is accepted/written as TASK-00474–00477. TICKET-00116's [three-TASK split](tickets/00116-TICKET.md#approved-task-decomposition-and-current-handoff)
+is accepted/written as TASK-00478–00480. TICKET-00117's [seven-TASK split and completed handoff](tickets/00117-TICKET.md#approved-task-decomposition-and-current-handoff)
+is accepted/written as TASK-00481–00487. **All map planning phases are complete**: one EPIC, seven TICKETs and
+thirty-seven unranked TASKs. Exact early installation suppliers are mapped without clearing qualification gates;
+TASK-00487 contains the composed operator/workload acceptance. Implementation/runtime qualification remains outstanding.
+Next: `/skill:next` in `.runs/worktrees/observability-planning/` for read-only Board-based work selection, not execution.
+This feature does not alter terminal-first/Board priority or block the independent local terminal log pane below.
+At the latest allocation, fetched `develop` was `58b087b`, while this worktree remained `ac41c28`; no rebase was
+performed. Live/archive/concurrent IDs were rechecked across 17 refs/four worktrees; recheck before future allocation.
+
 The approved [local Pi terminal workspace split](tickets/00110-TICKET.md#approved-decomposition--2026-10-15)
 is complete: TASK-00447 has no external blockers; TASK-00448 and TASK-00449 depend only on it. The log pane
 reads the existing shared main-checkout runtime; isolated containers and full observability remain separate.
@@ -212,6 +231,7 @@ when the accepted phase changes; historical selected-slice handoffs do not super
 | [EPIC-00016](epics/00016-EPIC.md) | Deliver usable Feature Flags management and enforcement | feature-flags-lifecycle | ready-for-agent |
 | [EPIC-00017](epics/00017-EPIC.md) | Author versioned Agent templates with human-approved AI assistance | browser-agent-template-authoring | ready-for-agent |
 | [EPIC-00018](epics/00018-EPIC.md) | Publish the qualified Agent OS AccessControl reference-consumer handoff | accesscontrol-reference-consumer-handoff | ready-for-agent |
+| [EPIC-00019](epics/00019-EPIC.md) | Diagnose Agent OS operations and managed runs with live and archived logs | operational-diagnosis | ready-for-agent |
 <!-- /planning:epics -->
 
 ## Planning Frontier
