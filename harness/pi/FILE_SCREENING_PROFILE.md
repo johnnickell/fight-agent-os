@@ -3,8 +3,9 @@
 This profile adds automatic actual-session binding, durable shared accounting and receipt-enforced **Agent tool**
 reads to the [existing single-file/list/glob consumer](FILE_SCREENING.md). It uses the same Jev client and
 session-local judgment cache. It is not installed or enrolled by this documentation, the $10 planning approval,
-a repository instruction or a model response. Live integration/representative-work qualification remains pending;
-local fixtures are not live provider evidence. See the [TASK checkpoint](../../planning/tasks/00309-TASK.md).
+a repository instruction or a model response. Bounded synthetic live native/build evidence is recorded; this is
+not representative-work qualification, complete answer synthesis or independent acceptance. Controlled local
+fixtures remain distinct from live provider evidence. See the [TASK checkpoint](../../planning/tasks/00309-TASK.md).
 
 ## Operator setup and inspection
 
@@ -198,5 +199,16 @@ screening investigations and independent Review/QA remain explicit TASK gates, n
 A bounded real native parent → Agent dispatch tool → provider build monitor → fresh native child investigation has
 completed on Sol/high with actual main-provider inference and source-bound instruction/assignment/reference/known-
 target reads. Native operator enrollment/import/reconciliation and controlled cancellation/revocation are also
-qualified. These are not live Jev evidence or a representative screening savings/recall comparison; see the TASK
-and source-bound handoff for subjects, controlled outcomes, counts and limitations.
+qualified. Those earlier probes are not live Jev evidence or a representative screening savings/recall comparison.
+
+A subsequent bounded live qualification and one explicitly approved corrected recovery pair used the same two
+unchanged synthetic candidates, production client/Pi-managed credentials and real shared monthly ledger. The
+original parent positive/negative/cache/read evidence was retained, not replayed; recovery established successful
+parent/child instruction exceptions and child screening, cache reuse, receipt read and post-negative ordinary
+blocking. All four authorized paid attempts are consumed: 66 micro-USD settled, zero reserved, plus 13 imported
+legacy micro-USD. Temporary enrollment is withdrawn; unused dollar allowance grants no further run. The child
+final omitted the requested fee formula, so process/screening completion is not useful answer synthesis. Genuine
+zero-inference operator PTY interactions and rendered-line captures are retained, **not screenshots** or independent
+visual certification. The artificial corpus establishes neither representative recall nor net context/cost savings.
+See the [recovery checkpoint](../../planning/tasks/00309-TASK.md#engineer-approved-corrected-recovery-pair--2026-10-15)
+and source-bound handoff for combined provenance, costs, counts and remaining independent acceptance boundaries.
