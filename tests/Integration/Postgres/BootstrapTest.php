@@ -68,6 +68,7 @@ final class BootstrapTest extends TestCase
     private Connection $connection;
     private Container $container;
     private AccessClock $clock;
+    private string|false $previousDeliveryKey;
     private int $providerCalls = 0;
     /** @var list<array<string, mixed>> */
     private array $events = [];
@@ -77,6 +78,9 @@ final class BootstrapTest extends TestCase
      */
     protected function setUp(): void
     {
+        $this->previousDeliveryKey = getenv('APP_CREDENTIAL_DELIVERY_KEY');
+        // Share one ephemeral fixture key with fresh containers and real child console processes.
+        putenv('APP_CREDENTIAL_DELIVERY_KEY='.bin2hex(random_bytes(32)));
         $url = (string) getenv('TEST_DATABASE_URL');
         $guard = new DatabaseTargetGuard(explode(',', (string) getenv('TEST_DATABASE_ALLOWED_HOST')));
         $expected = $guard->assertConfigured((string) getenv('APP_ENV'), $url);
@@ -96,6 +100,11 @@ final class BootstrapTest extends TestCase
      */
     protected function tearDown(): void
     {
+        if ($this->previousDeliveryKey === false) {
+            putenv('APP_CREDENTIAL_DELIVERY_KEY');
+        } else {
+            putenv('APP_CREDENTIAL_DELIVERY_KEY='.$this->previousDeliveryKey);
+        }
         if (!isset($this->connection)) {
             return;
         }

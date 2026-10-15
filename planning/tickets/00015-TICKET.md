@@ -2,7 +2,7 @@
 id: TICKET-00015
 epic: EPIC-00004
 title: Establish managed authority and guarded bootstrap
-status: done
+status: in-progress
 ---
 
 # Establish managed authority and guarded bootstrap
@@ -56,10 +56,16 @@ Bootstrap is a separately audited trusted-console capability, not anonymous web 
 |---|---|---|
 | [TASK-00036](../tasks/00036-TASK.md) | Reconcile the exact managed authority policy | done |
 | [TASK-00037](../tasks/00037-TASK.md) | Deliver trusted ordinary-user console invitations | done |
-| [TASK-00038](../tasks/00038-TASK.md) | Guard the one-time Super Admin bootstrap | done |
+| [TASK-00038](../tasks/00038-TASK.md) | Guard the one-time Super Admin bootstrap | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+HOSTED-01 (2026-10-15): reopened this TICKET with TASK-00038 for its confirmed bootstrap test-fixture dependency
+on an externally supplied delivery key. The same 21 hosted failures reproduce on the clean guarded task runtime
+without that key; the separate development database remains empty/unmigrated. The scoped fixture correction and
+fresh verification are recorded in TASK-00038. Earlier Review/QA acceptance is historical pending independent
+assessment of the repaired candidate; other children remain done and EPIC-00004 remains ready-for-agent.
 
 On 2026-10-15 the owner directed that TASK-00038 be fixed as part of its build after comparing TASK-00037's separate-commit approach with the package atomicity blocker. TASK-00038 now accepts a durably consumed one-time claim followed by independent package invitation/assignment commits and separate completion audit, truthful partial/uncertain results, early package delivery and explicit interrupted-claim recovery limitations. The claim remains closed after any later failure: no reset, second identity or resume is included. This supersedes that TASK's original atomic-result/complete-rollback requirements, not package ownership ADRs or normal permission requirements. TASK-00038 now implements the permanent claim, independent package steps, separate completion audit, dedicated console isolation and fresh normal assignment authorization in its selected worktree; Engineer verification is complete (897 backend tests / 6474 assertions; full gate pass in 182.09s), while independent Review/QA remain pending. Interrupted-claim recovery is explicitly unavailable and separately planned.
 
