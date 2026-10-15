@@ -98,3 +98,17 @@ Detected credentials and prohibited sensitive content are never preserved merely
 This decision defines semantic authority and minimum reliability, not a frozen telemetry protocol. Observation columns, batching, sequencing, transport, OpenTelemetry use, search/index infrastructure, and richer diagnostics may evolve without reopening this decision so long as observations cannot grant authority and incomplete telemetry is not presented as verified fact.
 
 It creates no schema, table, event mapping, outbox, projection, object bucket, Pi session, imported transcript, captured event, retained credential, browser component, or implementation record. Exact PHP classes, SQL layout, event names and payloads, Command and API names, projector topology, Mercure topics, S3 product, preview renderer, and UI layout remain downstream. WF-018 owns browser prototyping; WF-023 owns the runtime and concrete object-storage deployment.
+
+## Approved operational-log search and preservation clarification
+
+John approved the focused [Operational logs and failure diagnostics map](../operational-observability-map.md)
+and this clarification after inspecting the existing execution-history and Artifact boundaries. Its requested
+14-day default searchable window concerns indexing/query availability, not permission to purge preserved bytes.
+Active, paused, recoverable and Needs Human material, evidence/security holds and the existing configurable
+30-day default post-terminal grace remain unchanged. Older required material may leave the search index only
+with the agreed preservation/retrieval contract; exact archival retention and retrieval remain that map's decisions.
+
+Operational logs remain non-authoritative and distinct from Workflow events, audit evidence and protected Pi
+transcripts. No transcript ingestion, new Workflow store or competing Artifact authority is authorized. Any
+proposal to shorten existing preservation requires an explicit amendment rather than inference from index expiry.
+This clarification creates no collector, archive, retention job, implementation blocker or runtime configuration.
