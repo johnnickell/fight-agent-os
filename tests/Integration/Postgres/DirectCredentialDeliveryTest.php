@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\CredentialDelivery\CanonicalActivationLink;
 use App\Adapter\CredentialDelivery\InMemoryCredentialDeliveryProvider;
+use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Application\CredentialDelivery\ExpireCredentialDeliveryPages;
 use App\Application\CredentialDelivery\RecoverCredentialDeliveryPage;
+use App\Application\Mail\MailDelivery;
+use App\Application\Mail\MailMessage;
+use App\Application\Mail\MailOutcome;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -52,6 +57,7 @@ use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
+use Fight\Common\Application\Templating\TemplateEngine;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -551,23 +557,116 @@ final class DirectCredentialDeliveryTest extends TestCase
     }
 
     /**
+     * Recovers loss after transient link rendering but before an external mail effect or outcome commit
+     */
+    public function testRecoveryAfterDecryptionBeforeExternalMailEffect(): void
+    {
+        $grant = $this->seed('activation');
+        $ids = [];
+        $digests = [];
+        $mail = $this->createMock(MailDelivery::class);
+        $mail->method('deliver')->willReturnCallback(static function (MailMessage $message) use (
+            &$ids,
+            &$digests
+        ): MailOutcome {
+            $ids[] = $message->idempotencyId;
+            [, , $text, $html] = $message->content();
+            $digests[] = hash('sha256', $text.$html);
+            if (count($ids) === 1) {
+                // Materialized content is never retained and no external effect has occurred.
+                throw new \RuntimeException('Controlled interruption before SMTP.');
+            }
+
+            return MailOutcome::DELIVERED;
+        });
+        $provider = new InvitationMailProvider(
+            new CanonicalActivationLink('https://example.test', '/activate'),
+            $this->container->get(TemplateEngine::class),
+            $mail
+        );
+        $worker = $this->freshWorker($provider);
+        $real = $worker->get(TransactionalUnitOfWork::class);
+        $interrupted = new class ($real) implements TransactionalUnitOfWork {
+            private int $commits = 0;
+
+            /**
+             * Constructs the controlled outcome-persistence interruption
+             */
+            public function __construct(private readonly TransactionalUnitOfWork $real)
+            {
+            }
+
+            /**
+             * @inheritDoc
+             */
+            public function commitTransactional(callable $operation): mixed
+            {
+                if (++$this->commits === 2) {
+                    throw new \RuntimeException('Controlled loss before outcome persistence.');
+                }
+
+                return $this->real->commitTransactional($operation);
+            }
+
+            /**
+             * @inheritDoc
+             */
+            public function isClosed(): bool
+            {
+                return $this->real->isClosed();
+            }
+        };
+        $worker->set(TransactionalUnitOfWork::class, static fn(): TransactionalUnitOfWork => $interrupted);
+        try {
+            $this->recover($worker)->run(1, 1);
+            self::fail('The controlled loss must leave the committed claim recoverable.');
+        } catch (\RuntimeException $exception) {
+            self::assertSame('Controlled loss before outcome persistence.', $exception->getMessage());
+        }
+        self::assertCount(1, $ids);
+        self::assertSame('claimed', $this->row('activation')['delivery_status']);
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        $this->container->get(Clock::class)->time = $this->now->modify('+5 minutes');
+        self::assertSame(1, $this->recover($this->freshWorker($provider))->run(1, 1)['dispatched']);
+        self::assertSame(array_fill(0, 2, $grant->getDelivery()->getId()->toString()), $ids);
+        self::assertCount(2, $digests);
+        self::assertSame($digests[0], $digests[1]);
+        self::assertSame('delivered', $this->row('activation')['delivery_status']);
+        self::assertNull($this->row('activation')['delivery_ciphertext']);
+        self::assertSame(2, (int) $this->row('activation')['delivery_attempt_count']);
+    }
+
+    /**
      * Proves provider acceptance followed by a failed outcome commit retains the generation identity
      */
     public function testProviderSuccessThenOutcomeRollbackReusesIdempotencyIdentity(): void
     {
         $grant = $this->seed('activation');
         $ids = [];
-        $this->provider(function (CredentialDeliveryInvocation $invocation) use (&$ids): CredentialDeliveryOutcome {
-            $ids[] = $invocation->getIdempotencyId();
+        $digests = [];
+        $mail = $this->createMock(MailDelivery::class);
+        $mail->method('deliver')->willReturnCallback(function (MailMessage $message) use (
+            &$ids,
+            &$digests
+        ): MailOutcome {
+            $ids[] = $message->idempotencyId;
+            [, , $text, $html] = $message->content();
+            $digests[] = hash('sha256', $text.$html);
             if (count($ids) === 1) {
-                // Reject the outcome audit write without changing claim persistence.
+                // Reject the outcome audit write after the mapped mail effect without changing claim persistence.
                 $this->connection->executeStatement(
                     'ALTER TABLE audit_evidence ADD CONSTRAINT delivery_test_abort CHECK (false) NOT VALID'
                 );
             }
 
-            return CredentialDeliveryOutcome::DELIVERED;
+            return MailOutcome::DELIVERED;
         });
+        $provider = new InvitationMailProvider(
+            new CanonicalActivationLink('https://example.test', '/activate'),
+            $this->container->get(TemplateEngine::class),
+            $mail
+        );
+        $this->container->set(CredentialDeliveryProvider::class, static fn(): CredentialDeliveryProvider => $provider);
         try {
             $this->dispatch('activation');
             self::fail('Outcome transaction must roll back.');
@@ -595,6 +694,8 @@ final class DirectCredentialDeliveryTest extends TestCase
             ));
         $this->dispatch('activation');
         self::assertSame(array_fill(0, 2, $grant->getDelivery()->getId()->toString()), $ids);
+        self::assertCount(2, $digests);
+        self::assertSame($digests[0], $digests[1]);
         self::assertSame('delivered', $this->row('activation')['delivery_status']);
     }
 
