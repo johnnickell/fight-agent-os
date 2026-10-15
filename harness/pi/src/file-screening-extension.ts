@@ -7,6 +7,7 @@ import { Type, type TSchema } from 'typebox';
 import { createBashToolDefinition, createLocalBashOperations, createEditToolDefinition, createWriteToolDefinition,
   getAgentDir, getPackageDir, VERSION } from '@earendil-works/pi-coding-agent';
 import type { BashOperations, ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { reviewEnrollment } from './enrollment-preview.ts';
 import { FileScreening, type ScreenResult } from './jev/file-screening.mjs';
 import { FileScreeningSettings } from './jev/local-store.mjs';
 import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
@@ -35,7 +36,7 @@ const parameters = Type.Object({
 }, { additionalProperties: false });
 const textResult = (value: unknown, isError = false) => ({ content: [{ type: 'text' as const, text: typeof value === 'string' ? value : JSON.stringify(value) }], details: value, isError });
 const allowed = ['read', 'write', 'edit', 'bash', 'jev_read_file', 'file_locate', 'file_screening_status'];
-const sources = [fileURLToPath(import.meta.url), ...['jev', 'tool-policy'].flatMap(dir => readdirSync(join(sourceDir, dir))
+const sources = [fileURLToPath(import.meta.url), join(sourceDir, 'enrollment-preview.ts'), ...['jev', 'tool-policy'].flatMap(dir => readdirSync(join(sourceDir, dir))
   .filter(name => /\.(mjs|py)$/.test(name)).map(name => join(sourceDir, dir, name))), join(sourceDir, 'jev-extension.ts'), join(sourceDir, 'screening-bootstrap.mjs')];
 type Dependencies = { settings?: FileScreeningSettings; configuration: () => OperatorConfiguration | null;
   profiles: ScreeningProfiles; credentialConfigured: (ctx: ExtensionContext) => boolean };
@@ -355,12 +356,13 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         'Until explicit revocation/authority change, allow authorized UTF-8 source and final shell commands (<=16 KiB) with cwd/root/phase/shell settings, excluding secrets, to the pinned evaluator? No environment values, prompt/history or script bodies are fetched for command risk. Shell can bypass relevance and access same-user state; no safety/sandbox guarantee. No enrollment expiry or routine renewal. Existing task/role approval, shared budget and finite test grants still bind. Cancel declines enrollment.')) return;
       const candidate = profiles.preview({ cwd: ctx.cwd, configuration, excludedPaths: excluded.split(';').map(v => v.trim()).filter(Boolean),
         instructions: instructions.split(';').map(v => v.trim()).filter(Boolean), providerDisclosure: true, commandDisclosure: true });
-      if (!await ctx.ui.confirm('Preview STANDING project enrollment — no periodic renewal', JSON.stringify({ ...candidate,
+      if (!await reviewEnrollment(ctx, JSON.stringify({ ...candidate,
         monthly: { microUsd: 10000000, timeZone: 'America/Chicago', rollover: false },
         credentialResolution: 'Pi-managed OpenRouter; no credential resolution during setup',
         connection: { endpoint: configuration.endpoint, evaluator: configuration.evaluator },
         coverage: 'Explicit file receipts; final native Agent/user bash risk. Shell relevance bypass, scripts/descendants/plugins/SDK OS calls are outside interception. Not a sandbox.',
         sessionAllocation: 'At most 100000 micro-USD, further bounded by connection; 2688/request; shared account with file relevance, 8 questions/request, 2 outstanding, zero retries' }, null, 2))) return;
+      if (!await ctx.ui.confirm('Save enrollment?', 'Save the reviewed standing authority until revoked or changed?')) return;
       profiles.save(candidate, resources); invalidate();
       ctx.ui.notify('Standing enrollment saved; /reload. No credentials resolved or paid calls. Preserve all ledgers, pending liabilities and finite test counters.', 'info');
     } catch (error) { ctx.ui.notify(`File screening setup: ${safeCode(error)}. Existing settings/accounting preserved.`, 'warning'); }

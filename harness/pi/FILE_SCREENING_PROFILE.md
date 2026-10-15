@@ -29,8 +29,11 @@ replace them. No global installation/trust/settings or real enrollment occurs by
    source/command disclosure authority.
 3. Run `/file-screening setup` in the intended canonical project root. Enter extra protected paths and exact
    governing/selected-skill instruction files (semicolon-separated). Explicitly consent to source and bounded
-   nonsecret final-command/context disclosure, then inspect the full effective preview before confirmation.
-   Cancel changes nothing. No JSON editing or session-ID hashing is needed. Register each intended root explicitly;
+   nonsecret final-command/context disclosure, then inspect the full effective preview. Use Up/Down or Page Up/Down
+   to scroll and Home/End to jump; the footer shows active bindings and position. Enter continues to a separate
+   short save confirmation; it does not save from the preview. Escape cancels either step without changes.
+   Enlarge a terminal too small to display the preview controls before continuing. No JSON editing or session-ID
+   hashing is needed. Register each intended root explicitly;
    there is no hardcoded target/provider project. A changed connection authority with other enrolled roots requires
    reviewing those projects rather than silently transferring their disclosure.
 4. `/reload` binds the actual session. Enrollment is **standing until explicit revocation or authority change**:
