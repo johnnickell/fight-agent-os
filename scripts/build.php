@@ -214,7 +214,8 @@ try {
             '../harness/pi/tests/header.test.mjs',
             '../harness/pi/tests/jev.test.mjs',
             '../harness/pi/tests/judgments.test.mjs',
-            '../harness/pi/tests/file-screening.test.mjs'
+            '../harness/pi/tests/file-screening.test.mjs',
+            '../harness/pi/tests/tool-policy.test.mjs'
         ]
     ];
     $frontendChecks = [

@@ -6,7 +6,11 @@ macOS). Mixed typed forms have controlled Pi integration evidence, not live qual
 [bounded typed judgments](JUDGMENTS.md). One authorized live Decisions
 check succeeded on October 14, 2026; independent acceptance remains pending. A synthetic result does not establish
 model accuracy or another installation's account access. This is not the
-managed Runner, an execution sandbox or tool safeguards. TASK-00162 adds opt-in, instruction-based single-file
+managed Runner or an execution sandbox. TASK-00160 adds an explicitly selected
+[deterministic tool policy](TOOL_POLICY.md) for qualified Pi 1.2.0 macOS sessions: final-argument file admission,
+digest-bound script/argv admission and denial of unsupported helper/nested/child tools. It says **deterministic
+protection only**, not Jev screening or process isolation; installation alone never activates it.
+TASK-00162 adds opt-in, instruction-based single-file
 screening; TASK-00163 extends it with bounded lists/globs and session-local metadata caching; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
 is activated by installing/updating this source.
 
@@ -53,7 +57,7 @@ protocol. The separate prototype is not a runtime dependency.
 
 ## Verification and packaging
 
-`./bin/harness-check` (from the repository root) runs owned presentation and Jev behavior tests in the pinned Node container. The
+`./bin/harness-check` (from the repository root) runs owned presentation, Jev and deterministic-policy behavior tests in the pinned Node container. The
 full `./bin/build` includes this check. If the check image is missing, explicitly fetch it first:
 
 ```sh

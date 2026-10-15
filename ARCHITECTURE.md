@@ -15,7 +15,9 @@ system or an Internet homepage. It starts with the Slim composition from `johnni
   available; typed client `/me` integration, authentication journeys, product UI and final visual design remain planned
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)
 - `.pi/skills/`: local planning, engineering, Graphify and instruction-writing guidance; managed runtime execution remains planned
-- `harness/pi/`: installable terminal identity; future typed Workflow client capabilities remain separate
+- `harness/pi/`: installable terminal identity, Jev/file-screening capabilities and an opt-in
+  [deterministic Pi tool policy](harness/pi/TOOL_POLICY.md); future typed Workflow clients, semantic tool screening
+  and qualified process isolation remain separate
 
 Fight Common and Fight Access Control remain Composer dependencies. The inherited `App` namespace and
 hello-world HTTP behavior are preserved for the initial scaffold. Framework migration is a future decision. The
