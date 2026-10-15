@@ -12,8 +12,6 @@ set_error_handler(static function (): never {
 try {
     require dirname(__DIR__).'/vendor/autoload.php';
     $container = require dirname(__DIR__).'/config/services.php';
-    $configure = require dirname(__DIR__).'/config/application/console_invitation.php';
-    $configure($container);
     exit($container->get(SafeConsoleApplication::class)->run());
 } catch (Throwable) {
     fwrite(STDERR, "Console failed or its outcome is uncertain; inspect trusted persisted state.\n");

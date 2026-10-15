@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Security\UnauthenticatedContextProvider;
+use App\Application\Authorization\AuthenticatedRoleAssignment;
 use App\Application\Authorization\InstallationAuthority;
 use App\Application\Authorization\InvitationCorrectionAuthorization;
 use App\Application\Authorization\SessionAdministrationDecision;
 use App\Application\Authorization\UnavailableEmailChangeAdministration;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationAdministrationAuthorization;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContextProvider;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\EmailChangeGrant\Service\EmailChangeAdministrationAuthorization;
 use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionAdministrationAuthorization;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
@@ -18,6 +22,7 @@ use Fight\Common\Adapter\Auth\Security\PhpPasswordValidator;
 use Fight\Common\Application\Auth\RequestService;
 use Fight\Common\Application\Auth\Security\PasswordHasher;
 use Fight\Common\Application\Auth\Security\PasswordValidator;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Service\Container;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -33,6 +38,15 @@ return static function (Container $container): void {
         return $value;
     };
 
+    $container->set(AuthenticationContextProvider::class, static fn(): AuthenticationContextProvider =>
+        new UnauthenticatedContextProvider());
+    $container->set(AuthenticatedRoleAssignment::class, static fn(Container $c) =>
+        new AuthenticatedRoleAssignment(
+            $c->get(AuthenticationContextProvider::class),
+            $c->get(AuthoritativePrincipalResolver::class),
+            $c->get(RoleRepository::class),
+            $c->get(CommandBus::class)
+        ));
     $container->set(ValidatorInterface::class, static function (): ValidatorInterface {
         return Validation::createValidator();
     });

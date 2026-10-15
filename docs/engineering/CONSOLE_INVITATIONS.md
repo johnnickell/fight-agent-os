@@ -1,8 +1,8 @@
 # Trusted console invitations and role correction
 
-TASK-00037 implements two independent package business steps and a narrowly trusted corrective command.
-Implementation verification is separate from fresh independent Review and behavioral QA; historical QA at
-`2227c4b` does not cover this revision. No public HTTP or browser role-administration surface is introduced.
+Ordinary invitation uses two independent package business steps and a narrowly trusted corrective command.
+TASK-00446 simplifies their composition and Application sequencing; its fresh independent Review/QA are separate
+from historical TASK-00037/00038 acceptance. No public HTTP or browser role-administration surface is introduced.
 
 ## Prepare the intended installation
 
@@ -17,6 +17,8 @@ Local null/memory providers send no email; production provider/scheduler enrollm
 
 Enroll a stable lowercase operator UUID once through the owning ID factory or a UUID library, and keep its trusted
 identity mapping outside the command. Do not substitute the target ID or infer an operator from environment input.
+For the separate manually operated first Super Admin operation, read the
+[bootstrap runbook](SUPER_ADMIN_BOOTSTRAP.md); neither ordinary command can elevate or resume bootstrap.
 This bounded attribution does not require a database User or claim a logged-in principal. Package assignment uses
 the typed operator UUID as actor; durable console audit uses the distinct `console:UUID` namespace.
 
@@ -108,25 +110,30 @@ audited. An audit commit whose acknowledgement is lost may produce duplicate con
 trusted investigation, not this CLI, resolves historical gaps. No repository hook, participant, deferred-event
 buffer or transaction decorator manufactures atomicity.
 
-## Dispatch, filter safety and supported writer boundary
+## Shared dispatch and supported writer boundary
 
-[`ConsoleUserOperation`](../../src/Application/Invitation/ConsoleUserOperation.php) owns invocation isolation,
-sequencing, partial-state inspection and separate audit coordination. Symfony adapters only validate/map transport
-and render safe results. Owned commands/handlers are justified by this real installation policy and evidence
-boundary, not aliases for the package role API. All messages use the existing configured buses and shared
-container-managed handlers; package handlers receive normal `TransactionalUnitOfWork` and `EventDispatcher`.
-No direct handler injection/call, outer/nested/joining UoW or copied package business policy exists.
+[`ConsoleUserOperation`](../../src/Application/Invitation/ConsoleUserOperation.php) owns installation/eligible-role
+policy, package sequencing, partial-state inspection and separate audit coordination. Symfony adapters only map
+validated input and render safe results. The operation directly dispatches package messages through the one
+configured command bus; queries use the configured query bus. Package handlers retain normal transaction/event
+capabilities. The old cyclic operation/owned-handler forwarding, command intent and terminal guard pipelines are
+removed, not renamed. No direct handler call, outer/joining UoW or copied package business policy is introduced.
 
-[`ConsoleCommandIntent`](../../src/Application/Invitation/ConsoleCommandIntent.php) retains each intended payload
-outside configurable transformations and detects silent vetoes, including when membership already existed.
-The terminal [`ConsoleUserCommandGuard`](../../src/Application/Invitation/ConsoleUserCommandGuard.php) checks
-actual routed class/actor/target/role/email against that intent before mutation and rechecks current eligible
-references immediately before package assignment. It is the innermost filter, installed first in Common's LIFO
-pipeline; configured later filters run outside it. Invocation frames are removed in `finally` on success/failure.
-Do not insert a transforming stage between this guard and routing or bypass public buses. Queries also traverse
-their configured pipeline; returned IDs and the exact desired preview definitions must match, not merely claim
-an empty unchanged plan. QueryFilter's void continuation supports message veto/transformation, not a claimed
-query-result-transformation API.
+`config/services.php` loads all common/application modules, including lazy Console registrations, for both HTTP
+and Console. The normal Console application contains invitation, additive role and bootstrap commands together.
+There is no argv-selected graph, postboot registration or command-specific bus replacement. See
+[shared services and dispatch](STANDARDS.md#shared-services-and-bus-dispatch).
+
+Raw package messages and installed filters are trusted in-process infrastructure, not an authenticated API or a
+hostile-transformer boundary. Application validates its input/current references and inspects outcomes; no ambient
+intent/claim scope protects arbitrary filter rewrites. Membership confirmation records observed additive state,
+not proof that a void bus dispatch executed a mutation: an already-present role remains membership-idempotent.
+Throwing dispatch failures remain non-success, including repeats. Missing new membership cannot be reported as
+success. Queries must still return matching identities and exact desired policy definitions, not merely an empty
+unchanged plan. Authenticated/nontrusted assignment must use `AuthenticatedRoleAssignment::assign()` for fresh
+principal/actor/exact permission checks; never forward raw messages from HTTP or Agent tools. No such assignment
+endpoint currently exists. Trusted machine/process access remains the CLI boundary; future managed Agent CLI
+exclusion is not implemented by service registration.
 
 The supported installation writer supplies only `InstallationManagedPolicy::create()` via the shipped
 preview/apply CLI. Reapplying that fixed catalog cannot redesignate ordinary ROLE_USER as Super Admin. Stable
@@ -154,16 +161,17 @@ material; no operator-facing logging subscriber is registered, and one must not 
 
 The unchanged lock is Access Control **v0.5.0** (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`), Common **v1.3.0**
 (`7de6cad6e8a9752973ad9f8e27e285b0c1510582`) and Symfony Console **v8.1.6**. No package/upstream/ADR edit is required.
-Unit tests protect input, policy, scoped dispatch, uncertainty and rendering. PostgreSQL integration tests exercise
+Unit tests protect input, policy, package effects, uncertainty and rendering. PostgreSQL integration tests exercise
 real package commits/rollback, early provider timing, retained invitations, assignment/audit failures, postcommit
-inspection, correction/repeats, ordinary/custom roles, current drift/stale references and actual configured
-actor/target/role transformations/vetoes. Secret markers are checked only against safe output/events/audit/status,
+inspection, correction/repeats, ordinary/custom roles, current drift/stale references and dispatch failures/vetoes.
+Tests specific to superseded terminal-intent/hostile-transformer protection were removed with that mechanism. Secret markers are checked only against safe output/events/audit/status,
 not copied from private rows into evidence. Old all-or-nothing tests were replaced with independent-boundary
 assertions, not silently removed. Owning tools validate wiring/source paths directly, not product-suite tests.
 
 Serialize `./bin/database test-reset` then `./bin/phpunit --filter OrdinaryInvitation` for focused PostgreSQL work.
 `./bin/backend-tests` measures backend coverage; `./bin/build` remains the mandatory full local gate. Fresh-process
-recovery evidence and counts/warnings belong to [TASK-00037](../../planning/tasks/00037-TASK.md). No real email,
+recovery history belongs to [TASK-00037](../../planning/tasks/00037-TASK.md); current refactor evidence and
+counts/warnings belong to [TASK-00446](../../planning/tasks/00446-TASK.md). No real email,
 scheduler, production certification, crash-kill testing, hosted CI, independent acceptance or publication follows
 from an Engineer gate. Fresh independent Review and affected behavioral QA remain required; visual screenshots
 are N/A for these non-interactive commands.

@@ -10,8 +10,8 @@ use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Messaging\Event\SynchronousEventDispatcher;
 use Fight\Common\Application\Service\Container;
 
-return [
-    'services'    => [
+return static function (Container $container): void {
+    $services = [
         'messaging.event.dispatcher'           => static function (Container $container): ServiceAwareEventDispatcher {
             return new ServiceAwareEventDispatcher($container);
         },
@@ -29,9 +29,15 @@ return [
         ): PasswordResetDeliverySubscriber {
             return new PasswordResetDeliverySubscriber($container->get(CommandBus::class));
         }
-    ],
-    'subscribers' => [
+    ];
+    foreach ($services as $id => $factory) {
+        $container->set($id, $factory);
+    }
+    $subscribers = [
         InvitationDeliverySubscriber::class    => InvitationDeliverySubscriber::class,
         PasswordResetDeliverySubscriber::class => PasswordResetDeliverySubscriber::class
-    ]
-];
+    ];
+    foreach ($subscribers as $subscriber => $id) {
+        $container->get('messaging.event.dispatcher')->registerService($subscriber, $id);
+    }
+};

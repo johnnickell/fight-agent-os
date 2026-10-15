@@ -46,6 +46,25 @@ Preserve use-case transaction, authorization, audit and recovery guarantees when
 if the installed transaction contract cannot support them, report the concrete blocker rather than call handlers
 privately or weaken the contract. Void command dispatch alone does not prove a filter allowed all required effects.
 
+`config/services.php` loads sorted `config/{parameters,common,application}/*.php` globs. Every matched file returns
+one `callable(Container): void` registration module. Load all modules exactly once; keep metadata helpers outside
+these globs or convert them to that contract. Do not add a file manifest, filename exceptions, argv-selected
+profiles or nested module loads. Common `command.php`, `query.php` and `event.php` own their respective shared
+pipelines, routers, handlers and aliases. Application modules add lazy services and registrations, never replace
+the bus. HTTP and Console load the same graph; `scripts/console.php` only boots and runs the registered Console
+application. Register all commands together, without resolving invocation-only delivery keys or principals on
+unrelated boot/list/help. Service registration is neither execution nor access control.
+
+The raw package bus is trusted in-process composition infrastructure, not an authenticated public API. Nontrusted
+role assignment must use `AuthenticatedRoleAssignment::assign()` with verified invocation-bound authentication;
+it freshly checks principal, actor and exact current permissions before package dispatch. Trusted operator use
+cases use the same bus without pretending to authenticate as a browser user. Never forward untrusted raw package
+messages from HTTP/Agent callers, authorize by service presence, install ambient trust flags/intent scopes, or
+create an alternate bus to grant console authority. The [bootstrap runbook](SUPER_ADMIN_BOOTSTRAP.md) owns the
+manual presence-check/no-concurrency/retry policy and explains the historical raw-message guard supersession.
+Machine/process access is the current Console trust boundary; planned Agent shell/CLI exclusion is not implemented
+by this composition. New nontrusted consumers must demonstrate their actual authorization boundary before dispatch.
+
 For new or revised console entry points, use an Adapter Symfony Console Command registered with the existing
 container and exposed through generic `bin/console`. The command validates/maps transport input, dispatches a
 package or justified owned use case through injected buses, and presents safe output/exit status. Business and

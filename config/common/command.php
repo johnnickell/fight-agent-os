@@ -13,6 +13,7 @@ use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\CommandHand
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\CommandHandler\ExpirePasswordResetDeliveryHandler;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Application\AccessControl\User\CommandHandler\AssignRoleToUserHandler;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ExpireInvitationDelivery;
@@ -25,6 +26,7 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\Command\ExpirePa
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Messaging\Command\Sync\CommandPipeline;
 use Fight\Common\Adapter\Messaging\Command\Sync\Routing\ServiceAwareCommandRouter;
@@ -35,23 +37,30 @@ use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 
-return [
-    'services' => [
+return static function (Container $container): void {
+    $services = [
         'messaging.command.router'                => static function (Container $container): ServiceAwareCommandRouter {
             return new ServiceAwareCommandRouter($container);
         },
         'messaging.command.routing'               => static function (Container $container): RoutingCommandBus {
             return new RoutingCommandBus($container->get('messaging.command.router'));
         },
-        'messaging.command.bus'                   => static function (Container $container): CommandPipeline {
-            return new CommandPipeline($container->get('messaging.command.routing'));
-        },
+        'messaging.command.bus'                   => static fn(Container $container): CommandPipeline =>
+            new CommandPipeline($container->get('messaging.command.routing')),
         CommandBus::class                         => static function (Container $container): CommandBus {
             return $container->get('messaging.command.bus');
         },
         SynchronousCommandBus::class              => static function (Container $container): SynchronousCommandBus {
             return $container->get('messaging.command.bus');
         },
+        AssignRoleToUserHandler::class            => static fn(Container $c): AssignRoleToUserHandler =>
+            new AssignRoleToUserHandler(
+                $c->get(UserRepository::class),
+                $c->get(RoleRepository::class),
+                $c->get(Clock::class),
+                $c->get(TransactionalUnitOfWork::class),
+                $c->get(EventDispatcher::class)
+            ),
         ReconcileManagedPolicyHandler::class      => static function (
             Container $container
         ): ReconcileManagedPolicyHandler {
@@ -116,14 +125,17 @@ return [
                 $container->get(EventDispatcher::class)
             );
         }
-    ],
-    'handlers' => [
+    ];
+    foreach ($services as $id => $factory) {
+        $container->set($id, $factory);
+    }
+    $container->get('messaging.command.router')->registerHandlers([
+        AssignRoleToUser::class            => AssignRoleToUserHandler::class,
         ReconcileManagedPolicy::class      => ReconcileManagedPolicyHandler::class,
         ExpireInvitationDelivery::class    => ExpireInvitationDeliveryHandler::class,
         ExpirePasswordResetDelivery::class => ExpirePasswordResetDeliveryHandler::class,
         ExpireEmailChange::class           => ExpireEmailChangeHandler::class,
         DeliverUserInvitation::class       => DeliverUserInvitationHandler::class,
         DeliverPasswordReset::class        => DeliverPasswordResetHandler::class
-    ],
-    'filters'  => []
-];
+    ]);
+};

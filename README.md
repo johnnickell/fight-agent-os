@@ -97,6 +97,15 @@ this is additive/idempotent and excludes authoritative Super Admin. Role confirm
 with disclosed crash/uncertainty boundaries. TASK-00037 implementation awaits fresh independent Review/QA;
 the earlier alternate-policy probe is conditional history, not a shipped fixed-catalog prerequisite.
 This is not bootstrap/public registration; local delivery adapters send no email.
+The separate `./bin/console user:bootstrap-super-admin --internal --confirm-bootstrap --operator=OPERATOR_UUID --email=person@example.test`
+checks authoritative Super Admin presence and refuses if one exists or lookup fails. Run it manually, one operator
+at a time; no concurrent admission guarantee is provided. Another manual attempt is allowed after partial/failure
+when no Super Admin exists; retained same-email invitations still conflict normally. Read the
+[bootstrap runbook](docs/engineering/SUPER_ADMIN_BOOTSTRAP.md) before confirming. Invitation, assignment and completion
+audit commit independently; early delivery and retained partial state are deliberate, not an atomic rollback guarantee.
+All three Console commands share the normal glob-loaded container and bus. Raw package dispatch is trusted internal
+infrastructure; nontrusted role assignment must use the explicit authenticated Application use case. No HTTP/Agent
+assignment endpoint or managed Agent CLI restriction is supplied here.
 
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services

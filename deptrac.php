@@ -30,7 +30,7 @@ return static function (DeptracConfig $config): void {
                 ClassLikeConfig::create('^App\\Adapter\\')
             ),
             $composition = Layer::withName('Composition')->collectors(
-                DirectoryConfig::create('(^|/)(?:config|bootstrap|public|scripts)/')
+                DirectoryConfig::create('^'.preg_quote(__DIR__, '/').'/(?:config|bootstrap|public|scripts)/')
             ),
             $accessControlDomain = Layer::withName('Access Control Domain')->collectors(
                 ClassLikeConfig::create('^Fight\\AccessControl\\Domain\\')
