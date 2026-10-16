@@ -24,11 +24,14 @@ export type ScreenResult = {
 export declare const filePolicyVersion: 'file-screen-v1';
 export declare const sourceByteLimit: number;
 export declare const evidenceByteLimit: number;
+export declare const imageByteLimit: number;
+export type ByteSnapshot = Omit<Snapshot, 'text'> & { data: Buffer };
 export declare function validateFilePolicy(value: unknown): FilePolicy;
 export declare class FileSource {
   authorize(path: string, policy: FilePolicy, options?: { allowMissing?: boolean }): string;
   openDirectory(path: string, policy: FilePolicy): number;
   snapshot(path: string, policy: FilePolicy, options?: { sourceLimit?: number; maxBytes?: number; onRead?: (bytes: number) => void }): Snapshot;
+  snapshotBytes(path: string, policy: FilePolicy, options?: { sourceLimit?: number; maxBytes?: number; onRead?: (bytes: number) => void }): ByteSnapshot;
 }
 export declare class FileScreening {
   constructor(dependencies: { settings: { load(): unknown }; configuration(): OperatorConfiguration | null;

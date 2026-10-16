@@ -6,8 +6,10 @@ launcher. Installing the package without selecting a policy leaves ordinary sess
 
 ## Operator setup
 
-Qualified runtime: **Pi 1.2.0, macOS APFS, Node 22.23.1** (case-sensitive and case-insensitive APFS).
-Other Pi versions/platforms and unqualified filesystems refuse activation. The policy directory, working directory
+Supported runtime: **stable Pi 1.x from 1.2.0 onward, macOS APFS** (case-sensitive and case-insensitive APFS),
+with the [required runtime capabilities](#runtime-compatibility). Minor/patch upgrades do not require an allowlist
+edit or reenrollment. Earlier versions, prereleases, noncanonical version strings, other major versions/platforms
+and unqualified filesystems refuse activation. The policy directory, working directory
 and all allowed roots must share one filesystem device; targets crossing a nested mount to another device are
 also refused. Keep a private operator directory on that volume, outside the repository and allowed roots. The package
 uses Pi's exported tool-definition factories and execution wrappers, not a patched Pi installation. Review and
@@ -58,6 +60,29 @@ most 64 KiB. Roots must already be directories and cannot be `/`. Symlinked conf
 initial canonical destination and rechecked. `read` needs effect `read`; `write` needs `write`; `edit` needs both `read` and `write`.
 No delete, generic command, network, provider or child-launch permission exists in this schema. Effect classes
 admit a declared operation; they do not constrain what trusted script code does internally.
+
+## Runtime compatibility
+
+The shared guard accepts stable `>=1.2.0 <2.0.0`; it does not pin each Pi minor/patch release. Both this policy
+and enrolled file screening require successful registration of `session_start`, `tool_call`, `user_bash`,
+`session_before_switch`, `session_before_fork`, `session_before_tree` and `session_shutdown`. Each registration
+must return Pi's unsubscribe function. File screening additionally requires `before_agent_start`, `input`, `getSettings` and `appendEntry`.
+Both require callable `on`, `registerTool`, `getAllTools`, `getActiveTools`, `setActiveTools` and `getFlag` APIs.
+Missing acknowledgements/capabilities keep activation unavailable with `unsupported-runtime-or-hooks`; presence
+of `on` alone or a hard-coded `hooks: true` is not sufficient. Native tool factories remain required imports.
+
+Fresh compatibility probes exercised installed **Pi 1.2.0 and 1.3.0, Node 22.23.1, macOS APFS**: 42 deterministic
+pipeline outcomes per release, plus 17 enrolled-screening outcomes per release, with no provider calls. They
+covered real hooks, final-argument checks, alternate/nested denial, shell interception, lifecycle cancellation,
+reload and missing-registration refusal. Disposable enrollment, enforcement files, monthly SQLite accounting,
+legacy liabilities and exhausted finite counters remained byte-identical through screening probes and upgrade.
+Future 1.x releases are admitted by the compatibility contract, not claimed individually verified. API/registration
+checks cannot detect an upstream semantic change that preserves the API shape; they are not sandbox certification.
+
+Restart Pi after updating this guard or Pi itself, then inspect the selected profile. No setup, conversion,
+revocation, accounting migration/reset or paid qualification is required merely for a compatible runtime upgrade.
+Never delete enrollment or accounting to clear a compatibility hold. Historical filesystem/CLI evidence below
+retains its original runtime identity; this compatibility check does not rerun paid or visual qualification.
 
 ## Paths and protected resources
 
@@ -189,7 +214,9 @@ file effects, **not visual clipping/font/layout correctness**. Independent Revie
 
 Jev-enabled tool-effect screening remains TASK-00161. TASK-00309's separate
 [enrolled file-screening candidate](FILE_SCREENING_PROFILE.md) reuses these final-argument write/edit operations
-with receipt-bound explicit reads and separate final-command Jev risk assessment for useful authorized shell.
+with normal project reads, optional relevance discovery, role-scoped writes and separate final-command Jev
+risk assessment for useful authorized shell. Its project-instruction, skill and `.env.example` access defaults
+do not change the standalone deterministic policy described above.
 Shell relevance bypass and same-user access are accepted interim limitations, not containment. This does not change
 this standalone optional policy's exact-script shell restrictions. Current workflow proof/independent acceptance
 remain pending.

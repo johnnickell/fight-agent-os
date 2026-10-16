@@ -1,8 +1,8 @@
 # Standing project screening (TASK-00309 implementation candidate)
 
-This profile combines [explicit file relevance admission](FILE_SCREENING.md), automatic actual-session binding,
-shared monthly accounting and separate **command-risk assessment** using the existing Jev judgments supplier.
-It is not a sandbox, universal file-admission boundary or new task/role permission system. Ordinary authorized
+This profile combines normal project-file access, optional [Jev relevance discovery](FILE_SCREENING.md),
+automatic session binding, role-scoped explicit writes, shared monthly accounting and separate **command-risk
+assessment** using the existing Jev judgments supplier. It is not a sandbox or universal file-access boundary. Ordinary authorized
 shell remains useful, including `rg`, `cat`, `git diff`, checks, commits, non-force push and owned-worktree cleanup.
 Shell source reads can bypass relevance screening. Same-user shell can access operator state; explicit-tool
 protected paths do not provide OS containment. Restrictive shell containment/MCP replacements are future work.
@@ -16,10 +16,14 @@ replace them. No global installation/trust/settings or real enrollment occurs by
 
 ## Operator setup and inspection
 
-1. In reviewed native Pi **1.2.0 on macOS**, load the package through an existing trusted installation or explicitly
-   with `pi -e /absolute/provider/harness/pi`. Never automatically install globally, trust a project or alter settings.
-   Other runtimes/platforms, replaced tools and simultaneous `--fight-tool-policy` selection hold this profile.
-   TASK-00160's optional deterministic policy remains separate and unchanged, including its exact-script shell policy.
+1. In reviewed native **stable Pi 1.x from 1.2.0 onward on macOS APFS**, load the package through an existing
+   trusted installation or explicitly with `pi -e /absolute/provider/harness/pi`. Never automatically install
+   globally, trust a project or alter settings. The shared [runtime compatibility contract](TOOL_POLICY.md#runtime-compatibility)
+   requires actual hook registrations and APIs; older/prerelease/new-major runtimes, unsupported platforms,
+   replaced tools and simultaneous `--fight-tool-policy` selection hold this profile. Compatible minor/patch
+   upgrades need no allowlist edit, reenrollment or accounting reset. Fresh probes cover Pi 1.2.0 and 1.3.0;
+   future releases are not individually verified. Restart after guard/runtime upgrades and inspect the profile.
+   TASK-00160's optional deterministic policy remains separate, including its exact-script shell policy.
 2. Reuse [Pi-managed OpenRouter setup](README.md#jev-setup-and-readiness-operator-only), with the pinned Jev
    evaluator and `authorized-supplied-state` disclosure. Setup resolves no credential and makes no request.
    Shared connection/price setup is standing for the approved pins and limits, with no periodic renewal.
@@ -40,8 +44,10 @@ replace them. No global installation/trust/settings or real enrollment occurs by
    no expiry, routine renewal, new-session/day/month prompt or periodic lease. Resumes retain usage; fresh roles
    bind independently under the same account. Monthly reset changes available monthly funds, not enrollment.
 5. `/file-screening inspect` or `file_screening_status` is read-only and makes no paid/credential request. `active`
-   describes explicit-file admission and declared command-risk coverage, not provider readiness, accuracy or safety.
-   `degraded` gives the precise setup/authority/price/credential/budget action; `disabled` means not enrolled.
+   describes project access and declared command-risk coverage, not provider readiness, accuracy or safety.
+   `degraded` gives the precise setup/authority/provider/price/credential/budget action; `disabled` means not enrolled.
+   A per-file refusal such as `source-limit` does not degrade an otherwise active session or clear a prior provider
+   failure. The rejected file still has no positive receipt; a concretely needed file can be read directly within local limits.
    Status reports available/reserved/settled funds, all-month liabilities, reset, binding limit and actual session/phase.
 6. `/file-screening revoke` confirms revocation for **all roots listed in this enrollment**. Their durable revoked
    record holds new/resumed native tools rather than turning deletion into an implicit opt-out. Existing runtimes
@@ -52,8 +58,9 @@ replace them. No global installation/trust/settings or real enrollment occurs by
 Settings live outside roots/repository instructions in the existing private operator directory:
 `~/Library/Application Support/Fight Agent OS/jev/` (directory 0700, files 0600, operator-owned, no symlinks/hardlinks).
 `screening-profile.json` v2 has `expiresAt: null`, explicit command disclosure and revocation state. Generated
-`enforcement-<revision>.json` protects explicit file mutations, not arbitrary shell. Exact instructions, Pi settings,
-operator state and sensitive names retain their explicit-tool protections. Authority/source/tool drift holds old
+`enforcement-<revision>.json` protects explicit file mutations, not arbitrary shell. Explicit operator exclusions, Pi runtime settings,
+operator state and sensitive names retain their explicit-tool protections. Project instructions and `.pi/skills`
+are editable for Engineer/Land unless explicitly excluded; `.env.example` is an ordinary template. Authority/source/tool drift holds old
 runtime receipts and requires correcting the actual change and reload; no daily/session/monthly renewal is added.
 
 **Historical compatibility:** v1 profiles were deliberately timeboxed. They hold with
@@ -65,32 +72,65 @@ revision to invalidate old receipts. It never resolves credentials, sends a requ
 Do not convert a real operator's profile without explicit authority. Historical runtime ledgers/grants are retained,
 not imported into a fresh routine execution allowance; the coordinator reconciles any in-flight effects first.
 
-## Explicit file admission and exceptions
+## Project reads, discovery and workflow roles
 
-`jev_read_file` retains the 0.70 positive rule, validated single/list/glob/cache contract and current-source/access
-checks. Each complete positive gets its own admission token; cache reuse is visible, local to the actual session,
-and not a paid call. No source-body or cross-session judgment cache is added. Negative/partial/failed/unavailable
-results grant no explicit read and do not establish absence. Never repeatedly rephrase to seek a positive.
+The installed [shared rule](FILE_SCREENING_RULE.md) is injected into every participating session. It is the
+portable source of agent guidance; targets need no copied policy or new base skill. Strongly prefer Jev for
+unfamiliar/speculative discovery. Known targets, changed files, failure locations and core instructions read
+directly with `read` and `path`. This includes `AGENTS.md`, `README.md`, `planning/tasks/BOARD.md`, root or
+planning `ROADMAP.md`, without individual whitelist enrollment or fixed content digests. `need` and ranges are
+optional; defaults are 200 lines, with at most 1,000 requested lines / 32 KiB output and a 1 MiB local snapshot.
+Follow the returned continuation offset for more. A negative or unavailable relevance judgment does not deny
+access: briefly state the concrete need before a direct read, and never label it screened.
 
-Use `read` with `path`, identical `need`, `admission.receipt`, `questionDigest`, and explicit positive `offset`/`limit`
-(up to 1,000 lines / 32 KiB returned). Missing or false evidence returns no source. Changed need/question/source/
-revision/session/authority/connection invalidates a receipt. Discovery sources remain <=32 KiB; local exact-evidence
-snapshots may reach 1 MiB without widening Jev disclosure or the 32 KiB returned-range cap.
+Native loaded-context and advertised-skill paths read directly outside the project too. Reading trusted
+instructions establishes their exact relative Markdown references, bounded to eight links deep and 128 paths.
+Source changes and removed registrations invalidate those witnesses. Unlinked siblings, whole provider roots
+and Jev disclosure are not granted. Explicit exclusions, protected resources and inode checks remain binding.
+Do not use a shell workaround for an actual access denial.
 
-Exceptions bypass relevance only, never permissions or sensitive-file restrictions:
+The operator's interactive `/skill:work`, `/skill:review`, `/skill:qa` or `/skill:land` selects its role, as does a
+trusted launcher phase. `/file-screening role engineer|reviewer|qa|land` explicitly selects a role in the TUI;
+the session retains it on reload/resume. Model/extension and RPC prompt text cannot promote roles. New local
+sessions without a phase default to Engineer. Older sessions should select their workflow again after restart.
 
-- `exception: "instruction"`: exact current operator-enrolled instruction or actual authorized native context whose
-  bytes match. External provider skills need their exact instruction grant, never siblings/directory permission.
-  `/file-screening instruction` previews one genuinely required file, then reload.
-- `file_locate({path,symbol,need})`: one unique verified definition, location/evidence only, <=40 lines and 32
-  lookups/runtime. Use its evidence token with identical need. A plausible filename/certainty statement is not evidence.
-- `/file-screening target`: one exact operator-established edit/quote/verification purpose and bounded range;
-  use `exception: "required-evidence"` with matching need. Changed source needs reassessment.
+- Engineer and Land can read/edit normal project files, including instructions, `.env.example` and `.pi/skills`.
+- Reviewer can read project files and write reports/probes only beneath the project's `.runs`.
+- QA can read and execute checks/probes and use appropriate Git operations; direct writes are limited to `.runs`.
+- Every role retains explicit exclusions, credential/runtime protections and existing task authorization.
 
-Native mandatory context supplies current per-file witnesses. The trusted `ScreeningProfiles.intake` API remains
-available for host assignments/literal required references; model claims cannot call/promote it. Each exception
-needs establishing evidence; no glob/directory/sibling transfer. During evaluator outage, established local
-exceptions remain available where access/boundary permits. None makes ordinary discovery relevant by assertion.
+These are explicit-file-tool checks, not shell isolation. Every final shell command still receives assessment,
+now with the active role. Selecting Land does not grant publication, destructive or unrelated-work authority.
+
+`jev_read_file` retains its 0.70 positive rule, bounded list/glob/cache contract and current-source checks.
+Positive results can still issue receipts; cache reuse is session-local and visible. Negative, partial or failed
+results do not issue positive receipts or prove absence. Do not repeatedly rephrase for a positive result.
+Explicitly supplied receipts must match path, need, question, source, session and authority; invalid receipts
+fail rather than silently becoming direct reads. No source-body or cross-session judgment cache is added.
+
+Existing instruction/required-evidence exceptions and exact structural evidence remain compatible, but are
+optional. `file_locate` accepts exactly one `symbol` (code identifier) or `heading` (ATX title without `#`),
+plus path and need; its 32 lookups/session, 1 MiB scan and 40-line grant limits remain. Use its returned token
+and bounded range, never prose in the evidence field. It is not a prerequisite for reading a large Board.
+Jev source disclosure remains capped at 32 KiB; local direct reads do not call the evaluator.
+
+## Images and screenshots
+
+Ask the Agent to inspect an image normally. `read` accepts a PNG, JPEG, GIF or WebP `path` directly, including
+Desktop files outside project roots. No path-only user message, input-hook selection, special command or approval
+dialog is required, in interactive or noninteractive sessions. Relative, absolute, `~/`, spaced and Unicode paths
+are supported, as are matching quotes/backticks and space-escaped paths. `need` and `exception: "image"` remain
+optional for compatibility; omit text ranges, receipts and evidence tokens.
+
+Images bypass text relevance screening and go directly through Pi's native image processing to the main model,
+never Jev. Supported file signatures, the 10 MiB byte cap, enrolled exclusions, protected resources, sensitive names
+and symlink/hardlink checks still apply. Invalid images and processing failures return an error, never text fallback.
+A non-vision main model cannot inspect the attachment; Pi retains its normal limitation notice.
+
+There are no retained image selections or image-specific authorization state. Each read checks the current file;
+a file changed during native processing must be retried. Standing text roots, credentials, budgets and finite
+counters remain unchanged. This does not waive ordinary task permissions, text admission, command-risk checks
+or runtime source-integrity/lifecycle checks, and does not claim same-user OS containment.
 
 ## Command risk and authorization
 
@@ -104,7 +144,8 @@ Risk is a separate choice rubric, not the file-relevance score or an additional 
 - Complete `ordinary` with confidence >=0.90 may proceed **only within existing task/role/operator authorization**.
   It means no apparent dangerous effect in supplied context, not measured safety, containment or new permission.
 - Risky, low-confidence/unknown, denied, failed, unavailable, budget-limited or price-unqualified assessments emit
-  distinct visible observations and hold for an explicit one-command operator decision. No UI/declined decision
+  distinct held outcomes and require an explicit one-command operator decision. Native TUI uses concise warnings,
+  not routine event/JSON popups; noninteractive monitor observations remain structured. No UI/declined decision
   means no execution. Confirmation is an exceptional decision, not a recurring grant for normal authorized work.
   It does not fabricate a safe judgment or authorize an effect outside the operator's existing authority.
 - Enrollment revocation, epoch/authority/context/settings drift and cancellation cannot be overridden by that dialog.
@@ -118,12 +159,28 @@ Risk is a separate choice rubric, not the file-relevance score or an additional 
 - Shell syntax is not allowlisted. Pipelines, substitutions, scripts, Git/checks and reads are not blanket-denied;
   incomplete context can require an operator decision. Output is ordinary shell output, not relevance-admitted content.
 
+`command-secret-disclosure-held` is a local refusal of the supplied command, before provider disclosure or shell
+execution. It does not set a session-wide hold, and there is no hold-clear command. Chat approval cannot override
+it. Remove actual credential values or secret-file/environment reads; report a non-sensitive false-positive
+command for repair. Never encode, split or move the same operation into a script to evade the check. Unrelated
+non-sensitive commands remain assessable. Complete quoted display labels such as `print('tokens:', count)` and
+the exact template filename `.env.example` alone do not count as credentials. The whole command still receives
+risk assessment; real assignments, quoted credential object keys, `.env`/`.env.local`, secret expansions and mixed
+commands retain their checks. Template contents are not inspected or guaranteed safe by the filename.
+
+`command-context-disclosure-held` concerns the configured shell path/prefix or phase; the operator should inspect
+settings locally without pasting sensitive values. `command-operator-decision-required` instead means the risk
+assessment needs the native one-command confirmation. Chat approval does not answer that dialog, and no
+confirmation is reused for later commands. A blocked result includes this recovery guidance directly, so obtaining
+it does not depend on screening another policy document. Authority drift and revocation remain separate failures.
+
 ## Coverage and normal Build
 
 | Route | Actual treatment |
 |---|---|
-| Native explicit `read` / `jev_read_file` / `file_locate` | Current receipts or validated per-file exceptions; original supplier limits |
-| Native explicit `write` / `edit` | Final-argument protected-path checks; omit source diffs/previews in results |
+| Native explicit `read` | Normal project reads and exact portable instructions; optional explicit receipts/evidence remain validated |
+| `jev_read_file` / `file_locate` | Optional discovery with original supplier/lookup limits |
+| Native explicit `write` / `edit` | Role-scoped final-argument protected-path checks; omit source diffs/previews in results |
 | Native Agent `bash` | Final-command shared-Jev risk assessment and visible exceptional decisions; shell relevance bypass |
 | Native user `!` / `!!`, RPC user bash | Custom operations assess final prefixed command before local execution. `!!` excludes main-model context, not approved Jev command disclosure |
 | Provider-owned Build monitor | Read-only provider-relative preflight; enrolled children explicitly load package plus required authority identity, actual child sessions independently bind |
@@ -172,6 +229,12 @@ a dead process is not evidence of zero cost. Price halt has no automatic reset. 
 ledgers. Status initializes no fresh paid request; missing cost remains unknown.
 
 ## Observations and evidence limits
+
+Interactive sessions are quiet by default: no automatic JSON dumps at startup/before turns, no raw diagnostic
+stderr competing with the TUI renderer, and no success messages such as `command-risk-complete complete`.
+The compact status remains; changed degraded states and blocked operations produce concise, deduplicated warnings.
+`/file-screening inspect` explicitly requests the detailed status. Command holds still require their existing
+one-command decision; quiet presentation does not suppress tool errors, authority checks or accounting.
 
 The normal monitor drains private stderr and projects only declared safe screening/status fields into its ordinary
 feed: actual hashed session, phase, sequence, path/need/operation correlation, decision, reason, range, available

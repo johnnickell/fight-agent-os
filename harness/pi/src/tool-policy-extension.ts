@@ -6,9 +6,11 @@ import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { PolicyDenied, supportedTools, ToolPolicy } from './tool-policy/policy.mjs';
 import { fileOperations, runScript } from './tool-policy/effects.mjs';
+import { trackRuntimeHooks } from './tool-policy/runtime.mjs';
 
 /** Install an opt-in deterministic boundary, never activate it from repository instructions */
 export default function fightToolPolicy(pi: ExtensionAPI) {
+  const hooks = trackRuntimeHooks(pi);
   const extensionPath = fileURLToPath(import.meta.url);
   const sourceDir = dirname(extensionPath);
   let policy: ToolPolicy | undefined;
@@ -75,7 +77,7 @@ export default function fightToolPolicy(pi: ExtensionAPI) {
       });
     }
   }
-  pi.on('session_start', (_event, ctx) => {
+  hooks.on('session_start', (_event, ctx) => {
     policy?.cancel('session-replaced');
     liveSession = true;
     installed = false;
@@ -87,9 +89,10 @@ export default function fightToolPolicy(pi: ExtensionAPI) {
       policy = new ToolPolicy({ policyPath: path, cwd: ctx.cwd,
         resources: [sourceDir, getAgentDir(), getPackageDir(), join(homedir(), '.ssh'), join(homedir(), '.aws'),
           join(homedir(), '.gnupg'), join(homedir(), 'Library/Keychains')],
-        sources: [extensionPath, join(sourceDir, 'tool-policy/policy.mjs'), join(sourceDir, 'tool-policy/effects.mjs')] });
+        sources: [extensionPath, join(sourceDir, 'tool-policy/policy.mjs'), join(sourceDir, 'tool-policy/effects.mjs'),
+          join(sourceDir, 'tool-policy/runtime.mjs')] });
       policy.start(ctx.sessionManager.getSessionId(), { version: VERSION, platform: process.platform,
-        hooks: typeof pi.on === 'function' && typeof pi.registerTool === 'function' });
+        hooks: hooks.available() });
     } catch { policy = undefined; unavailable = 'policy-or-source-unavailable'; }
     install(ctx);
     installed = true;
@@ -97,7 +100,7 @@ export default function fightToolPolicy(pi: ExtensionAPI) {
     pi.setActiveTools(policy?.inspect().tools ?? []);
     present(ctx, true);
   });
-  pi.on('tool_call', (event, ctx) => {
+  hooks.on('tool_call', (event, ctx) => {
     if (!selected) return;
     const state = status();
     const reason = state.state !== 'active' ? state.reason : event.parentToolCallId ? 'unsupported-nested-route'
@@ -105,15 +108,15 @@ export default function fightToolPolicy(pi: ExtensionAPI) {
     if (reason) return { block: true, reason: denied(new PolicyDenied(reason), ctx).message };
     // This hook intentionally grants nothing: execution wrappers check the FINAL post-hook inputs.
   });
-  pi.on('user_bash', () => {
+  hooks.on('user_bash', () => {
     if (selected) return { result: { output: 'Fight policy blocked: unsupported-user-shell-route',
       exitCode: 1, cancelled: false, truncated: false } };
   });
   const cancel = (_event: unknown, ctx: ExtensionContext) => { policy?.cancel('session-changed'); present(ctx); };
-  pi.on('session_before_switch', cancel);
-  pi.on('session_before_fork', cancel);
-  pi.on('session_before_tree', cancel);
-  pi.on('session_shutdown', (_event, ctx) => {
+  hooks.on('session_before_switch', cancel);
+  hooks.on('session_before_fork', cancel);
+  hooks.on('session_before_tree', cancel);
+  hooks.on('session_shutdown', (_event, ctx) => {
     liveSession = false;
     policy?.cancel('shutdown-or-reload');
     if (ctx.mode === 'tui') ctx.ui.setStatus('fight-policy', undefined);
