@@ -98,8 +98,13 @@ for that session. Changed documentation requires a Pi restart, and lifecycle inv
 
 The operator's interactive `/skill:work`, `/skill:review`, `/skill:qa` or `/skill:land` selects its role, as does a
 trusted launcher phase. `/file-screening role engineer|reviewer|qa|land` explicitly selects a role in the TUI;
-the session retains it on reload/resume. Model/extension and RPC prompt text cannot promote roles. New local
-sessions without a phase default to Engineer. Older sessions should select their workflow again after restart.
+model/extension and RPC prompt text cannot promote roles. On every startup/reload an explicit trusted launcher
+takes precedence over stored selections, including earlier operator overrides. Local sessions restore the latest
+session-wide selection, independent of the navigated branch, only with matching session identity and local
+launcher provenance. Forks, legacy/unverifiable history and removal of a prior launcher default to Reviewer;
+the operator can then select the intended workflow explicitly. Fresh local sessions default to Engineer.
+Selections must persist before changing authority. Failed persistence holds tools; fix storage and reload.
+An uncertain failed append is superseded by a Reviewer checkpoint so reload cannot restore privilege from it.
 
 - Engineer and Land can read/edit normal project files, including instructions, `.env.example` and `.pi/skills`.
 - Reviewer can read project files and write reports/probes only beneath the project's `.runs`.

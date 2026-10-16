@@ -60,6 +60,16 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   let context: ExtensionContext | undefined;
   let workflow = new WorkflowAccess();
   let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0, lastNotice = '', lastWarning = '';
+  const persistRole = (role: string) => {
+    try { pi.appendEntry('fight-workflow-role-v2', workflow.checkpoint(sessionId, role)); }
+    catch (error) {
+      failure = 'workflow-role-persistence-failed';
+      // Pi appends in memory before writing to disk. Supersede a failed privileged append before
+      // a reload can restore it; if storage is still unavailable, Pi retains this restrictive entry.
+      try { pi.appendEntry('fight-workflow-role-v2', workflow.checkpoint(sessionId, 'reviewer')); } catch { /* Remain held */ }
+      throw error;
+    }
+  };
   const ledger = new MonthlyLedger(profiles.directory);
   const safeCode = (error: unknown) => error instanceof Error && 'code' in error && typeof error.code === 'string' && /^[a-z-]{1,80}$/.test(error.code) ? error.code : 'profile-unavailable';
   function imageRecovery(reason: string) {
@@ -312,10 +322,10 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   hooks.on('session_start', (_event, ctx) => {
     screening?.close(); admission?.close(); images?.close(); guard?.cancel('session-replaced'); epoch++;
     context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
+    workflow = new WorkflowAccess('review');
     try {
-      workflow = new WorkflowAccess(process.env.FIGHT_SCREENING_PHASE);
-      const priorRole = [...ctx.sessionManager.getBranch()].reverse().find(entry => entry.type === 'custom' && entry.customType === 'fight-workflow-role-v1');
-      if (priorRole?.type === 'custom' && priorRole.data && typeof priorRole.data === 'object' && 'role' in priorRole.data && typeof priorRole.data.role === 'string') workflow.select(priorRole.data.role);
+      workflow = WorkflowAccess.restore({ phase: process.env.FIGHT_SCREENING_PHASE, sessionId,
+        entries: ctx.sessionManager.getEntries(), parentSession: ctx.sessionManager.getHeader()?.parentSession });
     } catch (error) { failure = safeCode(error); }
     owner = pi.getAllTools().find(tool => tool.name === 'jev_read_file')?.sourceInfo?.path ?? '';
     try { const selection = profiles.selection(ctx.cwd); selected = Boolean(selection); authority = selection?.identity ?? ''; }
@@ -328,6 +338,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       try {
         const selection = profiles.selection(ctx.cwd);
         if (!selection) throw new PolicyDenied('profile-unavailable');
+        if (failure) throw new PolicyDenied(failure);
+        persistRole(workflow.role);
         guard = new ToolPolicy({ policyPath: selection.enforcementPath, cwd: ctx.cwd,
           workflowAccess: { root: selection.project.root, editableInstructions: selection.project.instructions.map(i => i.path)
             .filter(path => !selection.project.excludedPaths.some(excluded => path === excluded || path.startsWith(excluded + '/'))),
@@ -356,9 +368,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   });
   hooks.on('input', event => {
     if (!selected) return;
-    const previous = workflow.role;
-    workflow.input(event.text, event.source);
-    if (workflow.role !== previous) pi.appendEntry('fight-workflow-role-v1', { role: workflow.role });
+    workflow.input(event.text, event.source, persistRole);
   });
   hooks.on('tool_call', event => {
     if (!selected) return;
@@ -381,10 +391,9 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     if (action.startsWith('role ')) {
       if (ctx.mode !== 'tui') return;
       try {
-        workflow.select(action.slice(5).trim());
-        pi.appendEntry('fight-workflow-role-v1', { role: workflow.role });
+        workflow.select(action.slice(5).trim(), persistRole);
         ctx.ui.notify(`Workflow role: ${workflow.role}. Existing project exclusions and command-risk checks remain.`, 'info');
-      } catch { ctx.ui.notify('Use /file-screening role engineer, reviewer, qa or land.', 'warning'); }
+      } catch { ctx.ui.notify('Role selection failed; previous authority retained. Use /file-screening role engineer, reviewer, qa or land.', 'warning'); }
       return;
     }
     if (!['setup', 'inspect', '', 'instruction', 'target', 'reconcile', 'legacy', 'convert', 'revoke'].includes(action)) { if (ctx.mode === 'tui') ctx.ui.notify('Use /file-screening role engineer|reviewer|qa|land, inspect, setup, instruction, target, reconcile, legacy, convert or revoke. Never pass credentials.', 'warning'); return; }

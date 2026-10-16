@@ -47,8 +47,12 @@ are nonsecret. Images read directly with `path`, retain format/size checks, and 
 
 The trusted launcher phase or explicit user `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land` selects the
 role. Only interactive user input changes it automatically; model/extension and RPC prompt text cannot promote
-the role. The operator can use `/file-screening role engineer|reviewer|qa|land`; the selection is retained in the
-native session. A new unassigned local session defaults to Engineer. Inspect `/file-screening` for the active role.
+the role. The operator can use `/file-screening role engineer|reviewer|qa|land`. Inspect `/file-screening` for the
+active role. On every startup/reload, an explicit trusted launcher takes precedence. Otherwise, the latest
+session-wide selection survives tree navigation and restart when its session identity and launcher provenance
+match. Forks, legacy or unverifiable history, and removal of a prior launcher default to Reviewer until the
+operator selects a workflow. A fresh unassigned local session defaults to Engineer. Failed persistence holds
+tools; correct the storage problem and reload before continuing. Never use another tool to evade that hold.
 
 - Engineer (`work`): read and edit normal project files, including `.env.example` and project `.pi/skills`.
 - Reviewer: read normal project files; direct writes/edits are limited to the project's `.runs` reports and probes.
