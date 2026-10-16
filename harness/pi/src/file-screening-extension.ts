@@ -15,6 +15,7 @@ import { FileAdmission } from './jev/file-admission.mjs';
 import { ImageAdmission, isImagePath } from './jev/image-admission.mjs';
 import { WorkflowAccess } from './jev/workflow-access.mjs';
 import { CommandRisk, commandRiskRecovery } from './jev/command-risk.mjs';
+import { CommandApprovals } from './jev/command-approvals.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
 import { ToolPolicy, PolicyDenied } from './tool-policy/policy.mjs';
 import { fileOperations } from './tool-policy/effects.mjs';
@@ -59,6 +60,9 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   let selected = false, live = false, failure: string | undefined, evaluationFailure: string | undefined;
   let context: ExtensionContext | undefined;
   let workflow = new WorkflowAccess();
+  // Agent and user shell calls share one dialog slot; only its current owner reports blocked.
+  const approvals = new CommandApprovals(active => pi.events.emit('herdr:blocked', { active,
+    ...(active ? { label: 'Command approval required' } : {}) }));
   let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0, lastNotice = '', lastWarning = '';
   const persistRole = (role: string) => {
     try { pi.appendEntry('fight-workflow-role-v2', workflow.checkpoint(sessionId, role)); }
@@ -213,12 +217,9 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         // Pi has applied final tool-call mutations and its prefix before this operations boundary.
         await risk.assess(command, cwd, { signal: options.signal, validate, confirm: async decision => {
           if (!ctx.hasUI) return false;
-          // Herdr's optional Pi integration consumes this event; never publish command text.
-          pi.events.emit('herdr:blocked', { active: true, label: 'Command approval required' });
-          try {
-            return await ctx.ui.confirm(`Command held: ${decision.outcome} (${decision.reason})`,
-              `No safe verdict is claimed. Confirm this ONE exact command only if it is within existing task/role authority. No permission expansion.\nDirectory: ${decision.cwd}\n${decision.command}`);
-          } finally { pi.events.emit('herdr:blocked', { active: false }); }
+          return approvals.run(signal => ctx.ui.confirm(`Command held: ${decision.outcome} (${decision.reason})`,
+            `No safe verdict is claimed. Confirm this ONE exact command only if it is within existing task/role authority. No permission expansion.\nDirectory: ${decision.cwd}\n${decision.command}`,
+            { signal }), { signal: options.signal, validate });
         } });
         validate();
         return local.exec(command, cwd, options);
@@ -320,6 +321,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, declared coverage and shared monthly accounting; never resolves credentials or makes a provider request.',
     parameters: Type.Object({}, { additionalProperties: false }), async execute(_id, _args, _signal, _update, ctx) { return textResult(present(ctx)); } });
   hooks.on('session_start', (_event, ctx) => {
+    approvals.cancel();
     screening?.close(); admission?.close(); images?.close(); guard?.cancel('session-replaced'); epoch++;
     context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
     workflow = new WorkflowAccess('review');
@@ -383,7 +385,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     try { checkBoundary(); return { operations: shellOperations(ctx) }; }
     catch (error) { return { result: { output: `File screening: ${safeCode(error)}`, exitCode: 1, cancelled: false, truncated: false } }; }
   });
-  const invalidate = () => { epoch++; failure = 'session-changed-reload-required'; admission?.close(); images?.close(); screening?.close(); guard?.cancel('session-changed'); };
+  const invalidate = () => { approvals.cancel(); epoch++; failure = 'session-changed-reload-required'; admission?.close(); images?.close(); screening?.close(); guard?.cancel('session-changed'); };
   hooks.on('session_before_switch', invalidate); hooks.on('session_before_fork', invalidate); hooks.on('session_before_tree', invalidate);
   hooks.on('session_shutdown', (_event, ctx) => { live = false; invalidate(); if (ctx.mode === 'tui') ctx.ui.setStatus('fight-file-screen', undefined); });
   pi.registerCommand('file-screening', { description: 'Inspect or explicitly enroll/revoke/convert project screening; no provider calls or key entry', handler: async (args, ctx) => {

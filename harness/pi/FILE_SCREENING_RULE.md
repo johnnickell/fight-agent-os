@@ -70,6 +70,10 @@ Every final native Agent Bash and user `!`/`!!` command receives Jev risk assess
 local credential-disclosure checks and configured command-prefix expansion. Routine, already-authorized work
 proceeds on an ordinary result; risky or uncertain/unavailable results require the native one-command decision.
 Chat approval does not answer that dialog, and one decision is not reused. Ordinary is not a safety guarantee.
+Parallel commands share a queue for native approvals: only one command is displayed at a time. Answer each
+displayed command separately. Cancelling a command or changing sessions withdraws its pending approval;
+the next eligible request can then appear. Agents need not serialize all verification merely to avoid dialog
+collisions. Shell execution timeouts begin after assessment/approval, so they do not limit the operator's wait.
 
 A `command-secret-disclosure-held` result is a local refusal of that command before provider disclosure or
 execution, not a persistent hold to clear. Follow the returned recovery. Never embed credentials or hide the

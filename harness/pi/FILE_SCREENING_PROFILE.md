@@ -161,6 +161,12 @@ Risk is a separate choice rubric, not the file-relevance score or an additional 
   means no execution. Confirmation is an exceptional decision, not a recurring grant for normal authorized work.
   It does not fabricate a safe judgment or authorize an effect outside the operator's existing authority.
 - Enrollment revocation, epoch/authority/context/settings drift and cancellation cannot be overridden by that dialog.
+  Concurrent Agent/user command approvals are queued through one native dialog slot. Waiting commands revalidate
+  before displaying; each decision remains bound to its exact command. Aborting a waiting command removes it
+  without dismissing another command's dialog. Aborting the visible command dismisses it; lifecycle invalidation
+  withdraws all pending approvals. Only the displayed approval reports Herdr blocked, with a balanced clear on
+  answer, cancellation or error. Execution may remain parallel after separate decisions. The shell timeout starts
+  after approval and does not impose a deadline on the operator.
   Recheck after evaluation/decision and immediately before delegating the fixed command to Pi's local backend.
   A change requires a new assessment/decision; no reusable shell permit is stored.
 - Never embed credentials or secret material in commands. Local tripwires hold known key/token/assignment/Bearer/

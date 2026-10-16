@@ -104,8 +104,9 @@ export class CommandRisk {
       { costUsd: receipt?.usage?.costUsd ?? null, elapsedMs: receipt?.elapsedMs ?? null });
     if (outcome !== 'ordinary') {
       event('command-held', 'operator-decision-required', outcome);
-      if (!await confirm({ outcome, reason, command, cwd })) fail('command-operator-decision-required');
+      const approved = await confirm({ outcome, reason, command, cwd });
       check();
+      if (!approved) fail('command-operator-decision-required');
       event('command-approved', 'explicit-one-command-decision', outcome);
     }
     check();

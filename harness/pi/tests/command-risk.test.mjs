@@ -82,6 +82,13 @@ test('budget exhaustion holds without provider effects or replenishing the origi
   assert.equal(f.events.find(e => e.kind === 'command-risk-complete').reason, 'monthly-budget');
 });
 
+test('cancellation during a declined dialog remains cancellation rather than a new approval request', async t => {
+  const f = fixture(t, { choice: 'unknown' }), controller = new AbortController();
+  await assert.rejects(f.risk.assess('printf cancelled', f.root, { signal: controller.signal,
+    confirm: async () => { controller.abort(); return false; } }), { code: 'cancelled' });
+  assert.equal(f.events.some(event => event.kind === 'command-approved'), false);
+});
+
 test('revocation and authority/context changes during judgment prevent command admission', async t => {
   for (const change of ['revoke', 'phase', 'configuration']) {
     const f = fixture(t);
