@@ -8,6 +8,7 @@ export type IntakeRequest = { instructions?: string[]; assignments?: Assignment[
 export type TrustedIntake = { version: 1; authority: string; cwd: string; instructions: Instruction[];
   targets: (Target & { evidence: { kind: 'trusted-assignment'; reference: string } | { kind: 'required-reference'; from: string; digest: string } })[] };
 export type Project = { root: string; excludedPaths: string[]; instructions: Instruction[]; targets: Target[] };
+export type RepositoryScope = { roots: string[]; base: string; excludedPaths: string[] };
 export type Profile = { version: 'screening-profile-v1' | 'screening-profile-v2'; revision: string; configuration: string; projects: Project[];
   excludedNames: string[]; providerDisclosure: boolean; expiresAt: number | null; commandDisclosure?: boolean; revoked?: boolean; requestMicroUsd: number; sessionMicroUsd: number };
 export declare const profileVersion: 'screening-profile-v2';
@@ -18,7 +19,8 @@ export declare class ScreeningProfiles {
   directory: string;
   path: string;
   load(): Profile | null;
-  selection(cwd: string): { profile: Profile; project: Project; identity: string; enforcementPath: string } | null;
+  selection(cwd: string): { profile: Profile; project: Project; repository: RepositoryScope; identity: string; enforcementPath: string } | null;
+  repository(cwd: string): RepositoryScope;
   fileSettings(sessionId: string, cwd: string): { load(): FilePolicy | null };
   preview(input: { cwd: string; configuration: OperatorConfiguration; excludedPaths?: string[]; instructions?: string[];
     targets?: Omit<Target, 'digest'>[]; providerDisclosure: boolean; commandDisclosure?: boolean }): Profile;

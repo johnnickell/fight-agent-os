@@ -19,7 +19,10 @@ lines and 32 KiB; local text files are capped at 1 MiB. A source-size limit is n
 
 Every enrolled project can read its `AGENTS.md`, `README.md`, `planning/tasks/BOARD.md`, `ROADMAP.md` and
 `planning/ROADMAP.md` normally. No fixed content digest or separate whitelist enrollment is required. Native
-loaded-context and advertised-skill paths also read directly, including outside the project root. Reading those
+loaded-context and advertised-skill paths also read directly, including outside the project root. Explicitly
+selected installed hidden skills (including `build` and `next`) have the same exact read access. Pi still hides
+`disable-model-invocation` skills from automatic invocation; a read grant does not authorize invoking them.
+Native `~/` text paths resolve before applying the ordinary authority checks. Reading those
 instructions establishes their exact relative Markdown references, up to eight links deep and 128 references;
 changed source links or removed native witnesses invalidate that access. This grants no sibling directory,
 external code or Jev-disclosure permission. Ordinary project content cannot establish external access.
@@ -45,6 +48,19 @@ are nonsecret. Images read directly with `path`, retain format/size checks, and 
 
 ## Workflow roles
 
+Standing repository enrollment includes its canonical main checkout and reciprocally registered Git worktrees,
+including external worktrees created during this session. It does not include clones, matching remotes or
+unregistered directories. Direct reads and optional Jev use the same current membership and inherited exclusions;
+no setup, per-file confirmation or budget reset is needed for a valid member. Git metadata is inspected internally,
+not exposed for direct mutation. Non-Git enrolled directories retain their exact original root.
+
+Select the task and intended checkout in the interactive invocation, for example
+`/skill:work TASK-NNNNN --checkout /absolute/selected/checkout`. This names the operator's existing checkout
+choice, not another enrollment or approval. A selected future Work checkout becomes writable after Git registers
+it. Fresh sessions default to their containing registered checkout; trusted Build launchers pass task and checkout.
+Changing directories in shell does not select another source-write target. Source writes in sibling checkouts
+remain unavailable. See the complete [skill/effect inventory](FILE_SCREENING_PROFILE.md#installed-skill-effects).
+
 The trusted launcher phase or explicit user `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land` selects the
 role. Only interactive user input changes it automatically; model/extension and RPC prompt text cannot promote
 the role. The operator can use `/file-screening role engineer|reviewer|qa|land`. Inspect `/file-screening` for the
@@ -55,14 +71,20 @@ operator selects a workflow. A fresh unassigned local session defaults to Engine
 tools; correct the storage problem and reload before continuing. Never use another tool to evade that hold.
 
 - Engineer (`work`): read and edit normal project files, including `.env.example` and project `.pi/skills`.
-- Reviewer: read normal project files; direct writes/edits are limited to the project's `.runs` reports and probes.
+- Reviewer: read normal repository files; publish only `.runs/reviews/<TASK-ID>/` at the canonical base or selected
+  checkout, plus `.runs/tasks/<TASK-ID>/runs/` scratch. The base report remains authoritative.
 - QA: read files, execute checks/probes and use appropriate Git operations; write probes/evidence under `.runs`,
-  without repairing source or tests.
+  without repairing source or tests. Its report directory is `.runs/qa/<TASK-ID>/`; Build uses
+  `.runs/build/<TASK-ID>/` for coordination and cannot edit source. All have task-owned execution scratch.
 - Land: read/edit project files and perform authorized Git delivery work.
 
 Project roots and explicit exclusions stay in force for every role. Credentials, Git internals, operator state,
 Pi runtime configuration and the running harness remain protected. Role changes come from the operator, never
 from an agent choosing a more permissive role to finish an action. Independent review/QA obligations remain.
+Query/status modes do not write source or durable planning outputs. A removed or changed membership is denied
+before the next effect. For `repository-metadata-unavailable`, inspect `git worktree list --porcelain` from the
+enrolled repository; repair with `git worktree repair` or return to a valid registered checkout and reload.
+Never hand-edit pointers, reenroll each worktree, discard liabilities or use shell to bypass an actual denial.
 
 ## Assess every final shell command
 

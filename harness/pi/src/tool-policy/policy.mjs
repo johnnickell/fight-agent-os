@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { lstatSync, realpathSync, readFileSync, statSync, mkdirSync, mkdtempSync, rmSync, statfsSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { supportsRuntime } from './runtime.mjs';
+import { assertRepositoryPath } from '../jev/repository-access.mjs';
 
 /** @type {readonly ['read', 'write', 'edit', 'bash']} */
 export const supportedTools = Object.freeze(['read', 'write', 'edit', 'bash']);
@@ -33,13 +34,18 @@ class PathNames {
     try {
       const names = new Set(['.git', '.pi', 'skills', '.ssh', '.aws', '.gnupg', 'auth.json', '.env', '.env.example',
         ...paths.flatMap((path) => path.split(sep).filter(Boolean))]);
-      for (const name of names) {
-        const bucket = join(this.#path, String(this.#names.size));
-        mkdirSync(bucket, { mode: 0o700 });
-        mkdirSync(join(bucket, name), { mode: 0o700 });
-        this.#names.set(name, { bucket, path: join(bucket, name), identity: lstatSync(join(bucket, name)).ino });
-      }
+      this.register([...names]);
     } catch (error) { this.close(); throw error; }
+  }
+  register(paths) {
+    for (const name of new Set(paths.flatMap(path => path.split(sep).filter(Boolean)))) {
+      if (this.#names.has(name)) continue;
+      if (this.#names.size >= 4096) fail('filesystem-probe-limit');
+      const bucket = join(this.#path, String(this.#names.size));
+      mkdirSync(bucket, { mode: 0o700 });
+      mkdirSync(join(bucket, name), { mode: 0o700 });
+      this.#names.set(name, { bucket, path: join(bucket, name), identity: lstatSync(join(bucket, name)).ino });
+    }
   }
   check(path) {
     let ancestor = path;
@@ -143,7 +149,7 @@ function loadPolicy(path, cwd, resources, workflowAccess) {
       !list(policy.roots, (root) => typeof root === 'string' && isAbsolute(root), 16) || !policy.roots.length ||
       !list(policy.protectedPaths, (root) => typeof root === 'string' && isAbsolute(root)) ||
       !Array.isArray(policy.scripts) || policy.scripts.length > 32) fail('invalid-policy');
-  const roots = policy.roots.map((root) => {
+  const roots = policy.roots.filter(root => !workflowAccess || root === workflowAccess.root).map((root) => {
     const canonical = canonicalPath(root);
     if (!statSync(canonical).isDirectory() || canonical === sep) fail('invalid-root');
     return { configured: root, canonical };
@@ -177,7 +183,7 @@ function loadPolicy(path, cwd, resources, workflowAccess) {
 /** Own fresh admission and cancellation; no reusable allow token escapes this module */
 export class ToolPolicy {
   #path; #cwd; #resources; #sources; #policy; #names; #session; #workflowAccess; #epoch = 0; #pending = new Set(); #reason = 'not-started';
-  /** @param {{policyPath: string, cwd: string, resources?: string[], sources?: string[], workflowAccess?: {root: string, editableInstructions: string[], authorizeWrite: (path: string) => void}}} options */
+  /** @param {{policyPath: string, cwd: string, resources?: string[], sources?: string[], workflowAccess?: {root: string, editableInstructions: string[], scope?: () => {roots: string[], excludedPaths: string[]}, revision?: () => number, authorizeWrite: (path: string) => void}}} options */
   constructor({ policyPath, cwd, resources = [], sources = [], workflowAccess }) {
     this.#path = policyPath;
     this.#cwd = realpathSync.native(cwd);
@@ -234,6 +240,7 @@ export class ToolPolicy {
   }
   #live(operation) {
     if (operation.epoch !== this.#epoch || operation.session !== this.#session || operation.controller.signal.aborted) fail('stale-operation');
+    if (operation.workflowRevision !== this.#workflowAccess?.revision?.()) fail('stale-operation');
     try { this.#fresh(); }
     catch (error) { this.cancel(error instanceof PolicyDenied ? error.code : 'resource-unavailable'); throw error; }
   }
@@ -254,6 +261,7 @@ export class ToolPolicy {
     signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) abort();
     const operation = { tool, input: structuredClone(input), session, epoch: this.#epoch, controller,
+      workflowRevision: this.#workflowAccess?.revision?.(),
       close: () => { signal?.removeEventListener('abort', abort); this.#pending.delete(controller); } };
     this.#pending.add(controller);
     try {
@@ -274,7 +282,12 @@ export class ToolPolicy {
     const lexical = resolve(this.#cwd, path);
     this.#names.check(canonical);
     if (this.#names.reserved(lexical, Boolean(this.#workflowAccess)) || this.#names.reserved(canonical, Boolean(this.#workflowAccess))) fail('protected-path');
-    if (!this.#policy.roots.some((root) => within(canonical, root.canonical))) fail('out-of-root');
+    const scope = this.#workflowAccess?.scope?.();
+    const roots = scope?.roots ?? this.#policy.roots.map(root => root.canonical);
+    if (scope) this.#names.register([...roots, ...scope.excludedPaths]);
+    if (!roots.some(root => within(canonical, root))) fail('out-of-root');
+    if (scope) assertRepositoryPath(canonical, roots);
+    if (scope?.excludedPaths.some(root => this.#names.within(canonical, root) || this.#names.within(lexical, root))) fail('protected-path');
     if (this.#policy.protectedPaths.some((root) => this.#names.within(canonical, root.canonical) ||
         this.#names.within(lexical, resolve(root.configured)))) fail('protected-path');
     if (effect === 'write') this.#workflowAccess?.authorizeWrite(canonical);

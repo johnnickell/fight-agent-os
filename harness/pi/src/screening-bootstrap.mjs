@@ -14,5 +14,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   try {
     if (process.argv.length !== 4 || process.argv[2] !== 'prepare') throw new Error('invalid invocation');
     process.stdout.write(JSON.stringify(prepareScreening(process.argv[3])) + '\n');
-  } catch { console.error('File screening: launcher preflight failed; inspect operator enrollment before launch'); process.exitCode = 1; }
+  } catch (error) {
+    console.error(error.code === 'repository-metadata-unavailable'
+      ? 'File screening: repository-metadata-unavailable; inspect registered worktrees from the enrolled repository, repair with Git worktree repair or return to a valid checkout, then reload. No per-worktree enrollment or accounting reset.'
+      : 'File screening: launcher preflight failed; inspect operator enrollment before launch');
+    process.exitCode = 1;
+  }
 }

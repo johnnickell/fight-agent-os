@@ -3,6 +3,7 @@ import { constants, openSync, closeSync, fstatSync, lstatSync, realpathSync, rea
 import { isAbsolute, resolve, dirname, sep } from 'node:path';
 import { prepareEvaluation } from './judgments.mjs';
 import { Unavailable, reservationMicroUsd } from './readiness.mjs';
+import { assertRepositoryPath } from './repository-access.mjs';
 
 import { discoverFiles, batchLimits } from './file-discovery.mjs';
 export const filePolicyVersion = 'file-screen-v1';
@@ -25,8 +26,8 @@ const stamp = info => ['dev', 'ino', 'size', 'mtimeNs', 'ctimeNs', 'mode', 'nlin
 export function validateFilePolicy(value) {
   if (!exact(value, ['version', 'revision', 'configuration', 'allowedRoots', 'excludedPaths', 'excludedNames', 'sessions']) ||
     value.version !== filePolicyVersion || !identifier(value.revision) || !/^[a-f0-9]{64}$/.test(value.configuration) ||
-    !Array.isArray(value.allowedRoots) || value.allowedRoots.length < 1 || value.allowedRoots.length > 16 || !value.allowedRoots.every(absolute) ||
-    !Array.isArray(value.excludedPaths) || value.excludedPaths.length < 1 || value.excludedPaths.length > 128 || !value.excludedPaths.every(absolute) ||
+    !Array.isArray(value.allowedRoots) || value.allowedRoots.length < 1 || value.allowedRoots.length > 129 || !value.allowedRoots.every(absolute) ||
+    !Array.isArray(value.excludedPaths) || value.excludedPaths.length < 1 || value.excludedPaths.length > 6193 || !value.excludedPaths.every(absolute) ||
     !Array.isArray(value.excludedNames) || value.excludedNames.length < 1 || value.excludedNames.length > 128 ||
     !value.excludedNames.every(v => typeof v === 'string' && v.length > 0 && v.length <= 128 && !/[\/\\\0]/.test(v)) ||
     !object(value.sessions) || Object.keys(value.sessions).length > 64) deny('invalid-file-policy');
@@ -93,6 +94,7 @@ export class FileSource {
     // Check lexical containment first: no metadata probing of unrelated caller paths.
     const roots = policy.allowedRoots.map(root => resolve(root));
     if (!roots.some(root => within(lexical, root))) deny('root-denied');
+    assertRepositoryPath(lexical, roots);
     const canonicalRoots = roots.map(root => realpathSync.native(root));
     // Authority roots must be canonical operator paths, not mutable symlink pointers.
     if (canonicalRoots.some((root, index) => root !== roots[index])) deny('invalid-file-policy');

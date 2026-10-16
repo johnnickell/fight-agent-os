@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync, existsSync, symlinkSync, linkSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { tmpdir, homedir } from 'node:os';
+import { join, relative } from 'node:path';
 import { FileSource, FileScreening } from '../src/jev/file-screening.mjs';
 import { FileAdmission } from '../src/jev/file-admission.mjs';
 import { ScreeningProfiles } from '../src/jev/screening-profile.mjs';
@@ -135,6 +135,29 @@ test('native instructions and their exact local Markdown references read across 
   assert.throws(() => f.admission.read({ path: reference }), { code: 'stale-required-reference' });
   assert.equal(f.admission.read({ path: 'source.txt.md' }).text, 'Ordinary project document');
   f.admission.ingestNativeInstructions([], []);
+  assert.throws(() => f.admission.read({ path: skill }), { code: 'root-denied' });
+});
+
+test('explicit installed hidden skill seeds its exact portable reference chain, including native tilde reads', t => {
+  const f = fixture(t), provider = join(f.directory, 'provider'); mkdirSync(provider);
+  const skill = join(provider, 'SKILL.md'), context = join(provider, 'PROJECT_CONTEXT.md'), standards = join(provider, 'STANDARDS.md');
+  writeFileSync(skill, 'Read [context](PROJECT_CONTEXT.md)');
+  writeFileSync(context, 'Read [standards](STANDARDS.md)');
+  writeFileSync(standards, 'Required exact standards');
+  writeFileSync(join(provider, 'source.md'), 'Unlinked provider source');
+  const metadata = [{ name: 'build', filePath: skill, disableModelInvocation: true }];
+  f.admission.ingestNativeInstructions([], metadata);
+  assert.throws(() => f.admission.read({ path: skill }), { code: 'root-denied' });
+  f.admission.ingestNativeInstructions([], metadata, 'build');
+  assert.match(f.admission.read({ path: skill }).text, /context/);
+  assert.match(f.admission.read({ path: context }).text, /standards/);
+  assert.equal(f.admission.read({ path: standards }).text, 'Required exact standards');
+  for (const path of [join(provider, 'source.md'), join(homedir(), '.ssh/id_ed25519')]) {
+    assert.throws(() => f.admission.read({ path }), /root-denied|sensitive-file/);
+  }
+  // Native read accepts ~/ for the very same authority, never as a new root.
+  assert.equal(f.admission.read({ path: '~/' + relative(homedir(), standards) }).text, 'Required exact standards');
+  f.admission.ingestNativeInstructions([], metadata, 'review');
   assert.throws(() => f.admission.read({ path: skill }), { code: 'root-denied' });
 });
 

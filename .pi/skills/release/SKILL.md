@@ -59,6 +59,10 @@ unresolved boundary with a recovery step; complete independent authorized prepar
 
 Keep the resumable ledger, notes, scripts and raw receipts in the target's approved ignored evidence location
 (normally a version-scoped `.runs/` subfolder). Record approvals with their scope and identity, not secrets.
+Under the standing file-screening profile, use `.runs/handoffs/release-<version>/` for the ledger, scripts and
+receipts and `.runs/notes/release-<version>/` for notes, with the optional `v` prefix removed. These exact
+version-owned directories remain writable in `status`; other versions and independent TASK reports do not.
+Target-owned certification tools retain their own documented output locations and existing command authority.
 Update canonical release/planning records only for verified facts using the target's normal delivery process.
 Scan public notes, scripts and attachments for private local paths, research identifiers and credentials.
 

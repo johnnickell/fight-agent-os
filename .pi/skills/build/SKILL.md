@@ -41,6 +41,10 @@ deploy or continue to another TASK. A question about planning does not invoke th
    `active` child. Record coordinator session, checkout, branch and run path. Inspect an existing lock's ownership
    before continuation; release only your lock after proving children stopped. These are local coordination,
    not managed Workflow claims.
+   An enrolled repository's registered worktrees inherit access; never enroll a child checkout separately or
+   copy provider instructions to work around a denial. Pass the resolved TASK and selected checkout through
+   the monitor's trusted stage environment. The shared [access contract](../../../harness/pi/FILE_SCREENING_PROFILE.md#installed-skill-effects)
+   limits Build to coordination outputs and retains each child's independent role effects.
 4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, resolved role models, effective/consumed/remaining
    cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Check installed
    `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools

@@ -37,7 +37,12 @@ project without granting whole provider roots. Ordinary project files cannot gra
 
 Interactive `/skill:work`, `/skill:review`, `/skill:qa` and `/skill:land` select role permissions;
 `/file-screening role engineer|reviewer|qa|land` is the explicit operator alternative. Engineer/Land edit normal
-project files, including `.env.example`, instructions and `.pi/skills`; Reviewer/QA write only under `.runs`.
+project files, including `.env.example`, instructions and `.pi/skills`, in their selected checkout. Repository
+enrollment includes verified linked worktrees without another setup; select an existing checkout choice with
+`/skill:work TASK-NNNNN --checkout /absolute/path`. Reviewer/QA and Build write only their task-owned reports and
+scratch, including canonical base paths from an external worktree. The [skill/effect inventory](FILE_SCREENING_PROFILE.md#installed-skill-effects)
+defines every installed skill and mode. Explicit hidden provider Build/Next instructions and their exact linked
+references work in enrolled consumers without enrolling the provider root or allowing automatic invocation.
 All roles retain secret-file, explicit-exclusion and runtime protections. Every final shell command receives
 role-aware risk assessment; these file checks do not provide shell/OS containment. Restart Pi after upgrades
 and reselect the workflow for older sessions. See the [profile](FILE_SCREENING_PROFILE.md) for limits/recovery.

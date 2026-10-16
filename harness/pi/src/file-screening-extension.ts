@@ -40,6 +40,7 @@ const parameters = Type.Object({
   ]),
 }, { additionalProperties: false });
 const textResult = (value: unknown, isError = false) => ({ content: [{ type: 'text' as const, text: typeof value === 'string' ? value : JSON.stringify(value) }], details: value, isError });
+const repositoryRecovery = 'Operator: inspect git worktree list --porcelain from the enrolled repository; repair reciprocal registration with Git worktree repair, or return to a valid registered checkout and reload. Do not enroll each worktree, edit Git pointers manually, reset accounting or bypass the denial with shell.';
 const allowed = ['read', 'write', 'edit', 'bash', 'jev_read_file', 'file_locate', 'file_screening_status'];
 const sources = [rulePath, fileURLToPath(import.meta.url), join(sourceDir, 'enrollment-preview.ts'), ...['jev', 'tool-policy'].flatMap(dir => readdirSync(join(sourceDir, dir))
   .filter(name => /\.(mjs|py)$/.test(name)).map(name => join(sourceDir, dir, name))), join(sourceDir, 'jev-extension.ts'), join(sourceDir, 'screening-bootstrap.mjs')];
@@ -47,6 +48,7 @@ type Dependencies = { settings?: FileScreeningSettings; configuration: () => Ope
   profiles: ScreeningProfiles; credentialConfigured: (ctx: ExtensionContext) => boolean };
 
 // Request/file refusals are not evaluator outages; unknown/provider failures remain visible.
+const workflowInputFailures = new Set(['unknown-workflow-role', 'workflow-subject-required', 'workflow-checkout-required']);
 const localScreeningFailures = new Set(['source-limit', 'batch-source-limit', 'root-denied', 'sensitive-file',
   'symlink-denied', 'symlink-escape', 'unsupported-file', 'unsupported-hardlink', 'unstable-source',
   'binary-source', 'source-unavailable', 'invalid-input', 'result-presentation-limit', 'admission-presentation-limit']);
@@ -57,7 +59,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   const profiles = dependencies.profiles;
   pi.registerFlag('fight-screening-required', { type: 'string', description: 'Trusted launcher enrollment identity; missing/changed authority holds the native tools' });
   let screening: FileScreening | undefined, admission: FileAdmission | undefined, images: ImageAdmission | undefined, guard: ToolPolicy | undefined;
-  let selected = false, live = false, failure: string | undefined, evaluationFailure: string | undefined;
+  let selected = false, live = false, failure: string | undefined, inputFailure: string | undefined, evaluationFailure: string | undefined;
   let context: ExtensionContext | undefined;
   let workflow = new WorkflowAccess();
   // Agent and user shell calls share one dialog slot; only its current owner reports blocked.
@@ -65,12 +67,12 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     ...(active ? { label: 'Command approval required' } : {}) }));
   let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0, lastNotice = '', lastWarning = '';
   const persistRole = (role: string) => {
-    try { pi.appendEntry('fight-workflow-role-v2', workflow.checkpoint(sessionId, role)); }
+    try { pi.appendEntry('fight-workflow-role-v3', workflow.checkpoint(sessionId, role)); }
     catch (error) {
       failure = 'workflow-role-persistence-failed';
       // Pi appends in memory before writing to disk. Supersede a failed privileged append before
       // a reload can restore it; if storage is still unavailable, Pi retains this restrictive entry.
-      try { pi.appendEntry('fight-workflow-role-v2', workflow.checkpoint(sessionId, 'reviewer')); } catch { /* Remain held */ }
+      try { pi.appendEntry('fight-workflow-role-v3', workflow.checkpoint(sessionId, 'reviewer')); } catch { /* Remain held */ }
       throw error;
     }
   };
@@ -87,6 +89,10 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       'image-arguments-required': 'Read images with path; need and exception: "image" are optional. Omit line ranges, receipts and evidence.',
     };
     return actions[reason] ?? 'Read images directly with path. No image selection or approval is needed; existing file-safety and runtime checks still apply.';
+  }
+  function inputRecovery(reason: string) {
+    if (failure || !workflowInputFailures.has(reason)) return undefined;
+    return 'Operator: correct the workflow invocation with /skill:<installed-skill> and its required subject (for example /skill:release 0.4.0 status); use an absolute --checkout path when selecting a checkout. Only a successful interactive skill selection clears this input hold. Other authority, integrity and persistence holds still require their own recovery; do not change enrollment, exclusions or accounting or bypass the hold with shell.';
   }
   function observe(event: Record<string, unknown>) {
     if (!live || !context) return;
@@ -111,6 +117,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   function checkBoundary() {
     if (!selected) return;
     if (failure) throw new PolicyDenied(failure);
+    if (inputFailure) throw new PolicyDenied(inputFailure);
     try {
       const current = profiles.selection(context!.cwd);
       if (!current || current.identity !== authority) throw new PolicyDenied('profile-changed-reload-required');
@@ -127,7 +134,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   function status(ctx: ExtensionContext) {
     let budget: ReturnType<ProfileBudget['inspect']> | null = null;
     let allocation: { requestMicroUsd: number; sessionMicroUsd: number } | null = null;
-    let reason = failure ?? evaluationFailure;
+    let reason = failure ?? inputFailure ?? evaluationFailure;
     if (selected) {
       try {
         checkBoundary();
@@ -151,8 +158,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       bindingLimit: budget ? budget.availableMicroUsd <= budget.session.availableMicroUsd ? 'monthly' : 'session' : 'unavailable',
       coverage: selected ? `Pi ${VERSION} explicit read/write/edit; final native Agent bash and user-bash operations; preflighted provider Build children. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
       enrollment: selected ? 'standing-until-revocation-or-authority-change; historical-profiles-require-explicit-conversion' : 'none',
-      nextActionCode: !selected ? 'enroll-project' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
-      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.' };
+      nextActionCode: !selected ? 'enroll-project' : reason && inputRecovery(reason) ? 'correct-workflow-input' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
+      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : (reason && inputRecovery(reason)) || (reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.') };
   }
   function present(ctx: ExtensionContext, notify = false) {
     const view = status(ctx);
@@ -267,10 +274,11 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           return { content: [{ type: 'text' as const, text: value.text + continuation }], details: value.admission };
         } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
           pathId: hash(resolve(ctx.cwd, input.path)), needId: hash(input.need ?? '') }); return textResult({ blocked: reason,
-            nextAction: input.exception === 'image' || isImagePath(input.path, ctx.cwd) ? imageRecovery(reason) :
+            nextAction: inputRecovery(reason) ?? (input.exception === 'image' || isImagePath(input.path, ctx.cwd) ? imageRecovery(reason) :
+              reason === 'repository-metadata-unavailable' ? repositoryRecovery :
               reason === 'unambiguous-evidence-required' ? 'Use exactly one receipt, exception or file_locate evidence token. The evidence field is not explanatory prose; never invent a witness.' :
               reason === 'native-documentation-changed' ? 'Installed Pi documentation changed during this session. Restart Pi to load the current installation, then retry the direct read. No Jev request or enrollment change is needed.' :
-              'Use path for ordinary project reads and installed Pi README/Markdown docs; offset/limit are optional. Explicit receipts/evidence must still be current. Protected or other outside-root files remain unavailable; do not bypass access restrictions with shell. Native instructions must come from current host metadata or exact linked Markdown references.' }, true); }
+              'Use path for ordinary project reads and installed Pi README/Markdown docs; offset/limit are optional. Explicit receipts/evidence must still be current. Protected or other outside-root files remain unavailable; do not bypass access restrictions with shell. Native instructions must come from current host metadata or exact linked Markdown references.') }, true); }
       },
     });
     function registerMutation<T extends TSchema, D, S>(name: 'write' | 'edit', base: ToolDefinition<T, D | undefined, S>) {
@@ -284,7 +292,9 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           const tool = factory(toolCtx.cwd, { operations: fileOperations(guard!, operation) });
           await tool.execute(id, operation.input, operation.controller.signal, undefined, toolCtx);
           return { ...textResult({ status: 'applied', pathId: hash(operation.input.path) }), details: undefined };
-        } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-write', reason }); return { ...textResult({ blocked: reason, nextAction: reason === 'workflow-write-restricted' ? `The ${workflow.role} role writes only beneath the project .runs directory. Report source changes for Engineer; only the operator can select a different workflow.` : 'Check the target and project exclusions. Secret files, live harness resources and operator state remain protected; .env.example and project skills are ordinary editable files for Engineer/Land.' }, true), details: undefined }; }
+        } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-write', reason }); return { ...textResult({ blocked: reason,
+          nextAction: inputRecovery(reason) ?? (reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'workflow-checkout-unavailable' ? 'The selected checkout is no longer registered. Return to a valid checkout; the operator can explicitly select the intended workflow with --checkout /absolute/path. No new enrollment is needed.' :
+            reason === 'workflow-write-restricted' ? `The selected ${workflow.skill} workflow permits only its task reports/scratch and documented outputs in its selected checkout. Report implementation changes for Work; only the operator can change the workflow or checkout.` : 'Check the target and project exclusions. Secret files, live harness resources and operator state remain protected; .env.example and project skills are ordinary editable files for Engineer/Land.') }, true), details: undefined }; }
         finally { operation?.close(); }
       } });
     }
@@ -323,10 +333,12 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   hooks.on('session_start', (_event, ctx) => {
     approvals.cancel();
     screening?.close(); admission?.close(); images?.close(); guard?.cancel('session-replaced'); epoch++;
-    context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
+    context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; inputFailure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
     workflow = new WorkflowAccess('review');
     try {
       workflow = WorkflowAccess.restore({ phase: process.env.FIGHT_SCREENING_PHASE, sessionId,
+        taskId: process.env.FIGHT_SCREENING_TASK, checkout: process.env.FIGHT_SCREENING_CHECKOUT ??
+          profiles.selection(ctx.cwd)?.repository.roots.filter(root => ctx.cwd === root || ctx.cwd.startsWith(root + '/')).sort((a, b) => b.length - a.length)[0] ?? ctx.cwd,
         entries: ctx.sessionManager.getEntries(), parentSession: ctx.sessionManager.getHeader()?.parentSession });
     } catch (error) { failure = safeCode(error); }
     owner = pi.getAllTools().find(tool => tool.name === 'jev_read_file')?.sourceInfo?.path ?? '';
@@ -345,7 +357,9 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         guard = new ToolPolicy({ policyPath: selection.enforcementPath, cwd: ctx.cwd,
           workflowAccess: { root: selection.project.root, editableInstructions: selection.project.instructions.map(i => i.path)
             .filter(path => !selection.project.excludedPaths.some(excluded => path === excluded || path.startsWith(excluded + '/'))),
-            authorizeWrite: path => workflow.assertWrite(path, selection.project.root) },
+            scope: () => profiles.repository(ctx.cwd), revision: () => workflow.revision,
+            authorizeWrite: path => workflow.assertWrite(path, { ...profiles.repository(ctx.cwd),
+              checkout: ctx.cwd, taskId: null }) },
           resources: [profiles.directory, rulePath, sourceDir, getAgentDir(), getPackageDir(), join(homedir(), 'Library/Keychains'), ...(owner && !owner.startsWith('<') ? [owner] : [])],
           sources: [...sources, ...(owner && !owner.startsWith('<') && !sources.includes(owner) ? [owner] : [])] });
         const state = guard.start(sessionId, { version: VERSION, platform: process.platform, hooks: hooks.available() });
@@ -364,13 +378,20 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   hooks.on('before_agent_start', (event, ctx) => {
     if (!selected) { registerScreen(screening?.availability() === 'available'); return; }
     const options = event.systemPromptOptions;
-    try { admission?.ingestNativeInstructions(options.contextFiles, options.skills); } catch (error) { failure = safeCode(error); }
+    try { admission?.ingestNativeInstructions(options.contextFiles, options.skills, workflow.skill); } catch (error) { failure = safeCode(error); }
     if (options.forceSystemPrompt || !event.systemPrompt.includes(enforcedRule) || !options.selectedTools.includes('read') || options.hiddenTools.includes('read')) failure = 'required-tool-or-rule-missing';
     present(ctx, ctx.mode !== 'tui');
   });
   hooks.on('input', event => {
     if (!selected) return;
-    workflow.input(event.text, event.source, persistRole);
+    try {
+      if (workflow.input(event.text, event.source, persistRole)) inputFailure = undefined;
+    } catch (error) {
+      const reason = safeCode(error);
+      // Rejected operator input is recoverable; never overwrite or clear an integrity/authority hold.
+      if (workflowInputFailures.has(reason)) inputFailure = reason;
+      else failure ??= reason;
+    }
   });
   hooks.on('tool_call', event => {
     if (!selected) return;

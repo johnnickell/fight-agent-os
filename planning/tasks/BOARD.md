@@ -38,7 +38,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00489](00489-TASK.md) | Use authorized repository worktrees across Pi skills without repeated approval | — (standalone bug) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -537,4 +536,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | done | — | [PR #107](https://github.com/johnnickell/fight-agent-os/pull/107) |
 | — | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | — (standalone chore) | done | — | [PR #103](https://github.com/johnnickell/fight-agent-os/pull/103) |
 | — | [TASK-00488](00488-TASK.md) | Repair Pi screening, workflow access and runtime compatibility | — (standalone bug) | done | — | [PR #108](https://github.com/johnnickell/fight-agent-os/pull/108) |
+| — | [TASK-00489](00489-TASK.md) | Use authorized repository worktrees across Pi skills without repeated approval | — (standalone bug) | done | — | [PR #109](https://github.com/johnnickell/fight-agent-os/pull/109) |
 <!-- /planning:board -->
