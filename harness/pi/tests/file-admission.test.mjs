@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync, existsSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync, existsSync, symlinkSync, linkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FileSource, FileScreening } from '../src/jev/file-screening.mjs';
@@ -60,6 +60,62 @@ test('direct large-file reads return bounded content and a usable continuation w
   const next = f.admission.read({ path: 'large.md', offset: first.admission.nextOffset, limit: 1 });
   assert.equal(next.text, lines[first.admission.nextOffset - 1]);
   assert.equal(f.calls(), 0);
+});
+
+test('installed Pi documentation reads directly without granting its runtime or Jev disclosure', async t => {
+  const f = fixture(t), runtime = join(f.directory, 'pi'), docsPath = join(runtime, 'docs');
+  mkdirSync(docsPath, { recursive: true });
+  const readmePath = join(runtime, 'README.md'), extensions = join(docsPath, 'extensions.md');
+  writeFileSync(readmePath, '# Pi');
+  writeFileSync(extensions, '# Extensions\nRead [external](../../private.md)');
+  writeFileSync(join(docsPath, 'sdk.md'), '# SDK\nSession API');
+  writeFileSync(join(runtime, 'private.md'), 'Runtime sibling');
+  writeFileSync(join(f.directory, 'private.md'), 'External sibling');
+  writeFileSync(join(docsPath, 'implementation.js'), 'Runtime code');
+  const nativeDocumentation = { readmePath, docsPath };
+  const admission = new FileAdmission({ profiles: f.profiles, configuration: () => f.config,
+    sessionId: f.sessionId, cwd: f.root, nativeDocumentation });
+  t.after(() => admission.close());
+  nativeDocumentation.docsPath = f.directory; // Caller mutation cannot expand access.
+  admission.ingestNativeInstructions([], []); // Normal turn intake must not withdraw runtime docs.
+  assert.equal(admission.read({ path: readmePath }).text, '# Pi');
+  assert.equal(admission.read({ path: extensions }).admission.kind, 'native-documentation-read');
+  const located = admission.locate({ path: join(docsPath, 'sdk.md'), heading: 'SDK', need: 'Read SDK documentation' });
+  assert.equal(admission.read({ path: join(docsPath, 'sdk.md'), evidence: located.evidence,
+    need: 'Read SDK documentation', offset: located.offset, limit: located.maxLines }).text, '# SDK\nSession API');
+  for (const path of [join(runtime, 'private.md'), join(f.directory, 'private.md'), join(docsPath, 'implementation.js')]) {
+    assert.throws(() => admission.read({ path }), { code: 'root-denied' });
+  }
+  assert.equal((await f.screening.screen({ ...f.input, path: extensions })).status, 'root-denied');
+  assert.equal(f.calls(), 0);
+  writeFileSync(extensions, '# Replaced runtime documentation');
+  assert.throws(() => admission.read({ path: extensions }), { code: 'native-documentation-changed' });
+  admission.close();
+  assert.throws(() => admission.read({ path: readmePath }), { code: 'session-changed' });
+});
+
+test('installed documentation retains explicit exclusions, sensitive names and inode protections', t => {
+  const f = fixture(t), docsPath = join(f.directory, 'docs'); mkdirSync(docsPath);
+  const doc = join(docsPath, 'sdk.md'), excluded = join(docsPath, 'excluded.md');
+  writeFileSync(doc, '# SDK'); writeFileSync(excluded, 'Excluded');
+  writeFileSync(join(docsPath, '.env.local.md'), 'CONTROLLED-SENSITIVE');
+  symlinkSync(doc, join(docsPath, 'alias.md'));
+  writeFileSync(join(docsPath, 'original.md'), 'Hardlinked');
+  linkSync(join(docsPath, 'original.md'), join(docsPath, 'hardlink.md'));
+  const candidate = f.profiles.preview({ cwd: f.root, configuration: f.config,
+    excludedPaths: [excluded], providerDisclosure: true });
+  f.profiles.save(candidate, []);
+  const admission = new FileAdmission({ profiles: f.profiles, configuration: () => f.config,
+    sessionId: f.sessionId, cwd: f.root, nativeDocumentation: { readmePath: join(f.directory, 'README.md'), docsPath } });
+  t.after(() => admission.close());
+  assert.equal(admission.read({ path: doc }).text, '# SDK');
+  for (const path of [excluded, join(docsPath, '.env.local.md')]) {
+    assert.throws(() => admission.read({ path }), { code: 'sensitive-file' });
+  }
+  assert.throws(() => admission.read({ path: join(docsPath, 'alias.md') }), { code: 'symlink-denied' });
+  assert.throws(() => admission.read({ path: join(docsPath, 'hardlink.md') }), { code: 'unsupported-hardlink' });
+  f.profiles.save(f.profiles.preview({ cwd: f.root, configuration: f.config, providerDisclosure: true }), []);
+  assert.throws(() => admission.read({ path: doc }), { code: 'root-denied' });
 });
 
 test('native instructions and their exact local Markdown references read across projects without sibling grants', t => {

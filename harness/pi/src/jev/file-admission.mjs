@@ -55,9 +55,17 @@ export class FileAdmission {
   #linkedInstructions = new Map();
   #targets = [];
   #intakeAuthority;
-  constructor({ profiles, configuration, sessionId, cwd, source = new FileSource(), observe = () => {}, intake = null }) {
+  #nativeDocumentation;
+  #documentationDigests = new Map();
+  constructor({ profiles, configuration, sessionId, cwd, source = new FileSource(), observe = () => {}, intake = null, nativeDocumentation = null }) {
     this.profiles = profiles; this.configuration = configuration; this.sessionId = sessionId; this.cwd = cwd; this.source = source; this.observe = observe;
     this.#intakeAuthority = profiles.selection(cwd)?.identity;
+    // Installation-owned paths, never tool arguments or text parsed from a system prompt.
+    if (nativeDocumentation !== null) {
+      if (![nativeDocumentation.readmePath, nativeDocumentation.docsPath].every(path =>
+        typeof path === 'string' && isAbsolute(path) && path.length <= 4096 && !path.includes('\0'))) fail('invalid-trusted-intake');
+      this.#nativeDocumentation = { readmePath: resolve(nativeDocumentation.readmePath), docsPath: resolve(nativeDocumentation.docsPath) };
+    }
     if (intake) {
       if (intake.version !== 1 || intake.authority !== profiles.selection(cwd)?.identity || intake.cwd !== cwd) fail('stale-trusted-intake');
       this.#instructions = intake.instructions; this.#targets = intake.targets;
@@ -90,6 +98,12 @@ export class FileAdmission {
   close() {
     this.#closed = true; this.#receipts.clear(); this.#evidence.clear();
     this.#nativeInstructions = []; this.#nativeSkills.clear(); this.#linkedInstructions.clear();
+    this.#documentationDigests.clear();
+  }
+  #isNativeDocumentation(path) {
+    return this.#nativeDocumentation !== undefined && this.profiles.selection(this.cwd)?.identity === this.#intakeAuthority &&
+      (path === this.#nativeDocumentation.readmePath ||
+        (path.startsWith(this.#nativeDocumentation.docsPath + sep) && /\.md$/i.test(path)));
   }
   #current(path, instruction = false, exactEvidence = instruction) {
     if (this.#closed) fail('session-changed');
@@ -100,8 +114,14 @@ export class FileAdmission {
     const runtimeWitness = selected.identity === this.#intakeAuthority &&
       ([...this.#instructions, ...this.#nativeInstructions].some(i => i.path === resolved) || this.#nativeSkills.has(resolved) || this.#linkedInstructions.has(resolved));
     const exactInstruction = instruction && (selected.project.instructions.some(i => i.path === resolved) || runtimeWitness);
-    const snapshot = this.source.snapshot(resolved, exactInstruction ? { ...settings, allowedRoots: [dirname(resolved)] } : settings,
+    const documentation = exactEvidence && this.#isNativeDocumentation(resolved);
+    const snapshot = this.source.snapshot(resolved, exactInstruction || documentation ? { ...settings, allowedRoots: [dirname(resolved)] } : settings,
       { sourceLimit: exactEvidence ? evidenceByteLimit : sourceByteLimit });
+    if (documentation) {
+      const previous = this.#documentationDigests.get(snapshot.canonical);
+      if (previous !== undefined && previous !== snapshot.digest) fail('native-documentation-changed');
+      this.#documentationDigests.set(snapshot.canonical, snapshot.digest);
+    }
     return { ...selected, snapshot };
   }
   /** Only the consumer's actual returned/cache-validated result calls this, never tool input */
@@ -175,7 +195,8 @@ export class FileAdmission {
       if (nativeSkill && this.#nativeSkills.get(snapshot.canonical) === null) this.#nativeSkills.set(snapshot.canonical, snapshot.digest);
       const established = [...project.instructions, ...(identity === this.#intakeAuthority ? [...this.#instructions, ...this.#nativeInstructions] : [])]
         .some(i => i.path === snapshot.canonical && i.digest === snapshot.digest);
-      if (!established && !(nativeSkill && this.#nativeSkills.get(snapshot.canonical) === snapshot.digest)) fail('unestablished-instruction');
+      if (!established && !this.#isNativeDocumentation(snapshot.canonical) &&
+        !(nativeSkill && this.#nativeSkills.get(snapshot.canonical) === snapshot.digest)) fail('unestablished-instruction');
       kind = 'mandatory-instruction';
     } else if (input.exception === 'required-evidence') {
       const target = [...project.targets, ...(identity === this.#intakeAuthority ? this.#targets : [])].find(t => t.path === snapshot.canonical && t.digest === snapshot.digest && t.purpose === input.need && input.offset >= t.offset && input.offset + input.limit <= t.offset + t.limit);
@@ -249,7 +270,7 @@ export class FileAdmission {
     }
     if (!selected.length) fail('admission-byte-limit');
     const nextOffset = input.offset + selected.length;
-    const kind = instruction ? 'instruction-read' : 'project-read';
+    const kind = this.#isNativeDocumentation(snapshot.canonical) ? 'native-documentation-read' : instruction ? 'instruction-read' : 'project-read';
     this.observe({ kind, reason: kind, pathId: snapshot.id, needId: hash(input.need), offset: input.offset, lines: selected.length, decision: 'admitted' });
     return { text: selected.join('\n'), admission: { kind, pathId: snapshot.id, digest: snapshot.digest,
       offset: input.offset, limit: selected.length, ...(nextOffset <= lines.length ? { nextOffset } : {}) } };

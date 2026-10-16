@@ -89,6 +89,13 @@ Source changes and removed registrations invalidate those witnesses. Unlinked si
 and Jev disclosure are not granted. Explicit exclusions, protected resources and inode checks remain binding.
 Do not use a shell workaround for an actual access denial.
 
+The runtime also supplies its installed README and Markdown documentation directory directly through Pi's
+`getReadmePath()` and `getDocsPath()` APIs. All workflow roles can read these documents and locate headings
+without Jev, per-file enrollment or provider effects. This does not import a path from prompt text or grant
+runtime writes, sibling source-code access, external links or evaluator disclosure. Documents retain the local
+1 MiB snapshot / 32 KiB output limits, explicit exclusions and inode checks; their first-read digest is pinned
+for that session. Changed documentation requires a Pi restart, and lifecycle invalidation withdraws admission.
+
 The operator's interactive `/skill:work`, `/skill:review`, `/skill:qa` or `/skill:land` selects its role, as does a
 trusted launcher phase. `/file-screening role engineer|reviewer|qa|land` explicitly selects a role in the TUI;
 the session retains it on reload/resume. Model/extension and RPC prompt text cannot promote roles. New local

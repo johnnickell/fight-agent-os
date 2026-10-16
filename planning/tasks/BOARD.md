@@ -18,7 +18,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | in-progress | — | [PR #75](https://github.com/johnnickell/fight-agent-os/pull/75) |
-| — | [TASK-00488](00488-TASK.md) | Repair file-screening preview, interactive noise and screenshot reads | — (standalone bug) | in-progress | — | — |
+| — | [TASK-00488](00488-TASK.md) | Repair Pi screening, workflow access and runtime compatibility | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 

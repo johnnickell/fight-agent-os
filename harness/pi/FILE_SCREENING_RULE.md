@@ -24,6 +24,14 @@ instructions establishes their exact relative Markdown references, up to eight l
 changed source links or removed native witnesses invalidate that access. This grants no sibling directory,
 external code or Jev-disclosure permission. Ordinary project content cannot establish external access.
 
+Pi's installed README and Markdown files beneath its advertised documentation directory (including
+`extensions.md`, `sdk.md`, `sessions.md` and `tui.md`) also read directly in every role. Resolve these paths from
+Pi's native documentation locations, not the project directory. Use `read` with `path` and follow continuation
+offsets to finish a long document; `file_locate` can select a heading. No Jev request or instruction enrollment is
+needed. This is read-only documentation access, not access to sibling runtime code, settings or credentials,
+and it grants no Jev disclosure. Exclusions and inode checks still apply. A changed document returns
+`native-documentation-changed`; restart Pi to load the current installation before retrying.
+
 If Jev is negative, uncertain or unavailable but a file is concretely needed, briefly state the reason and read
 it directly. A negative relevance judgment is not an access denial or proof that information is absent. Do not
 claim a direct read was screened. Explicitly supplied receipts or evidence still must be current; stale or invented
