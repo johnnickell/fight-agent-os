@@ -490,5 +490,5 @@
 | [TASK-00485](00485-TASK.md) | Support bounded authenticated log streaming and extraction | needs-info | [TICKET-00117](../tickets/00117-TICKET.md) |
 | [TASK-00486](00486-TASK.md) | Inspect and recover observability through the existing operator guide | ready-for-agent | [TICKET-00117](../tickets/00117-TICKET.md) |
 | [TASK-00487](00487-TASK.md) | Complete the supported live-and-archived operator journey | ready-for-agent | [TICKET-00117](../tickets/00117-TICKET.md) |
-| [TASK-00488](00488-TASK.md) | Repair Pi screening, workflow access and runtime compatibility | in-progress | — |
+| [TASK-00488](00488-TASK.md) | Repair Pi screening, workflow access and runtime compatibility | done | — |
 <!-- /planning:records -->
