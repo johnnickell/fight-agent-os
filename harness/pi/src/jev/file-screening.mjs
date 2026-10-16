@@ -9,6 +9,8 @@ export const filePolicyVersion = 'file-screen-v1';
 export const sourceByteLimit = 32768;
 // Local exact-evidence intake is not Jev disclosure; its returned ranges remain 32 KiB.
 export const evidenceByteLimit = 1048576;
+// Local image evidence reaches the main model, never the text-only relevance evaluator.
+export const imageByteLimit = 10 * 1048576;
 const hash = value => createHash('sha256').update(value).digest('hex');
 const deny = code => { throw new Unavailable(code); };
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -76,7 +78,7 @@ function openContained(path) {
   } finally { closeSync(directory); }
 }
 
-/** Read a bounded regular UTF-8 snapshot only after canonical access and opened-inode checks */
+/** Read bounded regular snapshots only after canonical access and opened-inode checks */
 export class FileSource {
   authorize(path, policy, { allowMissing = false } = {}) {
     const lexical = resolve(path);
@@ -85,7 +87,7 @@ export class FileSource {
       return policy.excludedPaths.some(p => within(key, fold ? resolve(p).toLowerCase() : resolve(p))) ||
         key.split(sep).some(part => policy.excludedNames.some(name => (fold ? name.toLowerCase() : name) === part)) ||
         key.split(sep).some(part => ['.git', '.ssh', '.aws', '.gnupg'].includes(part) ||
-          /^(\.env($|\.)|auth\.json$|id_(rsa|ed25519)($|\.)|.*\.(pem|key|p12|pfx)$)/i.test(part));
+          /^(\.env(?!\.example$)($|\.)|auth\.json$|id_(rsa|ed25519)($|\.)|.*\.(pem|key|p12|pfx)$)/i.test(part));
     };
     if (excluded(lexical)) deny('sensitive-file');
     // Check lexical containment first: no metadata probing of unrelated caller paths.
@@ -122,6 +124,15 @@ export class FileSource {
   snapshot(path, policy, { sourceLimit = sourceByteLimit, maxBytes = sourceLimit + 1, onRead = () => {} } = {}) {
     if (!Number.isSafeInteger(sourceLimit) || sourceLimit < 1 || sourceLimit > evidenceByteLimit ||
       !Number.isSafeInteger(maxBytes) || maxBytes < 0 || maxBytes > evidenceByteLimit + 1) deny('source-limit');
+    const { data, ...snapshot } = this.snapshotBytes(path, policy, { sourceLimit, maxBytes, onRead });
+    let text;
+    try { text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(data); } catch { deny('binary-source'); }
+    if (/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(text)) deny('binary-source');
+    return { ...snapshot, text };
+  }
+  snapshotBytes(path, policy, { sourceLimit = sourceByteLimit, maxBytes = sourceLimit + 1, onRead = () => {} } = {}) {
+    if (!Number.isSafeInteger(sourceLimit) || sourceLimit < 1 || sourceLimit > imageByteLimit ||
+      !Number.isSafeInteger(maxBytes) || maxBytes < 0 || maxBytes > imageByteLimit + 1) deny('source-limit');
     const canonical = this.authorize(path, policy), lexical = resolve(path);
     const before = lstatSync(canonical, { bigint: true });
     if (!before.isFile()) deny('unsupported-file');
@@ -150,10 +161,7 @@ export class FileSource {
       if (count !== Number(before.size) || stamp(fstatSync(fd, { bigint: true })) !== stamp(before) ||
         realpathSync.native(lexical) !== canonical || stamp(lstatSync(canonical, { bigint: true })) !== stamp(before)) deny('unstable-source');
       const data = bytes.subarray(0, count);
-      let text;
-      try { text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(data); } catch { deny('binary-source'); }
-      if (/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(text)) deny('binary-source');
-      return { canonical, text, bytes: count, digest: hash(data), revision: hash(stamp(before)), id: hash(canonical) };
+      return { canonical, data, bytes: count, digest: hash(data), revision: hash(stamp(before)), id: hash(canonical) };
     } finally { if (fd !== undefined) closeSync(fd); }
   }
 }

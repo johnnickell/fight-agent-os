@@ -4,22 +4,28 @@ import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { Type, type TSchema } from 'typebox';
-import { createBashToolDefinition, createLocalBashOperations, createEditToolDefinition, createWriteToolDefinition,
-  getAgentDir, getPackageDir, VERSION } from '@earendil-works/pi-coding-agent';
+import { createBashToolDefinition, createLocalBashOperations, createReadToolDefinition, createEditToolDefinition, createWriteToolDefinition,
+  getAgentDir, getPackageDir, getReadmePath, getDocsPath, VERSION } from '@earendil-works/pi-coding-agent';
 import type { BashOperations, ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { reviewEnrollment } from './enrollment-preview.ts';
 import { FileScreening, type ScreenResult } from './jev/file-screening.mjs';
 import { FileScreeningSettings } from './jev/local-store.mjs';
 import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
 import { FileAdmission } from './jev/file-admission.mjs';
-import { CommandRisk } from './jev/command-risk.mjs';
+import { ImageAdmission, isImagePath } from './jev/image-admission.mjs';
+import { WorkflowAccess } from './jev/workflow-access.mjs';
+import { CommandRisk, commandRiskRecovery } from './jev/command-risk.mjs';
+import { CommandApprovals } from './jev/command-approvals.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
 import { ToolPolicy, PolicyDenied } from './tool-policy/policy.mjs';
 import { fileOperations } from './tool-policy/effects.mjs';
+import { trackRuntimeHooks } from './tool-policy/runtime.mjs';
 import type { ConsumerConnection, Connection, OperatorConfiguration, Json } from './jev/judgments.mjs';
 
 const sourceDir = dirname(fileURLToPath(import.meta.url));
-const rule = readFileSync(new URL('../FILE_SCREENING_RULE.md', import.meta.url), 'utf8');
-const enforcedRule = `Standing enrolled profile: explicit file reads require a current positive Jev receipt or validated per-file exception. Use jev_read_file then read with its admission receipt, questionDigest, identical need and explicit offset/limit. Instruction and required-evidence exceptions need exact trusted witnesses; file_locate establishes bounded verified-symbol targets. Never invent evidence or infer batch permission. Ordinary authorized bash remains available with separate final-command Jev dangerous-operation assessment, not relevance screening. Shell source reads can bypass relevance admission. This is not universal enforcement, OS containment or protection against all same-user access to operator state. Never embed secrets in commands; command/context disclosure is bounded and source/environment/script contents are not inspected by the risk evaluator. Ordinary judgments are advisory, not task/role authority or a safety guarantee. Risky, uncertain, unavailable or denied judgments hold for an explicit operator decision; no hidden bypass. Preserve existing task/role permissions, independent roles, budgets and all finite test counters. Use the normal provider-owned Build skill/monitor and canonical role reports, not a replacement executor. Inspect file_screening_status or /file-screening for coverage and recovery.`;
+const rulePath = fileURLToPath(new URL('../FILE_SCREENING_RULE.md', import.meta.url));
+const rule = readFileSync(rulePath, 'utf8');
+const enforcedRule = rule;
 const parameters = Type.Object({
   path: Type.Optional(Type.String({ minLength: 1, maxLength: 4096 })),
   paths: Type.Optional(Type.Array(Type.String({ minLength: 1, maxLength: 4096 }), { minItems: 1, maxItems: 50 })),
@@ -35,27 +41,66 @@ const parameters = Type.Object({
 }, { additionalProperties: false });
 const textResult = (value: unknown, isError = false) => ({ content: [{ type: 'text' as const, text: typeof value === 'string' ? value : JSON.stringify(value) }], details: value, isError });
 const allowed = ['read', 'write', 'edit', 'bash', 'jev_read_file', 'file_locate', 'file_screening_status'];
-const sources = [fileURLToPath(import.meta.url), ...['jev', 'tool-policy'].flatMap(dir => readdirSync(join(sourceDir, dir))
+const sources = [rulePath, fileURLToPath(import.meta.url), join(sourceDir, 'enrollment-preview.ts'), ...['jev', 'tool-policy'].flatMap(dir => readdirSync(join(sourceDir, dir))
   .filter(name => /\.(mjs|py)$/.test(name)).map(name => join(sourceDir, dir, name))), join(sourceDir, 'jev-extension.ts'), join(sourceDir, 'screening-bootstrap.mjs')];
 type Dependencies = { settings?: FileScreeningSettings; configuration: () => OperatorConfiguration | null;
   profiles: ScreeningProfiles; credentialConfigured: (ctx: ExtensionContext) => boolean };
 
+// Request/file refusals are not evaluator outages; unknown/provider failures remain visible.
+const localScreeningFailures = new Set(['source-limit', 'batch-source-limit', 'root-denied', 'sensitive-file',
+  'symlink-denied', 'symlink-escape', 'unsupported-file', 'unsupported-hardlink', 'unstable-source',
+  'binary-source', 'source-unavailable', 'invalid-input', 'result-presentation-limit', 'admission-presentation-limit']);
+
 /** Bind standing enrollment to explicit file admission and separate advisory command-risk assessment */
 export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencies) {
+  const hooks = trackRuntimeHooks(pi, { screening: true });
   const profiles = dependencies.profiles;
   pi.registerFlag('fight-screening-required', { type: 'string', description: 'Trusted launcher enrollment identity; missing/changed authority holds the native tools' });
-  let screening: FileScreening | undefined, admission: FileAdmission | undefined, guard: ToolPolicy | undefined;
+  let screening: FileScreening | undefined, admission: FileAdmission | undefined, images: ImageAdmission | undefined, guard: ToolPolicy | undefined;
   let selected = false, live = false, failure: string | undefined, evaluationFailure: string | undefined;
   let context: ExtensionContext | undefined;
-  let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0;
+  let workflow = new WorkflowAccess();
+  // Agent and user shell calls share one dialog slot; only its current owner reports blocked.
+  const approvals = new CommandApprovals(active => pi.events.emit('herdr:blocked', { active,
+    ...(active ? { label: 'Command approval required' } : {}) }));
+  let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0, lastNotice = '', lastWarning = '';
+  const persistRole = (role: string) => {
+    try { pi.appendEntry('fight-workflow-role-v2', workflow.checkpoint(sessionId, role)); }
+    catch (error) {
+      failure = 'workflow-role-persistence-failed';
+      // Pi appends in memory before writing to disk. Supersede a failed privileged append before
+      // a reload can restore it; if storage is still unavailable, Pi retains this restrictive entry.
+      try { pi.appendEntry('fight-workflow-role-v2', workflow.checkpoint(sessionId, 'reviewer')); } catch { /* Remain held */ }
+      throw error;
+    }
+  };
   const ledger = new MonthlyLedger(profiles.directory);
   const safeCode = (error: unknown) => error instanceof Error && 'code' in error && typeof error.code === 'string' && /^[a-z-]{1,80}$/.test(error.code) ? error.code : 'profile-unavailable';
+  function imageRecovery(reason: string) {
+    const actions: Record<string, string> = {
+      'source-limit': 'The image exceeds 10 MiB. Submit a smaller PNG/JPEG/GIF/WebP export.',
+      'sensitive-file': 'This image is protected. Provide non-sensitive evidence; do not bypass exclusions or widen roots.',
+      'unsupported-image': 'The file is not a supported image. Use a PNG/JPEG/GIF/WebP export.',
+      'image-processing-failed': 'Pi could not process this image. Submit a valid smaller PNG/JPEG/GIF/WebP export.',
+      'image-unavailable': 'Check the image path and filesystem access; no image content was returned.',
+      'image-changed-retry': 'The image changed during processing. Retry the read against the current file.',
+      'image-arguments-required': 'Read images with path; need and exception: "image" are optional. Omit line ranges, receipts and evidence.',
+    };
+    return actions[reason] ?? 'Read images directly with path. No image selection or approval is needed; existing file-safety and runtime checks still apply.';
+  }
   function observe(event: Record<string, unknown>) {
     if (!live || !context) return;
     const observation = { version: 'fight-file-screen-observation-v1', session: hash(sessionId), sequence: ++sequence,
-      phase: /^[A-Za-z0-9-]{1,48}$/.test(process.env.FIGHT_SCREENING_PHASE ?? '') ? process.env.FIGHT_SCREENING_PHASE : 'local', ...event };
-    console.error(`Fight screening: ${JSON.stringify(observation)}`);
-    if (context.mode === 'tui') context.ui.notify(`File screening: ${event.kind} ${event.reason ?? event.decision ?? ''}`, ['blocked-read', 'command-held'].includes(String(event.kind)) ? 'warning' : 'info');
+      phase: workflow.role, ...event };
+    if (context.mode !== 'tui') {
+      console.error(`Fight screening: ${JSON.stringify(observation)}`);
+      return;
+    }
+    const actions: Record<string, string> = { 'blocked-read': 'File read blocked', 'blocked-write': 'File change blocked', 'command-held': 'Command held' };
+    const action = actions[String(event.kind)];
+    if (!action) return;
+    const notice = `${action}: ${event.reason ?? 'unavailable'}. See the tool result for recovery.`;
+    if (notice !== lastNotice) { context.ui.notify(notice, 'warning'); lastNotice = notice; }
   }
   function connect(callerId: string, authorize: ConsumerConnection['authorize']) {
     let capability: Connection | { state: string } | undefined;
@@ -73,7 +118,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       const state = guard?.inspect();
       if (state?.state !== 'active') throw new PolicyDenied(state?.reason ?? 'boundary-unavailable');
       if (!owner || allowed.some(name => pi.getAllTools().find(tool => tool.name === name)?.sourceInfo?.path !== owner)) throw new PolicyDenied('unsupported-tool-replacement');
-      if (!['jev_read_file', 'read', 'bash'].every(name => pi.getActiveTools().includes(name))) throw new PolicyDenied('required-tool-hidden');
+      if (!['read', 'bash'].every(name => pi.getActiveTools().includes(name))) throw new PolicyDenied('required-tool-hidden');
     } catch (error) {
       failure = safeCode(error); admission?.close(); screening?.close(); guard?.cancel(failure);
       throw new PolicyDenied(failure);
@@ -99,21 +144,24 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (!reason && (budget?.session.availableMicroUsd ?? 0) < 2688) reason = 'session-budget';
     }
     return { state: selected ? reason ? 'degraded' : 'active' : 'disabled',
-      enforcement: selected ? reason ? 'held-with-bounded-exceptions' : 'explicit-file-receipts-and-command-risk' : 'not-enrolled',
+      enforcement: selected ? reason ? 'project-access-with-screening-degraded' : 'project-access-and-command-risk' : 'not-enrolled',
       reason: reason ?? (selected ? null : 'not-enrolled'), session: hash(sessionId),
-      phase: /^[A-Za-z0-9-]{1,48}$/.test(process.env.FIGHT_SCREENING_PHASE ?? '') ? process.env.FIGHT_SCREENING_PHASE : 'local', budget, allocation,
+      phase: workflow.role, budget, allocation,
       credential: selected && dependencies.credentialConfigured(ctx) ? 'configured-resolution-unchecked' : 'not-configured',
       bindingLimit: budget ? budget.availableMicroUsd <= budget.session.availableMicroUsd ? 'monthly' : 'session' : 'unavailable',
-      coverage: selected ? 'Pi 1.2.0 explicit read/write/edit; final native Agent bash and user-bash operations; preflighted provider Build children. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.' : 'none',
+      coverage: selected ? `Pi ${VERSION} explicit read/write/edit; final native Agent bash and user-bash operations; preflighted provider Build children. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
       enrollment: selected ? 'standing-until-revocation-or-authority-change; historical-profiles-require-explicit-conversion' : 'none',
-      nextActionCode: !selected ? 'enroll-project' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'screen-then-read',
-      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Established bounded file exceptions remain where access permits.' : 'Screen explicit discovery reads; use ordinary authorized shell with advisory command-risk assessment. No safety or universal relevance guarantee.' };
+      nextActionCode: !selected ? 'enroll-project' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
+      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.' };
   }
   function present(ctx: ExtensionContext, notify = false) {
     const view = status(ctx);
     if (ctx.mode === 'tui') {
-      ctx.ui.setStatus('fight-file-screen', `File screening: ${view.state}${view.reason ? ` (${view.reason})` : ''}${view.budget ? ` | available ${view.budget.availableMicroUsd}, reserved ${view.budget.reservedMicroUsd} micro-USD` : ''}`);
-      if (notify) ctx.ui.notify(JSON.stringify(view, null, 2), view.state === 'active' ? 'info' : 'warning');
+      ctx.ui.setStatus('fight-file-screen', selected ? `File screening: ${view.state}${view.reason ? ` (${view.reason})` : ''}` : undefined);
+      const warning = view.state === 'degraded' ? String(view.reason) : '';
+      if (notify) ctx.ui.notify(JSON.stringify(view, null, 2), view.state === 'degraded' ? 'warning' : 'info');
+      else if (warning && warning !== lastWarning) ctx.ui.notify(`File screening needs attention: ${warning}. Use /file-screening inspect.`, 'warning');
+      lastWarning = warning;
     } else if (notify) console.error(`Fight screening status: ${JSON.stringify(view)}`);
     return view;
   }
@@ -133,7 +181,10 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           for (const value of result.results ?? [result]) observe({ kind: value.cache?.hit ? 'cache-reuse' : 'screen-complete',
             operationId: value.operationId ?? null, pathId: value.source?.id ?? null, needId: hash(input.need), decision: value.threshold, reason: value.status,
             costUsd: value.receipt?.usage?.costUsd ?? null, elapsedMs: value.receipt?.elapsedMs ?? null });
-          evaluationFailure = (result.results ?? [result]).find(value => !['complete', 'incomplete'].includes(value.status))?.status;
+          const outcomes = result.results ?? [result];
+          const outage = outcomes.find(value => !['complete', 'incomplete'].includes(value.status) && !localScreeningFailures.has(value.status));
+          if (outage) evaluationFailure = outage.status;
+          else if (outcomes.some(value => value.status === 'complete' && !value.cache?.hit)) evaluationFailure = undefined;
           try { checkBoundary(); admission?.accept(input, result); }
           catch { return textResult({ status: 'profile-changed', threshold: 'unresolved' }, true); }
           present(ctx);
@@ -149,15 +200,15 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     });
   }
   function shellOperations(ctx: ExtensionContext): BashOperations {
-    const currentEpoch = epoch;
+    const currentEpoch = epoch, roleRevision = workflow.revision;
     const settings = pi.getSettings();
     const local = createLocalBashOperations({ shellPath: settings.shellPath });
     const risk = new CommandRisk({ profiles, configuration: dependencies.configuration, connect: authorize => connect('shell-risk-v1', authorize),
-      sessionId, cwd: ctx.cwd, observe, context: () => ({ phase: /^[A-Za-z0-9-]{1,48}$/.test(process.env.FIGHT_SCREENING_PHASE ?? '') ? process.env.FIGHT_SCREENING_PHASE : 'local',
+      sessionId, cwd: ctx.cwd, observe, context: () => ({ phase: workflow.role,
         shellPath: pi.getSettings().shellPath, commandPrefix: pi.getSettings().shellCommandPrefix }) });
     return { async exec(command, cwd, options) {
       const validate = () => {
-        if (currentEpoch !== epoch || options.signal?.aborted) throw new PolicyDenied('stale-operation');
+        if (currentEpoch !== epoch || roleRevision !== workflow.revision || options.signal?.aborted) throw new PolicyDenied('stale-operation');
         checkBoundary();
         const current = pi.getSettings();
         if (settings.shellPath !== current.shellPath || settings.shellCommandPrefix !== current.shellCommandPrefix) throw new PolicyDenied('command-context-changed');
@@ -166,33 +217,60 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         // Pi has applied final tool-call mutations and its prefix before this operations boundary.
         await risk.assess(command, cwd, { signal: options.signal, validate, confirm: async decision => {
           if (!ctx.hasUI) return false;
-          return ctx.ui.confirm(`Command held: ${decision.outcome} (${decision.reason})`,
-            `No safe verdict is claimed. Confirm this ONE exact command only if it is within existing task/role authority. No permission expansion.\nDirectory: ${decision.cwd}\n${decision.command}`);
+          return approvals.run(signal => ctx.ui.confirm(`Command held: ${decision.outcome} (${decision.reason})`,
+            `No safe verdict is claimed. Confirm this ONE exact command only if it is within existing task/role authority. No permission expansion.\nDirectory: ${decision.cwd}\n${decision.command}`,
+            { signal }), { signal: options.signal, validate });
         } });
         validate();
         return local.exec(command, cwd, options);
       } catch (error) {
         const reason = safeCode(error);
         observe({ kind: 'command-held', reason, decision: 'blocked', operationId: randomUUID(), pathId: hash(cwd), needId: hash(command) });
-        throw new PolicyDenied(reason);
+        const denied = new PolicyDenied(reason);
+        denied.message += `\n${commandRiskRecovery(reason)}`;
+        throw denied;
       }
     } };
   }
   function installBoundary(ctx: ExtensionContext) {
     const currentEpoch = epoch;
-    pi.registerTool({ name: 'read', label: 'Admit file contents', description: 'Explicit bounded file read after current screening or verified exception. Supply need, offset/limit and admission receipt/questionDigest, exact instruction/required-evidence exception or file_locate evidence. Shell is a separate, unenforced relevance route.',
+    pi.registerTool({ name: 'read', label: 'Read project files', description: 'Read project text directly with path; need and offset/limit are optional. Strongly prefer Jev before unfamiliar discovery reads, but known targets and core instructions need no receipt. Native skill instructions and their exact local Markdown references work across projects. The installed Pi README and Markdown documentation read directly in every role without Jev; use the advertised Pi documentation paths. Read PNG/JPEG/GIF/WebP images directly with path (need and exception: "image" optional), without selection, approval or Jev disclosure. Format/size and protected-file checks remain. Shell is a separate, unenforced relevance route.',
       parameters: Type.Object({ path: Type.String(), need: Type.Optional(Type.String()), offset: Type.Optional(Type.Integer({ minimum: 1 })), limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 1000 })),
         receipt: Type.Optional(Type.String()), questionDigest: Type.Optional(Type.String()), evidence: Type.Optional(Type.String()),
-        exception: Type.Optional(Type.Union([Type.Literal('instruction'), Type.Literal('required-evidence')])) }, { additionalProperties: false }),
+        exception: Type.Optional(Type.Union([Type.Literal('instruction'), Type.Literal('required-evidence'), Type.Literal('image')])) }, { additionalProperties: false }),
       promptGuidelines: [enforcedRule],
-      async execute(_id, input, signal) {
+      async execute(id, input, signal, onUpdate, toolCtx) {
         try {
           if (currentEpoch !== epoch || signal?.aborted) throw new PolicyDenied('stale-operation');
           checkBoundary();
-          const value = admission!.read(input);
-          return { content: [{ type: 'text', text: value.text }], details: value.admission };
+          if (input.exception === 'image' || isImagePath(input.path, ctx.cwd)) {
+            const image = images!.read(input);
+            const validate = (path: string) => {
+              if (currentEpoch !== epoch || signal?.aborted || path !== image.path) throw new PolicyDenied('stale-operation');
+              checkBoundary();
+            };
+            // Native Pi handles image conversion/resizing; its operations see only the admitted snapshot.
+            const tool = createReadToolDefinition(ctx.cwd, { operations: {
+              access: async path => { validate(path); },
+              detectImageMimeType: async path => { validate(path); return image.mimeType; },
+              readFile: async path => { validate(path); return image.data; },
+            } });
+            const result = await tool.execute(id, { path: image.path }, signal, onUpdate, toolCtx);
+            validate(image.path);
+            if (images!.read(input).admission.digest !== image.admission.digest) throw new PolicyDenied('image-changed-retry');
+            if (!result.content.some(block => block.type === 'image')) throw new PolicyDenied('image-processing-failed');
+            observe({ kind: 'exception', reason: 'image', pathId: image.admission.pathId, needId: hash(input.need ?? ''), decision: 'admitted' });
+            return { ...result, details: image.admission };
+          }
+          const value = admission!.read({ ...input, exception: input.exception });
+          const continuation = value.admission.nextOffset ? `\n\n[More lines available; continue with offset ${value.admission.nextOffset}.]` : '';
+          return { content: [{ type: 'text' as const, text: value.text + continuation }], details: value.admission };
         } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
-          pathId: hash(resolve(ctx.cwd, input.path)), needId: hash(input.need ?? '') }); return textResult({ blocked: reason, nextAction: 'Supply need, explicit range and a current receipt or independently established exception; no source released' }, true); }
+          pathId: hash(resolve(ctx.cwd, input.path)), needId: hash(input.need ?? '') }); return textResult({ blocked: reason,
+            nextAction: input.exception === 'image' || isImagePath(input.path, ctx.cwd) ? imageRecovery(reason) :
+              reason === 'unambiguous-evidence-required' ? 'Use exactly one receipt, exception or file_locate evidence token. The evidence field is not explanatory prose; never invent a witness.' :
+              reason === 'native-documentation-changed' ? 'Installed Pi documentation changed during this session. Restart Pi to load the current installation, then retry the direct read. No Jev request or enrollment change is needed.' :
+              'Use path for ordinary project reads and installed Pi README/Markdown docs; offset/limit are optional. Explicit receipts/evidence must still be current. Protected or other outside-root files remain unavailable; do not bypass access restrictions with shell. Native instructions must come from current host metadata or exact linked Markdown references.' }, true); }
       },
     });
     function registerMutation<T extends TSchema, D, S>(name: 'write' | 'edit', base: ToolDefinition<T, D | undefined, S>) {
@@ -206,14 +284,14 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           const tool = factory(toolCtx.cwd, { operations: fileOperations(guard!, operation) });
           await tool.execute(id, operation.input, operation.controller.signal, undefined, toolCtx);
           return { ...textResult({ status: 'applied', pathId: hash(operation.input.path) }), details: undefined };
-        } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-write', reason }); return { ...textResult({ blocked: reason }, true), details: undefined }; }
+        } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-write', reason }); return { ...textResult({ blocked: reason, nextAction: reason === 'workflow-write-restricted' ? `The ${workflow.role} role writes only beneath the project .runs directory. Report source changes for Engineer; only the operator can select a different workflow.` : 'Check the target and project exclusions. Secret files, live harness resources and operator state remain protected; .env.example and project skills are ordinary editable files for Engineer/Land.' }, true), details: undefined }; }
         finally { operation?.close(); }
       } });
     }
     registerMutation('write', createWriteToolDefinition(ctx.cwd));
     registerMutation('edit', createEditToolDefinition(ctx.cwd));
     const baseBash = createBashToolDefinition(ctx.cwd);
-    pi.registerTool({ ...baseBash, description: `${baseBash.description} Final-command dangerous-operation assessment uses shared Jev, not file relevance. No new task authority or safety guarantee. Never embed secrets.`,
+    pi.registerTool({ ...baseBash, description: `${baseBash.description} Final-command dangerous-operation assessment uses shared Jev, not file relevance. No new task authority or safety guarantee. Never embed secrets. A command-secret-disclosure-held result is a local refusal of this command, not a session-wide hold to clear; follow its recovery guidance. Risk decisions require the native one-command confirmation, not chat approval.`,
       async execute(id, input, signal, onUpdate, toolCtx) {
         if (currentEpoch !== epoch) throw new PolicyDenied('stale-operation');
         checkBoundary();
@@ -221,20 +299,36 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         return createBashToolDefinition(toolCtx.cwd, { commandPrefix: settings.shellCommandPrefix, shellPath: settings.shellPath,
           operations: shellOperations(toolCtx) }).execute(id, structuredClone(input), signal, onUpdate, toolCtx);
       } });
-    pi.registerTool({ name: 'file_locate', label: 'Locate exact definition', description: 'Verify one exact definition in an authorized file. Returns bounded location/evidence only, no source. 32 lookups/session, one unique match, at most 40 lines.',
-      parameters: Type.Object({ path: Type.String(), symbol: Type.String(), need: Type.String() }, { additionalProperties: false }),
+    pi.registerTool({ name: 'file_locate', label: 'Locate exact structural target', description: 'Locate one code definition with symbol, OR one exact ATX Markdown heading with heading (title without # markers; spaces allowed). Never put a heading in symbol. Returns evidence, offset and maxLines for read with the same path/need; no source. Authorized files up to 1 MiB; 32 shared lookups/session, unique match, at most 40 lines. No sibling or whole-file grant.',
+      parameters: Type.Object({ path: Type.String(), need: Type.String(),
+        symbol: Type.Optional(Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_]{2,127}$', description: 'Code identifier, not a Markdown heading; supply this OR heading' })),
+        heading: Type.Optional(Type.String({ minLength: 1, maxLength: 128, description: 'Exact case-sensitive ATX Markdown title without # markers; spaces allowed; supply this OR symbol' })),
+      }, { additionalProperties: false }),
       async execute(_id, input, signal) {
         try { if (currentEpoch !== epoch || signal?.aborted) throw new PolicyDenied('stale-operation'); checkBoundary(); return textResult(admission!.locate(input)); }
-        catch (error) { return textResult({ blocked: safeCode(error) }, true); }
+        catch (error) {
+          const blocked = safeCode(error);
+          const nextAction = blocked === 'invalid-structural-query' ? 'Supply path, need and exactly one of symbol (a code identifier, no spaces) or heading (an exact Markdown title without # markers; spaces allowed).'
+            : blocked === 'exact-heading-target-required' ? 'Use one existing unique ATX heading title. Missing or duplicate headings grant no read; narrow with bounded structural search or obtain exact operator evidence.'
+              : blocked === 'source-limit' ? 'Structural discovery is limited to 1 MiB per file; request a bounded artifact or an independently established exact obligation, not a shell-read bypass.'
+                : 'Respect this hold; do not invent evidence, replenish lookup limits or silently fall back to shell.';
+          return textResult({ blocked, nextAction }, true);
+        }
       } });
     pi.setActiveTools(allowed);
   }
   registerScreen(false);
   pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, declared coverage and shared monthly accounting; never resolves credentials or makes a provider request.',
     parameters: Type.Object({}, { additionalProperties: false }), async execute(_id, _args, _signal, _update, ctx) { return textResult(present(ctx)); } });
-  pi.on('session_start', (_event, ctx) => {
-    screening?.close(); admission?.close(); guard?.cancel('session-replaced'); epoch++;
-    context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0;
+  hooks.on('session_start', (_event, ctx) => {
+    approvals.cancel();
+    screening?.close(); admission?.close(); images?.close(); guard?.cancel('session-replaced'); epoch++;
+    context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
+    workflow = new WorkflowAccess('review');
+    try {
+      workflow = WorkflowAccess.restore({ phase: process.env.FIGHT_SCREENING_PHASE, sessionId,
+        entries: ctx.sessionManager.getEntries(), parentSession: ctx.sessionManager.getHeader()?.parentSession });
+    } catch (error) { failure = safeCode(error); }
     owner = pi.getAllTools().find(tool => tool.name === 'jev_read_file')?.sourceInfo?.path ?? '';
     try { const selection = profiles.selection(ctx.cwd); selected = Boolean(selection); authority = selection?.identity ?? ''; }
     catch (error) { selected = true; failure = safeCode(error); }
@@ -246,27 +340,39 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       try {
         const selection = profiles.selection(ctx.cwd);
         if (!selection) throw new PolicyDenied('profile-unavailable');
+        if (failure) throw new PolicyDenied(failure);
+        persistRole(workflow.role);
         guard = new ToolPolicy({ policyPath: selection.enforcementPath, cwd: ctx.cwd,
-          resources: [profiles.directory, sourceDir, getAgentDir(), getPackageDir(), join(homedir(), 'Library/Keychains'), ...(owner && !owner.startsWith('<') ? [owner] : [])],
+          workflowAccess: { root: selection.project.root, editableInstructions: selection.project.instructions.map(i => i.path)
+            .filter(path => !selection.project.excludedPaths.some(excluded => path === excluded || path.startsWith(excluded + '/'))),
+            authorizeWrite: path => workflow.assertWrite(path, selection.project.root) },
+          resources: [profiles.directory, rulePath, sourceDir, getAgentDir(), getPackageDir(), join(homedir(), 'Library/Keychains'), ...(owner && !owner.startsWith('<') ? [owner] : [])],
           sources: [...sources, ...(owner && !owner.startsWith('<') && !sources.includes(owner) ? [owner] : [])] });
-        const state = guard.start(sessionId, { version: VERSION, platform: process.platform, hooks: true });
+        const state = guard.start(sessionId, { version: VERSION, platform: process.platform, hooks: hooks.available() });
         if (state.state !== 'active') throw new PolicyDenied(state.reason!);
-        admission = new FileAdmission({ profiles, configuration: dependencies.configuration, sessionId, cwd: ctx.cwd, observe });
+        admission = new FileAdmission({ profiles, configuration: dependencies.configuration, sessionId, cwd: ctx.cwd, observe,
+          nativeDocumentation: { readmePath: getReadmePath(), docsPath: getDocsPath() } });
+        images = new ImageAdmission({ profiles, sessionId, cwd: ctx.cwd,
+          resources: [sourceDir, getAgentDir(), getPackageDir(), join(homedir(), 'Library/Keychains')] });
       } catch (error) { failure = safeCode(error); }
       installBoundary(ctx);
     }
     registerScreen(screening.availability() === 'available');
     if (selected) observe({ kind: 'session-bound', decision: failure ? 'held' : 'bound' });
-    present(ctx, true);
+    present(ctx, ctx.mode !== 'tui');
   });
-  pi.on('before_agent_start', (event, ctx) => {
+  hooks.on('before_agent_start', (event, ctx) => {
     if (!selected) { registerScreen(screening?.availability() === 'available'); return; }
     const options = event.systemPromptOptions;
-    try { admission?.ingestNativeInstructions(options.contextFiles); } catch (error) { failure = safeCode(error); }
-    if (options.forceSystemPrompt || !event.systemPrompt.includes(enforcedRule) || !options.selectedTools.includes('jev_read_file') || options.hiddenTools.includes('jev_read_file')) failure = 'required-tool-or-rule-missing';
-    present(ctx, true);
+    try { admission?.ingestNativeInstructions(options.contextFiles, options.skills); } catch (error) { failure = safeCode(error); }
+    if (options.forceSystemPrompt || !event.systemPrompt.includes(enforcedRule) || !options.selectedTools.includes('read') || options.hiddenTools.includes('read')) failure = 'required-tool-or-rule-missing';
+    present(ctx, ctx.mode !== 'tui');
   });
-  pi.on('tool_call', event => {
+  hooks.on('input', event => {
+    if (!selected) return;
+    workflow.input(event.text, event.source, persistRole);
+  });
+  hooks.on('tool_call', event => {
     if (!selected) return;
     // Only declared native explicit tools are covered. Bash itself is assessed at FINAL operations, not here.
     const reason = event.parentToolCallId ? 'unsupported-nested-route' : !allowed.includes(event.toolName) ? 'unsupported-explicit-tool-route' : undefined;
@@ -274,17 +380,25 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       pathId: hash('path' in event.input && typeof event.input.path === 'string' ? resolve(context!.cwd, event.input.path) : `tool:${event.toolName}`),
       needId: hash('need' in event.input && typeof event.input.need === 'string' ? event.input.need : '') }); return { block: true, reason: `File screening: ${reason}` }; }
   });
-  pi.on('user_bash', (_event, ctx) => {
+  hooks.on('user_bash', (_event, ctx) => {
     if (!selected) return;
     try { checkBoundary(); return { operations: shellOperations(ctx) }; }
     catch (error) { return { result: { output: `File screening: ${safeCode(error)}`, exitCode: 1, cancelled: false, truncated: false } }; }
   });
-  const invalidate = () => { epoch++; failure = 'session-changed-reload-required'; admission?.close(); screening?.close(); guard?.cancel('session-changed'); };
-  pi.on('session_before_switch', invalidate); pi.on('session_before_fork', invalidate); pi.on('session_before_tree', invalidate);
-  pi.on('session_shutdown', (_event, ctx) => { live = false; invalidate(); if (ctx.mode === 'tui') ctx.ui.setStatus('fight-file-screen', undefined); });
+  const invalidate = () => { approvals.cancel(); epoch++; failure = 'session-changed-reload-required'; admission?.close(); images?.close(); screening?.close(); guard?.cancel('session-changed'); };
+  hooks.on('session_before_switch', invalidate); hooks.on('session_before_fork', invalidate); hooks.on('session_before_tree', invalidate);
+  hooks.on('session_shutdown', (_event, ctx) => { live = false; invalidate(); if (ctx.mode === 'tui') ctx.ui.setStatus('fight-file-screen', undefined); });
   pi.registerCommand('file-screening', { description: 'Inspect or explicitly enroll/revoke/convert project screening; no provider calls or key entry', handler: async (args, ctx) => {
     const action = args.trim();
-    if (!['setup', 'inspect', '', 'instruction', 'target', 'reconcile', 'legacy', 'convert', 'revoke'].includes(action)) { if (ctx.mode === 'tui') ctx.ui.notify('Use /file-screening inspect, setup, instruction, target, reconcile, legacy, convert or revoke. Never pass credentials.', 'warning'); return; }
+    if (action.startsWith('role ')) {
+      if (ctx.mode !== 'tui') return;
+      try {
+        workflow.select(action.slice(5).trim(), persistRole);
+        ctx.ui.notify(`Workflow role: ${workflow.role}. Existing project exclusions and command-risk checks remain.`, 'info');
+      } catch { ctx.ui.notify('Role selection failed; previous authority retained. Use /file-screening role engineer, reviewer, qa or land.', 'warning'); }
+      return;
+    }
+    if (!['setup', 'inspect', '', 'instruction', 'target', 'reconcile', 'legacy', 'convert', 'revoke'].includes(action)) { if (ctx.mode === 'tui') ctx.ui.notify('Use /file-screening role engineer|reviewer|qa|land, inspect, setup, instruction, target, reconcile, legacy, convert or revoke. Never pass credentials.', 'warning'); return; }
     if (action === '' || action === 'inspect') { present(ctx, true); return; }
     if (ctx.mode !== 'tui') { console.error('File screening: operator changes require native TUI confirmation'); return; }
     const resources = [sourceDir, getAgentDir(), getPackageDir(), join(homedir(), 'Library/Keychains')];
@@ -349,18 +463,19 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (!configuration) { ctx.ui.notify('Configure the pinned Jev connection with /jev setup first. No enrollment changed.', 'warning'); return; }
       const excluded = await ctx.ui.input('Additional absolute protected paths (semicolon-separated; blank if none)');
       if (excluded === undefined) return;
-      const instructions = await ctx.ui.input('Exact governing/selected-skill instruction paths (semicolon-separated; only listed files get direct exceptions)');
+      const instructions = await ctx.ui.input('Optional extra instruction paths (semicolon-separated; project files and native skills already read directly)');
       if (instructions === undefined) return;
       if (!await ctx.ui.confirm('Standing source AND bounded nonsecret command disclosure to Jev',
         'Until explicit revocation/authority change, allow authorized UTF-8 source and final shell commands (<=16 KiB) with cwd/root/phase/shell settings, excluding secrets, to the pinned evaluator? No environment values, prompt/history or script bodies are fetched for command risk. Shell can bypass relevance and access same-user state; no safety/sandbox guarantee. No enrollment expiry or routine renewal. Existing task/role approval, shared budget and finite test grants still bind. Cancel declines enrollment.')) return;
       const candidate = profiles.preview({ cwd: ctx.cwd, configuration, excludedPaths: excluded.split(';').map(v => v.trim()).filter(Boolean),
         instructions: instructions.split(';').map(v => v.trim()).filter(Boolean), providerDisclosure: true, commandDisclosure: true });
-      if (!await ctx.ui.confirm('Preview STANDING project enrollment — no periodic renewal', JSON.stringify({ ...candidate,
+      if (!await reviewEnrollment(ctx, JSON.stringify({ ...candidate,
         monthly: { microUsd: 10000000, timeZone: 'America/Chicago', rollover: false },
         credentialResolution: 'Pi-managed OpenRouter; no credential resolution during setup',
         connection: { endpoint: configuration.endpoint, evaluator: configuration.evaluator },
-        coverage: 'Explicit file receipts; final native Agent/user bash risk. Shell relevance bypass, scripts/descendants/plugins/SDK OS calls are outside interception. Not a sandbox.',
+        coverage: 'Direct project reads, optional Jev discovery and role-scoped writes; final native Agent/user bash risk. Shell relevance bypass, scripts/descendants/plugins/SDK OS calls are outside interception. Not a sandbox.',
         sessionAllocation: 'At most 100000 micro-USD, further bounded by connection; 2688/request; shared account with file relevance, 8 questions/request, 2 outstanding, zero retries' }, null, 2))) return;
+      if (!await ctx.ui.confirm('Save enrollment?', 'Save the reviewed standing authority until revoked or changed?')) return;
       profiles.save(candidate, resources); invalidate();
       ctx.ui.notify('Standing enrollment saved; /reload. No credentials resolved or paid calls. Preserve all ledgers, pending liabilities and finite test counters.', 'info');
     } catch (error) { ctx.ui.notify(`File screening setup: ${safeCode(error)}. Existing settings/accounting preserved.`, 'warning'); }

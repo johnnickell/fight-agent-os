@@ -20,16 +20,20 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\ActivationCredentialGenerator;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContextProvider;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Event\RoleAssignedToUser;
 use Fight\AccessControl\Domain\AccessControl\User\Event\UserInvited;
@@ -430,6 +434,17 @@ final class BootstrapTest extends TestCase
             $actor->getAuthenticationVersion()
         ));
         $normal->set(AuthenticationContextProvider::class, static fn(): AuthenticationContextProvider => $context);
+        // Validate authentication at the same time used to create the session, not at wall-clock time.
+        $normal->set(
+            AuthoritativePrincipalResolver::class,
+            fn(Container $container): AuthoritativePrincipalResolver => new AuthoritativePrincipalResolver(
+                $container->get(UserRepository::class),
+                $container->get(RefreshSessionRepository::class),
+                $container->get(RoleRepository::class),
+                $container->get(PermissionRepository::class),
+                $this->clock
+            )
+        );
         $assignment = new AssignRoleToUser(
             $actor->getId(),
             $target->getId(),

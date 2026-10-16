@@ -5,10 +5,9 @@ description: Implement or revise an approved TASK on a feature branch, verify it
 
 # Work
 
-For discovery in a participating `jev_read_file` session, follow the shared
-[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
-For multiple discovery candidates, use bounded lists/globs, inspect per-file coverage/skips and treat current cache hits
-as reused judgments with local source checks, never permission for an entire set.
+In a participating harness session, follow the installed portable [project-access and discovery rule](../../../harness/pi/FILE_SCREENING_RULE.md).
+Strongly prefer Jev before unfamiliar discovery; read known targets and core instructions directly. Respect the
+operator-selected role, actual access denials and final-command assessment. Targets need no copy of this rule.
 
 Read the TASK, parent and [execution standards](../../../docs/engineering/EXECUTION.md). Work owns implementation,
 focused verification and a truthful handoff. Independent review owns the full quality assessment. Load the

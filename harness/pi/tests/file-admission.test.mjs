@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync, existsSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync, existsSync, symlinkSync, linkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FileSource, FileScreening } from '../src/jev/file-screening.mjs';
@@ -38,9 +38,109 @@ function fixture(t, probability = 0.7) {
   return { directory, root, profiles, config, admission, screening, sessionId, input, read, events, calls: () => calls };
 }
 
-test('an ordinary or fabricated receipt read releases no source; current positive permits only the useful range', async t => {
+test('ordinary project reads and portable core instructions need only a path without provider effects', t => {
   const f = fixture(t);
-  assert.throws(() => f.admission.read({ path: 'source.txt', need: f.input.need, offset: 1, limit: 3 }), { code: 'unambiguous-evidence-required' });
+  mkdirSync(join(f.root, 'planning/tasks'), { recursive: true });
+  for (const path of ['README.md', 'ROADMAP.md', 'planning/ROADMAP.md', 'planning/tasks/BOARD.md', '.env.example']) {
+    writeFileSync(join(f.root, path), `Current ${path}`);
+    assert.equal(f.admission.read({ path }).text, `Current ${path}`);
+  }
+  assert.match(f.admission.read({ path: 'source.txt' }).text, /Kettle/);
+  assert.equal(f.calls(), 0);
+  writeFileSync(join(f.root, '.env.local'), 'CONTROLLED-SECRET');
+  assert.throws(() => f.admission.read({ path: '.env.local' }), { code: 'sensitive-file' });
+});
+
+test('direct large-file reads return bounded content and a usable continuation without Jev', t => {
+  const f = fixture(t), lines = Array.from({ length: 500 }, (_, i) => `${i}: ${'x'.repeat(200)}`);
+  writeFileSync(join(f.root, 'large.md'), lines.join('\n'));
+  const first = f.admission.read({ path: 'large.md', limit: 1000 });
+  assert.ok(Buffer.byteLength(first.text) <= 32768);
+  assert.ok(first.admission.nextOffset > 1);
+  const next = f.admission.read({ path: 'large.md', offset: first.admission.nextOffset, limit: 1 });
+  assert.equal(next.text, lines[first.admission.nextOffset - 1]);
+  assert.equal(f.calls(), 0);
+});
+
+test('installed Pi documentation reads directly without granting its runtime or Jev disclosure', async t => {
+  const f = fixture(t), runtime = join(f.directory, 'pi'), docsPath = join(runtime, 'docs');
+  mkdirSync(docsPath, { recursive: true });
+  const readmePath = join(runtime, 'README.md'), extensions = join(docsPath, 'extensions.md');
+  writeFileSync(readmePath, '# Pi');
+  writeFileSync(extensions, '# Extensions\nRead [external](../../private.md)');
+  writeFileSync(join(docsPath, 'sdk.md'), '# SDK\nSession API');
+  writeFileSync(join(runtime, 'private.md'), 'Runtime sibling');
+  writeFileSync(join(f.directory, 'private.md'), 'External sibling');
+  writeFileSync(join(docsPath, 'implementation.js'), 'Runtime code');
+  const nativeDocumentation = { readmePath, docsPath };
+  const admission = new FileAdmission({ profiles: f.profiles, configuration: () => f.config,
+    sessionId: f.sessionId, cwd: f.root, nativeDocumentation });
+  t.after(() => admission.close());
+  nativeDocumentation.docsPath = f.directory; // Caller mutation cannot expand access.
+  admission.ingestNativeInstructions([], []); // Normal turn intake must not withdraw runtime docs.
+  assert.equal(admission.read({ path: readmePath }).text, '# Pi');
+  assert.equal(admission.read({ path: extensions }).admission.kind, 'native-documentation-read');
+  const located = admission.locate({ path: join(docsPath, 'sdk.md'), heading: 'SDK', need: 'Read SDK documentation' });
+  assert.equal(admission.read({ path: join(docsPath, 'sdk.md'), evidence: located.evidence,
+    need: 'Read SDK documentation', offset: located.offset, limit: located.maxLines }).text, '# SDK\nSession API');
+  for (const path of [join(runtime, 'private.md'), join(f.directory, 'private.md'), join(docsPath, 'implementation.js')]) {
+    assert.throws(() => admission.read({ path }), { code: 'root-denied' });
+  }
+  assert.equal((await f.screening.screen({ ...f.input, path: extensions })).status, 'root-denied');
+  assert.equal(f.calls(), 0);
+  writeFileSync(extensions, '# Replaced runtime documentation');
+  assert.throws(() => admission.read({ path: extensions }), { code: 'native-documentation-changed' });
+  admission.close();
+  assert.throws(() => admission.read({ path: readmePath }), { code: 'session-changed' });
+});
+
+test('installed documentation retains explicit exclusions, sensitive names and inode protections', t => {
+  const f = fixture(t), docsPath = join(f.directory, 'docs'); mkdirSync(docsPath);
+  const doc = join(docsPath, 'sdk.md'), excluded = join(docsPath, 'excluded.md');
+  writeFileSync(doc, '# SDK'); writeFileSync(excluded, 'Excluded');
+  writeFileSync(join(docsPath, '.env.local.md'), 'CONTROLLED-SENSITIVE');
+  symlinkSync(doc, join(docsPath, 'alias.md'));
+  writeFileSync(join(docsPath, 'original.md'), 'Hardlinked');
+  linkSync(join(docsPath, 'original.md'), join(docsPath, 'hardlink.md'));
+  const candidate = f.profiles.preview({ cwd: f.root, configuration: f.config,
+    excludedPaths: [excluded], providerDisclosure: true });
+  f.profiles.save(candidate, []);
+  const admission = new FileAdmission({ profiles: f.profiles, configuration: () => f.config,
+    sessionId: f.sessionId, cwd: f.root, nativeDocumentation: { readmePath: join(f.directory, 'README.md'), docsPath } });
+  t.after(() => admission.close());
+  assert.equal(admission.read({ path: doc }).text, '# SDK');
+  for (const path of [excluded, join(docsPath, '.env.local.md')]) {
+    assert.throws(() => admission.read({ path }), { code: 'sensitive-file' });
+  }
+  assert.throws(() => admission.read({ path: join(docsPath, 'alias.md') }), { code: 'symlink-denied' });
+  assert.throws(() => admission.read({ path: join(docsPath, 'hardlink.md') }), { code: 'unsupported-hardlink' });
+  f.profiles.save(f.profiles.preview({ cwd: f.root, configuration: f.config, providerDisclosure: true }), []);
+  assert.throws(() => admission.read({ path: doc }), { code: 'root-denied' });
+});
+
+test('native instructions and their exact local Markdown references read across projects without sibling grants', t => {
+  const f = fixture(t), provider = join(f.directory, 'provider'); mkdirSync(provider);
+  const skill = join(provider, 'SKILL.md'), reference = join(provider, 'GUIDE.md');
+  writeFileSync(skill, 'Read [the guide](GUIDE.md) and [project source](../project/source.txt.md)');
+  writeFileSync(join(f.root, 'source.txt.md'), 'Ordinary project document');
+  writeFileSync(reference, 'Portable provider instructions');
+  writeFileSync(join(provider, 'other.md'), 'Not linked');
+  f.admission.ingestNativeInstructions([], [{ filePath: skill }]);
+  assert.match(f.admission.read({ path: skill }).text, /guide/);
+  assert.equal(f.admission.read({ path: reference }).text, 'Portable provider instructions');
+  assert.throws(() => f.admission.read({ path: join(provider, 'other.md') }), { code: 'root-denied' });
+  writeFileSync(skill, 'Read [unassigned](other.md)');
+  f.admission.read({ path: skill });
+  assert.throws(() => f.admission.read({ path: join(provider, 'other.md') }), { code: 'root-denied' });
+  assert.throws(() => f.admission.read({ path: reference }), { code: 'stale-required-reference' });
+  assert.equal(f.admission.read({ path: 'source.txt.md' }).text, 'Ordinary project document');
+  f.admission.ingestNativeInstructions([], []);
+  assert.throws(() => f.admission.read({ path: skill }), { code: 'root-denied' });
+});
+
+test('direct reads need no receipt while fabricated or stale explicit receipts remain errors', async t => {
+  const f = fixture(t);
+  assert.match(f.admission.read({ path: 'source.txt', need: f.input.need, offset: 1, limit: 3 }).text, /Kettle/);
   assert.throws(() => f.read({ admission: { receipt: randomUUID(), questionDigest: 'model-authored' } }), { code: 'current-positive-receipt-required' });
   const result = await f.screening.screen(f.input); f.admission.accept(f.input, result);
   assert.equal(result.threshold, 'positive'); assert.equal(f.calls(), 1);
@@ -56,7 +156,8 @@ for (const probability of [0, 0.69]) test(`negative/below-threshold ${probabilit
   const f = fixture(t, probability), result = await f.screening.screen(f.input);
   f.admission.accept(f.input, result);
   assert.equal(result.admission, undefined);
-  assert.throws(() => f.read(result), { code: 'unambiguous-evidence-required' });
+  assert.equal(f.read(result).text, '  color = "blue";');
+  assert.equal(f.events.at(-1).kind, 'project-read');
 });
 
 test('source, policy, session and permission drift invalidate held decisions', async t => {
@@ -146,7 +247,7 @@ test('admission token overhead cannot exceed the bounded result or silently auth
   assert.equal(result.status, 'admission-presentation-limit');
   assert.equal(result.coverage.complete, false);
   assert.ok(Buffer.byteLength(JSON.stringify(result)) <= 65536);
-  assert.throws(() => f.read(result), { code: 'unambiguous-evidence-required' });
+  assert.equal(f.read(result).admission.kind, 'project-read');
 });
 
 test('batch admission is per-file; partial/failed/negative candidates never inherit a sibling receipt', async t => {
@@ -197,7 +298,7 @@ test('large mandatory/assigned sources remain bounded accessible without widenin
   assert.throws(() => f.profiles.intake(f.root, { instructions: ['large.md'] }), { code: 'source-limit' });
 });
 
-test('native context intake uses actual current host bytes and does not infer sibling or external authority', t => {
+test('native context intake admits exact host bytes across roots, never siblings or stale contents', t => {
   const f = fixture(t);
   writeFileSync(join(f.root, 'native.md'), 'Actual native governing context');
   f.admission.ingestNativeInstructions([{ path: join(f.root, 'native.md'), content: 'Forged content' }]);
@@ -207,8 +308,147 @@ test('native context intake uses actual current host bytes and does not infer si
   assert.equal(f.admission.read(read).admission.kind, 'mandatory-instruction');
   assert.throws(() => f.admission.read({ ...read, path: 'source.txt' }), { code: 'unestablished-instruction' });
   const external = join(f.directory, 'unapproved.md'); writeFileSync(external, 'Outside authority');
-  f.admission.ingestNativeInstructions([{ path: external, content: 'Outside authority' }]);
+  f.admission.ingestNativeInstructions([{ path: external, content: 'Wrong host bytes' }]);
   assert.throws(() => f.admission.read({ ...read, path: external }), { code: 'root-denied' });
+  f.admission.ingestNativeInstructions([{ path: external, content: 'Outside authority' }]);
+  assert.equal(f.admission.read({ ...read, path: external }).text, 'Outside authority');
+  assert.throws(() => f.admission.read(read), { code: 'unestablished-instruction' });
+  writeFileSync(external, 'Changed after host intake');
+  assert.throws(() => f.admission.read({ ...read, path: external }), { code: 'unestablished-instruction' });
+  f.admission.ingestNativeInstructions([]);
+  assert.throws(() => f.admission.read({ ...read, path: external }), { code: 'root-denied' });
+});
+
+test('native registered skills are exact local exceptions, not source roots or evaluator disclosure', async t => {
+  const f = fixture(t), provider = join(f.directory, 'canonical-skills'); mkdirSync(provider);
+  const skill = join(provider, 'SKILL.md'), sibling = join(provider, 'notes.md');
+  writeFileSync(skill, 'Required native skill\nSecond line'); writeFileSync(sibling, 'Unassigned sibling');
+  const profile = JSON.stringify(f.profiles.load());
+  f.admission.ingestNativeInstructions([], [{ filePath: skill, disableModelInvocation: false }]);
+  const input = { path: skill, need: 'Follow selected native skill', exception: 'instruction', offset: 1, limit: 1 };
+  assert.equal(f.admission.read(input).text, 'Required native skill');
+  assert.throws(() => f.admission.read({ ...input, path: sibling }), { code: 'root-denied' });
+  assert.throws(() => f.admission.read({ ...input, path: 'source.txt' }), { code: 'unestablished-instruction' });
+  assert.throws(() => f.admission.read({ ...input, exception: undefined, receipt: randomUUID() }), { code: 'root-denied' });
+  assert.throws(() => f.admission.read({ ...input, limit: 1001 }), { code: 'bounded-range-required' });
+  assert.equal((await f.screening.screen({ ...f.input, path: skill })).status, 'root-denied');
+  assert.equal(f.calls(), 0);
+  assert.equal(JSON.stringify(f.profiles.load()), profile);
+  writeFileSync(skill, 'Changed after first selected read');
+  assert.throws(() => f.admission.read(input), { code: 'unestablished-instruction' });
+  f.admission.ingestNativeInstructions([], [{ filePath: skill }]);
+  assert.equal(f.admission.read(input).text, 'Changed after first selected read');
+  f.admission.ingestNativeInstructions([], []);
+  assert.throws(() => f.admission.read(input), { code: 'root-denied' });
+});
+
+test('native skill metadata is lazy, copied and never inferred from tool assertions', t => {
+  const f = fixture(t), skill = join(f.root, 'SKILL.md'), hidden = join(f.root, 'hidden.md');
+  writeFileSync(skill, 'Selected instruction'); writeFileSync(hidden, 'Not advertised');
+  const source = new FileSource(), snapshots = [], original = source.snapshot.bind(source);
+  source.snapshot = (...args) => { snapshots.push(args[0]); return original(...args); };
+  const admission = new FileAdmission({ profiles: f.profiles, configuration: () => f.config, sessionId: f.sessionId, cwd: f.root, source });
+  t.after(() => admission.close());
+  const metadata = [{ filePath: skill }, { filePath: hidden, disableModelInvocation: true }];
+  admission.ingestNativeInstructions([], metadata);
+  assert.deepEqual(snapshots, []);
+  metadata[0].filePath = hidden;
+  const input = { path: skill, need: 'Follow native instruction', exception: 'instruction', offset: 1, limit: 1 };
+  assert.equal(admission.read(input).text, 'Selected instruction');
+  assert.throws(() => admission.read({ ...input, path: hidden }), { code: 'unestablished-instruction' });
+  admission.ingestNativeInstructions([], []);
+  assert.throws(() => admission.read(input), { code: 'unestablished-instruction' });
+});
+
+test('native instruction witnesses preserve exclusions, symlinks, source bounds and session authority', t => {
+  const f = fixture(t), provider = join(f.directory, 'provider'); mkdirSync(provider);
+  const skill = join(provider, 'SKILL.md'), link = join(provider, 'alias.md'), secret = join(provider, '.env');
+  writeFileSync(skill, 'Native instruction'); writeFileSync(secret, 'CONTROLLED-SENSITIVE'); symlinkSync(skill, link);
+  f.admission.ingestNativeInstructions([], [skill, link, secret].map(filePath => ({ filePath })));
+  const input = { path: skill, need: 'Follow native instruction', exception: 'instruction', offset: 1, limit: 1 };
+  assert.throws(() => f.admission.read({ ...input, path: secret }), { code: 'sensitive-file' });
+  assert.throws(() => f.admission.read({ ...input, path: link }), { code: 'symlink-denied' });
+  writeFileSync(skill, 'x'.repeat(1048577));
+  assert.throws(() => f.admission.read(input), { code: 'source-limit' });
+  writeFileSync(skill, 'Native instruction');
+  assert.equal(f.admission.read(input).text, 'Native instruction');
+  const changed = f.profiles.load(); changed.revision = randomUUID(); f.profiles.save(changed, []);
+  assert.throws(() => f.admission.read(input), { code: 'root-denied' });
+  assert.throws(() => f.admission.ingestNativeInstructions([], [{ filePath: skill }]), { code: 'stale-trusted-intake' });
+  changed.projects[0].excludedPaths.push(skill); f.profiles.save(changed, []);
+  assert.throws(() => f.admission.read(input), { code: 'sensitive-file' });
+  f.admission.close();
+  assert.throws(() => f.admission.read(input), { code: 'session-changed' });
+});
+
+test('native intake cannot replenish the finite structural lookup allowance', t => {
+  const f = fixture(t);
+  for (let i = 0; i < 32; i++) {
+    f.admission.ingestNativeInstructions([], []);
+    f.admission.locate({ path: 'source.txt', symbol: 'Kettle', need: 'Inspect exact definition' });
+  }
+  f.admission.ingestNativeInstructions([], []);
+  assert.throws(() => f.admission.locate({ path: 'source.txt', symbol: 'Kettle', need: 'Inspect exact definition' }), { code: 'structural-query-limit' });
+});
+
+test('large Markdown Board headings yield bounded evidence without evaluator disclosure or sibling authority', async t => {
+  const f = fixture(t), path = join(f.root, 'BOARD.md');
+  const board = '# Board\n## Current Human Decision\nChoose the next approved task.\n### Context\nKeep the existing scope.\n## Active Work\nCurrent task.\n## Archive\n' + 'Historical planning row.\n'.repeat(2500);
+  writeFileSync(path, board);
+  const profile = JSON.stringify(f.profiles.load());
+  assert.equal((await f.screening.screen({ ...f.input, path })).status, 'source-limit');
+  const need = 'Read the Board current decision';
+  const target = f.admission.locate({ path, heading: 'Current Human Decision', need });
+  assert.equal(target.kind, 'verified-heading'); assert.equal(target.offset, 2); assert.equal(target.maxLines, 4);
+  const input = { path, need, offset: target.offset, limit: target.maxLines, evidence: target.evidence };
+  assert.equal(f.admission.read(input).text, '## Current Human Decision\nChoose the next approved task.\n### Context\nKeep the existing scope.');
+  assert.throws(() => f.admission.read({ ...input, limit: 5 }), { code: 'current-target-evidence-required' });
+  assert.throws(() => f.admission.read({ ...input, need: 'Read a different purpose' }), { code: 'current-target-evidence-required' });
+  assert.throws(() => f.admission.read({ ...input, path: 'source.txt', offset: 1, limit: 1 }), { code: 'current-target-evidence-required' });
+  writeFileSync(path, board + 'Changed archive.\n');
+  assert.throws(() => f.admission.read(input), { code: 'current-target-evidence-required' });
+  assert.equal(f.calls(), 0); assert.equal(JSON.stringify(f.profiles.load()), profile);
+});
+
+test('Markdown lookup ignores frontmatter, fenced examples and comments and respects section boundaries', t => {
+  const f = fixture(t), path = join(f.root, 'guide.md');
+  writeFileSync(path, ['---', 'description: |', '  ## Current Human Decision', '---',
+    '<!--', '## Current Human Decision', '-->', '```markdown', '## Current Human Decision', '```',
+    '~~~~', '## Current Human Decision', '~~~', '~~~~', '    ## Current Human Decision',
+    '  ## Current Human Decision ###', 'Decide.', '### Details', 'Keep details.', '## Next', 'Unselected.'].join('\n'));
+  const target = f.admission.locate({ path, heading: 'Current Human Decision', need: 'Locate actual decision' });
+  assert.equal(target.offset, 16); assert.equal(target.maxLines, 4);
+  assert.throws(() => f.admission.locate({ path, heading: 'Missing', need: 'Locate missing heading' }), { code: 'exact-heading-target-required' });
+  writeFileSync(path, '## Duplicate\nFirst\n## Duplicate\nSecond');
+  assert.throws(() => f.admission.locate({ path, heading: 'Duplicate', need: 'Locate ambiguous heading' }), { code: 'exact-heading-target-required' });
+});
+
+test('heading and symbol lookups share existing finite query and returned-line limits', t => {
+  const f = fixture(t), path = join(f.root, 'BOARD.md');
+  writeFileSync(path, '# Ready frontier\n' + 'Ready task\n'.repeat(80));
+  const target = f.admission.locate({ path, heading: 'Ready frontier', need: 'Read first ready tasks' });
+  assert.equal(target.maxLines, 40);
+  assert.throws(() => f.admission.read({ path, need: 'Read first ready tasks', evidence: target.evidence, offset: 1, limit: 41 }), { code: 'current-target-evidence-required' });
+  for (let i = 0; i < 31; i++) f.admission.locate({ path: 'source.txt', symbol: 'Kettle', need: 'Inspect exact definition' });
+  assert.throws(() => f.admission.locate({ path, heading: 'Ready frontier', need: 'Read first ready tasks' }), { code: 'structural-query-limit' });
+});
+
+test('heading lookups retain exact-evidence byte, path, source and authority limits', t => {
+  const f = fixture(t), path = join(f.root, 'large.md');
+  writeFileSync(path, '# Decision\n' + 'x'.repeat(1048576));
+  assert.throws(() => f.admission.locate({ path, heading: 'Decision', need: 'Locate bounded decision' }), { code: 'source-limit' });
+  const input = { path: 'source.txt', heading: 'Decision', need: 'Locate bounded decision' };
+  for (const extra of [{ heading: '' }, { symbol: 'Kettle' }, { heading: 'Two\nlines' }]) {
+    assert.throws(() => f.admission.locate({ ...input, ...extra }), { code: 'invalid-structural-query' });
+  }
+  const outside = join(f.directory, 'outside.md'); writeFileSync(outside, '# Decision');
+  assert.throws(() => f.admission.locate({ ...input, path: outside }), { code: 'root-denied' });
+  writeFileSync(join(f.root, '.env'), '# Decision');
+  assert.throws(() => f.admission.locate({ ...input, path: '.env' }), { code: 'sensitive-file' });
+  writeFileSync(path, '# Decision\nRelevant text');
+  const target = f.admission.locate({ ...input, path });
+  const changed = f.profiles.load(); changed.revision = randomUUID(); f.profiles.save(changed, []);
+  assert.throws(() => f.admission.read({ path, need: input.need, offset: 1, limit: 2, evidence: target.evidence }), { code: 'current-target-evidence-required' });
 });
 
 test('reserved credential/environment components exclude descendants, not only basenames', t => {

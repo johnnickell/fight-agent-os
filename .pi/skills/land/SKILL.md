@@ -5,6 +5,10 @@ description: Publish an accepted TASK and clean owned resources, or publish a dr
 
 # Land
 
+In a participating harness session, follow the installed portable [project-access and discovery rule](../../../harness/pi/FILE_SCREENING_RULE.md).
+Strongly prefer Jev before unfamiliar discovery; read known targets and core instructions directly. Respect the
+operator-selected role, actual access denials and final-command assessment. Targets need no copy of this rule.
+
 Read [landing standards](../../../docs/engineering/LANDING.md). The standards own reconciliation proof, publication and cleanup boundaries; this skill executes them for one TASK.
 
 1. **Qualify.** Read the TASK, parent, Board and canonical `.runs/reviews/<TASK-ID>/review.md`. Check independence, verdict, criterion coverage, findings and limitations, reviewed base/head, branch and status. Inspect current `develop`, remote feature branch, PR, checkout and unrelated changes. Confirm credentials and cleanup ownership before mutation.

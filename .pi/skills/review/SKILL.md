@@ -5,8 +5,9 @@ description: Independently challenge an implemented TASK or PR against its requi
 
 # Review
 
-For discovery in a participating `jev_read_file` session, follow the shared
-[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
+In a participating harness session, follow the installed portable [project-access and discovery rule](../../../harness/pi/FILE_SCREENING_RULE.md).
+Strongly prefer Jev before unfamiliar discovery; read known targets and core instructions directly. Respect the
+operator-selected role, actual access denials and final-command assessment. Targets need no copy of this rule.
 
 Read [review standards](../../../docs/engineering/REVIEW.md) before starting and [engineering standards](../../../docs/engineering/STANDARDS.md) for application changes. The standards own report format, verdict rules and publication; keep those definitions there.
 

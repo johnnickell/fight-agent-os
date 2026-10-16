@@ -9,6 +9,7 @@ import { installFileScreening } from './file-screening-extension.ts';
 import { FileScreeningSettings } from './jev/local-store.mjs';
 import { ScreeningProfiles } from './jev/screening-profile.mjs';
 import { ProfileBudget } from './jev/monthly-budget.mjs';
+import { installStatusFooter } from './status-footer.ts';
 
 type Dependencies = {
   settings?: LocalSettings;
@@ -26,6 +27,7 @@ export default function jevExtension(pi: ExtensionAPI) { installJev(pi); }
 
 /** Inject controlled host boundaries for qualification; normal loading always uses protected local adapters */
 export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
+  installStatusFooter(pi);
   const settings = dependencies.settings ?? new LocalSettings();
   const profiles = dependencies.profiles ?? new ScreeningProfiles();
   let readiness: Readiness | undefined;
@@ -50,7 +52,8 @@ export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
   function present(ctx: ExtensionContext, failure?: string) {
     if (ctx.mode !== 'tui') return;
     const view = readiness?.inspect();
-    ctx.ui.setStatus('fight-jev', `Jev: ${failure ?? view?.state ?? 'missing-session'}`);
+    const state = failure ?? view?.state ?? 'missing-session';
+    ctx.ui.setStatus('fight-jev', `Jev: ${state === 'unchecked' ? 'configured' : state}`);
   }
   function cleanup() {
     disconnect?.(); disconnect = undefined;
@@ -117,13 +120,18 @@ export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
             priceConfirmedAt: Date.now(), revision: randomUUID() });
           judgments?.invalidate();
           readiness?.configure(config);
-          ctx.ui.notify('Jev settings saved; readiness unchecked. No credential was read and no request was sent.', 'info');
+          ctx.ui.notify('Jev configured; optional self-check not run. No credential was read and no request was sent.', 'info');
         } catch { ctx.ui.notify('Jev: invalid-setup. Settings require positive integer ceilings, with request no larger than session.', 'warning'); }
         present(ctx); return;
       }
       const failure = refresh();
       if (action === 'inspect') {
-        ctx.ui.notify(JSON.stringify({ setupFailure: failure ?? null, ...readiness?.inspect() }, null, 2), 'info');
+        const view = readiness?.inspect();
+        const state = failure ?? view?.state ?? 'missing-session';
+        ctx.ui.notify(JSON.stringify({ ...view, setupFailure: failure ?? null,
+          state: state === 'unchecked' ? 'configured' : state,
+          selfCheck: { optional: true, state: view?.outcome ? view.state : 'no-retained-result' },
+        }, null, 2), 'info');
         present(ctx, failure); return;
       }
       if (failure) { ctx.ui.notify(`Jev: ${failure}. Use /jev setup.`, 'warning'); present(ctx, failure); return; }

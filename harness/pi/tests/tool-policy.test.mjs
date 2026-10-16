@@ -8,6 +8,8 @@ import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { canonicalPath, ToolPolicy } from '../src/tool-policy/policy.mjs';
 import { fileOperations, runScript as executeScript } from '../src/tool-policy/effects.mjs';
+import { trackRuntimeHooks } from '../src/tool-policy/runtime.mjs';
+import { WorkflowAccess } from '../src/jev/workflow-access.mjs';
 
 // The focused check deliberately mounts /tmp noexec. Only tests inject a trusted interpreter;
 // production's default direct spawn is separately qualified in real Pi with disposable scripts.
@@ -38,6 +40,35 @@ function fixture(t, change = () => {}) {
   return { base, root, script, source, config, policyPath, data, save, guard, runtime, start, begin };
 }
 const blocked = (action, code) => assert.throws(action, (error) => error.code === code && !error.message.includes('PRIVATE'));
+
+test('enrolled workflow roles allow normal source/template/skill edits and restrict reviewer/QA writes at every effect', async t => {
+  const f = fixture(t, p => { p.profile = 'file-screening'; p.protectedPaths.push(join(p.roots[0], 'AGENTS.md')); });
+  const access = new WorkflowAccess('engineer');
+  const guard = new ToolPolicy({ policyPath: f.policyPath, cwd: f.root, resources: [f.source], sources: [f.source],
+    workflowAccess: { root: f.root, editableInstructions: [join(f.root, 'AGENTS.md')], authorizeWrite: path => access.assertWrite(path, f.root) } });
+  t.after(() => guard.cancel());
+  assert.equal(guard.start('workflow', f.runtime).state, 'active');
+  const begin = path => guard.begin('write', { path, content: 'Updated content' }, 'workflow', f.root);
+  for (const path of ['source.php', '.env.example', 'AGENTS.md', '.pi/skills/example/SKILL.md']) {
+    const op = begin(path), ops = fileOperations(guard, op);
+    await ops.mkdir(); await ops.writeFile(op.input.path, op.input.content); op.close();
+    assert.equal(readFileSync(join(f.root, path), 'utf8'), 'Updated content');
+  }
+  for (const path of ['.env', '.env.local', '.env.example.bak', '.pi/settings.json', '.pi/extensions/unsafe.ts', '.git/config', 'private/new', f.source]) {
+    assert.throws(() => begin(path), { code: 'protected-path' });
+  }
+  const pending = begin('source.php'), pendingOps = fileOperations(guard, pending);
+  access.select('reviewer');
+  await assert.rejects(pendingOps.writeFile(pending.input.path, 'Must not write'), { code: 'workflow-write-restricted' });
+  pending.close();
+  for (const role of ['reviewer', 'qa']) {
+    access.select(role);
+    assert.throws(() => begin('source.php'), { code: 'workflow-write-restricted' });
+    const op = begin('.runs/reports/result.md'), ops = fileOperations(guard, op);
+    await ops.mkdir(); await ops.writeFile(op.input.path, op.input.content); op.close();
+  }
+  access.select('land'); const op = begin('source.php'); op.close();
+});
 
 // Expectations come from actual fixture lookups, not a guessed Unicode/case-fold table.
 // The same cases must deny equivalent names on macOS and admit distinct names on Linux.
@@ -158,12 +189,67 @@ test('explicit versioned policy and runtime qualifications are required, with re
   assert.equal(f.start().state, 'active');
   assert.equal(f.guard.inspect().protection, 'deterministic protection only');
   assert.equal(f.guard.inspect().profile, 'local-check');
-  assert.equal(f.guard.start('session-one', { ...f.runtime, version: '1.2.1' }).reason, 'unsupported-runtime-or-hooks');
+  assert.equal(f.guard.start('session-one', { ...f.runtime, version: '2.0.0' }).reason, 'unsupported-runtime-or-hooks');
   assert.equal(f.guard.start('session-one', { ...f.runtime, hooks: false }).state, 'unavailable');
   f.start(); chmodSync(f.policyPath, 0o644);
   assert.equal(f.guard.inspect().reason, 'unsafe-policy-file');
   assert.ok(!JSON.stringify(f.guard.inspect()).includes(f.base));
   assert.equal(canonicalPath(join(f.base, '@scope', 'package')), join(f.base, '@scope', 'package'));
+});
+
+test('stable compatible Pi releases admit effects while unsupported runtimes and absent hooks hold', async (t) => {
+  const f = fixture(t);
+  const policyBytes = readFileSync(f.policyPath);
+  for (const version of ['1.2.0', '1.2.1', '1.3.0', '1.4.0', '1.99.123']) {
+    assert.equal(f.guard.start('session-one', { ...f.runtime, version }).state, 'active', version);
+    const op = f.begin('write', { path: 'compatible.txt', content: version });
+    await fileOperations(f.guard, op).writeFile(op.input.path, op.input.content); op.close();
+    assert.equal(readFileSync(join(f.root, 'compatible.txt'), 'utf8'), version);
+  }
+  for (const runtime of [null, {}, ...['0.99.0', '1.0.0', '1.1.99', '2.0.0', '1.3.0-rc.1', '1.3.0+unknown',
+    'v1.3.0', '1.3', '1.03.0', '1.3.00', '1.9007199254740992.0', '1.3.9007199254740992', '1.3.0\n', '', 1.3, undefined]
+    .map(version => ({ ...f.runtime, version })),
+    ...[false, undefined, 'true', 1, {}].map(hooks => ({ ...f.runtime, version: '1.3.0', hooks })),
+    { ...f.runtime, platform: 'linux' }]) {
+    assert.equal(f.guard.start('session-one', runtime).reason, 'unsupported-runtime-or-hooks');
+    assert.throws(() => f.begin('write', { path: 'held', content: 'never' }));
+    assert.equal(existsSync(join(f.root, 'held')), false);
+  }
+  assert.deepEqual(readFileSync(f.policyPath), policyBytes);
+});
+
+test('activation requires every registered boundary hook and API, not a truthy assumption', (t) => {
+  const f = fixture(t);
+  const events = ['session_start', 'tool_call', 'user_bash', 'session_before_switch',
+    'session_before_fork', 'session_before_tree', 'session_shutdown', 'before_agent_start', 'input'];
+  const methods = ['on', 'registerTool', 'getAllTools', 'getActiveTools', 'setActiveTools', 'getFlag', 'getSettings', 'appendEntry'];
+  const api = () => Object.fromEntries(methods.map(name => [name, () => () => {}]));
+  const activate = hooks => f.guard.start('session-one', { ...f.runtime, version: '1.4.0', hooks: hooks.available() });
+  for (const omitted of events) {
+    const hooks = trackRuntimeHooks(api(), { screening: true });
+    for (const name of events.filter(name => name !== omitted)) hooks.on(name, () => {});
+    assert.equal(activate(hooks).reason, 'unsupported-runtime-or-hooks', omitted);
+    hooks.on(omitted, () => {});
+    assert.equal(activate(hooks).state, 'active', omitted);
+  }
+  for (const missing of methods) {
+    const pi = api(), hooks = trackRuntimeHooks(pi, { screening: true });
+    for (const name of events) hooks.on(name, () => {});
+    pi[missing] = undefined;
+    assert.equal(activate(hooks).reason, 'unsupported-runtime-or-hooks', missing);
+  }
+  for (const unacknowledged of events) {
+    const pi = api(); pi.on = name => name === unacknowledged ? undefined : () => {};
+    const hooks = trackRuntimeHooks(pi, { screening: true });
+    for (const name of events) hooks.on(name, () => {});
+    assert.equal(activate(hooks).reason, 'unsupported-runtime-or-hooks', unacknowledged);
+  }
+  const pi = api(), hooks = trackRuntimeHooks(pi);
+  pi.getSettings = undefined; // The standalone policy does not consume settings or before_agent_start.
+  const removers = events.slice(0, -2).map(name => hooks.on(name, () => {}));
+  assert.equal(activate(hooks).state, 'active');
+  removers[1]();
+  assert.equal(activate(hooks).reason, 'unsupported-runtime-or-hooks');
 });
 
 test('new files, nested directories, reads and edits use admitted effects', async (t) => {

@@ -125,8 +125,10 @@ nonsecret command/context disclosure approved during setup. An ordinary judgment
 a safety guarantee. Risky, uncertain, denied or unavailable judgments visibly hold for the relevant operator
 decision; missing decision support holds the command. Do not paste secrets or source into commands for assessment.
 Shell source reads can bypass relevance screening and same-user shell can access operator state: this interim
-profile is not universal admission enforcement or a sandbox. Supported explicit file tools retain their receipts
-and bounded exceptions. The monitor's own process launch and descendants inside scripts are not recursively
+profile is not universal admission enforcement or a sandbox. The installed [shared rule](../../../harness/pi/FILE_SCREENING_RULE.md)
+strongly prefers Jev for unfamiliar discovery while allowing ordinary direct project reads and portable
+instructions. Explicit writes follow the trusted role; Reviewer/QA write only under `.runs`. Use canonical
+`work`, `review`, `qa` and `land` phase values for `--role`. The monitor's own process launch and descendants inside scripts are not recursively
 intercepted; preflighted children independently load the reviewed profile and bind their actual identities.
 
 Roles write their ordinary canonical reports under their owning skills. Coordinator intake must verify actual

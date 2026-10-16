@@ -7,20 +7,58 @@ macOS). Mixed typed forms have controlled Pi integration evidence, not live qual
 check succeeded on October 14, 2026; independent acceptance remains pending. A synthetic result does not establish
 model accuracy or another installation's account access. This is not the
 managed Runner or an execution sandbox. TASK-00160 adds an explicitly selected
-[deterministic tool policy](TOOL_POLICY.md) for qualified Pi 1.2.0 macOS sessions: final-argument file admission,
+[deterministic tool policy](TOOL_POLICY.md) for compatible stable Pi 1.x (>=1.2.0) macOS APFS sessions: final-argument file admission,
 digest-bound script/argv admission and denial of unsupported helper/nested/child tools. It says **deterministic
 protection only**, not Jev screening or process isolation; installation alone never activates it.
 TASK-00162 adds opt-in, instruction-based single-file
 screening; TASK-00163 extends it with bounded lists/globs and session-local metadata caching; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
 is activated by installing/updating this source. TASK-00309's [enrolled-profile implementation candidate](FILE_SCREENING_PROFILE.md)
 adds a stable `/file-screening` diagnostic, explicit enrollment preview, shared monthly accounting and local
-explicit-file receipt admission and conservative legacy reconciliation. Project enrollment stands until revocation/
+role-scoped project access, optional receipt admission and conservative legacy reconciliation. Project enrollment stands until revocation/
 authority change, with explicit conversion of historical timeboxed profiles. Use ordinary Pi and the owning provider's
 `/skill:build TASK-NNNNN`: authorized shell/Git/checks remain useful with separate shared-Jev final-command risk
 assessment, not a replacement executor. Shell can bypass relevance screening and same-user state is not confined.
 See the profile's [launcher contract](FILE_SCREENING_PROFILE.md#coverage-and-normal-build). Limited live synthetic
 boundary evidence exists; representative investigations, visual proof and independent acceptance remain pending.
-Local checks do not establish production readiness.
+Local checks do not establish production readiness. Both protected profiles share a
+[runtime compatibility contract](TOOL_POLICY.md#runtime-compatibility): compatible 1.x minor/patch upgrades
+need no allowlist update or reenrollment; missing required hooks/APIs still hold activation. Restart Pi after
+updating guard code or the runtime. Enrollment, monthly/session accounting, pending liabilities and finite test
+counters are retained; do not rerun setup or delete state merely to adopt a compatible Pi release.
+
+Routine interactive screening is quiet: startup/turn status and success events do not dump JSON or write around
+the input editor. Use `/file-screening inspect` for details; actionable warnings and command decisions remain.
+The installed [shared rule](FILE_SCREENING_RULE.md) supplies portable guidance in every participating project;
+targets do not need a copy. Strongly prefer Jev before unfamiliar discovery; read known targets and core project
+instructions directly with `read` and `path`. Large Boards support ordinary bounded reads and continuation.
+Negative/unavailable relevance results need a concrete reason for direct reading, not an access override.
+Native context, advertised skills and their exact relative Markdown instruction references work outside the
+project without granting whole provider roots. Ordinary project files cannot grant external access.
+
+Interactive `/skill:work`, `/skill:review`, `/skill:qa` and `/skill:land` select role permissions;
+`/file-screening role engineer|reviewer|qa|land` is the explicit operator alternative. Engineer/Land edit normal
+project files, including `.env.example`, instructions and `.pi/skills`; Reviewer/QA write only under `.runs`.
+All roles retain secret-file, explicit-exclusion and runtime protections. Every final shell command receives
+role-aware risk assessment; these file checks do not provide shell/OS containment. Restart Pi after upgrades
+and reselect the workflow for older sessions. See the [profile](FILE_SCREENING_PROFILE.md) for limits/recovery.
+
+For Herdr's needs-input indicator during a command approval, install its official Pi integration with
+`herdr integration install pi`, then restart Pi. The harness emits `herdr:blocked` only while its command
+confirmation is open, and clears it on answer/dismissal/error. The status carries a generic label, never the
+command or directory. Without Herdr's integration the event has no listener; command decisions are unchanged.
+See [Herdr integrations](https://herdr.dev/docs/integrations/). The harness never installs it automatically.
+
+In the native TUI, Codex weekly usage has its own footer row; `File screening: active · Jev: configured` appears
+on the next row. Narrow terminals wrap rather than hide the statuses. `configured` means valid local Jev setup,
+not a successful provider probe. `/jev inspect` shows `state: configured` with a separate optional
+`selfCheck.state: no-retained-result` when the current runtime has no result. That does not prove a check was
+never run; its actual result, if retained, remains in `outcome`. No self-check,
+credential resolution or polling is triggered by drawing the footer or inspecting configuration.
+Ask the Agent to inspect screenshots normally: image `read` calls need only a path, including external Desktop
+files. No special command, path-only message, input selection or approval popup is required. Images go directly
+to the main model, not Jev; text relevance screening and command-risk assessment remain unchanged.
+See [images and screenshots](FILE_SCREENING_PROFILE.md#images-and-screenshots) for supported forms and retained
+format, size and protected-file checks.
 
 ## Install
 
@@ -56,8 +94,12 @@ Unknown options produce a warning; an invalid startup option falls back to `auto
 
 Narrow terminals use a short ASCII identity. `TERM=dumb` or `NO_COLOR` also uses unstyled ASCII. Pi's built-in
 light/dark themes use the approved orange accent; custom themes keep their own accent. Other colors follow the
-active theme. JSON/print/RPC output receives no header. The editor, footer, status indicators and error messages
-remain owned by Pi.
+active theme. JSON/print/RPC output receives no header. The header extension leaves Pi's editor and error messages
+alone. The separate Jev extension uses Pi's supported custom-footer API for grouped status rows, with current
+session usage, context, selected model, directory/branch and other extension statuses from read-only public APIs.
+This changes presentation only, not accounting or Codex polling. Its footer is TUI-only and is removed at shutdown;
+like other custom footers, the last installed footer wins. Native-only decorations not exposed by these APIs,
+such as virtual-route annotations, are not reproduced.
 
 The mark is an approved terminal adaptation of this repository's `docs/assets/fight-agent-os-dark.svg`, with
 symmetric light squares above/below the orange entry point. It uses terminal block characters, not an image

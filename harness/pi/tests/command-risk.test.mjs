@@ -82,6 +82,13 @@ test('budget exhaustion holds without provider effects or replenishing the origi
   assert.equal(f.events.find(e => e.kind === 'command-risk-complete').reason, 'monthly-budget');
 });
 
+test('cancellation during a declined dialog remains cancellation rather than a new approval request', async t => {
+  const f = fixture(t, { choice: 'unknown' }), controller = new AbortController();
+  await assert.rejects(f.risk.assess('printf cancelled', f.root, { signal: controller.signal,
+    confirm: async () => { controller.abort(); return false; } }), { code: 'cancelled' });
+  assert.equal(f.events.some(event => event.kind === 'command-approved'), false);
+});
+
 test('revocation and authority/context changes during judgment prevent command admission', async t => {
   for (const change of ['revoke', 'phase', 'configuration']) {
     const f = fixture(t);
@@ -116,4 +123,39 @@ test('missing command consent fails before paid effects', async t => {
   const f = fixture(t), profile = f.profiles.load(); profile.commandDisclosure = false; f.profiles.save(profile, []);
   await assert.rejects(f.risk.assess('git status', f.root), { code: 'command-disclosure-not-approved' });
   assert.equal(f.payloads.length, 0);
+});
+
+test('review census labels and example manifest names reach risk assessment unchanged', async t => {
+  const f = fixture(t);
+  const commands = [
+    `python3 - <<'PY'\nimport json,collections\nfrom pathlib import Path\np=Path('.runs/reviews/TASK-00157/path-census-20261016.jsonl')\nrows=[json.loads(line) for line in p.read_text().splitlines()]\nunresolved=[r for r in rows if r['status']=='unresolved']\nprint('Unresolved by token category:',dict(collections.Counter(r['kind'] for r in unresolved)))\npaths=collections.defaultdict(list)\nfor r in unresolved:\n if r['path'].startswith('.runs/'):\n  paths[r['path']].append(f"{r['file']}:{r['line']}")\nprint('Unresolved .runs tokens:',len(paths))\nfor p, refs in list(paths.items())[:60]: print(p, refs[0])\nPY`,
+    `git worktree list --porcelain; git -C .runs/worktrees/task-00157-layout-closeout status --short; docker ps --format 'table {{.Names}}\\t{{.Ports}}\\t{{.Status}}'; docker image ls --format '{{.Repository}}:{{.Tag}}'; git -C .runs/worktrees/task-00157-layout-closeout ls-files 'AGENTS.md' 'bin/*' 'etc/docker/*' '.env.example' 'compose.yaml'; ls -ld .runs/worktrees/task-00157-layout-closeout/vendor .runs/worktrees/task-00157-layout-closeout/client/node_modules`,
+    `python3 -c 'print("tokens:", 3)'`,
+    `python3 -c 'print("tokens:", "count")'`,
+  ];
+  for (const command of commands) {
+    assert.equal((await f.risk.assess(command, f.root)).outcome, 'ordinary');
+    assert.equal(f.payloads.at(-1).state.command, command);
+  }
+  assert.equal(f.payloads.length, commands.length);
+});
+
+test('a disclosure refusal is command-local and cannot be overridden or cached', async t => {
+  const f = fixture(t);
+  const held = [
+    'TOKEN=,fixture printf harmless', 'TOKEN="fixture" printf harmless', 'token: fixture',
+    `token: ',fixture'`, `TOKEN="tokens:" printf harmless`, `token: 'tokens:'`,
+    `printf '%s' '{"token":"fixture"}'`,
+    'cat .env.local', 'cat .env.example.bak', 'cat .env.example/../.env',
+    'cat .env.example; cat .env', 'cat .env.example; echo $TOKEN',
+    `printf 'tokens:',3; API_KEY=fixture printf harmless`,
+  ];
+  for (const command of held) {
+    await assert.rejects(f.risk.assess(command, f.root, { confirm: async () => assert.fail('No disclosure override') }),
+      { code: 'command-secret-disclosure-held' });
+  }
+  assert.equal(f.credentials(), 0); assert.equal(f.payloads.length, 0);
+  assert.equal(f.ledger.inspect().pending.length, 0);
+  assert.equal((await f.risk.assess('git status --short', f.root)).outcome, 'ordinary');
+  assert.equal(f.payloads.length, 1);
 });
