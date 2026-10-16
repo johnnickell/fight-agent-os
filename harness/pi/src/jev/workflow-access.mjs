@@ -14,7 +14,9 @@ export const skillEffects = Object.freeze({
 });
 const skillRole = skill => ({ work: 'engineer', review: 'reviewer', qa: 'qa', land: 'land', build: 'qa' })[skill] ?? 'reviewer';
 const subject = value => typeof value === 'string' && /^(TASK|TICKET|EPIC|WF)-\d{3,5}$/.test(value);
-const scopedSubject = (skill, value) => subject(value) || (!['work', 'review', 'qa', 'land', 'build'].includes(skill) &&
+const releaseVersion = value => typeof value === 'string' && value.length <= 96 ?
+  /^v?((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)$/.exec(value)?.[1] ?? null : null;
+const scopedSubject = (skill, value) => skill === 'release' ? releaseVersion(value) !== null : subject(value) || (!['work', 'review', 'qa', 'land', 'build'].includes(skill) &&
   typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$/.test(value));
 const within = (path, root) => path === root || path.startsWith(root + sep);
 
@@ -72,7 +74,13 @@ export class WorkflowAccess {
     const selected = /^\/skill:([a-z-]+)(?:\s|$)(.*)/.exec(text);
     if (!selected) return;
     if (!Object.hasOwn(skillEffects, selected[1])) throw new Unavailable('unknown-workflow-role');
-    const taskId = selected[2].match(/\b(?:TASK|TICKET|EPIC|WF)-\d{3,5}\b/)?.[0] ??
+    const taskId = selected[1] === 'release' ? (() => {
+      const version = selected[2].trim().split(/\s+/)[0];
+      if (!version) return null;
+      const normalized = releaseVersion(version);
+      if (!normalized) throw new Unavailable('workflow-subject-required');
+      return normalized;
+    })() : selected[2].match(/\b(?:TASK|TICKET|EPIC|WF)-\d{3,5}\b/)?.[0] ??
       (/^[A-Za-z0-9][A-Za-z0-9._-]{0,95}(?:\s|$)/.exec(selected[2])?.[0].trim() ?? null);
     if (taskId !== null && !scopedSubject(selected[1], taskId)) throw new Unavailable('workflow-subject-required');
     const checkout = /(?:^|\s)--checkout\s+(.+)$/.exec(selected[2])?.[1]?.replace(/^(?:"(.*)"|'(.*)')$/, '$1$2');
@@ -94,12 +102,16 @@ export class WorkflowAccess {
     if (!checkout || !scope.roots.includes(checkout)) throw new Unavailable('workflow-checkout-unavailable');
     const skill = this.skill, effect = skillEffects[skill];
     if (!effect) throw new Unavailable('unknown-workflow-role');
+    const version = skill === 'release' ? releaseVersion(taskId) : null;
+    if (skill === 'release' && !version) throw new Unavailable('workflow-subject-required');
     const owned = taskId && scopedSubject(skill, taskId);
     const folder = ({ review: 'reviews', qa: 'qa', build: 'build', research: 'notes',
       design: 'prototypes', prototype: 'prototypes', 'design-review': 'prototypes' })[skill];
     if (owned && [scope.base, checkout].some(root =>
       (folder && within(path, join(root, '.runs', folder, taskId))) ||
       (subject(taskId) && within(path, join(root, '.runs/tasks', taskId, 'runs'))))) return;
+    if (version && [scope.base, checkout].some(root => ['handoffs', 'notes'].some(category =>
+      within(path, join(root, '.runs', category, `release-${version}`))))) return;
     if (['query', 'status'].includes(this.mode)) throw new Unavailable('workflow-write-restricted');
     const member = scope.roots.filter(root => within(path, root)).sort((a, b) => b.length - a.length)[0];
     if (!member) throw new Unavailable('write-outside-project');

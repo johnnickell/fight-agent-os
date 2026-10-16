@@ -169,7 +169,14 @@ prohibit overwriting another run. Query/trace and status/preview/dry-run modes p
 | `design`, `prototype`, `design-review` | `.runs/prototypes/<subject>/`; disposable evidence only |
 | `writing-for-agents` | Selected `AGENTS.md`, `.pi/skills/`, `docs/engineering/` |
 | `graphify` | Explicit build/refresh output beneath selected `graphify-out/`; query/trace remains read-only |
-| `release` | Selected `CHANGELOG.md`, `VERSION`, `docs/releases/`, `planning/`; no signing/publication grant |
+| `release` | Selected `CHANGELOG.md`, `VERSION`, `docs/releases/`, `planning/`; version-owned `.runs/handoffs/release-<version>/` and `.runs/notes/release-<version>/` at base or selected checkout; no signing/publication grant |
+
+Release uses its documented version subject (`/skill:release 0.5.0`, `0.4.0 status`, or
+`v0.4.0 resume after signing`), normalizing the optional `v` prefix. The transport accepts a bounded numeric
+three-part version with optional prerelease/build identifiers; target release policy still validates its supported
+versions before preparation. A missing/invalid version grants no release mutations. Status/query modes retain
+only the exact selected version's ignored evidence, with no other-version, TASK, canonical Review/QA or source
+write grant. Resume retains the same version boundary; signing and publication require their existing authority.
 
 Role aliases remain Engineer/Software Engineer → `work`, Reviewer/Senior Engineer → `review`, QA Engineer → `qa`,
 Team Lead → `build`, Release Manager → `land`. Auxiliary skills use Reviewer's shell-risk phase with their own

@@ -90,7 +90,7 @@ async function call(session, name, args, allowed = true) {
     context: { messages: session.agent.state.messages, tools }, beforeToolCall: ctx => session.agent.beforeToolCall(ctx), afterToolCall: ctx => session.agent.afterToolCall(ctx) });
   assert.equal(result.isError, !allowed, `${name} ${JSON.stringify(args)}: ${JSON.stringify(result.result)}`); outcomes++; return result.result;
 }
-async function select(session, skill, suffix = '') { await session.prompt(`/skill:${skill} TASK-00489 ${suffix}`.trim()); }
+async function select(session, skill, suffix = '') { await session.prompt(`/skill:${skill} ${skill === 'release' ? '0.5.0' : 'TASK-00489'} ${suffix}`.trim()); }
 async function read(session, path, allowed = true) { return call(session, 'read', { path }, allowed); }
 const targetState = path => {
   if (!existsSync(path)) return null;
@@ -196,13 +196,34 @@ try {
       await write(portable, join(consumer, 'source.txt'), 'Forbidden hidden skill source', false);
     }
     assert.equal(calls(), beforePortable); assert.equal(confirmations, 0);
+    // Real documented Release subjects replace the inventory's former artificial TASK argument.
+    for (const invocation of ['0.5.0', '0.4.0 status', 'v0.4.0 resume after signing']) {
+      await portable.prompt(`/skill:release ${invocation}`);
+      const version = invocation.startsWith('0.5.0') ? '0.5.0' : '0.4.0';
+      const target = join(consumer, '.runs/handoffs', `release-${version}`, 'ledger.md');
+      await write(portable, target, 'Authorized release ledger');
+      await call(portable, 'edit', { path: target, oldText: 'Authorized release', newText: 'Updated release' });
+      await read(portable, target);
+      await write(portable, join(consumer, '.runs/notes', `release-${version}`, 'state.md'));
+      for (const path of ['.runs/handoffs/release-0.3.0/ledger.md', '.runs/handoffs/release-' + version + '-other/ledger.md',
+        '.runs/reviews/TASK-00489/review.md', '.runs/qa/TASK-00489/qa.md', '.runs/tasks/TASK-00489/runs/release.md',
+        'source.txt', '.env.local']) await write(portable, join(consumer, path), 'Forbidden Release effect', false);
+      await write(portable, join(consumer, 'CHANGELOG.md'), 'Version preparation', !invocation.includes('status'));
+      await write(portable, join(provider, 'CHANGELOG.md'), 'Forbidden provider release', false);
+      await write(portable, join(modules, '@earendil-works/pi-coding-agent/docs/sdk.md'), 'Forbidden runtime', false);
+    }
+    await portable.prompt('/skill:release');
+    await write(portable, join(consumer, 'CHANGELOG.md'), 'Missing release version', false);
+    await select(portable, 'review');
+    await write(portable, join(consumer, '.runs/handoffs/release-0.4.0/ledger.md'), 'Wrong role', false);
+    assert.equal(calls(), beforePortable); assert.equal(confirmations, 0);
     const targets = { work: 'source.txt', land: 'source.txt', fix: 'planning/tasks/00489-TASK.md', grill: 'planning/epics/00001-EPIC.md',
       'to-tickets': 'planning/tickets/00001-TICKET.md', 'to-tasks': 'planning/tasks/00489-TASK.md', wayfinder: 'planning/wayfinder/map.md',
       research: 'planning/wayfinder/research/note.md', 'writing-for-agents': '.pi/skills/qualification/SKILL.md', graphify: 'graphify-out/graph.json', release: 'CHANGELOG.md' };
     for (const skill of Object.keys(effects)) {
       await select(work, skill);
       await read(work, join(provider, '.pi/skills', skill, 'SKILL.md'));
-      await write(work, join(main, '.runs/tasks/TASK-00489/runs', skill, 'evidence.md'));
+      await write(work, join(main, skill === 'release' ? '.runs/handoffs/release-0.5.0' : '.runs/tasks/TASK-00489/runs', skill, 'evidence.md'));
       await write(work, join(checkout, targets[skill] ?? 'source.txt'), 'Selected output', Boolean(targets[skill]));
       await select(work, skill, 'query');
       await write(work, join(checkout, targets[skill] ?? 'source.txt'), 'Query cannot write', false);

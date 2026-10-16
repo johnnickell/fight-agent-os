@@ -79,8 +79,9 @@ test('every installed skill has a narrower effect contract and query/status mode
   };
   assert.deepEqual(Object.keys(skillEffects).sort(), Object.keys(expected).sort());
   for (const [skill, target] of Object.entries(expected)) {
-    const access = new WorkflowAccess(skill, { checkout: f.checkout, taskId: 'TASK-00489' });
-    access.assertWrite(join(f.root, '.runs/tasks/TASK-00489/runs/native/evidence.md'), scope);
+    const selectedSubject = skill === 'release' ? '0.5.0' : 'TASK-00489';
+    const access = new WorkflowAccess(skill, { checkout: f.checkout, taskId: selectedSubject });
+    access.assertWrite(join(f.root, skill === 'release' ? '.runs/handoffs/release-0.5.0/evidence.md' : '.runs/tasks/TASK-00489/runs/native/evidence.md'), scope);
     assert.throws(() => access.assertWrite(join(f.root, '.runs/tasks/TASK-00999/runs/native/evidence.md'), scope));
     if (target) access.assertWrite(join(f.checkout, target), scope);
     if (!['work', 'land'].includes(skill)) assert.throws(() => access.assertWrite(join(f.checkout, 'source.txt'), scope));
@@ -88,7 +89,7 @@ test('every installed skill has a narrower effect contract and query/status mode
     else access.assertWrite(join(f.checkout, '.env.example'), scope);
     assert.throws(() => access.assertWrite(join(f.root, 'source.txt'), scope));
     for (const mode of ['query', 'status']) {
-      const query = new WorkflowAccess(skill, { checkout: f.checkout, taskId: 'TASK-00489', mode });
+      const query = new WorkflowAccess(skill, { checkout: f.checkout, taskId: selectedSubject, mode });
       assert.throws(() => query.assertWrite(join(f.checkout, target ?? 'source.txt'), scope));
     }
   }
@@ -121,6 +122,48 @@ test('final effects retain role restrictions, relative exclusions, secrets, inod
   role.select('review');
   await assert.rejects(fileOperations(policy, pending).writeFile(pending.input.path, 'Never'), { code: 'stale-operation' });
   pending.close(); assert.equal(existsSync(join(f.checkout, '.env.example')), false);
+});
+
+test('regression: documented Release version, status and resume invocations retain only their owned ignored evidence', async t => {
+  const f = worktreeFixture(t); f.add();
+  const scope = { ...f.profiles.repository(f.root), checkout: f.checkout, taskId: 'TASK-00489' };
+  const access = new WorkflowAccess('local', { checkout: f.checkout });
+  for (const invocation of ['0.5.0', '0.5.0 status', 'v0.5.0 resume after signing']) {
+    access.input(`/skill:release ${invocation}`, 'interactive', () => {});
+    assert.equal(access.taskId, '0.5.0');
+    for (const root of [f.root, f.checkout]) for (const category of ['handoffs', 'notes']) {
+      const path = join(root, '.runs', category, 'release-0.5.0', 'ledger.md');
+      const policy = f.guard(f.checkout, access);
+      const operation = policy.begin('write', { path, content: invocation }, f.sessionId, f.checkout);
+      const files = fileOperations(policy, operation);
+      await files.mkdir(join(path, '..')); await files.writeFile(path, invocation); operation.close();
+      assert.equal(readFileSync(path, 'utf8'), invocation);
+    }
+    for (const path of ['.runs/handoffs/release-0.4.0/ledger.md', '.runs/notes/release-0.5.00/ledger.md',
+      '.runs/handoffs/release-0.5.0-other/ledger.md', '.runs/reviews/TASK-00489/review.md',
+      '.runs/qa/TASK-00489/qa.md', '.runs/tasks/TASK-00489/runs/evidence.md', 'source.txt', '.env.local']) {
+      assert.throws(() => access.assertWrite(join(f.root, path), scope));
+      assert.equal(existsSync(join(f.root, path)), false);
+    }
+    if (invocation.includes('status')) assert.throws(() => access.assertWrite(join(f.checkout, 'CHANGELOG.md'), scope));
+    else access.assertWrite(join(f.checkout, 'CHANGELOG.md'), scope);
+  }
+  access.input('/skill:release 0.4.0 status', 'interactive', () => {});
+  access.assertWrite(join(f.root, '.runs/handoffs/release-0.4.0/ledger.md'), scope);
+  assert.throws(() => access.assertWrite(join(f.root, '.runs/handoffs/release-0.5.0/ledger.md'), scope));
+  access.input('/skill:review TASK-00489', 'interactive', () => {});
+  assert.throws(() => access.assertWrite(join(f.root, '.runs/handoffs/release-0.4.0/ledger.md'), scope));
+  access.input('/skill:release', 'interactive', () => {});
+  assert.throws(() => access.assertWrite(join(f.checkout, 'CHANGELOG.md'), scope));
+  for (const version of ['TASK-00489', '../0.4.0', '0.4', '00.4.0']) {
+    assert.throws(() => access.input(`/skill:release ${version}`, 'interactive', () => {}), { code: 'workflow-subject-required' });
+  }
+  access.input('/skill:release v0.5.0-rc.1+build.2 status', 'interactive', () => {});
+  const entry = { type: 'custom', customType: 'fight-workflow-role-v3', data: access.checkpoint(f.sessionId) };
+  const restored = WorkflowAccess.restore({ sessionId: f.sessionId, entries: [entry], checkout: f.checkout });
+  restored.assertWrite(join(f.root, '.runs/handoffs/release-0.5.0-rc.1+build.2/ledger.md'), scope);
+  assert.throws(() => restored.assertWrite(join(f.checkout, 'CHANGELOG.md'), scope));
+  assert.throws(() => restored.assertWrite(join(f.root, '.runs/handoffs/release-0.5.0/ledger.md'), scope));
 });
 
 test('removed, moved, replaced and forged registrations affect only their own membership', t => {
