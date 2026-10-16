@@ -224,7 +224,8 @@ def run(args):
                "--name", f"{args.task} {args.role}", "--provider", args.provider,
                "--model", args.model, "--thinking", args.thinking, "--", f"@{attempt / 'request.md'}"]
     env = dict(os.environ, PI_PROVIDER=args.provider, PI_MODEL=args.model, PI_REASONING_LEVEL=args.thinking,
-               FIGHT_SCREENING_PHASE=re.sub(r"[^A-Za-z0-9-]", "-", args.role)[:48])
+               FIGHT_SCREENING_PHASE=re.sub(r"[^A-Za-z0-9-]", "-", args.role)[:48],
+               FIGHT_SCREENING_TASK=args.task, FIGHT_SCREENING_CHECKOUT=str(Path.cwd().resolve()))
     cancelled = [0]
     def on_signal(signum, _frame):
         cancelled[0] = 128 + signum

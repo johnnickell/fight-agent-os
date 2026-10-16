@@ -1,10 +1,11 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { existsSync, lstatSync, realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { operatorDirectory, privateDirectory, readPrivate, writePrivate } from './local-store.mjs';
 import { configurationIdentity, reservationMicroUsd, Unavailable, validateConfiguration } from './readiness.mjs';
 import { FileSource, evidenceByteLimit } from './file-screening.mjs';
 import { canonicalPath } from '../tool-policy/policy.mjs';
+import { RepositoryAccess, repositoryExclusions } from './repository-access.mjs';
 
 export const profileVersion = 'screening-profile-v2';
 export const hash = value => createHash('sha256').update(value).digest('hex');
@@ -32,6 +33,7 @@ export function validateProfile(v, now = Date.now()) {
 }
 
 export class ScreeningProfiles {
+  #repositories = new Map();
   constructor(directory = operatorDirectory()) { this.directory = directory; this.path = join(directory, 'screening-profile.json'); }
   load() {
     if (!existsSync(this.directory)) return null;
@@ -44,23 +46,38 @@ export class ScreeningProfiles {
     // Deliberately timeboxed historical disclosure is never silently promoted or silently disabled.
     const profile = validateProfile(value, 0);
     const canonical = realpathSync.native(cwd);
-    const project = profile.projects.filter(p => within(canonical, p.root)).sort((a, b) => b.root.length - a.root.length)[0];
+    const matches = [];
+    for (const candidate of profile.projects) {
+      if (!this.#repositories.has(candidate.root)) this.#repositories.set(candidate.root, new RepositoryAccess(candidate.root));
+      try {
+        const repository = this.#repositories.get(candidate.root).scope();
+        if (repository?.roots.some(root => within(canonical, root))) matches.push({ project: candidate, repository });
+      } catch (error) { if (within(canonical, candidate.root) || this.#repositories.get(candidate.root).claims(canonical)) throw error; }
+      if (this.#repositories.get(candidate.root).claims(canonical) &&
+          !matches.some(match => match.project === candidate)) fail('repository-metadata-unavailable');
+    }
+    const matched = matches.sort((a, b) => b.project.root.length - a.project.root.length)[0];
+    const project = matched?.project;
     if (!project) return null;
     if (profile.version !== profileVersion) fail('historical-profile-conversion-required');
     if (profile.revoked) fail('enrollment-revoked');
-    for (const p of profile.projects) {
-      if (realpathSync.native(p.root) !== p.root || !lstatSync(p.root).isDirectory()) fail('profile-root-changed');
-      if (p.excludedPaths.some(path => canonicalPath(path) !== path)) fail('profile-exclusion-changed');
-    }
-    return { profile, project, identity: hash(JSON.stringify(profile)), enforcementPath: join(this.directory, `enforcement-${profile.revision}.json`) };
+    if (project.excludedPaths.some(path => canonicalPath(path) !== path)) fail('profile-exclusion-changed');
+    return { profile, project, repository: { ...matched.repository,
+      excludedPaths: repositoryExclusions(project, matched.repository.roots) },
+      identity: hash(JSON.stringify(profile)), enforcementPath: join(this.directory, `enforcement-${profile.revision}.json`) };
+  }
+  repository(cwd) {
+    const selected = this.selection(cwd);
+    if (!selected) fail('repository-metadata-unavailable');
+    return selected.repository;
   }
   fileSettings(sessionId, cwd) {
     return { load: () => {
       const selected = this.selection(cwd);
       if (!selected) return null;
-      const { profile, project } = selected;
+      const { profile } = selected;
       return { version: 'file-screen-v1', revision: profile.revision, configuration: profile.configuration,
-        allowedRoots: [project.root], excludedPaths: [...project.excludedPaths, this.directory], excludedNames: profile.excludedNames,
+        allowedRoots: selected.repository.roots, excludedPaths: [...selected.repository.excludedPaths, this.directory], excludedNames: profile.excludedNames,
         sessions: { [hash(sessionId)]: { requestMicroUsd: profile.requestMicroUsd, sessionMicroUsd: profile.sessionMicroUsd,
           expiresAt: profile.expiresAt, providerDisclosure: profile.providerDisclosure } } };
     } };

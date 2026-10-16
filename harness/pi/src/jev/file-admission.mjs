@@ -1,10 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { dirname, isAbsolute, resolve, sep } from 'node:path';
+import { homedir } from 'node:os';
 import { FileSource, evidenceByteLimit, sourceByteLimit } from './file-screening.mjs';
 import { hash } from './screening-profile.mjs';
 import { configurationIdentity, validateConfiguration, Unavailable } from './readiness.mjs';
 
 const fail = code => { throw new Unavailable(code); };
+// Match native ~/ reads before applying the same canonical authority and inode checks.
+const requestedPath = (cwd, path) => resolve(cwd, path === '~' ? homedir() : path.startsWith('~/') ? resolve(homedir(), path.slice(2)) : path);
 const range = input => {
   if (!Number.isSafeInteger(input.offset) || input.offset < 1 || !Number.isSafeInteger(input.limit) || input.limit < 1 || input.limit > 1000) fail('bounded-range-required');
   if (typeof input.need !== 'string' || !input.need.trim() || Buffer.byteLength(input.need) > 4096) fail('information-need-required');
@@ -72,7 +75,7 @@ export class FileAdmission {
     }
   }
   /** Take exact native context/advertised skill witnesses, never model-supplied paths or prompt XML */
-  ingestNativeInstructions(files, skills = []) {
+  ingestNativeInstructions(files, skills = [], invokedSkill = null) {
     if (this.#closed) fail('session-changed');
     // Replacing the host view withdraws removed witnesses; it never replenishes lookup/spend limits.
     this.#nativeInstructions = []; this.#nativeSkills.clear(); this.#linkedInstructions.clear();
@@ -88,7 +91,7 @@ export class FileAdmission {
       } catch { /* Invalid, excluded or stale native context never becomes a witness */ }
     }
     for (const skill of skills) {
-      if (skill && !skill.disableModelInvocation && typeof skill.filePath === 'string' &&
+      if (skill && (!skill.disableModelInvocation || skill.name === invokedSkill) && typeof skill.filePath === 'string' &&
         skill.filePath.length <= 4096 && !skill.filePath.includes('\0') && isAbsolute(skill.filePath)) {
         // Metadata only: do not open every advertised skill. Pin bytes when the selected skill is read.
         this.#nativeSkills.set(resolve(skill.filePath), null);
@@ -110,7 +113,7 @@ export class FileAdmission {
     const selected = this.profiles.selection(this.cwd);
     if (!selected) fail('profile-unavailable');
     const settings = this.profiles.fileSettings(this.sessionId, this.cwd).load();
-    const resolved = resolve(this.cwd, path);
+    const resolved = requestedPath(this.cwd, path);
     const runtimeWitness = selected.identity === this.#intakeAuthority &&
       ([...this.#instructions, ...this.#nativeInstructions].some(i => i.path === resolved) || this.#nativeSkills.has(resolved) || this.#linkedInstructions.has(resolved));
     const exactInstruction = instruction && (selected.project.instructions.some(i => i.path === resolved) || runtimeWitness);
@@ -227,8 +230,9 @@ export class FileAdmission {
     range(input);
     const selectedProject = this.profiles.selection(this.cwd);
     const native = selectedProject?.identity === this.#intakeAuthority;
-    const resolved = resolve(this.cwd, input.path);
-    const inProject = selectedProject && (resolved === selectedProject.project.root || resolved.startsWith(selectedProject.project.root + sep));
+    const resolved = requestedPath(this.cwd, input.path);
+    const inProject = selectedProject && this.profiles.fileSettings(this.sessionId, this.cwd).load().allowedRoots
+      .some(root => resolved === root || resolved.startsWith(root + sep));
     let linked = native ? this.#linkedInstructions.get(resolved) : undefined;
     for (const witness of linked ?? []) {
       try {

@@ -40,6 +40,7 @@ const parameters = Type.Object({
   ]),
 }, { additionalProperties: false });
 const textResult = (value: unknown, isError = false) => ({ content: [{ type: 'text' as const, text: typeof value === 'string' ? value : JSON.stringify(value) }], details: value, isError });
+const repositoryRecovery = 'Operator: inspect git worktree list --porcelain from the enrolled repository; repair reciprocal registration with Git worktree repair, or return to a valid registered checkout and reload. Do not enroll each worktree, edit Git pointers manually, reset accounting or bypass the denial with shell.';
 const allowed = ['read', 'write', 'edit', 'bash', 'jev_read_file', 'file_locate', 'file_screening_status'];
 const sources = [rulePath, fileURLToPath(import.meta.url), join(sourceDir, 'enrollment-preview.ts'), ...['jev', 'tool-policy'].flatMap(dir => readdirSync(join(sourceDir, dir))
   .filter(name => /\.(mjs|py)$/.test(name)).map(name => join(sourceDir, dir, name))), join(sourceDir, 'jev-extension.ts'), join(sourceDir, 'screening-bootstrap.mjs')];
@@ -65,12 +66,12 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     ...(active ? { label: 'Command approval required' } : {}) }));
   let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0, lastNotice = '', lastWarning = '';
   const persistRole = (role: string) => {
-    try { pi.appendEntry('fight-workflow-role-v2', workflow.checkpoint(sessionId, role)); }
+    try { pi.appendEntry('fight-workflow-role-v3', workflow.checkpoint(sessionId, role)); }
     catch (error) {
       failure = 'workflow-role-persistence-failed';
       // Pi appends in memory before writing to disk. Supersede a failed privileged append before
       // a reload can restore it; if storage is still unavailable, Pi retains this restrictive entry.
-      try { pi.appendEntry('fight-workflow-role-v2', workflow.checkpoint(sessionId, 'reviewer')); } catch { /* Remain held */ }
+      try { pi.appendEntry('fight-workflow-role-v3', workflow.checkpoint(sessionId, 'reviewer')); } catch { /* Remain held */ }
       throw error;
     }
   };
@@ -152,7 +153,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       coverage: selected ? `Pi ${VERSION} explicit read/write/edit; final native Agent bash and user-bash operations; preflighted provider Build children. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
       enrollment: selected ? 'standing-until-revocation-or-authority-change; historical-profiles-require-explicit-conversion' : 'none',
       nextActionCode: !selected ? 'enroll-project' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
-      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.' };
+      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.' };
   }
   function present(ctx: ExtensionContext, notify = false) {
     const view = status(ctx);
@@ -268,6 +269,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
           pathId: hash(resolve(ctx.cwd, input.path)), needId: hash(input.need ?? '') }); return textResult({ blocked: reason,
             nextAction: input.exception === 'image' || isImagePath(input.path, ctx.cwd) ? imageRecovery(reason) :
+              reason === 'repository-metadata-unavailable' ? repositoryRecovery :
               reason === 'unambiguous-evidence-required' ? 'Use exactly one receipt, exception or file_locate evidence token. The evidence field is not explanatory prose; never invent a witness.' :
               reason === 'native-documentation-changed' ? 'Installed Pi documentation changed during this session. Restart Pi to load the current installation, then retry the direct read. No Jev request or enrollment change is needed.' :
               'Use path for ordinary project reads and installed Pi README/Markdown docs; offset/limit are optional. Explicit receipts/evidence must still be current. Protected or other outside-root files remain unavailable; do not bypass access restrictions with shell. Native instructions must come from current host metadata or exact linked Markdown references.' }, true); }
@@ -284,7 +286,9 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           const tool = factory(toolCtx.cwd, { operations: fileOperations(guard!, operation) });
           await tool.execute(id, operation.input, operation.controller.signal, undefined, toolCtx);
           return { ...textResult({ status: 'applied', pathId: hash(operation.input.path) }), details: undefined };
-        } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-write', reason }); return { ...textResult({ blocked: reason, nextAction: reason === 'workflow-write-restricted' ? `The ${workflow.role} role writes only beneath the project .runs directory. Report source changes for Engineer; only the operator can select a different workflow.` : 'Check the target and project exclusions. Secret files, live harness resources and operator state remain protected; .env.example and project skills are ordinary editable files for Engineer/Land.' }, true), details: undefined }; }
+        } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-write', reason }); return { ...textResult({ blocked: reason,
+          nextAction: reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'workflow-checkout-unavailable' ? 'The selected checkout is no longer registered. Return to a valid checkout; the operator can explicitly select the intended workflow with --checkout /absolute/path. No new enrollment is needed.' :
+            reason === 'workflow-write-restricted' ? `The selected ${workflow.skill} workflow permits only its task reports/scratch and documented outputs in its selected checkout. Report implementation changes for Work; only the operator can change the workflow or checkout.` : 'Check the target and project exclusions. Secret files, live harness resources and operator state remain protected; .env.example and project skills are ordinary editable files for Engineer/Land.' }, true), details: undefined }; }
         finally { operation?.close(); }
       } });
     }
@@ -327,6 +331,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     workflow = new WorkflowAccess('review');
     try {
       workflow = WorkflowAccess.restore({ phase: process.env.FIGHT_SCREENING_PHASE, sessionId,
+        taskId: process.env.FIGHT_SCREENING_TASK, checkout: process.env.FIGHT_SCREENING_CHECKOUT ??
+          profiles.selection(ctx.cwd)?.repository.roots.filter(root => ctx.cwd === root || ctx.cwd.startsWith(root + '/')).sort((a, b) => b.length - a.length)[0] ?? ctx.cwd,
         entries: ctx.sessionManager.getEntries(), parentSession: ctx.sessionManager.getHeader()?.parentSession });
     } catch (error) { failure = safeCode(error); }
     owner = pi.getAllTools().find(tool => tool.name === 'jev_read_file')?.sourceInfo?.path ?? '';
@@ -345,7 +351,9 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         guard = new ToolPolicy({ policyPath: selection.enforcementPath, cwd: ctx.cwd,
           workflowAccess: { root: selection.project.root, editableInstructions: selection.project.instructions.map(i => i.path)
             .filter(path => !selection.project.excludedPaths.some(excluded => path === excluded || path.startsWith(excluded + '/'))),
-            authorizeWrite: path => workflow.assertWrite(path, selection.project.root) },
+            scope: () => profiles.repository(ctx.cwd), revision: () => workflow.revision,
+            authorizeWrite: path => workflow.assertWrite(path, { ...profiles.repository(ctx.cwd),
+              checkout: ctx.cwd, taskId: null }) },
           resources: [profiles.directory, rulePath, sourceDir, getAgentDir(), getPackageDir(), join(homedir(), 'Library/Keychains'), ...(owner && !owner.startsWith('<') ? [owner] : [])],
           sources: [...sources, ...(owner && !owner.startsWith('<') && !sources.includes(owner) ? [owner] : [])] });
         const state = guard.start(sessionId, { version: VERSION, platform: process.platform, hooks: hooks.available() });
@@ -364,13 +372,16 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   hooks.on('before_agent_start', (event, ctx) => {
     if (!selected) { registerScreen(screening?.availability() === 'available'); return; }
     const options = event.systemPromptOptions;
-    try { admission?.ingestNativeInstructions(options.contextFiles, options.skills); } catch (error) { failure = safeCode(error); }
+    try { admission?.ingestNativeInstructions(options.contextFiles, options.skills, workflow.skill); } catch (error) { failure = safeCode(error); }
     if (options.forceSystemPrompt || !event.systemPrompt.includes(enforcedRule) || !options.selectedTools.includes('read') || options.hiddenTools.includes('read')) failure = 'required-tool-or-rule-missing';
     present(ctx, ctx.mode !== 'tui');
   });
   hooks.on('input', event => {
     if (!selected) return;
-    workflow.input(event.text, event.source, persistRole);
+    try {
+      workflow.input(event.text, event.source, persistRole);
+      if (failure === 'unknown-workflow-role' && event.source === 'interactive' && /^\/skill:/.test(event.text)) failure = undefined;
+    } catch (error) { failure = safeCode(error); }
   });
   hooks.on('tool_call', event => {
     if (!selected) return;

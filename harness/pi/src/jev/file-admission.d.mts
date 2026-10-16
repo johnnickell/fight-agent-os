@@ -8,7 +8,7 @@ export declare class FileAdmission {
     source?: FileSource; observe?: (event: Record<string, unknown>) => void; intake?: TrustedIntake | null;
     nativeDocumentation?: { readmePath: string; docsPath: string } | null });
   close(): void;
-  ingestNativeInstructions(files: { path: string; content: string }[], skills?: { filePath: string; disableModelInvocation?: boolean }[]): void;
+  ingestNativeInstructions(files: { path: string; content: string }[], skills?: { name?: string; filePath: string; disableModelInvocation?: boolean }[], invokedSkill?: string | null): void;
   accept(input: { need: string }, result: ScreenResult): void;
   locate(input: { path: string; need: string; symbol?: string; heading?: string }): { evidence: string; pathId: string; offset: number; maxLines: number; kind: 'verified-symbol' | 'verified-heading' };
   read(input: AdmissionRead): { text: string; admission: { kind: string; pathId: string; digest: string; offset: number; limit: number; nextOffset?: number } };

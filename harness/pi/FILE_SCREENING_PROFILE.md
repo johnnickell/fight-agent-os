@@ -37,7 +37,8 @@ replace them. No global installation/trust/settings or real enrollment occurs by
    to scroll and Home/End to jump; the footer shows active bindings and position. Enter continues to a separate
    short save confirmation; it does not save from the preview. Escape cancels either step without changes.
    Enlarge a terminal too small to display the preview controls before continuing. No JSON editing or session-ID
-   hashing is needed. Register each intended root explicitly;
+   hashing is needed. Register each independent repository explicitly; its canonical main checkout and verified
+   linked worktrees inherit that enrollment automatically, including newly created external worktrees;
    there is no hardcoded target/provider project. A changed connection authority with other enrolled roots requires
    reviewing those projects rather than silently transferring their disclosure.
 4. `/reload` binds the actual session. Enrollment is **standing until explicit revocation or authority change**:
@@ -83,7 +84,11 @@ optional; defaults are 200 lines, with at most 1,000 requested lines / 32 KiB ou
 Follow the returned continuation offset for more. A negative or unavailable relevance judgment does not deny
 access: briefly state the concrete need before a direct read, and never label it screened.
 
-Native loaded-context and advertised-skill paths read directly outside the project too. Reading trusted
+Native loaded-context and advertised-skill paths read directly outside the project too. An explicitly selected
+installed hidden skill is admitted from the real host's installed metadata, including provider Build invoked
+in a different enrolled consumer repository. `disable-model-invocation` still prevents automatic advertising;
+this read grant conveys no invocation, write, shell or publication authority. `~/` text reads normalize to the
+same exact path before authority checks. No provider root enrollment or copied instructions are needed. Reading trusted
 instructions establishes their exact relative Markdown references, bounded to eight links deep and 128 paths.
 Source changes and removed registrations invalidate those witnesses. Unlinked siblings, whole provider roots
 and Jev disclosure are not granted. Explicit exclusions, protected resources and inode checks remain binding.
@@ -107,12 +112,77 @@ Selections must persist before changing authority. Failed persistence holds tool
 An uncertain failed append is superseded by a Reviewer checkpoint so reload cannot restore privilege from it.
 
 - Engineer and Land can read/edit normal project files, including instructions, `.env.example` and `.pi/skills`.
-- Reviewer can read project files and write reports/probes only beneath the project's `.runs`.
-- QA can read and execute checks/probes and use appropriate Git operations; direct writes are limited to `.runs`.
+- Reviewer writes its selected task's `.runs/reviews/<TASK-ID>/` and task execution scratch.
+- QA writes its selected task's `.runs/qa/<TASK-ID>/` and task execution scratch, and can execute checks/probes.
 - Every role retains explicit exclusions, credential/runtime protections and existing task authorization.
 
 These are explicit-file-tool checks, not shell isolation. Every final shell command still receives assessment,
 now with the active role. Selecting Land does not grant publication, destructive or unrelated-work authority.
+
+### Inherited repository membership
+
+The harness resolves `.git`, `commondir` and reciprocal registered `gitdir` pointers as bounded canonical filesystem
+metadata, without calling Git or trusting remote URLs, directory names, prompt JSON or relevance judgments.
+It checks current membership on every access/effect and pins observed root/Git-directory inode identities during
+the process. It discovers at most 128 linked worktrees; unsupported metadata or limits hold access. Repository-relative
+exclusions propagate to each checkout; external exclusions remain exact. A removed/forged registration withdraws
+only that member, and an unrelated unavailable enrollment does not poison valid projects. Replaced observed
+identities cannot reuse an old process's authority. Fresh processes validate current registration independently;
+this is not protection against a same-user process forging all trusted Git metadata.
+
+Enrollment identities, disclosure, session budgets, monthly charges and outstanding liabilities do not change
+when membership changes. Build's read-only preflight resolves the same membership and requires native child
+binding; it never silently switches an enrolled worktree to an unenrolled execution profile. For metadata failures,
+inspect `git worktree list --porcelain` from the enrolled repository, use `git worktree repair` for legitimate moved
+worktrees, or return to a valid registered checkout and reload. Do not manually edit pointers, enroll every
+worktree, reset accounting or use shell as a denied file-tool workaround.
+
+### Installed skill effects
+
+This is the installed inventory for TASK-00489. It restricts explicit file tools; accepted target instructions
+and human authorization may narrow it further. An allowed path alone does not authorize a business action.
+Trusted interactive `/skill:<name>` selects the skill, subject and mode; launcher roles take precedence on reload.
+`--checkout /absolute/path` carries an already selected checkout, including a future Work checkout before creation.
+Fresh sessions use their containing registered root. Unknown skills never default to source-writing authority.
+Current checkpoints retain skill/subject/checkout/mode only for matching local session provenance, with the same
+fork/tree/restart and failed-persistence safeguards as role selection.
+
+All skills read verified repository members, exact host instructions, required linked instruction chains and native
+documentation. All selected TASKs may write their `.runs/tasks/<TASK-ID>/runs/` evidence beneath the canonical base
+or selected checkout. Canonical Review/QA directories remain independently owned. Existing ownership rules still
+prohibit overwriting another run. Query/trace and status/preview/dry-run modes permit only owned ignored evidence.
+
+| Installed skill | Additional explicit file effects |
+|---|---|
+| `work` | Ordinary files in the selected implementation checkout, including planning, skills and `.env.example` |
+| `review` | `.runs/reviews/<TASK-ID>/` reports/history at base or selected checkout |
+| `qa` | `.runs/qa/<TASK-ID>/` evidence/captures at base or selected checkout |
+| `build` | `.runs/build/<TASK-ID>/` requests/ledger at base or selected checkout; no source promotion |
+| `land` | Selected checkout reconciliation, base `planning/` delivery metadata and owned task evidence |
+| `next`, `audit`, `architecture`, `security-audit`, `adopt` | Inspection and owned task evidence only |
+| `fix` | Selected `planning/tasks/` and `planning/ROADMAP.md` after record creation is authorized |
+| `grill` | Selected `planning/epics/` after the interview is approved |
+| `to-tickets` | Selected `planning/tickets/` and parent `planning/epics/` |
+| `to-tasks` | Selected `planning/tasks/` and `planning/ROADMAP.md` |
+| `wayfinder` | Selected `planning/wayfinder/` |
+| `research` | Selected `planning/wayfinder/research/`, `.runs/notes/<subject>/` |
+| `design`, `prototype`, `design-review` | `.runs/prototypes/<subject>/`; disposable evidence only |
+| `writing-for-agents` | Selected `AGENTS.md`, `.pi/skills/`, `docs/engineering/` |
+| `graphify` | Explicit build/refresh output beneath selected `graphify-out/`; query/trace remains read-only |
+| `release` | Selected `CHANGELOG.md`, `VERSION`, `docs/releases/`, `planning/`; no signing/publication grant |
+
+Role aliases remain Engineer/Software Engineer → `work`, Reviewer/Senior Engineer → `review`, QA Engineer → `qa`,
+Team Lead → `build`, Release Manager → `land`. Auxiliary skills use Reviewer's shell-risk phase with their own
+narrower explicit-file effects. Work/Land cannot edit another checkout's source; reports remain accessible at
+the canonical base even when only a linked worktree was enrolled. Secret variants, Git internals, operator state,
+symlinks/hardlinks and live runtime resources retain their protections.
+
+The reusable owning native probe is `tests/native/worktree-access.mjs`: pass an existing installed Pi
+`node_modules` directory and an ignored evidence directory. It uses real disposable Git worktrees, native
+`session.prompt`, installed skill metadata, final tool hooks, fresh role sessions and separate-process restart.
+Model output and evaluator responses are controlled; it neither reads real credentials nor qualifies live
+provider accuracy. The normal Harness wrapper runs the deterministic owning tests; native qualification is a
+separate macOS/APFS check against each installed supported runtime.
 
 `jev_read_file` retains its 0.70 positive rule, bounded list/glob/cache contract and current-source checks.
 Positive results can still issue receipts; cache reuse is session-local and visible. Negative, partial or failed

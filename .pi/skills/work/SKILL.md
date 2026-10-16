@@ -15,6 +15,10 @@ relevant sections of [engineering standards](../../../docs/engineering/STANDARDS
 decision needs them; do not preload every architectural checklist or reproduce the review matrix.
 
 1. **Bound and place.** Check accepted scope, blockers, Board, branch, ancestry and status. Preserve unrelated changes. Ask whether to use the main checkout or an isolated worktree unless chosen. For a new TASK use `feature/task-NNNNN-<slug>` from `develop`; preserve a pre-existing authorized TASK branch and keep scratch under `.runs/`.
+   In enrolled Pi, carry the existing choice with `/skill:work TASK-NNNNN --checkout /absolute/path` (the operator
+   selects it; never promote yourself). A newly registered worktree inherits repository access immediately;
+   no second setup or file-access approval is needed. Keep source writes in the selected checkout and execution
+   evidence in `.runs/tasks/<TASK-ID>/runs/`. Read independent canonical base reports without rewriting them.
 2. **Read the handoff.** Resolve the canonical base worktree through Git metadata and inspect `.runs/reviews/<TASK-ID>/review.md`. A first implementation may have none; a revision requires the canonical `revise` report and traces every blocker. Version-2 and version-3 reports are usable when their target identity and recorded snapshot match. If the branch has moved, trace changes to know whether findings remain applicable. When the only remaining findings require hosted evidence and no implementation correction, follow the [evidence routing](../../../docs/engineering/EXECUTION.md#review-handoff-intake); do not manufacture edits or repeat passing gates. An accepted implementation with applicable QA satisfied routes to `land`, which may reconcile an advancing base; do not use `work` solely to rebase an unchanged accepted implementation.
 Also inspect `<base-worktree>/.runs/qa/<TASK-ID>/qa.md` when present. A current QA FAIL is repair input even if
 the older technical review says accept: apply [QA intake](../../../docs/engineering/EXECUTION.md#qa-handoff-intake),
