@@ -88,6 +88,7 @@ export class WorkflowAccess {
     this.requested = { taskId, checkout: checkout ? resolve(checkout) : this.checkout,
       mode: /\b(query|trace)\b/.test(selected[2]) ? 'query' : /\b(status|preview|dry-run)\b/.test(selected[2]) ? 'status' : 'default' };
     try { this.select(selected[1], persist); } finally { this.requested = undefined; }
+    return true;
   }
   assertWrite(path, root) {
     if (typeof root !== 'string') return this.#assertScopedWrite(path, root);

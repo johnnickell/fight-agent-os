@@ -48,6 +48,7 @@ type Dependencies = { settings?: FileScreeningSettings; configuration: () => Ope
   profiles: ScreeningProfiles; credentialConfigured: (ctx: ExtensionContext) => boolean };
 
 // Request/file refusals are not evaluator outages; unknown/provider failures remain visible.
+const workflowInputFailures = new Set(['unknown-workflow-role', 'workflow-subject-required', 'workflow-checkout-required']);
 const localScreeningFailures = new Set(['source-limit', 'batch-source-limit', 'root-denied', 'sensitive-file',
   'symlink-denied', 'symlink-escape', 'unsupported-file', 'unsupported-hardlink', 'unstable-source',
   'binary-source', 'source-unavailable', 'invalid-input', 'result-presentation-limit', 'admission-presentation-limit']);
@@ -58,7 +59,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   const profiles = dependencies.profiles;
   pi.registerFlag('fight-screening-required', { type: 'string', description: 'Trusted launcher enrollment identity; missing/changed authority holds the native tools' });
   let screening: FileScreening | undefined, admission: FileAdmission | undefined, images: ImageAdmission | undefined, guard: ToolPolicy | undefined;
-  let selected = false, live = false, failure: string | undefined, evaluationFailure: string | undefined;
+  let selected = false, live = false, failure: string | undefined, inputFailure: string | undefined, evaluationFailure: string | undefined;
   let context: ExtensionContext | undefined;
   let workflow = new WorkflowAccess();
   // Agent and user shell calls share one dialog slot; only its current owner reports blocked.
@@ -89,6 +90,10 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     };
     return actions[reason] ?? 'Read images directly with path. No image selection or approval is needed; existing file-safety and runtime checks still apply.';
   }
+  function inputRecovery(reason: string) {
+    if (failure || !workflowInputFailures.has(reason)) return undefined;
+    return 'Operator: correct the workflow invocation with /skill:<installed-skill> and its required subject (for example /skill:release 0.4.0 status); use an absolute --checkout path when selecting a checkout. Only a successful interactive skill selection clears this input hold. Other authority, integrity and persistence holds still require their own recovery; do not change enrollment, exclusions or accounting or bypass the hold with shell.';
+  }
   function observe(event: Record<string, unknown>) {
     if (!live || !context) return;
     const observation = { version: 'fight-file-screen-observation-v1', session: hash(sessionId), sequence: ++sequence,
@@ -112,6 +117,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   function checkBoundary() {
     if (!selected) return;
     if (failure) throw new PolicyDenied(failure);
+    if (inputFailure) throw new PolicyDenied(inputFailure);
     try {
       const current = profiles.selection(context!.cwd);
       if (!current || current.identity !== authority) throw new PolicyDenied('profile-changed-reload-required');
@@ -128,7 +134,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   function status(ctx: ExtensionContext) {
     let budget: ReturnType<ProfileBudget['inspect']> | null = null;
     let allocation: { requestMicroUsd: number; sessionMicroUsd: number } | null = null;
-    let reason = failure ?? evaluationFailure;
+    let reason = failure ?? inputFailure ?? evaluationFailure;
     if (selected) {
       try {
         checkBoundary();
@@ -152,8 +158,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       bindingLimit: budget ? budget.availableMicroUsd <= budget.session.availableMicroUsd ? 'monthly' : 'session' : 'unavailable',
       coverage: selected ? `Pi ${VERSION} explicit read/write/edit; final native Agent bash and user-bash operations; preflighted provider Build children. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
       enrollment: selected ? 'standing-until-revocation-or-authority-change; historical-profiles-require-explicit-conversion' : 'none',
-      nextActionCode: !selected ? 'enroll-project' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
-      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.' };
+      nextActionCode: !selected ? 'enroll-project' : reason && inputRecovery(reason) ? 'correct-workflow-input' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
+      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : (reason && inputRecovery(reason)) || (reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.') };
   }
   function present(ctx: ExtensionContext, notify = false) {
     const view = status(ctx);
@@ -268,11 +274,11 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           return { content: [{ type: 'text' as const, text: value.text + continuation }], details: value.admission };
         } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
           pathId: hash(resolve(ctx.cwd, input.path)), needId: hash(input.need ?? '') }); return textResult({ blocked: reason,
-            nextAction: input.exception === 'image' || isImagePath(input.path, ctx.cwd) ? imageRecovery(reason) :
+            nextAction: inputRecovery(reason) ?? (input.exception === 'image' || isImagePath(input.path, ctx.cwd) ? imageRecovery(reason) :
               reason === 'repository-metadata-unavailable' ? repositoryRecovery :
               reason === 'unambiguous-evidence-required' ? 'Use exactly one receipt, exception or file_locate evidence token. The evidence field is not explanatory prose; never invent a witness.' :
               reason === 'native-documentation-changed' ? 'Installed Pi documentation changed during this session. Restart Pi to load the current installation, then retry the direct read. No Jev request or enrollment change is needed.' :
-              'Use path for ordinary project reads and installed Pi README/Markdown docs; offset/limit are optional. Explicit receipts/evidence must still be current. Protected or other outside-root files remain unavailable; do not bypass access restrictions with shell. Native instructions must come from current host metadata or exact linked Markdown references.' }, true); }
+              'Use path for ordinary project reads and installed Pi README/Markdown docs; offset/limit are optional. Explicit receipts/evidence must still be current. Protected or other outside-root files remain unavailable; do not bypass access restrictions with shell. Native instructions must come from current host metadata or exact linked Markdown references.') }, true); }
       },
     });
     function registerMutation<T extends TSchema, D, S>(name: 'write' | 'edit', base: ToolDefinition<T, D | undefined, S>) {
@@ -287,8 +293,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           await tool.execute(id, operation.input, operation.controller.signal, undefined, toolCtx);
           return { ...textResult({ status: 'applied', pathId: hash(operation.input.path) }), details: undefined };
         } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-write', reason }); return { ...textResult({ blocked: reason,
-          nextAction: reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'workflow-checkout-unavailable' ? 'The selected checkout is no longer registered. Return to a valid checkout; the operator can explicitly select the intended workflow with --checkout /absolute/path. No new enrollment is needed.' :
-            reason === 'workflow-write-restricted' ? `The selected ${workflow.skill} workflow permits only its task reports/scratch and documented outputs in its selected checkout. Report implementation changes for Work; only the operator can change the workflow or checkout.` : 'Check the target and project exclusions. Secret files, live harness resources and operator state remain protected; .env.example and project skills are ordinary editable files for Engineer/Land.' }, true), details: undefined }; }
+          nextAction: inputRecovery(reason) ?? (reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'workflow-checkout-unavailable' ? 'The selected checkout is no longer registered. Return to a valid checkout; the operator can explicitly select the intended workflow with --checkout /absolute/path. No new enrollment is needed.' :
+            reason === 'workflow-write-restricted' ? `The selected ${workflow.skill} workflow permits only its task reports/scratch and documented outputs in its selected checkout. Report implementation changes for Work; only the operator can change the workflow or checkout.` : 'Check the target and project exclusions. Secret files, live harness resources and operator state remain protected; .env.example and project skills are ordinary editable files for Engineer/Land.') }, true), details: undefined }; }
         finally { operation?.close(); }
       } });
     }
@@ -327,7 +333,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   hooks.on('session_start', (_event, ctx) => {
     approvals.cancel();
     screening?.close(); admission?.close(); images?.close(); guard?.cancel('session-replaced'); epoch++;
-    context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
+    context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; inputFailure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
     workflow = new WorkflowAccess('review');
     try {
       workflow = WorkflowAccess.restore({ phase: process.env.FIGHT_SCREENING_PHASE, sessionId,
@@ -379,9 +385,13 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   hooks.on('input', event => {
     if (!selected) return;
     try {
-      workflow.input(event.text, event.source, persistRole);
-      if (failure === 'unknown-workflow-role' && event.source === 'interactive' && /^\/skill:/.test(event.text)) failure = undefined;
-    } catch (error) { failure = safeCode(error); }
+      if (workflow.input(event.text, event.source, persistRole)) inputFailure = undefined;
+    } catch (error) {
+      const reason = safeCode(error);
+      // Rejected operator input is recoverable; never overwrite or clear an integrity/authority hold.
+      if (workflowInputFailures.has(reason)) inputFailure = reason;
+      else failure ??= reason;
+    }
   });
   hooks.on('tool_call', event => {
     if (!selected) return;

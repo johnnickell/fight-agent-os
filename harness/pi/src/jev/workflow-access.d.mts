@@ -13,6 +13,6 @@ export declare class WorkflowAccess {
   static restore(options: { phase?: string; sessionId: string; entries: { type: string; customType?: string; data?: unknown }[]; parentSession?: string; taskId?: string; checkout?: string; mode?: string }): WorkflowAccess;
   checkpoint(sessionId: string, role?: string): { sessionId: string; role: string; launcher: string | null; skill?: string; taskId?: string | null; checkout?: string | null; mode?: string };
   select(value: string, persist?: (role: string) => void): void;
-  input(text: string, source: string, persist?: (role: string) => void): void;
+  input(text: string, source: string, persist?: (role: string) => void): true | undefined;
   assertWrite(path: string, root: string | (RepositoryScope & {checkout: string; taskId: string | null})): void;
 }

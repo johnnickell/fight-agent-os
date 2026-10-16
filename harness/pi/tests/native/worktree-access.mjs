@@ -196,6 +196,56 @@ try {
       await write(portable, join(consumer, 'source.txt'), 'Forbidden hidden skill source', false);
     }
     assert.equal(calls(), beforePortable); assert.equal(confirmations, 0);
+    // Rejected operator input must hold effects until a successful trusted corrected selection.
+    for (const invocation of ['0.5.0', '0.4.0 status', 'v0.4.0 resume after signing']) {
+      await portable.prompt('/skill:release 0.4');
+      const blockedRead = await read(portable, join(consumer, 'README.md'), false);
+      assert.equal(JSON.parse(blockedRead.content[0].text).blocked, 'workflow-subject-required');
+      await write(portable, join(consumer, '.runs/handoffs/release-0.4.0/rejected.md'), 'Malformed subject', false);
+      const heldStatus = JSON.parse((await call(portable, 'file_screening_status', {})).content[0].text);
+      assert.equal(heldStatus.reason, 'workflow-subject-required');
+      assert.equal(heldStatus.nextActionCode, 'correct-workflow-input');
+      assert.match(heldStatus.nextAction, /\/skill:release/);
+      await portable.extensionRunner.emitInput(`/skill:release ${invocation}`, undefined, 'extension');
+      await portable.prompt('Continue with the current selection');
+      await read(portable, join(consumer, 'README.md'), false);
+      await portable.prompt(`/skill:release ${invocation}`);
+      await read(portable, join(consumer, 'README.md'));
+      const version = invocation.startsWith('0.5.0') ? '0.5.0' : '0.4.0';
+      await write(portable, join(consumer, '.runs/handoffs', `release-${version}`, 'recovered.md'), 'Corrected subject');
+      // Correcting input must not promote source, other-version, report, provider or runtime effects.
+      for (const path of ['source.txt', '.env.local', 'private/denied.md', '.runs/handoffs/release-0.3.0/recovered.md',
+        '.runs/handoffs/release-' + version + '-other/recovered.md', '.runs/reviews/TASK-00489/review.md']) {
+        await write(portable, join(consumer, path), 'Forbidden recovered effect', false);
+      }
+      await write(portable, join(provider, 'CHANGELOG.md'), 'Forbidden provider', false);
+      await write(portable, join(modules, '@earendil-works/pi-coding-agent/docs/sdk.md'), 'Forbidden runtime', false);
+      assert.match(JSON.parse(blockedRead.content[0].text).nextAction, /\/skill:release/);
+    }
+    // Correct selection cannot clear persistence or native-tool integrity failures.
+    const persistenceHeld = await start(consumer);
+    const append = persistenceHeld.sessionManager.appendCustomEntry;
+    persistenceHeld.sessionManager.appendCustomEntry = function(type, data) {
+      if (type === 'fight-workflow-role-v3') throw new Error('Controlled unavailable session storage');
+      return append.call(this, type, data);
+    };
+    await persistenceHeld.prompt('/skill:release 0.4.0');
+    persistenceHeld.sessionManager.appendCustomEntry = append;
+    await persistenceHeld.prompt('/skill:release 0.4');
+    await persistenceHeld.prompt('/skill:release 0.4.0 status');
+    const storageRead = await read(persistenceHeld, join(consumer, 'README.md'), false);
+    assert.equal(JSON.parse(storageRead.content[0].text).blocked, 'workflow-role-persistence-failed');
+    await write(persistenceHeld, join(consumer, '.runs/handoffs/release-0.4.0/storage-held.md'), 'Forbidden', false);
+    const integrityHeld = await start(consumer), activeTools = integrityHeld.getActiveToolNames();
+    integrityHeld.setActiveToolsByName(activeTools.filter(name => name !== 'bash'));
+    const integrityRead = await read(integrityHeld, join(consumer, 'README.md'), false);
+    assert.equal(JSON.parse(integrityRead.content[0].text).blocked, 'required-tool-hidden');
+    integrityHeld.setActiveToolsByName(activeTools);
+    await integrityHeld.prompt('/skill:release 0.4');
+    await integrityHeld.prompt('/skill:release 0.4.0 status');
+    const stillHeld = await read(integrityHeld, join(consumer, 'README.md'), false);
+    assert.match(JSON.parse(stillHeld.content[0].text).blocked, /^(required-tool-hidden|session-changed)$/);
+    await write(integrityHeld, join(consumer, '.runs/handoffs/release-0.4.0/integrity-held.md'), 'Forbidden', false);
     // Real documented Release subjects replace the inventory's former artificial TASK argument.
     for (const invocation of ['0.5.0', '0.4.0 status', 'v0.4.0 resume after signing']) {
       await portable.prompt(`/skill:release ${invocation}`);
@@ -234,7 +284,13 @@ try {
     await read(work, join(moved, 'source.txt')); await write(work, join(checkout, 'source.txt'), 'Stale', false);
     git(main, ['worktree', 'remove', '--force', moved]); git(main, ['worktree', 'prune']);
     await read(work, join(moved, 'source.txt'), false); await read(work, join(main, 'README.md'));
-    profiles.revoke(main); await read(work, join(main, 'README.md'), false);
+    profiles.revoke(main);
+    await read(portable, join(consumer, 'README.md'), false);
+    await portable.prompt('/skill:release 0.4');
+    await portable.prompt('/skill:release 0.4.0 status');
+    await read(portable, join(consumer, 'README.md'), false);
+    await write(portable, join(consumer, '.runs/handoffs/release-0.4.0/revoked.md'), 'Forbidden', false);
+    await read(work, join(main, 'README.md'), false);
     console.log(JSON.stringify({ mode: 'native-worktree-and-portable-provider', runtime: modules, fixture, outcomes, confirmations, modelTurns,
       controlledEvaluatorRequests: calls(), liveProviderRequests: 0, realCredentialReads: 0, hiddenSkills: [...new Set(nativeMetadata.map(s => s.name))],
       unchangedEnrollmentBeforeExplicitRevoke: true, unresolvedLiabilityPreserved: true }));
