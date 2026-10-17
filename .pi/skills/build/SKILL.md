@@ -45,6 +45,10 @@ deploy or continue to another TASK. A question about planning does not invoke th
    copy provider instructions to work around a denial. Pass the resolved TASK and selected checkout through
    the monitor's trusted stage environment. The shared [access contract](../../../harness/pi/FILE_SCREENING_PROFILE.md#installed-skill-effects)
    limits Build to coordination outputs and retains each child's independent role effects.
+   If checking `file_screening_status`, use `workflow.skill`, `effect`, task and checkout to identify the
+   coordinator. Build correctly reports `phase: qa` with `workflow.skill: build` and `effect: coordination`;
+   the phase describes command-risk assessment, not a QA-worker assignment. Do not hold or request a relaunch
+   solely because it says `qa`. If an older status omits `workflow`, that phase alone cannot establish a mismatch.
 4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, resolved role models, effective/consumed/remaining
    cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Check installed
    `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools

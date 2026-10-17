@@ -193,6 +193,12 @@ narrower explicit-file effects. Work/Land cannot edit another checkout's source;
 the canonical base even when only a linked worktree was enrolled. Secret variants, Git internals, operator state,
 symlinks/hardlinks and live runtime resources retain their protections.
 
+`file_screening_status` reports the selected `workflow.skill`, `effect`, `taskId`, `checkout` and `mode`.
+Its `phase` is the command-risk role: Build deliberately uses `qa` with the `coordination` effect. This does
+not make Build a QA worker or prevent child dispatch. `workflow.launcherRole` records the startup role
+(`null` for an unassigned interactive launcher), not the current skill. Diagnose a workflow mismatch from
+the selected skill and scope, never from `phase: qa` alone; do not promote Build to Engineer or Land.
+
 The reusable owning native probe is `tests/native/worktree-access.mjs`: pass an existing installed Pi
 `node_modules` directory and an ignored evidence directory. It uses real disposable Git worktrees, native
 `session.prompt`, installed skill metadata, final tool hooks, fresh role sessions and separate-process restart.

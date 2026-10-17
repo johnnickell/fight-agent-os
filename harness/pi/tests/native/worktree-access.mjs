@@ -147,8 +147,15 @@ try {
     assert.equal(JSON.parse(screening.content[0].text).status, 'complete'); assert.equal(calls(), beforeScreen + 1);
     assert.ok(ledger.inspect().pending.some(p => p.id === liability));
     let reviewFile;
-    for (const [phase, skill, folder, report] of [['review', 'review', 'reviews', 'review.md'], ['qa', 'qa', 'qa', 'qa.md'], ['team-lead', 'build', 'build', 'ledger.md']]) {
+    for (const [phase, skill, folder, report] of [['review', 'review', 'reviews', 'review.md'], ['qa', 'qa', 'qa', 'qa.md'], ['team-lead', 'build', 'build', 'ledger.md'], [undefined, 'build', 'build', 'interactive-ledger.md']]) {
       const session = await start(checkout, phase); await select(session, skill); await core(session, main);
+      const status = JSON.parse((await call(session, 'file_screening_status', {})).content[0].text);
+      assert.deepEqual(status.workflow, { skill, effect: effects[skill], taskId: 'TASK-00489', checkout,
+        mode: 'default', launcherRole: phase === undefined ? null : phase === 'review' ? 'reviewer' : 'qa' });
+      assert.equal(status.phase, skill === 'review' ? 'reviewer' : 'qa');
+      if (skill === 'build' || skill === 'qa') {
+        await write(session, join(main, '.runs', skill === 'build' ? 'qa' : 'build', 'TASK-00489/other-role.md'), 'Forbidden other workflow', false);
+      }
       await read(session, join(checkout, 'source.txt'));
       const target = join(main, '.runs', folder, 'TASK-00489', report);
       await write(session, target); await call(session, 'edit', { path: target, oldText: 'Native controlled', newText: 'Updated controlled' });

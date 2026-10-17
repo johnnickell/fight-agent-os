@@ -70,6 +70,11 @@ match. Forks, legacy or unverifiable history, and removal of a prior launcher de
 operator selects a workflow. A fresh unassigned local session defaults to Engineer. Failed persistence holds
 tools; correct the storage problem and reload before continuing. Never use another tool to evade that hold.
 
+Use `file_screening_status.workflow` to identify the selected skill, effect, task, checkout and mode.
+The top-level `phase` is the command-risk role: Build uses `phase: qa` with `skill: build` and
+`effect: coordination`. That is a valid coordinator, not a QA-worker mismatch. Do not request a relaunch
+or role promotion based on `phase` alone. See the [status contract](FILE_SCREENING_PROFILE.md#installed-skill-effects).
+
 - Engineer (`work`): read and edit normal project files, including `.env.example` and project `.pi/skills`.
 - Reviewer: read normal repository files; publish only `.runs/reviews/<TASK-ID>/` at the canonical base or selected
   checkout, plus `.runs/tasks/<TASK-ID>/runs/` scratch. The base report remains authoritative.

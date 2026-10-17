@@ -13,7 +13,7 @@ import { FileScreeningSettings } from './jev/local-store.mjs';
 import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
 import { FileAdmission } from './jev/file-admission.mjs';
 import { ImageAdmission, isImagePath } from './jev/image-admission.mjs';
-import { WorkflowAccess } from './jev/workflow-access.mjs';
+import { WorkflowAccess, skillEffects } from './jev/workflow-access.mjs';
 import { CommandRisk, commandRiskRecovery } from './jev/command-risk.mjs';
 import { CommandApprovals } from './jev/command-approvals.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
@@ -154,6 +154,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       enforcement: selected ? reason ? 'project-access-with-screening-degraded' : 'project-access-and-command-risk' : 'not-enrolled',
       reason: reason ?? (selected ? null : 'not-enrolled'), session: hash(sessionId),
       phase: workflow.role, budget, allocation,
+      workflow: { skill: workflow.skill, effect: skillEffects[workflow.skill], taskId: workflow.taskId,
+        checkout: workflow.checkout, mode: workflow.mode, launcherRole: workflow.launcher },
       credential: selected && dependencies.credentialConfigured(ctx) ? 'configured-resolution-unchecked' : 'not-configured',
       bindingLimit: budget ? budget.availableMicroUsd <= budget.session.availableMicroUsd ? 'monthly' : 'session' : 'unavailable',
       coverage: selected ? `Pi ${VERSION} explicit read/write/edit; final native Agent bash and user-bash operations; preflighted provider Build children. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
@@ -328,7 +330,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     pi.setActiveTools(allowed);
   }
   registerScreen(false);
-  pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, declared coverage and shared monthly accounting; never resolves credentials or makes a provider request.',
+  pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, selected workflow and shared monthly accounting. Inspect workflow.skill/effect for active workflow authority; phase is the command-risk role (Build also uses qa), not the selected skill. Never resolves credentials or makes a provider request.',
     parameters: Type.Object({}, { additionalProperties: false }), async execute(_id, _args, _signal, _update, ctx) { return textResult(present(ctx)); } });
   hooks.on('session_start', (_event, ctx) => {
     approvals.cancel();
