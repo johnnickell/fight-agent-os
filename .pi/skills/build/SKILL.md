@@ -136,7 +136,16 @@ never start at zero merely because the transport changed.
 Final native Agent bash and user-bash operations receive separate shared-Jev command-risk assessment with bounded
 nonsecret command/context disclosure approved during setup. An ordinary judgment is neither new permission nor
 a safety guarantee. Risky, uncertain, denied or unavailable judgments visibly hold for the relevant operator
-decision; missing decision support holds the command. Do not paste secrets or source into commands for assessment.
+decision. Enrolled JSON children send one-command decisions over the temporary local connection inherited
+from the active interactive Build shell launch. The coordinator's native dialog identifies the child TASK,
+role, session, directory and exact command. Each acceptance applies only to that request; chat approval,
+parent launch approval and prior child decisions cannot answer it. Keep the launching shell alive and do not
+strip its environment. The connection closes when the launch ends or the coordinator is cancelled/switched;
+missing transport, denied/expired decisions and changed authority leave the child command unexecuted.
+If an older coordinator still reports unavailable child confirmation, fully restart Pi with the updated provider
+before resuming the same ledger and model pins; `/reload` alone may retain old JavaScript modules. Never repeat
+an unchanged failed child or toggle roles to manufacture approval. Do not paste secrets or source into commands
+for assessment.
 Shell source reads can bypass relevance screening and same-user shell can access operator state: this interim
 profile is not universal admission enforcement or a sandbox. The installed [shared rule](../../../harness/pi/FILE_SCREENING_RULE.md)
 strongly prefers Jev for unfamiliar discovery while allowing ordinary direct project reads and portable

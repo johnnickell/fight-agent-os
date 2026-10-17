@@ -50,7 +50,17 @@ test('ordinary final commands use shared judgments/accounting without a new perm
   assert.equal(JSON.stringify(f.events).includes('git diff'), false);
 });
 
-for (const [choice, confidence, expected] of [['risky', 0.98, 'risky'], ['unknown', 0.98, 'uncertain'], ['ordinary', 0.89, 'uncertain']]) {
+for (const confidence of [0.70, 0.89, 0.90, 1]) {
+  test(`complete ordinary/${confidence} proceeds without a confirmation within existing authority`, async t => {
+    const f = fixture(t, { confidence });
+    const result = await f.risk.assess('git status --short', f.root, { confirm: async () => assert.fail('Ordinary judgment must not prompt') });
+    assert.equal(result.outcome, 'ordinary');
+    assert.equal(f.events.some(event => event.kind === 'command-held'), false);
+    assert.equal(f.ledger.inspect().settledMicroUsd, 3);
+  });
+}
+
+for (const [choice, confidence, expected] of [['risky', 0.98, 'risky'], ['unknown', 0.98, 'uncertain'], ['ordinary', 0.699999, 'uncertain'], ['risky', 0.70, 'risky'], ['unknown', 0.70, 'uncertain']]) {
   test(`${choice}/${confidence} visibly holds without an operator decision; one explicit decision is not a cached permit`, async t => {
     const f = fixture(t, { choice, confidence });
     await assert.rejects(f.risk.assess('printf harmless-probe', f.root), { code: 'command-operator-decision-required' });
