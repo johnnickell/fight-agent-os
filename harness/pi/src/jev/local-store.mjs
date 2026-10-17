@@ -64,6 +64,13 @@ export class LocalSettings {
   save(value) {
     const config = validateConfiguration(value);
     privateDirectory(this.directory);
+    const stored = readPrivate(join(this.directory, 'connection.json'), null);
+    let previous;
+    // Explicit setup may repair old/invalid pins, but unsafe storage is still rejected above.
+    try { if (stored !== null) previous = validateConfiguration(stored); } catch { /* Replace invalid settings. */ }
+    // Confirmation time/UUID are audit metadata, not changed connection authority. Preserve the
+    // original object (including key order) because existing enrollment binds its exact identity.
+    if (previous && Object.keys(config).every(key => ['revision', 'priceConfirmedAt'].includes(key) || config[key] === previous[key])) return previous;
     writePrivate(join(this.directory, 'connection.json'), config);
     return config;
   }

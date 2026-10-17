@@ -41,6 +41,15 @@ replace them. No global installation/trust/settings or real enrollment occurs by
    linked worktrees inherit that enrollment automatically, including newly created external worktrees;
    there is no hardcoded target/provider project. A changed connection authority with other enrolled roots requires
    reviewing those projects rather than silently transferring their disclosure.
+   Repeating `/jev setup` with identical effective choices preserves the saved connection identity and its
+   original confirmation metadata. Changed disclosure or ceilings still establish a different authority.
+   If `stale-file-policy` reports an old enrollment binding, inspect `/jev inspect`, then use
+   `/file-screening rebind`: review the current connection and **all enrolled projects** in the scrollable
+   preview, then confirm saving. Recovery retains roots, exclusions, instruction witnesses, disclosure flags
+   and protected runtime paths. It only reduces spending ceilings if the connection is more restrictive;
+   it never resets accounting or pending liabilities. Cancel makes no change; settings/enrollment changes
+   while the dialog is open invalidate the preview. Revoked enrollment and historical conversion remain
+   separate operations. Restart Pi after installing a harness repair; otherwise `/reload` after saving.
 4. `/reload` binds the actual session. Enrollment is **standing until explicit revocation or authority change**:
    no expiry, routine renewal, new-session/day/month prompt or periodic lease. Resumes retain usage; fresh roles
    bind independently under the same account. Monthly reset changes available monthly funds, not enrollment.
