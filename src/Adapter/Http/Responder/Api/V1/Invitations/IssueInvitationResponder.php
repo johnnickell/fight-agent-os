@@ -22,7 +22,30 @@ use Psr\Http\Message\ResponseInterface;
         new OA\Property(property: 'user_id', type: 'string', format: 'uuid', nullable: true),
         new OA\Property(property: 'assignment', type: 'string', enum: ['confirmed', 'unconfirmed', 'unknown']),
         new OA\Property(property: 'audit', type: 'string', enum: ['confirmed', 'unconfirmed']),
-        new OA\Property(property: 'delivery', ref: '#/components/schemas/InvitationDelivery', nullable: true)
+        new OA\Property(
+            property: 'delivery',
+            required: ['user_id', 'status', 'expires_at'],
+            properties: [
+                new OA\Property(property: 'user_id', type: 'string', format: 'uuid'),
+                new OA\Property(
+                    property: 'status',
+                    type: 'string',
+                    enum: [
+                        'pending',
+                        'claimed',
+                        'retry_pending',
+                        'delivered',
+                        'permanent_failure',
+                        'expired',
+                        'invalidated'
+                    ]
+                ),
+                new OA\Property(property: 'expires_at', type: 'string', format: 'date-time')
+            ],
+            type: 'object',
+            nullable: true,
+            additionalProperties: false
+        )
     ],
     type: 'object',
     additionalProperties: false
