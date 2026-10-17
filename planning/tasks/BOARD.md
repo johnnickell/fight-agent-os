@@ -537,5 +537,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | — (standalone chore) | done | — | [PR #103](https://github.com/johnnickell/fight-agent-os/pull/103) |
 | — | [TASK-00488](00488-TASK.md) | Repair Pi screening, workflow access and runtime compatibility | — (standalone bug) | done | — | [PR #108](https://github.com/johnnickell/fight-agent-os/pull/108) |
 | — | [TASK-00489](00489-TASK.md) | Use authorized repository worktrees across Pi skills without repeated approval | — (standalone bug) | done | — | [PR #109](https://github.com/johnnickell/fight-agent-os/pull/109) |
-| — | [TASK-00490](00490-TASK.md) | Recover shared Jev enrollment after connection setup | — (standalone bug) | done | — | — |
+| — | [TASK-00490](00490-TASK.md) | Recover shared Jev enrollment after connection setup | — (standalone bug) | done | — | [PR #110](https://github.com/johnnickell/fight-agent-os/pull/110) |
 <!-- /planning:board -->
