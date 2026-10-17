@@ -19,10 +19,12 @@ activity at top right and current Docker logs at bottom right. Each right pane o
 quarter of a wide terminal; narrow terminals use keyboard-accessible selectable views. Reuse the accepted Fight
 identity from [TICKET-00035](00035-TICKET.md). Herdr remains optional, with no required external multiplexer.
 
-Qualify the installed Pi 1.2.0 extension route inside the first delivery TASK. If persistent layout cannot be
-implemented cleanly through supported APIs, use a dedicated terminal client over Pi SDK/RPC. Reuse Pi's agent,
-provider and session machinery; do not fork Pi, nest another renderer in an extension or create a session engine.
-Current upstream documentation is not evidence of installed-version support. Record exact qualified versions.
+Qualify the currently installed Pi's supported extension APIs and behavior inside the first delivery TASK. If
+persistent layout cannot be implemented cleanly through those APIs, use a dedicated terminal client over supported
+Pi SDK/RPC. Reuse Pi's agent, provider and session machinery; do not fork Pi, nest another renderer in an extension
+or create a session engine. Never pin Pi to a version number or require version equality. Record required
+capabilities and actual tested versions as evidence only; documentation alone and a current version number do
+not establish runtime behavior or future compatibility.
 
 The first release has a read-only child pane using the existing local build monitor and a human-only live log
 pane for the existing, explicitly selected main-checkout Agent OS Compose runtime. Show actual conversation,
@@ -85,12 +87,24 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00447](../tasks/00447-TASK.md) | Work in the responsive Pi terminal workspace | needs-info |
+| [TASK-00447](../tasks/00447-TASK.md) | Work in the responsive Pi terminal workspace | in-progress |
 | [TASK-00448](../tasks/00448-TASK.md) | Observe the selected local child agent in the terminal workspace | ready-for-agent |
 | [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Superseding Pi qualification policy — 2026-10-17
+
+The user's authoritative amendment is: “Pi moves quickly. we should NEVER pin to a version number. We are on
+1.3.0 now, so do that”. Current requirements now qualify the installed runtime by supported APIs and actual
+behavior, not a fixed Pi release. TASK-00447's obsolete exact-version access hold is cleared; historical receipts
+remain history. Pi 1.3.0 is the installation observed during recovery, not a replacement pin. Root AGENTS.md owns
+the lasting project convention. No unrelated historical records, dependency/model pins or global configuration
+are changed, and the local presentation scope and required policy/terminal qualification are unchanged.
+
+TASK-00447 is in prerequisite recovery/initial implementation. Its RPC execution probe requires a native
+one-command decision; no product implementation or integration acceptance is claimed by this amendment.
 
 ### Approved decomposition — 2026-10-15
 

@@ -18,6 +18,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | in-progress | — | [PR #75](https://github.com/johnnickell/fight-agent-os/pull/75) |
+| — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -402,7 +403,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00442](00442-TASK.md) | Fast-forward and reconcile the designated checkout safely | [TICKET-00109 — Synchronize the designated checkout safely](../tickets/00109-TICKET.md) | needs-info | [TASK-00441](00441-TASK.md), [TASK-00432](00432-TASK.md) | — |
 | — | [TASK-00443](00443-TASK.md) | Configure and run currently authorized scheduled synchronization | [TICKET-00109 — Synchronize the designated checkout safely](../tickets/00109-TICKET.md) | needs-info | [TASK-00442](00442-TASK.md) | — |
 | — | [TASK-00445](00445-TASK.md) | Record independent managed Reviews | [TICKET-00083 — Deliver managed review through verified PR handoff](../tickets/00083-TICKET.md) | needs-info | [TASK-00141](00141-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00378](00378-TASK.md) | — |
-| — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | needs-info | — | — |
 | — | [TASK-00451](00451-TASK.md) | Emit useful native diagnostics without disrupting operations | [TICKET-00111 — Explain application activity and failures with useful diagnostics](../tickets/00111-TICKET.md) | needs-info | [TASK-00455](00455-TASK.md), [TASK-00456](00456-TASK.md) | — |
 | — | [TASK-00454](00454-TASK.md) | Attribute console and worker failures to the correct operation | [TICKET-00111 — Explain application activity and failures with useful diagnostics](../tickets/00111-TICKET.md) | needs-info | [TASK-00451](00451-TASK.md), [TASK-00453](00453-TASK.md) | — |
 | — | [TASK-00455](00455-TASK.md) | Resolve native collection and privilege blockers | [TICKET-00112 — Collect operational logs with bounded recovery and visible loss](../tickets/00112-TICKET.md) | needs-info | [TASK-00467](00467-TASK.md), [TASK-00481](00481-TASK.md), [TASK-00482](00482-TASK.md) | — |
