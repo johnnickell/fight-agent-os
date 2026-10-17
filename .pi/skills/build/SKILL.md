@@ -113,6 +113,11 @@ that skill and its nested references. Apply target substitutions throughout, exe
 the required report, then stop without delegating other roles or invoking `build`. Do not copy Engineer dialogue
 into reviewer prompts or suggest a verdict. Explicitly carry delegated land and capture-publication authority
 into the Release Manager prompt.
+For QA, carry the [terminal capture scope](../../../docs/engineering/QA.md#terminal-capture-authority), resolved
+provider [capture procedure](../../../docs/engineering/TERMINAL_CAPTURE.md), owned evidence directory and any
+known Peekaboo bridge prerequisites into the request. Creating, exercising, capturing and closing dedicated QA
+terminals needs no new per-image confirmation. Preserve target restrictions and host enforcement; an unavailable
+bridge is a prerequisite to resolve, not a request for the operator to manually take every screenshot.
 
 Use the bundled [stage monitor](scripts/run-stage.py) (Python 3.9+) to launch Pi in JSON mode. Resolve its absolute
 path beside the **owning provider skill**, even when the TASK checkout belongs to another project; do not assume

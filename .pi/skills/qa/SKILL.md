@@ -27,14 +27,19 @@ scenario narrows investigation but cannot silently waive the TASK's remaining re
    available tools; use isolated services and disposable data. Retain owned environments needed for evidence or
    repair. Do not use production/shared user data, switch
    a dirty checkout, replace another TASK's running service, or install missing tools without authority. An
-   unavailable prerequisite produces INCOMPLETE, with the exact recovery action.
+   unavailable prerequisite produces INCOMPLETE, with the exact recovery action. For macOS terminal visuals,
+   use the [Peekaboo capture procedure](../../../docs/engineering/TERMINAL_CAPTURE.md) and preflight its bridge
+   before the scenario run. Routine task-owned window creation, interaction, capture and cleanup are included
+   in the operator's QA invocation; do not request confirmation for each screenshot or default to manual capture.
 3. **Exercise and capture.** Use the real implementation through the selected interface, including actual API
    requests, browser interaction or a PTY for interactive terminals. If needed, use bounded [disposable probes](../../../docs/engineering/QA.md#disposable-probes)
    in the ignored run directory; retain reproducible scripts and results, without patching source/tests.
    Record steps, inputs, expected/observed results and evidence per scenario. For instruction scenarios, label
    walkthroughs and their limits rather than claiming live execution. Follow [visual evidence guidance](../../../docs/engineering/QA.md#visual-evidence)
    for readable, comparable baseline/result captures of affected states; inspect every final image before citing it.
-   For terminal image limitations, keep a sanitized real transcript/recording and state what it cannot prove.
+   Recheck the owned terminal session before each capture and inspect the saved PNG. Diagnose a missing bridge,
+   sandbox access, OS permission or stale window separately. For unresolved terminal image limitations, keep a
+   sanitized real transcript/recording and state what it cannot prove.
    Screenshots, static source inspection, existing green tests and successful startup alone cannot establish
    executable behavioral PASS.
 4. **Judge and hand off.** Apply the standards' PASS/FAIL/INCOMPLETE/N/A rules. Confirm reproducible defects and
