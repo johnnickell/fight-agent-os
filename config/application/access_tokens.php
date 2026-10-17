@@ -71,7 +71,7 @@ return static function (Container $container): void {
         $container->get(AuthenticateAccessToken::class),
         $container->get(AuthoritativePrincipalResolver::class),
         $container->get(PermissionRepository::class),
-        new PermissionGuard()
+        $container->get(PermissionGuard::class)
     ));
 
     // Fail at boot in every environment; public routes never bypass invalid signing configuration.

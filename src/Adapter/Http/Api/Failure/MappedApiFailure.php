@@ -15,8 +15,12 @@ final readonly class MappedApiFailure
 {
     /**
      * Constructs MappedApiFailure
+     *
+     * @param integer $status
+     * @param JSendEnvelope $envelope
+     * @param array<string, string> $headers
      */
-    public function __construct(public int $status, public JSendEnvelope $envelope)
+    public function __construct(public int $status, public JSendEnvelope $envelope, public array $headers = [])
     {
     }
 }

@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Adapter\Http\Api\Failure;
 
 use App\Adapter\Http\Api\Validation\InputFailures;
+use App\Adapter\Http\Responder\Api\V1\Invitations\InvitationIssuanceData;
 use App\Application\Failure\AuthenticationRequired;
+use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\PermissionDenied;
+use App\Application\Failure\RateLimited;
 use App\Application\Failure\ResourceNotFound;
 use App\Application\Failure\StateConflict;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
@@ -35,6 +38,14 @@ final readonly class ApiFailureMapper
      */
     public function classify(Throwable $exception): ?MappedApiFailure
     {
+        if ($exception instanceof RateLimited) {
+            return new MappedApiFailure(429, JSendEnvelope::error('Too many requests.'), [
+                'Retry-After' => (string) $exception->retryAfter
+            ]);
+        }
+        if ($exception instanceof IncompleteInvitation) {
+            return new MappedApiFailure(503, JSendEnvelope::fail(new InvitationIssuanceData($exception->outcome)));
+        }
         if ($exception instanceof TransportValidationException) {
             return new MappedApiFailure(400, JSendEnvelope::fail(new InputFailures([
                 'body' => ['Invalid input.']

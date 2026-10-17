@@ -66,7 +66,7 @@ final readonly class ApiFailureMiddleware implements MiddlewareInterface
             $response = $this->responses->fromEnvelope(
                 $classification->envelope,
                 $classification->status,
-                ['Cache-Control' => 'no-store']
+                ['Cache-Control' => 'no-store', ...$classification->headers]
             );
         }
 
