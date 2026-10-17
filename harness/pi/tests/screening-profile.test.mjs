@@ -5,10 +5,10 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, realpathSy
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ScreeningProfiles, validateProfile, hash } from '../src/jev/screening-profile.mjs';
-import { writePrivate } from '../src/jev/local-store.mjs';
+import { LocalSettings, writePrivate } from '../src/jev/local-store.mjs';
 import { MonthlyLedger, ProfileBudget } from '../src/jev/monthly-budget.mjs';
-import { validateFilePolicy } from '../src/jev/file-screening.mjs';
-import { connection } from '../src/jev/readiness.mjs';
+import { FileScreening, validateFilePolicy } from '../src/jev/file-screening.mjs';
+import { configurationIdentity, connection } from '../src/jev/readiness.mjs';
 
 function fixture(t) {
   const base = realpathSync.native(mkdtempSync(join(tmpdir(), 'standing-profile-'))), root = join(base, 'project');
@@ -75,4 +75,52 @@ test('revocation is a durable hold for fresh/resumed sessions, not a deleted imp
   f.profiles.save(reenrolled, []);
   assert.equal(new ProfileBudget('session', f.profiles.directory, ledger).inspect(100000).session.usedMicroUsd, 2688);
   assert.equal(ledger.inspect().reservedMicroUsd, 2688);
+});
+
+test('explicit connection rebind repairs every enrolled project and preserves permissions and accounting', t => {
+  const f = fixture(t), second = join(f.root, '..', 'consumer'); mkdirSync(second);
+  f.profiles.save(f.profiles.preview({ cwd: second, configuration: f.config, providerDisclosure: true, commandDisclosure: true }), []);
+  const previous = f.profiles.load(), before = readFileSync(f.profiles.path);
+  const ledger = new MonthlyLedger(f.profiles.directory);
+  const pending = ledger.reserve('existing-session', 2688, 100000); ledger.dispatch(pending);
+  const ledgerBefore = readFileSync(ledger.path);
+  const settings = new LocalSettings(f.profiles.directory);
+  // Simulate the old setup command's identity churn, without changing its actual choices.
+  const config = settings.save({ ...f.config, revision: randomUUID() });
+  const screening = root => new FileScreening({ settings: f.profiles.fileSettings('new-session', root),
+    configuration: () => config, sessionId: 'new-session', cwd: root, platform: 'darwin',
+    connect: () => ({ state: 'available', configuration: { ...config, identity: configurationIdentity(config) } }) });
+  for (const root of [f.root, second]) assert.equal(screening(root).availability(), 'stale-file-policy');
+  const preview = f.profiles.previewRebind(config);
+  assert.deepEqual(readFileSync(f.profiles.path), before);
+  assert.deepEqual(preview.profile.projects, previous.projects);
+  f.profiles.applyRebind(preview, []);
+  const repaired = f.profiles.load();
+  assert.deepEqual({ ...repaired, revision: previous.revision, configuration: previous.configuration }, previous);
+  for (const root of [f.root, second]) assert.equal(screening(root).availability(), 'available');
+  assert.deepEqual(readFileSync(ledger.path), ledgerBefore);
+  assert.equal(ledger.inspect().reservedMicroUsd, 2688);
+  assert.throws(() => f.profiles.applyRebind(preview, []), { code: 'rebind-preview-stale' });
+});
+
+test('connection rebind rejects stale or altered previews and revoked authority, and only reduces limits', t => {
+  const f = fixture(t), settings = new LocalSettings(f.profiles.directory);
+  let config = settings.save({ ...f.config, sessionMicroUsd: 50000 });
+  const preview = f.profiles.previewRebind(config), before = readFileSync(f.profiles.path);
+  assert.equal(preview.profile.sessionMicroUsd, 50000);
+  const modified = structuredClone(preview); modified.profile.projects[0].excludedPaths = [];
+  assert.throws(() => f.profiles.applyRebind(modified, []), { code: 'rebind-preview-stale' });
+  assert.deepEqual(readFileSync(f.profiles.path), before);
+  config = settings.save({ ...config, requestMicroUsd: 3000, revision: randomUUID() });
+  assert.throws(() => f.profiles.applyRebind(preview, []), { code: 'rebind-preview-stale' });
+  const fresh = f.profiles.previewRebind(config);
+  assert.equal(fresh.profile.requestMicroUsd, 2688);
+  f.profiles.revoke(f.root);
+  assert.throws(() => f.profiles.applyRebind(fresh, []), { code: 'rebind-preview-stale' });
+  assert.throws(() => f.profiles.previewRebind(config), { code: 'enrollment-revoked' });
+  const other = fixture(t);
+  assert.throws(() => other.profiles.previewRebind({ ...config, disclosure: 'fixed-synthetic-only' }), { code: 'disclosure-denied' });
+  const { commandDisclosure, revoked, ...legacy } = other.profiles.load();
+  writePrivate(other.profiles.path, { ...legacy, version: 'screening-profile-v1', expiresAt: 1 });
+  assert.throws(() => other.profiles.previewRebind(config), { code: 'historical-profile-conversion-required' });
 });

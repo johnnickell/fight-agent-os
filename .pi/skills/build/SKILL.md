@@ -45,6 +45,10 @@ deploy or continue to another TASK. A question about planning does not invoke th
    copy provider instructions to work around a denial. Pass the resolved TASK and selected checkout through
    the monitor's trusted stage environment. The shared [access contract](../../../harness/pi/FILE_SCREENING_PROFILE.md#installed-skill-effects)
    limits Build to coordination outputs and retains each child's independent role effects.
+   If checking `file_screening_status`, use `workflow.skill`, `effect`, task and checkout to identify the
+   coordinator. Build correctly reports `phase: qa` with `workflow.skill: build` and `effect: coordination`;
+   the phase describes command-risk assessment, not a QA-worker assignment. Do not hold or request a relaunch
+   solely because it says `qa`. If an older status omits `workflow`, that phase alone cannot establish a mismatch.
 4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, resolved role models, effective/consumed/remaining
    cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Check installed
    `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools
@@ -109,6 +113,11 @@ that skill and its nested references. Apply target substitutions throughout, exe
 the required report, then stop without delegating other roles or invoking `build`. Do not copy Engineer dialogue
 into reviewer prompts or suggest a verdict. Explicitly carry delegated land and capture-publication authority
 into the Release Manager prompt.
+For QA, carry the [terminal capture scope](../../../docs/engineering/QA.md#terminal-capture-authority), resolved
+provider [capture procedure](../../../docs/engineering/TERMINAL_CAPTURE.md), owned evidence directory and any
+known Peekaboo bridge prerequisites into the request. Creating, exercising, capturing and closing dedicated QA
+terminals needs no new per-image confirmation. Preserve target restrictions and host enforcement; an unavailable
+bridge is a prerequisite to resolve, not a request for the operator to manually take every screenshot.
 
 Use the bundled [stage monitor](scripts/run-stage.py) (Python 3.9+) to launch Pi in JSON mode. Resolve its absolute
 path beside the **owning provider skill**, even when the TASK checkout belongs to another project; do not assume

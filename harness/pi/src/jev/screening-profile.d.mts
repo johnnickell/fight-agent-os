@@ -11,6 +11,7 @@ export type Project = { root: string; excludedPaths: string[]; instructions: Ins
 export type RepositoryScope = { roots: string[]; base: string; excludedPaths: string[] };
 export type Profile = { version: 'screening-profile-v1' | 'screening-profile-v2'; revision: string; configuration: string; projects: Project[];
   excludedNames: string[]; providerDisclosure: boolean; expiresAt: number | null; commandDisclosure?: boolean; revoked?: boolean; requestMicroUsd: number; sessionMicroUsd: number };
+export type RebindPreview = { previousIdentity: string; profile: Profile };
 export declare const profileVersion: 'screening-profile-v2';
 export declare function hash(value: string | Buffer): string;
 export declare function validateProfile(value: unknown, now?: number): Profile;
@@ -25,6 +26,8 @@ export declare class ScreeningProfiles {
   preview(input: { cwd: string; configuration: OperatorConfiguration; excludedPaths?: string[]; instructions?: string[];
     targets?: Omit<Target, 'digest'>[]; providerDisclosure: boolean; commandDisclosure?: boolean }): Profile;
   convert(): Profile;
+  previewRebind(configuration: OperatorConfiguration): RebindPreview;
+  applyRebind(preview: RebindPreview, resources: string[]): void;
   revoke(cwd: string): void;
   addWitness(cwd: string, kind: 'instruction' | 'target', input: { path: string; purpose?: string; offset?: number; limit?: number }): Profile;
   intake(cwd: string, input: IntakeRequest): TrustedIntake;
