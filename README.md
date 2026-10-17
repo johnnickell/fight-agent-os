@@ -36,6 +36,11 @@ Restart Pi, then use `/fight-header` to choose a presentation or `off` to restor
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
+An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through `./bin/terminal`, with
+responsive conversation/observation panes and honest producer placeholders. Coordinator PTY/provider/file-hook
+checks, held-state terminal images and a recovered passing pre-commit full gate are recorded; independent
+Review/QA and the coordinator's post-commit gate remain pending. See the workspace runbook for evidence and
+limitations. Keep normal Pi for setup and native-only controls.
 Branding does not enable managed TASK execution or sandbox access. The optional [deterministic tool policy](harness/pi/TOOL_POLICY.md)
 requires separate operator selection on the qualified runtime; it is not Jev screening or sandbox isolation.
 

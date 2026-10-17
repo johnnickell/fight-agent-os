@@ -65,6 +65,16 @@ to the main model, not Jev; text relevance screening and command-risk assessment
 See [images and screenshots](FILE_SCREENING_PROFILE.md#images-and-screenshots) for supported forms and retained
 format, size and protected-file checks.
 
+## Responsive local workspace candidate
+
+`./bin/terminal` at the repository root starts a dedicated Pi RPC terminal client with a persistent half/quarter/
+quarter split, narrow selectable views and read-only unavailable placeholders. No producer, managed integration,
+Docker operation or global installation is added. Read the [workspace runbook](WORKSPACE.md) for input, policy,
+session and cleanup boundaries. Coordinator RPC/PTY/provider/file-hook checks, real held-state images and a
+recovered passing pre-commit full gate are recorded there with limitations; the coordinator's post-commit gate
+and independent Review/QA remain pending.
+Normal Pi remains the operator path.
+
 ## Install
 
 From the repository root, install for every Pi session:

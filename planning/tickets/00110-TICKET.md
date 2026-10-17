@@ -94,6 +94,28 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 
 ## Decisions and progress
 
+### Local workspace candidate — 2026-10-17
+
+TASK-00447 now has a dedicated Pi RPC client (`./bin/terminal`), owned focus/layout/lifecycle behavior tests and
+honest side placeholders; see its current completion notes and [workspace runbook](../../harness/pi/WORKSPACE.md).
+The coordinator recovered owned RPC transport and real PTY qualification (active Harness, wide/narrow,
+side-input isolation, harmless shell and terminal restoration), then completed a separate genuine provider turn
+with native status/read tools and fixture marker. Actual provider-reported model identity remains unavailable.
+Real wide/narrow terminal images were captured and inspected, but show disposable-HOME held state, not active
+provider conversation; the new feature was Not present before. Exact-window GUI Tab input was refused without
+dispatch; PTY provides keyboard proof. No light-theme or child-tab image was collected. The dedicated runtime
+is prepared. After freezing all 12 owned staged paths, the coordinator executed native
+`./bin/planning-check && ./bin/build`: both passed, full build 206.636 seconds, receipt
+`.runs/build/20261017T230157Z-2411/receipt.json`. Engineer verified the tested snapshot/file hashes before the
+Markdown-only evidence update. This is fresh coordinator-observed pre-commit evidence, not a self-run Engineer
+or independent acceptance receipt. The literal post-commit coordinator gate remains pending before Review.
+Earlier resumed checks passed 391 Harness tests and 32 workspace checks; the full gate's narrower Harness
+selection ran 329 tests. TASK-00447 records exact counts, warnings and limitations; prior runtime/provider/capture
+holds are resolved history. Review/QA must assess remaining native-only/attachment/custom-component/host
+limitations; none is silently accepted as an exclusion.
+This is not acceptance; TASK-00448/00449 producers and managed integrations remain undelivered. No Pi version
+pin was introduced.
+
 ### Superseding Pi qualification policy — 2026-10-17
 
 The user's authoritative amendment is: “Pi moves quickly. we should NEVER pin to a version number. We are on
@@ -103,8 +125,9 @@ remain history. Pi 1.3.0 is the installation observed during recovery, not a rep
 the lasting project convention. No unrelated historical records, dependency/model pins or global configuration
 are changed, and the local presentation scope and required policy/terminal qualification are unchanged.
 
-TASK-00447 is in prerequisite recovery/initial implementation. Its RPC execution probe requires a native
-one-command decision; no product implementation or integration acceptance is claimed by this amendment.
+At this amendment checkpoint TASK-00447 was in prerequisite recovery/initial implementation and its RPC probe
+still required a native one-command decision. The coordinator's later successful recovery and the candidate
+above supersede that prerequisite; this historical amendment itself claimed no implementation or acceptance.
 
 ### Approved decomposition — 2026-10-15
 
