@@ -474,5 +474,6 @@ ended at TASK-00480 before allocating seven new TASKs. All thirty-seven are unra
 TASKs gained early supplier metadata here. TICKET-00117 records fresh planning verification; no runtime/build/publication
 or operational enrollment is claimed.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/` for read-only Board-based work selection. This
+Next: `/skill:next` for read-only Board-based work selection from the published planning branch, or from `develop`
+after merge, following [the EPIC's current decomposition handoff](../../epics/00019-EPIC.md#approved-installation-task-decomposition-and-completed-map-planning). This
 recommendation invokes no execution and waives no missing owner, qualification, review or publication requirement.

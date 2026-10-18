@@ -224,5 +224,6 @@ build and upstream/ID reconciliation remain required before commit/publication. 
 separately authorized runtime experiments remain gated. Historical synthetic receipts are not fresh application
 acceptance or an ongoing execution grant.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/` for read-only Board-based work selection. This
+Next: `/skill:next` for read-only Board-based work selection from the published planning branch, or from `develop`
+after merge, following [the EPIC's current decomposition handoff](../epics/00019-EPIC.md#approved-installation-task-decomposition-and-completed-map-planning). This
 recommendation invokes no execution, changes no priority and grants no implementation, experiment or publication.
