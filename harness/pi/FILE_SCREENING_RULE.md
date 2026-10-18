@@ -71,7 +71,7 @@ operator selects a workflow. A fresh unassigned local session defaults to Engine
 tools; correct the storage problem and reload before continuing. Never use another tool to evade that hold.
 
 Use `file_screening_status.workflow` to identify the selected skill, effect, task, checkout and mode.
-The top-level `phase` is the command-risk role: Build uses `phase: qa` with `skill: build` and
+The top-level `phase` is the workflow role: Build uses `phase: qa` with `skill: build` and
 `effect: coordination`. That is a valid coordinator, not a QA-worker mismatch. Do not request a relaunch
 or role promotion based on `phase` alone. See the [status contract](FILE_SCREENING_PROFILE.md#installed-skill-effects).
 
@@ -91,23 +91,13 @@ before the next effect. For `repository-metadata-unavailable`, inspect `git work
 enrolled repository; repair with `git worktree repair` or return to a valid registered checkout and reload.
 Never hand-edit pointers, reenroll each worktree, discard liabilities or use shell to bypass an actual denial.
 
-## Assess every final shell command
+## Native shell remains independent
 
-Every final native Agent Bash and user `!`/`!!` command receives Jev risk assessment with the active role, after
-local credential-disclosure checks and configured command-prefix expansion. Routine, already-authorized work
-proceeds on an ordinary result; risky or uncertain/unavailable results require the native one-command decision.
-Chat approval does not answer that dialog, and one decision is not reused. Ordinary is not a safety guarantee.
-Parallel commands share a queue for native approvals: only one command is displayed at a time. Answer each
-displayed command separately. Cancelling a command or changing sessions withdraws its pending approval;
-the next eligible request can then appear. Agents need not serialize all verification merely to avoid dialog
-collisions. Shell execution timeouts begin after assessment/approval, so they do not limit the operator's wait.
-
-A `command-secret-disclosure-held` result is a local refusal of that command before provider disclosure or
-execution, not a persistent hold to clear. Follow the returned recovery. Never embed credentials or hide the
-same operation in a script to evade the check. Source scripts, future descendants and shell environment values
-are not inspected. These role checks cover explicit file tools; shell classification is advisory and cannot
-confine arbitrary scripts, Git effects or trusted SDK calls. Do not claim OS isolation or universal interception.
+Native Agent bash and user `!`/`!!` run through Pi without Jev command screening, command disclosure or a Jev
+confirmation dialog. No Jev setup is required for native shell. Existing task permissions and native runtime
+permissions still apply. Keep credentials out of commands and never use shell to bypass an actual file denial.
+Explicit-file checks do not confine shell, descendants or trusted SDK calls; do not claim OS isolation.
 
 Use the normal provider-owned Build workflow and canonical role reports. Preserve budgets, accounting and
-existing task permissions. For Jev batches, inspect every result and incomplete coverage. A current cache hit
-reuses a judgment after local source checks; it is not permission for sibling files or a fresh evaluation.
+existing task permissions. For optional Jev batches, inspect every result and incomplete coverage. A current
+cache hit reuses a judgment after local source checks; it is not permission for siblings or a fresh evaluation.

@@ -62,6 +62,29 @@ Exclude a new shell/theme, client eligibility/queue algorithm, Workflow engine, 
 command executor, review/QA execution, publication/merge or demonstration rows. Final visual treatment and actual
 accessibility qualification belong with production delivery, not inherited prototype screenshots.
 
+## Visual Workflow policy editor — approved plan 2026-10-18
+
+John requested a draggable visual representation and editor for the Workflows, Policies and associated Agents
+already planned. [TASK-00493](../tasks/00493-TASK.md) adds this bounded configuration surface under the existing
+Dashboard owner. Preserve the compact runtime table and detail sections; open policy configuration separately.
+No full Wayfinder map, new executor or duplicate policy/Agent/tool registry is needed.
+
+Show registered stages and their supported transitions, assigned eligible Agents/roles, policy bounds and available
+MCP tool capabilities. Dragging arranges nodes or proposes typed configuration changes; it never directly grants
+a Permission, launches a tool or changes a running Workflow. Provide keyboard/list-form equivalents. Keep layout
+metadata separate from authoritative policy, and distinguish available, requested and effective tool access.
+
+Reuse TICKET-00025/00052 for versioned Repository configuration/routes, TICKET-00032/00083 for owned execution
+stages and authority, TICKET-00061/00064 for current tool and Agent eligibility, TICKET-00075/00076 for published
+templates, TICKET-00088 for immutable snapshots, and TICKET-00096 for run facts. The application validates and
+publishes an attributable policy revision; existing runs retain their selected revision. Standing policy permits
+routine future runs without repeated human confirmation. Unsupported stages/connections or missing management
+contracts are visible gaps, not browser-invented runtime capabilities.
+
+Deliver inspection first, then typed draft edits, validation/diff and authorized publication/restore through these
+same owners. Exact supported stage-graph schema and policy-management operations must be allocated before this
+TASK is ready. This is approved product intent and a bounded implementation plan, not implemented behavior.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
@@ -110,6 +133,7 @@ controls truthfully rather than adding fixtures to production.
 | [TASK-00393](../tasks/00393-TASK.md) | Drill into sanitized phase activity | ready-for-agent |
 | [TASK-00394](../tasks/00394-TASK.md) | Intervene through existing Workflow and Runner controls | ready-for-agent |
 | [TASK-00395](../tasks/00395-TASK.md) | Follow existing Start and Pending start intents | ready-for-agent |
+| [TASK-00493](../tasks/00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress

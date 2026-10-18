@@ -47,7 +47,7 @@ deploy or continue to another TASK. A question about planning does not invoke th
    limits Build to coordination outputs and retains each child's independent role effects.
    If checking `file_screening_status`, use `workflow.skill`, `effect`, task and checkout to identify the
    coordinator. Build correctly reports `phase: qa` with `workflow.skill: build` and `effect: coordination`;
-   the phase describes command-risk assessment, not a QA-worker assignment. Do not hold or request a relaunch
+   the phase describes workflow role, not a QA-worker assignment. Do not hold or request a relaunch
    solely because it says `qa`. If an older status omits `workflow`, that phase alone cannot establish a mismatch.
 4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, resolved role models, effective/consumed/remaining
    cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Check installed
@@ -133,19 +133,10 @@ executor, `/screened-build`, stage/report tool or recurring per-child grant is r
 consumed revision counters in the existing coordinator ledger, including any older candidate grant history;
 never start at zero merely because the transport changed.
 
-Final native Agent bash and user-bash operations receive separate shared-Jev command-risk assessment with bounded
-nonsecret command/context disclosure approved during setup. An ordinary judgment is neither new permission nor
-a safety guarantee. Risky, uncertain, denied or unavailable judgments visibly hold for the relevant operator
-decision. Enrolled JSON children send one-command decisions over the temporary local connection inherited
-from the active interactive Build shell launch. The coordinator's native dialog identifies the child TASK,
-role, session, directory and exact command. Each acceptance applies only to that request; chat approval,
-parent launch approval and prior child decisions cannot answer it. Keep the launching shell alive and do not
-strip its environment. The connection closes when the launch ends or the coordinator is cancelled/switched;
-missing transport, denied/expired decisions and changed authority leave the child command unexecuted.
-If an older coordinator still reports unavailable child confirmation, fully restart Pi with the updated provider
-before resuming the same ledger and model pins; `/reload` alone may retain old JavaScript modules. Never repeat
-an unchanged failed child or toggle roles to manufacture approval. Do not paste secrets or source into commands
-for assessment.
+Native Agent bash and user bash use ordinary Pi execution without Jev screening or command confirmations.
+Jev setup, credentials and budgets are not prerequisites for Build. Optional enrolled file/search tools retain
+their own checks. If an older coordinator reports a command approval hold, fully restart Pi with the updated
+provider before resuming the same ledger and model pins; `/reload` can retain old JavaScript modules.
 Shell source reads can bypass relevance screening and same-user shell can access operator state: this interim
 profile is not universal admission enforcement or a sandbox. The installed [shared rule](../../../harness/pi/FILE_SCREENING_RULE.md)
 strongly prefers Jev for unfamiliar discovery while allowing ordinary direct project reads and portable
@@ -155,7 +146,7 @@ intercepted; preflighted children independently load the reviewed profile and bi
 
 Roles write their ordinary canonical reports under their owning skills. Coordinator intake must verify actual
 TASK/branch/base/head/status, independence, evidence and verdict before advancement, preserve prior reports, and
-hold malformed/wrong-subject/stale evidence. No host stamp or successful shell/risk result makes a report current
+hold malformed/wrong-subject/stale evidence. No host stamp or successful shell result makes a report current
 or independently accepted. The same shell example below is usable by enrolled coordinators within existing authority.
 
 Populate the quoted variables from the ledger: `attempt` is fresh and already contains `request.md`,

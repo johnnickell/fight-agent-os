@@ -16,8 +16,8 @@ is activated by installing/updating this source. TASK-00309's [enrolled-profile 
 adds a stable `/file-screening` diagnostic, explicit enrollment preview, shared monthly accounting and local
 role-scoped project access, optional receipt admission and conservative legacy reconciliation. Project enrollment stands until revocation/
 authority change, with explicit conversion of historical timeboxed profiles. Use ordinary Pi and the owning provider's
-`/skill:build TASK-NNNNN`: authorized shell/Git/checks remain useful with separate shared-Jev final-command risk
-assessment, not a replacement executor. Shell can bypass relevance screening and same-user state is not confined.
+`/skill:build TASK-NNNNN`: shell/Git/checks use ordinary Pi execution without Jev command screening or confirmations.
+Jev is optional: no setup, credentials or enrollment is required for normal native tools. Shell can bypass relevance screening and same-user state is not confined.
 See the profile's [launcher contract](FILE_SCREENING_PROFILE.md#coverage-and-normal-build). Limited live synthetic
 boundary evidence exists; representative investigations, visual proof and independent acceptance remain pending.
 Local checks do not establish production readiness. Both protected profiles share a
@@ -27,7 +27,7 @@ updating guard code or the runtime. Enrollment, monthly/session accounting, pend
 counters are retained; do not rerun setup or delete state merely to adopt a compatible Pi release.
 
 Routine interactive screening is quiet: startup/turn status and success events do not dump JSON or write around
-the input editor. Use `/file-screening inspect` for details; actionable warnings and command decisions remain.
+the input editor. Use `/file-screening inspect` for details; actionable file-screening warnings remain.
 The installed [shared rule](FILE_SCREENING_RULE.md) supplies portable guidance in every participating project;
 targets do not need a copy. Strongly prefer Jev before unfamiliar discovery; read known targets and core project
 instructions directly with `read` and `path`. Large Boards support ordinary bounded reads and continuation.
@@ -43,15 +43,8 @@ enrollment includes verified linked worktrees without another setup; select an e
 scratch, including canonical base paths from an external worktree. The [skill/effect inventory](FILE_SCREENING_PROFILE.md#installed-skill-effects)
 defines every installed skill and mode. Explicit hidden provider Build/Next instructions and their exact linked
 references work in enrolled consumers without enrolling the provider root or allowing automatic invocation.
-All roles retain secret-file, explicit-exclusion and runtime protections. Every final shell command receives
-role-aware risk assessment; these file checks do not provide shell/OS containment. Restart Pi after upgrades
+All roles retain secret-file, explicit-exclusion and runtime protections. Native shell receives no Jev assessment; these file checks do not provide shell/OS containment. Restart Pi after upgrades
 and reselect the workflow for older sessions. See the [profile](FILE_SCREENING_PROFILE.md) for limits/recovery.
-
-For Herdr's needs-input indicator during a command approval, install its official Pi integration with
-`herdr integration install pi`, then restart Pi. The harness emits `herdr:blocked` only while its command
-confirmation is open, and clears it on answer/dismissal/error. The status carries a generic label, never the
-command or directory. Without Herdr's integration the event has no listener; command decisions are unchanged.
-See [Herdr integrations](https://herdr.dev/docs/integrations/). The harness never installs it automatically.
 
 In the native TUI, Codex weekly usage has its own footer row; `File screening: active · Jev: configured` appears
 on the next row. Narrow terminals wrap rather than hide the statuses. `configured` means valid local Jev setup,
@@ -61,7 +54,7 @@ never run; its actual result, if retained, remains in `outcome`. No self-check,
 credential resolution or polling is triggered by drawing the footer or inspecting configuration.
 Ask the Agent to inspect screenshots normally: image `read` calls need only a path, including external Desktop
 files. No special command, path-only message, input selection or approval popup is required. Images go directly
-to the main model, not Jev; text relevance screening and command-risk assessment remain unchanged.
+to the main model, not Jev; optional text relevance screening remains available.
 See [images and screenshots](FILE_SCREENING_PROFILE.md#images-and-screenshots) for supported forms and retained
 format, size and protected-file checks.
 

@@ -37,7 +37,9 @@ See [Team roles](../docs/engineering/TEAM.md).
 The Runner remains deterministic PHP infrastructure. The selected first profile gives Engineer scoped source/
 scratch writes and TASK-only Review/QA reads, with no shell/private engine. Trusted infrastructure owns Git,
 permissions, provider access and fixed restricted-container check operations; the Team Lead may request routine
-checks automatically within a preapproved grant. File/handoff readiness is separate from candidate-check readiness.
+checks automatically within per-run grants derived from administrator-owned standing policy, with no routine
+workflow-start confirmation. The [autonomy amendment](../docs/engineering/TERMINAL_AUTHORITY.md#standing-execution-policy--approved-amendment-2026-10-18)
+is required future behavior; managed execution remains unimplemented. File/handoff readiness is separate from candidate-check readiness.
 The disposable two-session prototype is partial tool/context evidence, not production authorization or OS isolation.
 A prompt, worktree or Compose name alone is not a security boundary. Qualify actual capabilities and preserve
 independent results, limits and recovery rather than promising zero blast radius.

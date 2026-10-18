@@ -163,7 +163,7 @@
 | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | done | — |
 | [TASK-00159](00159-TASK.md) | Evaluate bounded typed questions with usage receipts | done | [TICKET-00037](../tickets/00037-TICKET.md) |
 | [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | done | [TICKET-00038](../tickets/00038-TICKET.md) |
-| [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | ready-for-agent | [TICKET-00038](../tickets/00038-TICKET.md) |
+| [TASK-00161](00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | wontfix | [TICKET-00038](../tickets/00038-TICKET.md) |
 | [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
@@ -494,4 +494,6 @@
 | [TASK-00489](00489-TASK.md) | Use authorized repository worktrees across Pi skills without repeated approval | done | — |
 | [TASK-00490](00490-TASK.md) | Recover shared Jev enrollment after connection setup | done | — |
 | [TASK-00491](00491-TASK.md) | Restore Build child confirmations and reduce routine command prompts | done | — |
+| [TASK-00492](00492-TASK.md) | Remove Jev command gating and plan autonomous policy authorization | done | — |
+| [TASK-00493](00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | needs-info | [TICKET-00097](../tickets/00097-TICKET.md) |
 <!-- /planning:records -->

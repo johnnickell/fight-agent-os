@@ -83,6 +83,7 @@ export class ScreeningProfiles {
     } };
   }
   /** Prepare a visible candidate without storing authority or resolving credentials */
+  // commandDisclosure is retained only for persisted v2 compatibility; shell never consumes it.
   preview({ cwd, configuration, excludedPaths = [], instructions = [], targets = [], providerDisclosure, commandDisclosure = false, days }) {
     // An old caller explicitly requesting bounded disclosure must not accidentally create standing authority.
     if (days !== undefined) fail('timeboxed-enrollment-no-longer-supported');
@@ -143,7 +144,7 @@ export class ScreeningProfiles {
     const previous = validateProfile(this.load(), 0);
     if (previous.version !== 'screening-profile-v1') fail('historical-profile-required');
     return validateProfile({ ...previous, version: profileVersion, revision: randomUUID(), expiresAt: null,
-      commandDisclosure: true, revoked: false });
+      commandDisclosure: false, revoked: false });
   }
   /** Retain the last revoked roots as a durable hold instead of turning removal into an implicit opt-out */
   revoke(cwd) {

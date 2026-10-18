@@ -37,8 +37,10 @@ This requires the controlled source-publication contract in the authority handof
 atomically protect arbitrary human filesystem edits, and a pre/post hash alone is not sufficient proof.
 The database Planning adapter later replaces the read source without replacing Workflow orchestration.
 
-An enrolled operator explicitly grants one TASK, repository/base, permitted roles/tools, limits and cleanup
-policy. The console authenticates that enrollment; possession of a shell or a role name is insufficient. Managed
+The application derives each TASK grant from administrator-owned standing execution policy: repository/base,
+permitted roles/tools, limits and cleanup policy. The console or unattended controller authenticates its enrolled
+identity and delegation; routine starts require no human confirmation. Possession of a shell or role name is insufficient.
+See the [approved autonomy amendment](TERMINAL_AUTHORITY.md#standing-execution-policy--approved-amendment-2026-10-18). Managed
 Agents use separate package-owned identities and bounded credentials. The exact enrollment/credential protocol
 must be accepted and implemented before managed work can launch. TASK-00139 has not been started.
 
@@ -80,7 +82,7 @@ contracts, not a requirement to introduce speculative classes before their use c
 
 | Capability | Trusted input | Result and uncertainty handling |
 |---|---|---|
-| TaskEligibility | Enrolled operator, selected TASK/dependency/context revisions and requested grant | An immutable eligible snapshot or a specific denial; revalidate when claiming, never accept client-authored eligibility. |
+| TaskEligibility | Authenticated User or delegated controller, standing policy, selected TASK/dependency/context revisions and derived grant | An immutable eligible snapshot or a specific denial; revalidate when claiming, never accept client-authored eligibility. |
 | SandboxProvisioner | Persisted effect ID, Workflow/role ownership, exact source and server-selected file/check profile | Observed workspace, tool/runtime and check-resource identities. After timeout, reconcile the original effect; never blindly create another resource. |
 | SandboxReadiness | Persisted ownership and observed file grants, runtime, source, services, network, credentials and limits | Separate file/handoff and check readiness bound to profile/attempt, or an actionable failure. A directory/container name alone proves neither. |
 | AgentLauncher | Current fenced attempt, verified readiness, pinned Harness/Pi inputs and bounded role grant | Process/session identity persisted before accepting progress. Unknown liveness requires reconciliation; worker reports cannot establish their own authority. |
