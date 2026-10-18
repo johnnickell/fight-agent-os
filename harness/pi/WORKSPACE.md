@@ -12,7 +12,33 @@ configuration. `--offline` prevents automatic catalog requests; it does **not** 
 provider prompts. Pi owns provider resolution, tools, context expansion, queued work and session persistence.
 The configured model is displayed separately from any actual provider response identity.
 
-**Repair cycle 1; independent acceptance pending:** canonical Review of `8e741aa…` requested R1–R5.
+**Current repair cycle 2; independent acceptance pending:** canonical Review of `735de3e…` resolved R1–R5,
+found R6 (long standard dialog edits off-screen), and requested E1 (real persistent native-selection/resume proof).
+The R6 repair follows the caret initially and after edits/backspace/newlines/resizes; manual scrolling remains
+independent until editing resumes. Three new regressions failed before repair; all **45 workspace** and **404 owning
+Harness** checks now pass. This is controlled evidence, not real-dialog PTY or independent QA. Coordinator's
+frozen-candidate planning check passed **625 records / 515 active** and full gate passed **215.664 seconds**,
+24 phases exit 0, source unchanged: `.runs/build/20261018T035504Z-11936/receipt.json`. Engineer verified equal
+before/after snapshots and all 1,317 snapshot file hashes before evidence-Markdown-only updates. This is inherited
+coordinator verification, not an Engineer rerun, literal post-commit receipt or independent acceptance. Canonical
+Harness ran **374 tests**, including all **45 workspace** tests; Sass/Bootstrap/Storybook warnings remain.
+**Recovered E1 now passes as coordinator-owned qualification, not independent QA:** real native interactive
+selection and actual status match explicit workspace resume of the same owned session, including persisted harmless
+shell conversation and review/reviewer/review-report/TASK-00447/exact checkout/status/null-launcher binding. Native
+and resumed normal exit0, canonical/echo restoration and child reaping are recorded. Evidence under
+`.runs/tasks/TASK-00447/runs/repair-cycle2/`: `e1-final-native{,-status}.json`, `e1-final-input.jsonl`, native stage in
+`e1-final-summary.json`, and `e1-resume-{summary,resumed-before,resumed-after,resumed-status,resumed-settled}.json`.
+The original helper API/observer failure, subsequent malformed checkout and final helper's incorrect all-history-in-
+viewport assertion remain preserved; the latter summary is still incomplete, not relabelled a whole-script pass.
+Resume-only recovery compared public session metadata and actual status instead; history above the viewport is not
+lost. Its earlier guard-source hold preceded the coordinator's normally assessed successful execution after resume.
+Configured Sol/high is separate from provider-event model identity; no launcher flags, policy mutation or RPC selector.
+See [TASK-00447](../../planning/tasks/00447-TASK.md) for provenance. Literal post-commit gate and fresh independent
+Review/affected QA remain pending at this tracked checkpoint; final gate/head/status are recorded in ignored
+`.runs/tasks/TASK-00447/runs/repair-cycle2/final-handoff.md`. Historical frozen checkpoints/holds remain evidence,
+not current prerequisites or reusable permits. No policy/input-scope amendment follows.
+
+**Historical repair cycle 1 checkpoint:** canonical Review of `8e741aa…` requested R1–R5.
 The repair explicitly refuses workflow selectors that RPC cannot honor, keeps dialog selection visible, bounds
 input at grapheme boundaries with rejection notices, discloses entry/stream clipping with source identity, and
 includes workspace behavior tests in the canonical gate. Fresh repair results and remaining limits are recorded
@@ -72,8 +98,9 @@ Side-pane typing/Enter is ignored. Global exit and abort remain available. A Pi 
 observation was focused. Confirmations require `y` for **that request only**; Enter, `n` and Escape deny. Select
 uses arrows/Enter, follows the selected option across wrapping/resizes, and always labels its selected ordinal.
 PageUp/PageDown can inspect a label taller than the pane without losing that identifier. Input/editor dialogs
-support literal text, Ctrl+J and Escape cancellation. Paste is ignored in
-dialogs. Focus returns to its previous pane after answering; the conversation draft stays separate.
+support literal text, Ctrl+J and Escape cancellation. Their viewport follows the caret initially, on editing
+(including backspace/newline), and on resize while following. PageUp/PageDown deliberately suspends following
+across redraw/resize; the next edit reveals the edit point again. Paste is ignored in dialogs. Focus returns to its previous pane after answering; the conversation draft stays separate.
 
 ## Policy and normal Pi paths
 
@@ -99,7 +126,8 @@ For a persistent session, exit with Ctrl+Q, open `pi --session PATH` in the same
 workflow there and inspect `/file-screening` to verify its binding. Exit native Pi and resume
 `./bin/terminal --session PATH`. Use the displayed exact session path; do not fork/clone it or copy launcher
 flags. Resume alone is not authority selection. An in-memory session cannot be resumed; its refusal says so.
-This documented route is not a new proof of native persistence/continuation; affected live QA remains required.
+The bounded real native-selection/resume qualification above establishes this owned session's continuation,
+not universal native parity or independent acceptance; affected live QA remains required.
 
 Enrollment, setup, role changes, login and native-only
 commands such as `/settings`, `/model`, `/tree`, `/new` and `/reload` require the normal Pi TUI. Unknown slash

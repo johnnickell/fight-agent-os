@@ -113,7 +113,8 @@ export class Workspace {
   dialogKey(text, key, dialog) {
     let response;
     if (key.name === 'pageup' || key.name === 'pagedown') {
-      dialog.scroll = Math.max(0, (dialog.scroll ?? 0) + (key.name === 'pagedown' ? 5 : -5)); return;
+      dialog.scroll = Math.max(0, (dialog.scroll ?? 0) + (key.name === 'pagedown' ? 5 : -5));
+      dialog.followEdit = false; return;
     }
     if (key.name === 'escape' || key.ctrl && key.name === 'c') response = { cancelled: true };
     else if (dialog.method === 'confirm') {
@@ -127,10 +128,12 @@ export class Workspace {
       const initial = prefix(clean(dialog.value ?? dialog.prefill ?? ''), 32768);
       dialog.value = initial.text; if (initial.omitted) this.inputLoss();
       if (key.name === 'return') response = { value: dialog.value };
-      else if (key.name === 'backspace') { dialog.value = graphemes(dialog.value).slice(0, -1).join(''); dialog.rejectedInput = ''; }
+      else if (key.name === 'backspace') {
+        dialog.value = graphemes(dialog.value).slice(0, -1).join(''); dialog.rejectedInput = ''; dialog.followEdit = true;
+      }
       else if (key.ctrl && key.name === 'j' || !key.ctrl && !key.meta && text) {
         const bounded = boundedInsert(dialog.value, graphemes(dialog.value).length, key.ctrl ? '\n' : clean(text), dialog.rejectedInput);
-        dialog.value = bounded.value; dialog.rejectedInput = bounded.rejected;
+        dialog.value = bounded.value; dialog.rejectedInput = bounded.rejected; dialog.followEdit = true;
         if (bounded.discarded) this.inputLoss();
       }
     }
@@ -175,7 +178,19 @@ export class Workspace {
           dialog.scroll = offset;
           // Manual scroll can inspect the rest of a long label without hiding what Enter submits.
           lines = [`Selected option ${(dialog.choice ?? 0) + 1}/${dialog.options.length}`, ...lines.slice(offset, offset + available)];
-        } else lines = lines.slice(offset, offset + viewport);
+        } else {
+          if (dialog && ['input', 'editor'].includes(dialog.method)) {
+            if (dialog.followEdit !== false) {
+              // The caret ends the value, immediately before the final help line. Follow it on
+              // edits/resizes, but leave deliberate PageUp/PageDown inspection alone until editing.
+              const caretRow = wrap(content.slice(0, content.lastIndexOf('\n')), inner).length - 1;
+              if (caretRow < offset) offset = caretRow;
+              else if (caretRow >= offset + viewport) offset = Math.max(0, caretRow - viewport + 1);
+            }
+            dialog.scroll = offset;
+          }
+          lines = lines.slice(offset, offset + viewport);
+        }
       }
       if (this.dialogs.length && pane === 0) title = 'Pi interaction — explicit response required';
       const block = [fit(`${pane === this.focus ? '>' : ' '} ${title} ${this.offsets[pane] ? `[scroll ${this.offsets[pane]}]` : ''}`, w)];

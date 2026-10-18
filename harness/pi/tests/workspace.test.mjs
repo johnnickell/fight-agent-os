@@ -375,6 +375,49 @@ test('R4 streaming loss is visible with assistant identity before the final mess
   } finally { await app.dispose(); }
 });
 
+// R6: standard input/editor dialogs must show the point being edited, not just retain its value.
+for (const method of ['input', 'editor']) {
+  test(`R6 long ${method} follows edits, backspace, newline and resize with exact request identity`, () => {
+    const model = workspace();
+    const prefill = Array.from({ length: 40 }, (_, i) => `existing-line-${i}`).join('\n');
+    model.dialogs.push({ id: `long-${method}`, method, title: 'Review response', prefill });
+    assert.match(model.render(78, 24).join('\n'), /existing-line-39▏/);
+    model.key('VISIBLE_EDIT_MARKER', {});
+    assert.match(model.render(78, 24).join('\n'), /VISIBLE_EDIT_MARKER▏/);
+    key(model, 'backspace');
+    assert.match(model.render(78, 24).join('\n'), /VISIBLE_EDIT_MARKE▏/);
+    key(model, 'j', { ctrl: true }); model.key('界👩‍💻'.repeat(30) + 'WRAPPED_END', {});
+    for (const [columns, rows] of [[78, 24], [120, 30], [30, 12], [78, 24]]) {
+      const lines = model.render(columns, rows);
+      assert.match(lines.join('\n'), /WRAPPED_END▏/);
+      assert.equal(lines.length, rows);
+      for (const line of lines) assert.equal(width(line), columns);
+    }
+    assert.deepEqual(key(model, 'return'), {
+      type: 'dialog', id: `long-${method}`,
+      value: prefill + 'VISIBLE_EDIT_MARKE\n' + '界👩‍💻'.repeat(30) + 'WRAPPED_END',
+    });
+  });
+}
+test('R6 manual dialog scrolling survives redraw/resize until the next edit and cancellation stays bound', () => {
+  const model = workspace(); model.focus = 2; model.insert('separate draft');
+  model.dialogs.push({ id: 'manual-editor', method: 'editor', prefill: Array.from({ length: 80 }, (_, i) => `line-${i}`).join('\n') });
+  model.render(78, 24);
+  for (let i = 0; i < 30; i++) key(model, 'pageup');
+  for (const [columns, rows] of [[78, 24], [78, 24], [120, 30], [30, 12]]) {
+    const frame = model.render(columns, rows).join('\n');
+    assert.match(frame, /line-0/); assert.doesNotMatch(frame, /line-79/);
+  }
+  key(model, 'pagedown'); assert.match(model.render(78, 24).join('\n'), /line-5/);
+  key(model, 'backspace'); assert.match(model.render(78, 24).join('\n'), /line-7▏/);
+  for (let i = 0; i < 30; i++) key(model, 'pageup');
+  model.render(78, 24); key(model, 'j', { ctrl: true });
+  assert.match(model.render(78, 24).join('\n'), /line-7/);
+  assert.match(model.render(78, 24).join('\n'), /▏/);
+  assert.deepEqual(key(model, 'escape'), { type: 'dialog', id: 'manual-editor', cancelled: true });
+  assert.equal(model.draft, 'separate draft'); assert.equal(model.focus, 2);
+});
+
 // Transport integration uses a separate harmless protocol peer, not a substitute for real Pi qualification.
 const peer = `process.stdin.setEncoding('utf8');let b='';process.stdin.on('data',t=>{b+=t;let n;while((n=b.indexOf('\\n'))>=0){let r=JSON.parse(b.slice(0,n));b=b.slice(n+1);if(r.type==='get_state')setTimeout(()=>process.stdout.write(JSON.stringify({type:'response',id:r.id,success:true,data:{sessionId:'owned'}})+'\\n'),20);else if(r.type==='get_commands')process.stdout.write(JSON.stringify({type:'response',id:r.id,success:true,data:{commands:[]}})+'\\n');else if(r.type==='fail')process.stdout.write(JSON.stringify({type:'response',id:r.id,success:false,error:'rejected'})+'\\n');}});`;
 test('RPC correlates concurrent responses, surfaces rejection/deadline and closes child cleanly', async () => {
