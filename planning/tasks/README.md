@@ -493,5 +493,5 @@
 | [TASK-00488](00488-TASK.md) | Repair Pi screening, workflow access and runtime compatibility | done | — |
 | [TASK-00489](00489-TASK.md) | Use authorized repository worktrees across Pi skills without repeated approval | done | — |
 | [TASK-00490](00490-TASK.md) | Recover shared Jev enrollment after connection setup | done | — |
-| [TASK-00491](00491-TASK.md) | Restore Build child confirmations and reduce routine command prompts | in-progress | — |
+| [TASK-00491](00491-TASK.md) | Restore Build child confirmations and reduce routine command prompts | done | — |
 <!-- /planning:records -->
