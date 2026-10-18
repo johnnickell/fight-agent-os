@@ -12,7 +12,22 @@ configuration. `--offline` prevents automatic catalog requests; it does **not** 
 provider prompts. Pi owns provider resolution, tools, context expansion, queued work and session persistence.
 The configured model is displayed separately from any actual provider response identity.
 
-**Independent acceptance pending:** coordinator-observed owned RPC and real `./bin/terminal` PTY probes passed
+**Repair cycle 1; independent acceptance pending:** canonical Review of `8e741aa…` requested R1–R5.
+The repair explicitly refuses workflow selectors that RPC cannot honor, keeps dialog selection visible, bounds
+input at grapheme boundaries with rejection notices, discloses entry/stream clipping with source identity, and
+includes workspace behavior tests in the canonical gate. Fresh repair results and remaining limits are recorded
+in [TASK-00447](../../planning/tasks/00447-TASK.md) and ignored
+`.runs/tasks/TASK-00447/runs/repair-cycle1/final-handoff.md`; the predecessor checkpoint/red-green proof is
+retained in `repair-handoff.md`. Recovered coordinator-owned repair gate passed **209.894 seconds** at
+`.runs/build/20261018T011616Z-7136/receipt.json`, with equal source snapshots and **371 canonical Harness tests**
+including all **42 workspace tests** (the broader focused Harness check passed 401). Engineer verified all eight
+file hashes before evidence-Markdown-only updates; this is inherited verification, not a self-run or independent
+acceptance receipt. The exact post-commit coordinator gate is pending before fresh Review. Sass/Bootstrap and
+Storybook warnings remain; some ANSI logs were blocked as binary during Engineer inspection, so their counts
+and warning inventory were not freshly rechecked. Review, affected QA and normal-input qualification remain
+required. No producer, policy authority, runtime or native-input scope amendment is introduced.
+
+**Historical implementation qualification (not repair verification):** coordinator-observed owned RPC and real `./bin/terminal` PTY probes passed
 with active Harness, wide/narrow views, side-input isolation, harmless native shell and terminal restoration.
 A separate genuine provider PTY completed a turn and observed native status/read tools and its fixture marker;
 the configured model is known, but the response model was not reported. Real wide/narrow terminal images were
@@ -55,7 +70,9 @@ session, invoke Docker, or change directories/grants. TASK-00448 and TASK-00449 
 
 Side-pane typing/Enter is ignored. Global exit and abort remain available. A Pi dialog is modal even when an
 observation was focused. Confirmations require `y` for **that request only**; Enter, `n` and Escape deny. Select
-uses arrows/Enter. Input/editor dialogs support literal text, Ctrl+J and Escape cancellation. Paste is ignored in
+uses arrows/Enter, follows the selected option across wrapping/resizes, and always labels its selected ordinal.
+PageUp/PageDown can inspect a label taller than the pane without losing that identifier. Input/editor dialogs
+support literal text, Ctrl+J and Escape cancellation. Paste is ignored in
 dialogs. Focus returns to its previous pane after answering; the conversation draft stays separate.
 
 ## Policy and normal Pi paths
@@ -67,14 +84,24 @@ Harness's existing `Fight screening status:` diagnostic. A changed/missing diagn
 not permission to infer activation from command names alone. A green label is not OS isolation or a substitute
 for executing policy-boundary probes.
 
-Prompts, registered extension commands, skills and prompt templates go through RPC `prompt`; streaming prompts
+Prompts, supported registered extension commands and prompt templates go through RPC `prompt`; streaming prompts
 explicitly steer. `agent_settled`, not a successful command response, clears the running indicator. Shell input
 uses RPC `bash`, preserving Pi's `user_bash` route and the Harness's final-command assessment. Supported extension
 select/confirm/input/editor requests are forwarded, request-bound, timeout-aware and never automatically allowed.
 No policy source is modified to accommodate the UI. Raw stderr, provider configuration, signatures and image
 payloads are not copied into display state. Pi retains images in the session; the display shows a text marker.
 
-RPC input is **not** trusted interactive operator input. Enrollment, setup, role changes, login and native-only
+RPC input is **not** trusted interactive operator input. Every `/skill:…` invocation and `/file-screening`
+command is explicitly refused locally, even if discovered in `get_commands`: these can select workflow, role,
+subject, checkout or query/status mode, which RPC cannot establish. Nothing is submitted and the current binding
+is unchanged. This is a compatibility refusal/routing boundary, not acceptance of reduced normal-input scope.
+For a persistent session, exit with Ctrl+Q, open `pi --session PATH` in the same directory, select the intended
+workflow there and inspect `/file-screening` to verify its binding. Exit native Pi and resume
+`./bin/terminal --session PATH`. Use the displayed exact session path; do not fork/clone it or copy launcher
+flags. Resume alone is not authority selection. An in-memory session cannot be resumed; its refusal says so.
+This documented route is not a new proof of native persistence/continuation; affected live QA remains required.
+
+Enrollment, setup, role changes, login and native-only
 commands such as `/settings`, `/model`, `/tree`, `/new` and `/reload` require the normal Pi TUI. Unknown slash
 commands are rejected locally rather than accidentally sent to a provider. Native custom terminal components,
 image rendering, file/image clipboard attachments, rich Markdown, mouse navigation and Pi custom palettes are
@@ -97,8 +124,12 @@ credential isolation, nor a promise that ambient-environment-only providers work
 into child environment variables, UI preferences or another credential store.
 
 Presentation state is memory-only. Display retention is 500 entries / 256 Ki UTF-16 units, each entry 64 Ki units;
-truncation drops old display content with an explicit notice, without editing Pi history. Input is capped at
-32 Ki units; RPC records at 8 MiB, pending requests at 32 and dialogs at eight. Terminal controls and bidi
+whole-entry eviction, per-entry clipping and streaming-tail clipping carry explicit notices, without editing Pi
+history. Clipped entries preserve a bounded role/source header and a grapheme-safe tail; a trailing notice stays
+visible while following the newest content. Input is capped at 32 Ki units across typed text, bracketed paste,
+and input/editor dialogs, including prefill/newlines. A cluster crossing the boundary is rejected whole; the
+status line discloses discarded input without echoing it. Paste truncation propagates that notice to the editor.
+RPC records are capped at 8 MiB, pending requests at 32 and dialogs at eight. Terminal controls and bidi
 embedding/override controls are removed from display output. Unicode uses grapheme boundaries, combining marks,
 CJK-wide and common emoji widths; actual terminal/font width variations still need real qualification.
 Long text wraps inside pane bounds. Very small terminals request resize rather than writing outside the screen.
@@ -120,7 +151,8 @@ uses those public records directly, with LF framing, response IDs, backpressure 
 read private runtime code or fork Pi. Installed examples previously denied access were not shell-read.
 
 Run `node --test harness/pi/tests/workspace.test.mjs` for owned layout, focus, editor, Unicode, paste, dialog,
-transport and lifecycle checks; `./bin/harness-check` runs them with the other Harness tests. Controlled peers
+transport and lifecycle checks; `./bin/harness-check` and the canonical `./bin/build` Harness phase run them
+with the other selected Harness tests. Controlled peers
 are explicitly **not** real-Pi integration proof. For acceptance, run the actual entry point in a PTY, inspect
 active Harness identity, exercise a real authorized conversation and file/command boundaries, test narrow/resize,
 scrolling, dialog cancellation, normal/error exit and capture real terminal images. Existing held-state images

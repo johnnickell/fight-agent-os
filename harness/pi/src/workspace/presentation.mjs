@@ -1,6 +1,6 @@
 // Local presentation only. Pi remains authoritative for conversation, tools and sessions.
-const segments = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-export const graphemes = text => [...segments.segment(text)].map(part => part.segment);
+import { graphemes, prefix, tail, boundedInsert } from './text.mjs';
+export { graphemes } from './text.mjs';
 export const clean = value => String(value ?? '').replace(/[\x00-\x08\x0b-\x1f\x7f-\x9f\u061c\u200b\u200e\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g, '').replace(/\t/g, '    ');
 export function cellWidth(cluster) {
   if (/^[\p{Mark}\u200d\ufe0f]+$/u.test(cluster)) return 0;
@@ -47,20 +47,34 @@ export function layout(columns, rows, focus = 0, collapsed = false) {
 export class Workspace {
   focus = 0; collapsed = false; theme = 'system'; draft = ''; cursor = 0;
   offsets = [0, 0, 0]; transcript = []; transcriptBytes = 0; omitted = false;
-  live = ''; status = 'Starting Pi; input held until policy qualification'; ready = false; busy = false;
+  live = ''; liveOmitted = false; rejectedInput = ''; status = 'Starting Pi; input held until policy qualification'; ready = false; busy = false;
   identity = 'Pi starting'; policy = 'unavailable'; commands = new Set(); dialogs = []; history = []; historyIndex = 0;
   constructor(cwd) { this.cwd = cwd; }
   append(text) {
-    text = clean(text).slice(-65536);
+    text = clean(text);
+    if (text.length > 65536) {
+      // Keep the source/role header independently of the clipped body tail.
+      const identity = prefix(text.split('\n', 1)[0], 256).text;
+      const notice = `${identity}\n[Earlier entry content omitted; Pi history is authoritative]\n`;
+      const ending = `\n[${identity}: entry truncated; Pi history is authoritative]`;
+      text = notice + tail(text, 65536 - notice.length - ending.length) + ending; this.omitted = true;
+    }
     this.transcript.push(text); this.transcriptBytes += text.length;
     while (this.transcriptBytes > 262144 || this.transcript.length > 500) {
       this.transcriptBytes -= this.transcript.shift().length; this.omitted = true;
     }
   }
+  stream(text) {
+    const combined = this.live + clean(text);
+    if (combined.length > 65536) this.liveOmitted = true;
+    this.live = tail(combined, 65536);
+  }
+  inputLoss() { this.status = 'Input rejected at 32 Ki limit; discarded content was not submitted.'; }
   insert(text) {
-    text = clean(text).slice(0, Math.max(0, 32768 - this.draft.length));
-    const parts = graphemes(this.draft); parts.splice(this.cursor, 0, ...graphemes(text));
-    this.draft = parts.join(''); this.cursor += graphemes(text).length;
+    // A later keypress may continue a rejected emoji/combining cluster. Do not insert its fragments.
+    const bounded = boundedInsert(this.draft, this.cursor, clean(text), this.rejectedInput);
+    this.draft = bounded.value; this.cursor = bounded.cursor; this.rejectedInput = bounded.rejected;
+    if (bounded.discarded) this.inputLoss();
   }
   key(text, key = {}) {
     const dialog = this.dialogs[0];
@@ -79,10 +93,11 @@ export class Workspace {
       const message = this.draft.trim();
       if (!message) return;
       this.history.push(this.draft); this.history = this.history.slice(-50); this.historyIndex = this.history.length;
-      this.draft = ''; this.cursor = 0;
+      this.draft = ''; this.cursor = 0; this.rejectedInput = '';
       return { type: 'submit', message };
     }
     if (key.ctrl && key.name === 'j') { this.insert('\n'); return; }
+    if (['left', 'right', 'home', 'end', 'backspace', 'delete', 'up', 'down'].includes(key.name)) this.rejectedInput = '';
     if (key.name === 'left') this.cursor = Math.max(0, this.cursor - 1);
     else if (key.name === 'right') this.cursor = Math.min(graphemes(this.draft).length, this.cursor + 1);
     else if (key.name === 'home' || key.ctrl && key.name === 'a') this.cursor = 0;
@@ -109,18 +124,22 @@ export class Workspace {
       if (key.name === 'down') dialog.choice = Math.min(dialog.options.length - 1, (dialog.choice ?? 0) + 1);
       if (key.name === 'return') response = { value: dialog.options[dialog.choice ?? 0] };
     } else {
-      dialog.value ??= dialog.prefill ?? '';
+      const initial = prefix(clean(dialog.value ?? dialog.prefill ?? ''), 32768);
+      dialog.value = initial.text; if (initial.omitted) this.inputLoss();
       if (key.name === 'return') response = { value: dialog.value };
-      else if (key.name === 'backspace') dialog.value = graphemes(dialog.value).slice(0, -1).join('');
-      else if (key.ctrl && key.name === 'j') dialog.value += '\n';
-      else if (!key.ctrl && !key.meta && text) dialog.value = (dialog.value + clean(text)).slice(0, 32768);
+      else if (key.name === 'backspace') { dialog.value = graphemes(dialog.value).slice(0, -1).join(''); dialog.rejectedInput = ''; }
+      else if (key.ctrl && key.name === 'j' || !key.ctrl && !key.meta && text) {
+        const bounded = boundedInsert(dialog.value, graphemes(dialog.value).length, key.ctrl ? '\n' : clean(text), dialog.rejectedInput);
+        dialog.value = bounded.value; dialog.rejectedInput = bounded.rejected;
+        if (bounded.discarded) this.inputLoss();
+      }
     }
     if (response) { this.dialogs.shift(); return { type: 'dialog', id: dialog.id, ...response }; }
   }
   paneText(pane) {
     if (pane === 1) return 'Observation only — child agent\nUnavailable: no child selected\nTASK-00448 supplies the producer.\nFocus cannot send commands or change an agent directory, session or grants.';
     if (pane === 2) return 'Observation only — runtime logs\nUnavailable: no runtime connected\nTASK-00449 supplies the producer.\nNo Docker access or lifecycle operations.\nRuntime identity: none (not worktree-isolated).';
-    return [this.omitted ? '[Older display content omitted; Pi session remains authoritative]' : '', ...this.transcript, this.live].filter(Boolean).join('\n');
+    return [this.omitted ? '[Older display content omitted; Pi session remains authoritative]' : '', ...this.transcript, this.live || this.liveOmitted ? `${this.liveOmitted ? '[assistant stream: earlier content omitted]\n' : ''}${this.live}${this.liveOmitted ? '\n[assistant stream truncated; Pi history is authoritative]' : ''}` : ''].filter(Boolean).join('\n');
   }
   render(columns, rows) {
     columns = Math.max(1, columns); rows = Math.max(1, rows);
@@ -141,8 +160,22 @@ export class Workspace {
       // Observation and dialogs start at the top; conversation follows the newest content.
       if (pane === 0 && !this.dialogs.length) lines = lines.slice(Math.max(0, end - viewport), end);
       else {
-        const offset = this.dialogs.length && pane === 0 ? Math.min(this.dialogs[0].scroll ?? 0, Math.max(0, lines.length - viewport)) : this.offsets[pane];
-        lines = lines.slice(offset, offset + viewport);
+        const dialog = this.dialogs.length && pane === 0 ? this.dialogs[0] : undefined;
+        let offset = dialog ? Math.min(dialog.scroll ?? 0, Math.max(0, lines.length - viewport)) : this.offsets[pane];
+        if (dialog?.method === 'select') {
+          const available = Math.max(0, viewport - 1);
+          const selectionView = `${dialog.choice ?? 0}:${inner}:${available}`;
+          if (dialog.selectionView !== selectionView) {
+            const before = [dialog.title, dialog.message, ...dialog.options.slice(0, dialog.choice ?? 0).map(option => `  ${option}`)].filter(Boolean).join('\n');
+            const selectedStart = before ? wrap(before, inner).length : 0;
+            const selectedRows = wrap(`> ${dialog.options[dialog.choice ?? 0]}`, inner).length;
+            if (selectedStart < offset || selectedStart + selectedRows > offset + available) offset = selectedStart;
+            dialog.selectionView = selectionView;
+          }
+          dialog.scroll = offset;
+          // Manual scroll can inspect the rest of a long label without hiding what Enter submits.
+          lines = [`Selected option ${(dialog.choice ?? 0) + 1}/${dialog.options.length}`, ...lines.slice(offset, offset + available)];
+        } else lines = lines.slice(offset, offset + viewport);
       }
       if (this.dialogs.length && pane === 0) title = 'Pi interaction — explicit response required';
       const block = [fit(`${pane === this.focus ? '>' : ' '} ${title} ${this.offsets[pane] ? `[scroll ${this.offsets[pane]}]` : ''}`, w)];
@@ -168,6 +201,10 @@ export class Workspace {
   }
   dialogText() {
     const dialog = this.dialogs[0];
+    if (['input', 'editor'].includes(dialog.method)) {
+      const bounded = prefix(clean(dialog.value ?? dialog.prefill ?? ''), 32768);
+      dialog.value = bounded.text; if (bounded.omitted) this.inputLoss();
+    }
     return [dialog.title, dialog.message, ...(dialog.options ?? []).map((option, index) => `${index === (dialog.choice ?? 0) ? '>' : ' '} ${option}`),
       dialog.method === 'confirm' ? 'y: allow this request once · n/Enter/Esc: deny' : dialog.method === 'select' ? 'Up/Down select · Enter submit · Esc cancel' : `${dialog.value ?? dialog.prefill ?? ''}▏\nEnter submit · ^J newline · Esc cancel`].filter(Boolean).join('\n');
   }

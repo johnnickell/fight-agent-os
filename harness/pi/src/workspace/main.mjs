@@ -34,7 +34,7 @@ export async function run(argv = process.argv.slice(2), {
   const model = new Workspace(cwd); model.theme = config.theme;
   const terminal = createTerminal(input, output);
   const rpc = connect({ cwd, args: config.args });
-  let closing = false, fault = false, renderTimer, startupTimer, policySeen = false, stateSeen = false, commandsSeen = false;
+  let closing = false, fault = false, renderTimer, startupTimer, sessionFile, policySeen = false, stateSeen = false, commandsSeen = false;
   const dialogTimers = new Map();
   const render = () => {
     if (closing || renderTimer) return;
@@ -85,6 +85,11 @@ export async function run(argv = process.argv.slice(2), {
           model.append(`Shell exit: ${result.exitCode ?? 'unknown'}${result.cancelled ? ' (cancelled)' : ''}\n${result.output ?? ''}`);
         } else {
           const command = message.match(/^\/(\S+)/)?.[1];
+          if (command?.startsWith('skill:') || command === 'file-screening') {
+            model.append('Workflow selector not submitted: RPC cannot select role, workflow, task, checkout or query/status mode. Current binding is unchanged.');
+            model.append(sessionFile ? `Use native Pi in the same session: exit (^Q), run pi --session ${JSON.stringify(sessionFile)} from ${cwd}, select the workflow and inspect /file-screening to verify its binding. Exit native Pi, then resume ./bin/terminal --session ${JSON.stringify(sessionFile)}. Resume alone never selects authority.` : 'Use native Pi for workflow selection and verify /file-screening. This in-memory session has no same session resume path; do not assume a new session inherits its binding.');
+            render(); return;
+          }
           if (command && !model.commands.has(command)) {
             model.append('Unsupported/native-only Pi command. Use the normal Pi TUI; nothing was submitted.'); return;
           }
@@ -117,12 +122,12 @@ export async function run(argv = process.argv.slice(2), {
       else if (event.method === 'setStatus') model.append(`Pi status ${event.statusKey}: ${event.statusText ?? '(cleared)'}`);
       else if (event.method === 'setWidget' && event.widgetLines) model.append(event.widgetLines.join('\n'));
     } else if (event.type === 'agent_start') model.busy = true;
-    else if (event.type === 'agent_settled') { model.busy = false; model.live = ''; }
+    else if (event.type === 'agent_settled') { model.busy = false; model.live = ''; model.liveOmitted = false; }
     else if (event.type === 'message_update') {
       const delta = event.assistantMessageEvent;
-      if (delta.type === 'text_delta') model.live = (model.live + clean(delta.delta)).slice(-65536);
+      if (delta.type === 'text_delta') model.stream(delta.delta);
     } else if (event.type === 'message_end') {
-      const text = messageText(event.message); if (text) model.append(text); model.live = '';
+      const text = messageText(event.message); if (text) model.append(text); model.live = ''; model.liveOmitted = false;
     } else if (event.type === 'tool_execution_start') model.append(`Tool running: ${event.toolName}`);
     else if (event.type === 'bash_execution_update') model.append(`Shell output (${event.id ?? 'Pi'}):\n${event.delta}`);
     else if (event.type === 'extension_error') fail('Pi extension handler failed; input held. Restart after diagnosis in native Pi.');
@@ -130,9 +135,9 @@ export async function run(argv = process.argv.slice(2), {
     render();
   });
   try {
-    terminal.start((text, key) => { void sendAction(model.key(text, key)); render(); }, text => {
+    terminal.start((text, key) => { void sendAction(model.key(text, key)); render(); }, (text, retention = {}) => {
       if (model.dialogs.length) { model.append('Paste ignored during Pi interaction; type an explicit response.'); }
-      else if (model.focus === 0 && model.ready) model.insert(text);
+      else if (model.focus === 0 && model.ready) { model.insert(text); if (retention.discarded) model.inputLoss(); }
       render();
     });
     output.on('resize', render);
@@ -141,7 +146,7 @@ export async function run(argv = process.argv.slice(2), {
     render();
     const state = await rpc.request('get_state');
     model.identity = `${state.model?.provider ?? '?'}/${state.model?.id ?? '?'} · ${state.thinkingLevel ?? '?'} · session ${state.sessionId}`;
-    model.busy = state.isStreaming; stateSeen = true;
+    model.busy = state.isStreaming; sessionFile = state.sessionFile; stateSeen = true;
     model.append(`Conversation directory: ${cwd}\nSession: ${state.sessionId}\nStorage: ${state.sessionFile ?? 'in memory (not resumable)'}\nConfigured model: ${state.model?.provider}/${state.model?.id}; actual provider identity is available only after a response.`);
     const commands = await rpc.request('get_commands');
     model.commands = new Set(commands.commands.map(command => command.name));

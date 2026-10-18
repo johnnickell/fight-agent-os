@@ -162,11 +162,11 @@ test('workspace uses Pi-owned var session storage and rejects startup prompts or
 
 // Controller checks drive the owned entrypoint with controlled Pi records; not real PTY qualification.
 const tick = () => new Promise(resolve => setTimeout(resolve, 45));
-async function controller({ policy = 'active', commands = ['jev', 'file-screening', 'safe'], drawError = false } = {}) {
+async function controller({ policy = 'active', commands = ['jev', 'file-screening', 'safe'], drawError = false, sessionFile } = {}) {
   const rpc = new EventEmitter(); rpc.requests = []; rpc.sent = []; rpc.closed = 0;
   rpc.request = async (type, data) => {
     rpc.requests.push({ type, ...data });
-    if (type === 'get_state') { rpc.emit('policy', { state: policy, phase: 'reviewer', enforcement: 'owned-fixture' }); return { model: { provider: 'fixture', id: 'model' }, sessionId: 'fixture-session', thinkingLevel: 'high' }; }
+    if (type === 'get_state') { rpc.emit('policy', { state: policy, phase: 'reviewer', enforcement: 'owned-fixture' }); return { model: { provider: 'fixture', id: 'model' }, sessionId: 'fixture-session', sessionFile, thinkingLevel: 'high' }; }
     if (type === 'get_commands') return { commands: commands.map(name => ({ name })) };
     if (type === 'get_messages') return { messages: [{ role: 'user', content: 'prior' }] };
     if (type === 'clear_queue') return { steering: ['queued correction'], followUp: [] };
@@ -259,6 +259,120 @@ test('entrypoint closes its transport and terminal once on rendering failure or 
 test('native textual exit uses the same owned cleanup without submitting a provider prompt', async () => {
   const app = await controller(); app.terminal.paste('/quit'); app.terminal.key('', { name: 'return' }); await tick();
   assert.equal(app.rpc.closed, 1); assert.ok(!app.rpc.requests.some(request => request.type === 'prompt')); await app.dispose();
+});
+
+// Regression cases derived from independent Review R1–R4; no provider or policy mutation.
+test('R1 workflow selectors are explicitly refused even when discovered as commands', async () => {
+  const selectors = [
+    '/skill:review TASK-00447', '/skill:work TASK-00447 --checkout /other',
+    '/skill:graphify query symbol', '/skill:build TASK-00447 status',
+    '/skill:release 0.5.0 preview', '/skill:research TASK-00447 trace',
+    '/file-screening role land', '/file-screening',
+  ];
+  const app = await controller({ sessionFile: '/fixture/session.jsonl', commands: ['jev', 'file-screening', 'skill:review', 'skill:work', 'skill:graphify', 'skill:build', 'skill:release', 'skill:research'] });
+  try {
+    for (const selector of selectors) {
+      app.terminal.paste(selector); app.terminal.key('', { name: 'return' }); await tick();
+      assert.match(app.terminal.frames.at(-1), /not submitted/i, selector);
+    }
+    assert.deepEqual(app.rpc.requests.filter(request => request.type === 'prompt'), []);
+    assert.match(app.terminal.frames.at(-1), /native Pi/i);
+    assert.match(app.terminal.frames.at(-1), /same session/i);
+  } finally { await app.dispose(); }
+});
+test('R1 ephemeral rejection does not promise an unavailable same-session resume', async () => {
+  const app = await controller();
+  try {
+    app.terminal.paste('/skill:review TASK-00447'); app.terminal.key('', { name: 'return' }); await tick();
+    assert.match(app.terminal.frames.at(-1), /no same session resume path/);
+    assert.ok(!app.rpc.requests.some(request => request.type === 'prompt'));
+  } finally { await app.dispose(); }
+});
+test('R2 long and wrapped selects keep the exact selected value visible after navigation and resize', () => {
+  const model = workspace();
+  const options = Array.from({ length: 50 }, (_, i) => `choice-${i} ${'wrapped label '.repeat(8)} END-${i}`);
+  model.dialogs.push({ id: 'long', method: 'select', title: 'Choose', options });
+  for (let i = 0; i < 30; i++) key(model, 'down');
+  for (const [columns, rows] of [[78, 24], [120, 30], [30, 12], [78, 24]]) {
+    const frame = model.render(columns, rows).join('\n');
+    assert.match(frame, /> choice-30/);
+  }
+  key(model, 'up'); assert.match(model.render(78, 24).join('\n'), /> choice-29/);
+  assert.equal(key(model, 'return').value, options[29]);
+});
+test('R2 manually scrolling a label taller than the pane retains the selected option identity', () => {
+  const model = workspace(); model.dialogs.push({ id: 'tall', method: 'select', options: ['deny', 'allow\n' + 'detail\n'.repeat(40) + 'END-ALLOW'] });
+  key(model, 'down'); model.render(30, 12);
+  for (let i = 0; i < 8; i++) key(model, 'pagedown');
+  const frame = model.render(30, 12).join('\n');
+  assert.match(frame, /Selected option 2\/2/); assert.match(frame, /END-ALLOW/);
+  assert.match(key(model, 'return').value, /^allow/);
+});
+test('R3 typed and dialog input limits reject whole emoji and combining graphemes with notice', () => {
+  for (const cluster of ['👩‍💻', 'é']) {
+    const model = workspace(); model.insert('x'.repeat(32767));
+    const keyboard = new Keyboard((text, key) => model.key(text, key), text => model.insert(text));
+    keyboard.push(cluster); keyboard.close();
+    assert.equal(model.draft, 'x'.repeat(32767));
+    assert.ok(model.draft.isWellFormed()); assert.match(model.status, /input.*(discard|reject)/i);
+    model.dialogs.push({ id: 'bounded', method: 'input', prefill: 'x'.repeat(32767) });
+    model.key(cluster, {});
+    assert.equal(model.dialogs[0].value, 'x'.repeat(32767));
+    assert.match(model.status, /input.*(discard|reject)/i);
+    assert.equal(key(model, 'return').value.length, 32767);
+  }
+});
+test('R3 paste bounds preserve split graphemes and disclose discarded input through the controller', async () => {
+  const app = await controller();
+  const keyboard = new Keyboard(app.terminal.key, app.terminal.paste);
+  try {
+    keyboard.push('\x1b[200~' + 'x'.repeat(32767) + '👩');
+    keyboard.push('‍💻'); keyboard.push('\x1b[201~'); await tick();
+    assert.match(app.terminal.frames.at(-1), /input.*(discard|reject)/i);
+    app.terminal.key('', { name: 'return' }); await tick();
+    assert.equal(app.rpc.requests.find(request => request.type === 'prompt').message, 'x'.repeat(32767));
+  } finally { keyboard.close(); await app.dispose(); }
+});
+test('R3 complete graphemes that fit remain accepted; rejected middle insertion preserves existing suffix', () => {
+  for (const cluster of ['👩‍💻', 'é', '界']) {
+    const model = workspace(); model.insert('x'.repeat(32768 - cluster.length));
+    const keyboard = new Keyboard((text, key) => model.key(text, key), text => model.insert(text));
+    keyboard.push(cluster); keyboard.close();
+    assert.equal(model.draft, 'x'.repeat(32768 - cluster.length) + cluster);
+    key(model, 'home'); model.insert('👩‍💻');
+    assert.equal(model.draft, 'x'.repeat(32768 - cluster.length) + cluster);
+    assert.match(model.status, /Input rejected/);
+  }
+});
+test('R3 paste combining boundaries, huge dialog prefill and newline cannot bypass the bound', () => {
+  const model = workspace();
+  const keyboard = new Keyboard(() => {}, (text, retention) => { model.insert(text); if (retention.discarded) model.inputLoss(); });
+  keyboard.push('\x1b[200~' + 'x'.repeat(32767) + 'e'); keyboard.push('́\x1b[201~'); keyboard.close();
+  assert.equal(model.draft, 'x'.repeat(32767)); assert.match(model.status, /Input rejected/);
+  model.dialogs.push({ id: 'prefill', method: 'editor', prefill: 'x'.repeat(32767) + '👩‍💻' }); model.render(78, 24);
+  assert.equal(model.dialogs[0].value, 'x'.repeat(32767));
+  key(model, 'j', { ctrl: true }); key(model, 'j', { ctrl: true });
+  assert.equal(key(model, 'return').value, 'x'.repeat(32767) + '\n');
+});
+test('R4 a single large entry discloses clipping while retaining source identity and a Unicode-safe tail', () => {
+  const model = workspace(); model.append('toolResult: read\nBEGIN_CONTEXT\n' + '👩‍💻'.repeat(15000) + '\nEND');
+  assert.ok(model.transcript[0].length <= 65536);
+  assert.ok(model.transcript[0].isWellFormed());
+  assert.match(model.paneText(0), /toolResult: read/);
+  assert.match(model.paneText(0), /omitted|truncat/i);
+  assert.match(model.paneText(0), /END/);
+  const frame = model.render(78, 24).join('\n');
+  assert.match(frame, /toolResult: read/); assert.match(frame, /truncated/i);
+});
+test('R4 streaming loss is visible with assistant identity before the final message', async () => {
+  const app = await controller();
+  try {
+    app.rpc.emit('record', { type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: '👩‍💻'.repeat(15000) + '\nTAIL' } });
+    await tick();
+    const frame = app.terminal.frames.at(-1);
+    assert.match(frame, /assistant/i); assert.match(frame, /omitted|truncat/i); assert.match(frame, /TAIL/);
+    assert.ok(frame.isWellFormed());
+  } finally { await app.dispose(); }
 });
 
 // Transport integration uses a separate harmless protocol peer, not a substitute for real Pi qualification.

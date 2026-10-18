@@ -1,9 +1,10 @@
 import { emitKeypressEvents } from 'node:readline';
 import { PassThrough } from 'node:stream';
+import { prefix } from './text.mjs';
 
 // Bracketed paste must never turn pasted newlines into submissions or confirmations.
 export class Keyboard {
-  buffer = ''; paste = false; pasted = '';
+  buffer = ''; paste = false; pasted = ''; discarded = false;
   constructor(onKey, onPaste) {
     this.stream = new PassThrough(); emitKeypressEvents(this.stream);
     this.stream.on('keypress', onKey); this.onPaste = onPaste; this.onKey = onKey;
@@ -15,7 +16,7 @@ export class Keyboard {
     if (at >= 0) {
       const before = this.buffer.slice(0, at); this.buffer = this.buffer.slice(at + marker.length);
       if (this.paste) {
-        this.pasted = (this.pasted + before).slice(0, 32768); this.onPaste(this.pasted); this.pasted = '';
+        this.retainPaste(before); this.onPaste(this.pasted, { discarded: this.discarded }); this.pasted = ''; this.discarded = false;
       } else if (before) this.stream.write(before);
       this.paste = !this.paste; this.push(''); return;
     }
@@ -23,7 +24,7 @@ export class Keyboard {
     let keep = 0;
     for (let length = 1; length < marker.length; length++) if (this.buffer.endsWith(marker.slice(0, length))) keep = length;
     const ready = this.buffer.slice(0, this.buffer.length - keep); this.buffer = this.buffer.slice(this.buffer.length - keep);
-    if (this.paste) this.pasted = (this.pasted + ready).slice(0, 32768);
+    if (this.paste) this.retainPaste(ready);
     else if (ready) this.stream.write(ready);
     clearTimeout(this.timer);
     if (this.buffer && !this.paste) this.timer = setTimeout(() => {
@@ -31,6 +32,11 @@ export class Keyboard {
       else this.stream.write(this.buffer);
       this.buffer = '';
     }, 30);
+  }
+  retainPaste(text) {
+    if (this.discarded) return;
+    const bounded = prefix(this.pasted + text, 32768);
+    this.pasted = bounded.text; this.discarded = bounded.omitted;
   }
   close() { clearTimeout(this.timer); this.stream.destroy(); }
 }
