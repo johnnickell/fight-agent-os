@@ -18,6 +18,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | in-progress | — | [PR #75](https://github.com/johnnickell/fight-agent-os/pull/75) |
+| — | [TASK-00491](00491-TASK.md) | Restore Build child confirmations and reduce routine command prompts | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -538,5 +539,4 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00488](00488-TASK.md) | Repair Pi screening, workflow access and runtime compatibility | — (standalone bug) | done | — | [PR #108](https://github.com/johnnickell/fight-agent-os/pull/108) |
 | — | [TASK-00489](00489-TASK.md) | Use authorized repository worktrees across Pi skills without repeated approval | — (standalone bug) | done | — | [PR #109](https://github.com/johnnickell/fight-agent-os/pull/109) |
 | — | [TASK-00490](00490-TASK.md) | Recover shared Jev enrollment after connection setup | — (standalone bug) | done | — | — |
-| — | [TASK-00491](00491-TASK.md) | Restore Build child confirmations and reduce routine command prompts | — (standalone bug) | done | — | — |
 <!-- /planning:board -->

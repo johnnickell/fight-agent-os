@@ -62,7 +62,34 @@ const model = runtime.getModel('openai-codex', 'gpt-6.1-sol'); assert.ok(model);
 const assistant = () => ({ role: 'assistant', content: [], api: model.api, provider: model.provider, model: model.id,
   usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } }, stopReason: 'stop', timestamp: Date.now() });
 let outcomes = 0, confirmations = 0, modelTurns = 0;
-let approve = true, onConfirm = async () => {}; const dialogs = [];
+let approve = true, blindEnter = false, onConfirm = async () => {}; const dialogs = [];
+async function customDialog(factory) {
+  confirmations++;
+  let completed = false, accepted;
+  const terminal = { columns: 80, rows: 24 };
+  const component = await factory({ terminal, requestRender() {} }, {}, {}, value => { completed = true; accepted = value; });
+  const displayed = [], body = [];
+  const render = () => {
+    const lines = component.render(terminal.columns);
+    assert.ok(lines.length <= terminal.rows - 2, 'dialog fits terminal height');
+    assert.ok(lines.every(line => line.length <= terminal.columns), 'dialog fits terminal width');
+    displayed.push(...lines); body.push(...lines.slice(3, -3)); return lines;
+  };
+  let lines = render();
+  await onConfirm();
+  if (blindEnter) component.handleInput('\r');
+  else if (!approve) component.handleInput('d');
+  else {
+    for (let page = 0; !completed && !lines.some(line => line.startsWith('a: approve')); page++) {
+      assert.ok(page < 100, 'all pages are reachable');
+      component.handleInput('n'); lines = render();
+    }
+    component.handleInput('a');
+  }
+  assert.equal(completed, true);
+  dialogs.push({ message: displayed.join('\n'), body: body.join('') });
+  return accepted;
+}
 const sessions = [], nativeMetadata = [];
 const calls = () => existsSync(requests) ? readFileSync(requests, 'utf8').trim().split('\n').filter(Boolean).length : 0;
 async function start(cwd, phase, manager = sdk.SessionManager.create(cwd, sessionDir)) {
@@ -81,7 +108,7 @@ async function start(cwd, phase, manager = sdk.SessionManager.create(cwd, sessio
   nativeMetadata.push(...skills.filter(s => s.disableModelInvocation).map(({ name, filePath, disableModelInvocation }) => ({ name, filePath, disableModelInvocation })));
   const { session } = await sdk.createAgentSession({ cwd, agentDir, modelRuntime: runtime, model, settingsManager: settings, resourceLoader: loader, sessionManager: manager });
   session.agent.streamFunction = async () => { modelTurns++; const stream = createAssistantMessageEventStream(); stream.push({ type: 'done', reason: 'stop', message: assistant() }); return stream; };
-  await session.bindExtensions({ mode: childMode ? 'json' : 'tui', uiContext: childMode ? undefined : { setStatus() {}, setFooter() {}, notify() {}, confirm: async (title, message) => { confirmations++; dialogs.push({title, message}); await onConfirm(); return approve; } }, onError: error => { throw error; } });
+  await session.bindExtensions({ mode: childMode ? 'json' : 'tui', uiContext: childMode ? undefined : { setStatus() {}, setFooter() {}, notify() {}, custom: customDialog, confirm: async (title, message) => { confirmations++; dialogs.push({title, message}); await onConfirm(); return approve; } }, onError: error => { throw error; } });
   sessions.push(session); return session;
 }
 async function call(session, name, args, allowed = true) {
@@ -96,9 +123,13 @@ try {
   if (childMode) {
     const session = await start(childMode === 'wrong-root' ? consumer : checkout, 'work');
     const marker = join(checkout, '.runs', randomUUID()); mkdirSync(dirname(marker), {recursive:true});
-    const result = await call(session, 'bash', {command: 'printf child-held-marker > ' + quote(marker)}, childMode === 'allow');
-    assert.equal(existsSync(marker), childMode === 'allow');
-    if (childMode !== 'allow') assert.match(JSON.stringify(result), /command-operator-decision-required/);
+    const accepted = childMode === 'allow' || childMode === 'long-allow';
+    const command = childMode.startsWith('long-') ? '# child-held-marker: ' + 'read this exact harmless comment; '.repeat(90) + '\n' +
+      'printf \'child-held-marker unicode-é-界 "quoted"\\n\' > ' + quote(marker) : 'printf child-held-marker > ' + quote(marker);
+    const result = await call(session, 'bash', {command}, accepted);
+    assert.equal(existsSync(marker), accepted);
+    if (childMode === 'long-allow') assert.equal(readFileSync(marker, 'utf8'), 'child-held-marker unicode-é-界 "quoted"\n');
+    if (!accepted) assert.match(JSON.stringify(result), /command-operator-decision-required/);
     await call(session, 'bash', {command: 'test -z "${FIGHT_CHILD_COMMAND_APPROVAL+x}"'});
     if (childMode !== 'wrong-root') await call(session, 'write', {path:join(checkout, 'source.txt'),content:'work-still-allowed'});
     await call(session, 'bash', {command:'cat .env.local'}, false);
@@ -168,6 +199,13 @@ console.log(JSON.stringify(result));`);
       assert.doesNotMatch(readFileSync(join(attempt,'progress.log'),'utf8'), /printf child-held-marker|FIGHT_CHILD_COMMAND_APPROVAL/);
     }
     assert.equal(confirmations, 5);
+    // QA-01: Return must not approve a long command whose suffix/controls are clipped.
+    approve = true; blindEnter = true;
+    await run('long-blind');
+    blindEnter = false;
+    await run('long-allow');
+    assert.equal(confirmations, 7);
+    assert.ok(dialogs.at(-1).body.includes('unicode-\\u00e9-\\u754c'));
     console.log(JSON.stringify({outcomes, confirmations, fixture, controlledEvaluatorRequests:calls(), liveProviderRequests:0, realCredentialReads:0, result:'passed'}));
   }
 } finally {

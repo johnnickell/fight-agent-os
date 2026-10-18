@@ -371,9 +371,17 @@ use the operator-approved fallback with explicit limits; never fabricate images 
 An enrolled interactive Build coordinator supplies a temporary loopback confirmation connection only to its
 current shell launch. The existing stage monitor inherits it into the independently enrolled JSON child.
 Risk assessment stays in the child. A non-ordinary result requests a fresh coordinator-native decision showing
-the exact final command (JSON-escaped), directory, TASK, role and session. Parent validation binds the request
+the exact final command (ASCII JSON-escaped), directory, TASK, role and session. Parent validation binds the request
 to its current task and enrolled repository, including registered linked worktrees; both sides recheck their
 current authority before execution. Direct interactive commands retain their own native confirmation.
+
+Child decisions use a bounded terminal overlay, not an unbounded Yes/No message. Page Down/`n` advances;
+Page Up/`p` returns, and Home/End selects the first/last page. Every page must have been displayed before `a`
+can approve on the final page. Enter, Escape, Ctrl-C or `d` denies; Return never implicitly accepts. Commands
+and context use lossless ASCII JSON escapes, including Unicode and terminal control characters. Controls stay
+visible at supported sizes; below 64 columns or 12 rows, approval is disabled until resized. Resizing restarts
+page inspection. The existing two-minute deadline includes inspection and queue wait; expiry refuses rather
+than extending authority. RPC cannot display this custom surface and refuses child decisions without fallback.
 
 The connection uses an unpredictable per-launch token, request identity and content digest, a bounded two-minute
 decision deadline, bounded messages and the same exclusive dialog queue as direct commands. It closes on launch

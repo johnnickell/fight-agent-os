@@ -7,7 +7,9 @@ import { Type, type TSchema } from 'typebox';
 import { createBashToolDefinition, createLocalBashOperations, createReadToolDefinition, createEditToolDefinition, createWriteToolDefinition,
   getAgentDir, getPackageDir, getReadmePath, getDocsPath, VERSION } from '@earendil-works/pi-coding-agent';
 import type { BashOperations, ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { matchesKey } from '@earendil-works/pi-tui';
 import { reviewEnrollment } from './enrollment-preview.ts';
+import { ChildCommandView } from './jev/child-command-view.mjs';
 import { FileScreening, type ScreenResult } from './jev/file-screening.mjs';
 import { FileScreeningSettings } from './jev/local-store.mjs';
 import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
@@ -248,12 +250,24 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
                 profiles.selection(request.cwd)?.project.root !== profiles.selection(ctx.cwd)?.project.root)
               throw new PolicyDenied('child-command-context-changed');
           },
-          confirm: (request, signal, check) => approvals.run(dialogSignal => ctx.ui.confirm(
-            `Child command held: ${request.task} / ${request.role} (${request.outcome})`,
-            `Confirm ONE exact child command within its existing authority. No permission expansion.\n` +
-            `Child session: ${JSON.stringify(request.session)}\nDirectory: ${JSON.stringify(request.cwd)}\n` +
-            `Reason: ${request.reason}\nCommand (JSON-escaped):\n${JSON.stringify(request.command)}`,
-            { signal: dialogSignal }), { signal, validate: check }) });
+          confirm: (request, signal, check) => approvals.run(async dialogSignal => {
+            // RPC has no bounded custom terminal surface; never fall back to a clipped confirm.
+            if (ctx.mode !== 'tui' || dialogSignal.aborted) return false;
+            let cancel: (() => void) | undefined;
+            try {
+              return await ctx.ui.custom<boolean>((tui, _theme, _keys, done) => {
+                const view = new ChildCommandView(request, {
+                  size: () => ({ columns: tui.terminal.columns, rows: tui.terminal.rows }),
+                  redraw: () => tui.requestRender(), done,
+                  key: (data, key) => matchesKey(data, key as Parameters<typeof matchesKey>[1]),
+                });
+                cancel = () => view.finish(false);
+                dialogSignal.addEventListener('abort', cancel, { once: true });
+                if (dialogSignal.aborted) queueMicrotask(cancel);
+                return view;
+              }, { overlay: true, overlayOptions: { width: '100%', maxHeight: '100%', margin: 0 } });
+            } finally { if (cancel) dialogSignal.removeEventListener('abort', cancel); }
+          }, { signal, validate: check }) });
         childBridges.add(bridge);
         try {
           validate();
