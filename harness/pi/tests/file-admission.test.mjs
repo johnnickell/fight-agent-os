@@ -228,6 +228,36 @@ test('explicit installed hidden skill seeds its exact portable reference chain, 
   assert.throws(() => f.admission.read({ path: skill }), { code: 'root-denied' });
 });
 
+test('explicit instruction reads establish and validate the same nested references as direct reads', t => {
+  const f = fixture(t), provider = join(f.directory, 'provider'); mkdirSync(provider);
+  const skill = join(provider, 'SKILL.md'), guide = join(provider, 'QA.md'), template = join(provider, 'REPORT.md');
+  writeFileSync(skill, 'Read [QA](QA.md)');
+  writeFileSync(guide, 'Use [report](REPORT.md)');
+  writeFileSync(template, 'Required report');
+  f.admission.ingestNativeInstructions([], [{ name: 'qa', filePath: skill }], 'qa');
+  const instruction = path => f.admission.read({ path, exception: 'instruction', need: 'Read mandatory QA instructions', offset: 1, limit: 200 });
+  instruction(skill);
+  assert.match(instruction(guide).text, /report/);
+  assert.equal(instruction(template).text, 'Required report');
+  writeFileSync(skill, 'Removed reference');
+  assert.throws(() => instruction(template), { code: 'stale-required-reference' });
+  assert.throws(() => f.admission.read({ path: template }), { code: 'stale-required-reference' });
+  f.admission.ingestNativeInstructions([], []);
+  assert.throws(() => instruction(template), { code: 'root-denied' });
+});
+
+test('mandatory project context seeds follow-up instructions but unrelated files are not instruction witnesses', t => {
+  const f = fixture(t), agents = join(f.root, 'AGENTS.md');
+  writeFileSync(agents, 'Read [profile](PROFILE.md)');
+  writeFileSync(join(f.root, 'PROFILE.md'), 'Required project profile');
+  f.admission.ingestNativeInstructions([{ path: agents, content: 'Read [profile](PROFILE.md)' }]);
+  const instruction = path => f.admission.read({ path, exception: 'instruction', need: 'Read instructions', offset: 1, limit: 200 });
+  instruction(agents);
+  assert.equal(instruction('PROFILE.md').text, 'Required project profile');
+  assert.throws(() => instruction('source.txt'), { code: 'unestablished-instruction' });
+  assert.match(f.admission.read({ path: 'source.txt' }).text, /Kettle/);
+});
+
 test('direct reads need no receipt while fabricated or stale explicit receipts remain errors', async t => {
   const f = fixture(t);
   assert.match(f.admission.read({ path: 'source.txt', need: f.input.need, offset: 1, limit: 3 }).text, /Kettle/);

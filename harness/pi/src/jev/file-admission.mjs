@@ -188,6 +188,7 @@ export class FileAdmission {
   }
   read(input) {
     if (![input.receipt, input.exception, input.evidence].some(Boolean)) return this.#readDirect(input);
+    if (input.exception === 'instruction' && !input.receipt && !input.evidence) return this.#readDirect(input, true);
     range(input);
     if ([input.receipt, input.exception, input.evidence].filter(Boolean).length !== 1) fail('unambiguous-evidence-required');
     const { snapshot, project, identity, profile } = this.#current(input.path, input.exception === 'instruction', Boolean(input.exception || input.evidence));
@@ -198,14 +199,6 @@ export class FileAdmission {
       if (!held || held.session !== this.sessionId || held.authority !== identity || held.need !== input.need || held.questionDigest !== input.questionDigest ||
         held.source.id !== snapshot.id || held.source.digest !== snapshot.digest || held.source.revision !== snapshot.revision) fail('current-positive-receipt-required');
       kind = 'receipt-admission';
-    } else if (input.exception === 'instruction') {
-      const nativeSkill = identity === this.#intakeAuthority && this.#nativeSkills.has(snapshot.canonical);
-      if (nativeSkill && this.#nativeSkills.get(snapshot.canonical) === null) this.#nativeSkills.set(snapshot.canonical, snapshot.digest);
-      const established = [...project.instructions, ...(identity === this.#intakeAuthority ? [...this.#instructions, ...this.#nativeInstructions] : [])]
-        .some(i => i.path === snapshot.canonical && i.digest === snapshot.digest);
-      if (!established && !this.#isNativeDocumentation(snapshot.canonical) &&
-        !(nativeSkill && this.#nativeSkills.get(snapshot.canonical) === snapshot.digest)) fail('unestablished-instruction');
-      kind = 'mandatory-instruction';
     } else if (input.exception === 'required-evidence') {
       const target = [...project.targets, ...(identity === this.#intakeAuthority ? this.#targets : [])].find(t => t.path === snapshot.canonical && t.digest === snapshot.digest && t.purpose === input.need && input.offset >= t.offset && input.offset + input.limit <= t.offset + t.limit);
       if (!target) fail('unestablished-evidence-obligation');
@@ -230,7 +223,7 @@ export class FileAdmission {
   }
 
   /** Read normal project files locally; discovery screening is encouraged, not an access prerequisite */
-  #readDirect(input) {
+  #readDirect(input, requireInstruction = false) {
     input = { ...input, offset: input.offset ?? 1, limit: input.limit ?? 200, need: input.need ?? 'Read requested file' };
     range(input);
     const selectedProject = this.profiles.selection(this.cwd);
@@ -244,7 +237,7 @@ export class FileAdmission {
         if (this.#current(witness.path, true, true).snapshot.digest !== witness.digest) fail('stale-required-reference');
       } catch (error) {
         // A withdrawn external witness cannot revoke otherwise ordinary in-project access.
-        if (!inProject) throw error;
+        if (requireInstruction || !inProject) throw error;
         linked = undefined; break;
       }
     }
@@ -257,6 +250,7 @@ export class FileAdmission {
     const trustedLinks = Boolean(linked) || [...project.instructions, ...(native ? [...this.#instructions, ...this.#nativeInstructions] : [])]
       .some(i => i.path === snapshot.canonical && i.digest === snapshot.digest) ||
       (nativeSkill && this.#nativeSkills.get(snapshot.canonical) === snapshot.digest);
+    if (requireInstruction && !trustedLinks && !this.#isNativeDocumentation(snapshot.canonical)) fail('unestablished-instruction');
     // Only host-established instructions seed external exact Markdown references. Ordinary project
     // content cannot grant outside-root access. Each link retains the complete source witness chain.
     if (trustedLinks && witnesses.length < 8) {
@@ -279,8 +273,8 @@ export class FileAdmission {
     }
     if (!selected.length) fail('admission-byte-limit');
     const nextOffset = input.offset + selected.length;
-    const kind = this.#isNativeDocumentation(snapshot.canonical) ? 'native-documentation-read' : instruction ? 'instruction-read' : 'project-read';
-    this.observe({ kind, reason: kind, pathId: snapshot.id, needId: hash(input.need), offset: input.offset, lines: selected.length, decision: 'admitted' });
+    const kind = requireInstruction ? 'mandatory-instruction' : this.#isNativeDocumentation(snapshot.canonical) ? 'native-documentation-read' : instruction ? 'instruction-read' : 'project-read';
+    this.observe({ kind: requireInstruction ? 'exception' : kind, reason: kind, pathId: snapshot.id, needId: hash(input.need), offset: input.offset, lines: selected.length, decision: 'admitted' });
     return { text: selected.join('\n'), admission: { kind, pathId: snapshot.id, digest: snapshot.digest,
       offset: input.offset, limit: selected.length, ...(nextOffset <= lines.length ? { nextOffset } : {}) } };
   }
