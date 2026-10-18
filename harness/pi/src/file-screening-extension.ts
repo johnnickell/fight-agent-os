@@ -7,7 +7,9 @@ import { Type, type TSchema } from 'typebox';
 import { createBashToolDefinition, createLocalBashOperations, createReadToolDefinition, createEditToolDefinition, createWriteToolDefinition,
   getAgentDir, getPackageDir, getReadmePath, getDocsPath, VERSION } from '@earendil-works/pi-coding-agent';
 import type { BashOperations, ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { matchesKey } from '@earendil-works/pi-tui';
 import { reviewEnrollment } from './enrollment-preview.ts';
+import { ChildCommandView } from './jev/child-command-view.mjs';
 import { FileScreening, type ScreenResult } from './jev/file-screening.mjs';
 import { FileScreeningSettings } from './jev/local-store.mjs';
 import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
@@ -15,6 +17,7 @@ import { FileAdmission } from './jev/file-admission.mjs';
 import { ImageAdmission, isImagePath } from './jev/image-admission.mjs';
 import { WorkflowAccess, skillEffects } from './jev/workflow-access.mjs';
 import { CommandRisk, commandRiskRecovery } from './jev/command-risk.mjs';
+import { childApprovalEnvironment, openChildApprovals, requestChildApproval } from './jev/child-command-approval.mjs';
 import { CommandApprovals } from './jev/command-approvals.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
 import { ToolPolicy, PolicyDenied } from './tool-policy/policy.mjs';
@@ -61,6 +64,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   let screening: FileScreening | undefined, admission: FileAdmission | undefined, images: ImageAdmission | undefined, guard: ToolPolicy | undefined;
   let selected = false, live = false, failure: string | undefined, inputFailure: string | undefined, evaluationFailure: string | undefined;
   let context: ExtensionContext | undefined;
+  const inheritedApproval = process.env[childApprovalEnvironment];
+  const childBridges = new Set<{ close: () => void }>();
   let workflow = new WorkflowAccess();
   // Agent and user shell calls share one dialog slot; only its current owner reports blocked.
   const approvals = new CommandApprovals(active => pi.events.emit('herdr:blocked', { active,
@@ -225,13 +230,49 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       try {
         // Pi has applied final tool-call mutations and its prefix before this operations boundary.
         await risk.assess(command, cwd, { signal: options.signal, validate, confirm: async decision => {
-          if (!ctx.hasUI) return false;
+          if (!ctx.hasUI) return workflow.launcher ? requestChildApproval(inheritedApproval,
+            { ...decision, task: workflow.taskId, role: workflow.role, session: sessionId }, { signal: options.signal }) : false;
           return approvals.run(signal => ctx.ui.confirm(`Command held: ${decision.outcome} (${decision.reason})`,
             `No safe verdict is claimed. Confirm this ONE exact command only if it is within existing task/role authority. No permission expansion.\nDirectory: ${decision.cwd}\n${decision.command}`,
             { signal }), { signal: options.signal, validate });
         } });
         validate();
-        return local.exec(command, cwd, options);
+        // Keep the transport out of child shell environments. Only a live, interactive Build
+        // operation receives a new endpoint; its lifetime is exactly the launching shell call.
+        const env = { ...(options.env ?? process.env) };
+        delete env[childApprovalEnvironment];
+        if (workflow.skill !== 'build' || workflow.launcher || !ctx.hasUI) return local.exec(command, cwd, { ...options, env });
+        const task = workflow.taskId;
+        const bridge = await openChildApprovals({ signal: options.signal,
+          validate: request => {
+            validate();
+            if (workflow.skill !== 'build' || request.task !== task ||
+                profiles.selection(request.cwd)?.project.root !== profiles.selection(ctx.cwd)?.project.root)
+              throw new PolicyDenied('child-command-context-changed');
+          },
+          confirm: (request, signal, check) => approvals.run(async dialogSignal => {
+            // RPC has no bounded custom terminal surface; never fall back to a clipped confirm.
+            if (ctx.mode !== 'tui' || dialogSignal.aborted) return false;
+            let cancel: (() => void) | undefined;
+            try {
+              return await ctx.ui.custom<boolean>((tui, _theme, _keys, done) => {
+                const view = new ChildCommandView(request, {
+                  size: () => ({ columns: tui.terminal.columns, rows: tui.terminal.rows }),
+                  redraw: () => tui.requestRender(), done,
+                  key: (data, key) => matchesKey(data, key as Parameters<typeof matchesKey>[1]),
+                });
+                cancel = () => view.finish(false);
+                dialogSignal.addEventListener('abort', cancel, { once: true });
+                if (dialogSignal.aborted) queueMicrotask(cancel);
+                return view;
+              }, { overlay: true, overlayOptions: { width: '100%', maxHeight: '100%', margin: 0 } });
+            } finally { if (cancel) dialogSignal.removeEventListener('abort', cancel); }
+          }, { signal, validate: check }) });
+        childBridges.add(bridge);
+        try {
+          validate();
+          return await local.exec(command, cwd, { ...options, env: { ...env, [childApprovalEnvironment]: bridge.environment } });
+        } finally { bridge.close(); childBridges.delete(bridge); }
       } catch (error) {
         const reason = safeCode(error);
         observe({ kind: 'command-held', reason, decision: 'blocked', operationId: randomUUID(), pathId: hash(cwd), needId: hash(command) });
@@ -334,6 +375,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     parameters: Type.Object({}, { additionalProperties: false }), async execute(_id, _args, _signal, _update, ctx) { return textResult(present(ctx)); } });
   hooks.on('session_start', (_event, ctx) => {
     approvals.cancel();
+    for (const bridge of childBridges) bridge.close();
+    childBridges.clear();
     screening?.close(); admission?.close(); images?.close(); guard?.cancel('session-replaced'); epoch++;
     context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; inputFailure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
     workflow = new WorkflowAccess('review');
@@ -408,7 +451,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     try { checkBoundary(); return { operations: shellOperations(ctx) }; }
     catch (error) { return { result: { output: `File screening: ${safeCode(error)}`, exitCode: 1, cancelled: false, truncated: false } }; }
   });
-  const invalidate = () => { approvals.cancel(); epoch++; failure = 'session-changed-reload-required'; admission?.close(); images?.close(); screening?.close(); guard?.cancel('session-changed'); };
+  const invalidate = () => { for (const bridge of childBridges) bridge.close(); childBridges.clear(); approvals.cancel(); epoch++; failure = 'session-changed-reload-required'; admission?.close(); images?.close(); screening?.close(); guard?.cancel('session-changed'); };
   hooks.on('session_before_switch', invalidate); hooks.on('session_before_fork', invalidate); hooks.on('session_before_tree', invalidate);
   hooks.on('session_shutdown', (_event, ctx) => { live = false; invalidate(); if (ctx.mode === 'tui') ctx.ui.setStatus('fight-file-screen', undefined); });
   pi.registerCommand('file-screening', { description: 'Inspect or explicitly enroll/revoke/convert project screening; no provider calls or key entry', handler: async (args, ctx) => {

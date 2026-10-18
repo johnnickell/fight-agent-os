@@ -245,8 +245,9 @@ or script contents are fetched for risk assessment. Final command is <=16 KiB; s
 The same shared Jev supplier, credentials, pins, concurrency, zero-retry contract and durable account are used.
 Risk is a separate choice rubric, not the file-relevance score or an additional provider client/cache.
 
-- Complete `ordinary` with confidence >=0.90 may proceed **only within existing task/role/operator authorization**.
-  It means no apparent dangerous effect in supplied context, not measured safety, containment or new permission.
+- Complete `ordinary` with confidence >=0.70 may proceed **only within existing task/role/operator authorization**.
+  The balanced threshold uses confidence in the ordinary classification, not a measured probability of safety.
+  It means no apparent dangerous effect in supplied context, not containment or new permission.
 - Risky, low-confidence/unknown, denied, failed, unavailable, budget-limited or price-unqualified assessments emit
   distinct held outcomes and require an explicit one-command operator decision. Native TUI uses concise warnings,
   not routine event/JSON popups; noninteractive monitor observations remain structured. No UI/declined decision
@@ -258,7 +259,8 @@ Risk is a separate choice rubric, not the file-relevance score or an additional 
   without dismissing another command's dialog. Aborting the visible command dismisses it; lifecycle invalidation
   withdraws all pending approvals. Only the displayed approval reports Herdr blocked, with a balanced clear on
   answer, cancellation or error. Execution may remain parallel after separate decisions. The shell timeout starts
-  after approval and does not impose a deadline on the operator.
+  after approval. Direct native dialogs have no operator deadline; the child relay below has a bounded
+  two-minute decision window, and the stage monitor retains its overall timeout.
   Recheck after evaluation/decision and immediately before delegating the fixed command to Pi's local backend.
   A change requires a new assessment/decision; no reusable shell permit is stored.
 - Never embed credentials or secret material in commands. Local tripwires hold known key/token/assignment/Bearer/
@@ -363,3 +365,32 @@ The approved AC8/E1 deferral applies, not another automatic recovery or counter 
 comparative benefit is inferred. Real baseline/current wide/narrow terminal PNGs now cover bounded degraded status;
 full behavioral/visual QA remains independent. PTY text is not a screenshot. If future captures are unavailable,
 use the operator-approved fallback with explicit limits; never fabricate images or claim visual certification.
+
+### Build child command confirmations
+
+An enrolled interactive Build coordinator supplies a temporary loopback confirmation connection only to its
+current shell launch. The existing stage monitor inherits it into the independently enrolled JSON child.
+Risk assessment stays in the child. A non-ordinary result requests a fresh coordinator-native decision showing
+the exact final command (ASCII JSON-escaped), directory, TASK, role and session. Parent validation binds the request
+to its current task and enrolled repository, including registered linked worktrees; both sides recheck their
+current authority before execution. Direct interactive commands retain their own native confirmation.
+
+Child decisions use a bounded terminal overlay, not an unbounded Yes/No message. Page Down/`n` advances;
+Page Up/`p` returns, and Home/End selects the first/last page. Every page must have been displayed before `a`
+can approve on the final page. Enter, Escape, Ctrl-C or `d` denies; Return never implicitly accepts. Commands
+and context use lossless ASCII JSON escapes, including Unicode and terminal control characters. Controls stay
+visible at supported sizes; below 64 columns or 12 rows, approval is disabled until resized. Resizing restarts
+page inspection. The existing two-minute deadline includes inspection and queue wait; expiry refuses rather
+than extending authority. RPC cannot display this custom surface and refuses child decisions without fallback.
+
+The connection uses an unpredictable per-launch token, request identity and content digest, a bounded two-minute
+decision deadline, bounded messages and the same exclusive dialog queue as direct commands. It closes on launch
+completion, cancellation, session changes or disconnect. Missing UI/transport, malformed input, timeout, denial,
+context mismatch and stale authority never approve execution. The token is not written to logs or approval files
+and is removed from the child's subsequent shell environments. Ordinary judgments need no confirmation; local
+secret-disclosure refusals never reach this connection. Enrollment, monthly accounting and role effects are unchanged.
+
+This is same-user local transport, not OS isolation, caller attestation, a reusable permit or additional task
+permission. A malicious same-user process can inspect process state; the existing shell trust limit remains.
+No global settings or additional Pi extension installation is needed. Fully restart a coordinator using older
+loaded modules before resuming its original Build ledger; do not reset repair counts or retry a missing channel.

@@ -218,6 +218,9 @@ try {
             '../harness/pi/tests/file-admission.test.mjs',
             '../harness/pi/tests/monthly-budget.test.mjs',
             '../harness/pi/tests/command-risk.test.mjs',
+            '../harness/pi/tests/command-approvals.test.mjs',
+            '../harness/pi/tests/child-command-approval.test.mjs',
+            '../harness/pi/tests/child-command-view.test.mjs',
             '../harness/pi/tests/screening-profile.test.mjs',
             '../harness/pi/tests/tool-policy.test.mjs'
         ]
