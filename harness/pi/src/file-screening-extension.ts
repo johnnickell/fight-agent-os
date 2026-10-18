@@ -5,7 +5,7 @@ import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { Type, type TSchema } from 'typebox';
 import { createReadToolDefinition, createEditToolDefinition, createWriteToolDefinition,
-  getAgentDir, getPackageDir, getReadmePath, getDocsPath, VERSION } from '@earendil-works/pi-coding-agent';
+  getAgentDir, getPackageDir, getReadmePath, getDocsPath, getExamplesPath, VERSION } from '@earendil-works/pi-coding-agent';
 import type { ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { reviewEnrollment } from './enrollment-preview.ts';
 import { FileScreening, type ScreenResult } from './jev/file-screening.mjs';
@@ -204,7 +204,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   }
   function installBoundary(ctx: ExtensionContext) {
     const currentEpoch = epoch;
-    pi.registerTool({ name: 'read', label: 'Read project files', description: 'Read project text directly with path; need and offset/limit are optional. Strongly prefer Jev before unfamiliar discovery reads, but known targets and core instructions need no receipt. Native skill instructions and their exact local Markdown references work across projects. The installed Pi README and Markdown documentation read directly in every role without Jev; use the advertised Pi documentation paths. Read PNG/JPEG/GIF/WebP images directly with path (need and exception: "image" optional), without selection, approval or Jev disclosure. Format/size and protected-file checks remain. Shell is a separate, unenforced relevance route.',
+    pi.registerTool({ name: 'read', label: 'Read project files', description: 'Read project text directly with path; need and offset/limit are optional. Strongly prefer Jev before unfamiliar discovery reads, but known targets and core instructions need no receipt. Native skill instructions and their exact local Markdown references work across projects. The installed Pi README, Markdown documentation and published example source/documentation read directly in every role without Jev; use the advertised Pi documentation and examples paths. Read PNG/JPEG/GIF/WebP images directly with path (need and exception: "image" optional), without selection, approval or Jev disclosure. Format/size and protected-file checks remain. Shell is a separate, unenforced relevance route.',
       parameters: Type.Object({ path: Type.String(), need: Type.Optional(Type.String()), offset: Type.Optional(Type.Integer({ minimum: 1 })), limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 1000 })),
         receipt: Type.Optional(Type.String()), questionDigest: Type.Optional(Type.String()), evidence: Type.Optional(Type.String()),
         exception: Type.Optional(Type.Union([Type.Literal('instruction'), Type.Literal('required-evidence'), Type.Literal('image')])) }, { additionalProperties: false }),
@@ -240,8 +240,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
             nextAction: inputRecovery(reason) ?? (input.exception === 'image' || isImagePath(input.path, ctx.cwd) ? imageRecovery(reason) :
               reason === 'repository-metadata-unavailable' ? repositoryRecovery :
               reason === 'unambiguous-evidence-required' ? 'Use exactly one receipt, exception or file_locate evidence token. The evidence field is not explanatory prose; never invent a witness.' :
-              reason === 'native-documentation-changed' ? 'Installed Pi documentation changed during this session. Restart Pi to load the current installation, then retry the direct read. No Jev request or enrollment change is needed.' :
-              'Use path for ordinary project reads and installed Pi README/Markdown docs; offset/limit are optional. Explicit receipts/evidence must still be current. Protected or other outside-root files remain unavailable; do not bypass access restrictions with shell. Native instructions must come from current host metadata or exact linked Markdown references.') }, true); }
+              reason === 'native-documentation-changed' ? 'Installed Pi documentation or example source changed during this session. Restart Pi to load the current installation, then retry the direct read. No Jev request or enrollment change is needed.' :
+              'Use path for ordinary project reads and installed Pi README/Markdown docs/published examples; offset/limit are optional. Explicit receipts/evidence must still be current. Protected or other outside-root files remain unavailable; do not bypass access restrictions with shell. Native instructions must come from current host metadata or exact linked Markdown references.') }, true); }
       },
     });
     function registerMutation<T extends TSchema, D, S>(name: 'write' | 'edit', base: ToolDefinition<T, D | undefined, S>) {
@@ -318,7 +318,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         const state = guard.start(sessionId, { version: VERSION, platform: process.platform, hooks: hooks.available() });
         if (state.state !== 'active') throw new PolicyDenied(state.reason!);
         admission = new FileAdmission({ profiles, configuration: dependencies.configuration, sessionId, cwd: ctx.cwd, observe,
-          nativeDocumentation: { readmePath: getReadmePath(), docsPath: getDocsPath() } });
+          nativeDocumentation: { readmePath: getReadmePath(), docsPath: getDocsPath(), examplesPath: getExamplesPath() } });
         images = new ImageAdmission({ profiles, sessionId, cwd: ctx.cwd,
           resources: [sourceDir, getAgentDir(), getPackageDir(), join(homedir(), 'Library/Keychains')] });
       } catch (error) { failure = safeCode(error); }

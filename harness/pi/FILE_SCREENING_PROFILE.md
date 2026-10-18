@@ -105,12 +105,15 @@ Source changes and removed registrations invalidate those witnesses. Unlinked si
 and Jev disclosure are not granted. Explicit exclusions, protected resources and inode checks remain binding.
 Do not use a shell workaround for an actual access denial.
 
-The runtime also supplies its installed README and Markdown documentation directory directly through Pi's
-`getReadmePath()` and `getDocsPath()` APIs. All workflow roles can read these documents and locate headings
-without Jev, per-file enrollment or provider effects. This does not import a path from prompt text or grant
-runtime writes, sibling source-code access, external links or evaluator disclosure. Documents retain the local
-1 MiB snapshot / 32 KiB output limits, explicit exclusions and inode checks; their first-read digest is pinned
-for that session. Changed documentation requires a Pi restart, and lifecycle invalidation withdraws admission.
+The runtime also supplies its installed README, Markdown documentation and published examples directly through
+Pi's `getReadmePath()`, `getDocsPath()` and `getExamplesPath()` APIs. All workflow roles can read these documents
+and locate headings/symbols without Jev, per-file enrollment or provider effects. Beneath the native examples
+directory, this admits `.md`, `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, `.cjs` and `.json` text files;
+nested `node_modules` dependencies are excluded. This covers the installed extension dialog examples needed by QA.
+It does not import a path from prompt text or grant writes, runtime code outside examples, settings/credentials,
+external links or evaluator disclosure. Explicit exclusions, inode checks and the 1 MiB snapshot / 32 KiB output
+limits remain. Each document/example's first-read digest is pinned for that session. Changed content returns
+`native-documentation-changed` and requires a Pi restart; lifecycle invalidation withdraws admission.
 
 The operator's interactive `/skill:work`, `/skill:review`, `/skill:qa` or `/skill:land` selects its role, as does a
 trusted launcher phase. `/file-screening role engineer|reviewer|qa|land` explicitly selects a role in the TUI;

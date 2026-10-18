@@ -108,6 +108,9 @@ async function core(session, cwd) {
   for (const path of ['AGENTS.md', 'README.md', 'planning/tasks/BOARD.md', 'planning/ROADMAP.md']) await read(session, join(cwd, path));
   await read(session, join(modules, '@earendil-works/pi-coding-agent/README.md'));
   await read(session, join(modules, '@earendil-works/pi-coding-agent/docs/sdk.md'));
+  for (const name of ['timed-confirm.ts', 'modal-editor.ts', 'question.ts', 'commands.ts']) {
+    await read(session, join(sdk.getExamplesPath(), 'extensions', name));
+  }
   assert.equal(calls(), before);
 }
 try {
@@ -167,7 +170,7 @@ try {
       assert.equal(readFileSync(target, 'utf8'), 'Atomic owned report');
       if (skill === 'review') reviewFile = session.sessionManager.getSessionFile();
     }
-    const land = await start(checkout, 'land'); await select(land, 'land');
+    const land = await start(checkout, 'land'); await select(land, 'land'); await core(land, checkout);
     for (const path of ['.runs/reviews/TASK-00489/review.md', '.runs/qa/TASK-00489/qa.md']) await read(land, join(main, path));
     await write(land, join(checkout, 'planning/tasks/00489-TASK.md')); await write(land, join(main, 'planning/tasks/00489-TASK.md'));
     await write(land, join(main, 'source.txt'), 'Forbidden source', false);
@@ -197,6 +200,10 @@ try {
     await read(portable, join(provider, 'composer.json'), false);
     await write(portable, join(provider, '.pi/skills/build/SKILL.md'), 'Forbidden provider', false);
     await write(portable, join(modules, '@earendil-works/pi-coding-agent/docs/sdk.md'), 'Forbidden runtime', false);
+    await write(portable, join(sdk.getExamplesPath(), 'extensions/timed-confirm.ts'), 'Forbidden example write', false);
+    await call(portable, 'edit', { path: join(sdk.getExamplesPath(), 'extensions/timed-confirm.ts'),
+      oldText: 'import', newText: 'Forbidden example edit' }, false);
+    await read(portable, join(sdk.getPackageDir(), 'dist/config.js'), false);
     for (const skill of [...new Set(nativeMetadata.map(s => s.name))]) {
       await select(portable, skill); await read(portable, join(provider, '.pi/skills', skill, 'SKILL.md'));
       await write(portable, join(consumer, 'source.txt'), 'Forbidden hidden skill source', false);

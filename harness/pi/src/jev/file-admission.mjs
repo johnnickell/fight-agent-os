@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { dirname, isAbsolute, resolve, sep } from 'node:path';
+import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { homedir } from 'node:os';
 import { FileSource, evidenceByteLimit, sourceByteLimit } from './file-screening.mjs';
 import { hash } from './screening-profile.mjs';
@@ -65,9 +65,11 @@ export class FileAdmission {
     this.#intakeAuthority = profiles.selection(cwd)?.identity;
     // Installation-owned paths, never tool arguments or text parsed from a system prompt.
     if (nativeDocumentation !== null) {
-      if (![nativeDocumentation.readmePath, nativeDocumentation.docsPath].every(path =>
+      if (![nativeDocumentation.readmePath, nativeDocumentation.docsPath,
+        ...(nativeDocumentation.examplesPath === undefined ? [] : [nativeDocumentation.examplesPath])].every(path =>
         typeof path === 'string' && isAbsolute(path) && path.length <= 4096 && !path.includes('\0'))) fail('invalid-trusted-intake');
-      this.#nativeDocumentation = { readmePath: resolve(nativeDocumentation.readmePath), docsPath: resolve(nativeDocumentation.docsPath) };
+      this.#nativeDocumentation = { readmePath: resolve(nativeDocumentation.readmePath), docsPath: resolve(nativeDocumentation.docsPath),
+        ...(nativeDocumentation.examplesPath === undefined ? {} : { examplesPath: resolve(nativeDocumentation.examplesPath) }) };
     }
     if (intake) {
       if (intake.version !== 1 || intake.authority !== profiles.selection(cwd)?.identity || intake.cwd !== cwd) fail('stale-trusted-intake');
@@ -106,7 +108,10 @@ export class FileAdmission {
   #isNativeDocumentation(path) {
     return this.#nativeDocumentation !== undefined && this.profiles.selection(this.cwd)?.identity === this.#intakeAuthority &&
       (path === this.#nativeDocumentation.readmePath ||
-        (path.startsWith(this.#nativeDocumentation.docsPath + sep) && /\.md$/i.test(path)));
+        (path.startsWith(this.#nativeDocumentation.docsPath + sep) && /\.md$/i.test(path)) ||
+        (this.#nativeDocumentation.examplesPath !== undefined && path.startsWith(this.#nativeDocumentation.examplesPath + sep) &&
+          /\.(?:md|[cm]?[jt]s|[jt]sx|json)$/i.test(path) &&
+          !relative(this.#nativeDocumentation.examplesPath, path).split(sep).includes('node_modules')));
   }
   #current(path, instruction = false, exactEvidence = instruction) {
     if (this.#closed) fail('session-changed');

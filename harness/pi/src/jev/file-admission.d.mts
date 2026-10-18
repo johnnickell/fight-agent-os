@@ -6,7 +6,7 @@ export type AdmissionRead = { path: string; need?: string; offset?: number; limi
 export declare class FileAdmission {
   constructor(options: { profiles: ScreeningProfiles; configuration(): OperatorConfiguration | null; sessionId: string; cwd: string;
     source?: FileSource; observe?: (event: Record<string, unknown>) => void; intake?: TrustedIntake | null;
-    nativeDocumentation?: { readmePath: string; docsPath: string } | null });
+    nativeDocumentation?: { readmePath: string; docsPath: string; examplesPath?: string } | null });
   close(): void;
   ingestNativeInstructions(files: { path: string; content: string }[], skills?: { name?: string; filePath: string; disableModelInvocation?: boolean }[], invokedSkill?: string | null): void;
   accept(input: { need: string }, result: ScreenResult): void;

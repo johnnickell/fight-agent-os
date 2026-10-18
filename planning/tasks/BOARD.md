@@ -541,4 +541,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00490](00490-TASK.md) | Recover shared Jev enrollment after connection setup | — (standalone bug) | done | — | [PR #110](https://github.com/johnnickell/fight-agent-os/pull/110) |
 | — | [TASK-00491](00491-TASK.md) | Restore Build child confirmations and reduce routine command prompts | — (standalone bug) | done | — | [PR #111](https://github.com/johnnickell/fight-agent-os/pull/111) |
 | — | [TASK-00492](00492-TASK.md) | Remove Jev command gating and plan autonomous policy authorization | — (standalone chore) | done | — | [PR #113](https://github.com/johnnickell/fight-agent-os/pull/113) |
+| — | [TASK-00494](00494-TASK.md) | Read installed Pi examples through the authorized file reader | — (standalone bug) | done | — | [PR #114](https://github.com/johnnickell/fight-agent-os/pull/114) |
 <!-- /planning:board -->
