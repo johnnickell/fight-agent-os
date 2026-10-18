@@ -53,7 +53,7 @@ export function installJev(pi: ExtensionAPI, dependencies: Dependencies = {}) {
     if (ctx.mode !== 'tui') return;
     const view = readiness?.inspect();
     const state = failure ?? view?.state ?? 'missing-session';
-    ctx.ui.setStatus('fight-jev', `Jev: ${state === 'unchecked' ? 'configured' : state}`);
+    ctx.ui.setStatus('fight-jev', state === 'missing-setup' ? undefined : `Jev: ${state === 'unchecked' ? 'configured' : state}`);
   }
   function cleanup() {
     disconnect?.(); disconnect = undefined;

@@ -14,6 +14,16 @@ candidate code, not a replacement name for a fully qualified sandbox. Worktrees 
 No Engineer shell, sudo, private engine, host Docker socket or arbitrary process/network capability is required
 or permitted by this profile. A future unrestricted Engineer profile needs a separate approved qualification.
 
+## Autonomous authorization amendment — 2026-10-18
+
+The [standing execution policy](TERMINAL_AUTHORITY.md#standing-execution-policy--approved-amendment-2026-10-18)
+now authorizes unattended starts as well as routine execution. TASK-00139 must derive per-run grants from current
+administrator-owned policy and immutable eligibility, without asking a human to confirm every workflow. Atomic
+claims/reservations, authenticated delegated controllers, revocation and effect fences remain required. Policy
+setup or expansion is an administrator action; repeated permitted starts, retries, checks and handoffs are not.
+This amends the eventual implementation plan; it neither enables managed execution now nor grants Agents bash.
+Optional Jev judgments cannot grant or deny deterministic execution authority. MCP uses the same application policy.
+
 ## Role and file contract
 
 | Actor | Read | Write / request | Denied |
@@ -147,7 +157,7 @@ Local evidence (ignored, not shipped with a clone):
 | Owner | Exit responsibility |
 |---|---|
 | TASK-00138 | Settle revised authority/file/message/check contracts; qualify minimum file/handoff primitives and select a supportable restricted-check mechanism with direct scoped evidence; record limits and independent review disposition. Not a production implementation. |
-| TASK-00139 | Implement authorized start/inspect, immutable eligibility, durable grants/claims/intents and staged readiness; unsupported capabilities remain disabled. |
+| TASK-00139 | Implement unattended policy-authorized start/inspect, immutable eligibility, derived durable grants/claims/intents and staged readiness; unsupported capabilities remain disabled. |
 | TASK-00140 | Implement owned worktree/scratch/file capabilities, restricted check runtime/services, budgets, protected results, Git preparation and effect recovery; qualify the actual composed checker before enabling it. |
 | TASK-00141 | Implement separate Pi roles, bounded messages/correction, automatic permitted check requests and exact-commit handoff through the production path; one real TASK reaches Awaiting review only with required evidence. |
 | TASK-00142 | Qualify parallel production Workflows, cross-task/role denial, stale messages/snapshots, interruption, cancellation and retained-resource recovery. |

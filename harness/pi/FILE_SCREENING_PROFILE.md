@@ -1,8 +1,7 @@
 # Standing project screening (TASK-00309 implementation candidate)
 
 This profile combines normal project-file access, optional [Jev relevance discovery](FILE_SCREENING.md),
-automatic session binding, role-scoped explicit writes, shared monthly accounting and separate **command-risk
-assessment** using the existing Jev judgments supplier. It is not a sandbox or universal file-access boundary. Ordinary authorized
+automatic session binding, role-scoped explicit writes and shared monthly accounting for optional Jev discovery. It is not a sandbox or universal file-access boundary. Ordinary authorized
 shell remains useful, including `rg`, `cat`, `git diff`, checks, commits, non-force push and owned-worktree cleanup.
 Shell source reads can bypass relevance screening. Same-user shell can access operator state; explicit-tool
 protected paths do not provide OS containment. Restrictive shell containment/MCP replacements are future work.
@@ -13,6 +12,10 @@ John subsequently approved the narrow [AC8/E1 evaluation deferral](../../plannin
 comparative usefulness remains unestablished, with no effectiveness, recall or net context/latency/billed-cost
 savings claims. Independent Review and remaining behavioral/visual QA still apply; green controlled checks do not
 replace them. No global installation/trust/settings or real enrollment occurs by reading these instructions.
+
+TASK-00492 supersedes the earlier shell-assessment requirement. Jev setup and enrollment are optional; an
+unconfigured installation uses native tools without a setup prompt or provider request. The following setup
+applies only when the operator chooses Jev file screening. Historical records remain evidence of earlier behavior.
 
 ## Operator setup and inspection
 
@@ -28,12 +31,10 @@ replace them. No global installation/trust/settings or real enrollment occurs by
    evaluator and `authorized-supplied-state` disclosure. Setup resolves no credential and makes no request.
    Shared connection/price setup is standing for the approved pins and limits, with no periodic renewal.
    TASK-00450's timer removal is integrated from approved `develop`; existing timestamps/identities need no refresh.
-   Changed pins or invalid settings need explicit repair/setup, not automatic higher-price approval. Project/source/
-   command authority remains separate. `/jev check` is a separately confirmed billed synthetic request, not
-   source/command disclosure authority.
+   Changed pins or invalid settings need explicit repair/setup, not automatic higher-price approval. Project/source authority remains separate. `/jev check` is a separately confirmed billed synthetic request, not
+   source disclosure authority.
 3. Run `/file-screening setup` in the intended canonical project root. Enter extra protected paths and exact
-   governing/selected-skill instruction files (semicolon-separated). Explicitly consent to source and bounded
-   nonsecret final-command/context disclosure, then inspect the full effective preview. Use Up/Down or Page Up/Down
+   governing/selected-skill instruction files (semicolon-separated). Explicitly consent to source disclosure, then inspect the full effective preview. Use Up/Down or Page Up/Down
    to scroll and Home/End to jump; the footer shows active bindings and position. Enter continues to a separate
    short save confirmation; it does not save from the preview. Escape cancels either step without changes.
    Enlarge a terminal too small to display the preview controls before continuing. No JSON editing or session-ID
@@ -54,20 +55,21 @@ replace them. No global installation/trust/settings or real enrollment occurs by
    no expiry, routine renewal, new-session/day/month prompt or periodic lease. Resumes retain usage; fresh roles
    bind independently under the same account. Monthly reset changes available monthly funds, not enrollment.
 5. `/file-screening inspect` or `file_screening_status` is read-only and makes no paid/credential request. `active`
-   describes project access and declared command-risk coverage, not provider readiness, accuracy or safety.
+   describes project access and optional file-screening coverage, not provider readiness, accuracy or safety.
    `degraded` gives the precise setup/authority/provider/price/credential/budget action; `disabled` means not enrolled.
    A per-file refusal such as `source-limit` does not degrade an otherwise active session or clear a prior provider
    failure. The rejected file still has no positive receipt; a concretely needed file can be read directly within local limits.
    Status reports available/reserved/settled funds, all-month liabilities, reset, binding limit and actual session/phase.
 6. `/file-screening revoke` confirms revocation for **all roots listed in this enrollment**. Their durable revoked
-   record holds new/resumed native tools rather than turning deletion into an implicit opt-out. Existing runtimes
+   record holds new/resumed explicit file tools rather than turning deletion into an implicit opt-out. Existing runtimes
    recheck before new effects; already-running shell/descendants/remote effects are not guaranteed stopped. Preserve
    every ledger, pending charge and finite test counter. Setup may explicitly reenroll under reviewed authority;
    neither a new revision nor a new session resets accounting.
 
 Settings live outside roots/repository instructions in the existing private operator directory:
 `~/Library/Application Support/Fight Agent OS/jev/` (directory 0700, files 0600, operator-owned, no symlinks/hardlinks).
-`screening-profile.json` v2 has `expiresAt: null`, explicit command disclosure and revocation state. Generated
+`screening-profile.json` v2 has `expiresAt: null` and revocation state. Its legacy `commandDisclosure` field
+remains readable for compatibility but conveys no active command-screening behavior; new profiles default false. Generated
 `enforcement-<revision>.json` protects explicit file mutations, not arbitrary shell. Explicit operator exclusions, Pi runtime settings,
 operator state and sensitive names retain their explicit-tool protections. Project instructions and `.pi/skills`
 are editable for Engineer/Land unless explicitly excluded; `.env.example` is an ordinary template. Authority/source/tool drift holds old
@@ -75,7 +77,7 @@ runtime receipts and requires correcting the actual change and reload; no daily/
 
 **Historical compatibility:** v1 profiles were deliberately timeboxed. They hold with
 `historical-profile-conversion-required`, even if their old date remains in the future. `/file-screening convert`
-previews all formerly bounded roots and explicitly confirms standing disclosure plus new command-context consent.
+previews all formerly bounded roots and explicitly confirms standing source disclosure.
 Cancel retains the original bytes; `/file-screening revoke` can withdraw them without converting disclosure.
 Conversion retains roots, exclusions, exact witnesses, ceilings and all original accounting, with a new authority
 revision to invalidate old receipts. It never resolves credentials, sends a request or resets finite one-off tests.
@@ -125,8 +127,7 @@ An uncertain failed append is superseded by a Reviewer checkpoint so reload cann
 - QA writes its selected task's `.runs/qa/<TASK-ID>/` and task execution scratch, and can execute checks/probes.
 - Every role retains explicit exclusions, credential/runtime protections and existing task authorization.
 
-These are explicit-file-tool checks, not shell isolation. Every final shell command still receives assessment,
-now with the active role. Selecting Land does not grant publication, destructive or unrelated-work authority.
+These are explicit-file-tool checks, not shell isolation. Native shell does not receive Jev assessment. Selecting Land does not grant publication, destructive or unrelated-work authority.
 
 ### Inherited repository membership
 
@@ -188,13 +189,13 @@ only the exact selected version's ignored evidence, with no other-version, TASK,
 write grant. Resume retains the same version boundary; signing and publication require their existing authority.
 
 Role aliases remain Engineer/Software Engineer → `work`, Reviewer/Senior Engineer → `review`, QA Engineer → `qa`,
-Team Lead → `build`, Release Manager → `land`. Auxiliary skills use Reviewer's shell-risk phase with their own
+Team Lead → `build`, Release Manager → `land`. Auxiliary skills use Reviewer's workflow phase with their own
 narrower explicit-file effects. Work/Land cannot edit another checkout's source; reports remain accessible at
 the canonical base even when only a linked worktree was enrolled. Secret variants, Git internals, operator state,
 symlinks/hardlinks and live runtime resources retain their protections.
 
 `file_screening_status` reports the selected `workflow.skill`, `effect`, `taskId`, `checkout` and `mode`.
-Its `phase` is the command-risk role: Build deliberately uses `qa` with the `coordination` effect. This does
+Its `phase` is the workflow role: Build deliberately uses `qa` with the `coordination` effect. This does
 not make Build a QA worker or prevent child dispatch. `workflow.launcherRole` records the startup role
 (`null` for an unassigned interactive launcher), not the current skill. Diagnose a workflow mismatch from
 the selected skill and scope, never from `phase: qa` alone; do not promote Build to Engineer or Land.
@@ -233,58 +234,24 @@ A non-vision main model cannot inspect the attachment; Pi retains its normal lim
 
 There are no retained image selections or image-specific authorization state. Each read checks the current file;
 a file changed during native processing must be retried. Standing text roots, credentials, budgets and finite
-counters remain unchanged. This does not waive ordinary task permissions, text admission, command-risk checks
-or runtime source-integrity/lifecycle checks, and does not claim same-user OS containment.
+counters remain unchanged. This does not waive ordinary task permissions, text admission or runtime source-integrity/lifecycle checks, and does not claim same-user OS containment.
 
-## Command risk and authorization
+## Native shell and task authority
 
-Native Agent `bash` uses Pi's ordinary shell tool/rendering/output limits and local execution backend. The wrapper
-assesses the **final command at `BashOperations.exec`**, after tool-call hooks and configured command prefix.
-It captures cwd, root, phase and shellPath/prefix settings only; no environment values, prompt/history, file bodies
-or script contents are fetched for risk assessment. Final command is <=16 KiB; shell settings are <=4 KiB each.
-The same shared Jev supplier, credentials, pins, concurrency, zero-retry contract and durable account are used.
-Risk is a separate choice rubric, not the file-relevance score or an additional provider client/cache.
+TASK-00492 removes Jev command screening, local command tripwires and the parent/child approval relay.
+Native Agent `bash`, user `!` / `!!` and RPC user bash use Pi's ordinary implementation, configured prefix,
+output limits and cancellation. They do not resolve Jev credentials, disclose commands to Jev, spend a Jev
+budget or request a Jev confirmation. Missing setup, an unavailable evaluator or file enrollment status does
+not gate shell execution. No switch or automatic approval substitute retains the removed gate.
 
-- Complete `ordinary` with confidence >=0.70 may proceed **only within existing task/role/operator authorization**.
-  The balanced threshold uses confidence in the ordinary classification, not a measured probability of safety.
-  It means no apparent dangerous effect in supplied context, not containment or new permission.
-- Risky, low-confidence/unknown, denied, failed, unavailable, budget-limited or price-unqualified assessments emit
-  distinct held outcomes and require an explicit one-command operator decision. Native TUI uses concise warnings,
-  not routine event/JSON popups; noninteractive monitor observations remain structured. No UI/declined decision
-  means no execution. Confirmation is an exceptional decision, not a recurring grant for normal authorized work.
-  It does not fabricate a safe judgment or authorize an effect outside the operator's existing authority.
-- Enrollment revocation, epoch/authority/context/settings drift and cancellation cannot be overridden by that dialog.
-  Concurrent Agent/user command approvals are queued through one native dialog slot. Waiting commands revalidate
-  before displaying; each decision remains bound to its exact command. Aborting a waiting command removes it
-  without dismissing another command's dialog. Aborting the visible command dismisses it; lifecycle invalidation
-  withdraws all pending approvals. Only the displayed approval reports Herdr blocked, with a balanced clear on
-  answer, cancellation or error. Execution may remain parallel after separate decisions. The shell timeout starts
-  after approval. Direct native dialogs have no operator deadline; the child relay below has a bounded
-  two-minute decision window, and the stage monitor retains its overall timeout.
-  Recheck after evaluation/decision and immediately before delegating the fixed command to Pi's local backend.
-  A change requires a new assessment/decision; no reusable shell permit is stored.
-- Never embed credentials or secret material in commands. Local tripwires hold known key/token/assignment/Bearer/
-  private-key forms and obvious credential-file/environment reads **before** provider disclosure, with only hashed
-  command IDs in observations. This is not a complete secret detector or shell parser. Encoding, indirect scripts,
-  ambient environment, startup shell files and later substitutions can conceal effects; they are not inspected.
-  Ordinary user approval/disclosure constraints remain binding. Do not interpret the classifier as secret protection.
-- Shell syntax is not allowlisted. Pipelines, substitutions, scripts, Git/checks and reads are not blanket-denied;
-  incomplete context can require an operator decision. Output is ordinary shell output, not relevance-admitted content.
+Existing task authorization and native host/runtime permissions remain binding. Do not put credentials in
+commands or use shell to circumvent an actual file-access denial. File protections do not contain same-user
+shell, descendants, plugins or SDK calls. The separate explicitly selected deterministic tool-policy profile
+retains its own shell restrictions. Managed execution without Agent shell access remains future work under
+[tool-mediated execution](../../docs/engineering/TOOL_MEDIATED_EXECUTION.md).
 
-`command-secret-disclosure-held` is a local refusal of the supplied command, before provider disclosure or shell
-execution. It does not set a session-wide hold, and there is no hold-clear command. Chat approval cannot override
-it. Remove actual credential values or secret-file/environment reads; report a non-sensitive false-positive
-command for repair. Never encode, split or move the same operation into a script to evade the check. Unrelated
-non-sensitive commands remain assessable. Complete quoted display labels such as `print('tokens:', count)` and
-the exact template filename `.env.example` alone do not count as credentials. The whole command still receives
-risk assessment; real assignments, quoted credential object keys, `.env`/`.env.local`, secret expansions and mixed
-commands retain their checks. Template contents are not inspected or guaranteed safe by the filename.
-
-`command-context-disclosure-held` concerns the configured shell path/prefix or phase; the operator should inspect
-settings locally without pasting sensitive values. `command-operator-decision-required` instead means the risk
-assessment needs the native one-command confirmation. Chat approval does not answer that dialog, and no
-confirmation is reused for later commands. A blocked result includes this recovery guidance directly, so obtaining
-it does not depend on screening another policy document. Authority drift and revocation remain separate failures.
+Fully restart Pi after updating the harness; a running process can retain old modules. Resume the original
+Build ledger and model pins without resetting repair counts, enrollment, charges or unresolved liabilities.
 
 ## Coverage and normal Build
 
@@ -293,11 +260,11 @@ it does not depend on screening another policy document. Authority drift and rev
 | Native explicit `read` | Normal project reads and exact portable instructions; optional explicit receipts/evidence remain validated |
 | `jev_read_file` / `file_locate` | Optional discovery with original supplier/lookup limits |
 | Native explicit `write` / `edit` | Role-scoped final-argument protected-path checks; omit source diffs/previews in results |
-| Native Agent `bash` | Final-command shared-Jev risk assessment and visible exceptional decisions; shell relevance bypass |
-| Native user `!` / `!!`, RPC user bash | Custom operations assess final prefixed command before local execution. `!!` excludes main-model context, not approved Jev command disclosure |
+| Native Agent `bash` | Ordinary native execution; no Jev request, setup dependency or command confirmation |
+| Native user `!` / `!!`, RPC user bash | Ordinary native execution and prefix handling; no Jev command disclosure |
 | Provider-owned Build monitor | Read-only provider-relative preflight; enrolled children explicitly load package plus required authority identity, actual child sessions independently bind |
 | Code/script descendants, monitor's process launch, Git hooks, native shell startup, other tools/SDK/OS calls, plugins, prompt attachments, external editors | Not recursively intercepted or OS-confined; no universal enforcement claim |
-| Alternate/nested explicit tools in this profile | Unsupported and held; ordinary useful work uses assessed bash, not bespoke capability replacements |
+| Alternate/nested explicit tools in this profile | Unsupported and held; ordinary useful work uses native bash, not bespoke capability replacements |
 
 Start ordinary Pi with the reviewed package and invoke **`/skill:build TASK-NNNNN`** from the owning provider skill.
 Use the [normal provider-owned Build monitor](../../.pi/skills/build/SKILL.md#dispatch-fresh-roles), ordinary shell,
@@ -316,7 +283,7 @@ never delete old records or use a new command/directory to reset them. Never rer
 ## Shared monthly accounting and recovery
 
 Explicit enrollment applies one operator-wide **10,000,000 micro-USD ($10) per America/Chicago calendar month**,
-no rollover, across projects/parents/children and both file-relevance and command-risk requests. External clients
+no rollover, across projects/parents/children for file-relevance requests. Historical command charges and liabilities remain accounted for. External clients
 and unrelated main-model spending are not capped. Every attempt reserves **2,688 micro-USD** worst-case before
 credential resolution, marks dispatch durably and settles actual reported cost once, rounded upward. SQLite full
 synchronous transactions/finite locks serialize processes. Its experimental Node warning remains visible.
@@ -343,10 +310,9 @@ ledgers. Status initializes no fresh paid request; missing cost remains unknown.
 ## Observations and evidence limits
 
 Interactive sessions are quiet by default: no automatic JSON dumps at startup/before turns, no raw diagnostic
-stderr competing with the TUI renderer, and no success messages such as `command-risk-complete complete`.
+stderr competing with the TUI renderer, and no routine success messages.
 The compact status remains; changed degraded states and blocked operations produce concise, deduplicated warnings.
-`/file-screening inspect` explicitly requests the detailed status. Command holds still require their existing
-one-command decision; quiet presentation does not suppress tool errors, authority checks or accounting.
+`/file-screening inspect` explicitly requests the detailed status. Quiet presentation does not suppress file-tool errors, authority checks or accounting.
 
 The normal monitor drains private stderr and projects only declared safe screening/status fields into its ordinary
 feed: actual hashed session, phase, sequence, path/need/operation correlation, decision, reason, range, available
@@ -365,32 +331,3 @@ The approved AC8/E1 deferral applies, not another automatic recovery or counter 
 comparative benefit is inferred. Real baseline/current wide/narrow terminal PNGs now cover bounded degraded status;
 full behavioral/visual QA remains independent. PTY text is not a screenshot. If future captures are unavailable,
 use the operator-approved fallback with explicit limits; never fabricate images or claim visual certification.
-
-### Build child command confirmations
-
-An enrolled interactive Build coordinator supplies a temporary loopback confirmation connection only to its
-current shell launch. The existing stage monitor inherits it into the independently enrolled JSON child.
-Risk assessment stays in the child. A non-ordinary result requests a fresh coordinator-native decision showing
-the exact final command (ASCII JSON-escaped), directory, TASK, role and session. Parent validation binds the request
-to its current task and enrolled repository, including registered linked worktrees; both sides recheck their
-current authority before execution. Direct interactive commands retain their own native confirmation.
-
-Child decisions use a bounded terminal overlay, not an unbounded Yes/No message. Page Down/`n` advances;
-Page Up/`p` returns, and Home/End selects the first/last page. Every page must have been displayed before `a`
-can approve on the final page. Enter, Escape, Ctrl-C or `d` denies; Return never implicitly accepts. Commands
-and context use lossless ASCII JSON escapes, including Unicode and terminal control characters. Controls stay
-visible at supported sizes; below 64 columns or 12 rows, approval is disabled until resized. Resizing restarts
-page inspection. The existing two-minute deadline includes inspection and queue wait; expiry refuses rather
-than extending authority. RPC cannot display this custom surface and refuses child decisions without fallback.
-
-The connection uses an unpredictable per-launch token, request identity and content digest, a bounded two-minute
-decision deadline, bounded messages and the same exclusive dialog queue as direct commands. It closes on launch
-completion, cancellation, session changes or disconnect. Missing UI/transport, malformed input, timeout, denial,
-context mismatch and stale authority never approve execution. The token is not written to logs or approval files
-and is removed from the child's subsequent shell environments. Ordinary judgments need no confirmation; local
-secret-disclosure refusals never reach this connection. Enrollment, monthly accounting and role effects are unchanged.
-
-This is same-user local transport, not OS isolation, caller attestation, a reusable permit or additional task
-permission. A malicious same-user process can inspect process state; the existing shell trust limit remains.
-No global settings or additional Pi extension installation is needed. Fully restart a coordinator using older
-loaded modules before resuming its original Build ledger; do not reset repair counts or retry a missing channel.

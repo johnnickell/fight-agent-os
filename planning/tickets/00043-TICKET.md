@@ -7,6 +7,15 @@ status: ready-for-agent
 
 # Gather judgment evidence through authorized tools and analysis
 
+## Approved gate-removal amendment — 2026-10-18
+
+[TASK-00492](../tasks/00492-TASK.md) removes required Jev command/effect screening. Current MCP composition uses
+TASK-00160's deterministic policy plus each operation's actual authorization, limits and recovery contract.
+TASK-00174 now depends on TASK-00171/TASK-00160; the earlier TASK-00161 semantic-guard dependency below is
+historical and superseded. Jev remains an optional evaluator of permitted evidence, not an execution gate.
+Standing application policy authorizes routine managed operations without a fresh human decision each time;
+independent business-operation requirements remain authoritative.
+
 ## Problem statement
 
 Some questions need current MCP/application observations or qualified analysis rather than existing files alone.

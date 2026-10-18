@@ -64,14 +64,15 @@ admit a declared operation; they do not constrain what trusted script code does 
 ## Runtime compatibility
 
 The shared guard accepts stable `>=1.2.0 <2.0.0`; it does not pin each Pi minor/patch release. Both this policy
-and enrolled file screening require successful registration of `session_start`, `tool_call`, `user_bash`,
+and enrolled file screening require successful registration of `session_start`, `tool_call`,
 `session_before_switch`, `session_before_fork`, `session_before_tree` and `session_shutdown`. Each registration
-must return Pi's unsubscribe function. File screening additionally requires `before_agent_start`, `input`, `getSettings` and `appendEntry`.
+must return Pi's unsubscribe function. This deterministic policy additionally requires `user_bash`; enrolled
+file screening leaves shell native after TASK-00492 and does not register that hook. File screening requires `before_agent_start`, `input`, `getSettings` and `appendEntry`.
 Both require callable `on`, `registerTool`, `getAllTools`, `getActiveTools`, `setActiveTools` and `getFlag` APIs.
 Missing acknowledgements/capabilities keep activation unavailable with `unsupported-runtime-or-hooks`; presence
 of `on` alone or a hard-coded `hooks: true` is not sufficient. Native tool factories remain required imports.
 
-Fresh compatibility probes exercised installed **Pi 1.2.0 and 1.3.0, Node 22.23.1, macOS APFS**: 42 deterministic
+Historical compatibility probes exercised installed **Pi 1.2.0 and 1.3.0, Node 22.23.1, macOS APFS**: 42 deterministic
 pipeline outcomes per release, plus 17 enrolled-screening outcomes per release, with no provider calls. They
 covered real hooks, final-argument checks, alternate/nested denial, shell interception, lifecycle cancellation,
 reload and missing-registration refusal. Disposable enrollment, enforcement files, monthly SQLite accounting,
@@ -212,7 +213,7 @@ not a supported external launch API. Separate real CLI PTYs exercise policy insp
 presentation-only package. Native terminal images are unavailable: ANSI transcripts demonstrate interaction and
 file effects, **not visual clipping/font/layout correctness**. Independent Review and QA remain separate.
 
-Jev-enabled tool-effect screening remains TASK-00161. TASK-00309's separate
+Required Jev tool-effect screening (TASK-00161) was cancelled by TASK-00492; no semantic command gate remains. TASK-00309's separate
 [enrolled file-screening candidate](FILE_SCREENING_PROFILE.md) reuses these final-argument write/edit operations
 with normal project reads, optional relevance discovery, role-scoped writes and separate final-command Jev
 risk assessment for useful authorized shell. Its project-instruction, skill and `.env.example` access defaults

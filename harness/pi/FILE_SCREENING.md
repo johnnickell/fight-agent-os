@@ -2,7 +2,7 @@
 
 **TASK-00309 implementation candidate:** the [enrolled profile](FILE_SCREENING_PROFILE.md) adds operator preview,
 automatic actual-session allocation, shared monthly accounting, trusted evidence intake and local receipt admission.
-The amended standing profile keeps ordinary authorized shell with separate command-risk assessment; shell can
+The amended standing profile keeps ordinary native shell without Jev command screening or confirmation; shell can
 bypass relevance admission and is not OS-confined. Use normal Pi/provider-owned Build, not a replacement executor.
 Historical bounded native/build dispatch and synthetic live screening/admission have recorded evidence, including
 one explicitly approved corrected recovery pair; parent screens were not replayed. The child final omitted the

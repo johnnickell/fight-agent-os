@@ -21,7 +21,7 @@ capabilities, effect recovery and check execution. Team Lead delegates; Engineer
 and scratch, exchanges bounded notes, and reads its TASK's canonical Review/QA reports without write permission.
 Neither Agent receives bash, sudo, Docker administration, arbitrary network/command tools or mutable tool loading.
 
-1. Authorize the TASK revision, grant, dependencies and required capabilities; atomically claim and persist dispatch.
+1. Derive the exact TASK grant from administrator-owned standing policy and immutable eligibility for an authenticated User or delegated controller; reserve budgets/concurrency, atomically claim and persist dispatch without routine human confirmation.
 2. Resolve an exact base, create an owned branch/worktree, register contained role-specific code/notes roots and
    protect shared Git administration. Do not repurpose a human checkout or expose sibling metadata.
 3. Prepare pinned trusted Pi/tool infrastructure with separate role identities, conversations, file grants,
@@ -55,6 +55,14 @@ Provider and Agent HMAC credentials stay in trusted infrastructure outside Agent
 Bind every tool/provider operation to current Workflow, role, attempt and permissions, with bounded usage and
 cancellation. Preserve package-owned enrollment/recovery, durable intent, source-publication coordination and
 independent receipt authority. A prompt, copied role name, note or exit code alone grants nothing.
+
+## Autonomous starts amendment — 2026-10-18
+
+The [standing execution policy](../../docs/engineering/TERMINAL_AUTHORITY.md#standing-execution-policy--approved-amendment-2026-10-18)
+supersedes per-run operator grant confirmation. TASK-00139 and all Start consumers must run unattended within
+administrator-approved scope, with current delegation/revocation checks, exact grants and no Agent self-authorization.
+Routine starts, resumes, delegation, retries, checks and handoffs need no new human decision. Only an actual
+scope expansion or unresolved policy decision escalates. Implement and verify this before enabling managed launch.
 
 ## Pi Durable integration direction — 2026-10-13
 

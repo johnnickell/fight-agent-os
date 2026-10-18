@@ -78,6 +78,7 @@ Use the accepted coverage/handoffs in the owning records:
 | Original vision, EPIC-00005–00010 | [Vision map frontier and coverage](wayfinder/complete-agent-os-vision-map.md#frontier): original planning phases complete; accepted requirements and unresolved supplier contracts remain with their records. |
 | Local Pi workspace, TICKET-00110 | [Approved split](tickets/00110-TICKET.md#approved-decomposition--2026-10-15): TASK-00447–00449; local activity/log display remains independent of full operational observability. |
 | Operational observability, EPIC-00019 | [Completed map planning](epics/00019-EPIC.md#approved-installation-task-decomposition-and-completed-map-planning): seven TICKETs and thirty-seven TASKs, TASK-00451–00487; early suppliers are mapped, not runtime-qualified. |
+| Visual Workflow policy editor | [TASK-00493](tasks/00493-TASK.md): bounded plan under TICKET-00097; exact supported stage graph and policy-management contracts still need resolution. No new Wayfinder map or priority change. |
 | Other accepted destinations | [Wayfinder inventory](wayfinder/README.md) and each EPIC's own coverage/handoff retain their authority. Map closure and historical selected-slice approvals are not substitutes for current implementation evidence. |
 
 For execution, read the Board's **Active Work** first, then its **Ready Frontier** under

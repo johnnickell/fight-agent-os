@@ -220,7 +220,7 @@ test('stable compatible Pi releases admit effects while unsupported runtimes and
 
 test('activation requires every registered boundary hook and API, not a truthy assumption', (t) => {
   const f = fixture(t);
-  const events = ['session_start', 'tool_call', 'user_bash', 'session_before_switch',
+  const events = ['session_start', 'tool_call', 'session_before_switch',
     'session_before_fork', 'session_before_tree', 'session_shutdown', 'before_agent_start', 'input'];
   const methods = ['on', 'registerTool', 'getAllTools', 'getActiveTools', 'setActiveTools', 'getFlag', 'getSettings', 'appendEntry'];
   const api = () => Object.fromEntries(methods.map(name => [name, () => () => {}]));
@@ -246,7 +246,7 @@ test('activation requires every registered boundary hook and API, not a truthy a
   }
   const pi = api(), hooks = trackRuntimeHooks(pi);
   pi.getSettings = undefined; // The standalone policy does not consume settings or before_agent_start.
-  const removers = events.slice(0, -2).map(name => hooks.on(name, () => {}));
+  const removers = [...events.slice(0, -2), 'user_bash'].map(name => hooks.on(name, () => {}));
   assert.equal(activate(hooks).state, 'active');
   removers[1]();
   assert.equal(activate(hooks).reason, 'unsupported-runtime-or-hooks');

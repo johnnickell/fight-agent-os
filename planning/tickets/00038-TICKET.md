@@ -2,10 +2,20 @@
 id: TICKET-00038
 epic: EPIC-00006
 title: Guard Pi tool execution with deterministic restrictions and Jev
-status: ready-for-agent
+status: done
 ---
 
 # Guard Pi tool execution with deterministic restrictions and Jev
+
+## Approved scope reduction and closure — 2026-10-18
+
+John removed required Jev command/effect screening in [TASK-00492](../tasks/00492-TASK.md). TASK-00160 delivered
+the independent opt-in deterministic Pi policy; TASK-00161 is intentionally `wontfix`. This mixed closure records
+only that delivered deterministic outcome, not implementation of the historical semantic guard described below.
+Optional file/search and explicitly requested judgments remain available. No Jev configuration is required for
+normal native Pi/Build commands. Standing application policy owns future managed execution authorization.
+This amendment supersedes the earlier mandatory semantic guard and operator-resolution requirements throughout
+this TICKET; their historical rationale and decisions remain below.
 
 ## Problem statement
 
@@ -88,7 +98,7 @@ not a promise of universal interception. The complete initial Jev-enabled profil
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00160](../tasks/00160-TASK.md) | Enforce an operator-selected Pi tool policy | done |
-| [TASK-00161](../tasks/00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | ready-for-agent |
+| [TASK-00161](../tasks/00161-TASK.md) | Screen permitted tool effects with Jev and resolve uncertainty | wontfix |
 <!-- /planning:children -->
 
 ## Decisions and progress

@@ -51,9 +51,8 @@ import { ScreeningProfiles } from ${JSON.stringify(join(harness, 'src/jev/screen
 export default function(pi) { installJev(pi, {settings: {load: () => (${JSON.stringify(config)})}, profiles: new ScreeningProfiles(${JSON.stringify(directory)}), credentialConfigured: () => true,
 credentials: () => ({read: async () => Buffer.from('controlled-nonsecret-fixture')}),
 transport: {submit: async (_endpoint, payload) => { appendFileSync(${JSON.stringify(requests)}, JSON.stringify(payload) + '\\n');
-const command = JSON.stringify(payload).includes('command-risk');
 return {status:200, body:{model:${JSON.stringify(connection.evaluator)},provider:'TypeSafe',usage:{input_tokens:10,output_tokens:2,cost:0.000003},
-answers: command ? {'command-risk':{type:'choice',choice:'ordinary',confidence:0.98,probabilities:{ordinary:0.98,risky:0.01,unknown:0.01}}} : {relevance:{type:'noul',noul:0.95}}}};}} }); }
+answers: {relevance:{type:'noul',noul:0.95}}}};}} }); }
 `);
 }
 const runtime = await sdk.ModelRuntime.create({ authPath: join(agentDir, 'auth.json'), modelsPath: null, modelsStorePath: join(agentDir, 'models-cache.json'), refreshOnCreate: false });
@@ -130,7 +129,7 @@ try {
     await select(work, 'work', `--checkout ${checkout}`);
     const beforeGit = calls();
     await call(work, 'bash', { command: `git worktree add --detach '${checkout}' HEAD` });
-    assert.equal(calls(), beforeGit + 1); assert.equal(confirmations, 0);
+    assert.equal(calls(), beforeGit); assert.equal(confirmations, 0);
     assert.equal(prepareScreening(checkout, new ScreeningProfiles(directory)).enrolled, true);
     await core(work, checkout);
     await read(work, join(checkout, 'source.txt')); await write(work, join(checkout, 'source.txt'), 'First native update\n');
@@ -162,7 +161,7 @@ try {
       await write(session, join(main, '.runs', folder, 'TASK-00489/history/snapshot.md'));
       await read(session, target); await write(session, join(checkout, 'source.txt'), 'Forbidden source', false);
       await write(session, join(main, '.runs', folder, 'TASK-99999/other.md'), 'Forbidden task', false);
-      // Atomic publication remains an independently assessed command, never a denied file-tool workaround.
+      // Atomic publication remains a native shell operation, never a denied file-tool workaround.
       await write(session, target + '.tmp', 'Atomic owned report');
       await call(session, 'bash', { command: `mv '${target}.tmp' '${target}'` });
       assert.equal(readFileSync(target, 'utf8'), 'Atomic owned report');
@@ -244,8 +243,8 @@ try {
     assert.equal(JSON.parse(storageRead.content[0].text).blocked, 'workflow-role-persistence-failed');
     await write(persistenceHeld, join(consumer, '.runs/handoffs/release-0.4.0/storage-held.md'), 'Forbidden', false);
     const integrityHeld = await start(consumer), activeTools = integrityHeld.getActiveToolNames();
-    integrityHeld.setActiveToolsByName(activeTools.filter(name => name !== 'bash'));
-    const integrityRead = await read(integrityHeld, join(consumer, 'README.md'), false);
+    integrityHeld.setActiveToolsByName(activeTools.filter(name => name !== 'read'));
+    const integrityRead = await write(integrityHeld, join(consumer, 'integrity-held.txt'), 'Forbidden', false);
     assert.equal(JSON.parse(integrityRead.content[0].text).blocked, 'required-tool-hidden');
     integrityHeld.setActiveToolsByName(activeTools);
     await integrityHeld.prompt('/skill:release 0.4');

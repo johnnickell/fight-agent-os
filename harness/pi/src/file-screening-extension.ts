@@ -4,21 +4,16 @@ import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { Type, type TSchema } from 'typebox';
-import { createBashToolDefinition, createLocalBashOperations, createReadToolDefinition, createEditToolDefinition, createWriteToolDefinition,
+import { createReadToolDefinition, createEditToolDefinition, createWriteToolDefinition,
   getAgentDir, getPackageDir, getReadmePath, getDocsPath, VERSION } from '@earendil-works/pi-coding-agent';
-import type { BashOperations, ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
-import { matchesKey } from '@earendil-works/pi-tui';
+import type { ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { reviewEnrollment } from './enrollment-preview.ts';
-import { ChildCommandView } from './jev/child-command-view.mjs';
 import { FileScreening, type ScreenResult } from './jev/file-screening.mjs';
 import { FileScreeningSettings } from './jev/local-store.mjs';
 import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
 import { FileAdmission } from './jev/file-admission.mjs';
 import { ImageAdmission, isImagePath } from './jev/image-admission.mjs';
 import { WorkflowAccess, skillEffects } from './jev/workflow-access.mjs';
-import { CommandRisk, commandRiskRecovery } from './jev/command-risk.mjs';
-import { childApprovalEnvironment, openChildApprovals, requestChildApproval } from './jev/child-command-approval.mjs';
-import { CommandApprovals } from './jev/command-approvals.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
 import { ToolPolicy, PolicyDenied } from './tool-policy/policy.mjs';
 import { fileOperations } from './tool-policy/effects.mjs';
@@ -56,7 +51,7 @@ const localScreeningFailures = new Set(['source-limit', 'batch-source-limit', 'r
   'symlink-denied', 'symlink-escape', 'unsupported-file', 'unsupported-hardlink', 'unstable-source',
   'binary-source', 'source-unavailable', 'invalid-input', 'result-presentation-limit', 'admission-presentation-limit']);
 
-/** Bind standing enrollment to explicit file admission and separate advisory command-risk assessment */
+/** Bind optional file screening to explicit file access without intercepting shell execution */
 export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencies) {
   const hooks = trackRuntimeHooks(pi, { screening: true });
   const profiles = dependencies.profiles;
@@ -64,12 +59,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   let screening: FileScreening | undefined, admission: FileAdmission | undefined, images: ImageAdmission | undefined, guard: ToolPolicy | undefined;
   let selected = false, live = false, failure: string | undefined, inputFailure: string | undefined, evaluationFailure: string | undefined;
   let context: ExtensionContext | undefined;
-  const inheritedApproval = process.env[childApprovalEnvironment];
-  const childBridges = new Set<{ close: () => void }>();
   let workflow = new WorkflowAccess();
-  // Agent and user shell calls share one dialog slot; only its current owner reports blocked.
-  const approvals = new CommandApprovals(active => pi.events.emit('herdr:blocked', { active,
-    ...(active ? { label: 'Command approval required' } : {}) }));
   let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0, lastNotice = '', lastWarning = '';
   const persistRole = (role: string) => {
     try { pi.appendEntry('fight-workflow-role-v3', workflow.checkpoint(sessionId, role)); }
@@ -129,8 +119,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (pi.getFlag('fight-tool-policy') !== undefined) throw new PolicyDenied('incompatible-tool-policy-selection');
       const state = guard?.inspect();
       if (state?.state !== 'active') throw new PolicyDenied(state?.reason ?? 'boundary-unavailable');
-      if (!owner || allowed.some(name => pi.getAllTools().find(tool => tool.name === name)?.sourceInfo?.path !== owner)) throw new PolicyDenied('unsupported-tool-replacement');
-      if (!['read', 'bash'].every(name => pi.getActiveTools().includes(name))) throw new PolicyDenied('required-tool-hidden');
+      if (!owner || allowed.filter(name => name !== 'bash').some(name => pi.getAllTools().find(tool => tool.name === name)?.sourceInfo?.path !== owner)) throw new PolicyDenied('unsupported-tool-replacement');
+      if (!['read'].every(name => pi.getActiveTools().includes(name))) throw new PolicyDenied('required-tool-hidden');
     } catch (error) {
       failure = safeCode(error); admission?.close(); screening?.close(); guard?.cancel(failure);
       throw new PolicyDenied(failure);
@@ -145,7 +135,6 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         checkBoundary();
         const policy = profiles.selection(ctx.cwd)!.profile;
         allocation = { requestMicroUsd: policy.requestMicroUsd, sessionMicroUsd: policy.sessionMicroUsd };
-        if (!reason && !policy.commandDisclosure) reason = 'command-disclosure-not-approved';
         budget = new ProfileBudget(sessionId, profiles.directory, ledger).inspect(policy.sessionMicroUsd);
       } catch (error) { reason = safeCode(error); }
       if (!reason && !dependencies.credentialConfigured(ctx)) reason = 'credential-unavailable';
@@ -156,17 +145,17 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (!reason && (budget?.session.availableMicroUsd ?? 0) < 2688) reason = 'session-budget';
     }
     return { state: selected ? reason ? 'degraded' : 'active' : 'disabled',
-      enforcement: selected ? reason ? 'project-access-with-screening-degraded' : 'project-access-and-command-risk' : 'not-enrolled',
+      enforcement: selected ? reason ? 'project-access-with-screening-degraded' : 'project-access-with-optional-screening' : 'not-enrolled',
       reason: reason ?? (selected ? null : 'not-enrolled'), session: hash(sessionId),
       phase: workflow.role, budget, allocation,
       workflow: { skill: workflow.skill, effect: skillEffects[workflow.skill], taskId: workflow.taskId,
         checkout: workflow.checkout, mode: workflow.mode, launcherRole: workflow.launcher },
       credential: selected && dependencies.credentialConfigured(ctx) ? 'configured-resolution-unchecked' : 'not-configured',
       bindingLimit: budget ? budget.availableMicroUsd <= budget.session.availableMicroUsd ? 'monthly' : 'session' : 'unavailable',
-      coverage: selected ? `Pi ${VERSION} explicit read/write/edit; final native Agent bash and user-bash operations; preflighted provider Build children. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
+      coverage: selected ? `Pi ${VERSION} explicit read/write/edit and optional screening; preflighted provider Build children. Native shell is unchanged and makes no Jev request. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
       enrollment: selected ? 'standing-until-revocation-or-authority-change; historical-profiles-require-explicit-conversion' : 'none',
-      nextActionCode: !selected ? 'enroll-project' : reason && inputRecovery(reason) ? 'correct-workflow-input' : reason === 'stale-file-policy' ? 'review-connection-rebind' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
-      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : (reason && inputRecovery(reason)) || (reason === 'stale-file-policy' ? 'Operator: /jev inspect, then /file-screening rebind to review the current connection for ALL enrolled projects; reload after saving. Do not repeat setup or reset accounting.' : reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.') };
+      nextActionCode: !selected ? 'none' : reason && inputRecovery(reason) ? 'correct-workflow-input' : reason === 'stale-file-policy' ? 'review-connection-rebind' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
+      nextAction: !selected ? 'Continue with native tools. Jev setup and file screening are optional.' : (reason && inputRecovery(reason)) || (reason === 'stale-file-policy' ? 'Operator: /jev inspect, then /file-screening rebind to review the current connection for ALL enrolled projects; reload after saving. Do not repeat setup or reset accounting.' : reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Native shell commands do not use Jev. No safety or universal relevance guarantee.') };
   }
   function present(ctx: ExtensionContext, notify = false) {
     const view = status(ctx);
@@ -212,75 +201,6 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         return { ...textResult(result, !['complete', 'incomplete'].includes(result.status)), structuredContent, usage: measuredUsage };
       },
     });
-  }
-  function shellOperations(ctx: ExtensionContext): BashOperations {
-    const currentEpoch = epoch, roleRevision = workflow.revision;
-    const settings = pi.getSettings();
-    const local = createLocalBashOperations({ shellPath: settings.shellPath });
-    const risk = new CommandRisk({ profiles, configuration: dependencies.configuration, connect: authorize => connect('shell-risk-v1', authorize),
-      sessionId, cwd: ctx.cwd, observe, context: () => ({ phase: workflow.role,
-        shellPath: pi.getSettings().shellPath, commandPrefix: pi.getSettings().shellCommandPrefix }) });
-    return { async exec(command, cwd, options) {
-      const validate = () => {
-        if (currentEpoch !== epoch || roleRevision !== workflow.revision || options.signal?.aborted) throw new PolicyDenied('stale-operation');
-        checkBoundary();
-        const current = pi.getSettings();
-        if (settings.shellPath !== current.shellPath || settings.shellCommandPrefix !== current.shellCommandPrefix) throw new PolicyDenied('command-context-changed');
-      };
-      try {
-        // Pi has applied final tool-call mutations and its prefix before this operations boundary.
-        await risk.assess(command, cwd, { signal: options.signal, validate, confirm: async decision => {
-          if (!ctx.hasUI) return workflow.launcher ? requestChildApproval(inheritedApproval,
-            { ...decision, task: workflow.taskId, role: workflow.role, session: sessionId }, { signal: options.signal }) : false;
-          return approvals.run(signal => ctx.ui.confirm(`Command held: ${decision.outcome} (${decision.reason})`,
-            `No safe verdict is claimed. Confirm this ONE exact command only if it is within existing task/role authority. No permission expansion.\nDirectory: ${decision.cwd}\n${decision.command}`,
-            { signal }), { signal: options.signal, validate });
-        } });
-        validate();
-        // Keep the transport out of child shell environments. Only a live, interactive Build
-        // operation receives a new endpoint; its lifetime is exactly the launching shell call.
-        const env = { ...(options.env ?? process.env) };
-        delete env[childApprovalEnvironment];
-        if (workflow.skill !== 'build' || workflow.launcher || !ctx.hasUI) return local.exec(command, cwd, { ...options, env });
-        const task = workflow.taskId;
-        const bridge = await openChildApprovals({ signal: options.signal,
-          validate: request => {
-            validate();
-            if (workflow.skill !== 'build' || request.task !== task ||
-                profiles.selection(request.cwd)?.project.root !== profiles.selection(ctx.cwd)?.project.root)
-              throw new PolicyDenied('child-command-context-changed');
-          },
-          confirm: (request, signal, check) => approvals.run(async dialogSignal => {
-            // RPC has no bounded custom terminal surface; never fall back to a clipped confirm.
-            if (ctx.mode !== 'tui' || dialogSignal.aborted) return false;
-            let cancel: (() => void) | undefined;
-            try {
-              return await ctx.ui.custom<boolean>((tui, _theme, _keys, done) => {
-                const view = new ChildCommandView(request, {
-                  size: () => ({ columns: tui.terminal.columns, rows: tui.terminal.rows }),
-                  redraw: () => tui.requestRender(), done,
-                  key: (data, key) => matchesKey(data, key as Parameters<typeof matchesKey>[1]),
-                });
-                cancel = () => view.finish(false);
-                dialogSignal.addEventListener('abort', cancel, { once: true });
-                if (dialogSignal.aborted) queueMicrotask(cancel);
-                return view;
-              }, { overlay: true, overlayOptions: { width: '100%', maxHeight: '100%', margin: 0 } });
-            } finally { if (cancel) dialogSignal.removeEventListener('abort', cancel); }
-          }, { signal, validate: check }) });
-        childBridges.add(bridge);
-        try {
-          validate();
-          return await local.exec(command, cwd, { ...options, env: { ...env, [childApprovalEnvironment]: bridge.environment } });
-        } finally { bridge.close(); childBridges.delete(bridge); }
-      } catch (error) {
-        const reason = safeCode(error);
-        observe({ kind: 'command-held', reason, decision: 'blocked', operationId: randomUUID(), pathId: hash(cwd), needId: hash(command) });
-        const denied = new PolicyDenied(reason);
-        denied.message += `\n${commandRiskRecovery(reason)}`;
-        throw denied;
-      }
-    } };
   }
   function installBoundary(ctx: ExtensionContext) {
     const currentEpoch = epoch;
@@ -343,15 +263,6 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     }
     registerMutation('write', createWriteToolDefinition(ctx.cwd));
     registerMutation('edit', createEditToolDefinition(ctx.cwd));
-    const baseBash = createBashToolDefinition(ctx.cwd);
-    pi.registerTool({ ...baseBash, description: `${baseBash.description} Final-command dangerous-operation assessment uses shared Jev, not file relevance. No new task authority or safety guarantee. Never embed secrets. A command-secret-disclosure-held result is a local refusal of this command, not a session-wide hold to clear; follow its recovery guidance. Risk decisions require the native one-command confirmation, not chat approval.`,
-      async execute(id, input, signal, onUpdate, toolCtx) {
-        if (currentEpoch !== epoch) throw new PolicyDenied('stale-operation');
-        checkBoundary();
-        const settings = pi.getSettings();
-        return createBashToolDefinition(toolCtx.cwd, { commandPrefix: settings.shellCommandPrefix, shellPath: settings.shellPath,
-          operations: shellOperations(toolCtx) }).execute(id, structuredClone(input), signal, onUpdate, toolCtx);
-      } });
     pi.registerTool({ name: 'file_locate', label: 'Locate exact structural target', description: 'Locate one code definition with symbol, OR one exact ATX Markdown heading with heading (title without # markers; spaces allowed). Never put a heading in symbol. Returns evidence, offset and maxLines for read with the same path/need; no source. Authorized files up to 1 MiB; 32 shared lookups/session, unique match, at most 40 lines. No sibling or whole-file grant.',
       parameters: Type.Object({ path: Type.String(), need: Type.String(),
         symbol: Type.Optional(Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_]{2,127}$', description: 'Code identifier, not a Markdown heading; supply this OR heading' })),
@@ -371,12 +282,9 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     pi.setActiveTools(allowed);
   }
   registerScreen(false);
-  pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, selected workflow and shared monthly accounting. Inspect workflow.skill/effect for active workflow authority; phase is the command-risk role (Build also uses qa), not the selected skill. Never resolves credentials or makes a provider request.',
+  pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, selected workflow and shared monthly accounting. Inspect workflow.skill/effect for active workflow authority; phase is the workflow role (Build also uses qa), not the selected skill. Never resolves credentials or makes a provider request.',
     parameters: Type.Object({}, { additionalProperties: false }), async execute(_id, _args, _signal, _update, ctx) { return textResult(present(ctx)); } });
   hooks.on('session_start', (_event, ctx) => {
-    approvals.cancel();
-    for (const bridge of childBridges) bridge.close();
-    childBridges.clear();
     screening?.close(); admission?.close(); images?.close(); guard?.cancel('session-replaced'); epoch++;
     context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; inputFailure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
     workflow = new WorkflowAccess('review');
@@ -440,18 +348,14 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   });
   hooks.on('tool_call', event => {
     if (!selected) return;
-    // Only declared native explicit tools are covered. Bash itself is assessed at FINAL operations, not here.
+    // File-profile restrictions cover explicit file tools; native shell is unchanged.
+    if (event.toolName === 'bash') return;
     const reason = event.parentToolCallId ? 'unsupported-nested-route' : !allowed.includes(event.toolName) ? 'unsupported-explicit-tool-route' : undefined;
     if (reason) { observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
       pathId: hash('path' in event.input && typeof event.input.path === 'string' ? resolve(context!.cwd, event.input.path) : `tool:${event.toolName}`),
       needId: hash('need' in event.input && typeof event.input.need === 'string' ? event.input.need : '') }); return { block: true, reason: `File screening: ${reason}` }; }
   });
-  hooks.on('user_bash', (_event, ctx) => {
-    if (!selected) return;
-    try { checkBoundary(); return { operations: shellOperations(ctx) }; }
-    catch (error) { return { result: { output: `File screening: ${safeCode(error)}`, exitCode: 1, cancelled: false, truncated: false } }; }
-  });
-  const invalidate = () => { for (const bridge of childBridges) bridge.close(); childBridges.clear(); approvals.cancel(); epoch++; failure = 'session-changed-reload-required'; admission?.close(); images?.close(); screening?.close(); guard?.cancel('session-changed'); };
+  const invalidate = () => { epoch++; failure = 'session-changed-reload-required'; admission?.close(); images?.close(); screening?.close(); guard?.cancel('session-changed'); };
   hooks.on('session_before_switch', invalidate); hooks.on('session_before_fork', invalidate); hooks.on('session_before_tree', invalidate);
   hooks.on('session_shutdown', (_event, ctx) => { live = false; invalidate(); if (ctx.mode === 'tui') ctx.ui.setStatus('fight-file-screen', undefined); });
   pi.registerCommand('file-screening', { description: 'Inspect or explicitly enroll/revoke/convert project screening; no provider calls or key entry', handler: async (args, ctx) => {
@@ -460,7 +364,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (ctx.mode !== 'tui') return;
       try {
         workflow.select(action.slice(5).trim(), persistRole);
-        ctx.ui.notify(`Workflow role: ${workflow.role}. Existing project exclusions and command-risk checks remain.`, 'info');
+        ctx.ui.notify(`Workflow role: ${workflow.role}. Existing file exclusions and workflow restrictions remain; shell is unchanged.`, 'info');
       } catch { ctx.ui.notify('Role selection failed; previous authority retained. Use /file-screening role engineer, reviewer, qa or land.', 'warning'); }
       return;
     }
@@ -483,7 +387,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (action === 'convert') {
         const candidate = profiles.convert();
         if (!await ctx.ui.confirm('Explicitly convert formerly timeboxed enrollment to STANDING disclosure', JSON.stringify({ ...candidate,
-          warning: 'ALL listed roots/source exclusions and budgets remain. Approve standing nonsecret command/context disclosure to the pinned evaluator, no expiry or routine renewal. Shell bypasses relevance; this is not a sandbox. Cancel preserves the bounded profile. No accounting or finite test grants change.' }, null, 2))) return;
+          warning: 'ALL listed roots/source exclusions and budgets remain. Approve standing authorized file disclosure to the pinned evaluator, no expiry or routine renewal. Commands are never sent. Shell bypasses relevance; this is not a sandbox. Cancel preserves the bounded profile. No accounting or finite test grants change.' }, null, 2))) return;
         profiles.save(candidate, resources); invalidate(); ctx.ui.notify('Explicit conversion saved; /reload. All ledgers and finite test counters retained.', 'info'); return;
       }
       if (action === 'revoke') {
@@ -542,15 +446,15 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (excluded === undefined) return;
       const instructions = await ctx.ui.input('Optional extra instruction paths (semicolon-separated; project files and native skills already read directly)');
       if (instructions === undefined) return;
-      if (!await ctx.ui.confirm('Standing source AND bounded nonsecret command disclosure to Jev',
-        'Until explicit revocation/authority change, allow authorized UTF-8 source and final shell commands (<=16 KiB) with cwd/root/phase/shell settings, excluding secrets, to the pinned evaluator? No environment values, prompt/history or script bodies are fetched for command risk. Shell can bypass relevance and access same-user state; no safety/sandbox guarantee. No enrollment expiry or routine renewal. Existing task/role approval, shared budget and finite test grants still bind. Cancel declines enrollment.')) return;
+      if (!await ctx.ui.confirm('Optional standing file disclosure to Jev',
+        'Until explicit revocation/authority change, allow authorized UTF-8 source, excluding secrets, to the pinned evaluator when the optional screening tool is called? Native shell commands do not use Jev. Shell can bypass relevance and access same-user state; no safety/sandbox guarantee. No enrollment expiry or routine renewal. Existing task/role approval, shared budget and finite test grants still bind. Cancel declines enrollment.')) return;
       const candidate = profiles.preview({ cwd: ctx.cwd, configuration, excludedPaths: excluded.split(';').map(v => v.trim()).filter(Boolean),
-        instructions: instructions.split(';').map(v => v.trim()).filter(Boolean), providerDisclosure: true, commandDisclosure: true });
+        instructions: instructions.split(';').map(v => v.trim()).filter(Boolean), providerDisclosure: true });
       if (!await reviewEnrollment(ctx, JSON.stringify({ ...candidate,
         monthly: { microUsd: 10000000, timeZone: 'America/Chicago', rollover: false },
         credentialResolution: 'Pi-managed OpenRouter; no credential resolution during setup',
         connection: { endpoint: configuration.endpoint, evaluator: configuration.evaluator },
-        coverage: 'Direct project reads, optional Jev discovery and role-scoped writes; final native Agent/user bash risk. Shell relevance bypass, scripts/descendants/plugins/SDK OS calls are outside interception. Not a sandbox.',
+        coverage: 'Direct project reads, optional Jev discovery and role-scoped file writes; native shell unchanged. Shell relevance bypass, scripts/descendants/plugins/SDK OS calls are outside interception. Not a sandbox.',
         sessionAllocation: 'At most 100000 micro-USD, further bounded by connection; 2688/request; shared account with file relevance, 8 questions/request, 2 outstanding, zero retries' }, null, 2))) return;
       if (!await ctx.ui.confirm('Save enrollment?', 'Save the reviewed standing authority until revoked or changed?')) return;
       profiles.save(candidate, resources); invalidate();

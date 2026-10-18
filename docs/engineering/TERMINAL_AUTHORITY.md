@@ -47,7 +47,32 @@ real PostgreSQL repositories, all authority writers, independent restoration wit
 activation/use to the package conformance suites and real cross-process races. An equal cohort generation or
 implemented interface is not evidence of this composition. Release availability alone cannot enable enrollment.
 
-### Permission catalog and operator confirmation
+### Standing execution policy — approved amendment 2026-10-18
+
+John approved autonomous starts and routine execution under administrator-owned standing policy. This supersedes
+the earlier per-run manifest confirmation and User-only start/control requirements for this slice. Administrators
+configure a versioned, revocable policy covering repositories, eligible TASK selection, source/base selection,
+roles, tools, profiles, models, budgets, concurrency, retry and retention limits. Policy changes that expand
+authority require administrator authorization; ordinary permitted runs do not need a human confirmation.
+
+The trusted application authenticates the initiating User or delegated controller identity, evaluates current
+policy and immutable eligibility, and derives a narrow grant for each run. It records the policy revision,
+authorization evidence, source/context digests and exact grant with the exclusive claim, budget reservations and
+dispatch intent atomically. A controller can start, resume, delegate, retry, request checks and hand off unattended
+within this authority. An interactive User session is not a prerequisite for a delegated controller to continue;
+its own enrollment, delegation, credentials, policy and revocation checks remain current on every effect.
+
+Missing authority, ambiguous eligibility, out-of-scope effects, exhausted limits and revoked policy fail closed
+with an actionable outcome. Escalate only when an actual policy decision or expanded authority is needed; a prompt
+is not the default failure recovery. Changed source is re-resolved and evaluated under policy, never silently
+substituted into an existing grant. Repeated permitted starts need no approval dialogue. Revocation prevents new
+effects and reconciles in-flight work. Agents cannot author policy, widen grants, inherit administrator access or
+turn a relevance judgment into permission. MCP transports the same application checks; it is not authority itself.
+
+This is the required design for TASK-00139 and its consumers, not an installed policy or a claim of qualified
+managed execution. The interim Pi shell removal in TASK-00492 does not implement this restricted execution layer.
+
+### Permission catalog and policy authorization
 
 John approved this separately versioned **execution extension** on October 6, including the amended start/control
 tiers and explicit `SUPER_ADMIN` seed below. It is not an implicit edit to the foundation's exact 21-permission
@@ -58,8 +83,8 @@ do not install a competing reconciler that removes its definitions. This is acce
 | Permission | Tier / permitted subject | Narrowing policy in addition to Permission |
 |---|---|---|
 | `MANAGE_EXECUTION_ENROLLMENT` | SUPER_ADMIN_ONLY / User | Enroll/revoke approved repositories, roots, profiles and delegated recovery destinations; never self-enroll an unauthenticated operator |
-| `START_TASK_EXECUTION` | ADMIN_SAFE / User | Require administration authority over the target repository or workspace; confirm exact source/context, bounded grant and role assignments; one active repository/TASK claim |
-| `CONTROL_TASK_EXECUTION` | ADMIN_SAFE / User | Require administration authority over the target repository or workspace; pause/cancel/resume/takeover only an enrolled, authorized Workflow and expected revision |
+| `START_TASK_EXECUTION` | ADMIN_SAFE / authorized User or delegated controller | Resolve standing target policy, immutable eligibility and an exact bounded grant; reserve limits and one active repository/TASK claim |
+| `CONTROL_TASK_EXECUTION` | ADMIN_SAFE / authorized User or delegated controller | Current standing target policy and delegated scope; pause/cancel/resume/takeover only an enrolled, authorized Workflow and expected revision |
 | `READ_TASK_EXECUTION` | ADMIN_SAFE / User or bound Agent | Assigned repository/Workflow only; no credentials or unrelated ownership disclosure |
 | `READ_EXECUTION_FILES` | ADMIN_SAFE / bound Lead or Engineer | Exact role roots and TASK-only Review/QA, current generation and size/revision limits |
 | `WRITE_EXECUTION_SOURCE` | ADMIN_SAFE / bound Engineer | Assigned source/local scratch only, unfrozen expected revision |
@@ -76,9 +101,10 @@ future Permissions are not. This seed does not replace the role's foundation Per
 Agent-facing Permissions remain explicit direct assignments to the appropriate Agent identities.
 
 `ADMIN_SAFE` permits delegation; it does not itself confer repository/workspace administration authority.
-Start/control remain User-only, even if a package tier permits direct Agent assignment. Future human repository
-or workspace administrators may receive them without becoming Super Admin. Their scope resolution and grants
-must be implemented and verified before use; this decision creates neither those roles nor a global User grant.
+Start/control allow an authenticated controller with explicit administrator-owned delegation under standing
+policy. An arbitrary Agent identity or package tier alone is insufficient. Human repository/workspace administrators
+may receive scoped authority without becoming Super Admin. Delegation, scope resolution and revocation must be
+implemented and verified before use; this decision installs no role or global grant.
 Unavailable target authority denies the operation. Enrollment management remains `SUPER_ADMIN_ONLY` / User.
 
 ADMIN_SAFE makes direct Agent assignment possible under the current package contract; it does **not** waive
@@ -88,10 +114,9 @@ Provisioning/rotation/recovery policy derives authenticated User or delegated wo
 actor IDs remain provenance, not authorization. Deterministic Runner effects consume exact committed intents;
 there is no model-callable provisioning, signature, SQL, Git-command or container-flags endpoint.
 
-The operator first uses complete package-backed authentication and active enrollment, then confirms a secret-free
-manifest/grant digest. Record confirmation identity, time, expiry and policy revision. A second prompt is not
-required for each already-permitted read/edit/check; widening roots, role, model or ceilings requires a new grant.
-No active authorized User or unavailable complete token validation means stop, not bootstrap through shell access.
+Use complete package-backed authentication and active enrollment for the initiating User or delegated controller.
+Derive and record the exact grant under current standing policy without a per-run consent prompt. Scope expansion
+requires administrator-authorized policy change; unavailable identity, delegation or token validation denies access.
 
 ### Protected credentials and activation
 
@@ -148,8 +173,8 @@ requirements/status/dependencies; this is source selection metadata, not the Pla
    compare the expected publication revision before advancing its pointer to the verified immutable manifest. An out-of-band
    branch move has no authority. Audit and command result commit together; an unpublished pin is inert retention.
 4. Start fences current authority before taking the same source gate, resolves that exact published manifest,
-   checks confirmation, and commits claim/grant/dispatch intent atomically. Publication or revocation wins one fenced order;
-   stale consent returns `RevisionChanged`. A later publication never rewrites an existing grant.
+   checks current standing policy and delegated authority, and commits claim/grant/reservations/dispatch intent atomically. Publication or revocation wins one fenced order;
+   stale eligibility returns `RevisionChanged` for fresh policy evaluation. A later publication never rewrites an existing grant.
 5. Writes to the registered object store or its administration outside this protocol invalidate source readiness.
    Registration must exclude such writers; a mutex they need not obey is insufficient. Human worktrees stay
    untouched and unenrolled. Candidate edits, notes and reports never publish Planning authority automatically.
@@ -184,7 +209,7 @@ history and prove a newer reconciled generation before use. These are production
 
 Under the approved [finite completion contract](../../planning/tasks/00138-TASK.md#completion-contract-and-resume-plan--2026-10-13),
 Q1 is a **settled design contract**, not package adoption. Its authoritative choices are the execution catalog and
-operator confirmation above, immutable Markdown publication, PostgreSQL claim/intent fences, protected delivery
+standing policy authorization above, immutable Markdown publication, PostgreSQL claim/intent fences, protected delivery
 storage and broker-held signing. There is no remaining design choice needed to implement authorized start/inspect.
 Tagged capability qualification and actual composition remain mandatory in the named implementation owners.
 
@@ -233,7 +258,9 @@ before providing `AuthenticationContext`; package resolution then checks live Us
 Enrollment binds that authenticated User to the installation, registered repository, approved source/worktree
 roots and exact policy revision. It records who confirmed it, when, its revision and revocation state in PostgreSQL.
 It is a narrowing resource authorization, not a second user database. Every command requires both current package
-authority and current enrollment. Re-enrollment cannot silently broaden roots, profiles or repositories.
+authority and current enrollment, using authenticated delegated controller authority for unattended runs as
+specified above. The following interactive authentication flow applies to User enrollment; it does not require a
+live User session for each delegated run. Re-enrollment cannot silently broaden roots, profiles or repositories.
 
 Credentials enter only through a protected, non-echoing console authentication flow, never command arguments,
 Markdown, environment snapshots or logs. Retained refresh material belongs in an installation-selected host secret
@@ -337,16 +364,17 @@ digests, statuses, dependency closure and digests, effective instruction/context
 base OID. Symlinks, path traversal, missing parents, cycles, contradictory identifiers, invalid records and unresolved
 or dirty source authority reject selection. No filesystem path, branch name or eligibility boolean from Pi is trusted.
 
-The operator confirms the manifest digest and a bounded grant: repository/TASK, source/base, role identities and
-profile revisions, Harness/Pi/image digests, tools, provider/model/reasoning, time/cost/token ceilings, attempt limits,
-cleanup/retention policy and expiry. Defaults come from versioned installation policy and can only narrow its limits.
-A changed manifest or a widened limit requires a new confirmation; the Runner cannot “refresh” consent silently.
+The application derives a bounded grant from current standing policy and the manifest: repository/TASK, source/base,
+role identities and profile revisions, Harness/Pi/image digests, tools, provider/model/reasoning, time/cost/token
+ceilings, attempt limits, cleanup/retention policy and expiry. Grants can only narrow policy limits. Changed
+manifests require fresh eligibility and policy evaluation, not routine human confirmation. Widened authority
+requires administrator-authorized policy change; the Runner cannot silently expand an existing grant.
 
 Before claiming, the adapter re-resolves the registered source and dependency closure under the trusted source
 administration lock. PostgreSQL cannot atomically lock arbitrary human Markdown edits. Therefore production must
 qualify a controlled source-publication protocol that all registered-source writers obey, or fail closed on that
 source. A pre/post filesystem hash check alone does not prove an atomic latest-revision claim. The current checkout
-is not thereby enrolled or write-locked. PostgreSQL may retain immutable observed manifests and consent, but does
+is not thereby enrolled or write-locked. PostgreSQL may retain immutable observed manifests and authorization evidence, but does
 not become Planning authority before the separately approved cutover.
 
 ## Command and persistence contracts
@@ -358,7 +386,7 @@ must be revalidated/fenced within it without nesting package transactions.
 
 | Operation | Required input and checks | Atomic result or safe rejection |
 |---|---|---|
-| Start coordinated work | Current operator/enrollment; command ID and canonical request digest; confirmed eligibility/grant; qualified server-selected profile | In one shared PostgreSQL transaction: Workflow initial event, immutable grant/snapshot references, exclusive repository/TASK claim, command result and dispatch intent. Same actor/command/digest returns the same Workflow; different digest is an idempotency conflict. |
+| Start coordinated work | Current User or delegated controller/enrollment; command ID and canonical request digest; policy-authorized eligibility/grant; qualified server-selected profile | In one shared PostgreSQL transaction: Workflow initial event, immutable grant/snapshot references, exclusive repository/TASK claim, command result and dispatch intent. Same actor/command/digest returns the same Workflow; different digest is an idempotency conflict. |
 | Inspect execution | Current actor and repository/Workflow read authorization | Authoritative status, phase, owner, attempt generation, remaining limits, readiness/checkpoint age, wait reason and permitted recovery choices. No state mutation. |
 | Reconcile preparation | Runner identity, committed effect ID, expected Workflow revision and current lease/fence | Observe/reuse only exact owned workspace/tool/check resources. Record distinct file/check readiness or Needs Human; never create a replacement while an earlier effect is ambiguous. |
 | Pause / cancel | Authorized actor, expected revision, reason, exact Workflow | Revoke new broker admission and persist stop intent. Pause retains claim/resources. Cancellation becomes terminal and releases claim only after complete owned-workload quiescence is verified. |
