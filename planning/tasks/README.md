@@ -494,6 +494,6 @@
 | [TASK-00489](00489-TASK.md) | Use authorized repository worktrees across Pi skills without repeated approval | done | — |
 | [TASK-00490](00490-TASK.md) | Recover shared Jev enrollment after connection setup | done | — |
 | [TASK-00491](00491-TASK.md) | Restore Build child confirmations and reduce routine command prompts | done | — |
-| [TASK-00492](00492-TASK.md) | Remove Jev command gating and plan autonomous policy authorization | in-progress | — |
+| [TASK-00492](00492-TASK.md) | Remove Jev command gating and plan autonomous policy authorization | done | — |
 | [TASK-00493](00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | needs-info | [TICKET-00097](../tickets/00097-TICKET.md) |
 <!-- /planning:records -->
