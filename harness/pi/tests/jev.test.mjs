@@ -76,6 +76,27 @@ test('old protected settings reload unchanged and readiness does not require ren
   assert.equal(readFileSync(path, 'utf8'), original);
   assert.equal(f.calls(), 2);
 });
+test('repeating identical setup preserves connection identity and stored bytes despite new confirmation metadata', t => {
+  const f = fixture(t), store = new LocalSettings(f.directory);
+  const original = store.save(config({ priceConfirmedAt: 0 }));
+  const before = readFileSync(join(f.directory, 'connection.json'));
+  // Setup supplies a fresh UUID/time; reordered fields must not turn equal choices into new authority.
+  const repeated = Object.fromEntries(Object.entries({ ...original, revision: randomUUID(), priceConfirmedAt: Date.now() }).reverse());
+  assert.deepEqual(store.save(repeated), original);
+  assert.deepEqual(readFileSync(join(f.directory, 'connection.json')), before);
+  for (const change of [{ disclosure: 'authorized-supplied-state' }, { requestMicroUsd: 4000 }, { sessionMicroUsd: 12000 }]) {
+    const next = { ...store.load(), ...change, revision: randomUUID() };
+    assert.deepEqual(store.save(next), next);
+  }
+});
+test('explicit setup can repair invalid stored pins while unsafe storage remains rejected', t => {
+  const f = fixture(t), store = new LocalSettings(f.directory), value = config();
+  store.save(value);
+  writeFileSync(join(f.directory, 'connection.json'), JSON.stringify({ ...value, model: 'obsolete-model' }));
+  assert.deepEqual(store.save(value), value);
+  chmodSync(join(f.directory, 'connection.json'), 0o644);
+  assert.throws(() => store.save(value), { code: 'invalid-setup' });
+});
 test('success is configuration-bound, usage is measured and credentials are absent from inspection', async t => {
   const f = fixture(t); const result = await f.readiness.check();
   assert.equal(result.state, 'ready'); assert.equal(result.yesProbability, 0.99);

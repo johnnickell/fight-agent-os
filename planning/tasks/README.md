@@ -43,7 +43,7 @@
 | [TASK-00038](00038-TASK.md) | Guard the one-time Super Admin bootstrap | done | [TICKET-00015](../tickets/00015-TICKET.md) |
 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | done | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | done | [TICKET-00016](../tickets/00016-TICKET.md) |
-| [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | in-progress | [TICKET-00016](../tickets/00016-TICKET.md) |
+| [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | done | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | done | [TICKET-00017](../tickets/00017-TICKET.md) |
@@ -492,4 +492,5 @@
 | [TASK-00487](00487-TASK.md) | Complete the supported live-and-archived operator journey | ready-for-agent | [TICKET-00117](../tickets/00117-TICKET.md) |
 | [TASK-00488](00488-TASK.md) | Repair Pi screening, workflow access and runtime compatibility | done | — |
 | [TASK-00489](00489-TASK.md) | Use authorized repository worktrees across Pi skills without repeated approval | done | — |
+| [TASK-00490](00490-TASK.md) | Recover shared Jev enrollment after connection setup | done | — |
 <!-- /planning:records -->

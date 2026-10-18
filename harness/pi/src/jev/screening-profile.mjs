@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
-import { operatorDirectory, privateDirectory, readPrivate, writePrivate } from './local-store.mjs';
+import { LocalSettings, operatorDirectory, privateDirectory, readPrivate, writePrivate } from './local-store.mjs';
 import { configurationIdentity, reservationMicroUsd, Unavailable, validateConfiguration } from './readiness.mjs';
 import { FileSource, evidenceByteLimit } from './file-screening.mjs';
 import { canonicalPath } from '../tool-policy/policy.mjs';
@@ -110,6 +110,33 @@ export class ScreeningProfiles {
       requestMicroUsd: Math.min(config.requestMicroUsd, reservationMicroUsd, previous?.requestMicroUsd ?? Infinity),
       sessionMicroUsd: Math.min(config.sessionMicroUsd, 100000, previous?.sessionMicroUsd ?? Infinity) };
     return validateProfile(candidate);
+  }
+  /** Preview explicit connection recovery for all enrolled roots without adding authority */
+  previewRebind(configuration) {
+    const config = validateConfiguration(configuration), current = this.load();
+    if (!current) fail('profile-unavailable');
+    const profile = validateProfile(current, 0);
+    if (profile.version !== profileVersion) fail('historical-profile-conversion-required');
+    if (profile.revoked) fail('enrollment-revoked');
+    if (config.disclosure !== 'authorized-supplied-state') fail('disclosure-denied');
+    const candidate = { ...profile, configuration: configurationIdentity(config),
+      requestMicroUsd: Math.min(profile.requestMicroUsd, config.requestMicroUsd),
+      sessionMicroUsd: Math.min(profile.sessionMicroUsd, config.sessionMicroUsd) };
+    if (JSON.stringify(candidate) !== JSON.stringify(profile)) candidate.revision = randomUUID();
+    return { previousIdentity: hash(JSON.stringify(current)), profile: validateProfile(candidate) };
+  }
+  /** Apply an operator-reviewed preview only while both settings and enrollment still match */
+  applyRebind(preview, resources) {
+    const current = this.load();
+    if (!current || hash(JSON.stringify(current)) !== preview.previousIdentity) fail('rebind-preview-stale');
+    const config = new LocalSettings(this.directory).load();
+    if (!config || configurationIdentity(config) !== preview.profile.configuration) fail('rebind-preview-stale');
+    const expected = this.previewRebind(config).profile;
+    // The preview's revision is an opaque identifier, but every effect must equal the derived candidate.
+    if (JSON.stringify({ ...preview.profile, revision: expected.revision }) !== JSON.stringify(expected)) fail('rebind-preview-stale');
+    const guard = readPrivate(join(this.directory, `enforcement-${current.revision}.json`), null);
+    if (!guard || !Array.isArray(guard.protectedPaths) || !guard.protectedPaths.every(path)) fail('invalid-setup');
+    this.save(preview.profile, [...new Set([...guard.protectedPaths, ...resources])]);
   }
   /** Preview an explicit conversion of all previously bounded roots; never touch any accounting */
   convert() {

@@ -98,6 +98,22 @@ scenario INCOMPLETE with a specific recovery action; they do not authorize modif
 
 ## Visual evidence
 
+### Terminal capture authority
+
+An operator invocation of QA, directly or delegated by Build, includes creating dedicated QA terminal sessions,
+running the authorized scenarios in them, capturing their exact windows, writing local evidence in the owned
+QA run and closing those sessions. Carry this scope into delegated requests and continue without asking for
+each image. Explicit operator restrictions and target policy still apply. This covers disposable fixtures and
+task-owned terminals, not existing personal sessions, whole-desktop capture, credentials, provider calls,
+software installation, OS permission changes or publication. Capture tooling does not expand scenario authority.
+
+On macOS, follow the [Peekaboo terminal capture procedure](TERMINAL_CAPTURE.md) before terminal visual QA.
+Use the installed tool and permitted bridge; sandbox and command-policy enforcement remain in force. A skill
+cannot grant OS access or override an actual denial. Report the specific unavailable prerequisite rather than
+repeatedly requesting screenshot consent already supplied by the QA invocation.
+
+### Capture quality
+
 For affected UI/TUI behavior, capture Before from the recorded baseline and After from the reviewed implementation.
 Use comparable scenario, data, viewport/terminal dimensions, theme and zoom; note intentional differences. Wait
 for the intended render state (including assets/fonts where relevant) and capture loading/error states separately

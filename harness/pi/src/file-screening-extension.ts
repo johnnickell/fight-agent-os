@@ -13,7 +13,7 @@ import { FileScreeningSettings } from './jev/local-store.mjs';
 import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
 import { FileAdmission } from './jev/file-admission.mjs';
 import { ImageAdmission, isImagePath } from './jev/image-admission.mjs';
-import { WorkflowAccess } from './jev/workflow-access.mjs';
+import { WorkflowAccess, skillEffects } from './jev/workflow-access.mjs';
 import { CommandRisk, commandRiskRecovery } from './jev/command-risk.mjs';
 import { CommandApprovals } from './jev/command-approvals.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
@@ -154,12 +154,14 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       enforcement: selected ? reason ? 'project-access-with-screening-degraded' : 'project-access-and-command-risk' : 'not-enrolled',
       reason: reason ?? (selected ? null : 'not-enrolled'), session: hash(sessionId),
       phase: workflow.role, budget, allocation,
+      workflow: { skill: workflow.skill, effect: skillEffects[workflow.skill], taskId: workflow.taskId,
+        checkout: workflow.checkout, mode: workflow.mode, launcherRole: workflow.launcher },
       credential: selected && dependencies.credentialConfigured(ctx) ? 'configured-resolution-unchecked' : 'not-configured',
       bindingLimit: budget ? budget.availableMicroUsd <= budget.session.availableMicroUsd ? 'monthly' : 'session' : 'unavailable',
       coverage: selected ? `Pi ${VERSION} explicit read/write/edit; final native Agent bash and user-bash operations; preflighted provider Build children. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
       enrollment: selected ? 'standing-until-revocation-or-authority-change; historical-profiles-require-explicit-conversion' : 'none',
-      nextActionCode: !selected ? 'enroll-project' : reason && inputRecovery(reason) ? 'correct-workflow-input' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
-      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : (reason && inputRecovery(reason)) || (reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.') };
+      nextActionCode: !selected ? 'enroll-project' : reason && inputRecovery(reason) ? 'correct-workflow-input' : reason === 'stale-file-policy' ? 'review-connection-rebind' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
+      nextAction: !selected ? 'Operator: /file-screening setup (preview before enrollment)' : (reason && inputRecovery(reason)) || (reason === 'stale-file-policy' ? 'Operator: /jev inspect, then /file-screening rebind to review the current connection for ALL enrolled projects; reload after saving. Do not repeat setup or reset accounting.' : reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Direct project reads remain available unless authority or file-access checks fail.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Shell commands receive role-aware risk assessment. No safety or universal relevance guarantee.') };
   }
   function present(ctx: ExtensionContext, notify = false) {
     const view = status(ctx);
@@ -293,7 +295,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           await tool.execute(id, operation.input, operation.controller.signal, undefined, toolCtx);
           return { ...textResult({ status: 'applied', pathId: hash(operation.input.path) }), details: undefined };
         } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-write', reason }); return { ...textResult({ blocked: reason,
-          nextAction: inputRecovery(reason) ?? (reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'workflow-checkout-unavailable' ? 'The selected checkout is no longer registered. Return to a valid checkout; the operator can explicitly select the intended workflow with --checkout /absolute/path. No new enrollment is needed.' :
+          nextAction: inputRecovery(reason) ?? (reason === 'stale-file-policy' ? 'Operator: /jev inspect, then /file-screening rebind to review the current connection for ALL enrolled projects; reload after saving. Do not repeat setup or reset accounting.' : reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'workflow-checkout-unavailable' ? 'The selected checkout is no longer registered. Return to a valid checkout; the operator can explicitly select the intended workflow with --checkout /absolute/path. No new enrollment is needed.' :
             reason === 'workflow-write-restricted' ? `The selected ${workflow.skill} workflow permits only its task reports/scratch and documented outputs in its selected checkout. Report implementation changes for Work; only the operator can change the workflow or checkout.` : 'Check the target and project exclusions. Secret files, live harness resources and operator state remain protected; .env.example and project skills are ordinary editable files for Engineer/Land.') }, true), details: undefined }; }
         finally { operation?.close(); }
       } });
@@ -328,7 +330,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     pi.setActiveTools(allowed);
   }
   registerScreen(false);
-  pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, declared coverage and shared monthly accounting; never resolves credentials or makes a provider request.',
+  pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, selected workflow and shared monthly accounting. Inspect workflow.skill/effect for active workflow authority; phase is the command-risk role (Build also uses qa), not the selected skill. Never resolves credentials or makes a provider request.',
     parameters: Type.Object({}, { additionalProperties: false }), async execute(_id, _args, _signal, _update, ctx) { return textResult(present(ctx)); } });
   hooks.on('session_start', (_event, ctx) => {
     approvals.cancel();
@@ -419,11 +421,22 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       } catch { ctx.ui.notify('Role selection failed; previous authority retained. Use /file-screening role engineer, reviewer, qa or land.', 'warning'); }
       return;
     }
-    if (!['setup', 'inspect', '', 'instruction', 'target', 'reconcile', 'legacy', 'convert', 'revoke'].includes(action)) { if (ctx.mode === 'tui') ctx.ui.notify('Use /file-screening role engineer|reviewer|qa|land, inspect, setup, instruction, target, reconcile, legacy, convert or revoke. Never pass credentials.', 'warning'); return; }
+    if (!['setup', 'inspect', '', 'instruction', 'target', 'reconcile', 'legacy', 'convert', 'rebind', 'revoke'].includes(action)) { if (ctx.mode === 'tui') ctx.ui.notify('Use /file-screening role engineer|reviewer|qa|land, inspect, setup, instruction, target, reconcile, legacy, convert, rebind or revoke. Never pass credentials.', 'warning'); return; }
     if (action === '' || action === 'inspect') { present(ctx, true); return; }
     if (ctx.mode !== 'tui') { console.error('File screening: operator changes require native TUI confirmation'); return; }
     const resources = [sourceDir, getAgentDir(), getPackageDir(), join(homedir(), 'Library/Keychains')];
     try {
+      if (action === 'rebind') {
+        const configuration = dependencies.configuration();
+        if (!configuration) throw new PolicyDenied('invalid-setup');
+        const preview = profiles.previewRebind(configuration);
+        if (!await reviewEnrollment(ctx, JSON.stringify({
+          action: 'Review connection recovery for ALL enrolled projects', connection: configuration, enrollment: preview.profile,
+          explanation: 'Bind every listed project to this connection. Existing roots, exclusions, instructions, disclosure permissions and protected runtime paths remain; spending ceilings can only decrease. No ledger, pending liability or finite test counter is reset. Cancel makes no change.' }, null, 2))) return;
+        if (!await ctx.ui.confirm('Save connection recovery?', 'Apply the reviewed connection to all listed projects? Changed settings or enrollment will reject this preview.')) return;
+        profiles.applyRebind(preview, resources); invalidate();
+        ctx.ui.notify('Connection recovery saved for all enrolled projects; /reload. Existing permissions and all accounting retained.', 'info'); return;
+      }
       if (action === 'convert') {
         const candidate = profiles.convert();
         if (!await ctx.ui.confirm('Explicitly convert formerly timeboxed enrollment to STANDING disclosure', JSON.stringify({ ...candidate,
