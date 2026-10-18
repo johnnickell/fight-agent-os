@@ -215,8 +215,8 @@ file effects, **not visual clipping/font/layout correctness**. Independent Revie
 
 Required Jev tool-effect screening (TASK-00161) was cancelled by TASK-00492; no semantic command gate remains. TASK-00309's separate
 [enrolled file-screening candidate](FILE_SCREENING_PROFILE.md) reuses these final-argument write/edit operations
-with normal project reads, optional relevance discovery, role-scoped writes and separate final-command Jev
-risk assessment for useful authorized shell. Its project-instruction, skill and `.env.example` access defaults
+with normal project reads, optional relevance discovery, role-scoped writes and native shell execution
+without Jev assessment or confirmation. Its project-instruction, skill and `.env.example` access defaults
 do not change the standalone deterministic policy described above.
 Shell relevance bypass and same-user access are accepted interim limitations, not containment. This does not change
 this standalone optional policy's exact-script shell restrictions. Current workflow proof/independent acceptance

@@ -7,7 +7,8 @@ description: Challenge a reviewed TASK or PR with adversarial UI, API, CLI or im
 
 In a participating harness session, follow the installed portable [project-access and discovery rule](../../../harness/pi/FILE_SCREENING_RULE.md).
 Strongly prefer Jev before unfamiliar discovery; read known targets and core instructions directly. Respect the
-operator-selected role, actual access denials and final-command assessment. Targets need no copy of this rule.
+operator-selected role, actual file-access denials and any independently selected deterministic tool policy.
+Native shell requires no Jev command assessment or confirmation. Targets need no copy of this rule.
 
 Read [QA standards](../../../docs/engineering/QA.md). They own dispositions, report location, independence,
 runtime identity and evidence requirements. Use `/skill:qa TASK-NNNNN` or `/skill:qa <PR URL>`; an optional

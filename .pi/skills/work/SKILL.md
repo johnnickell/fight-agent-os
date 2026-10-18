@@ -7,7 +7,8 @@ description: Implement or revise an approved TASK on a feature branch, verify it
 
 In a participating harness session, follow the installed portable [project-access and discovery rule](../../../harness/pi/FILE_SCREENING_RULE.md).
 Strongly prefer Jev before unfamiliar discovery; read known targets and core instructions directly. Respect the
-operator-selected role, actual access denials and final-command assessment. Targets need no copy of this rule.
+operator-selected role, actual file-access denials and any independently selected deterministic tool policy.
+Native shell requires no Jev command assessment or confirmation. Targets need no copy of this rule.
 
 Read the TASK, parent and [execution standards](../../../docs/engineering/EXECUTION.md). Work owns implementation,
 focused verification and a truthful handoff. Independent review owns the full quality assessment. Load the
