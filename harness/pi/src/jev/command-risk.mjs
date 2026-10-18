@@ -6,7 +6,7 @@ import { configurationIdentity, validateConfiguration, Unavailable } from './rea
 
 const fail = code => { throw new Unavailable(code); };
 const callerId = 'shell-risk-v1';
-const policyVersion = 'shell-risk-v2';
+const policyVersion = 'shell-risk-v3';
 const credentialName = '[A-Za-z0-9_]*(?:api[_-]?key|token|password|secret|credential|authorization|cookie)[A-Za-z0-9_]*';
 const credentialAssignment = new RegExp(String.raw`(?:\b${credentialName}|["']${credentialName}["'])\s*([:=])\s*["']?[^\s"';]+`, 'gi');
 
@@ -28,7 +28,7 @@ export function secretBearingCommand(command) {
 export function commandRiskRecovery(reason) {
   if (reason === 'command-secret-disclosure-held') return 'This command was held locally before Jev disclosure or shell execution. There is no session-wide hold to clear, and chat approval cannot override the disclosure check. Remove literal credentials or secret-file/environment reads; for a false positive, report the non-sensitive command for repair. Do not encode, split or hide the same operation to bypass the check. Unrelated non-sensitive commands can still be assessed.';
   if (reason === 'command-context-disclosure-held') return 'Configured shell path/prefix or phase failed local disclosure checks before execution. The operator must inspect shell settings locally and remove sensitive values; do not paste them into chat. Chat approval cannot override this check.';
-  if (reason === 'command-operator-decision-required') return 'This exact command needs the native one-command confirmation. Declining or running without interactive confirmation leaves it unexecuted; chat approval does not answer that dialog. No reusable permit or session-wide hold was created.';
+  if (reason === 'command-operator-decision-required') return 'This exact command needs the native one-command confirmation. For a Build child, answer it in the active coordinator; an older coordinator needs a full Pi restart with the updated provider. Declining or running without a live confirmation channel leaves it unexecuted; chat approval does not answer that dialog. No reusable permit or session-wide hold was created.';
   return 'Inspect file_screening_status or /file-screening for current authority and recovery. Preserve enrollment and accounting; do not bypass the check.';
 }
 
@@ -96,7 +96,7 @@ export class CommandRisk {
       const answer = result.answers?.[0];
       if (result.state === 'incomplete' && answer?.id === 'command-risk' && answer.type === 'choice' && answer.status === 'unknown') outcome = 'uncertain';
       if (result.state === 'complete' && answer?.id === 'command-risk' && answer.type === 'choice' && answer.status === 'answered') {
-        outcome = answer.choice === 'ordinary' && answer.confidence >= 0.90 ? 'ordinary' : answer.choice === 'risky' ? 'risky' : 'uncertain';
+        outcome = answer.choice === 'ordinary' && answer.confidence >= 0.70 ? 'ordinary' : answer.choice === 'risky' ? 'risky' : 'uncertain';
       }
     } catch (error) { reason = error instanceof Unavailable ? error.code : 'judgment-unavailable'; }
     check(); // Revocation or host/context drift cannot be overridden by a dialog or an unavailable judgment.
