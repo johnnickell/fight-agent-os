@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync, existsSync, symlinkSync, linkSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { FileSource, FileScreening } from '../src/jev/file-screening.mjs';
 import { FileAdmission } from '../src/jev/file-admission.mjs';
 import { ScreeningProfiles } from '../src/jev/screening-profile.mjs';
@@ -92,6 +92,73 @@ test('installed Pi documentation reads directly without granting its runtime or 
   assert.throws(() => admission.read({ path: extensions }), { code: 'native-documentation-changed' });
   admission.close();
   assert.throws(() => admission.read({ path: readmePath }), { code: 'session-changed' });
+});
+
+test('installed Pi examples read as documentation without granting sibling code or evaluator disclosure', async t => {
+  const f = fixture(t), runtime = join(f.directory, 'pi'), examplesPath = join(runtime, 'examples');
+  mkdirSync(join(examplesPath, 'extensions/nested'), { recursive: true });
+  const example = join(examplesPath, 'extensions/timed-confirm.ts');
+  writeFileSync(example, 'export default function timedConfirm() {}');
+  const metadata = { readmePath: join(runtime, 'README.md'), docsPath: join(runtime, 'docs'), examplesPath };
+  const admission = new FileAdmission({ profiles: f.profiles, configuration: () => f.config,
+    sessionId: f.sessionId, cwd: f.root, nativeDocumentation: metadata });
+  t.after(() => admission.close());
+  metadata.examplesPath = f.directory; // Host metadata is copied, not a mutable caller grant.
+  admission.ingestNativeInstructions([], []);
+  assert.equal(admission.read({ path: example }).text, 'export default function timedConfirm() {}');
+  assert.equal(admission.read({ path: example }).admission.kind, 'native-documentation-read');
+  for (const name of ['modal-editor.ts', 'question.ts', 'commands.ts', 'nested/view.tsx', 'README.md', 'package.json', 'helper.mjs']) {
+    const path = join(examplesPath, 'extensions', name); writeFileSync(path, 'Published example');
+    assert.equal(admission.read({ path }).text, 'Published example');
+  }
+  const located = admission.locate({ path: example, symbol: 'timedConfirm', need: 'Use the published dialog API' });
+  assert.match(admission.read({ path: example, evidence: located.evidence, need: 'Use the published dialog API',
+    offset: located.offset, limit: located.maxLines }).text, /timedConfirm/);
+  for (const path of [join(runtime, 'runtime.ts'), join(runtime, 'examples-other.ts'),
+    join(examplesPath, '../outside.ts'), join(examplesPath, 'extensions/image.png'),
+    join(examplesPath, 'extensions/node_modules/dependency/index.ts')]) {
+    mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, 'Outside published example text');
+    assert.throws(() => admission.read({ path }), { code: 'root-denied' });
+  }
+  assert.equal((await f.screening.screen({ ...f.input, path: example })).status, 'root-denied');
+  assert.equal(f.calls(), 0);
+  writeFileSync(example, 'Changed installation');
+  assert.throws(() => admission.read({ path: example }), { code: 'native-documentation-changed' });
+  admission.close();
+  assert.throws(() => admission.read({ path: example }), { code: 'session-changed' });
+});
+
+test('installed example reads preserve exclusions, inode checks, limits and enrollment revocation', t => {
+  const f = fixture(t), examplesPath = join(f.directory, 'examples'); mkdirSync(examplesPath);
+  const source = join(examplesPath, 'dialog.ts'), excluded = join(examplesPath, 'excluded.ts');
+  writeFileSync(source, 'Published source'); writeFileSync(excluded, 'Excluded source');
+  writeFileSync(join(examplesPath, '.env.local.ts'), 'CONTROLLED-SENSITIVE');
+  writeFileSync(join(examplesPath, 'auth.json'), 'CONTROLLED-SENSITIVE');
+  symlinkSync(source, join(examplesPath, 'alias.ts'));
+  symlinkSync(f.root, join(examplesPath, 'escape'));
+  writeFileSync(join(f.root, 'outside.ts'), 'Outside root');
+  writeFileSync(join(examplesPath, 'original.ts'), 'Hardlink');
+  linkSync(join(examplesPath, 'original.ts'), join(examplesPath, 'hardlink.ts'));
+  writeFileSync(join(examplesPath, 'large.ts'), 'x'.repeat(1048577));
+  writeFileSync(join(examplesPath, 'binary.ts'), Buffer.from([0, 1, 2]));
+  writeFileSync(join(examplesPath, 'bounded.ts'), Array.from({ length: 500 }, () => 'x'.repeat(200)).join('\n'));
+  f.profiles.save(f.profiles.preview({ cwd: f.root, configuration: f.config, excludedPaths: [excluded], providerDisclosure: true }), []);
+  const admission = new FileAdmission({ profiles: f.profiles, configuration: () => f.config, sessionId: f.sessionId,
+    cwd: f.root, nativeDocumentation: { readmePath: join(f.directory, 'README.md'), docsPath: join(f.directory, 'docs'), examplesPath } });
+  t.after(() => admission.close());
+  assert.equal(admission.read({ path: source }).text, 'Published source');
+  for (const path of [excluded, join(examplesPath, '.env.local.ts'), join(examplesPath, 'auth.json')]) {
+    assert.throws(() => admission.read({ path }), { code: 'sensitive-file' });
+  }
+  assert.throws(() => admission.read({ path: join(examplesPath, 'alias.ts') }), { code: 'symlink-denied' });
+  assert.throws(() => admission.read({ path: join(examplesPath, 'escape/outside.ts') }), { code: 'invalid-file-policy' });
+  assert.throws(() => admission.read({ path: join(examplesPath, 'hardlink.ts') }), { code: 'unsupported-hardlink' });
+  assert.throws(() => admission.read({ path: join(examplesPath, 'large.ts') }), { code: 'source-limit' });
+  assert.throws(() => admission.read({ path: join(examplesPath, 'binary.ts') }), { code: 'binary-source' });
+  const bounded = admission.read({ path: join(examplesPath, 'bounded.ts'), limit: 1000 });
+  assert.ok(Buffer.byteLength(bounded.text) <= 32768); assert.ok(bounded.admission.nextOffset > 1);
+  f.profiles.save(f.profiles.preview({ cwd: f.root, configuration: f.config, providerDisclosure: true }), []);
+  assert.throws(() => admission.read({ path: source }), { code: 'root-denied' });
 });
 
 test('installed documentation retains explicit exclusions, sensitive names and inode protections', t => {
