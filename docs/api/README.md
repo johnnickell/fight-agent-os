@@ -4,7 +4,9 @@ PHP `OpenApi\Attributes` are the single authored OpenAPI **3.0.3** source. TASK-
 handwritten `docs/api/openapi.yaml`; no independently maintained YAML or tracked generated specification remains.
 TASK-00021's YAML receipts are historical evidence, not the current input. The document describes **only
 `GET /api/v1/auth/csrf`, the public-safe `GET /api/v1/validations/{form_name}`, and authenticated
-`GET /api/v1/me`**. See
+`GET /api/v1/me`, `POST /api/v1/invitations`, and `GET /api/v1/invitations/{user_id}`**. See
+[invitation API](../engineering/INVITATION_API.md) for exact permissions, confirmation, rate policy and
+independently committed partial/uncertain outcomes. See
 [validation metadata](VALIDATIONS.md) for its explicit private-artifact export, read and future form-registration
 contract. Its `info.version: 0.1.0` labels the representative contract, not an authentication release.
 
@@ -109,8 +111,9 @@ Only declared endpoint rules can allow pagination, ordering, filters or boolean 
 confer permission to see deleted records or choose raw database expressions. Nested/list shapes and
 implicit conversions are deferred until a concrete endpoint qualifies them.
 
-The locked `johnnickell/fight-common` **v1.2.0** source at `a2cd615d9b5064c9c30e994655536176249cd73b`
-provides `Validation`, `RulesParser` and `ValidationService`. Qualification through the installed service
+The original qualification used `johnnickell/fight-common` **v1.2.0** source at
+`a2cd615d9b5064c9c30e994655536176249cd73b`; current installation is locked to **v1.3.0** at
+`7de6cad6e8a9752973ad9f8e27e285b0c1510582`. That package provides `Validation`, `RulesParser` and `ValidationService`. Qualification through the installed service
 confirmed `required` distinguishes missing from present null, other single-field rules skip absent fields,
 `type[int]` accepts JSON integers but rejects query numeric strings, `type[bool]` accepts JSON booleans but
 rejects `"false"`, and `in_list[true,false]` accepts the exact query literals without truthy casting.
@@ -196,9 +199,10 @@ maps its safe `UserView` plus current authority to JSend data with exactly `user
 `roles` and sorted `permissions` name lists. It returns no-store with safe correlation, no cookie and no
 token/session/grant/password material. Real-route PostgreSQL tests prove anonymous/invalid/stale/revoked
 refusal before construction/query work and fresh permissions/session state on successive requests.
-Permission conjunction is proven directly at the guard boundary. No real permission-protected operation
-is registered yet: its HTTP 403/allow/no-dispatch matrix belongs to the first owning consumer, not a fixture
-route. Route and method misses retain 404/405; root/web and future independent MCP remain outside this group.
+Permission conjunction is proven at the guard boundary and the invitation API now supplies the first real
+permission-protected HTTP allow/403/no-dispatch matrix. Invitation Actions require exact `INVITE_USERS` or
+`MANAGE_USER_INVITATIONS`; Application freshly rechecks authentication and adds `ASSIGN_SUPER_ADMIN` for
+explicitly confirmed elevation. No fixture route is introduced. Route and method misses retain 404/405; root/web and future independent MCP remain outside this group.
 
 The reusable `AccessBearer` scheme describes the implemented **memory-only access-token boundary**:
 pinned HS256, exact claims and times, bounded keys, strict single-header extraction and per-request PostgreSQL
@@ -210,8 +214,10 @@ invented here. `x-future-browser-security` retains the accepted cookie/mutation 
 manual refresh credentials, and no credential examples are published.
 
 The generic `ValidationFail` dictionary describes supported dotted snake_case paths, which OpenAPI 3.0 cannot
-constrain by key name. Bootstrap narrows this to `body` or `cookie`. No body-bearing operation exists yet, so
-HTTP dotted-field matrices and mutation 409/422 journeys remain deferred to their owning TASKs.
+constrain by key name. Bootstrap narrows this to `body` or `cookie`. The invitation issuance Action is the first body-bearing consumer; its real HTTP dotted-field matrix,
+canonical conflict (409), explicit confirmation (422), throttle (429) and retained partial/uncertain origin (503)
+are covered by TASK-00041. The existing authentication guard's 16 KiB body cap runs before source validation;
+larger bodies receive 401, without weakening its credential-transport boundary.
 Schema checks do not prove MAC correctness, server authorization or a complete authentication journey;
 focused security tests cover CSRF and access-token policy; package-created session integration proves the
 access-token middleware without adding a fake HTTP endpoint.

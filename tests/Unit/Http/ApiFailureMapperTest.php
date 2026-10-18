@@ -6,9 +6,15 @@ namespace Tests\Unit\Http;
 
 use App\Adapter\Http\Api\Failure\ApiFailureMapper;
 use App\Application\Failure\AuthenticationRequired;
+use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\PermissionDenied;
 use App\Application\Failure\ResourceNotFound;
 use App\Application\Failure\StateConflict;
+use App\Application\Invitation\InvitationIssuance;
+use DateTimeImmutable;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
+use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
+use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Validation\Exception\ValidationException as TransportValidationException;
 use Fight\Common\Domain\Exception\LookupException;
 use Fight\Common\Domain\Exception\ValidationException as DomainValidationException;
@@ -86,6 +92,73 @@ final class ApiFailureMapperTest extends TestCase
             $classification->envelope->toArray(),
             $body['status'] === 'fail' ? 'ValidationFail' : 'Error'
         );
+    }
+
+    /**
+     * Enumerates inspected and unknown invitation identities with unavailable delivery
+     *
+     * @return iterable<string, array{bool}>
+     */
+    public static function unavailable_delivery(): iterable
+    {
+        yield 'unknown target' => [false];
+        yield 'known target' => [true];
+    }
+
+    /**
+     * Preserves unavailable delivery as null rather than inventing a delivery outcome
+     */
+    #[DataProvider('unavailable_delivery')]
+    public function test_that_incomplete_invitation_preserves_null_delivery(bool $knownTarget): void
+    {
+        $userId = $knownTarget ? UserId::generate() : null;
+        $classification = (new ApiFailureMapper())->classify(new IncompleteInvitation(
+            new InvitationIssuance($userId, $knownTarget ? 'confirmed' : 'unknown', false, null)
+        ));
+
+        self::assertNotNull($classification);
+        self::assertSame(503, $classification->status);
+        self::assertSame([
+            'status' => 'fail',
+            'data'   => [
+                'user_id'    => $userId?->toString(),
+                'assignment' => $knownTarget ? 'confirmed' : 'unknown',
+                'audit'      => 'unconfirmed',
+                'delivery'   => null
+            ]
+        ], json_decode($classification->envelope->toJson(), true, 512, JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * Retains only the package-safe delivery facts when completion is unconfirmed
+     */
+    public function test_that_incomplete_invitation_preserves_safe_delivery(): void
+    {
+        $userId = UserId::generate();
+        $delivery = new InvitationDeliveryStatusView(
+            $userId,
+            CredentialDeliveryStatus::PENDING,
+            new DateTimeImmutable('2026-10-24T12:00:00+00:00')
+        );
+        $classification = (new ApiFailureMapper())->classify(new IncompleteInvitation(
+            new InvitationIssuance($userId, 'unconfirmed', false, $delivery)
+        ));
+
+        self::assertNotNull($classification);
+        self::assertSame(503, $classification->status);
+        self::assertSame([
+            'status' => 'fail',
+            'data'   => [
+                'user_id'    => $userId->toString(),
+                'assignment' => 'unconfirmed',
+                'audit'      => 'unconfirmed',
+                'delivery'   => [
+                    'user_id'    => $userId->toString(),
+                    'status'     => 'pending',
+                    'expires_at' => '2026-10-24T12:00:00+00:00'
+                ]
+            ]
+        ], json_decode($classification->envelope->toJson(), true, 512, JSON_THROW_ON_ERROR));
     }
 
     /**

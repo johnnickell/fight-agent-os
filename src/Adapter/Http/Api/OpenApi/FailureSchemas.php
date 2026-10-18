@@ -25,8 +25,8 @@ use OpenApi\Attributes as OA;
                     description: <<<'TEXT'
                         Field paths map to unique nonempty message lists. Bootstrap uses body
                         or cookie. Declared input sources support dotted snake_case paths
-                        such as body.profile_name and query.page; no body- or query-bearing
-                        HTTP operation exists yet. OpenAPI 3.0 cannot constrain these keys.
+                        such as body.email and body.mode on invitation issuance.
+                        OpenAPI 3.0 cannot constrain these keys.
                         TEXT,
                     minProperties: 1,
                     type: 'object',
@@ -150,7 +150,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Response(
     response: 'Forbidden',
-    description: 'HTTPS/origin/Fetch Metadata/preflight rejection',
+    description: 'Exact required permission absent or HTTPS/origin/Fetch Metadata/preflight rejection',
     headers: [
         new OA\Header(ref: '#/components/headers/NoStore', header: 'Cache-Control'),
         new OA\Header(ref: '#/components/headers/CorrelationId', header: 'X-Correlation-ID')
@@ -180,7 +180,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Response(
     response: 'MethodNotAllowed',
-    description: 'Unsupported method on a known API path; not a supported POST operation',
+    description: 'Unsupported method on a known API path',
     headers: [
         new OA\Header(ref: '#/components/headers/NoStore', header: 'Cache-Control'),
         new OA\Header(ref: '#/components/headers/CorrelationId', header: 'X-Correlation-ID')

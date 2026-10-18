@@ -64,8 +64,10 @@ Also configure the external `APP_ACCESS_TOKEN_CONFIG` HS256 keyring before boot;
 [access-token configuration](docs/engineering/ACCESS_TOKENS.md) for its exact shape and finite rotation bounds.
 JWT issuance/consumption, request-scoped PostgreSQL authentication and a JWT-by-default matched-Action
 API-v1 gate are available. The protected `GET /api/v1/me` returns safe identity and current role/permission
-names without a dashboard permission prerequisite. No login/refresh/logout journey or permission-protected
-business operation is registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
+names without a dashboard permission prerequisite. Permission-protected invitation issuance and safe status are available at `POST /api/v1/invitations` and
+`GET /api/v1/invitations/{user_id}`; see [invitation API](docs/engineering/INVITATION_API.md) for exact
+permissions, confirmation, bounded atomic limits and retained partial/uncertain outcomes. No login/refresh/logout
+journey is registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`
@@ -116,8 +118,9 @@ when no Super Admin exists; retained same-email invitations still conflict norma
 [bootstrap runbook](docs/engineering/SUPER_ADMIN_BOOTSTRAP.md) before confirming. Invitation, assignment and completion
 audit commit independently; early delivery and retained partial state are deliberate, not an atomic rollback guarantee.
 All three Console commands share the normal glob-loaded container and bus. Raw package dispatch is trusted internal
-infrastructure; nontrusted role assignment must use the explicit authenticated Application use case. No HTTP/Agent
-assignment endpoint or managed Agent CLI restriction is supplied here.
+infrastructure; nontrusted role assignment must use the explicit authenticated Application use case. No direct HTTP/Agent
+role-assignment endpoint or managed Agent CLI restriction is supplied here; invitation-specific authenticated
+managed assignment is available through the separate invitation API.
 
 ```sh
 ./bin/database check       # Check development and guarded test PostgreSQL services
