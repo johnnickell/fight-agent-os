@@ -18,7 +18,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | in-progress | — | [PR #75](https://github.com/johnnickell/fight-agent-os/pull/75) |
-| — | [TASK-00494](00494-TASK.md) | Read installed Pi examples through the authorized file reader | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -542,4 +541,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00490](00490-TASK.md) | Recover shared Jev enrollment after connection setup | — (standalone bug) | done | — | [PR #110](https://github.com/johnnickell/fight-agent-os/pull/110) |
 | — | [TASK-00491](00491-TASK.md) | Restore Build child confirmations and reduce routine command prompts | — (standalone bug) | done | — | [PR #111](https://github.com/johnnickell/fight-agent-os/pull/111) |
 | — | [TASK-00492](00492-TASK.md) | Remove Jev command gating and plan autonomous policy authorization | — (standalone chore) | done | — | [PR #113](https://github.com/johnnickell/fight-agent-os/pull/113) |
+| — | [TASK-00494](00494-TASK.md) | Read installed Pi examples through the authorized file reader | — (standalone bug) | done | — | [PR #114](https://github.com/johnnickell/fight-agent-os/pull/114) |
 <!-- /planning:board -->
