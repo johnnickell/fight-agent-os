@@ -8,10 +8,12 @@ use App\Adapter\Http\Api\Validation\InputFailures;
 use App\Adapter\Http\Responder\Api\V1\Invitations\InvitationIssuanceData;
 use App\Application\Failure\AuthenticationRequired;
 use App\Application\Failure\IncompleteInvitation;
+use App\Application\Failure\InvitationRecoveryUncertain;
 use App\Application\Failure\PermissionDenied;
 use App\Application\Failure\RateLimited;
 use App\Application\Failure\ResourceNotFound;
 use App\Application\Failure\StateConflict;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use Fight\Common\Application\Validation\Exception\ValidationException as TransportValidationException;
 use Fight\Common\Domain\EventSourcing\Exception\OptimisticConcurrencyException;
@@ -43,6 +45,11 @@ final readonly class ApiFailureMapper
                 'Retry-After' => (string) $exception->retryAfter
             ]);
         }
+        if ($exception instanceof InvitationRecoveryUncertain) {
+            return new MappedApiFailure(503, JSendEnvelope::error(
+                'Recovery outcome uncertain. Read invitation status before another operation.'
+            ));
+        }
         if ($exception instanceof IncompleteInvitation) {
             return new MappedApiFailure(503, JSendEnvelope::fail(new InvitationIssuanceData($exception->outcome)));
         }
@@ -62,6 +69,7 @@ final readonly class ApiFailureMapper
             $exception instanceof AuthenticationRequired,
             $exception instanceof HttpUnauthorizedException => [401, 'Unauthorized.'],
             $exception instanceof PermissionDenied,
+            $exception instanceof InvitationAdministrationAuthorizationException,
             $exception instanceof HttpForbiddenException => [403, 'Forbidden.'],
             $exception instanceof StateConflict,
             $exception instanceof OptimisticConcurrencyException => [409, 'Conflict.'],

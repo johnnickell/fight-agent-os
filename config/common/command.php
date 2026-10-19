@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\DeliverUserInvitationHandler;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\ExpireInvitationDeliveryHandler;
+use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\ResendInvitationDeliveryHandler;
+use Fight\AccessControl\Application\AccessControl\ActivationGrant\CommandHandler\RetryInvitationDeliveryHandler;
+use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\ActivationCredentialGenerator;
+use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationAdministrationAuthorization;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\EmailChangeGrant\CommandHandler\ExpireEmailChangeHandler;
@@ -14,9 +18,12 @@ use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\CommandHand
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Application\AccessControl\User\CommandHandler\AssignRoleToUserHandler;
+use Fight\AccessControl\Application\AccessControl\User\CommandHandler\CorrectPendingInvitationHandler;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ExpireInvitationDelivery;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ResendInvitationDelivery;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\RetryInvitationDelivery;
 use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\Command\ExpireEmailChange;
 use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantRepository;
@@ -27,6 +34,7 @@ use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGra
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Command\AssignRoleToUser;
+use Fight\AccessControl\Domain\AccessControl\User\Command\CorrectPendingInvitation;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Messaging\Command\Sync\CommandPipeline;
 use Fight\Common\Adapter\Messaging\Command\Sync\Routing\ServiceAwareCommandRouter;
@@ -53,6 +61,36 @@ return static function (Container $container): void {
         SynchronousCommandBus::class              => static function (Container $container): SynchronousCommandBus {
             return $container->get('messaging.command.bus');
         },
+        RetryInvitationDeliveryHandler::class     => static fn(Container $c): RetryInvitationDeliveryHandler =>
+            new RetryInvitationDeliveryHandler(
+                $c->get(ActivationGrantRepository::class),
+                $c->get(AuditEvidenceRepository::class),
+                $c->get(TransactionalUnitOfWork::class),
+                $c->get(Clock::class),
+                $c->get(EventDispatcher::class)
+            ),
+        ResendInvitationDeliveryHandler::class    => static fn(Container $c): ResendInvitationDeliveryHandler =>
+            new ResendInvitationDeliveryHandler(
+                $c->get(ActivationGrantRepository::class),
+                $c->get(AuditEvidenceRepository::class),
+                $c->get(TransactionalUnitOfWork::class),
+                $c->get(ActivationCredentialGenerator::class),
+                $c->get(InvitationDeliveryCipher::class),
+                $c->get(Clock::class),
+                $c->get(EventDispatcher::class)
+            ),
+        CorrectPendingInvitationHandler::class    => static fn(Container $c): CorrectPendingInvitationHandler =>
+            new CorrectPendingInvitationHandler(
+                $c->get(UserRepository::class),
+                $c->get(ActivationGrantRepository::class),
+                $c->get(InvitationAdministrationAuthorization::class),
+                $c->get(AuditEvidenceRepository::class),
+                $c->get(TransactionalUnitOfWork::class),
+                $c->get(ActivationCredentialGenerator::class),
+                $c->get(InvitationDeliveryCipher::class),
+                $c->get(Clock::class),
+                $c->get(EventDispatcher::class)
+            ),
         AssignRoleToUserHandler::class            => static fn(Container $c): AssignRoleToUserHandler =>
             new AssignRoleToUserHandler(
                 $c->get(UserRepository::class),
@@ -130,6 +168,9 @@ return static function (Container $container): void {
         $container->set($id, $factory);
     }
     $container->get('messaging.command.router')->registerHandlers([
+        RetryInvitationDelivery::class     => RetryInvitationDeliveryHandler::class,
+        ResendInvitationDelivery::class    => ResendInvitationDeliveryHandler::class,
+        CorrectPendingInvitation::class    => CorrectPendingInvitationHandler::class,
         AssignRoleToUser::class            => AssignRoleToUserHandler::class,
         ReconcileManagedPolicy::class      => ReconcileManagedPolicyHandler::class,
         ExpireInvitationDelivery::class    => ExpireInvitationDeliveryHandler::class,

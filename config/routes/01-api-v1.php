@@ -3,8 +3,11 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
+use App\Adapter\Http\Action\Api\V1\Invitations\CorrectInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\IssueInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ReadInvitationStatusAction;
+use App\Adapter\Http\Action\Api\V1\Invitations\ResendInvitationAction;
+use App\Adapter\Http\Action\Api\V1\Invitations\RetryInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Me\ReadCurrentPrincipalAction;
 use App\Adapter\Http\Action\Api\V1\Validations\ReadValidationAction;
 use App\Adapter\Http\Middleware\Api\Auth\ApiActionSecurity;
@@ -22,6 +25,12 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
         ->add($container->get(CsrfBootstrapGuard::class))
         ->setName('api.v1.auth.csrf');
     $api->post('/invitations', IssueInvitationAction::class.':handle')->setName('api.v1.invitations.issue');
+    $api->post('/invitations/{user_id}/retry', RetryInvitationAction::class.':handle')
+        ->setName('api.v1.invitations.retry');
+    $api->post('/invitations/{user_id}/resend', ResendInvitationAction::class.':handle')
+        ->setName('api.v1.invitations.resend');
+    $api->patch('/invitations/{user_id}/email', CorrectInvitationAction::class.':handle')
+        ->setName('api.v1.invitations.correct');
     $api->get('/invitations/{user_id}', ReadInvitationStatusAction::class.':handle')
         ->setName('api.v1.invitations.status');
     $api->get('/me', ReadCurrentPrincipalAction::class.':handle')

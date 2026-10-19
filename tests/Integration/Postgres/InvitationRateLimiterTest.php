@@ -15,6 +15,7 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use LogicException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\AccessClock;
 
@@ -77,9 +78,7 @@ final class InvitationRateLimiterTest extends TestCase
         $this->clock->time = $this->clock->time->modify('+1 second');
         $limiter->consume($actor, InvitationOperation::ISSUE);
         self::assertSame(1, (int) $this->connection->fetchOne('SELECT count(*) FROM invitation_rate_limits'));
-        self::assertSame(['actor_id', 'operation', 'window_end', 'attempts'], array_keys(
-            $this->connection->fetchAssociative('SELECT * FROM invitation_rate_limits') ?: []
-        ));
+        self::assertSame([''], $this->connection->fetchFirstColumn('SELECT target_scope FROM invitation_rate_limits'));
     }
 
     /**
@@ -124,9 +123,11 @@ final class InvitationRateLimiterTest extends TestCase
     /**
      * Admits one winner across separate processes already blocked on the shared atomic admission lock
      */
-    public function testConcurrentAdmission(): void
+    #[DataProvider('operations')]
+    public function testConcurrentAdmission(InvitationOperation $operation): void
     {
         $actor = UserId::generate();
+        $target = $operation === InvitationOperation::ISSUE ? null : UserId::generate();
         $children = [];
         $this->connection->beginTransaction();
         $this->connection->executeQuery('SELECT pg_advisory_xact_lock(24121, 41)');
@@ -144,9 +145,11 @@ final class InvitationRateLimiterTest extends TestCase
                 $children[] = [$process, $pipes];
                 stream_set_timeout($pipes[1], 15);
                 fwrite($pipes[0], json_encode([
-                    'operation' => 'rate',
-                    'actor'     => $actor->toString(),
-                    'now'       => $this->clock->time->format(DATE_ATOM)
+                    'operation'      => 'rate',
+                    'rate_operation' => $operation->value,
+                    'target'         => $target?->toString(),
+                    'actor'          => $actor->toString(),
+                    'now'            => $this->clock->time->format(DATE_ATOM)
                 ], JSON_THROW_ON_ERROR)."\n");
                 fflush($pipes[0]);
                 $pids[] = (int) fgets($pipes[1]);
@@ -169,7 +172,10 @@ final class InvitationRateLimiterTest extends TestCase
             }
             sort($results);
             self::assertSame(['admitted', 'throttled', 'throttled'], $results);
-            self::assertSame(1, (int) $this->connection->fetchOne('SELECT attempts FROM invitation_rate_limits'));
+            self::assertSame($target === null ? [1] : [1, 1], array_map(
+                'intval',
+                $this->connection->fetchFirstColumn('SELECT attempts FROM invitation_rate_limits')
+            ));
         } finally {
             if ($this->connection->isTransactionActive()) {
                 $this->connection->rollBack();
@@ -180,6 +186,57 @@ final class InvitationRateLimiterTest extends TestCase
                 }
                 self::assertSame(0, proc_close($process));
             }
+        }
+    }
+
+    /**
+     * Supplies existing issuance and every new recovery admission class
+     *
+     * @return iterable<array{InvitationOperation}>
+     */
+    public static function operations(): iterable
+    {
+        foreach (
+            [InvitationOperation::ISSUE, InvitationOperation::RETRY,
+            InvitationOperation::RESEND, InvitationOperation::CORRECT] as $operation
+        ) {
+            yield [$operation];
+        }
+    }
+
+    /**
+     * Keeps target admission atomic with actor admission and enforces capacity before either write
+     */
+    public function testTargetCapacity(): void
+    {
+        $actor = UserId::generate();
+        $target = UserId::generate();
+        $limiter = new PostgresInvitationRateLimiter(
+            $this->connection,
+            $this->clock,
+            new InvitationRatePolicy(capacity: 1)
+        );
+        try {
+            $limiter->consume($actor, InvitationOperation::RETRY, $target);
+            self::fail('Two scopes cannot fit a single-row capacity.');
+        } catch (RateLimited $failure) {
+            self::assertSame(60, $failure->retryAfter);
+            self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM invitation_rate_limits'));
+        }
+        $limiter = new PostgresInvitationRateLimiter(
+            $this->connection,
+            $this->clock,
+            new InvitationRatePolicy(capacity: 10, retryLimit: 1)
+        );
+        $limiter->consume($actor, InvitationOperation::RETRY, $target);
+        try {
+            $limiter->consume($actor, InvitationOperation::RETRY, UserId::generate());
+            self::fail('Changing targets cannot evade the actor budget.');
+        } catch (RateLimited) {
+            self::assertSame([1, 1], array_map(
+                'intval',
+                $this->connection->fetchFirstColumn('SELECT attempts FROM invitation_rate_limits')
+            ));
         }
     }
 

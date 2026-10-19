@@ -16,7 +16,7 @@ use LogicException;
 /**
  * Class PostgresInvitationRateLimiter
  *
- * Serializes bounded fixed-window admission across processes without private target keys
+ * Atomically admits actor/action and optional actor/action/target budgets within a global capacity
  */
 final readonly class PostgresInvitationRateLimiter implements InvitationRateLimiter
 {
@@ -33,48 +33,46 @@ final readonly class PostgresInvitationRateLimiter implements InvitationRateLimi
     /**
      * @inheritDoc
      */
-    public function consume(UserId $actorId, InvitationOperation $operation): void
+    public function consume(UserId $actorId, InvitationOperation $operation, ?UserId $targetId = null): void
     {
         if ($this->connection->isTransactionActive()) {
             throw new LogicException('Invitation admission requires an independent transaction.');
         }
-        $now = $this->clock->now()->getTimestamp();
-        $end = (int) (floor($now / $this->policy->windowSeconds) + 1) * $this->policy->windowSeconds;
-        $retry = $this->connection->transactional(function () use ($actorId, $operation, $now, $end): int {
-            // One short global admission lock also makes cleanup and the total row cap atomic.
+        $this->connection->transactional(function () use ($actorId, $operation, $targetId): void {
             $this->connection->executeQuery('SELECT pg_advisory_xact_lock(24121, 41)');
+            $now = $this->clock->now()->getTimestamp();
+            $end = (int) (floor($now / $this->policy->windowSeconds) + 1) * $this->policy->windowSeconds;
             $this->connection->executeStatement('DELETE FROM invitation_rate_limits WHERE window_end <= ?', [$now]);
-            $row = $this->connection->fetchAssociative(
-                'SELECT attempts, window_end FROM invitation_rate_limits WHERE actor_id = ? AND operation = ?',
-                [$actorId->toString(), $operation->value]
-            );
-            if ($row !== false) {
-                if ((int) $row['attempts'] >= $this->policy->limit($operation)) {
-                    return max(1, min(86400, (int) $row['window_end'] - $now));
-                }
-                $this->connection->executeStatement(
-                    'UPDATE invitation_rate_limits SET attempts = attempts + 1 WHERE actor_id = ? AND operation = ?',
-                    [$actorId->toString(), $operation->value]
+            $scopes = $targetId === null ? [''] : ['', $targetId->toString()];
+            $missing = 0;
+            foreach ($scopes as $scope) {
+                $row = $this->connection->fetchAssociative(
+                    <<<'SQL'
+SELECT attempts, window_end FROM invitation_rate_limits
+WHERE actor_id = ? AND operation = ? AND target_scope = ?
+SQL,
+                    [$actorId->toString(), $operation->value, $scope]
                 );
-            } else {
-                $count = (int) $this->connection->fetchOne('SELECT count(*) FROM invitation_rate_limits');
-                if ($count >= $this->policy->capacity) {
-                    $earliest = (int) $this->connection->fetchOne('SELECT min(window_end) FROM invitation_rate_limits');
-
-                    return max(1, min(86400, $earliest - $now));
+                if ($row === false) {
+                    ++$missing;
+                } elseif ((int) $row['attempts'] >= $this->policy->limit($operation)) {
+                    throw new RateLimited(max(1, min(86400, (int) $row['window_end'] - $now)));
                 }
-                $this->connection->insert('invitation_rate_limits', [
-                    'actor_id'   => $actorId->toString(),
-                    'operation'  => $operation->value,
-                    'window_end' => $end,
-                    'attempts'   => 1
-                ]);
             }
-
-            return 0;
+            $count = (int) $this->connection->fetchOne('SELECT count(*) FROM invitation_rate_limits');
+            if ($count + $missing > $this->policy->capacity) {
+                $earliest = $this->connection->fetchOne('SELECT min(window_end) FROM invitation_rate_limits');
+                throw new RateLimited(max(1, min(86400, ($earliest === null ? $end : (int) $earliest) - $now)));
+            }
+            foreach ($scopes as $scope) {
+                $this->connection->executeStatement(
+                    <<<'SQL'
+INSERT INTO invitation_rate_limits (actor_id, operation, target_scope, window_end, attempts) VALUES (?, ?, ?, ?, 1)
+ON CONFLICT (actor_id, operation, target_scope) DO UPDATE SET attempts = invitation_rate_limits.attempts + 1
+SQL,
+                    [$actorId->toString(), $operation->value, $scope, $end]
+                );
+            }
         });
-        if ($retry > 0) {
-            throw new RateLimited($retry);
-        }
     }
 }

@@ -54,8 +54,12 @@ final class InvitationRaceWorker
                     new PostgresInvitationRateLimiter(
                         $connection,
                         new AccessClock(new DateTimeImmutable($input['now'])),
-                        new InvitationRatePolicy(60, 1, 2, 10)
-                    )->consume(UserId::fromString($input['actor']), InvitationOperation::ISSUE);
+                        new InvitationRatePolicy(60, 1, 2, 10, 1, 1, 1)
+                    )->consume(
+                        UserId::fromString($input['actor']),
+                        InvitationOperation::from($input['rate_operation'] ?? 'issue'),
+                        isset($input['target']) ? UserId::fromString($input['target']) : null
+                    );
                     echo "admitted\n";
                 } catch (RateLimited) {
                     echo "throttled\n";

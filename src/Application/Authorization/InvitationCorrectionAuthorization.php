@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Authorization;
 
-use App\Application\Failure\PermissionDenied;
 use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\InvitationAdministrationAuthorization;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Throwable;
 
 /**
  * Class InvitationCorrectionAuthorization
@@ -30,12 +29,8 @@ final readonly class InvitationCorrectionAuthorization implements InvitationAdmi
     public function assertCanCorrectInvitation(UserId $actorId, UserId $userId): void
     {
         try {
-            $this->authority->assertInstallationPermission(
-                $actorId,
-                PermissionName::fromString('MANAGE_USER_INVITATIONS'),
-                $userId
-            );
-        } catch (PermissionDenied) {
+            $this->authority->assertInvitationPermission($actorId, $userId);
+        } catch (Throwable) {
             throw new InvitationAdministrationAuthorizationException('Invitation correction is not authorized.');
         }
     }

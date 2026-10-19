@@ -20,11 +20,16 @@ final readonly class InvitationRatePolicy
         public int $windowSeconds = 60,
         public int $issueLimit = 10,
         public int $statusLimit = 60,
-        public int $capacity = 10000
+        public int $capacity = 10000,
+        public int $retryLimit = 5,
+        public int $resendLimit = 3,
+        public int $correctLimit = 3
     ) {
         if (
             $windowSeconds < 1 || $windowSeconds > 86400 || $issueLimit < 1 || $issueLimit > 1000
             || $statusLimit < 1 || $statusLimit > 10000 || $capacity < 1 || $capacity > 100000
+            || $retryLimit < 1 || $retryLimit > 1000 || $resendLimit < 1 || $resendLimit > 1000
+            || $correctLimit < 1 || $correctLimit > 1000
         ) {
             throw new InvalidArgumentException('Invalid invitation rate policy.');
         }
@@ -35,6 +40,12 @@ final readonly class InvitationRatePolicy
      */
     public function limit(InvitationOperation $operation): int
     {
-        return $operation === InvitationOperation::ISSUE ? $this->issueLimit : $this->statusLimit;
+        return match ($operation) {
+            InvitationOperation::ISSUE => $this->issueLimit,
+            InvitationOperation::STATUS => $this->statusLimit,
+            InvitationOperation::RETRY => $this->retryLimit,
+            InvitationOperation::RESEND => $this->resendLimit,
+            InvitationOperation::CORRECT => $this->correctLimit
+        };
     }
 }
