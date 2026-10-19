@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\CredentialDelivery;
 
-use App\Adapter\CredentialDelivery\CanonicalActivationLink;
+use App\Adapter\CredentialDelivery\CanonicalCredentialLink;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Application\Mail\MailDelivery;
 use App\Application\Mail\MailMessage;
@@ -35,8 +35,8 @@ final class InvitationMailTest extends TestCase
     public function testRejectsUnsafeCanonicalConfiguration(string $origin, string $path): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid canonical activation URL configuration.');
-        new CanonicalActivationLink($origin, $path);
+        $this->expectExceptionMessage('Invalid canonical credential URL configuration.');
+        new CanonicalCredentialLink($origin, $path);
     }
 
     /**
@@ -71,7 +71,7 @@ final class InvitationMailTest extends TestCase
      */
     public function testBuildsEncodedFragmentFromOnlyConfiguredOriginAndPath(): void
     {
-        $link = new CanonicalActivationLink('https://localhost:28443', '/auth/activate');
+        $link = new CanonicalCredentialLink('https://localhost:28443', '/auth/activate');
         $url = $link->forCredential('a&b<>" /?#%');
         self::assertTrue($url === 'https://localhost:28443/auth/activate#credential=a%26b%3C%3E%22%20%2F%3F%23%25');
         self::assertSame('/auth/activate', parse_url($url, PHP_URL_PATH));
@@ -274,7 +274,7 @@ HTML;
     private function provider(MailDelivery $mail, ?TemplateEngine $templates = null): InvitationMailProvider
     {
         return new InvitationMailProvider(
-            new CanonicalActivationLink('https://example.test', '/activate'),
+            new CanonicalCredentialLink('https://example.test', '/activate'),
             $templates ?? $this->templates(),
             $mail
         );

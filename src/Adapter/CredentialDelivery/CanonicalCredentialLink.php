@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace App\Adapter\CredentialDelivery;
 
+use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use InvalidArgumentException;
 use SensitiveParameter;
 
 /**
- * Class CanonicalActivationLink
+ * Class CanonicalCredentialLink
  *
- * Builds credential-only fragment links from explicit canonical HTTPS configuration
+ * Builds fragment-only links from explicit canonical HTTPS configuration
  */
-final readonly class CanonicalActivationLink
+final readonly class CanonicalCredentialLink
 {
     private string $base;
 
     /**
-     * Constructs CanonicalActivationLink
+     * Constructs CanonicalCredentialLink
      */
     public function __construct(string $origin, string $path)
     {
@@ -31,13 +32,13 @@ final readonly class CanonicalActivationLink
             $valid !== 1 || strlen($origin) > 253 || (isset($parts[2]) && (int) $parts[2] > 65535)
             || preg_match('~\A/(?:[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*)?\z~D', $path) !== 1
         ) {
-            throw new InvalidArgumentException('Invalid canonical activation URL configuration.');
+            throw new InvalidArgumentException('Invalid canonical credential URL configuration.');
         }
         $this->base = $origin.$path;
     }
 
     /**
-     * Builds a link only for the provider invocation
+     * Builds the existing invitation fragment only for the provider invocation
      */
     public function forCredential(#[SensitiveParameter] string $credential): string
     {
@@ -46,5 +47,17 @@ final readonly class CanonicalActivationLink
         }
 
         return $this->base.'#credential='.rawurlencode($credential);
+    }
+
+    /**
+     * Builds the bounded reset fragment without interpreting opaque credential bytes
+     */
+    public function forPasswordReset(UserId $userId, #[SensitiveParameter] string $credential): string
+    {
+        if ($credential === '' || strlen($credential) > 4096) {
+            throw new InvalidArgumentException('Invalid password-reset material.');
+        }
+
+        return $this->base.'#user_id='.$userId->toString().'&credential='.rawurlencode($credential);
     }
 }

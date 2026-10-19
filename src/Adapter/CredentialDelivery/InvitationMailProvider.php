@@ -25,7 +25,7 @@ final readonly class InvitationMailProvider implements CredentialDeliveryProvide
      * Constructs InvitationMailProvider
      */
     public function __construct(
-        private CanonicalActivationLink $link,
+        private CanonicalCredentialLink $link,
         private TemplateEngine $templates,
         private MailDelivery $mail
     ) {
@@ -36,7 +36,7 @@ final readonly class InvitationMailProvider implements CredentialDeliveryProvide
      */
     public function deliver(#[SensitiveParameter] CredentialDeliveryInvocation $invocation): CredentialDeliveryOutcome
     {
-        // Reset mapping belongs to its own TASK; never send an activation link for another purpose.
+        // Never send an activation link for another purpose.
         if ($invocation->getPurpose() !== 'activation') {
             return CredentialDeliveryOutcome::RETRYABLE_FAILURE;
         }

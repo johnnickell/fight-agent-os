@@ -49,7 +49,7 @@ Reset requires grant possession; change requires authenticated ownership and cur
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00053](../tasks/00053-TASK.md) | Deliver recoverable secret-safe password-reset email | ready-for-agent |
+| [TASK-00053](../tasks/00053-TASK.md) | Deliver recoverable secret-safe password-reset email | done |
 | [TASK-00054](../tasks/00054-TASK.md) | Deliver the generic password-reset request journey | ready-for-agent |
 | [TASK-00055](../tasks/00055-TASK.md) | Deliver one-time password-reset completion | ready-for-agent |
 | [TASK-00056](../tasks/00056-TASK.md) | Deliver authenticated password change and terminal logout | ready-for-agent |
