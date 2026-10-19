@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, realpathSync, symlinkSync, linkSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, realpathSync, symlinkSync, linkSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 const modules = resolve(process.argv[2]), evidence = resolve(process.argv[3]);
@@ -22,7 +22,7 @@ for (const mode of ['policy-active', 'policy-missing']) {
   assert.equal(spawnSync('/usr/bin/git',['init','--initial-branch=develop'],{cwd:root}).status,0);
   const policyPath = join(directory, 'policy.json');
   if (mode === 'policy-active') writeFileSync(policyPath, JSON.stringify({version:1, profile:'native-reads',
-    revision:1, roots:[root], protectedPaths:[join(root,'private')], tools:['write','edit'],
+    revision:1, roots:[root], protectedPaths:[join(root,'private')], tools:['bash'],
     effects:['read','write'], scripts:[]}), {mode:0o600});
   writeFileSync(join(root,'source.txt'),'export function example() { return 1; }\n');
   writeFileSync(join(root,'AGENTS.md'),'Controlled qualification instructions');
@@ -55,7 +55,7 @@ for (const mode of ['policy-active', 'policy-missing']) {
     assert.equal(result.isError,!allowed,`${mode}/${name}: ${JSON.stringify(result.result)}`);outcomes++;return result.result;
   }
   try {
-    assert.ok(session.getActiveToolNames().includes('read'));
+    for (const name of ['read','write','edit']) assert.ok(session.getActiveToolNames().includes(name));
     for (const path of ['build.log', '.env.local', 'linked.md', 'hardlink.txt', 'large.log', join(base, 'provider.md'), join(provider, '.pi/skills/review/SKILL.md'), join(provider, 'docs/engineering/REVIEW.md')]) {
       await call('read', {path});
     }
@@ -66,16 +66,21 @@ for (const mode of ['policy-active', 'policy-missing']) {
     assert.ok(picture.content.some(block => block.type === 'image'));
     await call('read', {path: 'missing-file.txt'}, false); // Native filesystem failures remain honest.
 
-    await call('write', {path: '.env.local', content: 'denied'}, false);
+    await call('write', {path: '.env.local', content: 'synthetic updated'});
+    await call('write', {path: join(base, 'planning/tickets/00083-TICKET.md'), content: 'status: in-progress'});
+    await call('edit', {path: join(base, 'planning/tickets/00083-TICKET.md'), edits: [{oldText:'in-progress',newText:'done'}]});
+    assert.equal(readFileSync(join(base, 'planning/tickets/00083-TICKET.md'), 'utf8'), 'status: done');
     if (mode === 'policy-active') {
       await call('write', {path: 'created.txt', content: 'before'});
       await call('edit', {path: 'created.txt', edits:[{oldText:'before',newText:'after'}]});
       assert.equal(readFileSync(join(root,'created.txt'),'utf8'), 'after');
-      writeFileSync(policyPath, '{}'); // Authority drift still holds mutations, never native reads.
-      await call('write', {path:'created.txt',content:'denied'}, false);
+      writeFileSync(policyPath, '{}'); // Authority drift holds shell policy, never native file tools.
+      await call('write', {path:'created.txt',content:'still native'});
     }
     await call('read', {path:'build.log'});
     await call('read', {path:join(base, 'provider.md')});
+    await call('bash', {command:'printf forbidden > shell-marker'}, false);
+    assert.equal(existsSync(join(root, 'shell-marker')), false);
     const nested = await session.extensionRunner.emitToolCall({type:'tool_call',toolName:'read',
       toolCallId:randomUUID(),parentToolCallId:randomUUID(),input:{path:'build.log'}});
     assert.notEqual(nested?.block, true); outcomes++;

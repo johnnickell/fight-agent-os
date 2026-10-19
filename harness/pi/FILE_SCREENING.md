@@ -1,7 +1,7 @@
 # Bounded file relevance screening
 
 **TASK-00309 implementation candidate:** the [enrolled profile](FILE_SCREENING_PROFILE.md) adds operator preview,
-automatic actual-session allocation, shared monthly accounting, bounded optional discovery and role-scoped mutations.
+automatic actual-session allocation, shared monthly accounting, bounded optional discovery and workflow metadata. Native reads, writes and edits remain unchanged.
 Native `read` is not intercepted by either harness profile (TASK-00499). Discovery refusals and receipts never
 control native reading; Pi and operating-system permissions govern that operation.
 The amended standing profile keeps ordinary native shell without Jev command screening or confirmation; shell can
