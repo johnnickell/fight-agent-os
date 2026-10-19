@@ -28,6 +28,30 @@ This hash identifies desired policy, **not** a database snapshot, signed approva
 Preserve existing identities when extending the complete catalog. Before removing a definition or reference,
 inspect every consumer check and persisted assignment; do not submit a one-permission replacement policy.
 
+## Permission eligibility is not assignment
+
+**The ability to grant a Permission never grants it automatically.** Keep these decisions independent:
+
+- The Permission definition and tier determine the capability and which assignments are permitted.
+- Explicit managed Role membership determines installation-approved defaults.
+- Authorized Role assignments to Users and direct Permission assignments to Agents determine their grants.
+
+`ADMIN_SAFE` is delegation eligibility, not membership in `ROLE_USER` or a grant to every Agent. Likewise,
+`SUPER_ADMIN_ONLY` is a restriction on assignment, not an instruction to add a Permission to a Role. Defining a
+Permission, changing its tier or including it in application references must not infer any new membership or
+grant. Each default membership change requires its own explicit authorization, including Super Admin defaults.
+Existing approved memberships remain effective; this rule does not revoke them or require repeated confirmation
+of already authorized operations. Repository access remains distinct from operation Permissions.
+
+The initial three `ROLE_USER` defaults and 22 `ROLE_SUPER_ADMIN` members above are explicit foundation decisions,
+not rules to automatically assign future definitions. Current `InstallationManagedPolicy::create()` couples
+`SELF_SERVICE` tier selection with `ROLE_USER` membership and assigns the complete catalog to `ROLE_SUPER_ADMIN`.
+That represents the original approved sets but does not keep these decisions independent. Before extending the
+catalog, separate explicit tier definitions, explicit managed Role memberships and application references;
+do not extend the coupled lists and infer grants from eligibility or catalog inclusion. Preserve the existing
+approved IDs and memberships while making this separation. This documentation records the required contract,
+not a completed source repair or changed installation grants.
+
 ## Trusted local operation
 
 Only an operator already authorized to access this installation's source, Docker runtime and database should

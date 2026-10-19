@@ -497,4 +497,6 @@
 | [TASK-00492](00492-TASK.md) | Remove Jev command gating and plan autonomous policy authorization | done | — |
 | [TASK-00493](00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | needs-info | [TICKET-00097](../tickets/00097-TICKET.md) |
 | [TASK-00494](00494-TASK.md) | Read installed Pi examples through the authorized file reader | done | — |
+| [TASK-00495](00495-TASK.md) | Standardize Pi extension and integration naming | ready-for-agent | — |
+| [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | needs-info | [TICKET-00032](../tickets/00032-TICKET.md) |
 <!-- /planning:records -->

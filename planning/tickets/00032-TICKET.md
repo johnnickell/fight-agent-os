@@ -64,6 +64,20 @@ administrator-approved scope, with current delegation/revocation checks, exact g
 Routine starts, resumes, delegation, retries, checks and handoffs need no new human decision. Only an actual
 scope expansion or unresolved policy decision escalates. Implement and verify this before enabling managed launch.
 
+### Approved standing-policy supplier allocation
+
+John approved [TASK-00496 — Manage versioned standing execution policy](../tasks/00496-TASK.md) as a bounded
+administrative application/console outcome under this TICKET. Execution owns installation-policy semantics,
+immutable publication/restore/revocation and shared validation/admission participants; Repository configuration
+retains scoped overrides. The visual editor consumes these contracts without owning another policy engine.
+
+TASK-00496 is unranked and `needs-info`, blocked by TASK-00036, TASK-00078 and TASK-00138. TASK-00139 and TASK-00493
+gain the explicitly approved dependency. TASK-00139 retains order 3 and its Start/grant/claim/reservation/dispatch
+scope; its executable readiness now waits for this early policy supplier, not browser or completed role delivery.
+No reverse dependency is added to the new supplier. Exact policy-management Permissions, stage/instruction schema,
+reference/transaction participation and budget/drift reconciliation remain held; allocation enables no runtime.
+Other dependencies and terminal-first scope are unchanged. TASK-00495 remains the separate naming chore.
+
 ## Pi Durable integration direction — 2026-10-13
 
 John requested this bounded refinement of existing Harness and execution work after reviewing Pi Durable:
@@ -185,6 +199,7 @@ The explicitly approved disposable experiment is limited evidence, not a second 
 | [TASK-00140](../tasks/00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | ready-for-agent |
 | [TASK-00141](../tasks/00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | ready-for-agent |
 | [TASK-00142](../tasks/00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | ready-for-agent |
+| [TASK-00496](../tasks/00496-TASK.md) | Manage versioned standing execution policy | needs-info |
 <!-- /planning:children -->
 
 ## Decisions and progress
