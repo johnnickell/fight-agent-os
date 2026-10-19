@@ -130,13 +130,14 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     let budget: ReturnType<ProfileBudget['inspect']> | null = null;
     let allocation: { requestMicroUsd: number; sessionMicroUsd: number } | null = null;
     let reason = failure ?? inputFailure ?? evaluationFailure;
+    let accessReason = failure ?? inputFailure;
     if (selected) {
       try {
         checkBoundary();
         const policy = profiles.selection(ctx.cwd)!.profile;
         allocation = { requestMicroUsd: policy.requestMicroUsd, sessionMicroUsd: policy.sessionMicroUsd };
         budget = new ProfileBudget(sessionId, profiles.directory, ledger).inspect(policy.sessionMicroUsd);
-      } catch (error) { reason = safeCode(error); }
+      } catch (error) { reason = safeCode(error); accessReason = reason; }
       if (!reason && !dependencies.credentialConfigured(ctx)) reason = 'credential-unavailable';
       if (!reason && screening?.availability() !== 'available') reason = screening?.availability() ?? 'screening-unavailable';
       if (budget?.legacy?.held) reason = 'legacy-reconciliation-required';
@@ -145,6 +146,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (!reason && (budget?.session.availableMicroUsd ?? 0) < 2688) reason = 'session-budget';
     }
     return { state: selected ? reason ? 'degraded' : 'active' : 'disabled',
+      access: { state: accessReason ? 'held' : 'available', reason: accessReason ?? null },
       enforcement: selected ? reason ? 'project-access-with-screening-degraded' : 'project-access-with-optional-screening' : 'not-enrolled',
       reason: reason ?? (selected ? null : 'not-enrolled'), session: hash(sessionId),
       phase: workflow.role, budget, allocation,

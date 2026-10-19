@@ -24,6 +24,9 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Follow repository terminology when using external planning skills. Do not silently map a TASK to a TICKET
 - Use `.pi/skills/writing-for-agents/SKILL.md` when authoring skills or agent-facing instructions
 - Put fresh Pi skills in `.pi/skills/<name>/SKILL.md`; design their behavior through planning
+- Never pin Pi to a version number. For Pi integrations, qualify the currently installed supported APIs and behavior;
+  record the tested version as evidence, not an equality gate or future compatibility guarantee. Missing capabilities
+  block the affected behavior; preserve historical version receipts and unrelated dependency/model pins.
 - In a participating session with `jev_read_file` and its shared rule available, follow
   [selective file reads](harness/pi/FILE_SCREENING_RULE.md). Load mandatory governing/selected-skill instructions
   directly; record evidence-backed target and required-evidence exceptions. Missing tool/policy is not activation

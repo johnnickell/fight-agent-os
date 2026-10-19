@@ -25,7 +25,9 @@ scenario narrows investigation but cannot silently waive the TASK's remaining re
    against the changed contract: intended use plus likely or high-impact failures. Establish independent expected
    outcomes, including rejected operations and forbidden effects. Select browser, API, CLI/TUI, library/worker or
    executable-instruction exercises as relevant; do not expand into every mode. Inspect target-owned commands and
-   available tools; use isolated services and disposable data. Retain owned environments needed for evidence or
+   available tools; use isolated services and disposable data. Create missing disposable local settings, test
+   credentials and TLS material under [QA authority](../../../docs/engineering/QA.md#sequence-and-authority)
+   without asking again. Retain owned environments needed for evidence or
    repair. Do not use production/shared user data, switch
    a dirty checkout, replace another TASK's running service, or install missing tools without authority. An
    unavailable prerequisite produces INCOMPLETE, with the exact recovery action. For macOS terminal visuals,
