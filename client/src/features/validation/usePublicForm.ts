@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 import { type PublicSchema, validatePublicSchema } from '@/features/validation/PublicSchema';
 
 import type { ApiFailure, ApiResult } from '@/api/ApiResult';
-import type { ChangeEvent, RefCallback } from 'react';
+import type { ChangeEvent, FocusEvent, RefCallback } from 'react';
 
 export type FieldMessages = Readonly<Record<string, readonly string[]>>;
 
@@ -223,8 +223,18 @@ export function usePublicForm<T>(
       errors: errors[name] ?? [],
       ref,
       onChange: (event: ChangeEvent<HTMLInputElement>) => setFieldValue(name, event.target.value),
-      onBlur: () => {
+      onBlur: (event: FocusEvent<HTMLInputElement>) => {
         setTouched((previous) => ({ ...previous, [name]: true }));
+        const next = event.relatedTarget;
+        // Submit validates the whole form. Inserting blur feedback during its pointer
+        // press can move the button before release and swallow that first activation.
+        if (
+          (next instanceof HTMLButtonElement || next instanceof HTMLInputElement) &&
+          next.type === 'submit' &&
+          event.currentTarget.form &&
+          next.form === event.currentTarget.form
+        )
+          return;
         if (schema) {
           const local = validatePublicSchema(schema, values.current)[name];
           if (local) setErrors((previous) => ({ ...previous, [name]: local }));

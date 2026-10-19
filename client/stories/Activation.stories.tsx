@@ -56,11 +56,41 @@ export const Loading: Story = { args: { scenario: 'loading' } };
 export const MetadataUnavailable: Story = { args: { scenario: 'metadata' } };
 export const UnusableInvitation: Story = { args: { scenario: 'recovery' } };
 export const PolicyValidation: Story = {
+  globals: { viewport: { value: 'narrow' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = await canvas.findByRole('button', { name: 'Activate account' });
-    await userEvent.click(button);
-    await expect(canvas.getByLabelText('New password (required)')).toHaveFocus();
+    const password = canvas.getByLabelText('New password (required)');
+    const confirmation = canvas.getByLabelText('Confirm new password (required)');
+    const document = canvasElement.ownerDocument;
+    const user = userEvent.setup({ document });
+    const previousWidth = canvasElement.style.width;
+    // R43-01: browser layout must keep the original release point on the submit control.
+    // A click dispatched straight to the button cannot detect blur stealing the first press.
+    canvasElement.style.width = '320px';
+    try {
+      await document.fonts.ready;
+      password.focus();
+      button.scrollIntoView({ block: 'center', behavior: 'instant' });
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      const bounds = button.getBoundingClientRect();
+      const point = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+      await expect(document.elementFromPoint(point.x, point.y)?.closest('button')).toBe(button);
+      await user.pointer({ target: button, keys: '[MouseLeft>]', coords: point });
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      );
+      const releaseTarget = document.elementFromPoint(point.x, point.y);
+      await expect(releaseTarget?.closest('button')).toBe(button);
+      await user.pointer({ target: button, keys: '[/MouseLeft]', coords: point });
+      await expect(password).toHaveFocus();
+      await expect(password).toHaveAttribute('aria-invalid', 'true');
+      await expect(confirmation).toHaveAttribute('aria-invalid', 'true');
+      await expect(password).toHaveAccessibleDescription(/Error:/);
+      await expect(confirmation).toHaveAccessibleDescription(/Error:/);
+    } finally {
+      canvasElement.style.width = previousWidth;
+    }
   }
 };
 const submitExample: Story['play'] = async ({ canvasElement }) => {

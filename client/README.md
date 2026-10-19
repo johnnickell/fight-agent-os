@@ -328,7 +328,10 @@ deployment change. Later-started reads that establish a different revision fence
 (`mb_strlen` equivalent for the published subset), with PHP-compatible primitive casting; and `Same` compares
 two present values strictly. This is usability feedback, never server validation or credential policy.
 `usePublicForm` is a narrow Formik adapter: form components bind registered field props, present multiple
-plain-text messages with the production `TextField`, and submit through a feature-owned function. Typed/pasted
+plain-text messages with the production `TextField`, and submit through a feature-owned function. Blur marks a
+field touched; when focus moves to that form's submit control, feedback is left to submission so layout changes
+cannot move the control between pointer press and release. Other blur targets retain local feedback, and submission
+still validates the whole form and focuses its first invalid field. Typed/pasted
 and adapter-mediated programmatic changes increment field and dependency generations; local/server errors for
 affected fields are invalidated without erasing unrelated errors. Reset, schema replacement and unmount fence
 late failures. A current successful submission resets owned values when unchanged; an edit after dispatch is
