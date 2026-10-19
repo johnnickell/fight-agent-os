@@ -17,5 +17,5 @@ interface InvitationRateLimiter
     /**
      * Rejects exhausted or full-capacity windows with safe retry metadata
      */
-    public function consume(UserId $actorId, InvitationOperation $operation): void;
+    public function consume(UserId $actorId, InvitationOperation $operation, ?UserId $targetId = null): void;
 }

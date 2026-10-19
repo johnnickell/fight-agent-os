@@ -5,8 +5,11 @@ one-shot console operations, not a scheduler or product endpoint. No production 
 
 ## Adoption and data safety
 
-The committed Composer lock selects Access Control v0.5.0 (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`) and
-Common v1.3.0 (`7de6cad6e8a9752973ad9f8e27e285b0c1510582`). Install that lock, then apply migrations through the
+The current Composer lock selects Access Control v0.6.0 (`dc4621d13851dd08cdf85ed9715ead24b1051e80`) and
+Common v1.3.0 (`7de6cad6e8a9752973ad9f8e27e285b0c1510582`). TASK-00024's original v0.5.0 adoption source was
+`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`; its migration/data-safety evidence remains historical.
+TASK-00042 qualifies the package-owned expiry-aware retry boundary and adds the separate authorized
+[invitation recovery API](INVITATION_API.md#atomic-invitation-recovery), without changing these internal commands. Install that lock, then apply migrations through the
 ordinary authorized `./bin/database migrate` operation before using recovery. TASK verification applies migrations
 only to the guarded test database; it does not migrate development or production.
 

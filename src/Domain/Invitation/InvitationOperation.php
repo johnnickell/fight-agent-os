@@ -13,4 +13,7 @@ enum InvitationOperation: string
 {
     case ISSUE = 'issue';
     case STATUS = 'status';
+    case RETRY = 'retry';
+    case RESEND = 'resend';
+    case CORRECT = 'correct';
 }

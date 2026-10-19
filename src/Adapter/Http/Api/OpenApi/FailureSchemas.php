@@ -82,7 +82,8 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'status', type: 'string', enum: ['error']),
         new OA\Property(property: 'message', type: 'string', enum: [
             'Bad request.', 'Unauthorized.', 'Forbidden.', 'Not found.', 'Method not allowed.',
-            'Conflict.', 'Gone.', 'Too many requests.', 'Internal server error.'
+            'Conflict.', 'Gone.', 'Too many requests.', 'Internal server error.',
+            'Recovery outcome uncertain. Read invitation status before another operation.'
         ])
     ],
     type: 'object',
