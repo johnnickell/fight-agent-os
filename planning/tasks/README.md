@@ -498,4 +498,5 @@
 | [TASK-00493](00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | needs-info | [TICKET-00097](../tickets/00097-TICKET.md) |
 | [TASK-00494](00494-TASK.md) | Read installed Pi examples through the authorized file reader | done | — |
 | [TASK-00497](00497-TASK.md) | Restore optional-Jev workspace startup and child QA instruction reads | done | — |
+| [TASK-00499](00499-TASK.md) | Remove harness denials from native file reads | done | — |
 <!-- /planning:records -->

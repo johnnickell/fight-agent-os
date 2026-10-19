@@ -6,7 +6,7 @@ description: Use to answer a factual question from primary sources and produce a
 # Research
 
 For discovery in a participating `jev_read_file` session, follow the shared
-[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
+[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); native reads need no screening receipt or exception, including mandatory instructions and exact targets.
 
 Research gathers facts so humans can make decisions and agents can plan without guessing.
 
