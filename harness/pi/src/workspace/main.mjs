@@ -51,7 +51,7 @@ export async function run(argv = process.argv.slice(2), {
     if (closing || renderTimer) return;
     renderTimer = setTimeout(() => {
       renderTimer = undefined;
-      try { terminal.draw(model.render(Math.max(1, output.columns - 1), output.rows), process.env.NO_COLOR ? 'system' : model.theme); }
+      try { terminal.draw(model.render(output.columns, output.rows, Math.max(1, output.columns - 1)), process.env.NO_COLOR ? 'system' : model.theme); }
       catch { void close(1); }
     }, 25);
   };

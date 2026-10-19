@@ -29,7 +29,7 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
   block the affected behavior; preserve historical version receipts and unrelated dependency/model pins.
 - In a participating session with `jev_read_file` and its shared rule available, follow
   [selective file reads](harness/pi/FILE_SCREENING_RULE.md). Load mandatory governing/selected-skill instructions
-  directly; record evidence-backed target and required-evidence exceptions. Missing tool/policy is not activation
+  directly. Native reads need no screening receipt or exception; discovery refusals do not prohibit them
 - Keep PHP business logic in Domain, orchestration in Application, and framework/provider concerns in Adapter
 - Prefer capability-named interfaces without an Interface suffix, injected dependencies, and single-use-case HTTP Actions
 - For console entry points, bus pipelines and shared container services, follow [shared services and dispatch](docs/engineering/STANDARDS.md#shared-services-and-bus-dispatch)

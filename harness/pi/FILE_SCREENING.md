@@ -1,7 +1,9 @@
 # Bounded file relevance screening
 
 **TASK-00309 implementation candidate:** the [enrolled profile](FILE_SCREENING_PROFILE.md) adds operator preview,
-automatic actual-session allocation, shared monthly accounting, trusted evidence intake and local receipt admission.
+automatic actual-session allocation, shared monthly accounting, bounded optional discovery and role-scoped mutations.
+Native `read` is not intercepted by either harness profile (TASK-00499). Discovery refusals and receipts never
+control native reading; Pi and operating-system permissions govern that operation.
 The amended standing profile keeps ordinary native shell without Jev command screening or confirmation; shell can
 bypass relevance admission and is not OS-confined. Use normal Pi/provider-owned Build, not a replacement executor.
 Historical bounded native/build dispatch and synthetic live screening/admission have recorded evidence, including
@@ -136,7 +138,7 @@ bodies never enter normal results/receipts. The Agent already retains its questi
 A complete Yes probability >=0.70 or predeclared relevant class confidence >=0.70 is `positive`. Confident No,
 below-bar and irrelevant/other classes are `not-positive`; unknown is `incomplete`/`unresolved`. Failure is
 unresolved with no invented negative. `coverage.complete` means wholly answered and source-current, not model
-accuracy. The [shared rule](FILE_SCREENING_RULE.md) requires selective follow-up and records direct-read exceptions.
+accuracy. The [shared rule](FILE_SCREENING_RULE.md) requires selective follow-up; native reads need no screening receipt or exception.
 
 Explicit outcomes include denied root/sensitive file/symlink, unsupported file/hardlink, binary/source/payload
 limits, missing source, unstable source, unallocated session, stale policy, denied disclosure and every shared

@@ -449,7 +449,7 @@
 | [TASK-00444](00444-TASK.md) | Synchronize from the Dashboard and complete the instruction-change journey | ready-for-agent | [TICKET-00109](../tickets/00109-TICKET.md) |
 | [TASK-00445](00445-TASK.md) | Record independent managed Reviews | needs-info | [TICKET-00083](../tickets/00083-TICKET.md) |
 | [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | done | — |
-| [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | in-progress | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | done | — |
@@ -501,4 +501,5 @@
 | [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | needs-info | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00497](00497-TASK.md) | Restore optional-Jev workspace startup and child QA instruction reads | done | — |
 | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
+| [TASK-00499](00499-TASK.md) | Remove harness denials from native file reads | done | — |
 <!-- /planning:records -->

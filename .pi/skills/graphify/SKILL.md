@@ -6,7 +6,7 @@ description: Query a project's Graphify knowledge graph for relationships and so
 # Graphify
 
 For discovery in a participating `jev_read_file` session, follow the shared
-[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
+[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); native reads need no screening receipt or exception, including mandatory instructions and exact targets.
 
 Graphify supplies derived navigation evidence. Source files and accepted planning records remain authoritative;
 its knowledge graph is distinct from the Planning dependency DAG and the PHP execution state machine.

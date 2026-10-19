@@ -162,7 +162,7 @@ test('workspace uses Pi-owned var session storage and rejects startup prompts or
 
 // Controller checks drive the owned entrypoint with controlled Pi records; not real PTY qualification.
 const tick = () => new Promise(resolve => setTimeout(resolve, 45));
-async function controller({ policy = 'active', status, commands = ['jev', 'file-screening', 'safe'], drawError = false, sessionFile } = {}) {
+async function controller({ policy = 'active', status, commands = ['jev', 'file-screening', 'safe'], drawError = false, sessionFile, columns = 140, rows = 40 } = {}) {
   const rpc = new EventEmitter(); rpc.requests = []; rpc.sent = []; rpc.closed = 0;
   rpc.request = async (type, data) => {
     rpc.requests.push({ type, ...data });
@@ -174,7 +174,7 @@ async function controller({ policy = 'active', status, commands = ['jev', 'file-
     return { disposition: 'handled' };
   };
   rpc.send = async record => rpc.sent.push(record); rpc.close = async () => { rpc.closed++; };
-  const input = { isTTY: true }, output = new EventEmitter(); output.isTTY = true; output.columns = 140; output.rows = 40;
+  const input = { isTTY: true }, output = new EventEmitter(); output.isTTY = true; output.columns = columns; output.rows = rows;
   const terminal = { frames: [], stopped: 0,
     start(onKey, onPaste) { this.key = onKey; this.paste = onPaste; },
     draw(lines) { if (drawError) throw new Error('fixture render failure'); this.frames.push(lines.join('\n')); },
@@ -185,6 +185,49 @@ async function controller({ policy = 'active', status, commands = ['jev', 'file-
   const dispose = async () => { await close(); process.exitCode = originalExitCode; };
   return { rpc, terminal, output, dispose };
 }
+// WORKSPACE.md promises wide panes at physical 100×20, while the final column must
+// remain unused to prevent terminal autowrap. Exercise both contracts at the controller.
+for (const rows of [20, 30]) test(`QA-01 entrypoint shows all panes at physical 100×${rows} without filling the final column`, async () => {
+  const app = await controller({ columns: 100, rows });
+  try {
+    await tick();
+    const lines = app.terminal.frames.at(-1).split('\n');
+    assert.match(lines[1], /^> Conversation\s+Child observation/);
+    assert.match(lines.join('\n'), /Runtime observation/);
+    assert.equal(lines.length, rows);
+    for (const line of lines) assert.equal(width(line), 99);
+  } finally { await app.dispose(); }
+});
+test('QA-01 entrypoint preserves boundary, resize, collapse, draft and modal response contracts', async () => {
+  const app = await controller({ columns: 99, rows: 20 });
+  const frame = () => app.terminal.frames.at(-1);
+  const resize = async (columns, rows) => {
+    app.output.columns = columns; app.output.rows = rows; app.output.emit('resize'); await tick();
+    const lines = frame().split('\n'); assert.equal(lines.length, rows);
+    for (const line of lines) assert.equal(width(line), Math.max(1, columns - 1));
+  };
+  try {
+    app.terminal.paste('retained界'); await tick();
+    assert.doesNotMatch(frame(), /Child observation|Runtime observation/);
+    await resize(100, 19); assert.doesNotMatch(frame(), /Child observation|Runtime observation/);
+    await resize(100, 20); assert.match(frame(), /Child observation/); assert.match(frame(), /Runtime observation/);
+    app.terminal.key('', { name: 'w', ctrl: true }); await tick();
+    assert.doesNotMatch(frame(), /Child observation|Runtime observation/); assert.match(frame(), /retained界/);
+    app.terminal.key('', { name: 'tab' }); await tick(); assert.match(frame(), /> Child observation/);
+    app.terminal.key('', { name: 'w', ctrl: true }); await tick(); assert.match(frame(), /Runtime observation/);
+    app.rpc.emit('record', { type: 'extension_ui_request', id: 'boundary-confirm', method: 'confirm', title: 'Boundary confirmation' });
+    await tick(); assert.match(frame(), /Boundary confirmation/); assert.match(frame(), /Runtime observation/);
+    app.terminal.paste('y'); assert.deepEqual(app.rpc.sent, []);
+    await resize(99, 20); assert.match(frame(), /Boundary confirmation/); assert.doesNotMatch(frame(), /Runtime observation/);
+    app.terminal.key('', { name: 'return' }); await tick();
+    assert.deepEqual(app.rpc.sent, [{ type: 'extension_ui_response', id: 'boundary-confirm', confirmed: false }]);
+    assert.match(frame(), /> Child observation/);
+    app.terminal.key('', { name: 'tab', shift: true }); await tick(); assert.match(frame(), /retained界/);
+    for (const dimensions of [[78, 24], [101, 20], [120, 40], [12, 6], [1, 1], [100, 20]]) await resize(...dimensions);
+    assert.match(frame(), /Child observation/); assert.match(frame(), /retained界/);
+    assert.ok(!app.rpc.requests.some(request => request.type === 'prompt'));
+  } finally { await app.dispose(); }
+});
 test('entrypoint submits text only after active policy qualification and preserves normal RPC steering', async () => {
   const app = await controller();
   try {

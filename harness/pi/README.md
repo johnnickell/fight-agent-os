@@ -7,14 +7,14 @@ macOS). Mixed typed forms have controlled Pi integration evidence, not live qual
 check succeeded on October 14, 2026; independent acceptance remains pending. A synthetic result does not establish
 model accuracy or another installation's account access. This is not the
 managed Runner or an execution sandbox. TASK-00160 adds an explicitly selected
-[deterministic tool policy](TOOL_POLICY.md) for compatible stable Pi 1.x (>=1.2.0) macOS APFS sessions: final-argument file admission,
+[deterministic tool policy](TOOL_POLICY.md) for compatible stable Pi 1.x (>=1.2.0) macOS APFS sessions: final-argument mutation admission,
 digest-bound script/argv admission and denial of unsupported helper/nested/child tools. It says **deterministic
 protection only**, not Jev screening or process isolation; installation alone never activates it.
 TASK-00162 adds opt-in, instruction-based single-file
 screening; TASK-00163 extends it with bounded lists/globs and session-local metadata caching; see [operator policy, session activation and qualification limits](FILE_SCREENING.md). No global policy
 is activated by installing/updating this source. TASK-00309's [enrolled-profile implementation candidate](FILE_SCREENING_PROFILE.md)
 adds a stable `/file-screening` diagnostic, explicit enrollment preview, shared monthly accounting and local
-role-scoped project access, optional receipt admission and conservative legacy reconciliation. Project enrollment stands until revocation/
+role-scoped project mutations, optional discovery and conservative legacy reconciliation. Project enrollment stands until revocation/
 authority change, with explicit conversion of historical timeboxed profiles. Use ordinary Pi and the owning provider's
 `/skill:build TASK-NNNNN`: shell/Git/checks use ordinary Pi execution without Jev command screening or confirmations.
 Jev is optional: no setup, credentials or enrollment is required for normal native tools. Shell can bypass relevance screening and same-user state is not confined.
@@ -32,8 +32,9 @@ The installed [shared rule](FILE_SCREENING_RULE.md) supplies portable guidance i
 targets do not need a copy. Strongly prefer Jev before unfamiliar discovery; read known targets and core project
 instructions directly with `read` and `path`. Large Boards support ordinary bounded reads and continuation.
 Negative/unavailable relevance results need a concrete reason for direct reading, not an access override.
-Native context, advertised skills and their exact relative Markdown instruction references work outside the
-project without granting whole provider roots. Ordinary project files cannot grant external access.
+Native `read` is not intercepted by either harness profile. Logs, images, links and cross-project
+instructions use Pi and OS permissions without harness receipts, exclusions or enrollment. Optional discovery
+refusals do not prohibit native reads. Writes and evaluator disclosure keep their separate controls.
 
 Interactive `/skill:work`, `/skill:review`, `/skill:qa` and `/skill:land` select role permissions;
 `/file-screening role engineer|reviewer|qa|land` is the explicit operator alternative. Engineer/Land edit normal
@@ -43,7 +44,7 @@ enrollment includes verified linked worktrees without another setup; select an e
 scratch, including canonical base paths from an external worktree. The [skill/effect inventory](FILE_SCREENING_PROFILE.md#installed-skill-effects)
 defines every installed skill and mode. Explicit hidden provider Build/Next instructions and their exact linked
 references work in enrolled consumers without enrolling the provider root or allowing automatic invocation.
-All roles retain secret-file, explicit-exclusion and runtime protections. Native shell receives no Jev assessment; these file checks do not provide shell/OS containment. Restart Pi after upgrades
+All roles retain secret-file, explicit-exclusion and runtime protections for mutations. Native shell receives no Jev assessment; these file checks do not provide shell/OS containment. Restart Pi after upgrades
 and reselect the workflow for older sessions. See the [profile](FILE_SCREENING_PROFILE.md) for limits/recovery.
 
 In the native TUI, Codex weekly usage has its own footer row; `File screening: active · Jev: configured` appears
@@ -56,7 +57,7 @@ Ask the Agent to inspect screenshots normally: image `read` calls need only a pa
 files. No special command, path-only message, input selection or approval popup is required. Images go directly
 to the main model, not Jev; optional text relevance screening remains available.
 See [images and screenshots](FILE_SCREENING_PROFILE.md#images-and-screenshots) for supported forms and retained
-format, size and protected-file checks.
+native format and output handling.
 
 ## Responsive local workspace candidate
 

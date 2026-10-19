@@ -6,7 +6,7 @@ description: Explore a bounded architecture question through real use cases and 
 # Architecture
 
 For discovery in a participating `jev_read_file` session, follow the shared
-[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); mandatory instructions and evidenced exact targets retain its direct-read exceptions.
+[selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); native reads need no screening receipt or exception, including mandatory instructions and exact targets.
 
 Start with the question, affected use cases, maintainer's constraints and inspected revision. Read applicable
 accepted ADRs, especially [ADR 0001](../../../planning/adr/0001-application-ownership-and-orchestration.md), and
