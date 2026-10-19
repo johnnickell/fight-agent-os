@@ -27,20 +27,26 @@ policies. A negative, unavailable or rejected discovery result does not block na
 needed file. Briefly state that need and read directly; do not label it screened or invent a receipt.
 Optional evaluator disclosure still requires its existing authorization and budget.
 
+## Native writes and edits
+
+TASK-00500 also removes native `write` and `edit` interception from both profiles. Pi owns schemas, path
+handling, mutation queues, diffs, results and filesystem errors. Enrollment, workflow role, task identity,
+root/exclusion lists, discovery budgets and integrity holds cannot deny these native tools or hide them.
+Task, ticket, parent and Board closeout uses ordinary native writes within existing task authorization.
+Optional discovery does not grant write authority; user instructions and native runtime permissions still apply.
+
 ## Workflow roles
 
 Standing repository enrollment includes its canonical main checkout and reciprocally registered Git worktrees,
 including external worktrees created during this session. It does not include clones, matching remotes or
-unregistered directories. File mutations and optional Jev use the same current membership and inherited exclusions;
+unregistered directories. Optional Jev uses the same current membership and inherited exclusions;
 no setup, per-file confirmation or budget reset is needed for a valid member. Git metadata is inspected internally,
 not exposed for direct mutation. Non-Git enrolled directories retain their exact original root.
 
 Select the task and intended checkout in the interactive invocation, for example
 `/skill:work TASK-NNNNN --checkout /absolute/selected/checkout`. This names the operator's existing checkout
-choice, not another enrollment or approval. A selected future Work checkout becomes writable after Git registers
-it. Fresh sessions default to their containing registered checkout; trusted Build launchers pass task and checkout.
-Changing directories in shell does not select another source-write target. Source writes in sibling checkouts
-remain unavailable. See the complete [skill/effect inventory](FILE_SCREENING_PROFILE.md#installed-skill-effects).
+choice, not another enrollment or approval. Git registration makes a selected future Work checkout available to optional discovery. Fresh sessions default to their containing registered checkout; trusted Build launchers pass task and checkout.
+The selected checkout records task ownership; it is not a native file-tool permission gate. See the complete [skill/effect inventory](FILE_SCREENING_PROFILE.md#installed-skill-effects).
 
 The trusted launcher phase or explicit user `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land` selects the
 role. Only interactive user input changes it automatically; model/extension and RPC prompt text cannot promote
@@ -49,7 +55,7 @@ active role. On every startup/reload, an explicit trusted launcher takes precede
 session-wide selection survives tree navigation and restart when its session identity and launcher provenance
 match. Forks, legacy or unverifiable history, and removal of a prior launcher default to Reviewer until the
 operator selects a workflow. A fresh unassigned local session defaults to Engineer. Failed persistence holds
-mutations and optional discovery; correct the storage problem and reload before continuing. Native reads remain available during that hold; do not evade mutation controls.
+optional discovery; correct the storage problem and reload to recover it. Native reads, writes and edits remain available.
 
 Use `file_screening_status.workflow` to identify the selected skill, effect, task, checkout and mode.
 The top-level `phase` is the workflow role: Build uses `phase: qa` with `skill: build` and
@@ -64,20 +70,18 @@ or role promotion based on `phase` alone. See the [status contract](FILE_SCREENI
   `.runs/build/<TASK-ID>/` for coordination and cannot edit source. All have task-owned execution scratch.
 - Land: read/edit project files and perform authorized Git delivery work.
 
-Project roots and explicit exclusions constrain writes and optional discovery in every role. Credentials, Git
-internals, operator state, Pi runtime configuration and the running harness remain protected from mutation. Role changes come from the operator, never
-from an agent choosing a more permissive role to finish an action. Independent review/QA obligations remain.
-Query/status modes do not write source or durable planning outputs. A removed or changed membership is denied
-before the next effect. For `repository-metadata-unavailable`, inspect `git worktree list --porcelain` from the
-enrolled repository; repair with `git worktree repair` or return to a valid registered checkout and reload.
-Never hand-edit pointers, reenroll each worktree, discard liabilities or bypass mutation controls.
+These role responsibilities guide authorized work; the harness does not enforce them through native file tools.
+Project roots and exclusions constrain optional discovery and provider disclosure only. Role changes come from
+the operator. Independent review/QA obligations and task ownership remain. For discovery's
+`repository-metadata-unavailable`, inspect `git worktree list --porcelain` from the enrolled repository;
+repair with `git worktree repair` or return to a valid registered checkout. Do not discard accounting liabilities.
 
 ## Native shell remains independent
 
 Native Agent bash and user `!`/`!!` run through Pi without Jev command screening, command disclosure or a Jev
 confirmation dialog. No Jev setup is required for native shell. Existing task permissions and native runtime
 permissions still apply. Keep credentials out of commands and respect authorized task and mutation boundaries.
-Mutation checks do not confine native reads, shell, descendants or trusted SDK calls; do not claim OS isolation.
+The harness does not confine native file tools, shell, descendants or trusted SDK calls; do not claim OS isolation.
 
 Use the normal provider-owned Build workflow and canonical role reports. Preserve budgets, accounting and
 existing task permissions. For optional Jev batches, inspect every result and incomplete coverage. A current

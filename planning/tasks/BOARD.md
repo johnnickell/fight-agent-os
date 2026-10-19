@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00500](00500-TASK.md) | Restore native file tools and use Terra for Land | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 

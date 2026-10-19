@@ -74,7 +74,7 @@ then the target-bound role choice, otherwise retain the configured provider. Nev
 | Software Engineer, including repairs | Sol | high | `gpt-6.1-sol` |
 | Senior Engineer review | Sol | high | `gpt-6.1-sol` |
 | QA Engineer | Terra | high | `gpt-5.6-terra` |
-| Release Manager land | Luna | medium | `gpt-6-luna` |
+| Release Manager land | Terra | high | `gpt-5.6-terra` |
 
 Team Lead is a recommendation when starting a coordinator, not a command to replace an active session.
 Astra is an explicit override, never an automatic fallback or escalation after failure. Model choice does not
@@ -140,7 +140,8 @@ provider before resuming the same ledger and model pins; `/reload` can retain ol
 Shell source reads can bypass relevance screening and same-user shell can access operator state: this interim
 profile is not universal admission enforcement or a sandbox. The installed [shared rule](../../../harness/pi/FILE_SCREENING_RULE.md)
 strongly prefers Jev for unfamiliar discovery while allowing ordinary direct project reads and portable
-instructions. Explicit writes follow the trusted role; Reviewer/QA write only under `.runs`. Use canonical
+instructions. Native writes and edits also remain unmodified; role responsibilities still limit
+Reviewer/QA outputs to their task-owned `.runs` evidence. Use canonical
 `work`, `review`, `qa` and `land` phase values for `--role`. The monitor's own process launch and descendants inside scripts are not recursively
 intercepted; preflighted children independently load the reviewed profile and bind their actual identities.
 

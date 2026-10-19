@@ -3,10 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { Type, type TSchema } from 'typebox';
-import { createEditToolDefinition, createWriteToolDefinition,
-  getAgentDir, getPackageDir, getReadmePath, getDocsPath, getExamplesPath, VERSION } from '@earendil-works/pi-coding-agent';
-import type { ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { Type } from 'typebox';
+import { getAgentDir, getPackageDir, getReadmePath, getDocsPath, getExamplesPath, VERSION } from '@earendil-works/pi-coding-agent';
+import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { reviewEnrollment } from './enrollment-preview.ts';
 import { FileScreening, type ScreenResult } from './jev/file-screening.mjs';
 import { FileScreeningSettings } from './jev/local-store.mjs';
@@ -15,7 +14,6 @@ import { FileAdmission } from './jev/file-admission.mjs';
 import { WorkflowAccess, skillEffects } from './jev/workflow-access.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
 import { ToolPolicy, PolicyDenied } from './tool-policy/policy.mjs';
-import { fileOperations } from './tool-policy/effects.mjs';
 import { trackRuntimeHooks } from './tool-policy/runtime.mjs';
 import type { ConsumerConnection, Connection, OperatorConfiguration, Json } from './jev/judgments.mjs';
 
@@ -50,11 +48,11 @@ const localScreeningFailures = new Set(['source-limit', 'batch-source-limit', 'r
   'symlink-denied', 'symlink-escape', 'unsupported-file', 'unsupported-hardlink', 'unstable-source',
   'binary-source', 'source-unavailable', 'invalid-input', 'result-presentation-limit', 'admission-presentation-limit']);
 
-/** Bind optional discovery and file mutations without intercepting native reads or shell execution */
+/** Bind optional discovery without intercepting native file tools or shell execution */
 export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencies) {
   const hooks = trackRuntimeHooks(pi, { screening: true });
   const profiles = dependencies.profiles;
-  pi.registerFlag('fight-screening-required', { type: 'string', description: 'Trusted launcher enrollment identity; missing/changed authority holds file mutations and optional discovery' });
+  pi.registerFlag('fight-screening-required', { type: 'string', description: 'Trusted launcher enrollment identity; missing/changed authority holds optional discovery' });
   let screening: FileScreening | undefined, admission: FileAdmission | undefined, guard: ToolPolicy | undefined;
   let selected = false, live = false, failure: string | undefined, inputFailure: string | undefined, evaluationFailure: string | undefined;
   let context: ExtensionContext | undefined;
@@ -106,7 +104,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (pi.getFlag('fight-tool-policy') !== undefined) throw new PolicyDenied('incompatible-tool-policy-selection');
       const state = guard?.inspect();
       if (state?.state !== 'active') throw new PolicyDenied(state?.reason ?? 'boundary-unavailable');
-      if (!owner || allowed.filter(name => name !== 'bash' && name !== 'read').some(name => pi.getAllTools().find(tool => tool.name === name)?.sourceInfo?.path !== owner)) throw new PolicyDenied('unsupported-tool-replacement');
+      if (!owner || allowed.filter(name => !['bash', 'read', 'write', 'edit'].includes(name)).some(name => pi.getAllTools().find(tool => tool.name === name)?.sourceInfo?.path !== owner)) throw new PolicyDenied('unsupported-tool-replacement');
     } catch (error) {
       failure = safeCode(error); admission?.close(); screening?.close(); guard?.cancel(failure);
       throw new PolicyDenied(failure);
@@ -140,10 +138,10 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         checkout: workflow.checkout, mode: workflow.mode, launcherRole: workflow.launcher },
       credential: selected && dependencies.credentialConfigured(ctx) ? 'configured-resolution-unchecked' : 'not-configured',
       bindingLimit: budget ? budget.availableMicroUsd <= budget.session.availableMicroUsd ? 'monthly' : 'session' : 'unavailable',
-      coverage: selected ? `Pi ${VERSION} explicit write/edit controls and optional discovery; native reads are unchanged; preflighted provider Build children. Native shell is unchanged and makes no Jev request. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
+      coverage: selected ? `Pi ${VERSION} optional discovery; native reads, writes and edits are unchanged; preflighted provider Build children. Native shell is unchanged and makes no Jev request. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
       enrollment: selected ? 'standing-until-revocation-or-authority-change; historical-profiles-require-explicit-conversion' : 'none',
       nextActionCode: !selected ? 'none' : reason && inputRecovery(reason) ? 'correct-workflow-input' : reason === 'stale-file-policy' ? 'review-connection-rebind' : reason === 'legacy-reconciliation-required' ? 'reconcile-legacy' : reason === 'credential-unavailable' ? 'configure-credentials' : reason === 'monthly-budget' ? 'wait-month-reset' : reason ? 'inspect-reload' : 'read-or-screen-discovery',
-      nextAction: !selected ? 'Continue with native tools. Jev setup and file screening are optional.' : (reason && inputRecovery(reason)) || (reason === 'stale-file-policy' ? 'Operator: /jev inspect, then /file-screening rebind to review the current connection for ALL enrolled projects; reload after saving. Do not repeat setup or reset accounting.' : reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Native reads remain independent of this hold; Pi and OS permissions apply.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Native shell commands do not use Jev. No safety or universal relevance guarantee.') };
+      nextAction: !selected ? 'Continue with native tools. Jev setup and file screening are optional.' : (reason && inputRecovery(reason)) || (reason === 'stale-file-policy' ? 'Operator: /jev inspect, then /file-screening rebind to review the current connection for ALL enrolled projects; reload after saving. Do not repeat setup or reset accounting.' : reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'historical-profile-conversion-required' ? 'Operator: /file-screening convert; explicitly review all formerly timeboxed roots or revoke them' : reason === 'legacy-reconciliation-required' ? 'Operator: /file-screening legacy; quiesce old clients and preserve liabilities' : reason === 'credential-unavailable' ? 'Configure Pi-managed OpenRouter, then /jev inspect; never enter keys here' : reason === 'monthly-budget' ? 'Wait for reset or inspect liabilities; never delete accounting' : reason ? 'Operator: /file-screening inspect; correct authority/setup and reload. Native reads, writes and edits remain independent of this hold; Pi and OS permissions apply.' : 'Read known project targets directly; strongly prefer Jev for unfamiliar discovery. Native shell commands do not use Jev. No safety or universal relevance guarantee.') };
   }
   function present(ctx: ExtensionContext, notify = false) {
     const view = status(ctx);
@@ -190,27 +188,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       },
     });
   }
-  function installBoundary(ctx: ExtensionContext) {
+  function installBoundary() {
     const currentEpoch = epoch;
-    function registerMutation<T extends TSchema, D, S>(name: 'write' | 'edit', base: ToolDefinition<T, D | undefined, S>) {
-      const factory = name === 'write' ? createWriteToolDefinition : createEditToolDefinition;
-      pi.registerTool({ ...base, promptGuidelines: [...(base.promptGuidelines ?? []), enforcedRule], async execute(id, args, signal, _onUpdate, toolCtx) {
-        let operation;
-        try {
-          if (currentEpoch !== epoch) throw new PolicyDenied('stale-operation');
-          checkBoundary();
-          operation = guard!.begin(name, args, toolCtx.sessionManager.getSessionId(), toolCtx.cwd, signal);
-          const tool = factory(toolCtx.cwd, { operations: fileOperations(guard!, operation) });
-          await tool.execute(id, operation.input, operation.controller.signal, undefined, toolCtx);
-          return { ...textResult({ status: 'applied', pathId: hash(operation.input.path) }), details: undefined };
-        } catch (error) { const reason = safeCode(error); observe({ kind: 'blocked-write', reason }); return { ...textResult({ blocked: reason,
-          nextAction: inputRecovery(reason) ?? (reason === 'stale-file-policy' ? 'Operator: /jev inspect, then /file-screening rebind to review the current connection for ALL enrolled projects; reload after saving. Do not repeat setup or reset accounting.' : reason === 'repository-metadata-unavailable' ? repositoryRecovery : reason === 'workflow-checkout-unavailable' ? 'The selected checkout is no longer registered. Return to a valid checkout; the operator can explicitly select the intended workflow with --checkout /absolute/path. No new enrollment is needed.' :
-            reason === 'workflow-write-restricted' ? `The selected ${workflow.skill} workflow permits only its task reports/scratch and documented outputs in its selected checkout. Report implementation changes for Work; only the operator can change the workflow or checkout.` : 'Check the target and project exclusions. Secret files, live harness resources and operator state remain protected; .env.example and project skills are ordinary editable files for Engineer/Land.') }, true), details: undefined }; }
-        finally { operation?.close(); }
-      } });
-    }
-    registerMutation('write', createWriteToolDefinition(ctx.cwd));
-    registerMutation('edit', createEditToolDefinition(ctx.cwd));
     pi.registerTool({ name: 'file_locate', label: 'Locate exact structural target', description: 'Locate one code definition with symbol, OR one exact ATX Markdown heading with heading (title without # markers; spaces allowed). Never put a heading in symbol. Returns evidence, offset and maxLines; use only path/offset/limit with native read. No source. Authorized files up to 1 MiB; 32 shared lookups/session, unique match, at most 40 lines. No sibling or whole-file grant.',
       parameters: Type.Object({ path: Type.String(), need: Type.String(),
         symbol: Type.Optional(Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_]{2,127}$', description: 'Code identifier, not a Markdown heading; supply this OR heading' })),
@@ -268,7 +247,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         admission = new FileAdmission({ profiles, configuration: dependencies.configuration, sessionId, cwd: ctx.cwd, observe,
           nativeDocumentation: { readmePath: getReadmePath(), docsPath: getDocsPath(), examplesPath: getExamplesPath() } });
       } catch (error) { failure = safeCode(error); }
-      installBoundary(ctx);
+      installBoundary();
     }
     registerScreen(screening.availability() === 'available');
     if (selected) observe({ kind: 'session-bound', decision: failure ? 'held' : 'bound' });
@@ -294,8 +273,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   });
   hooks.on('tool_call', event => {
     if (!selected) return;
-    // File-profile restrictions cover mutations and optional discovery; reads and shell stay native.
-    if (event.toolName === 'bash' || event.toolName === 'read') return;
+    // Native file tools and shell stay independent of optional discovery authority.
+    if (['bash', 'read', 'write', 'edit'].includes(event.toolName)) return;
     const reason = event.parentToolCallId ? 'unsupported-nested-route' : !allowed.includes(event.toolName) ? 'unsupported-explicit-tool-route' : undefined;
     if (reason) { observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
       pathId: hash('path' in event.input && typeof event.input.path === 'string' ? resolve(context!.cwd, event.input.path) : `tool:${event.toolName}`),
@@ -310,7 +289,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       if (ctx.mode !== 'tui') return;
       try {
         workflow.select(action.slice(5).trim(), persistRole);
-        ctx.ui.notify(`Workflow role: ${workflow.role}. Existing file exclusions and workflow restrictions remain; shell is unchanged.`, 'info');
+        ctx.ui.notify(`Workflow role: ${workflow.role}. Discovery exclusions remain; native file tools and shell are unchanged.`, 'info');
       } catch { ctx.ui.notify('Role selection failed; previous authority retained. Use /file-screening role engineer, reviewer, qa or land.', 'warning'); }
       return;
     }
@@ -400,7 +379,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
         monthly: { microUsd: 10000000, timeZone: 'America/Chicago', rollover: false },
         credentialResolution: 'Pi-managed OpenRouter; no credential resolution during setup',
         connection: { endpoint: configuration.endpoint, evaluator: configuration.evaluator },
-        coverage: 'Direct project reads, optional Jev discovery and role-scoped file writes; native shell unchanged. Shell relevance bypass, scripts/descendants/plugins/SDK OS calls are outside interception. Not a sandbox.',
+        coverage: 'Optional Jev discovery; native reads, writes, edits and shell unchanged. Shell relevance bypass, scripts/descendants/plugins/SDK OS calls are outside interception. Not a sandbox.',
         sessionAllocation: 'At most 100000 micro-USD, further bounded by connection; 2688/request; shared account with file relevance, 8 questions/request, 2 outstanding, zero retries' }, null, 2))) return;
       if (!await ctx.ui.confirm('Save enrollment?', 'Save the reviewed standing authority until revoked or changed?')) return;
       profiles.save(candidate, resources); invalidate();

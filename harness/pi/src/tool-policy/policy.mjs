@@ -226,7 +226,7 @@ export class ToolPolicy {
       policySha256: this.#policy?.identity, tools: this.#policy?.tools ?? [], effects: this.#policy?.effects ?? [],
       roots: this.#policy?.roots.length ?? 0, protectedPaths: this.#policy?.protectedPaths.length ?? 0,
       scripts: this.#policy?.scripts.length ?? 0,
-      coverage: 'wrapped read/write/edit/bash; all alternate/helper/nested/child tools denied; !/!! denied',
+      coverage: 'wrapped bash; native read/write/edit unchanged; alternate/helper/child tools and nested bash denied; !/!! denied',
       limits: 'No Jev screening, filesystem/process isolation, subprocess containment or unload detection' };
   }
   #fresh() {

@@ -87,12 +87,15 @@ transport:{submit:async()=>{appendFileSync(${JSON.stringify(requests)},'request\
     assert.ok(picture.content.some(block => block.type === 'image'));
     await call('read', {path: 'missing-file.txt'}, false); // Native filesystem failures remain honest.
 
+    await call('write',{path:'planning/tickets/00083-TICKET.md',content:'status: in-progress'});
+    await call('edit',{path:'planning/tickets/00083-TICKET.md',edits:[{oldText:'in-progress',newText:'done'}]});
+    assert.equal(readFileSync(join(root, 'planning/tickets/00083-TICKET.md'), 'utf8'), 'status: done');
     await call('write',{path:'created.txt',content:'before'});
     await call('edit',{path:'created.txt',edits:[{oldText:'before',newText:'after'}]});
     assert.equal(readFileSync(join(root,'created.txt'),'utf8'),'after');
     if (enrolled) {
       await call('file_locate',{path:'source.txt',need:'Locate example',symbol:'example'});
-      await call('write',{path:join(directory,'forbidden.txt'),content:'denied'},false);
+      await call('write',{path:join(directory,'native.txt'),content:'native'});
     }
     assert.equal(prompts,0); assert.equal(readFileSync(requests,'utf8'),'');
     if (mode === 'enrolled-online') {
@@ -104,7 +107,9 @@ transport:{submit:async()=>{appendFileSync(${JSON.stringify(requests)},'request\
       profiles.revoke(root);
       await call('read', {path: 'build.log'});
       await call('read', {path: join(base, 'provider.md')});
-      await call('write', {path: 'held-write.txt', content: 'denied'}, false);
+      await call('write', {path: 'held-write.txt', content: 'native'});
+      await call('edit', {path: 'held-write.txt', edits:[{oldText:'native',newText:'still native'}]});
+      assert.equal(readFileSync(join(root, 'held-write.txt'), 'utf8'), 'still native');
     }
   } finally {await session.abort();session.dispose();}
 }
