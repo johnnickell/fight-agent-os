@@ -78,6 +78,13 @@ No reverse dependency is added to the new supplier. Exact policy-management Perm
 reference/transaction participation and budget/drift reconciliation remain held; allocation enables no runtime.
 Other dependencies and terminal-first scope are unchanged. TASK-00495 remains the separate naming chore.
 
+John subsequently approved [TASK-00498](../tasks/00498-TASK.md), under TICKET-00024, as the Repository access
+supplier and added it to TASK-00139's prerequisites. It owns explicit human/Agent access grant/revoke, not Start,
+configuration or installation policy. Start consumes current access independently of its operation Permission and
+coordinates access changes within its grant/claim/reservation/dispatch transaction. TASK-00496 remains independent
+of access-management delivery; no reverse dependency on Start, Teams or the editor is introduced. Working concurrency
+and retry behavior belong to normal implementation, not a new preliminary qualification phase.
+
 ## Pi Durable integration direction — 2026-10-13
 
 John requested this bounded refinement of existing Harness and execution work after reviewing Pi Durable:

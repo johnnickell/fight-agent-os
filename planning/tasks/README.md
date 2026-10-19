@@ -499,4 +499,5 @@
 | [TASK-00494](00494-TASK.md) | Read installed Pi examples through the authorized file reader | done | — |
 | [TASK-00495](00495-TASK.md) | Standardize Pi extension and integration naming | ready-for-agent | — |
 | [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | needs-info | [TICKET-00032](../tickets/00032-TICKET.md) |
+| [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
 <!-- /planning:records -->

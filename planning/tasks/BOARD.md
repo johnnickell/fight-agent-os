@@ -42,7 +42,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md) | — |
+| 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md), [TASK-00498](00498-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00377](00377-TASK.md) | — |
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
@@ -75,7 +75,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 75 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00077](00077-TASK.md) | — |
 | 76 | [TASK-00079](00079-TASK.md) | Confirm and designate checkout and worktree links | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00073](00073-TASK.md), [TASK-00078](00078-TASK.md) | — |
 | 77 | [TASK-00080](00080-TASK.md) | Complete repository reconciliation and lifecycle operations | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00079](00079-TASK.md) | — |
-| 78 | [TASK-00081](00081-TASK.md) | Version repository configuration and rollback | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00080](00080-TASK.md) | — |
+| 78 | [TASK-00081](00081-TASK.md) | Version repository configuration and rollback | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00080](00080-TASK.md), [TASK-00498](00498-TASK.md) | — |
 | 79 | [TASK-00082](00082-TASK.md) | Resolve deterministic repository context snapshots | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00081](00081-TASK.md) | — |
 | 80 | [TASK-00083](00083-TASK.md) | Record narrowing context choices | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00082](00082-TASK.md) | — |
 | 81 | [TASK-00084](00084-TASK.md) | Enforce snapshot drift and unavailable-authority boundaries | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00083](00083-TASK.md) | — |
@@ -320,6 +320,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00480](00480-TASK.md) | Export selected requester-owned restored diagnostics | [TICKET-00116 — Export and download authorized diagnostic material](../tickets/00116-TICKET.md) | ready-for-agent | [TASK-00478](00478-TASK.md), [TASK-00474](00474-TASK.md), [TASK-00475](00475-TASK.md), [TASK-00476](00476-TASK.md) | — |
 | — | [TASK-00486](00486-TASK.md) | Inspect and recover observability through the existing operator guide | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | ready-for-agent | [TASK-00074](00074-TASK.md), [TASK-00075](00075-TASK.md), [TASK-00456](00456-TASK.md), [TASK-00460](00460-TASK.md), [TASK-00469](00469-TASK.md), [TASK-00472](00472-TASK.md), [TASK-00473](00473-TASK.md), [TASK-00477](00477-TASK.md) | — |
 | — | [TASK-00487](00487-TASK.md) | Complete the supported live-and-archived operator journey | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | ready-for-agent | [TASK-00486](00486-TASK.md), [TASK-00466](00466-TASK.md), [TASK-00480](00480-TASK.md) | — |
+| — | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00078](00078-TASK.md) | — |
 
 ## Needs Info
 

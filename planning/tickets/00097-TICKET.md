@@ -104,16 +104,20 @@ access, all repositories for Super Admin and the initial Workspace's repositorie
 Use existing Role assignment/removal; separate Workspace assignment is deferred until multi-workspace functionality,
 not a new administrative-membership type or current blocker. Operation Permissions remain separate. Humans and Agents may read/revise/restore Repository configuration when granted the
 required rights and access; likely read-only Agent assignments are not a capability or assignment restriction.
-No additional principal-type gate is introduced. The Repository access-grant writer, Workspace Admin Role integration,
-authenticated console admission, compatible lock order, fixed stage schema, instruction composition and actual
-shared publication/admission integration remain held. The
-[ownership map](../tasks/00496-TASK.md#engineering-investigation-repository-access-and-administrator-role-owners)
-traces existing Role/Permission and Team writers and identifies Repository access grant/revoke as the remaining
-unallocated writer. Workspace Admin reuses the Role path; Workspace assignment waits for multi-workspace work.
-Neither identity nor configuration silently owns access grants; no new TASK or prerequisite edge is allocated here. Reconcile existing start-override
-and drift contracts with the approved narrowing/pinning rules before readiness. Preserve `needs-info`, authored
-priorities, other dependencies and all host/runtime/authority qualification holds. No new Wayfinder map, v2 TASKs,
-implementation or operational grant follows from this allocation.
+No additional principal-type gate is introduced. The approved [TASK-00498](../tasks/00498-TASK.md) now owns explicit
+Repository access grant/revoke and Workspace Admin integration through the existing catalog/Role assignment owners.
+Its separate `ADMIN_SAFE` read/manage access Permissions imply no Role defaults or human/Agent grants. TASK-00081
+and TASK-00139 gain its approved prerequisite; this editor consumes through them. Installation policy remains an
+independent owner, with no reverse dependency on the editor, Start or completed Agent delivery.
+
+The [ownership map](../tasks/00496-TASK.md#engineering-investigation-repository-access-and-administrator-role-owners)
+now distinguishes that supplier from existing Role/Permission and Team writers. Workspace assignment remains
+deferred. `ROLE_REPOSITORY_ADMIN` and `ROLE_DEVELOPER` are
+[human Roles](../../docs/UBIQUITOUS_LANGUAGE.md#human-roles), not Agent templates or implicit access grants.
+Authenticated admission, compatible transactions and audit must work as part of implementation; John rejected an
+additional qualification phase. Fixed-stage schema, instruction composition, explicit policy memberships and the
+budget/drift reconciliation remain planning work. Preserve `needs-info`, authored priorities and existing unrelated
+runtime holds. No new Wayfinder map, v2 decomposition, source implementation or operational grant follows.
 
 ## Use cases
 
