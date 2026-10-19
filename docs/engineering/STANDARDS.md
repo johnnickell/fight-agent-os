@@ -122,6 +122,26 @@ separate in `client/styles/`. That document owns composition order, theme-extens
 and read-only check versus explicit fix/install commands. Preserve runtime behavior and accessibility when
 changing organization or tooling; verify the production shell and catalog through their actual builds/browsers.
 
+## Pi and TypeScript module naming
+
+Name Pi modules for the capability they own, using kebab-case filenames. Reserve `-extension.ts` for entry
+points loaded by the Pi package manifest: `header-extension.ts`, `jev-extension.ts` and
+`tool-policy-extension.ts`. Use `-integration.ts` for an internal SDK registration boundary when a suffix
+clarifies its role: `file-screening-integration.ts` is installed by the Jev adapter, not loaded by Pi itself.
+Reusable logic keeps capability names such as `header.mjs`, `file-admission.mjs` and `workflow-access.mjs`.
+
+Use camelCase functions, PascalCase exported classes/types, and `install<Capability>` registration functions
+(`installHeader`, `installJev`, `installFileScreening`, `installToolPolicy`). Keep a provider name when the
+module actually adapts that provider, as `jev-extension.ts` does. Avoid generic `extension`, `manager`, `utils`
+or `service` names that hide responsibility. Apply capability ownership without importing PHP namespaces or
+class boilerplate; do not add wrappers or directories solely for uniformity.
+
+When renaming, inventory package and explicit-path loading plus exported callers first. Migrate owned imports,
+declarations, tests/probes, typecheck inputs, package contents and runnable documentation together. Document
+removed paths and full-process restart instructions; retain a compatibility export only for a demonstrated
+supported caller, outside the manifest and with duplicate-registration qualification. Preserve public command/tool
+IDs, operator state and historical evidence. See the [package migration instructions](../../harness/pi/README.md#module-path-migration).
+
 ## PHP and naming
 
 Prefer `final` classes and readonly properties, with Doctrine entity exceptions; make value objects readonly. Use constructor injection, strict types, guard clauses, and Fight helpers where they improve clarity. Name commands, queries, and events with intent or fact (`RegisterUser`, `GetUserById`, `UserRegistered`) and name their handlers with `Handler`.
