@@ -87,7 +87,7 @@ not imported into a fresh routine execution allowance; the coordinator reconcile
 ## Project reads, discovery and workflow roles
 
 Native Pi `read` is independent of this profile, including when enrolled, revoked, misconfigured or held.
-TASK-00498 removes the read replacement and read-blocking hooks from both harness profiles. Text, images,
+TASK-00499 removes the read replacement and read-blocking hooks from both harness profiles. Text, images,
 terminal-formatted logs, links and cross-project instructions use native path/range/format behavior and OS
 permissions. No enrollment, instruction witness, receipt or special exception is needed. Native errors remain
 honest errors. Use the [shared rule](FILE_SCREENING_RULE.md) for direct reads and optional discovery.

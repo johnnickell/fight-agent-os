@@ -2,7 +2,7 @@
 
 **TASK-00309 implementation candidate:** the [enrolled profile](FILE_SCREENING_PROFILE.md) adds operator preview,
 automatic actual-session allocation, shared monthly accounting, bounded optional discovery and role-scoped mutations.
-Native `read` is not intercepted by either harness profile (TASK-00498). Discovery refusals and receipts never
+Native `read` is not intercepted by either harness profile (TASK-00499). Discovery refusals and receipts never
 control native reading; Pi and operating-system permissions govern that operation.
 The amended standing profile keeps ordinary native shell without Jev command screening or confirmation; shell can
 bypass relevance admission and is not OS-confined. Use normal Pi/provider-owned Build, not a replacement executor.

@@ -16,7 +16,7 @@ This includes logs, reports, images, project instructions and cross-project prov
 returned truncation/continuation guidance. Do not supply harness receipts, `need`, `evidence` or `exception`
 arguments to native `read`; these are not prerequisites for reading.
 
-TASK-00498 removes native-read interception from both the enrolled profile and the opt-in deterministic
+TASK-00499 removes native-read interception from both the enrolled profile and the opt-in deterministic
 policy. The harness does not veto native reads by root, extension, control bytes, link type, instruction
 witness, workflow role, enrollment, budget or integrity state. Pi and operating-system permissions still apply;
 a missing file or native runtime error remains an error. Read permission does not authorize disclosure,

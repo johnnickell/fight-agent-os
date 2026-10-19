@@ -1,6 +1,6 @@
 # Deterministic Pi tool policy
 
-TASK-00498 removes native `read` interception from this profile. Reads remain visible and use Pi/OS permissions
+TASK-00499 removes native `read` interception from this profile. Reads remain visible and use Pi/OS permissions
 even when this policy is missing, invalid, held or does not list `read`. The policy below governs writes, edits,
 approved scripts and other tool routes. Historical read-denial qualification records describe earlier behavior.
 
