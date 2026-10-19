@@ -78,7 +78,9 @@ PY
 
 Do not paste `.env`, `docker compose config`, messages, SMTP debug output or activation links into transcripts.
 Compose consumes `APP_ENV` (default `development`); `APP_DEBUG` remains unwired. `null` is the default retryable
-no-send provider; `memory` is simulation only. `catcher` supports **activation invitations only**. Other credential
+no-send provider; `memory` is simulation only. `catcher` supports activation invitations and
+[password-reset mail](PASSWORD_RESET_EMAIL.md). Catcher mode now also requires `APP_PASSWORD_RESET_ORIGIN` and
+`APP_PASSWORD_RESET_PATH`; configure them before boot even when sending invitations only. Other credential
 purposes remain retryable and unsent until their own mapping is implemented.
 
 ## Start, send, run, inspect, clean
@@ -144,8 +146,9 @@ is a separate destructive decision, never part of mailbox cleanup. Other Compose
 
 ## Contracts and limits
 
-The unchanged Composer lock selects Access Control **v0.5.0**, source/lock reference
-`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`, and Common **v1.3.0**,
+TASK-00040 originally qualified Access Control **v0.5.0** (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`).
+The current unchanged Composer lock selects Access Control **v0.6.0**, source/lock reference
+`dc4621d13851dd08cdf85ed9715ead24b1051e80`, and Common **v1.3.0**,
 `7de6cad6e8a9752973ad9f8e27e285b0c1510582`. The public invocation provides only purpose, destination,
 credential and stable delivery-generation ID: **no expiry timestamp, user ID or claim token**. The fixed
 `invitation-v1` template states seven days **from issuance**, matching locked `InvitePendingUser`, rather than
@@ -153,7 +156,7 @@ inventing an exact expiry or seven days from arrival. An altered issuance lifeti
 contract/template change. The future activation consumer must accept this credential-only fragment or qualify
 additional required routing data; no unknown package field is inferred here.
 
-Canonical URL validation accepts lowercase ASCII DNS names (or `localhost`), HTTPS, an optional canonical numeric
+Shared `CanonicalCredentialLink` URL validation accepts lowercase ASCII DNS names (or `localhost`), HTTPS, an optional canonical numeric
 port 1–65535, and a simple absolute path of alphanumeric/underscore/hyphen segments. It rejects userinfo, IP/alternate
 numeric hosts, Unicode/uppercase/trailing-dot hosts, whitespace, query/fragment, percent escapes, dot segments,
 backslashes and double/trailing path slashes (root `/` is allowed). No request headers or recipient input select

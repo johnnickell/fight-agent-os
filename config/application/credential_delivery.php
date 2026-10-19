@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-use App\Adapter\CredentialDelivery\CanonicalActivationLink;
+use App\Adapter\CredentialDelivery\CanonicalCredentialLink;
+use App\Adapter\CredentialDelivery\CredentialMailProvider;
 use App\Adapter\CredentialDelivery\InMemoryCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
+use App\Adapter\CredentialDelivery\PasswordResetMailProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\CredentialDelivery\SystemDeliveryClock;
 use App\Adapter\Mail\CatcherMailDelivery;
@@ -14,6 +16,7 @@ use Fight\AccessControl\Application\AccessControl\ActivationGrant\Service\Invita
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\PasswordResetGrant\Service\PasswordResetDeliveryCipher;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Application\Templating\TemplateEngine;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
@@ -36,10 +39,16 @@ return static function (Container $container): void {
         return $cipher('password_reset');
     });
     $container->set(Clock::class, static fn(): Clock => new SystemDeliveryClock());
-    $container->set(CanonicalActivationLink::class, static fn(): CanonicalActivationLink => new CanonicalActivationLink(
-        getenv('APP_ACTIVATION_ORIGIN') ?: '',
-        getenv('APP_ACTIVATION_PATH') ?: ''
-    ));
+    $container->set('credential-delivery.activation-link', static fn(): CanonicalCredentialLink =>
+        new CanonicalCredentialLink(
+            getenv('APP_ACTIVATION_ORIGIN') ?: '',
+            getenv('APP_ACTIVATION_PATH') ?: ''
+        ));
+    $container->set('credential-delivery.password-reset-link', static fn(): CanonicalCredentialLink =>
+        new CanonicalCredentialLink(
+            getenv('APP_PASSWORD_RESET_ORIGIN') ?: '',
+            getenv('APP_PASSWORD_RESET_PATH') ?: ''
+        ));
     $container->set(SmtpTransport::class, static function (): SmtpTransport {
         // This fixed, private Compose endpoint is not a user-selectable DSN or production fallback.
         $transport = new EsmtpTransport('mailcatcher', 1025, false);
@@ -56,9 +65,21 @@ return static function (Container $container): void {
     ));
     $container->set(InvitationMailProvider::class, static fn(Container $c): InvitationMailProvider =>
         new InvitationMailProvider(
-            $c->get(CanonicalActivationLink::class),
+            $c->get('credential-delivery.activation-link'),
             $c->get(TemplateEngine::class),
             $c->get(MailDelivery::class)
+        ));
+    $container->set(PasswordResetMailProvider::class, static fn(Container $c): PasswordResetMailProvider =>
+        new PasswordResetMailProvider(
+            $c->get(QueryBus::class),
+            $c->get('credential-delivery.password-reset-link'),
+            $c->get(TemplateEngine::class),
+            $c->get(MailDelivery::class)
+        ));
+    $container->set(CredentialMailProvider::class, static fn(Container $c): CredentialMailProvider =>
+        new CredentialMailProvider(
+            $c->get(InvitationMailProvider::class),
+            $c->get(PasswordResetMailProvider::class)
         ));
     $container->set(CredentialDeliveryProvider::class, static function (Container $c) use (
         $environment,
@@ -67,14 +88,15 @@ return static function (Container $container): void {
         if (!in_array($environment, ['test', 'development', 'local'], true) || $selection === 'catcher') {
             // Validate required secure inputs before a delivery-enabled runtime can mutate work.
             $c->get(InvitationDeliveryCipher::class);
-            $c->get(CanonicalActivationLink::class);
+            $c->get('credential-delivery.activation-link');
+            $c->get('credential-delivery.password-reset-link');
         }
         if (!in_array($environment, ['test', 'development', 'local'], true)) {
             throw new RuntimeException('A real credential delivery provider is required in this environment.');
         }
 
         return match ($selection) {
-            'catcher' => $c->get(InvitationMailProvider::class),
+            'catcher' => $c->get(CredentialMailProvider::class),
             'null' => new NullCredentialDeliveryProvider(),
             'memory' => new InMemoryCredentialDeliveryProvider(),
             default => throw new RuntimeException('Unsupported local credential delivery adapter.')

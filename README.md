@@ -97,8 +97,10 @@ Direct Fight Access Control invitation/reset delivery handlers now require an in
 for recoverable encrypted material. Keep it external to source control and preserve it while work is outstanding.
 Local/test delivery defaults to a retryable null provider; an in-memory provider is opt-in. Invitation email can
 explicitly use the disposable loopback Mailpit catcher with `APP_CREDENTIAL_DELIVERY_ADAPTER=catcher` and validated
-`APP_ACTIVATION_ORIGIN`/`APP_ACTIVATION_PATH`; see [local invitation email](docs/engineering/INVITATION_EMAIL.md)
-for exact `.env`, start/send/recovery/cleanup commands. No real inbox or activation UI is supplied.
+`APP_ACTIVATION_ORIGIN`/`APP_ACTIVATION_PATH`, plus `APP_PASSWORD_RESET_ORIGIN`/`APP_PASSWORD_RESET_PATH`; see
+[local invitation email](docs/engineering/INVITATION_EMAIL.md) and
+[password-reset email](docs/engineering/PASSWORD_RESET_EMAIL.md) for exact `.env`, routing/fragment and
+start/send/recovery/cleanup contracts. No real inbox or activation/reset UI is supplied.
 A bounded internal
 `./bin/credential-delivery run --internal` runner, key-free `expire --internal` cleanup and safe generation status
 command are available. See [credential recovery](docs/engineering/CREDENTIAL_RECOVERY.md) for the v0.5.0 adoption
@@ -120,7 +122,7 @@ this is additive/idempotent and excludes authoritative Super Admin. Role confirm
 with disclosed crash/uncertainty boundaries. TASK-00037 implementation awaits fresh independent Review/QA;
 the earlier alternate-policy probe is conditional history, not a shipped fixed-catalog prerequisite.
 This is not bootstrap/public registration; null/memory adapters send no email, while the opt-in catcher stores
-local test invitations only.
+local test invitation/reset mail only.
 The separate `./bin/console user:bootstrap-super-admin --internal --confirm-bootstrap --operator=OPERATOR_UUID --email=person@example.test`
 checks authoritative Super Admin presence and refuses if one exists or lookup fails. Run it manually, one operator
 at a time; no concurrent admission guarantee is provided. Another manual attempt is allowed after partial/failure

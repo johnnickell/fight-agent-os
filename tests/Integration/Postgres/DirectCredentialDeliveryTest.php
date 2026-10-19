@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
-use App\Adapter\CredentialDelivery\CanonicalActivationLink;
+use App\Adapter\CredentialDelivery\CanonicalCredentialLink;
 use App\Adapter\CredentialDelivery\InMemoryCredentialDeliveryProvider;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
+use App\Adapter\CredentialDelivery\PasswordResetMailProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Application\CredentialDelivery\ExpireCredentialDeliveryPages;
@@ -580,7 +581,7 @@ final class DirectCredentialDeliveryTest extends TestCase
             return MailOutcome::DELIVERED;
         });
         $provider = new InvitationMailProvider(
-            new CanonicalActivationLink('https://example.test', '/activate'),
+            new CanonicalCredentialLink('https://example.test', '/activate'),
             $this->container->get(TemplateEngine::class),
             $mail
         );
@@ -662,7 +663,7 @@ final class DirectCredentialDeliveryTest extends TestCase
             return MailOutcome::DELIVERED;
         });
         $provider = new InvitationMailProvider(
-            new CanonicalActivationLink('https://example.test', '/activate'),
+            new CanonicalCredentialLink('https://example.test', '/activate'),
             $this->container->get(TemplateEngine::class),
             $mail
         );
@@ -1208,6 +1209,196 @@ SQL);
         self::assertCount(1, $work);
         self::assertSame($eligible->getDelivery()->getId()->toString(), $work[0]->getDeliveryId()->toString());
         self::assertSame($this->userId->toString(), $work[0]->getUserId()->toString());
+    }
+
+    /**
+     * Qualifies exact public reset routing across terminal history without destination or latest-user inference
+     */
+    public function testResetRoutingQueryPreservesExactHistoricalIdentity(): void
+    {
+        $old = $this->seed('password_reset');
+        $oldId = $old->getDelivery()->getId()->toString();
+        $query = new FindCredentialDeliveryStatus('password_reset', $oldId);
+        $before = $this->queries()->fetch($query);
+        self::assertSame('password_reset', $before->getPurpose());
+        self::assertSame($oldId, $before->getDeliveryId());
+        self::assertTrue($this->userId->equals($before->getUserId()));
+        $repo = $this->container->get(PasswordResetGrantRepository::class);
+        $new = $this->issue('password_reset');
+        self::assertTrue($this->container->get(TransactionalUnitOfWork::class)->commitTransactional(
+            fn(): bool => $repo->replaceWithSuccessor($old, $old->revoke($this->now), $new)
+        ));
+        $after = $this->queries()->fetch($query);
+        self::assertSame($oldId, $after->getDeliveryId());
+        self::assertTrue($before->getUserId()->equals($after->getUserId()));
+        self::assertSame('invalidated', $after->getStatus()->value);
+        $latestId = $repo->getLatestByUserId($this->userId)->getDelivery()->getId()->toString();
+        self::assertSame($new->getDelivery()->getId()->toString(), $latestId);
+        self::assertNull($this->queries()->fetch(new FindCredentialDeliveryStatus('activation', $oldId)));
+        self::assertNull($this->queries()->fetch(new FindCredentialDeliveryStatus(
+            'password_reset',
+            \Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId::generate()->toString()
+        )));
+        $safe = json_encode($after->toArray(), JSON_THROW_ON_ERROR);
+        $markers = [
+            $old->getCredentialHash(), $old->getDelivery()->getEncryptedMaterial()->reveal(),
+            'delivery@example.test', 'https://', 'claim_token'
+        ];
+        foreach ($markers as $marker) {
+            self::assertFalse(str_contains($safe, $marker));
+        }
+    }
+
+    /**
+     * Recovers mapped reset mail after transient materialization or provider-success outcome failure
+     */
+    #[DataProvider('resetMailCrashPoints')]
+    public function testResetMailRecoveryRetainsIdentityAndDestroysCiphertext(bool $beforeMail): void
+    {
+        $grant = $this->seed('password_reset');
+        $ids = [];
+        $digests = [];
+        $routingChecks = [];
+        $mail = $this->createMock(MailDelivery::class);
+        $mail->method('deliver')->willReturnCallback(function (MailMessage $message) use (
+            $beforeMail,
+            &$ids,
+            &$digests,
+            &$routingChecks
+        ): MailOutcome {
+            $ids[] = $message->idempotencyId;
+            [$destination, , $text, $html] = $message->content();
+            $routingChecks[] = !$this->connection->isTransactionActive()
+                && $destination->toString() === 'delivery@example.test'
+                && str_contains($text, '#user_id='.$this->userId->toString().'&credential=')
+                && str_contains($html, '#user_id='.$this->userId->toString().'&amp;credential=');
+            $digests[] = hash('sha256', $text.$html);
+            if (count($ids) === 1) {
+                $this->connection->executeStatement(
+                    'ALTER TABLE audit_evidence ADD CONSTRAINT delivery_test_abort CHECK (false) NOT VALID'
+                );
+                if ($beforeMail) {
+                    throw new \RuntimeException('Controlled interruption before external effect.');
+                }
+            }
+
+            return MailOutcome::DELIVERED;
+        });
+        $provider = new PasswordResetMailProvider(
+            $this->queries(),
+            new CanonicalCredentialLink('https://example.test', '/reset-password'),
+            $this->container->get(TemplateEngine::class),
+            $mail
+        );
+        try {
+            $this->recover($this->freshWorker($provider))->run(1, 1);
+            self::fail('Outcome transaction must fail after the controlled interruption.');
+        } catch (DriverException) {
+            self::assertSame('claimed', $this->row('password_reset')['delivery_status']);
+            self::assertNotNull($this->row('password_reset')['delivery_ciphertext']);
+            self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+        } finally {
+            $this->connection->executeStatement('ALTER TABLE audit_evidence DROP CONSTRAINT delivery_test_abort');
+        }
+        $this->container->get(Clock::class)->time = $this->now->modify('+5 minutes');
+        self::assertSame(1, $this->recover($this->freshWorker($provider))->run(1, 1)['dispatched']);
+        self::assertSame([true, true], $routingChecks);
+        self::assertSame(array_fill(0, 2, $grant->getDelivery()->getId()->toString()), $ids);
+        self::assertSame($digests[0], $digests[1]);
+        self::assertSame('delivered', $this->row('password_reset')['delivery_status']);
+        self::assertNull($this->row('password_reset')['delivery_ciphertext']);
+        self::assertSame(2, (int) $this->row('password_reset')['delivery_attempt_count']);
+    }
+
+    /**
+     * Supplies the two accepted at-least-once interruption windows
+     *
+     * @return iterable<string, array{bool}>
+     */
+    public static function resetMailCrashPoints(): iterable
+    {
+        yield 'after rendering before mail' => [true];
+        yield 'provider success before outcome commit' => [false];
+    }
+
+    /**
+     * Keeps immutable historical routing during succession without mistaking status for a claim fence
+     */
+    #[DataProvider('resetRoutingRacePoints')]
+    public function testResetSuccessorAroundRoutingCannotRedirectMailOrCommitStaleOutcome(bool $beforeLookup): void
+    {
+        $old = $this->seed('password_reset');
+        $new = $this->issue('password_reset');
+        $realQueries = $this->queries();
+        $other = $this->freshWorker(new NullCredentialDeliveryProvider());
+        $repo = $other->get(PasswordResetGrantRepository::class);
+        $replace = function () use ($repo, $other, $new): bool {
+            $claimed = $repo->getLatestByUserId($this->userId);
+
+            return $other->get(TransactionalUnitOfWork::class)->commitTransactional(
+                fn(): bool => $repo->replaceWithSuccessor($claimed, $claimed->revoke($this->now), $new)
+            );
+        };
+        $queries = $this->createMock(QueryBus::class);
+        $replaced = false;
+        $queries->method('fetch')->willReturnCallback(static function (FindCredentialDeliveryStatus $query) use (
+            $realQueries,
+            $replace,
+            $beforeLookup,
+            &$replaced
+        ) {
+            if ($beforeLookup) {
+                $replaced = $replace();
+            }
+            $view = $realQueries->fetch($query);
+            if (!$beforeLookup) {
+                $replaced = $replace();
+            }
+
+            return $view;
+        });
+        $observations = [];
+        $mail = $this->createMock(MailDelivery::class);
+        $mail->method('deliver')->willReturnCallback(function (MailMessage $message) use (
+            $old,
+            &$observations
+        ): MailOutcome {
+            [$destination, , $text] = $message->content();
+            $observations[] = [
+                $message->idempotencyId === $old->getDelivery()->getId()->toString(),
+                $destination->toString() === 'delivery@example.test',
+                str_contains($text, '#user_id='.$this->userId->toString().'&credential=')
+            ];
+
+            return MailOutcome::DELIVERED;
+        });
+        $provider = new PasswordResetMailProvider(
+            $queries,
+            new CanonicalCredentialLink('https://example.test', '/reset-password'),
+            $this->container->get(TemplateEngine::class),
+            $mail
+        );
+        $result = $this->recover($this->freshWorker($provider))->run(1, 1);
+        self::assertTrue($replaced);
+        self::assertSame([[true, true, true]], $observations);
+        self::assertSame(1, $result['contended']);
+        $oldRow = $this->rowForDelivery('password_reset', $old->getDelivery()->getId()->toString());
+        self::assertSame('invalidated', $oldRow['delivery_status']);
+        $successor = $this->rowForDelivery('password_reset', $new->getDelivery()->getId()->toString());
+        self::assertSame('pending', $successor['delivery_status']);
+        self::assertSame(0, (int) $successor['delivery_attempt_count']);
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+    }
+
+    /**
+     * Supplies succession immediately before and after the secret-free lookup
+     *
+     * @return iterable<string, array{bool}>
+     */
+    public static function resetRoutingRacePoints(): iterable
+    {
+        yield 'before lookup' => [true];
+        yield 'after lookup' => [false];
     }
 
     /**

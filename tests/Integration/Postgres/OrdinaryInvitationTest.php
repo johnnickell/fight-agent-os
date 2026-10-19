@@ -6,7 +6,7 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Console\InviteUserCommand;
 use App\Adapter\Console\SafeConsoleApplication;
-use App\Adapter\CredentialDelivery\CanonicalActivationLink;
+use App\Adapter\CredentialDelivery\CanonicalCredentialLink;
 use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Adapter\CredentialDelivery\SodiumCredentialDeliveryCipher;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
@@ -253,7 +253,7 @@ SQL
             return count($observations) === 1 ? MailOutcome::RETRYABLE_FAILURE : MailOutcome::DELIVERED;
         });
         $provider = new InvitationMailProvider(
-            new CanonicalActivationLink('https://example.test', '/activate'),
+            new CanonicalCredentialLink('https://example.test', '/activate'),
             $this->container->get(TemplateEngine::class),
             $mail
         );
