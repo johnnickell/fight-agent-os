@@ -1,5 +1,9 @@
 # Deterministic Pi tool policy
 
+TASK-00498 removes native `read` interception from this profile. Reads remain visible and use Pi/OS permissions
+even when this policy is missing, invalid, held or does not list `read`. The policy below governs writes, edits,
+approved scripts and other tool routes. Historical read-denial qualification records describe earlier behavior.
+
 This opt-in profile is **deterministic protection only**. It needs no Jev credential and performs no semantic
 screening. It is not a managed Workflow grant, qualified sandbox, filesystem/process isolation or autonomous
 launcher. Installing the package without selecting a policy leaves ordinary sessions unchanged.
@@ -57,7 +61,7 @@ sessions that require unsupported tools, unrestricted shell or child launch.
 Every top-level field is required; unknown fields, unsupported tools/effects and invalid bounds fail activation.
 At most 16 roots, 64 protected paths, 4 tools, 3 effects and 32 script entries are accepted; the policy file is at
 most 64 KiB. Roots must already be directories and cannot be `/`. Symlinked configured roots are pinned to their
-initial canonical destination and rechecked. `read` needs effect `read`; `write` needs `write`; `edit` needs both `read` and `write`.
+initial canonical destination and rechecked. The legacy `read` tool entry is accepted but does not restrict native reads; `write` needs `write`; `edit` needs both `read` and `write`.
 No delete, generic command, network, provider or child-launch permission exists in this schema. Effect classes
 admit a declared operation; they do not constrain what trusted script code does internally.
 
@@ -88,8 +92,8 @@ retains its original runtime identity; this compatibility check does not rerun p
 ## Paths and protected resources
 
 The policy directory, selected policy, Harness source directory, Pi installation, Pi agent directory, common SSH/
-AWS/GnuPG/macOS Keychain locations, and every approved script are protected from direct Agent file access.
-Configured protected paths deny both reads and writes, including new descendants and symlink aliases. Components
+AWS/GnuPG/macOS Keychain locations, and every approved script are protected from Agent file mutations.
+Configured protected paths deny mutations, including new descendants and symlink aliases. Components
 named `.git`, `.pi`, `.ssh`, `.aws`, `.gnupg`, `auth.json`, or `.env`/`.env.*` are reserved anywhere in a path.
 Other credentials/resources need explicit `protectedPaths`; this is not semantic credential detection. Choose
 minimal roots rather than granting an entire home directory. Pi's own credential use is outside file-tool access.
@@ -104,9 +108,8 @@ inert directory there; the operator may remove that stopped session's directory.
 fail closed. Existing distinct names on case-sensitive APFS remain distinct, while equivalent Unicode spellings and
 nonexistent protected ancestors remain protected. Internal symlinks can reach allowed regular files; out-of-root and protected destinations, dangling symlinks, hardlinked
 files and special files are denied. Tilde, leading `@`, percent encodings, backslashes and control characters are
-rejected rather than interpreted ambiguously. Images retain Pi's renderer through checked PNG/JPEG/GIF/WebP/BMP
-reads. Reads/edits and existing write targets are limited to 1 MiB; new write content and aggregate edit inputs
-also have a 1 MiB ceiling. Edits accept 1–128 replacements. Read offset/limit must be positive integers.
+rejected rather than interpreted ambiguously. Native reads/images retain Pi behavior. Edits and existing write targets are limited to 1 MiB; new write content and aggregate edit inputs
+also have a 1 MiB ceiling. Edits accept 1–128 replacements.
 
 Execution wrappers clone final arguments **after every `tool_call` hook**, validate types again, and construct
 fresh tool definitions with checked filesystem operations. Every access/read/mkdir/write rechecks session,
@@ -163,11 +166,12 @@ is required; do not broaden this policy to emulate it.
 
 | Route | Treatment in the selected profile |
 |---|---|
-| Pi `read`, `write`, `edit`, `bash` Agent calls | Execution-time wrappers and fresh per-effect admission |
+| Pi `read` calls, including nested reads | Native Pi behavior; no harness admission or denial |
+| Pi `write`, `edit`, `bash` Agent calls | Execution-time wrappers and fresh per-effect admission |
 | Later argument-changing `tool_call` hook | Final wrapper checks changed arguments, not the earlier proposal |
 | `grep`, `find`, `ls`, `powershell`, custom/MCP tools | Inactive by default and denied by name before execution if enabled/called |
 | `codemode`, tool search, `jev_read_file`, helpers, child/sub-agent launch | Agent tool execution denied; trusted registration/startup/hooks are outside this boundary |
-| `ctx.executeTool` nested calls | Denied by `parentToolCallId`, including nested calls to the four wrapped names |
+| `ctx.executeTool` nested calls | Denied by `parentToolCallId`, except native `read`; mutations and approved scripts remain wrapped |
 | TUI `!` and `!!`, built-in RPC `bash` dispatch | `user_bash` handled with a denial result; no local shell fallthrough |
 | Trusted extensions, commands, SDK host calls, external editors, startup resources, `@file` prompt attachment | **Outside Agent tool coverage**, not isolated or intercepted by this policy |
 

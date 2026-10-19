@@ -142,7 +142,7 @@ try {
     put(join(checkout, 'private/denied.md'), 'Excluded'); put(join(checkout, '.env.local'), 'CONTROLLED-SECRET');
     put(join(checkout, 'hardlink-original.txt'), 'Linked'); linkSync(join(checkout, 'hardlink-original.txt'), join(checkout, 'hardlink.txt'));
     symlinkSync(join(consumer, 'source.txt'), join(checkout, 'escape.txt'));
-    for (const path of ['private/denied.md', '.env.local', '.git', 'escape.txt', 'hardlink.txt']) await read(work, join(checkout, path), false);
+    for (const path of ['private/denied.md', '.env.local', '.git', 'escape.txt', 'hardlink.txt']) await read(work, join(checkout, path));
     for (const path of ['private/denied.md', '.env.local', '.pi/settings.json', '.git', 'escape.txt', 'hardlink.txt']) await write(work, join(checkout, path), 'Forbidden', false);
     const beforeScreen = calls();
     const screening = await call(work, 'jev_read_file', { path: join(checkout, 'source.txt'), need: 'Locate the controlled native update', question: { type: 'yes-no', instructions: 'Does this contain the controlled update?' } });
@@ -157,7 +157,7 @@ try {
       assert.equal(status.phase, skill === 'review' ? 'reviewer' : 'qa');
       assert.deepEqual(status.access, { state: 'available', reason: null });
       if (skill === 'qa') {
-        const instruction = path => call(session, 'read', { path, exception: 'instruction' });
+        const instruction = path => call(session, 'read', { path });
         await instruction(join(provider, '.pi/skills/qa/SKILL.md'));
         await instruction(join(provider, 'docs/engineering/QA.md'));
         await instruction(join(provider, 'docs/engineering/QA_REPORT_TEMPLATE.md'));
@@ -166,7 +166,7 @@ try {
         await read(session, join(main, '.runs/reviews/TASK-00489/review.md'));
         put(join(main, '.runs/reviews/TASK-00489/runtime/probe.php'), '<?php // Controlled reviewed probe\n');
         await read(session, join(main, '.runs/reviews/TASK-00489/runtime/probe.php'));
-        await read(session, join(provider, 'composer.json'), false);
+        await read(session, join(provider, 'composer.json'));
       }
       if (skill === 'build' || skill === 'qa') {
         await write(session, join(main, '.runs', skill === 'build' ? 'qa' : 'build', 'TASK-00489/other-role.md'), 'Forbidden other workflow', false);
@@ -197,7 +197,7 @@ try {
     await write(forked, join(checkout, 'source.txt'), 'Forbidden historical Work', false);
     // Separate enrolled consumer uses the installed provider skill without enrolling or copying provider files.
     const portable = await start(consumer); const beforePortable = calls();
-    await read(portable, join(provider, '.pi/skills/build/SKILL.md'), false);
+    await read(portable, join(provider, '.pi/skills/build/SKILL.md'));
     await select(portable, 'build');
     const expanded = portable.agent.state.messages.filter(m => m.role === 'user').at(-1);
     assert.ok(expanded.content.some(block => block.type === 'text' && block.text.includes('<skill name="build"')));
@@ -209,14 +209,14 @@ try {
     await read(portable, join(provider, 'docs/engineering/LANDING.md'));
     await read(portable, join(provider, 'docs/engineering/REVIEW.md'));
     await read(portable, join(provider, 'docs/engineering/STANDARDS.md'));
-    await read(portable, join(provider, 'harness/pi/src/jev/file-admission.mjs'), false);
-    await read(portable, join(provider, 'composer.json'), false);
+    await read(portable, join(provider, 'harness/pi/src/jev/file-admission.mjs'));
+    await read(portable, join(provider, 'composer.json'));
     await write(portable, join(provider, '.pi/skills/build/SKILL.md'), 'Forbidden provider', false);
     await write(portable, join(modules, '@earendil-works/pi-coding-agent/docs/sdk.md'), 'Forbidden runtime', false);
     await write(portable, join(sdk.getExamplesPath(), 'extensions/timed-confirm.ts'), 'Forbidden example write', false);
     await call(portable, 'edit', { path: join(sdk.getExamplesPath(), 'extensions/timed-confirm.ts'),
       oldText: 'import', newText: 'Forbidden example edit' }, false);
-    await read(portable, join(sdk.getPackageDir(), 'dist/config.js'), false);
+    await read(portable, join(sdk.getPackageDir(), 'dist/config.js'));
     for (const skill of [...new Set(nativeMetadata.map(s => s.name))]) {
       await select(portable, skill); await read(portable, join(provider, '.pi/skills', skill, 'SKILL.md'));
       await write(portable, join(consumer, 'source.txt'), 'Forbidden hidden skill source', false);
@@ -225,8 +225,7 @@ try {
     // Rejected operator input must hold effects until a successful trusted corrected selection.
     for (const invocation of ['0.5.0', '0.4.0 status', 'v0.4.0 resume after signing']) {
       await portable.prompt('/skill:release 0.4');
-      const blockedRead = await read(portable, join(consumer, 'README.md'), false);
-      assert.equal(JSON.parse(blockedRead.content[0].text).blocked, 'workflow-subject-required');
+      await read(portable, join(consumer, 'README.md'));
       await write(portable, join(consumer, '.runs/handoffs/release-0.4.0/rejected.md'), 'Malformed subject', false);
       const heldStatus = JSON.parse((await call(portable, 'file_screening_status', {})).content[0].text);
       assert.equal(heldStatus.reason, 'workflow-subject-required');
@@ -235,7 +234,7 @@ try {
       assert.match(heldStatus.nextAction, /\/skill:release/);
       await portable.extensionRunner.emitInput(`/skill:release ${invocation}`, undefined, 'extension');
       await portable.prompt('Continue with the current selection');
-      await read(portable, join(consumer, 'README.md'), false);
+      await read(portable, join(consumer, 'README.md'));
       await portable.prompt(`/skill:release ${invocation}`);
       await read(portable, join(consumer, 'README.md'));
       const version = invocation.startsWith('0.5.0') ? '0.5.0' : '0.4.0';
@@ -247,7 +246,6 @@ try {
       }
       await write(portable, join(provider, 'CHANGELOG.md'), 'Forbidden provider', false);
       await write(portable, join(modules, '@earendil-works/pi-coding-agent/docs/sdk.md'), 'Forbidden runtime', false);
-      assert.match(JSON.parse(blockedRead.content[0].text).nextAction, /\/skill:release/);
     }
     // Correct selection cannot clear persistence or native-tool integrity failures.
     const persistenceHeld = await start(consumer);
@@ -260,21 +258,16 @@ try {
     persistenceHeld.sessionManager.appendCustomEntry = append;
     await persistenceHeld.prompt('/skill:release 0.4');
     await persistenceHeld.prompt('/skill:release 0.4.0 status');
-    const storageRead = await read(persistenceHeld, join(consumer, 'README.md'), false);
-    assert.equal(JSON.parse(storageRead.content[0].text).blocked, 'workflow-role-persistence-failed');
+    await read(persistenceHeld, join(consumer, 'README.md'));
     assert.equal((await call(persistenceHeld, 'file_screening_status', {})).details.access.state, 'held');
     await write(persistenceHeld, join(consumer, '.runs/handoffs/release-0.4.0/storage-held.md'), 'Forbidden', false);
+    // Hiding the native reader does not poison mutation authority or require reenrollment.
     const integrityHeld = await start(consumer), activeTools = integrityHeld.getActiveToolNames();
     integrityHeld.setActiveToolsByName(activeTools.filter(name => name !== 'read'));
-    const integrityRead = await write(integrityHeld, join(consumer, 'integrity-held.txt'), 'Forbidden', false);
-    assert.equal(JSON.parse(integrityRead.content[0].text).blocked, 'required-tool-hidden');
+    await write(integrityHeld, join(consumer, 'native-read-independent.txt'), 'Allowed Work write');
     integrityHeld.setActiveToolsByName(activeTools);
-    await integrityHeld.prompt('/skill:release 0.4');
-    await integrityHeld.prompt('/skill:release 0.4.0 status');
-    const stillHeld = await read(integrityHeld, join(consumer, 'README.md'), false);
-    assert.match(JSON.parse(stillHeld.content[0].text).blocked, /^(required-tool-hidden|session-changed)$/);
-    assert.equal((await call(integrityHeld, 'file_screening_status', {})).details.access.state, 'held');
-    await write(integrityHeld, join(consumer, '.runs/handoffs/release-0.4.0/integrity-held.md'), 'Forbidden', false);
+    await read(integrityHeld, join(consumer, 'README.md'));
+    assert.equal((await call(integrityHeld, 'file_screening_status', {})).details.access.state, 'available');
     // Real documented Release subjects replace the inventory's former artificial TASK argument.
     for (const invocation of ['0.5.0', '0.4.0 status', 'v0.4.0 resume after signing']) {
       await portable.prompt(`/skill:release ${invocation}`);
@@ -314,12 +307,12 @@ try {
     git(main, ['worktree', 'remove', '--force', moved]); git(main, ['worktree', 'prune']);
     await read(work, join(moved, 'source.txt'), false); await read(work, join(main, 'README.md'));
     profiles.revoke(main);
-    await read(portable, join(consumer, 'README.md'), false);
+    await read(portable, join(consumer, 'README.md'));
     await portable.prompt('/skill:release 0.4');
     await portable.prompt('/skill:release 0.4.0 status');
-    await read(portable, join(consumer, 'README.md'), false);
+    await read(portable, join(consumer, 'README.md'));
     await write(portable, join(consumer, '.runs/handoffs/release-0.4.0/revoked.md'), 'Forbidden', false);
-    await read(work, join(main, 'README.md'), false);
+    await read(work, join(main, 'README.md'));
     console.log(JSON.stringify({ mode: 'native-worktree-and-portable-provider', runtime: modules, fixture, outcomes, confirmations, modelTurns,
       controlledEvaluatorRequests: calls(), liveProviderRequests: 0, realCredentialReads: 0, hiddenSkills: [...new Set(nativeMetadata.map(s => s.name))],
       unchangedEnrollmentBeforeExplicitRevoke: true, unresolvedLiabilityPreserved: true }));

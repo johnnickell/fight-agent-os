@@ -55,7 +55,7 @@ applies only when the operator chooses Jev file screening. Historical records re
    no expiry, routine renewal, new-session/day/month prompt or periodic lease. Resumes retain usage; fresh roles
    bind independently under the same account. Monthly reset changes available monthly funds, not enrollment.
 5. `/file-screening inspect` or `file_screening_status` is read-only and makes no paid/credential request. `active`
-   describes project access and optional file-screening coverage, not provider readiness, accuracy or safety.
+   describes mutation authority and optional file-screening coverage, not provider readiness, accuracy or safety.
    `degraded` gives the precise setup/authority/provider/price/credential/budget action; `disabled` means not enrolled.
    A per-file refusal such as `source-limit` does not degrade an otherwise active session or clear a prior provider
    failure. The rejected file still has no positive receipt; a concretely needed file can be read directly within local limits.
@@ -86,34 +86,14 @@ not imported into a fresh routine execution allowance; the coordinator reconcile
 
 ## Project reads, discovery and workflow roles
 
-The installed [shared rule](FILE_SCREENING_RULE.md) is injected into every participating session. It is the
-portable source of agent guidance; targets need no copied policy or new base skill. Strongly prefer Jev for
-unfamiliar/speculative discovery. Known targets, changed files, failure locations and core instructions read
-directly with `read` and `path`. This includes `AGENTS.md`, `README.md`, `planning/tasks/BOARD.md`, root or
-planning `ROADMAP.md`, without individual whitelist enrollment or fixed content digests. `need` and ranges are
-optional; defaults are 200 lines, with at most 1,000 requested lines / 32 KiB output and a 1 MiB local snapshot.
-Follow the returned continuation offset for more. A negative or unavailable relevance judgment does not deny
-access: briefly state the concrete need before a direct read, and never label it screened.
+Native Pi `read` is independent of this profile, including when enrolled, revoked, misconfigured or held.
+TASK-00498 removes the read replacement and read-blocking hooks from both harness profiles. Text, images,
+terminal-formatted logs, links and cross-project instructions use native path/range/format behavior and OS
+permissions. No enrollment, instruction witness, receipt or special exception is needed. Native errors remain
+honest errors. Use the [shared rule](FILE_SCREENING_RULE.md) for direct reads and optional discovery.
 
-Native loaded-context and advertised-skill paths read directly outside the project too. An explicitly selected
-installed hidden skill is admitted from the real host's installed metadata, including provider Build invoked
-in a different enrolled consumer repository. `disable-model-invocation` still prevents automatic advertising;
-this read grant conveys no invocation, write, shell or publication authority. `~/` text reads normalize to the
-same exact path before authority checks. No provider root enrollment or copied instructions are needed. Reading trusted
-instructions establishes their exact relative Markdown references, bounded to eight links deep and 128 paths.
-Source changes and removed registrations invalidate those witnesses. Unlinked siblings, whole provider roots
-and Jev disclosure are not granted. Explicit exclusions, protected resources and inode checks remain binding.
-Do not use a shell workaround for an actual access denial.
-
-The runtime also supplies its installed README, Markdown documentation and published examples directly through
-Pi's `getReadmePath()`, `getDocsPath()` and `getExamplesPath()` APIs. All workflow roles can read these documents
-and locate headings/symbols without Jev, per-file enrollment or provider effects. Beneath the native examples
-directory, this admits `.md`, `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, `.cjs` and `.json` text files;
-nested `node_modules` dependencies are excluded. This covers the installed extension dialog examples needed by QA.
-It does not import a path from prompt text or grant writes, runtime code outside examples, settings/credentials,
-external links or evaluator disclosure. Explicit exclusions, inode checks and the 1 MiB snapshot / 32 KiB output
-limits remain. Each document/example's first-read digest is pinned for that session. Changed content returns
-`native-documentation-changed` and requires a Pi restart; lifecycle invalidation withdraws admission.
+Optional `jev_read_file` and `file_locate` retain their bounded source and disclosure checks; failures do not
+prohibit native reads. Workflow roles, selected checkout and protected resources below govern mutations.
 
 The operator's interactive `/skill:work`, `/skill:review`, `/skill:qa` or `/skill:land` selects its role, as does a
 trusted launcher phase. `/file-screening role engineer|reviewer|qa|land` explicitly selects a role in the TUI;
@@ -122,13 +102,13 @@ takes precedence over stored selections, including earlier operator overrides. L
 session-wide selection, independent of the navigated branch, only with matching session identity and local
 launcher provenance. Forks, legacy/unverifiable history and removal of a prior launcher default to Reviewer;
 the operator can then select the intended workflow explicitly. Fresh local sessions default to Engineer.
-Selections must persist before changing authority. Failed persistence holds tools; fix storage and reload.
+Selections must persist before changing authority. Failed persistence holds mutations and optional discovery; fix storage and reload.
 An uncertain failed append is superseded by a Reviewer checkpoint so reload cannot restore privilege from it.
 
 - Engineer and Land can read/edit normal project files, including instructions, `.env.example` and `.pi/skills`.
 - Reviewer writes its selected task's `.runs/reviews/<TASK-ID>/` and task execution scratch.
 - QA writes its selected task's `.runs/qa/<TASK-ID>/` and task execution scratch, and can execute checks/probes.
-- Every role retains explicit exclusions, credential/runtime protections and existing task authorization.
+- Every role retains write exclusions, credential/runtime mutation protections and existing task authorization.
 
 These are explicit-file-tool checks, not shell isolation. Native shell does not receive Jev assessment. Selecting Land does not grant publication, destructive or unrelated-work authority.
 
@@ -136,8 +116,8 @@ These are explicit-file-tool checks, not shell isolation. Native shell does not 
 
 The harness resolves `.git`, `commondir` and reciprocal registered `gitdir` pointers as bounded canonical filesystem
 metadata, without calling Git or trusting remote URLs, directory names, prompt JSON or relevance judgments.
-It checks current membership on every access/effect and pins observed root/Git-directory inode identities during
-the process. It discovers at most 128 linked worktrees; unsupported metadata or limits hold access. Repository-relative
+It checks current membership for mutations and optional discovery and pins observed root/Git-directory inode identities during
+the process. It discovers at most 128 linked worktrees; unsupported metadata or limits hold those operations, not native reads. Repository-relative
 exclusions propagate to each checkout; external exclusions remain exact. A removed/forged registration withdraws
 only that member, and an unrelated unavailable enrollment does not poison valid projects. Replaced observed
 identities cannot reuse an old process's authority. Fresh processes validate current registration independently;
@@ -152,7 +132,7 @@ worktree, reset accounting or use shell as a denied file-tool workaround.
 
 ### Installed skill effects
 
-This is the installed inventory for TASK-00489. It restricts explicit file tools; accepted target instructions
+This is the installed inventory for TASK-00489. It restricts explicit mutation tools; accepted target instructions
 and human authorization may narrow it further. An allowed path alone does not authorize a business action.
 Trusted interactive `/skill:<name>` selects the skill, subject and mode; launcher roles take precedence on reload.
 `--checkout /absolute/path` carries an already selected checkout, including a future Work checkout before creation.
@@ -160,8 +140,7 @@ Fresh sessions use their containing registered root. Unknown skills never defaul
 Current checkpoints retain skill/subject/checkout/mode only for matching local session provenance, with the same
 fork/tree/restart and failed-persistence safeguards as role selection.
 
-All skills read verified repository members, exact host instructions, required linked instruction chains and native
-documentation. All selected TASKs may write their `.runs/tasks/<TASK-ID>/runs/` evidence beneath the canonical base
+All skills use native reading without harness file denials. All selected TASKs may write their `.runs/tasks/<TASK-ID>/runs/` evidence beneath the canonical base
 or selected checkout. Canonical Review/QA directories remain independently owned. Existing ownership rules still
 prohibit overwriting another run. Query/trace and status/preview/dry-run modes permit only owned ignored evidence.
 
@@ -213,31 +192,20 @@ separate macOS/APFS check against each installed supported runtime.
 `jev_read_file` retains its 0.70 positive rule, bounded list/glob/cache contract and current-source checks.
 Positive results can still issue receipts; cache reuse is session-local and visible. Negative, partial or failed
 results do not issue positive receipts or prove absence. Do not repeatedly rephrase for a positive result.
-Explicitly supplied receipts must match path, need, question, source, session and authority; invalid receipts
-fail rather than silently becoming direct reads. No source-body or cross-session judgment cache is added.
+Receipts describe optional screening only; do not pass them to native `read`. No source-body or cross-session
+judgment cache is added.
 
-Existing instruction/required-evidence exceptions and exact structural evidence remain compatible, but are
-optional. `file_locate` accepts exactly one `symbol` (code identifier) or `heading` (ATX title without `#`),
-plus path and need; its 32 lookups/session, 1 MiB scan and 40-line grant limits remain. Use its returned token
-and bounded range, never prose in the evidence field. It is not a prerequisite for reading a large Board.
-Jev source disclosure remains capped at 32 KiB; local direct reads do not call the evaluator.
+`file_locate` accepts exactly one `symbol` (code identifier) or `heading` (ATX title without `#`), plus path and
+need; its 32 lookups/session, 1 MiB scan and bounded 40-line location remain. Use the returned path and range
+with native `read`, without its evidence token or legacy instruction/required-evidence exceptions. Lookup is
+not a prerequisite for reading a large Board. Jev source disclosure remains capped at 32 KiB; native reads do
+not call the evaluator.
 
 ## Images and screenshots
 
-Ask the Agent to inspect an image normally. `read` accepts a PNG, JPEG, GIF or WebP `path` directly, including
-Desktop files outside project roots. No path-only user message, input-hook selection, special command or approval
-dialog is required, in interactive or noninteractive sessions. Relative, absolute, `~/`, spaced and Unicode paths
-are supported, as are matching quotes/backticks and space-escaped paths. `need` and `exception: "image"` remain
-optional for compatibility; omit text ranges, receipts and evidence tokens.
-
-Images bypass text relevance screening and go directly through Pi's native image processing to the main model,
-never Jev. Supported file signatures, the 10 MiB byte cap, enrolled exclusions, protected resources, sensitive names
-and symlink/hardlink checks still apply. Invalid images and processing failures return an error, never text fallback.
-A non-vision main model cannot inspect the attachment; Pi retains its normal limitation notice.
-
-There are no retained image selections or image-specific authorization state. Each read checks the current file;
-a file changed during native processing must be retried. Standing text roots, credentials, budgets and finite
-counters remain unchanged. This does not waive ordinary task permissions, text admission or runtime source-integrity/lifecycle checks, and does not claim same-user OS containment.
+Use Pi's native `read` with an image path. Pi owns supported formats, conversion, resizing and output limits;
+there is no harness image admission, approval or file-path exclusion. Images are sent to the main model through
+native behavior, never automatically to Jev. Keep task and disclosure authorization distinct from read access.
 
 ## Native shell and task authority
 
@@ -248,7 +216,7 @@ budget or request a Jev confirmation. Missing setup, an unavailable evaluator or
 not gate shell execution. No switch or automatic approval substitute retains the removed gate.
 
 Existing task authorization and native host/runtime permissions remain binding. Do not put credentials in
-commands or use shell to circumvent an actual file-access denial. File protections do not contain same-user
+commands or circumvent mutation controls. File-mutation protections do not contain native reads or same-user
 shell, descendants, plugins or SDK calls. The separate explicitly selected deterministic tool-policy profile
 retains its own shell restrictions. Managed execution without Agent shell access remains future work under
 [tool-mediated execution](../../docs/engineering/TOOL_MEDIATED_EXECUTION.md).
@@ -260,21 +228,21 @@ Build ledger and model pins without resetting repair counts, enrollment, charges
 
 | Route | Actual treatment |
 |---|---|
-| Native explicit `read` | Normal project reads and exact portable instructions; optional explicit receipts/evidence remain validated |
+| Native explicit `read` | Unmodified native Pi reader; no harness path, receipt, file-type or authority gate |
 | `jev_read_file` / `file_locate` | Optional discovery with original supplier/lookup limits |
 | Native explicit `write` / `edit` | Role-scoped final-argument protected-path checks; omit source diffs/previews in results |
 | Native Agent `bash` | Ordinary native execution; no Jev request, setup dependency or command confirmation |
 | Native user `!` / `!!`, RPC user bash | Ordinary native execution and prefix handling; no Jev command disclosure |
 | Provider-owned Build monitor | Read-only provider-relative preflight; enrolled children explicitly load package plus required authority identity, actual child sessions independently bind |
 | Code/script descendants, monitor's process launch, Git hooks, native shell startup, other tools/SDK/OS calls, plugins, prompt attachments, external editors | Not recursively intercepted or OS-confined; no universal enforcement claim |
-| Alternate/nested explicit tools in this profile | Unsupported and held; ordinary useful work uses native bash, not bespoke capability replacements |
+| Alternate/nested explicit tools in this profile | Native reads and bash remain independent; other unsupported routes are held; ordinary useful work uses native bash, not bespoke capability replacements |
 
 Start ordinary Pi with the reviewed package and invoke **`/skill:build TASK-NNNNN`** from the owning provider skill.
 Use the [normal provider-owned Build monitor](../../.pi/skills/build/SKILL.md#dispatch-fresh-roles), ordinary shell,
 Git and target `./bin/*` checks, with its existing coordinator ledger, model pins, independent roles, repair budget,
 canonical reports and liveness rules. Provider instructions/monitor need not live in the target project. No
 `/screened-build`, replacement executor, stage/report tool, recurring lease or per-child approval is required.
-Missing exact instruction/root authority remains a real prerequisite, not automatic broader disclosure.
+Instruction reads need no harness grant. Mutation and evaluator-disclosure authority remain separate prerequisites.
 
 The removed candidate-only scheduler/tickets/external-work/report transport no longer has a concrete purpose once
 shell works. Its machine report envelope is not an acceptance substitute. Coordinators must still validate report

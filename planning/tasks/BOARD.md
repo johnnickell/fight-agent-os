@@ -18,6 +18,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | in-progress | — | — |
+| — | [TASK-00498](00498-TASK.md) | Remove harness denials from native file reads | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
