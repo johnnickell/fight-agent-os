@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | in-progress | — | [PR #75](https://github.com/johnnickell/fight-agent-os/pull/75) |
+| — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -34,7 +34,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00283](00283-TASK.md) | Protect email-change issuance material | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00495](00495-TASK.md) | Standardize Pi extension and integration naming | — (standalone chore) | ready-for-agent | — | — |
 
@@ -455,6 +454,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00071](00071-TASK.md) | Prepare develop documentation for public visibility | — (standalone chore) | done | — | [PR #18](https://github.com/johnnickell/fight-agent-os/pull/18) |
 | 1 | [TASK-00135](00135-TASK.md) | Reconcile execution planning and add priority Pi skills | — (standalone chore) | done | — | — |
 | 1 | [TASK-00137](00137-TASK.md) | Package and install the Fight Pi terminal identity | [TICKET-00035 — Install the approved Fight terminal identity in Pi](../tickets/00035-TICKET.md) | done | — | — |
+| 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | done | — | [PR #117](https://github.com/johnnickell/fight-agent-os/pull/117) |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
@@ -545,4 +545,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00491](00491-TASK.md) | Restore Build child confirmations and reduce routine command prompts | — (standalone bug) | done | — | [PR #111](https://github.com/johnnickell/fight-agent-os/pull/111) |
 | — | [TASK-00492](00492-TASK.md) | Remove Jev command gating and plan autonomous policy authorization | — (standalone chore) | done | — | [PR #113](https://github.com/johnnickell/fight-agent-os/pull/113) |
 | — | [TASK-00494](00494-TASK.md) | Read installed Pi examples through the authorized file reader | — (standalone bug) | done | — | [PR #114](https://github.com/johnnickell/fight-agent-os/pull/114) |
+| — | [TASK-00497](00497-TASK.md) | Restore optional-Jev workspace startup and child QA instruction reads | — (standalone bug) | done | — | [PR #115](https://github.com/johnnickell/fight-agent-os/pull/115) |
 <!-- /planning:board -->

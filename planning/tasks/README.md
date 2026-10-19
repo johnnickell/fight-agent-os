@@ -159,7 +159,7 @@
 | [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00155](00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | done | — |
-| [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | in-progress | — |
+| [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | done | — |
 | [TASK-00158](00158-TASK.md) | Render the client shell with Twig and self-host the selected fonts | done | — |
 | [TASK-00159](00159-TASK.md) | Evaluate bounded typed questions with usage receipts | done | [TICKET-00037](../tickets/00037-TICKET.md) |
 | [TASK-00160](00160-TASK.md) | Enforce an operator-selected Pi tool policy | done | [TICKET-00038](../tickets/00038-TICKET.md) |
@@ -449,7 +449,7 @@
 | [TASK-00444](00444-TASK.md) | Synchronize from the Dashboard and complete the instruction-change journey | ready-for-agent | [TICKET-00109](../tickets/00109-TICKET.md) |
 | [TASK-00445](00445-TASK.md) | Record independent managed Reviews | needs-info | [TICKET-00083](../tickets/00083-TICKET.md) |
 | [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | done | — |
-| [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | in-progress | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | done | — |
@@ -499,5 +499,6 @@
 | [TASK-00494](00494-TASK.md) | Read installed Pi examples through the authorized file reader | done | — |
 | [TASK-00495](00495-TASK.md) | Standardize Pi extension and integration naming | ready-for-agent | — |
 | [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | needs-info | [TICKET-00032](../tickets/00032-TICKET.md) |
+| [TASK-00497](00497-TASK.md) | Restore optional-Jev workspace startup and child QA instruction reads | done | — |
 | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
 <!-- /planning:records -->

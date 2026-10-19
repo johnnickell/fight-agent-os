@@ -10,8 +10,12 @@ QA while disclosing that QA remains pending. The skill also accepts an already-o
 
 QA does not change implementation, tests, requirements, Planning status or technical review reports. It may run
 owned isolated services, exercise application writes against disposable data and write ignored QA artifacts within
-the invocation's scope. External side effects, shared/production data, new credentials, tool installation and
-artifact publication require their own authority. Never put secrets or personal data into commands or evidence.
+the invocation's scope. This includes creating disposable local application settings, test credentials and TLS
+keys/certificates for task-owned local services without asking again. Keep them in ignored task-owned storage,
+use them only for the test runtime, and remove them with that runtime. Use client-local certificate trust;
+do not change host trust stores. External side effects, shared/production data or credentials, credentials for
+external services, tool installation and artifact publication require their own authority. Never put secrets
+or personal data into commands or evidence. Explicit user restrictions and actual tool/OS denials still apply.
 A contributor to the implementation or its submitted acceptance evidence cannot independently pass that work;
 builder self-checks are diagnostic only. Independent QA may produce its own verification evidence.
 

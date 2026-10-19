@@ -155,6 +155,19 @@ try {
       assert.deepEqual(status.workflow, { skill, effect: effects[skill], taskId: 'TASK-00489', checkout,
         mode: 'default', launcherRole: phase === undefined ? null : phase === 'review' ? 'reviewer' : 'qa' });
       assert.equal(status.phase, skill === 'review' ? 'reviewer' : 'qa');
+      assert.deepEqual(status.access, { state: 'available', reason: null });
+      if (skill === 'qa') {
+        const instruction = path => call(session, 'read', { path, exception: 'instruction' });
+        await instruction(join(provider, '.pi/skills/qa/SKILL.md'));
+        await instruction(join(provider, 'docs/engineering/QA.md'));
+        await instruction(join(provider, 'docs/engineering/QA_REPORT_TEMPLATE.md'));
+        await instruction(join(provider, 'docs/engineering/TERMINAL_CAPTURE.md'));
+        await instruction(join(provider, 'docs/engineering/HANDOFFS.md'));
+        await read(session, join(main, '.runs/reviews/TASK-00489/review.md'));
+        put(join(main, '.runs/reviews/TASK-00489/runtime/probe.php'), '<?php // Controlled reviewed probe\n');
+        await read(session, join(main, '.runs/reviews/TASK-00489/runtime/probe.php'));
+        await read(session, join(provider, 'composer.json'), false);
+      }
       if (skill === 'build' || skill === 'qa') {
         await write(session, join(main, '.runs', skill === 'build' ? 'qa' : 'build', 'TASK-00489/other-role.md'), 'Forbidden other workflow', false);
       }
@@ -217,6 +230,7 @@ try {
       await write(portable, join(consumer, '.runs/handoffs/release-0.4.0/rejected.md'), 'Malformed subject', false);
       const heldStatus = JSON.parse((await call(portable, 'file_screening_status', {})).content[0].text);
       assert.equal(heldStatus.reason, 'workflow-subject-required');
+      assert.deepEqual(heldStatus.access, { state: 'held', reason: 'workflow-subject-required' });
       assert.equal(heldStatus.nextActionCode, 'correct-workflow-input');
       assert.match(heldStatus.nextAction, /\/skill:release/);
       await portable.extensionRunner.emitInput(`/skill:release ${invocation}`, undefined, 'extension');
@@ -248,6 +262,7 @@ try {
     await persistenceHeld.prompt('/skill:release 0.4.0 status');
     const storageRead = await read(persistenceHeld, join(consumer, 'README.md'), false);
     assert.equal(JSON.parse(storageRead.content[0].text).blocked, 'workflow-role-persistence-failed');
+    assert.equal((await call(persistenceHeld, 'file_screening_status', {})).details.access.state, 'held');
     await write(persistenceHeld, join(consumer, '.runs/handoffs/release-0.4.0/storage-held.md'), 'Forbidden', false);
     const integrityHeld = await start(consumer), activeTools = integrityHeld.getActiveToolNames();
     integrityHeld.setActiveToolsByName(activeTools.filter(name => name !== 'read'));
@@ -258,6 +273,7 @@ try {
     await integrityHeld.prompt('/skill:release 0.4.0 status');
     const stillHeld = await read(integrityHeld, join(consumer, 'README.md'), false);
     assert.match(JSON.parse(stillHeld.content[0].text).blocked, /^(required-tool-hidden|session-changed)$/);
+    assert.equal((await call(integrityHeld, 'file_screening_status', {})).details.access.state, 'held');
     await write(integrityHeld, join(consumer, '.runs/handoffs/release-0.4.0/integrity-held.md'), 'Forbidden', false);
     // Real documented Release subjects replace the inventory's former artificial TASK argument.
     for (const invocation of ['0.5.0', '0.4.0 status', 'v0.4.0 resume after signing']) {

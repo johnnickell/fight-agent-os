@@ -19,10 +19,12 @@ activity at top right and current Docker logs at bottom right. Each right pane o
 quarter of a wide terminal; narrow terminals use keyboard-accessible selectable views. Reuse the accepted Fight
 identity from [TICKET-00035](00035-TICKET.md). Herdr remains optional, with no required external multiplexer.
 
-Qualify the installed Pi 1.2.0 extension route inside the first delivery TASK. If persistent layout cannot be
-implemented cleanly through supported APIs, use a dedicated terminal client over Pi SDK/RPC. Reuse Pi's agent,
-provider and session machinery; do not fork Pi, nest another renderer in an extension or create a session engine.
-Current upstream documentation is not evidence of installed-version support. Record exact qualified versions.
+Qualify the currently installed Pi's supported extension APIs and behavior inside the first delivery TASK. If
+persistent layout cannot be implemented cleanly through those APIs, use a dedicated terminal client over supported
+Pi SDK/RPC. Reuse Pi's agent, provider and session machinery; do not fork Pi, nest another renderer in an extension
+or create a session engine. Never pin Pi to a version number or require version equality. Record required
+capabilities and actual tested versions as evidence only; documentation alone and a current version number do
+not establish runtime behavior or future compatibility.
 
 The first release has a read-only child pane using the existing local build monitor and a human-only live log
 pane for the existing, explicitly selected main-checkout Agent OS Compose runtime. Show actual conversation,
@@ -85,12 +87,47 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00447](../tasks/00447-TASK.md) | Work in the responsive Pi terminal workspace | ready-for-agent |
+| [TASK-00447](../tasks/00447-TASK.md) | Work in the responsive Pi terminal workspace | in-progress |
 | [TASK-00448](../tasks/00448-TASK.md) | Observe the selected local child agent in the terminal workspace | ready-for-agent |
 | [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Local workspace candidate — 2026-10-17
+
+TASK-00447 now has a dedicated Pi RPC client (`./bin/terminal`), owned focus/layout/lifecycle behavior tests and
+honest side placeholders; see its current completion notes and [workspace runbook](../../harness/pi/WORKSPACE.md).
+The coordinator recovered owned RPC transport and real PTY qualification (active Harness, wide/narrow,
+side-input isolation, harmless shell and terminal restoration), then completed a separate genuine provider turn
+with native status/read tools and fixture marker. Actual provider-reported model identity remains unavailable.
+Real wide/narrow terminal images were captured and inspected, but show disposable-HOME held state, not active
+provider conversation; the new feature was Not present before. Exact-window GUI Tab input was refused without
+dispatch; PTY provides keyboard proof. No light-theme or child-tab image was collected. The dedicated runtime
+is prepared. After freezing all 12 owned staged paths, the coordinator executed native
+`./bin/planning-check && ./bin/build`: both passed, full build 206.636 seconds, receipt
+`.runs/build/20261017T230157Z-2411/receipt.json`. Engineer verified the tested snapshot/file hashes before the
+Markdown-only evidence update. This is fresh coordinator-observed pre-commit evidence, not a self-run Engineer
+or independent acceptance receipt. The literal post-commit coordinator gate remains pending before Review.
+Earlier resumed checks passed 391 Harness tests and 32 workspace checks; the full gate's narrower Harness
+selection ran 329 tests. TASK-00447 records exact counts, warnings and limitations; prior runtime/provider/capture
+holds are resolved history. Review/QA must assess remaining native-only/attachment/custom-component/host
+limitations; none is silently accepted as an exclusion.
+This is not acceptance; TASK-00448/00449 producers and managed integrations remain undelivered. No Pi version
+pin was introduced.
+
+### Superseding Pi qualification policy — 2026-10-17
+
+The user's authoritative amendment is: “Pi moves quickly. we should NEVER pin to a version number. We are on
+1.3.0 now, so do that”. Current requirements now qualify the installed runtime by supported APIs and actual
+behavior, not a fixed Pi release. TASK-00447's obsolete exact-version access hold is cleared; historical receipts
+remain history. Pi 1.3.0 is the installation observed during recovery, not a replacement pin. Root AGENTS.md owns
+the lasting project convention. No unrelated historical records, dependency/model pins or global configuration
+are changed, and the local presentation scope and required policy/terminal qualification are unchanged.
+
+At this amendment checkpoint TASK-00447 was in prerequisite recovery/initial implementation and its RPC probe
+still required a native one-command decision. The coordinator's later successful recovery and the candidate
+above supersede that prerequisite; this historical amendment itself claimed no implementation or acceptance.
 
 ### Approved decomposition — 2026-10-15
 

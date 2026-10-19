@@ -16,6 +16,10 @@ verified references, core project instructions and the selected skill. `need`, `
 Direct project reads do not require a receipt, a structural lookup or operator confirmation. Use the smallest
 useful range and follow the returned continuation offset. Default output is 200 lines, at most 1,000 requested
 lines and 32 KiB; local text files are capped at 1 MiB. A source-size limit is not a provider outage.
+This includes canonical review/QA reports and their evidence in registered checkouts. Read those by path;
+calling a file an instruction or required evidence does not establish an exception witness. Use
+`exception: "instruction"` only for host-established instructions or their exact linked Markdown references.
+That mode follows the same reference chain and bounded continuation as an ordinary instruction read.
 
 Every enrolled project can read its `AGENTS.md`, `README.md`, `planning/tasks/BOARD.md`, `ROADMAP.md` and
 `planning/ROADMAP.md` normally. No fixed content digest or separate whitelist enrollment is required. Native

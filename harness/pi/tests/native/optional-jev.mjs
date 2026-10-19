@@ -56,6 +56,9 @@ transport:{submit:async()=>{appendFileSync(${JSON.stringify(requests)},'request\
     assert.equal(result.isError,!allowed,`${mode}/${name}: ${JSON.stringify(result.result)}`);outcomes++;return result.result;
   }
   try {
+    const access = (await call('file_screening_status', {})).details;
+    assert.deepEqual(access.access, { state: 'available', reason: null });
+    assert.equal(access.state, !enrolled ? 'disabled' : mode === 'enrolled-online' ? 'active' : 'degraded');
     // Both agent and user shell paths must execute with no Jev setup, credential or confirmation.
     await call('bash',{command:'test "$QUALIFICATION_PREFIX" = applied && printf completed > shell-result.txt'});
     assert.equal(readFileSync(join(root,'shell-result.txt'),'utf8'),'completed');
