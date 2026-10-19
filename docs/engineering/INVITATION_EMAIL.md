@@ -2,7 +2,8 @@
 
 TASK-00040 maps the locked Access Control `CredentialDeliveryProvider` directly to generic
 [`MailDelivery`](../../src/Application/Mail/MailDelivery.php). It sends invitations to a disposable Mailpit
-catcher, **not a real inbox**. No mail vendor, scheduler, activation API or public activation UI is enrolled here.
+catcher, **not a real inbox**. No production mail vendor or scheduler is enrolled here. [TASK-00043 activation](ACTIVATION.md) now supplies
+the public UI/API; this runbook retains TASK-00040's delivery-specific evidence separately.
 Do not expose this development stack or its mailbox to untrusted users.
 
 ## Configure the selected checkout
@@ -20,7 +21,7 @@ FIGHT_AGENT_OS_MAIL_PORT=28041
 APP_ENV=development
 APP_CREDENTIAL_DELIVERY_ADAPTER=catcher
 APP_ACTIVATION_ORIGIN=https://localhost:28443
-APP_ACTIVATION_PATH=/activate
+APP_ACTIVATION_PATH=/app/activate
 ```
 
 Also set `APP_CREDENTIAL_DELIVERY_KEY` to an independent random 32-byte hex key. This command fills only an
@@ -124,10 +125,11 @@ Use `./bin/credential-delivery status activation DELIVERY_ID --internal` with a 
 There is no scheduler: later due retries require another explicit runner invocation.
 
 Open the catcher privately and inspect the invitation's text and HTML alternatives. The link should have the
-configured `https://localhost:28443/activate` base and a `#credential=…` fragment, never a query credential. **Do not
-click expecting activation:** this TASK does not implement the activation page, and port 28443 is only a canonical
-link example, not an automatically provisioned HTTPS listener. Existing optional local HTTPS has separate setup
-and ports; configure its actual canonical origin if using it. The catcher delivers only to this local mailbox,
+configured `https://localhost:28443/app/activate` base and fragment-only credential and user routing fields,
+never a query credential. Port 28443 remains only an isolated configuration example, not an automatically
+provisioned HTTPS listener. Configure the actual trusted browser origin and `/app/activate` before enabling
+catcher delivery; composition rejects a different origin/path. See the activation runbook for current capture,
+history, request and session behavior. Existing optional local HTTPS has separate setup and ports. The catcher delivers only to this local mailbox,
 regardless of the recipient address; it cannot deliver to Gmail or another real inbox.
 
 The mailbox intentionally holds activation material. Treat every body, source, screenshot and API response as
@@ -153,14 +155,15 @@ The current unchanged Composer lock selects Access Control **v0.6.0**, source/lo
 credential and stable delivery-generation ID: **no expiry timestamp, user ID or claim token**. The fixed
 `invitation-v1` template states seven days **from issuance**, matching locked `InvitePendingUser`, rather than
 inventing an exact expiry or seven days from arrival. An altered issuance lifetime requires a qualified upstream
-contract/template change. The future activation consumer must accept this credential-only fragment or qualify
-additional required routing data; no unknown package field is inferred here.
+contract/template change. TASK-00043 has now qualified the current release's supported delivery-ID lookup to obtain the owning user ID
+and include it in new fragment links. No unknown invocation field or credential encoding is inferred. Older
+credential-only messages require an explicit administrative resend; the activation runbook records this boundary.
 
 Shared `CanonicalCredentialLink` URL validation accepts lowercase ASCII DNS names (or `localhost`), HTTPS, an optional canonical numeric
 port 1–65535, and a simple absolute path of alphanumeric/underscore/hyphen segments. It rejects userinfo, IP/alternate
 numeric hosts, Unicode/uppercase/trailing-dot hosts, whitespace, query/fragment, percent escapes, dot segments,
 backslashes and double/trailing path slashes (root `/` is allowed). No request headers or recipient input select
-the origin/path. Credential bytes are RFC3986-encoded entirely inside the fragment. Fragment placement avoids
+the origin/path. Credential bytes and the qualified user routing ID are RFC3986-encoded entirely inside the fragment. Fragment placement avoids
 request-line/referrer transmission, **not** mailbox/history/extension access or arbitrary future UI leakage.
 
 The fixed `templates/mail/invitation.txt.twig` and `templates/mail/invitation.html.twig` alternatives use the

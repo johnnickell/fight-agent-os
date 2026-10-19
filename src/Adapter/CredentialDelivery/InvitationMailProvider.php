@@ -10,7 +10,10 @@ use App\Application\Mail\MailOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\Common\Application\Templating\TemplateEngine;
+use LogicException;
 use SensitiveParameter;
 use Throwable;
 
@@ -27,7 +30,8 @@ final readonly class InvitationMailProvider implements CredentialDeliveryProvide
     public function __construct(
         private CanonicalCredentialLink $link,
         private TemplateEngine $templates,
-        private MailDelivery $mail
+        private MailDelivery $mail,
+        private ActivationGrantRepository $grants
     ) {
     }
 
@@ -42,7 +46,16 @@ final readonly class InvitationMailProvider implements CredentialDeliveryProvide
         }
 
         try {
-            $context = ['activationUrl' => $this->link->forCredential($invocation->getCredential())];
+            // The stable delivery identifier is a supported lookup, not an inferred credential encoding.
+            // This adds routing data only; AuthenticationService alone validates current grant authority.
+            $grant = $this->grants->getByDeliveryId(ActivationDeliveryId::fromString($invocation->getIdempotencyId()));
+            if ($grant === null) {
+                throw new LogicException('Unavailable invitation routing identity.');
+            }
+            $context = ['activationUrl' => $this->link->forCredential(
+                $invocation->getCredential(),
+                $grant->getUserId()
+            )];
             $message = new MailMessage(
                 $invocation->getIdempotencyId(),
                 $invocation->getEmail(),

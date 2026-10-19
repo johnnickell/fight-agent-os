@@ -11,8 +11,10 @@ are delivered. This project is not a general-purpose personal AI operating syste
 those belong to a separate future project.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
-API validation/error handling, an empty public-safe form metadata catalog and local engineering skills are
-present. These pieces do not yet constitute the complete authenticated browser journey. A non-product React shell with local system/light/dark appearance is available at `/app`; product UI journeys,
+API validation/error handling, public-safe form metadata and local engineering skills are
+present. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
+login/refresh/logout and the complete authenticated shell remain unfinished. A non-product React shell with
+local system/light/dark appearance is available at `/app`; other product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
 ## Start planning
@@ -76,7 +78,9 @@ names without a dashboard permission prerequisite. Permission-protected invitati
 `GET /api/v1/invitations/{user_id}`. Permission-controlled retry, resend and atomic pending-email correction
 are available at `POST /api/v1/invitations/{user_id}/retry`, `POST /api/v1/invitations/{user_id}/resend`, and
 `PATCH /api/v1/invitations/{user_id}/email`; see [invitation API](docs/engineering/INVITATION_API.md) for exact
-permissions, confirmation, bounded atomic limits and retained partial/uncertain outcomes. No login/refresh/logout
+permissions, confirmation, bounded atomic limits and retained partial/uncertain outcomes. Public `POST /api/v1/auth/activate` establishes an ordinary session by invitation possession with
+Origin/CSRF/JSON/admission protections; see [activation contracts and limits](docs/engineering/ACTIVATION.md).
+Configure the independent external `APP_ACTIVATION_RATE_KEY` before HTTP boot. No login/refresh/logout
 journey is registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
@@ -90,7 +94,7 @@ schemas and fixtures belong alongside `migrations/` under `database/`.
 The shared [password-setting boundary](docs/engineering/PASSWORDS.md) enforces Unicode code-point composition,
 checks a pinned local hashed common-password list and uses explicit Argon2id parameters. Application startup
 verifies the corpus and platform support before use. Include `resources/passwords/` and its CC BY-SA 4.0 notice
-in deployment artifacts. Activation/reset/change consumers remain planned; this is not a public password endpoint.
+in deployment artifacts. Activation consumes this boundary; reset/change consumers remain planned. It is not a standalone password endpoint.
 
 Direct Fight Access Control invitation/reset delivery handlers now require an independent
 `APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
@@ -100,7 +104,8 @@ explicitly use the disposable loopback Mailpit catcher with `APP_CREDENTIAL_DELI
 `APP_ACTIVATION_ORIGIN`/`APP_ACTIVATION_PATH`, plus `APP_PASSWORD_RESET_ORIGIN`/`APP_PASSWORD_RESET_PATH`; see
 [local invitation email](docs/engineering/INVITATION_EMAIL.md) and
 [password-reset email](docs/engineering/PASSWORD_RESET_EMAIL.md) for exact `.env`, routing/fragment and
-start/send/recovery/cleanup contracts. No real inbox or activation/reset UI is supplied.
+start/send/recovery/cleanup contracts. No real inbox or reset UI is supplied. The public activation UI requires the
+configured canonical `/app/activate` path and the qualified fragment-only link shape described in the activation runbook.
 A bounded internal
 `./bin/credential-delivery run --internal` runner, key-free `expire --internal` cleanup and safe generation status
 command are available. See [credential recovery](docs/engineering/CREDENTIAL_RECOVERY.md) for the v0.5.0 adoption
@@ -147,8 +152,8 @@ managed assignment is available through the separate invitation API.
 ```
 
 Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
-then validate freshness and real responses with `./bin/openapi check`. Generate the initially empty public-safe
-form catalog with `./bin/validations export` and verify it with `./bin/validations check`; see
+then validate freshness and real responses with `./bin/openapi check`. Generate the public-safe
+form catalog (including the real `invitation_activation` form) with `./bin/validations export` and verify it with `./bin/validations check`; see
 [validation metadata](docs/api/VALIDATIONS.md). Generated JSON stays under ignored `var/openapi/` and
 `var/validations/`, not public assets. Compiled browser assets live in `var/client/build/` and local TLS state
 in `var/https/`. Application runtime never depends on `.runs/`. Swagger UI, spec-serving and diagnostic routes

@@ -5,17 +5,19 @@ import type { ReactNode } from 'react';
 
 export function ShellLayout({
   children,
-  theme
+  theme,
+  publicJourney = false
 }: {
   children: ReactNode;
   theme?: ThemePreferenceStore | undefined;
+  publicJourney?: boolean;
 }) {
   return (
     <>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <header className="border-bottom py-3">
+      <header className={`border-bottom py-3${publicJourney ? ' activation-header' : ''}`}>
         <div className="container shell-width">
           <nav aria-label="Foundation">
             <a href="/app">Fight Agent OS</a>

@@ -10,7 +10,6 @@ use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\InvitationRatePolicy;
-use DateInterval;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -18,35 +17,22 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
-use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\RefreshCredentialGenerator;
-use Fight\AccessControl\Application\AccessControl\RefreshSession\Service\SessionRevocationService;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
-use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationTokenPolicy;
-use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
-use Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
-use Fight\AccessControl\Domain\AccessControl\EmailChangeGrant\EmailChangeGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
-use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
-use Fight\Common\Application\Auth\Security\PasswordHasher;
-use Fight\Common\Application\Auth\Security\PasswordValidator;
-use Fight\Common\Application\Auth\Security\TokenEncoder;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
-use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use League\OpenAPIValidation\PSR7\OperationAddress;
@@ -723,7 +709,7 @@ SQL,
                 try {
                     $this->activate($credential);
                     self::fail('A replaced predecessor must never activate.');
-                } catch (LogicException) {
+                } catch (\App\Application\Failure\StateConflict) {
                     self::assertSame('pending_activation', $this->connection->fetchOne(
                         'SELECT state FROM users WHERE id = ?',
                         [$this->target->toString()]
@@ -810,41 +796,15 @@ SQL,
     }
 
     /**
-     * Exercises the package activation service with real persistence until its transport is implemented separately
+     * Exercises production password acceptance and package activation against real persistence
      */
     private function activate(string $credential): void
     {
-        $c = $this->container;
-        $refresh = $c->get(RefreshSessionRepository::class);
-        $generator = $this->createStub(RefreshCredentialGenerator::class);
-        $generator->method('generate')->willReturn(RefreshCredential::fromString(bin2hex(random_bytes(32))));
-        $service = new AuthenticationService(
-            $c->get(UserRepository::class),
-            $c->get(ActivationGrantRepository::class),
-            $refresh,
-            new SessionRevocationService($refresh),
-            $c->get(TransactionalUnitOfWork::class),
-            $c->get(Clock::class),
-            $this->createStub(LoginThrottle::class),
-            $generator,
-            $c->get(PasswordHasher::class),
-            $c->get(PasswordValidator::class),
-            $c->get(TokenEncoder::class),
-            new AuthenticationTokenPolicy(
-                new DateInterval('PT15M'),
-                new DateInterval('P1D'),
-                new DateInterval('P2D'),
-                new DateInterval('P30D'),
-                new DateInterval('P1Y'),
-                new DateInterval('PT5S')
-            ),
-            PasswordHash::fromString((string) password_hash('fixture', PASSWORD_BCRYPT)),
-            $c->get(EventDispatcher::class),
-            $c->get(PasswordResetGrantRepository::class),
-            $c->get(AuditEvidenceRepository::class),
-            $c->get(EmailChangeGrantRepository::class)
+        $this->container->get(\App\Application\Security\Activation\ActivateInvitation::class)->activate(
+            $this->target,
+            $credential,
+            'A!9z'.bin2hex(random_bytes(12))
         );
-        $service->activate($this->target, $credential, 'A!9z'.bin2hex(random_bytes(12)));
     }
 
     /**

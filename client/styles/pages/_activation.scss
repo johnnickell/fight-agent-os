@@ -1,0 +1,57 @@
+.activation-header a,
+.activation-page a {
+  color: var(--ui-action);
+}
+
+.activation-header a:hover,
+.activation-page a:hover {
+  color: var(--ui-action-hover);
+}
+
+.activation-page {
+  max-width: 36rem;
+  margin-inline: auto;
+  padding-block: clamp(0.5rem, 3vw, 2.5rem);
+}
+
+.activation-eyebrow {
+  font-family: var(--bs-body-font-family);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--bs-secondary-color);
+}
+
+.activation-page h1 {
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  line-height: 1.13;
+  margin-block: 1rem;
+}
+
+.activation-introduction {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.activation-panel {
+  background: var(--ui-surface);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  padding: clamp(1rem, 4vw, 2rem);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 5%);
+}
+
+.activation-panel h2 {
+  font-size: 1.45rem;
+}
+
+.activation-panel form {
+  display: grid;
+  gap: 1rem;
+}
+
+.activation-footnote,
+.activation-session-note {
+  font-size: 0.9rem;
+  color: var(--bs-secondary-color);
+  margin-top: 1rem;
+}

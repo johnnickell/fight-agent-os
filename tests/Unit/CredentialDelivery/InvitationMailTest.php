@@ -9,9 +9,14 @@ use App\Adapter\CredentialDelivery\InvitationMailProvider;
 use App\Application\Mail\MailDelivery;
 use App\Application\Mail\MailMessage;
 use App\Application\Mail\MailOutcome;
+use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Templating\TwigEngine;
 use Fight\Common\Application\Templating\TemplateEngine;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
@@ -28,6 +33,16 @@ use Twig\Loader\FilesystemLoader;
  */
 final class InvitationMailTest extends TestCase
 {
+    private UserId $routingUser;
+
+    /**
+     * Creates the package-owned routing identity without an invented UUID
+     */
+    protected function setUp(): void
+    {
+        $this->routingUser = UserId::generate();
+    }
+
     /**
      * Rejects ambiguous, request-derived or insecure link configuration before materialization
      */
@@ -72,11 +87,12 @@ final class InvitationMailTest extends TestCase
     public function testBuildsEncodedFragmentFromOnlyConfiguredOriginAndPath(): void
     {
         $link = new CanonicalCredentialLink('https://localhost:28443', '/auth/activate');
-        $url = $link->forCredential('a&b<>" /?#%');
-        self::assertTrue($url === 'https://localhost:28443/auth/activate#credential=a%26b%3C%3E%22%20%2F%3F%23%25');
+        $url = $link->forCredential('a&b<>" /?#%', $this->routingUser);
+        $expected = 'https://localhost:28443/auth/activate#credential=a%26b%3C%3E%22%20%2F%3F%23%25&user_id=';
+        self::assertTrue($url === $expected.$this->routingUser->toString());
         self::assertSame('/auth/activate', parse_url($url, PHP_URL_PATH));
         $this->expectException(InvalidArgumentException::class);
-        $link->forCredential('');
+        $link->forCredential('', $this->routingUser);
     }
 
     /**
@@ -85,16 +101,20 @@ final class InvitationMailTest extends TestCase
     public function testRendersVersionOneWithoutPrivateOrRemoteContent(): void
     {
         $observations = [];
+        $userId = $this->routingUser->toString();
         $mail = $this->createMock(MailDelivery::class);
         $mail->method('deliver')->willReturnCallback(static function (MailMessage $message) use (
-            &$observations
+            &$observations,
+            $userId
         ): MailOutcome {
             [$destination, $subject, $text, $html] = $message->content();
+            $expectedUrl = 'https://example.test/activate#credential=synthetic%3C%26%22credential&user_id='.$userId;
+            $expectedHtmlUrl = str_replace('&', '&amp;', $expectedUrl);
             $expectedText = <<<TEXT
 You have been invited to Fight Agent OS.
 
 Activate your account:
-https://example.test/activate#credential=synthetic%3C%26%22credential
+{$expectedUrl}
 
 This single-use link expires seven days after the invitation was issued, not after this email arrives.
 If it has expired or no longer works, ask your administrator for a new invitation.
@@ -106,7 +126,7 @@ TEXT;
 <meta http-equiv="Content-Security-Policy" content="default-src &apos;none&apos;">
 <title>Fight Agent OS invitation</title></head><body>
 <h1>You have been invited to Fight Agent OS</h1>
-<p><a href="https://example.test/activate#credential=synthetic%3C%26%22credential">Activate your account</a></p>
+<p><a href="{$expectedHtmlUrl}">Activate your account</a></p>
 <p>This single-use link expires seven days after the invitation was issued, not after this email arrives.</p>
 <p>If it has expired or no longer works, ask your administrator for a new invitation.</p>
 <p>If you did not expect this invitation, ignore it. Do not forward or share this link.</p>
@@ -269,14 +289,62 @@ HTML;
     }
 
     /**
+     * Refuses mail when routing identity cannot be resolved without leaking lookup diagnostics
+     */
+    #[DataProvider('routingFailures')]
+    public function testMissingOrUnavailableRoutingIdentity(bool $unavailable): void
+    {
+        $grants = $this->createStub(ActivationGrantRepository::class);
+        if ($unavailable) {
+            $grants->method('getByDeliveryId')->willThrowException(new RuntimeException('private-lookup-marker'));
+        } else {
+            $grants->method('getByDeliveryId')->willReturn(null);
+        }
+        $templates = $this->createMock(TemplateEngine::class);
+        $templates->expects(self::never())->method('render');
+        $mail = $this->createMock(MailDelivery::class);
+        $mail->expects(self::never())->method('deliver');
+        $provider = new InvitationMailProvider(
+            new CanonicalCredentialLink('https://example.test', '/app/activate'),
+            $templates,
+            $mail,
+            $grants
+        );
+        self::assertSame(CredentialDeliveryOutcome::RETRYABLE_FAILURE, $provider->deliver($this->invocation()));
+    }
+
+    /**
+     * Supplies missing history and an unavailable lookup as distinct refusal conditions
+     *
+     * @return iterable<string, array{bool}>
+     */
+    public static function routingFailures(): iterable
+    {
+        yield 'missing' => [false];
+        yield 'unavailable' => [true];
+    }
+
+    /**
      * Constructs the provider with configured canonical links and no network transport
      */
     private function provider(MailDelivery $mail, ?TemplateEngine $templates = null): InvitationMailProvider
     {
+        $grants = $this->createStub(ActivationGrantRepository::class);
+        $now = new DateTimeImmutable();
+        $grants->method('getByDeliveryId')->willReturn(ActivationGrant::issue(
+            $this->routingUser,
+            ActivationCredential::fromString('synthetic-credential'),
+            $now,
+            $now->modify('+7 days'),
+            EmailAddress::fromString('private@example.test'),
+            'synthetic-ciphertext'
+        ));
+
         return new InvitationMailProvider(
             new CanonicalCredentialLink('https://example.test', '/activate'),
             $templates ?? $this->templates(),
-            $mail
+            $mail,
+            $grants
         );
     }
 

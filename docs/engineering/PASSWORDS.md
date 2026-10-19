@@ -1,6 +1,7 @@
 # Shared password acceptance and hashing
 
-TASK-00039 supplies a reusable library boundary, not an activation, reset, change or login endpoint.
+TASK-00039 supplies a reusable library boundary. [Public activation](ACTIVATION.md) now consumes it;
+reset/change/login endpoint work remains separate.
 Fight Access Control still owns identity transitions; no package policy is modified.
 
 ## Calling contract
@@ -11,7 +12,7 @@ acceptance before hashing and returns a sensitive encoded Argon2id string, or th
 a safe enum reason. Infrastructure failure throws a generic exception without retaining the downstream cause.
 These operations have no persistence, audit, metrics, delivery or network effects.
 
-Later activation/reset/change orchestration must call this boundary before dispatching the package's password-setting
+Activation and later reset/change orchestration must call this boundary before dispatching the package's password-setting
 operation. When the package operation hashes internally, call `rejection()` first and pass the **original bytes**
 only after acceptance; do not hash twice or feed a hash as plaintext. The package's shared `PasswordHasher` and
 `PasswordValidator` both resolve to the same `Argon2idPasswords` instance. They deliberately do **not** enforce

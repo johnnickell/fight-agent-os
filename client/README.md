@@ -1,7 +1,8 @@
 # Browser foundation
 
-The production React shell is available at `/app` and `/app/`. It is deliberately not a dashboard,
-login or Planning workspace. The semantic theme and three-state appearance selector are present; the
+The production React shell is available at `/app` and `/app/`; these are not a dashboard,
+login or Planning workspace. `/app/activate` now mounts the real [public invitation journey](../docs/engineering/ACTIVATION.md),
+pending independent acceptance. The semantic theme and three-state appearance selector are present; the
 rest of the authenticated application frame remains planned. `/` retains the PHP smoke response; `/api/v1` retains
 its independent API contract. Unknown `/app/...` paths render the shell's not-found page (HTTP 200),
 not an API response. Paths outside `/app` never fall back to React.
@@ -93,7 +94,9 @@ scanner or a proof against obfuscated/dynamically constructed values**. Human so
 that credentials/private config/authority snapshots are not bundled. Production never receives host application
 secrets through the wrapper. Catalog tooling legitimately contains help URLs and example authority fixtures;
 it is isolated from production, has no source maps, and its static captures fail on external requests, render
-errors, accessibility violations or horizontal overflow. `storybook-artifacts.json` inventories its files/hashes.
+errors, accessibility violations or horizontal overflow. First production Formik use retains one static PropTypes
+runtime diagnostic URL; artifact inspection permits only that exact diagnostic text, not arbitrary remote URLs.
+It is not a resource request. The live activation probe observes no external requests or console output. `storybook-artifacts.json` inventories its files/hashes.
 
 Coverage includes **all** `src/**/*.{ts,tsx}`, including unimported source. Exact exclusions are
 `src/**/*.d.ts` (declarations) and `src/main.tsx` (browser root/CSS/boot composition). Type-only modules have no
@@ -258,15 +261,15 @@ build. Local static output and PHP must belong to the same release.
 
 Loading/errors are actual boot/import states, not pretend product routes or a permanent debug gallery.
 Malformed config never mounts routes; failed page imports show generic recovery. Initial entry-script/network
-failure cannot execute React recovery; the base document retains its loading/noscript fallback. The shell makes
-no API calls and mounts no principal owner, authentication restoration or protected routes. The transport,
+failure cannot execute React recovery; the base document retains its loading/noscript fallback. The foundation routes make no API calls. Activation loads its real public schema and submits through the typed
+feature service; no route yet mounts principal ownership, authentication restoration or protected product UI. The transport,
 CSRF service and authority foundation below are available for later feature composition; no browser persistence
 or synthetic production principal is introduced.
 
 ## Typed API and CSRF boundary
 
-- `src/api/ApiClient.ts` owns shared GET transport. Construct it with validated runtime configuration; inject
-  `fetch` for deterministic tests and an `AccessTokenProvider` from the future memory-only authentication owner
+- `src/api/ApiClient.ts` owns shared GET and explicit CSRF-protected JSON POST transport. Construct it with validated runtime configuration; inject
+  `fetch` for deterministic tests and an `AccessTokenProvider` from the memory-only credential owner
   when protected operations exist. A provider is read on every explicitly `access: 'required'` call, never on
   public bootstrap. Missing/unsafe credentials fail before dispatch; this is transport validation, not JWT authority.
 - Feature services own fixed paths and `ResponseDecoder<T>` codecs. Paths are root-relative **below** `/api/v1`,
@@ -298,9 +301,10 @@ or synthetic production principal is introduced.
 The shared normalization matrix distinguishes validation (400/422 fail), authentication (401), authorization
 (403), conflict (409), not-found (404), bad-request (400 error), method-not-allowed (405), gone (410), rate-limited
 (429), generic system (5xx with the canonical message), protocol, network and cancellation. Non-bootstrap cases
-are transport tests against documented mapper contracts, **not implemented protected endpoints**. The service is
-not mounted into the non-product shell: no visible journey, `/me`, login, refresh, mutation API, retry loop, cache
-library, cross-tab channel or browser persistence is added. Future methods/codecs need their own accepted contract.
+are transport tests against documented mapper contracts, **not implemented protected endpoints**. Activation now consumes these seams through `ActivationService`, which owns its fixed path/codec, accepts the
+returned access token only into `MemoryAccessToken` and never retries mutations. POST sends JSON plus the explicit
+CSRF proof, keeps all transport privacy controls and deliberately does not abort an observed server mutation
+success. `/me` client, login, refresh, retry/coordination, cross-tab and persistence remain outside this journey.
 
 Client tests use deterministic fetch/controlled-promise doubles, synthetic non-live values and the published
 CSRF shape. They prove strict decoding, safe outcomes, memory-token policy, abort and independent generation
@@ -336,8 +340,9 @@ feedback. Locally invalid resubmission preserves current server feedback on unch
 published safe messages on explicit `body.<wire_field>` paths are shown; mixed published/private failures show approved field messages and generic
 form-level feedback without rendering private text. No arbitrary server path
 is used as a Formik setter. The owning journey controls loading/retry, form-level status, completion/cleanup and
-server success; it must not persist or log credential values. Real activation/login/reset/change forms and their
-nonempty PHP registrations are still owned by their journey TASKs. The catalog examples are synthetic local
+server success; it must not persist or log credential values. The real `invitation_activation` registration and form now consume this boundary; login/reset/change forms
+remain with their owning TASKs. The real PHP wire uses zero/one-element string-list rule arguments; the client
+strictly checks that shape before mapping it into its internal rule representation. The catalog examples are synthetic local
 interactions, not endpoints or authentication E2E evidence.
 
 ## Client authority foundation
@@ -439,8 +444,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **39** named examples across six story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states and 11 Authority states/interactions. The form composition demonstrates rejection,
+`stories/` holds **48** named examples across seven story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states, 11 Authority states/interactions and 9 production-backed Activation states. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -467,7 +472,7 @@ do not write real browser preferences or perform production prepaint.
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 39 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 48 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases

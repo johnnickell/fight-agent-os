@@ -4,7 +4,7 @@ import { decodeResponse, type ResponseDecoder } from '@/api/decodeResponse';
 import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 
 /**
- * Reads the current access credential from its future volatile authentication owner
+ * Reads the current access credential from its volatile authentication owner
  */
 export type AccessTokenProvider = Readonly<{
   getAccessToken: () => string | null;
@@ -18,7 +18,7 @@ export type GetOptions = Readonly<{
 export type ApiTransport = (url: string, init: RequestInit) => Promise<Response>;
 
 /**
- * Owns same-origin GET transport without retries, persistence or authentication policy
+ * Owns same-origin GET and protected JSON transport without retries or persistence
  */
 export class ApiClient {
   readonly #basePath: '/api/v1';
@@ -64,10 +64,23 @@ export class ApiClient {
     });
   }
 
+  /** Sends one explicit JSON mutation; never retries or cancels an observed server success. */
+  post<T>(
+    path: string,
+    body: Readonly<Record<string, unknown>>,
+    csrfProof: string,
+    decode: ResponseDecoder<T>
+  ): Promise<ApiResult<T>> {
+    if (!/^[1-9][0-9]{0,9}\.[a-f0-9]{64}$/.test(csrfProof))
+      return Promise.resolve(apiFailure('protocol'));
+    return this.#request(path, decode, {}, { body, csrfProof }).catch(() => apiFailure('system'));
+  }
+
   async #request<T>(
     path: string,
     decode: ResponseDecoder<T>,
-    options: GetOptions
+    options: GetOptions,
+    mutation?: Readonly<{ body: Readonly<Record<string, unknown>>; csrfProof: string }>
   ): Promise<ApiResult<T>> {
     // Paths belong to feature services, not user input. No query, fragment, encoding,
     // dot segments, backslash, authority or alternative origin is supported yet.
@@ -87,11 +100,16 @@ export class ApiClient {
       }
       headers.set('Authorization', `Bearer ${token}`);
     }
+    if (mutation) {
+      headers.set('Content-Type', 'application/json');
+      headers.set('X-CSRF-Proof', mutation.csrfProof);
+    }
     let response: Response;
     try {
       response = await this.#fetch(`${this.#basePath}${path}`, {
-        method: 'GET',
+        method: mutation ? 'POST' : 'GET',
         headers,
+        ...(mutation ? { body: JSON.stringify(mutation.body) } : {}),
         credentials: 'same-origin',
         mode: 'same-origin',
         cache: 'no-store',

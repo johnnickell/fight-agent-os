@@ -52,6 +52,22 @@ const rejection = (messages: readonly string[]) =>
   });
 
 describe('Formik shared error lifecycle', () => {
+  it('discards an obsolete non-field rejection after an edit while preserving real success', async () => {
+    const pending = deferred<ApiResult<string>>();
+    render(<Example submit={() => pending.promise} activeSchema={singleFieldSchema} />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value: 'Valid' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+      target: { value: 'Edited' }
+    });
+    await act(async () => {
+      pending.resolve(apiFailure('rate-limited'));
+      await pending.promise;
+    });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled();
+  });
   it('focuses invalid input, shows current multiple messages, clears on edits and retains unrelated errors', async () => {
     const user = userEvent.setup();
     const submit = vi

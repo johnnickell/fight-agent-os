@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 
 import { type PublicSchema, validatePublicSchema } from '@/features/validation/PublicSchema';
 
-import type { ApiResult } from '@/api/ApiResult';
+import type { ApiFailure, ApiResult } from '@/api/ApiResult';
 import type { ChangeEvent, RefCallback } from 'react';
 
 export type FieldMessages = Readonly<Record<string, readonly string[]>>;
@@ -20,6 +20,7 @@ export function usePublicForm<T>(
     initialValues: Readonly<Record<string, string>>;
     submit: (values: Readonly<Record<string, string>>) => Promise<ApiResult<T>>;
     onSuccess: (result: T) => void;
+    failureMessage?: (failure: ApiFailure) => string | null;
   }>
 ) {
   const { schema, initialValues, submit, onSuccess } = options;
@@ -88,8 +89,15 @@ export function usePublicForm<T>(
       if (!mounted.current || id !== request.current || startEpoch !== epoch.current) return;
       setBusy(false);
       if (result.error.kind === 'cancelled') return;
+      const editedSinceSubmit = Object.keys(generations.current).some(
+        (key) => (snapshot[key] ?? 0) !== (generations.current[key] ?? 0)
+      );
       if (result.error.kind !== 'validation' || !result.error.fields) {
-        setFormError('Unable to complete the request. Please check the form and try again.');
+        if (editedSinceSubmit) return;
+        setFormError(
+          options.failureMessage?.(result) ??
+            'Unable to complete the request. Please check the form and try again.'
+        );
         return;
       }
       const mapped: Record<string, readonly string[]> = {
@@ -130,7 +138,7 @@ export function usePublicForm<T>(
       // A rejection made solely of superseded field feedback is not a current form failure.
       // A genuinely empty or unclassified current rejection still needs generic feedback.
       if (uncertain || (Object.keys(mapped).length === 0 && !discardedStale)) {
-        setFormError('Please check the form and try again.');
+        setFormError(options.failureMessage?.(result) ?? 'Please check the form and try again.');
       }
       if (Object.keys(mapped).length && !edited) focusFirst(mapped, selected);
     }

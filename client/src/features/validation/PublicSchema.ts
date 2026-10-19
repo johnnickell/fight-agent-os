@@ -62,26 +62,30 @@ export function decodePublicSchema(source: unknown): PublicSchema | null {
       if (!hasExactKeys(rule, ['type', 'args', 'message', 'depends_on'])) return null;
       if (
         !['Required', 'Type', 'MinLength', 'MaxLength', 'Same'].includes(String(rule.type)) ||
-        typeof rule.args !== 'string' ||
+        !Array.isArray(rule.args) ||
+        rule.args.length > 1 ||
+        !rule.args.every((arg: unknown) => typeof arg === 'string') ||
         !safeMessage(rule.message) ||
         !Array.isArray(rule.depends_on) ||
         !rule.depends_on.every((item: unknown) => typeof item === 'string' && clientName.test(item))
       )
         return null;
+      const args = rule.args[0] ?? '';
       if (
-        (rule.type === 'Required' && (rule.args !== '' || rule.depends_on.length !== 0)) ||
-        (rule.type === 'Type' && (rule.args !== 'string' || rule.depends_on.length !== 0)) ||
+        (rule.type !== 'Required' && rule.args.length !== 1) ||
+        (rule.type === 'Required' && (rule.args.length !== 0 || rule.depends_on.length !== 0)) ||
+        (rule.type === 'Type' && (args !== 'string' || rule.depends_on.length !== 0)) ||
         ((rule.type === 'MinLength' || rule.type === 'MaxLength') &&
-          (!/^(0|[1-9][0-9]{0,3})$/.test(rule.args) ||
-            Number(rule.args) > 9999 ||
+          (!/^(0|[1-9][0-9]{0,3})$/.test(args) ||
+            Number(args) > 9999 ||
             rule.depends_on.length !== 0)) ||
-        (rule.type === 'Same' && (!wireName.test(rule.args) || rule.depends_on.length !== 1))
+        (rule.type === 'Same' && (!wireName.test(args) || rule.depends_on.length !== 1))
       )
         return null;
       rules.push(
         Object.freeze({
           type: rule.type as PublicRule['type'],
-          args: rule.args,
+          args,
           message: rule.message,
           dependsOn: Object.freeze([...(rule.depends_on as string[])])
         })

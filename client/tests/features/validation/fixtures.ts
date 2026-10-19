@@ -6,9 +6,9 @@ export const fixture = {
     display_name: {
       client_field: 'displayName',
       rules: [
-        { type: 'Required', args: '', message: 'Provide a value.', depends_on: [] },
-        { type: 'Type', args: 'string', message: 'Use text.', depends_on: [] },
-        { type: 'MinLength', args: '2', message: 'Use two characters.', depends_on: [] }
+        { type: 'Required', args: [], message: 'Provide a value.', depends_on: [] },
+        { type: 'Type', args: ['string'], message: 'Use text.', depends_on: [] },
+        { type: 'MinLength', args: ['2'], message: 'Use two characters.', depends_on: [] }
       ]
     },
     confirmation: {
@@ -16,7 +16,7 @@ export const fixture = {
       rules: [
         {
           type: 'Same',
-          args: 'display_name',
+          args: ['display_name'],
           message: 'Values must match.',
           depends_on: ['displayName']
         }

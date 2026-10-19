@@ -57,7 +57,11 @@ function inspectJavascript(text, path) {
       if (
         /(?:https?:)?\/\//i.test(value) &&
         !namespaceUrls.has(value) &&
-        !value.startsWith('https://react.dev/errors/')
+        !value.startsWith('https://react.dev/errors/') &&
+        // Formik's locked runtime hoisting dependency retains this static PropTypes diagnostic.
+        // Exact text only: it is not a resource URL or permission for arbitrary documentation links.
+        value !==
+          'Calling PropTypes validators directly is not supported by the `prop-types` package. Use PropTypes.checkPropTypes() to call them. Read more at http://fb.me/use-check-prop-types'
       ) {
         reject(`unapproved remote URL literal in ${path}`);
       }

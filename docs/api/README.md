@@ -4,7 +4,9 @@ PHP `OpenApi\Attributes` are the single authored OpenAPI **3.0.3** source. TASK-
 handwritten `docs/api/openapi.yaml`; no independently maintained YAML or tracked generated specification remains.
 TASK-00021's YAML receipts are historical evidence, not the current input. The document describes **only
 `GET /api/v1/auth/csrf`, the public-safe `GET /api/v1/validations/{form_name}`, and authenticated
-`GET /api/v1/me`, `POST /api/v1/invitations`, and `GET /api/v1/invitations/{user_id}`**. See
+`GET /api/v1/me`, the invitation issuance/status/recovery operations, and
+`POST /api/v1/auth/activate`**. See [public activation](../engineering/ACTIVATION.md) for the implemented
+possession-only JSON/Origin/CSRF/rate/session contract, not public registration. See
 [invitation API](../engineering/INVITATION_API.md) for exact permissions, confirmation, rate policy and
 independently committed partial/uncertain outcomes. See
 [validation metadata](VALIDATIONS.md) for its explicit private-artifact export, read and future form-registration
@@ -182,8 +184,9 @@ unsupported-target and unknown catalog declarations fail closed as sanitized ser
 construction. Use final nonstatic Actions. Access metadata stays on the class; source/Validation and operation
 attributes stay on `handle`, following the ordering above.
 
-The only public allowlisted Action identities are `CsrfBootstrapAction` and `ReadValidationAction`.
-Their own origin/cookie/input/catalog controls remain mandatory. Credential-flow Actions are not registered;
+The public allowlisted Action identities are `CsrfBootstrapAction`, `ReadValidationAction` and the explicit
+`ActivateInvitationAction`. Their own origin/cookie/input/catalog/grant controls remain mandatory.
+Other credential-flow Actions are not registered;
 adding a public exception requires the owning approved endpoint and an explicit identity allowlist change,
 never a URL pattern or a blanket group bypass. Swagger, other API routes and `/mcp` gain no exception.
 
@@ -207,9 +210,9 @@ explicitly confirmed elevation. No fixture route is introduced. Route and method
 The reusable `AccessBearer` scheme describes the implemented **memory-only access-token boundary**:
 pinned HS256, exact claims and times, bounded keys, strict single-header extraction and per-request PostgreSQL
 user/session/version resolution. `/me` is protected; the two approved public reads remain public.
-See [configuration and integration](../engineering/ACCESS_TOKENS.md). Opaque refresh
-credentials are browser-managed HttpOnly cookies; their eventual exact cookie name and operations are not
-invented here. `x-future-browser-security` retains the accepted cookie/mutation policy from
+See [configuration and integration](../engineering/ACCESS_TOKENS.md). Opaque refresh credentials are browser-managed HttpOnly cookies. Activation now establishes
+`__Secure-agent_os_refresh` at `/api/v1/auth`, Secure/HttpOnly/Strict and browser-session-only; refresh/logout
+operations are still separate work. `x-future-browser-security` retains the accepted cookie/mutation policy from
 [ADR 0003](../../planning/adr/0003-browser-authentication-security-profile.md). No cookie `apiKey` scheme invites
 manual refresh credentials, and no credential examples are published.
 

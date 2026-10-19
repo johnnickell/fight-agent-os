@@ -54,8 +54,8 @@ claims remain unchanged; serialized `exp` must equal `iat + 900`. Expiry that fl
 refused, not repaired by computing another deadline. Package DateTime/`TokenSet` expiry retains its original
 fractional precision, while JWT expiry can be less than one second earlier, never later. Their whole-second
 timing representations agree; they are not subsecond-identical. Future login/refresh responses must expose
-whole-second timing no later than JWT expiry, not round package DateTime upward. No such response or endpoint
-is implemented here. Tests use representative fractional clocks and persisted hard deadlines, not only
+whole-second timing no later than JWT expiry, not round package DateTime upward. [Activation](ACTIVATION.md) now supplies this response mapping through `SessionResponder`; login/refresh
+responses remain unfinished. Tests use representative fractional clocks and persisted hard deadlines, not only
 whole-second fixtures.
 
 `AuthenticateAccessToken` resolves session and user fresh on every request using package repository ports,

@@ -24,7 +24,24 @@ final class PublicForms
      */
     public static function registrations(): array
     {
-        // No real named product form exists yet. The complete empty catalog is intentional.
-        return [];
+        return [[
+            'name'   => 'invitation_activation',
+            'action' => \App\Adapter\Http\Action\Api\V1\Auth\ActivateInvitationAction::class,
+            'fields' => [
+                'password'              => ['client_field' => 'password', 'rules' => [
+                    ['index' => 0, 'message' => 'Password is required'],
+                    ['index' => 1, 'message' => 'Password must be a value of type: string'],
+                    ['index' => 2, 'message' => \App\Domain\Security\Password\PasswordStructure::GUIDANCE],
+                    ['index' => 3, 'message' => 'Password must contain no more than 128 characters']
+                ]],
+                'password_confirmation' => ['client_field' => 'passwordConfirmation', 'rules' => [
+                    ['index' => 0, 'message' => 'Confirmation is required'],
+                    ['index' => 1, 'message' => 'Confirmation must be a value of type: string'],
+                    ['index' => 2, 'message' => 'Confirmation must contain no less than 8 characters'],
+                    ['index' => 3, 'message' => 'Confirmation must contain no more than 128 characters'],
+                    ['index' => 4, 'message' => 'Confirmation must be the same as the value in the password field']
+                ]]
+            ]
+        ]];
     }
 }
