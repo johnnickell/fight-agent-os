@@ -74,6 +74,12 @@ instructions, eligible Agent/role assignments, bounded policy and requested MCP 
 layout only, not execution order or topology. Provide keyboard/list-form equivalents and distinguish requested,
 eligible and effective tool access. Instructions cannot grant Permissions or weaken required gates/independence.
 Creating Workflows from scratch with custom stages/transitions is the v2 destination, not part of this TASK.
+John subsequently approved [database-driven configuration composition](../tasks/00496-TASK.md#approved-database-driven-configuration-composition):
+immutable revisions chain ordered stage configurations and instruction components with exact existing resource
+references. The UI consumes that persisted model; v1 validation constrains composition instead of hardwiring the
+sequence into storage. Instruction supplements follow explicit inheritance/replacement rules and do not replace
+role obligations. A future editor can extend supported compositions without another configuration store, but still
+needs approved transition semantics and validation. Layout remains non-authoritative.
 
 Reuse TICKET-00025/00052 for versioned Repository configuration/routes, TICKET-00032/00083 for owned execution
 stages and authority, TICKET-00061/00064 for current tool and Agent eligibility, TICKET-00075/00076 for published
@@ -115,9 +121,10 @@ now distinguishes that supplier from existing Role/Permission and Team writers. 
 deferred. `ROLE_REPOSITORY_ADMIN` and `ROLE_DEVELOPER` are
 [human Roles](../../docs/UBIQUITOUS_LANGUAGE.md#human-roles), not Agent templates or implicit access grants.
 Authenticated admission, compatible transactions and audit must work as part of implementation; John rejected an
-additional qualification phase. Fixed-stage schema, instruction composition, explicit policy memberships and the
-budget/drift reconciliation remain planning work. Preserve `needs-info`, authored priorities and existing unrelated
-runtime holds. No new Wayfinder map, v2 decomposition, source implementation or operational grant follows.
+additional qualification phase. The configuration model and instruction-composition direction are now approved;
+remaining planning work covers explicit policy memberships, the policy writer/audit composition trace and budget/
+drift reconciliation. Preserve `needs-info`, authored priorities and existing unrelated runtime holds. No new
+Wayfinder map, TASK, v2 decomposition, source implementation or operational grant follows.
 
 ## Use cases
 

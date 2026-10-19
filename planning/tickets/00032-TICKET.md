@@ -74,9 +74,13 @@ retains scoped overrides. The visual editor consumes these contracts without own
 TASK-00496 is unranked and `needs-info`, blocked by TASK-00036, TASK-00078 and TASK-00138. TASK-00139 and TASK-00493
 gain the explicitly approved dependency. TASK-00139 retains order 3 and its Start/grant/claim/reservation/dispatch
 scope; its executable readiness now waits for this early policy supplier, not browser or completed role delivery.
-No reverse dependency is added to the new supplier. Exact policy-management Permissions, stage/instruction schema,
-reference/transaction participation and budget/drift reconciliation remain held; allocation enables no runtime.
-Other dependencies and terminal-first scope are unchanged. TASK-00495 remains the separate naming chore.
+No reverse dependency is added to the new supplier. The later approved Permission definitions do not imply
+memberships. John also approved its [database-driven configuration composition](../tasks/00496-TASK.md#approved-database-driven-configuration-composition):
+immutable revisions chain ordered stage configurations and instruction components, referencing existing resources.
+V1's fixed execution shape is enforced by validation rather than hardwired storage; future UI composition reuses
+the model without enabling arbitrary nodes now. Explicit policy memberships and budget/drift decisions remain open;
+writer/transaction/audit composition belongs to the existing implementation owners. Allocation and design approval
+enable no runtime. Other dependencies and terminal-first scope are unchanged; TASK-00495 remains the naming chore.
 
 John subsequently approved [TASK-00498](../tasks/00498-TASK.md), under TICKET-00024, as the Repository access
 supplier and added it to TASK-00139's prerequisites. It owns explicit human/Agent access grant/revoke, not Start,
