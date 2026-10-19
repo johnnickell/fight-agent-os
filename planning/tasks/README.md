@@ -44,7 +44,7 @@
 | [TASK-00039](00039-TASK.md) | Enforce shared password acceptance and Argon2id hashing | done | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00040](00040-TASK.md) | Deliver recoverable secret-safe invitation email | done | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00041](00041-TASK.md) | Expose authorized invitation issuance and safe status | done | [TICKET-00016](../tickets/00016-TICKET.md) |
-| [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
+| [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | needs-info | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | ready-for-agent | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | done | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00045](00045-TASK.md) | Enforce browser authentication request controls | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
