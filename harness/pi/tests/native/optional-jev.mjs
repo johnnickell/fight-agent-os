@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, realpathSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, realpathSync, symlinkSync, linkSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 const modules = resolve(process.argv[2]), evidence = resolve(process.argv[3]);
@@ -31,6 +31,16 @@ for (const mode of ['unconfigured', 'enrolled-offline', 'enrolled-json', 'enroll
   if (enrolled) profiles.save(profiles.preview({cwd:root,configuration:config,providerDisclosure:true,commandDisclosure:mode === 'enrolled-online'}),[]);
   writeFileSync(join(root,'source.txt'),'export function example() { return 1; }\n');
   writeFileSync(join(root,'AGENTS.md'),'Controlled qualification instructions');
+  // Ordinary native reads remain available independently of optional screening policy.
+  const terminalLog = '\x1b[1G\x1b[2K\x1b[31mFAIL\x1b[0m\n';
+  writeFileSync(join(root, 'build.log'), terminalLog);
+  writeFileSync(join(root, '.env.local'), 'SYNTHETIC=fixture-only');
+  writeFileSync(join(base, 'provider.md'), 'Cross-project provider instructions');
+  symlinkSync(join(base, 'provider.md'), join(root, 'linked.md'));
+  writeFileSync(join(root, 'hardlink-original.txt'), 'Hardlinked evidence');
+  linkSync(join(root, 'hardlink-original.txt'), join(root, 'hardlink.txt'));
+  writeFileSync(join(root, 'large.log'), 'Native bounded output\n'.repeat(60000));
+  writeFileSync(join(base, 'evidence.png'), Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAAD0lEQVR4nGP4z8DA8J8BAAf/Af8Bf4mnAAAAAElFTkSuQmCC', 'base64'));
   const extension = join(base,'extension.ts'), requests = join(base,'requests.log');
   writeFileSync(requests,'');
   writeFileSync(extension, `import { appendFileSync } from 'node:fs';
@@ -67,18 +77,39 @@ transport:{submit:async()=>{appendFileSync(${JSON.stringify(requests)},'request\
     }
     assert.equal((await session.executeBash('test "$QUALIFICATION_PREFIX" = applied && printf user-shell')).exitCode,0);outcomes++;
     await call('read',{path:'source.txt'});
+    for (const path of ['build.log', '.env.local', 'linked.md', 'hardlink.txt', 'large.log', join(base, 'provider.md'), join(provider, '.pi/skills/review/SKILL.md'), join(provider, 'docs/engineering/REVIEW.md')]) {
+      await call('read', {path});
+    }
+    const log = await call('read', {path: 'build.log'});
+    assert.match(log.content.filter(block => block.type === 'text').map(block => block.text).join('\n'), /FAIL/);
+    assert.equal(readFileSync(join(root, 'build.log'), 'utf8'), terminalLog);
+    const picture = await call('read', {path: join(base, 'evidence.png')});
+    assert.ok(picture.content.some(block => block.type === 'image'));
+    await call('read', {path: 'missing-file.txt'}, false); // Native filesystem failures remain honest.
+
+    await call('write',{path:'planning/tickets/00083-TICKET.md',content:'status: in-progress'});
+    await call('edit',{path:'planning/tickets/00083-TICKET.md',edits:[{oldText:'in-progress',newText:'done'}]});
+    assert.equal(readFileSync(join(root, 'planning/tickets/00083-TICKET.md'), 'utf8'), 'status: done');
     await call('write',{path:'created.txt',content:'before'});
     await call('edit',{path:'created.txt',edits:[{oldText:'before',newText:'after'}]});
     assert.equal(readFileSync(join(root,'created.txt'),'utf8'),'after');
     if (enrolled) {
       await call('file_locate',{path:'source.txt',need:'Locate example',symbol:'example'});
-      await call('write',{path:join(directory,'forbidden.txt'),content:'denied'},false);
+      await call('write',{path:join(directory,'native.txt'),content:'native'});
     }
     assert.equal(prompts,0); assert.equal(readFileSync(requests,'utf8'),'');
     if (mode === 'enrolled-online') {
       const result=await call('jev_read_file',{path:'source.txt',need:'Find example implementation',question:{type:'yes-no',instructions:'Is this the example implementation?'}});
       assert.equal(result.details.status,'complete');
       assert.equal(readFileSync(requests,'utf8'),'credential\nrequest\n');
+    }
+    if (enrolled) {
+      profiles.revoke(root);
+      await call('read', {path: 'build.log'});
+      await call('read', {path: join(base, 'provider.md')});
+      await call('write', {path: 'held-write.txt', content: 'native'});
+      await call('edit', {path: 'held-write.txt', edits:[{oldText:'native',newText:'still native'}]});
+      assert.equal(readFileSync(join(root, 'held-write.txt'), 'utf8'), 'still native');
     }
   } finally {await session.abort();session.dispose();}
 }

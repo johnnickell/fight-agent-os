@@ -106,6 +106,7 @@ post-routing validation examines the executed method; web routes call the inject
 - A Responder owns status, headers, response shape, and boundary mapping; it neither fetches missing business data nor decides policy. JSend is scoped to the documented API, not every HTTP path or other transport; an arbitrary lookup failure does not become a public 404 without explicit use-case context.
 - Cross presentation boundaries with explicit safe Views, not raw entities. Keep PHP properties camelCase and map HTTP JSON and database fields to snake_case.
 - Enforce authorization on the server. Sanitize public errors and keep secrets out of diagnostics.
+- Permission eligibility never implies assignment. Keep tiers, explicit managed Role defaults and human/Agent grants independent; no new membership follows merely from defining or making a Permission delegable. Follow [the managed authority assignment contract](MANAGED_POLICY.md#permission-eligibility-is-not-assignment), including for Super Admin defaults.
 
 For API Action and Responder class/method declarations, group applicable attributes in source order:
 **OpenAPI → input source → Validation → access requirements → other applicable metadata**. Keep each

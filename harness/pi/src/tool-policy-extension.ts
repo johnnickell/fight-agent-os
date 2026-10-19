@@ -1,11 +1,11 @@
 import type { ExtensionAPI, ExtensionContext, ToolDefinition } from '@earendil-works/pi-coding-agent';
-import { createBashToolDefinition, createEditToolDefinition, createReadToolDefinition, createWriteToolDefinition,
+import { createBashToolDefinition,
   getAgentDir, getPackageDir, VERSION } from '@earendil-works/pi-coding-agent';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { PolicyDenied, supportedTools, ToolPolicy } from './tool-policy/policy.mjs';
-import { fileOperations, runScript } from './tool-policy/effects.mjs';
+import { PolicyDenied, ToolPolicy } from './tool-policy/policy.mjs';
+import { runScript } from './tool-policy/effects.mjs';
 import { trackRuntimeHooks } from './tool-policy/runtime.mjs';
 
 /** Install an opt-in deterministic boundary, never activate it from repository instructions */
@@ -13,6 +13,7 @@ export default function fightToolPolicy(pi: ExtensionAPI) {
   const hooks = trackRuntimeHooks(pi);
   const extensionPath = fileURLToPath(import.meta.url);
   const sourceDir = dirname(extensionPath);
+  const guardedTools = ['bash'] as const;
   let policy: ToolPolicy | undefined;
   let selected = false;
   let unavailable = 'not-started';
@@ -23,7 +24,7 @@ export default function fightToolPolicy(pi: ExtensionAPI) {
     description: 'Select a private absolute machine-local policy file; deterministic protection only' });
 
   const status = () => {
-    if (installed && policy && supportedTools.some((name) =>
+    if (installed && policy && guardedTools.some((name) =>
       pi.getAllTools().find((tool) => tool.name === name)?.sourceInfo?.path !== extensionPath)) {
       policy.cancel('unsupported-tool-replacement');
     }
@@ -49,28 +50,24 @@ export default function fightToolPolicy(pi: ExtensionAPI) {
     return safe;
   }
   function install(ctx: ExtensionContext) {
-    const factories = { read: createReadToolDefinition, write: createWriteToolDefinition,
-      edit: createEditToolDefinition, bash: createBashToolDefinition };
-    for (const name of supportedTools) {
+    const factories = { bash: createBashToolDefinition };
+    for (const name of guardedTools) {
       const base = factories[name](ctx.cwd) as ToolDefinition;
       pi.registerTool({ ...base,
         description: `${base.description} Fight deterministic policy applies. Bash accepts only exact approved script/argv forms.`,
-        async execute(id, args, signal, onUpdate, toolCtx) {
+        async execute(_id, args, signal, _onUpdate, toolCtx) {
           let operation;
           try {
             if (!policy) throw new PolicyDenied(unavailable);
             operation = policy.begin(name, args, toolCtx.sessionManager.getSessionId(), toolCtx.cwd, signal);
-            if (name === 'bash') {
-              const started = performance.now();
-              const result = await runScript(policy, operation);
-              return { content: [{ type: 'text', text: result.output + (result.truncated ? '\n[Output truncated at 64 KiB]' : '') +
-                `\n[Script exit ${result.exitCode}]` }], details: { exitCode: result.exitCode, truncated: result.truncated },
-                structuredContent: { output: result.output, truncated: result.truncated, exit_code: result.exitCode,
-                  wall_time_seconds: Math.round((performance.now() - started) / 100) / 10 },
-                isError: result.exitCode !== 0 };
-            }
-            const definition = factories[name](toolCtx.cwd, { operations: fileOperations(policy, operation) });
-            return await definition.execute(id, operation.input, operation.controller.signal, onUpdate, toolCtx);
+            const started = performance.now();
+            const result = await runScript(policy, operation);
+            return { content: [{ type: 'text', text: result.output + (result.truncated ? '\n[Output truncated at 64 KiB]' : '') +
+              `\n[Script exit ${result.exitCode}]` }], details: { exitCode: result.exitCode, truncated: result.truncated },
+              structuredContent: { output: result.output, truncated: result.truncated, exit_code: result.exitCode,
+                wall_time_seconds: Math.round((performance.now() - started) / 100) / 10 },
+              isError: result.exitCode !== 0 };
+
           } catch (error) { throw denied(error, toolCtx); }
           finally { operation?.close(); }
         },
@@ -97,14 +94,14 @@ export default function fightToolPolicy(pi: ExtensionAPI) {
     install(ctx);
     installed = true;
     // Tool visibility alone is not exclusion: the pre-execution hook below also denies every other name.
-    pi.setActiveTools(policy?.inspect().tools ?? []);
+    pi.setActiveTools(['read', 'write', 'edit', ...(policy?.inspect().tools ?? []).filter((name: string) => name === 'bash')]);
     present(ctx, true);
   });
   hooks.on('tool_call', (event, ctx) => {
-    if (!selected) return;
+    if (!selected || ['read', 'write', 'edit'].includes(event.toolName)) return;
     const state = status();
     const reason = state.state !== 'active' ? state.reason : event.parentToolCallId ? 'unsupported-nested-route'
-      : !supportedTools.some((name) => name === event.toolName) || !state.tools.includes(event.toolName) ? 'disallowed-tool' : undefined;
+      : !guardedTools.some((name) => name === event.toolName) || !state.tools.includes(event.toolName) ? 'disallowed-tool' : undefined;
     if (reason) return { block: true, reason: denied(new PolicyDenied(reason), ctx).message };
     // This hook intentionally grants nothing: execution wrappers check the FINAL post-hook inputs.
   });

@@ -21,8 +21,9 @@ Read the [foundation brief](planning/FOUNDATION.md), [planning conventions](plan
 [TASK Board](planning/tasks/BOARD.md). Use your preferred planning skills in the terminal; saved artifacts follow
 **EPIC → TICKET → TASK**, with dependency-ordered SUBTASKs during implementation.
 
-Fresh project skills live in [.pi/skills/](.pi/skills/README.md). Markdown remains authoritative until an
-explicit, verified migration to the future project-scoped planning database.
+Use the [ubiquitous language](docs/UBIQUITOUS_LANGUAGE.md) for human Roles, Agent Team roles, Permissions and
+Repository access. Fresh project skills live in [.pi/skills/](.pi/skills/README.md). Markdown remains authoritative
+until an explicit, verified migration to the future project-scoped planning database.
 
 ## Fight terminal
 

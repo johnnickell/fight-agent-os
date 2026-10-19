@@ -1,5 +1,10 @@
 # Deterministic Pi tool policy
 
+TASK-00499 removes native `read` interception; TASK-00500 removes native `write` and `edit` interception.
+All three remain visible and use Pi/OS permissions even when policy is missing, invalid, held or omits them.
+This profile governs approved scripts and other tool routes. Historical file-denial qualification describes
+earlier behavior; native file tools are not a protection boundary for the selected policy or script files.
+
 This opt-in profile is **deterministic protection only**. It needs no Jev credential and performs no semantic
 screening. It is not a managed Workflow grant, qualified sandbox, filesystem/process isolation or autonomous
 launcher. Installing the package without selecting a policy leaves ordinary sessions unchanged.
@@ -57,7 +62,8 @@ sessions that require unsupported tools, unrestricted shell or child launch.
 Every top-level field is required; unknown fields, unsupported tools/effects and invalid bounds fail activation.
 At most 16 roots, 64 protected paths, 4 tools, 3 effects and 32 script entries are accepted; the policy file is at
 most 64 KiB. Roots must already be directories and cannot be `/`. Symlinked configured roots are pinned to their
-initial canonical destination and rechecked. `read` needs effect `read`; `write` needs `write`; `edit` needs both `read` and `write`.
+initial canonical destination and rechecked. Legacy `read`, `write` and `edit` entries and effect requirements remain schema-compatible, but do not
+restrict or authorize native file tools. Only `bash` is wrapped by this extension.
 No delete, generic command, network, provider or child-launch permission exists in this schema. Effect classes
 admit a declared operation; they do not constrain what trusted script code does internally.
 
@@ -85,39 +91,18 @@ revocation, accounting migration/reset or paid qualification is required merely 
 Never delete enrollment or accounting to clear a compatibility hold. Historical filesystem/CLI evidence below
 retains its original runtime identity; this compatibility check does not rerun paid or visual qualification.
 
-## Paths and protected resources
+## Native file tools and policy integrity
 
-The policy directory, selected policy, Harness source directory, Pi installation, Pi agent directory, common SSH/
-AWS/GnuPG/macOS Keychain locations, and every approved script are protected from direct Agent file access.
-Configured protected paths deny both reads and writes, including new descendants and symlink aliases. Components
-named `.git`, `.pi`, `.ssh`, `.aws`, `.gnupg`, `auth.json`, or `.env`/`.env.*` are reserved anywhere in a path.
-Other credentials/resources need explicit `protectedPaths`; this is not semantic credential detection. Choose
-minimal roots rather than granting an entire home directory. Pi's own credential use is outside file-tool access.
+Native `read`, `write` and `edit` run unchanged, including outside policy roots, on linked files and on paths
+previously reserved by the harness. Pi owns argument validation, output/diff presentation, mutation queues and
+filesystem errors. This applies during missing-policy, invalid-policy, cancellation and nested-tool routes.
+The extension neither replaces these tools nor requires policy membership to expose them.
 
-Paths are canonicalized component by component using native filesystem spelling, including existing ancestors
-of new write targets. Case and Unicode aliases are compared using the selected volume's own directory lookups,
-not universal lowercasing or a guessed Unicode normalization table. At activation the guard creates a private
-`0700` `.fight-policy-names-*` directory beside the policy, containing empty lookup directories for policy/reserved
-name components. Admission only reads those lookup entries; it never creates a requested target to test equivalence.
-The guard removes its lookup directory on cancellation, reload or shutdown. An abrupt process kill can leave an
-inert directory there; the operator may remove that stopped session's directory. Missing/replaced lookup resources
-fail closed. Existing distinct names on case-sensitive APFS remain distinct, while equivalent Unicode spellings and
-nonexistent protected ancestors remain protected. Internal symlinks can reach allowed regular files; out-of-root and protected destinations, dangling symlinks, hardlinked
-files and special files are denied. Tilde, leading `@`, percent encodings, backslashes and control characters are
-rejected rather than interpreted ambiguously. Images retain Pi's renderer through checked PNG/JPEG/GIF/WebP/BMP
-reads. Reads/edits and existing write targets are limited to 1 MiB; new write content and aggregate edit inputs
-also have a 1 MiB ceiling. Edits accept 1–128 replacements. Read offset/limit must be positive integers.
-
-Execution wrappers clone final arguments **after every `tool_call` hook**, validate types again, and construct
-fresh tool definitions with checked filesystem operations. Every access/read/mkdir/write rechecks session,
-cancellation, policy/guard content, canonical roots/resources and the final target immediately before its
-synchronous filesystem effect. A queued edit/write therefore cannot use an earlier path check. There is no
-cached/reusable allow decision. Guard source bytes and policy bytes are digest-bound; inspection and admission
-recheck them. Replaced wrapped-tool ownership makes the profile unavailable.
-
-These checks do **not** close OS-level TOCTOU races: another process can change filesystem components between
-check/open or check/spawn. Hardlinks and symlinks are deliberately restricted, not an inode-capability sandbox.
-Synchronous effect calls avoid JavaScript yields between final validation and access, not same-user races.
+Policy and guard bytes, canonical roots/resources and approved script digests remain checked for script
+execution. Editing a policy or script with a native tool does not authorize its execution: changed policy
+holds the old session; changed script bytes must match the approved digest. Runtime/OS permissions and user
+authorization govern file changes. This profile cannot prevent an agent from altering same-user files and is
+not a sandbox. Retained low-level file-admission helpers are not installed as native file-tool wrappers.
 
 ## Approved bash scripts
 
@@ -163,11 +148,12 @@ is required; do not broaden this policy to emulate it.
 
 | Route | Treatment in the selected profile |
 |---|---|
-| Pi `read`, `write`, `edit`, `bash` Agent calls | Execution-time wrappers and fresh per-effect admission |
+| Pi `read`, `write`, `edit`, including nested calls | Native Pi behavior; no harness admission or denial |
+| Pi `bash` Agent calls | Execution-time wrappers and fresh per-effect admission |
 | Later argument-changing `tool_call` hook | Final wrapper checks changed arguments, not the earlier proposal |
 | `grep`, `find`, `ls`, `powershell`, custom/MCP tools | Inactive by default and denied by name before execution if enabled/called |
 | `codemode`, tool search, `jev_read_file`, helpers, child/sub-agent launch | Agent tool execution denied; trusted registration/startup/hooks are outside this boundary |
-| `ctx.executeTool` nested calls | Denied by `parentToolCallId`, including nested calls to the four wrapped names |
+| `ctx.executeTool` nested calls | Denied by `parentToolCallId`, except native `read`, `write` and `edit`; approved scripts remain wrapped |
 | TUI `!` and `!!`, built-in RPC `bash` dispatch | `user_bash` handled with a denial result; no local shell fallthrough |
 | Trusted extensions, commands, SDK host calls, external editors, startup resources, `@file` prompt attachment | **Outside Agent tool coverage**, not isolated or intercepted by this policy |
 
@@ -180,11 +166,9 @@ They are trusted-host capabilities, **not covered Agent routes**. A controlled p
 SDK `executeBash` itself bypasses `user_bash`; the CLI TUI/RPC dispatch owns that event. The profile cannot make
 an arbitrary SDK host or malicious trusted extension safe and must not be advertised for that purpose.
 
-Reload/shutdown abort pending script processes and invalidate old wrapper closures. File operations waiting in
-Pi's mutation queue recheck their original session/epoch and cannot start after invalidation. No semantic or
+Reload/shutdown abort pending script processes and invalidate old wrapper closures. Native file mutation queues retain Pi's own lifecycle behavior. No semantic or
 human admission decision is pending in this deterministic slice. Session switch/fork/tree navigation invalidates
-the old context; even a cancelled navigation needs explicit reload/reselection before more work. An already
-started synchronous write cannot be rolled back; process-group cancellation cannot contain escaped descendants
+the old context; even a cancelled navigation needs explicit reload/reselection before more work. Process-group cancellation cannot contain escaped descendants
 or undo prior script effects. A direct process is bounded, not a proof that all descendants stopped.
 
 `/fight-policy` and normal block reasons contain bounded profile IDs, revisions/digests, counts and enumerated
@@ -214,10 +198,9 @@ presentation-only package. Native terminal images are unavailable: ANSI transcri
 file effects, **not visual clipping/font/layout correctness**. Independent Review and QA remain separate.
 
 Required Jev tool-effect screening (TASK-00161) was cancelled by TASK-00492; no semantic command gate remains. TASK-00309's separate
-[enrolled file-screening candidate](FILE_SCREENING_PROFILE.md) reuses these final-argument write/edit operations
-with normal project reads, optional relevance discovery, role-scoped writes and native shell execution
-without Jev assessment or confirmation. Its project-instruction, skill and `.env.example` access defaults
-do not change the standalone deterministic policy described above.
+[enrolled file-screening candidate](FILE_SCREENING_PROFILE.md) provides optional relevance discovery and
+workflow metadata with native reads, writes, edits and shell execution. Discovery exclusions and task
+responsibilities do not intercept native file tools in either profile.
 Shell relevance bypass and same-user access are accepted interim limitations, not containment. This does not change
 this standalone optional policy's exact-script shell restrictions. Current workflow proof/independent acceptance
 remain pending.

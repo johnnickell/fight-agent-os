@@ -66,8 +66,12 @@ Missing authority, ambiguous eligibility, out-of-scope effects, exhausted limits
 with an actionable outcome. Escalate only when an actual policy decision or expanded authority is needed; a prompt
 is not the default failure recovery. Changed source is re-resolved and evaluated under policy, never silently
 substituted into an existing grant. Repeated permitted starts need no approval dialogue. Revocation prevents new
-effects and reconciles in-flight work. Agents cannot author policy, widen grants, inherit administrator access or
-turn a relevance judgment into permission. MCP transports the same application checks; it is not authority itself.
+effects and reconciles in-flight work. Execution rights confer no policy-management authority and cannot widen an
+existing grant. Humans and Agents may separately perform Repository configuration operations when granted the
+required Permissions and Repository access; likely read-only Agent assignments are not a capability restriction.
+Those Repository rights do not confer installation-policy management or inherited administrator authority; use
+[the explicit management boundary](../../planning/tasks/00496-TASK.md#approved-management-authority).
+A relevance judgment grants no Permission. MCP transports the same application checks; it is not authority itself.
 
 This is the required design for TASK-00139 and its consumers, not an installed policy or a claim of qualified
 managed execution. The interim Pi shell removal in TASK-00492 does not implement this restricted execution layer.
