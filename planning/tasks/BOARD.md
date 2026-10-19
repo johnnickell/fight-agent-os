@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -35,6 +35,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00283](00283-TASK.md) | Protect email-change issuance material | [TICKET-00068 — Deliver and recover new-mailbox confirmation credentials](../tickets/00068-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00290](00290-TASK.md) | Discover complete Feature references for exact code scopes | [TICKET-00070 — Discover provision and prepare complete Feature references](../tickets/00070-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00321](00321-TASK.md) | Install and maintain exact Harness releases | [TICKET-00085 — Install and configure the versioned Harness](../tickets/00085-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
@@ -307,8 +309,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00439](00439-TASK.md) | Return the published checkout safely to default | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | ready-for-agent | [TASK-00438](00438-TASK.md) | — |
 | — | [TASK-00440](00440-TASK.md) | Publish and recover instruction changes in the Dashboard | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | ready-for-agent | [TASK-00439](00439-TASK.md), [TASK-00433](00433-TASK.md) | — |
 | — | [TASK-00444](00444-TASK.md) | Synchronize from the Dashboard and complete the instruction-change journey | [TICKET-00109 — Synchronize the designated checkout safely](../tickets/00109-TICKET.md) | ready-for-agent | [TASK-00443](00443-TASK.md), [TASK-00435](00435-TASK.md), [TASK-00440](00440-TASK.md) | — |
-| — | [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | [TASK-00447](00447-TASK.md) | — |
-| — | [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | [TASK-00447](00447-TASK.md) | — |
 | — | [TASK-00452](00452-TASK.md) | Explain HTTP failures without changing public responses | [TICKET-00111 — Explain application activity and failures with useful diagnostics](../tickets/00111-TICKET.md) | ready-for-agent | [TASK-00451](00451-TASK.md) | — |
 | — | [TASK-00453](00453-TASK.md) | Observe every command query and event dispatch | [TICKET-00111 — Explain application activity and failures with useful diagnostics](../tickets/00111-TICKET.md) | ready-for-agent | [TASK-00451](00451-TASK.md) | — |
 | — | [TASK-00464](00464-TASK.md) | Inspect exact diagnostic content and surrounding context | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | [TASK-00463](00463-TASK.md) | — |
@@ -535,6 +535,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00226](00226-TASK.md) | Describe Fight Agent OS as software to build software | — (standalone chore) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
 | — | [TASK-00306](00306-TASK.md) | Add a local build coordinator through automatic PR publication | [TICKET-00084 — Coordinate local TASK delivery through an open reviewed PR](../tickets/00084-TICKET.md) | done | — | [PR #84](https://github.com/johnnickell/fight-agent-os/pull/84) |
 | — | [TASK-00309](00309-TASK.md) | Activate and enforce visible file screening across Pi workflow sessions | [TICKET-00039 — Require relevance screening before loading file contents](../tickets/00039-TICKET.md) | done | — | [PR #107](https://github.com/johnnickell/fight-agent-os/pull/107) |
+| — | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | — |
 | — | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | — (standalone chore) | done | — | [PR #103](https://github.com/johnnickell/fight-agent-os/pull/103) |
 | — | [TASK-00488](00488-TASK.md) | Repair Pi screening, workflow access and runtime compatibility | — (standalone bug) | done | — | [PR #108](https://github.com/johnnickell/fight-agent-os/pull/108) |
 | — | [TASK-00489](00489-TASK.md) | Use authorized repository worktrees across Pi skills without repeated approval | — (standalone bug) | done | — | [PR #109](https://github.com/johnnickell/fight-agent-os/pull/109) |
