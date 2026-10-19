@@ -9,7 +9,7 @@ import { runScript } from './tool-policy/effects.mjs';
 import { trackRuntimeHooks } from './tool-policy/runtime.mjs';
 
 /** Install an opt-in deterministic boundary, never activate it from repository instructions */
-export default function fightToolPolicy(pi: ExtensionAPI) {
+export default function installToolPolicy(pi: ExtensionAPI) {
   const hooks = trackRuntimeHooks(pi);
   const extensionPath = fileURLToPath(import.meta.url);
   const sourceDir = dirname(extensionPath);
