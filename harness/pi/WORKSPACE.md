@@ -117,8 +117,14 @@ for executing policy-boundary probes.
 
 Prompts, supported registered extension commands and prompt templates go through RPC `prompt`; streaming prompts
 explicitly steer. `agent_settled`, not a successful command response, clears the running indicator. Shell input
-uses RPC `bash`, preserving Pi's `user_bash` route and the Harness's final-command assessment. Supported extension
-select/confirm/input/editor requests are forwarded, request-bound, timeout-aware and never automatically allowed.
+uses RPC `bash`, preserving Pi's `user_bash` route. Under the [native-shell rule](FILE_SCREENING_RULE.md#native-shell-remains-independent),
+there is no Jev command assessment, disclosure or confirmation, and no Jev setup is required. Existing task and
+native runtime permissions still apply; RPC grants no shell authority. Explicit-file checks do not confine shell,
+its descendants or trusted SDK calls, and do not provide OS isolation. Any independently selected
+[deterministic tool policy](TOOL_POLICY.md) remains separate from Jev screening.
+
+Supported extension select/confirm/input/editor requests are forwarded, request-bound, timeout-aware and never
+automatically allowed. These standard dialogs are distinct from Jev command confirmation.
 No policy source is modified to accommodate the UI. Raw stderr, provider configuration, signatures and image
 payloads are not copied into display state. Pi retains images in the session; the display shows a text marker.
 
