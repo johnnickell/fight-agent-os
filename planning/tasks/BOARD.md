@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00500](00500-TASK.md) | Restore native file tools and use Terra for Land | — (standalone chore) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -548,4 +548,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00494](00494-TASK.md) | Read installed Pi examples through the authorized file reader | — (standalone bug) | done | — | [PR #114](https://github.com/johnnickell/fight-agent-os/pull/114) |
 | — | [TASK-00497](00497-TASK.md) | Restore optional-Jev workspace startup and child QA instruction reads | — (standalone bug) | done | — | [PR #115](https://github.com/johnnickell/fight-agent-os/pull/115) |
 | — | [TASK-00499](00499-TASK.md) | Remove harness denials from native file reads | — (standalone bug) | done | — | [PR #119](https://github.com/johnnickell/fight-agent-os/pull/119) |
+| — | [TASK-00500](00500-TASK.md) | Restore native file tools and use Terra for Land | — (standalone chore) | done | — | — |
 <!-- /planning:board -->
