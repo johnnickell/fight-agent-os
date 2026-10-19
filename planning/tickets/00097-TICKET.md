@@ -122,9 +122,18 @@ deferred. `ROLE_REPOSITORY_ADMIN` and `ROLE_DEVELOPER` are
 [human Roles](../../docs/UBIQUITOUS_LANGUAGE.md#human-roles), not Agent templates or implicit access grants.
 Authenticated admission, compatible transactions and audit must work as part of implementation; John rejected an
 additional qualification phase. The configuration model and instruction-composition direction are now approved;
-remaining planning work covers explicit policy memberships, the policy writer/audit composition trace and budget/
-drift reconciliation. Preserve `needs-info`, authored priorities and existing unrelated runtime holds. No new
-Wayfinder map, TASK, v2 decomposition, source implementation or operational grant follows.
+the subsequent [TASK-00493 follow-through](../tasks/00493-TASK.md#runtime-team-and-observability-follow-through)
+records the bounded policy writer/audit trace and runtime/MCP, Team/independence and history ownership. Existing
+owners now distinguish narrowing-only Start allowance from later human extensions, and future-only publication
+from genuine pinned-input drift. John subsequently approved human repair extensions up to the run's pinned
+installation maximum, initially ten total cycles, preserving consumption and policy/instructions. This changes no
+separate process or resource limit. John also explicitly approved all five policy/configuration Permissions as
+managed Super Admin defaults, with no automatic memberships for other Roles or direct Agent assignments, as recorded
+in [TASK-00496](../tasks/00496-TASK.md#approved-policy-permission-memberships). Their tiers remain unchanged; separate
+Repository-access defaults and actual User/Agent assignments are outside that approval. The named #3–#5 policy
+decisions are resolved. Preserve the requested planning-only `needs-info` metadata, authored priorities and existing
+host/authority/Team holds; this is not a declaration of implementation readiness or an extra certification phase.
+No new Wayfinder map, TASK, v2 decomposition, source implementation or operational grant follows.
 
 ## Use cases
 
