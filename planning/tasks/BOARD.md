@@ -17,13 +17,14 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 43 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | [TICKET-00016 — Deliver the invitation and activation lifecycle](../tickets/00016-TICKET.md) | ready-for-agent | — | — |
+| 75 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 | 118 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
@@ -69,7 +70,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00072](00072-TASK.md) | — |
 | 71 | [TASK-00074](00074-TASK.md) | Expose authorized installation capabilities and diagnostics | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00073](00073-TASK.md) | — |
 | 72 | [TASK-00075](00075-TASK.md) | Deliver the guided Planning installation journey | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00074](00074-TASK.md) | — |
-| 75 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00077](00077-TASK.md) | — |
 | 76 | [TASK-00079](00079-TASK.md) | Confirm and designate checkout and worktree links | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00073](00073-TASK.md), [TASK-00078](00078-TASK.md) | — |
 | 77 | [TASK-00080](00080-TASK.md) | Complete repository reconciliation and lifecycle operations | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00079](00079-TASK.md) | — |
 | 78 | [TASK-00081](00081-TASK.md) | Version repository configuration and rollback | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00080](00080-TASK.md), [TASK-00498](00498-TASK.md) | — |
@@ -514,6 +514,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 53 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | done | — | [PR #125](https://github.com/johnnickell/fight-agent-os/pull/125) |
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
+| 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | — |
 | 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #79](https://github.com/johnnickell/fight-agent-os/pull/79) |
 | — | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | — (standalone chore) | done | — | [PR #19](https://github.com/johnnickell/fight-agent-os/pull/19) |
 | — | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | — (standalone bug) | done | — | — |
