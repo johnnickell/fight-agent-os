@@ -37,8 +37,10 @@ export function wrap(text, columns) {
   }
   return lines;
 }
-export function layout(columns, rows, focus = 0, collapsed = false) {
-  if (columns < 100 || rows < 20 || collapsed) return [{ pane: focus, x: 0, y: 1, w: columns, h: Math.max(1, rows - 3) }];
+export function layout(columns, rows, focus = 0, collapsed = false, availableColumns = columns) {
+  const singleView = columns < 100 || rows < 20 || collapsed;
+  columns = Math.max(1, Math.min(columns, availableColumns));
+  if (singleView) return [{ pane: focus, x: 0, y: 1, w: columns, h: Math.max(1, rows - 3) }];
   const left = Math.floor(columns / 2), top = Math.floor((rows - 3) / 2);
   return [{ pane: 0, x: 0, y: 1, w: left, h: rows - 3 },
     { pane: 1, x: left, y: 1, w: columns - left, h: top },
@@ -144,13 +146,15 @@ export class Workspace {
     if (pane === 2) return 'Observation only — runtime logs\nUnavailable: no runtime connected\nTASK-00449 supplies the producer.\nNo Docker access or lifecycle operations.\nRuntime identity: none (not worktree-isolated).';
     return [this.omitted ? '[Older display content omitted; Pi session remains authoritative]' : '', ...this.transcript, this.live || this.liveOmitted ? `${this.liveOmitted ? '[assistant stream: earlier content omitted]\n' : ''}${this.live}${this.liveOmitted ? '\n[assistant stream truncated; Pi history is authoritative]' : ''}` : ''].filter(Boolean).join('\n');
   }
-  render(columns, rows) {
+  render(columns, rows, availableColumns = columns) {
     columns = Math.max(1, columns); rows = Math.max(1, rows);
+    // Physical dimensions select the layout; drawable width may reserve the autowrap column.
+    const areas = layout(columns, rows, this.dialogs.length ? 0 : this.focus, this.collapsed, availableColumns);
+    columns = Math.max(1, Math.min(columns, availableColumns));
     if (rows < 6 || columns < 12) return Array.from({ length: rows }, (_, index) => fit(index === 0 ? 'Resize terminal; ^Q exits' : '', columns));
     const output = Array.from({ length: rows }, () => ' '.repeat(columns));
     const pieces = Array.from({ length: rows }, () => []);
     output[0] = fit(`FIGHT | screening: ${this.policy} | ${this.busy ? 'running' : 'idle'} | ${this.identity}`, columns);
-    const areas = layout(columns, rows, this.dialogs.length ? 0 : this.focus, this.collapsed);
     for (const area of areas) {
       const { pane, x, y, w, h } = area, inner = Math.max(1, w - 2);
       let title = ['Conversation', 'Child observation', 'Runtime observation'][pane];
