@@ -69,10 +69,17 @@ already planned. [TASK-00493](../tasks/00493-TASK.md) adds this bounded configur
 Dashboard owner. Preserve the compact runtime table and detail sections; open policy configuration separately.
 No full Wayfinder map, new executor or duplicate policy/Agent/tool registry is needed.
 
-Show registered stages and their supported transitions, assigned eligible Agents/roles, policy bounds and available
-MCP tool capabilities. Dragging arranges nodes or proposes typed configuration changes; it never directly grants
-a Permission, launches a tool or changes a running Workflow. Provide keyboard/list-form equivalents. Keep layout
-metadata separate from authoritative policy, and distinguish available, requested and effective tool access.
+The subsequent approved v1 scope uses a **fixed stage sequence** with configurable, versioned per-stage
+instructions, eligible Agent/role assignments, bounded policy and requested MCP tool capabilities. Dragging changes
+layout only, not execution order or topology. Provide keyboard/list-form equivalents and distinguish requested,
+eligible and effective tool access. Instructions cannot grant Permissions or weaken required gates/independence.
+Creating Workflows from scratch with custom stages/transitions is the v2 destination, not part of this TASK.
+John subsequently approved [database-driven configuration composition](../tasks/00496-TASK.md#approved-database-driven-configuration-composition):
+immutable revisions chain ordered stage configurations and instruction components with exact existing resource
+references. The UI consumes that persisted model; v1 validation constrains composition instead of hardwiring the
+sequence into storage. Instruction supplements follow explicit inheritance/replacement rules and do not replace
+role obligations. A future editor can extend supported compositions without another configuration store, but still
+needs approved transition semantics and validation. Layout remains non-authoritative.
 
 Reuse TICKET-00025/00052 for versioned Repository configuration/routes, TICKET-00032/00083 for owned execution
 stages and authority, TICKET-00061/00064 for current tool and Agent eligibility, TICKET-00075/00076 for published
@@ -81,9 +88,43 @@ publishes an attributable policy revision; existing runs retain their selected r
 routine future runs without repeated human confirmation. Unsupported stages/connections or missing management
 contracts are visible gaps, not browser-invented runtime capabilities.
 
+John also approved bounded transient retries and shared Review/QA repair loops with visible holds on exhaustion
+or uncertainty; installation constraints/defaults with permitted Repository overrides and run-only narrowing;
+and immutable run policy/instructions with current revocation/stop checks. New revisions apply to future runs;
+resume keeps its pinned revision, and adopting another revision requires a new eligible run. Team-level policy
+inheritance and in-place policy migration are deferred to v2. These are planning decisions, not implemented behavior.
+
 Deliver inspection first, then typed draft edits, validation/diff and authorized publication/restore through these
-same owners. Exact supported stage-graph schema and policy-management operations must be allocated before this
-TASK is ready. This is approved product intent and a bounded implementation plan, not implemented behavior.
+same owners. [TASK-00493's decision record](../tasks/00493-TASK.md#approved-v1-policy-decisions) owns the details;
+its [supplier contract trace](../tasks/00493-TASK.md#supplier-contract-trace-and-remaining-holds) distinguishes
+existing planned boundaries from missing amendments. John accepted the [policy ownership boundary](../tasks/00493-TASK.md#approved-policy-ownership-boundary):
+Execution owns policy semantics and the installation-policy lifecycle; Repository configuration owns scoped
+overrides; the editor consumes their shared validation/publication contracts. The separately approved
+[TASK-00496](../tasks/00496-TASK.md) now owns the installation-policy lifecycle under TICKET-00032; TASK-00139 and
+TASK-00493 gain its explicit prerequisite edge. Its [approved management boundary](../tasks/00496-TASK.md#approved-management-authority)
+restricts installation changes to protected Super Admin authority and Repository overrides to separate scoped
+management; neither grants execution rights. Its [engineering Permission/participant map](../tasks/00496-TASK.md#engineering-investigation-permission-mapping)
+records the accepted five-right mapping and traces current writer paths, without implementation or runtime qualification.
+The [Repository access model](../tasks/00496-TASK.md#approved-repository-access-model) permits explicit human/Agent
+access, all repositories for Super Admin and the initial Workspace's repositories through `ROLE_WORKSPACE_ADMIN`.
+Use existing Role assignment/removal; separate Workspace assignment is deferred until multi-workspace functionality,
+not a new administrative-membership type or current blocker. Operation Permissions remain separate. Humans and Agents may read/revise/restore Repository configuration when granted the
+required rights and access; likely read-only Agent assignments are not a capability or assignment restriction.
+No additional principal-type gate is introduced. The approved [TASK-00498](../tasks/00498-TASK.md) now owns explicit
+Repository access grant/revoke and Workspace Admin integration through the existing catalog/Role assignment owners.
+Its separate `ADMIN_SAFE` read/manage access Permissions imply no Role defaults or human/Agent grants. TASK-00081
+and TASK-00139 gain its approved prerequisite; this editor consumes through them. Installation policy remains an
+independent owner, with no reverse dependency on the editor, Start or completed Agent delivery.
+
+The [ownership map](../tasks/00496-TASK.md#engineering-investigation-repository-access-and-administrator-role-owners)
+now distinguishes that supplier from existing Role/Permission and Team writers. Workspace assignment remains
+deferred. `ROLE_REPOSITORY_ADMIN` and `ROLE_DEVELOPER` are
+[human Roles](../../docs/UBIQUITOUS_LANGUAGE.md#human-roles), not Agent templates or implicit access grants.
+Authenticated admission, compatible transactions and audit must work as part of implementation; John rejected an
+additional qualification phase. The configuration model and instruction-composition direction are now approved;
+remaining planning work covers explicit policy memberships, the policy writer/audit composition trace and budget/
+drift reconciliation. Preserve `needs-info`, authored priorities and existing unrelated runtime holds. No new
+Wayfinder map, TASK, v2 decomposition, source implementation or operational grant follows.
 
 ## Use cases
 
