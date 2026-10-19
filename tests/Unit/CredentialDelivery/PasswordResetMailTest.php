@@ -15,6 +15,9 @@ use App\Application\Mail\MailOutcome;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\CredentialDeliveryStatusView;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential;
@@ -144,11 +147,14 @@ HTML;
 
             return $outcome;
         });
+        $activationGrants = $this->createMock(ActivationGrantRepository::class);
+        $activationGrants->expects(self::never())->method('getByDeliveryId');
         $provider = new CredentialMailProvider(
             new InvitationMailProvider(
-                new CanonicalCredentialLink('https://example.test', '/activate'),
+                new CanonicalCredentialLink('https://example.test', '/app/activate'),
                 $this->templates(),
-                $mail
+                $mail,
+                $activationGrants
             ),
             $this->provider($queries, $mail)
         );
@@ -295,12 +301,39 @@ HTML;
     {
         $queries = $this->createMock(QueryBus::class);
         $queries->expects(self::never())->method('fetch');
+        $at = new DateTimeImmutable('2026-10-02T12:00:00Z');
+        $activationGrant = ActivationGrant::issue(
+            UserId::generate(),
+            ActivationCredential::fromString('synthetic'),
+            $at,
+            $at->modify('+7 days'),
+            EmailAddress::fromString('not-routing-authority@example.test'),
+            'synthetic-ciphertext'
+        );
+        $activationGrants = $this->createMock(ActivationGrantRepository::class);
+        $activationGrants->expects(self::once())->method('getByDeliveryId')
+            ->with(self::equalTo($activationGrant->getDelivery()->getId()))
+            ->willReturn($activationGrant);
         $mail = $this->createMock(MailDelivery::class);
-        $mail->expects(self::once())->method('deliver')->willReturn(MailOutcome::DELIVERED);
+        $mail->expects(self::once())->method('deliver')->willReturnCallback(static function (
+            MailMessage $message
+        ) use ($activationGrant): MailOutcome {
+            [$destination, $subject, $text, $html] = $message->content();
+            $url = 'https://example.test/app/activate#credential=synthetic&user_id=';
+            $url .= $activationGrant->getUserId()->toString();
+            self::assertTrue($destination->toString() === 'local@example.test');
+            self::assertSame('Your Fight Agent OS invitation', $subject);
+            self::assertTrue(str_contains($text, "\n".$url."\n"));
+            self::assertTrue(str_contains($html, 'href="'.str_replace('&', '&amp;', $url).'"'));
+            self::assertSame($activationGrant->getDelivery()->getId()->toString(), $message->idempotencyId);
+
+            return MailOutcome::DELIVERED;
+        });
         $invitations = new InvitationMailProvider(
-            new CanonicalCredentialLink('https://example.test', '/activate'),
+            new CanonicalCredentialLink('https://example.test', '/app/activate'),
             $this->templates(),
-            $mail
+            $mail,
+            $activationGrants
         );
         $resets = $this->provider($queries, $mail);
         $provider = new CredentialMailProvider($invitations, $resets);
@@ -316,7 +349,7 @@ HTML;
         }
         $activation = new CredentialDeliveryInvocation(
             'activation',
-            $grant->getDelivery()->getId()->toString(),
+            $activationGrant->getDelivery()->getId()->toString(),
             EmailAddress::fromString('local@example.test'),
             'synthetic'
         );
