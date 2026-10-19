@@ -3,7 +3,7 @@ import { truncateToWidth } from '@earendil-works/pi-tui';
 import { displayMode, hasConversation, modes, parseMode, renderHeader } from './header.mjs';
 
 /** Install presentation only; tools, prompts, credentials and Workflow authority are untouched. */
-export default function fightTerminal(pi: ExtensionAPI) {
+export default function installHeader(pi: ExtensionAPI) {
   let preference = 'auto';
   let started = false;
   const plain = process.env.TERM === 'dumb' || process.env.NO_COLOR !== undefined;

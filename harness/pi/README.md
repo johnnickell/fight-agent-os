@@ -90,6 +90,34 @@ pi remove /absolute/path/to/fight-agent-os/harness/pi
 An install changes only Pi's package declaration. It does not select models, alter credentials, install skills,
 authorize tools, or overwrite another theme. Pi's normal package/project trust rules still apply.
 
+## Module path migration
+
+Module names follow the repository's [Pi/TypeScript convention](../../docs/engineering/STANDARDS.md#pi-and-typescript-module-naming).
+The manifest loads `header-extension.ts`, `jev-extension.ts` and `tool-policy-extension.ts` exactly once.
+`file-screening-integration.ts` is internal to the Jev adapter; do not load it as an extension.
+
+| Old path under `harness/pi/src/` | Current path | Compatibility |
+|---|---|---|
+| `extension.ts` | `header-extension.ts` | Old file removed; update explicit paths |
+| `file-screening-extension.ts` | `file-screening-integration.ts` | Internal import moved; `installFileScreening` export unchanged |
+| `jev-extension.ts` | Unchanged | Default registration and named `installJev` export retained |
+| `tool-policy-extension.ts` | Unchanged | Independent policy selection unchanged |
+
+The consumer inventory found no supported caller requiring an old-path shim. Package-root installations
+(`pi install ./harness/pi` or `pi --extension ./harness/pi`) follow the manifest and need no path change.
+For header-only loading, use `pi --extension ./harness/pi/src/header-extension.ts` instead of the removed
+`src/extension.ts`. Update any operator-owned explicit extension path or package resource filter in the
+appropriate settings scope yourself; this migration does not edit settings or global installation paths.
+Do not combine package loading with a second copy of its entry points or use a broad `src/*.ts` glob.
+
+If Pi reports a missing old file, stop that process, replace the old path with the corresponding current path
+(or select the package root), and start Pi again. An absent header after a package update can also mean an old
+resource filter no longer matches; select the new entry in `pi config` in the intended scope. After authorized
+adoption, **fully exit and restart the Pi process**; `/reload` alone is not the adoption qualification for
+renamed guard modules. Do not rerun Jev setup, reenroll projects, reset accounting/ledgers, change models or
+restart sessions automatically. Existing commands, tool IDs, permissions and deterministic-policy decisions
+are unchanged.
+
 ## Appearance
 
 The default `auto` mode shows the refined F welcome and switches to a one-line identity at the first Agent run.
@@ -127,8 +155,23 @@ declared peer dependencies when loading extensions. There are no third-party run
 Use `npm pack --ignore-scripts --pack-destination <output-directory>` to create a distributable tarball; package
 contents are limited to the manifest, source, README and license. Keep local build artifacts under `.runs/`.
 
-Controlled behavior tests are separate from Pi integration qualification. Real terminal/font
-rendering still varies; a browser design mockup must not be presented as a native terminal screenshot.
+Controlled behavior tests are separate from Pi integration qualification. For installed-SDK loading and
+public behavior checks, set `PI_SDK_MODULES` to the reviewed Pi installation's `node_modules` directory and run
+from the repository root, using a fresh task-owned evidence directory:
+
+```sh
+node harness/pi/tests/native/module-loading.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/loading
+node harness/pi/tests/native/optional-jev.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/optional-jev
+node harness/pi/tests/native/read-policy.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/read-policy
+node harness/pi/tests/native/worktree-access.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/worktree-access
+```
+
+These probes use disposable operator/session fixtures and controlled provider boundaries, not live Jev calls.
+The loading probe exercises the manifest, explicit entries, deduplication, header-only loading, JSON mode,
+header commands and obsolete-path recovery. Its header callbacks are not terminal screenshots. Record the
+actual SDK version and required API/hook availability; a tested version is evidence, not an equality gate or
+a promise about untested runtimes. Real terminal/font rendering still varies; a browser design mockup must not
+be presented as a native terminal screenshot.
 
 ## Jev setup and readiness (operator only)
 
