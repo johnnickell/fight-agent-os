@@ -47,7 +47,10 @@ One execution writes ignored `.runs/build/reports/backend/coverage.php`, `clover
 `domain-application.json`, and `adapter.json`.
 Old reports are removed before execution. A failed phase is incomplete even if PHPUnit emitted report files;
 only a successful complete command is a verification receipt. The PHP coverage artifact is trusted local
-output; never replace it with an externally supplied PHP file.
+output; never replace it with an externally supplied PHP file. The coverage-policy subprocess receives an explicit
+`160M` PHP memory limit to load and process this artifact; the reconciled 1,577-test report peaked at 129.6 MiB,
+just above PHP's `128M` default. This finite allowance applies only to policy processing, not PHPUnit or application
+execution, and leaves the web container's `2 GiB` ceiling unchanged.
 
 The two layer reports and combined `summary.json` report **Domain/Application** and **Adapter**, with per-file executable-line counts,
 covered lines, uncovered line numbers and exact excluded executable lines with reasons. Unit, Integration
