@@ -88,7 +88,7 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00447](../tasks/00447-TASK.md) | Work in the responsive Pi terminal workspace | done |
-| [TASK-00448](../tasks/00448-TASK.md) | Observe the selected local child agent in the terminal workspace | in-progress |
+| [TASK-00448](../tasks/00448-TASK.md) | Observe the selected local child agent in the terminal workspace | done |
 | [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent |
 <!-- /planning:children -->
 
