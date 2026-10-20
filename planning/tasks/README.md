@@ -47,7 +47,7 @@
 | [TASK-00042](00042-TASK.md) | Expose permission-controlled invitation recovery | done | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00043](00043-TASK.md) | Deliver the public invitation activation journey | done | [TICKET-00016](../tickets/00016-TICKET.md) |
 | [TASK-00044](00044-TASK.md) | Enforce complete access-token authentication | done | [TICKET-00017](../tickets/00017-TICKET.md) |
-| [TASK-00045](00045-TASK.md) | Enforce browser authentication request controls | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
+| [TASK-00045](00045-TASK.md) | Enforce browser authentication request controls | done | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00046](00046-TASK.md) | Deliver the canonical email and password login journey | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00047](00047-TASK.md) | Deliver rotating refresh and current-session logout | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |

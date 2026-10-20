@@ -16,19 +16,21 @@ use OpenApi\Attributes as OA;
     security: [],
     x: [
         'future-browser-security' => [
-            'status'    => 'Accepted ADR 0003 policy, not implemented authentication operations',
+            'status'    => 'Reusable TASK-00045 controls implemented; login/refresh/logout operations remain absent',
             'refresh'   => <<<'TEXT'
                 Refresh credentials are opaque package-generated 256-bit values, not JWTs or Bearer
                 tokens. Only a host-only __Secure- prefixed HttpOnly, Secure, SameSite=Strict cookie
-                at Path=/api/v1/auth may transport them. Its exact name is not selected here.
+                at Path=/api/v1/auth may transport them. The shared factory selects __Secure-agent_os_refresh.
                 No Domain; ordinary cookie is session-only; remembered expiry cannot exceed the
                 server absolute deadline. Never JSON, JavaScript, URL, header credential or example.
                 No cookie apiKey scheme is offered for manual credential entry in documentation UI.
                 TEXT,
             'mutations' => <<<'TEXT'
-                Future login/refresh/logout require exact trusted HTTPS Origin, same-origin Fetch
+                Reusable login/refresh/logout guards require exact trusted HTTPS Origin, same-origin Fetch
                 Metadata when present, an explicit CSRF header with the nonce-bound unexpired proof,
-                and bounded application/json objects. Bootstrap does not enforce future mutations.
+                and unique-key UTF-8 application/json objects bounded to 65536 bytes. Shared components
+                describe input contracts, not registered operations. Direct TLS authority only; no
+                forwarded-header promotion. Rolling persistent email/network/endpoint limits deny on outage.
                 Future access credentials and CSRF proofs stay memory-only; responses are no-store.
                 TEXT
         ],

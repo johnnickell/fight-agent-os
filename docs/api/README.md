@@ -169,6 +169,14 @@ the exact `APP_ENV` must be expressly included in a configured allowed-environme
 supersedes the originally local-only TASK/ADR rule; no viewer is implemented yet. Neither a role claim,
 APP_DEBUG, public validation metadata nor this export command enables that future permission boundary.
 
+## Reusable browser authentication controls
+
+TASK-00045 adds `BrowserAuthOrigin`/`BrowserAuthCsrf` parameters, login/empty-object input schemas and a safe
+`BrowserAuthThrottled` response component. These do not register login, refresh or logout paths. The shared
+[browser request runbook](../engineering/BROWSER_AUTH_REQUESTS.md) owns pipeline ordering, fixed cookie identity,
+rolling admission, direct HTTPS configuration and deployment limitations. Activation reuses the strengthened
+browser guard and typed session-cookie factory; its operation contract remains unchanged.
+
 ## Current versus future security
 
 Bootstrap accepts no body, Content-Type or query. It creates/reuses an HttpOnly nonce cookie and returns a

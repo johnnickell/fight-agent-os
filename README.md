@@ -80,8 +80,11 @@ are available at `POST /api/v1/invitations/{user_id}/retry`, `POST /api/v1/invit
 `PATCH /api/v1/invitations/{user_id}/email`; see [invitation API](docs/engineering/INVITATION_API.md) for exact
 permissions, confirmation, bounded atomic limits and retained partial/uncertain outcomes. Public `POST /api/v1/auth/activate` establishes an ordinary session by invitation possession with
 Origin/CSRF/JSON/admission protections; see [activation contracts and limits](docs/engineering/ACTIVATION.md).
-Configure the independent external `APP_ACTIVATION_RATE_KEY` before HTTP boot. No login/refresh/logout
-journey is registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
+Configure independent external `APP_ACTIVATION_RATE_KEY` and `APP_AUTH_RATE_KEY` before HTTP boot.
+The reusable [browser authentication request controls](docs/engineering/BROWSER_AUTH_REQUESTS.md) provide
+fixed session/persistent refresh cookies, nonce lifecycle, strict browser guards and independently committed
+rolling email/network/endpoint admission. Production-like HTTP boot requires explicit direct TLS authority,
+no trusted forwarding proxies, and available migrated limiter storage. No login/refresh/logout journey is registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`

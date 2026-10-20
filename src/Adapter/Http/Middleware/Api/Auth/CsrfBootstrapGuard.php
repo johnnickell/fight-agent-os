@@ -37,11 +37,11 @@ final readonly class CsrfBootstrapGuard implements MiddlewareInterface
         $submittedOrigin = $request->getHeader('Origin');
 
         if (
-            $uri->getScheme() !== 'https' || $origin !== $this->proofs->origin()
+            $uri->getScheme() !== 'https' || !$this->proofs->acceptsOrigin($origin)
             || $uri->getUserInfo() !== '' || $uri->getFragment() !== ''
             || count($fetch) > 1 || ($fetch !== [] && $fetch[0] !== 'same-origin')
             || count($submittedOrigin) > 1
-            || ($submittedOrigin !== [] && $submittedOrigin[0] !== $this->proofs->origin())
+            || ($submittedOrigin !== [] && !$this->proofs->acceptsOrigin($submittedOrigin[0]))
             || $request->hasHeader('Access-Control-Request-Method')
         ) {
             return $this->reject(403);
