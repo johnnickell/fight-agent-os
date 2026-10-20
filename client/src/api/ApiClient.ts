@@ -13,6 +13,8 @@ export type AccessTokenProvider = Readonly<{
 export type GetOptions = Readonly<{
   signal?: AbortSignal;
   access?: 'required';
+  /** Closed numeric pagination; arbitrary query strings remain unsupported. */
+  pagination?: Readonly<{ page: number; perPage: number }>;
 }>;
 
 export type ApiTransport = (url: string, init: RequestInit) => Promise<Response>;
@@ -82,10 +84,24 @@ export class ApiClient {
     options: GetOptions,
     mutation?: Readonly<{ body: Readonly<Record<string, unknown>>; csrfProof: string }>
   ): Promise<ApiResult<T>> {
-    // Paths belong to feature services, not user input. No query, fragment, encoding,
-    // dot segments, backslash, authority or alternative origin is supported yet.
+    // Paths belong to feature services, not user input. No raw query, fragment,
+    // encoding, dot segments, backslash, authority or alternative origin is supported.
     if (path.length > 2048 || !/^\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+(?![\s\S])/.test(path)) {
       return apiFailure('protocol');
+    }
+    let query = '';
+    if (options.pagination) {
+      const { page, perPage } = options.pagination;
+      if (
+        !Number.isInteger(page) ||
+        page < 1 ||
+        page > 1000 ||
+        !Number.isInteger(perPage) ||
+        perPage < 1 ||
+        perPage > 100
+      )
+        return apiFailure('protocol');
+      query = `?page=${String(page)}&per_page=${String(perPage)}`;
     }
     const headers = new Headers({ Accept: 'application/json' });
     headers.set('X-Correlation-ID', crypto.randomUUID().replaceAll('-', ''));
@@ -106,7 +122,7 @@ export class ApiClient {
     }
     let response: Response;
     try {
-      response = await this.#fetch(`${this.#basePath}${path}`, {
+      response = await this.#fetch(`${this.#basePath}${path}${query}`, {
         method: mutation ? 'POST' : 'GET',
         headers,
         ...(mutation ? { body: JSON.stringify(mutation.body) } : {}),
