@@ -112,7 +112,7 @@
 | [TICKET-00107](00107-TICKET.md) | Prepare bounded AI instruction suggestions | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |
 | [TICKET-00108](00108-TICKET.md) | Publish an instruction change through a recoverable PR | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |
 | [TICKET-00109](00109-TICKET.md) | Synchronize the designated checkout safely | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |
-| [TICKET-00110](00110-TICKET.md) | Work in a Pi terminal workspace with agent activity and live Docker logs | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
+| [TICKET-00110](00110-TICKET.md) | Work in a Pi terminal workspace with agent activity and live Docker logs | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00111](00111-TICKET.md) | Explain application activity and failures with useful diagnostics | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
 | [TICKET-00112](00112-TICKET.md) | Collect operational logs with bounded recovery and visible loss | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
 | [TICKET-00113](00113-TICKET.md) | Diagnose current failures through authorized native Logs | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |

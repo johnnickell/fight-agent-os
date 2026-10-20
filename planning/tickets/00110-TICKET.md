@@ -2,7 +2,7 @@
 id: TICKET-00110
 epic: EPIC-00006
 title: Work in a Pi terminal workspace with agent activity and live Docker logs
-status: ready-for-agent
+status: done
 ---
 
 # Work in a Pi terminal workspace with agent activity and live Docker logs
@@ -89,7 +89,7 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 |---|---|---|
 | [TASK-00447](../tasks/00447-TASK.md) | Work in the responsive Pi terminal workspace | done |
 | [TASK-00448](../tasks/00448-TASK.md) | Observe the selected local child agent in the terminal workspace | done |
-| [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent |
+| [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

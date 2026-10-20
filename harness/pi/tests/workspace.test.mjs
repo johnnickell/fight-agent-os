@@ -85,7 +85,7 @@ test('conversation scrolling is clamped and independent of observation focus', (
 });
 test('observation states disclose missing producers and cannot impersonate conversation', () => {
   const model = workspace(); assert.match(model.paneText(1), /no child selected/);
-  assert.match(model.paneText(2), /no runtime connected/); assert.match(model.paneText(2), /not worktree-isolated/);
+  assert.match(model.paneText(2), /No runtime selected/); assert.match(model.paneText(2), /shared runtime/);
 });
 test('Pi confirmations are modal, explicit, request-bound and deny by default', () => {
   const model = workspace(); model.focus = 2; model.insert('draft');

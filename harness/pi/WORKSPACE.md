@@ -1,5 +1,9 @@
 # Local terminal workspace (implementation candidate)
 
+TASK-00449 adds the human-only shared-runtime reader below. Its frozen-candidate full gate passed; local
+qualification is implementation evidence, not independent acceptance. See the TASK for visual limits and
+`.runs/tasks/TASK-00449/runs/initial-finalization/handoff.md` for the committed-head gate result.
+
 From a checkout with Node 22 or later and Pi already available on PATH:
 
 ```sh
@@ -78,9 +82,8 @@ for exact paths, image hashes, final gate result, warnings and remaining accepta
 
 At 100 columns / 20 rows or larger, the conversation occupies the left half and each read-only observation
 occupies a right quarter. Smaller terminals show one selectable view. The child pane can subscribe to an
-explicitly selected local stage monitor (below); without a socket it says no child selected. The runtime pane
-still says unavailable: TASK-00449 owns that producer. Neither observation changes directories/grants or launches
-an observed agent. Docker access and managed execution remain outside this candidate.
+explicitly selected local stage monitor (below); without a socket it says no child selected. The runtime pane is opt-in through explicit human launch options (below). Neither observation changes
+conversation directories/grants or launches an observed agent. Managed execution remains outside this candidate.
 
 | Key/input | Behavior |
 |---|---|
@@ -167,6 +170,69 @@ wide/narrow images. These are implementer qualification, not independent accepta
 slow-reader stress remain controlled checks; the two live fixtures were deliberately not concurrent. Independent
 Review/QA remain required. See [TASK-00448](../../planning/tasks/00448-TASK.md) for exact receipts and limitations.
 
+## Human-only shared Docker logs (TASK-00449 candidate)
+
+Select an **existing main-checkout** Compose runtime explicitly at launch:
+
+```sh
+./bin/terminal --provider openai-codex --model gpt-6.1-sol --thinking high \
+  --logs-main /absolute/main/checkout --logs-context default \
+  --logs-project fight-agent-os --logs-service web
+```
+
+All four options are required together; none is inferred from cwd, selected child, repository configuration,
+model output, Docker environment overrides or a saved preference. With no selection, no Docker process starts.
+The compact pane pins **SHARED** context/project/service and reader state above recent output; it never claims
+worktree-isolated logs. Conversation and child identities stay separate.
+
+With runtime focus: `[` / `]` select another verified single-container service; `p` freezes/resumes display;
+`c` closes/opens only the reader; `r` explicitly reconnects; `i` shows verified main path, local endpoint and
+full notices. PageUp/PageDown inspect bounded scrollback (or details); Tab returns to conversation. Pause
+keeps a bounded frozen view while draining into the recent bounded buffer. Resume shows that recent window;
+eviction counts disclose loss. Collapse (`Ctrl+W`) is layout-only, not close.
+No log, source option or selection is sent to Pi RPC, tools, sessions or provider context. This is separation
+in this client, **not** OS isolation: existing authorized native shell/file access is unchanged.
+
+The trusted host uses fixed argument-vector Docker operations, no shell or Compose option passthrough. It checks
+`docker --context NAME context inspect`, requiring a local Unix endpoint pinned for this workspace lifetime,
+then lists containers with the selected Compose project label. Every returned container must have a full ID,
+validated service and exact main-checkout working-directory label. Missing, ambiguous/replicated, stopped,
+mismatched or inaccessible sources are refused; no source container is started or changed. To avoid evaluating
+repository/worktree Compose configuration, the log operation is **`docker container logs` on that verified
+Compose container ID**, not `docker compose logs` from cwd. Docker's emitted timestamps and diagnostic text are
+retained; the selected service labels the stream. Separate stdout/stderr arrival order is not a total ordering
+guarantee. Logs without TASK attribution remain unattributed.
+
+Limits: initial/reconnect tail **100 lines**, **300 records / 32 Ki UTF-16 units** retained; a paused snapshot
+adds at most one equal-sized buffer. Each raw record retains **4 Ki UTF-16 units**, with a clipping marker;
+escaped display records cap at approximately **8 Ki units**. UTF-8 framing preserves fragmented characters,
+replaces malformed bytes and visibly escapes C0/C1, escape/clipboard, CR and bidi controls. These are presentation
+limits, not a new logging/redaction policy. Identity queries cap combined output at **64 KiB**, **32 containers**,
+and **5 seconds**. One sequential metadata/read process is used; reader lifetime is **15 minutes**, followed by
+explicit human reconnect only. Automatic retries: **zero**. Close sends TERM, then KILL after **1 second**,
+with a **2-second** wait bound. An unreaped reader remains tracked; no replacement starts while tracked processes
+remain. Workspace exit also disposes readers. No container lifecycle operation is implemented.
+
+Interrupted/empty streams are not proof of source death or complete history. Reconnect/service switches have
+unknown gaps and can replay up to 100 tail lines; there is no lossless cursor or deduplication guarantee.
+Use `i` for the full notice if the compact pane clips details. Missing Docker/permission and stopped-source
+states need operator recovery, never automatic startup or privilege escalation.
+
+A private informational preference is written to the selected main checkout's ignored
+`var/terminal/runtime-source.json`. Owned nonsymlink directories and a private regular single-link file are
+required. **It is never reloaded as authority**: each launch still requires explicit selection, so repository/model
+edits cannot redirect this observer through saved state. No socket/credentials are forwarded to Pi's environment.
+Docker's host authority remains powerful; these operations are not Docker read-only authorization.
+No browser endpoint, collector, instrumentation, Compose override, per-worktree runtime product, archive or
+application dependency on `.runs/` is added.
+
+Qualification observed Node 22.23.1, Pi 1.3.0, Docker 29.7.2 and Compose v5.3.1; these are receipts, not pins.
+No new Pi protocol command is added: the existing public RPC lifecycle and child-environment filter remain.
+`node --test harness/pi/tests/runtime-logs.test.mjs` checks owned source, buffer, safe display and reader behavior.
+Controlled peers are not live integration proof. TASK-00449 records the existing-source probe, separate real-Pi
+PTY, sanitized terminal image, input denial, counts and limitations. Keep live pane contents out of model/tool
+transcripts; sanitize explicitly authorized evidence.
+
 ## Policy and normal Pi paths
 
 The client requires genuine healthy Harness access plus `get_state` and the `jev`/`file-screening` commands
@@ -220,7 +286,7 @@ qualification. Resuming a session does not reset enrollment, budgets, accounting
 changes still need the native TUI; inherited launcher-role environment flags are deliberately not forwarded.
 
 The wrapper accepts only `--theme system|light|dark`, `--provider`, `--model`, `--thinking`, `--session`,
-`--session-dir`, `--name`, `--extension`, repeatable `--observe-child`, `--continue`, `--no-session` and `--help`. It does not accept API keys,
+`--session-dir`, `--name`, `--extension`, repeatable `--observe-child`, the four `--logs-*` source options above, `--continue`, `--no-session` and `--help`. It does not accept API keys,
 initial prompts, arbitrary process modes or extension-disabling flags. The child gets only HOME, PATH, TMPDIR,
 locale and terminal variables. Pi may resolve its configured credentials through HOME normally; this is not
 credential isolation, nor a promise that ambient-environment-only providers work. No provider values are copied

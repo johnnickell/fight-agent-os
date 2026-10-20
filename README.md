@@ -42,8 +42,8 @@ See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and r
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
 An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through `./bin/terminal`, with
-responsive conversation/observation panes, opt-in local child observation (TASK-00448 candidate), and an honest
-runtime-log placeholder. Earlier real PTY/provider/file-hook
+responsive conversation/observation panes, opt-in local child observation (TASK-00448 candidate), and an opt-in
+human-only shared main-runtime log reader (TASK-00449 candidate). Earlier real PTY/provider/file-hook
 checks, held-state terminal images and a passing exact-head baseline gate are recorded. Review's long-dialog
 visibility repair passes focused checks and the coordinator's frozen-candidate full gate. Coordinator-owned real
 native-selection/same-session resume qualification now passes, preserving conversation and actual workflow binding;
