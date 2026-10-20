@@ -6,6 +6,9 @@ import { ContentState } from '@/components/ContentState';
 import { CsrfProofService } from '@/features/auth/CsrfProofService';
 import { LoginService } from '@/features/auth/LoginService';
 import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
+import { browserSessionPlatform } from '@/features/auth/SessionChannel';
+import { SessionContinuity } from '@/features/auth/SessionContinuity';
+import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { LoginPage } from '@/pages/LoginPage';
@@ -25,24 +28,40 @@ export function LoginJourney({
     const api = new ApiClient(runtime, { accessTokens: tokens });
     const csrf = new CsrfProofService(api);
     return {
-      service: new LoginService(api, csrf, tokens),
-      session: new SessionService(api, csrf, tokens),
+      coordinator: new SessionCoordinator({
+        tokens,
+        session: new SessionService(api, csrf, tokens),
+        login: new LoginService(api, csrf, tokens),
+        ...browserSessionPlatform()
+      }),
       schemas: new PublicSchemaService(api)
     };
   });
   useLayoutEffect(() => {
     const clear = () => {
-      dependencies.service.dispose();
-      dependencies.session.dispose();
+      dependencies.coordinator.dispose();
       dependencies.schemas.clear();
     };
     const retire = () => {
       clear();
       flushSync(() => setRetired(true));
     };
+    let hidden = document.hidden;
+    const visibility = () => {
+      if (hidden && !document.hidden) dependencies.coordinator.resume();
+      hidden = document.hidden;
+    };
+    const focus = () => {
+      if (hidden) dependencies.coordinator.resume();
+    };
     window.addEventListener('pagehide', retire);
+    window.addEventListener('focus', focus);
+    document.addEventListener('visibilitychange', visibility);
+    void dependencies.coordinator.restore();
     return () => {
       window.removeEventListener('pagehide', retire);
+      window.removeEventListener('focus', focus);
+      document.removeEventListener('visibilitychange', visibility);
       clear();
     };
   }, [dependencies]);
@@ -54,5 +73,13 @@ export function LoginJourney({
         message="Reload this page to sign in again. Browser history does not restore credentials."
       />
     );
-  return <LoginPage {...dependencies} onAuthenticated={onAuthenticated} />;
+  return (
+    <SessionContinuity coordinator={dependencies.coordinator}>
+      <LoginPage
+        service={dependencies.coordinator}
+        schemas={dependencies.schemas}
+        onAuthenticated={onAuthenticated}
+      />
+    </SessionContinuity>
+  );
 }

@@ -1,8 +1,9 @@
 # Refresh and current-session logout
 
 TASK-00047 implements `POST /api/v1/auth/refresh` and `POST /api/v1/auth/logout`, plus the current-session
-logout action on the real login success screen. Independent Review/QA remain separate. This is not a `/me`
-client, authenticated product frame, session-management UI, reload restoration or multi-tab coordinator.
+logout action on the real login success screen. TASK-00048 adds bounded reload/multi-tab continuity at
+`/app/login`, pending independent Review/QA. This is not a `/me` client, authenticated product frame or
+session-management UI. Public activation and future email-confirmation landings do not mount restoration.
 
 ## Protected browser contract
 
@@ -74,9 +75,53 @@ caller-supplied navigation authority. No dashboard, principal, account or other-
 The public activation journey retains its existing document-scoped memory seam; this TASK does not mount a
 shared authenticated shell around it.
 
-TASK-00048 owns bounded conflict recovery, reload restoration, conservative scheduling/wake behavior,
-Web Locks/BroadcastChannel and sibling-tab invalidation. Other tabs are not claimed to clear immediately here.
-TICKET-00018 owns fresh principal/navigation integration; TICKET-00020 owns other-session management.
+### Bounded multi-tab coordinator (TASK-00048)
+
+`SessionCoordinator` composes the existing `SessionService`, `LoginService` and `MemoryAccessToken`; it stores
+credential progress only, never identity/roles/permissions. `SessionContinuity` subscribes directly. Its
+`authenticated` state means credential-ready, not an authenticated principal or permission grant. Optional
+`AuthorityCache` notifications use the existing sole-cache seam; no production principal loader is constructed.
+TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-session management.
+
+- States: unknown → restoring → credential-ready (`authenticated`), conflict, network-degraded or terminal;
+  explicit login may cross a terminal/logout barrier. Logout clears memory immediately, then reports anonymous
+  completion or unconfirmed server sign-out. No protected operation may use a missing/expired token.
+- Cold `/app/login` performs one controlled refresh (or accepts a response to its fresh peer challenge).
+  Network/protocol/service failure clears access and requires explicit retry. A 401 or exhausted conflict ends
+  the context and broadcasts terminal. There is no interceptor or automatic business-mutation replay.
+- Secure-origin Web Locks use fixed `fight-agent-os.session-mutation.v1`, exclusively for refresh/logout.
+  Acquisition aborts after 2 seconds, with at most one successor election for refresh. A dispatched refresh has
+  an 8-second observation bound. A conflict waits 250 ms for a winner, then permits exactly one 8-second retry;
+  any failed recovery is terminal. `try/finally`/callback return release locks. A 50 ms discovery wait and,
+  with Locks+Channel, another 50 ms acquired-lock delivery grace permit a winner's posted result to arrive.
+  Maximum local refresh flow is 20.35 seconds (including two acquisition windows); held work is at most
+  16.30 seconds. Logout acquisition is 2 seconds and observation is 8 seconds. No failure starts a timer loop.
+- BroadcastChannel `fight-agent-os.session.v1` accepts exact version-1 envelopes: `version`, random 32-hex
+  `sender`, positive safe-integer `sequence`, and `kind`. `request` adds random 32-hex `round`; `token` adds
+  that round, a bounded compact access token (≤2,048 characters), and `remaining` (0 < ms ≤840,000).
+  `invalidate`, `logout`, `terminal` add nothing. Extra fields/versions/malformed values are rejected.
+  At most 64 senders and 64 outstanding challenges are retained. Per-sender sequences reject duplicates;
+  independent tab counters are never compared. Only the current local challenge can accept a token.
+- Access lifetime is conservatively request-start +840 seconds (validated `exp - iat =900`, minus60 seconds),
+  not browser wall time. Peer hints subtract full local challenge elapsed time and cannot extend that maximum.
+  Backwards/nonfinite monotonic reads retire access. Early expiry and hidden-tab resume coordinate a new bounded
+  refresh; errors never retain stale authority. Terminal/logout/disposal fence old login/refresh/network work.
+- Unsupported or denied Channel uses own refresh under Locks; missing Locks permits independent-tab races.
+  Missing both still permits only one conflict recovery. No storage polling, readable cookies, persistent queue,
+  URL or HTML credential state is introduced. Without Channel, remote logout is learned on the next server
+  interaction/resume, not immediately. Cross-tab messaging is best-effort, not distributed consensus.
+- Mutation timeouts cannot undo a server commit or late browser Set-Cookie. Local generations reject the access
+  result; logout waits for a same-owner dispatched refresh through `SessionService`. A timed-out/failed server
+  observation is not proof of revocation. Reload may still find a server session after uncertain logout;
+  cookies/server state remain server-owned. Do not claim atomic logout across crashed/suspended/unsupported tabs.
+- Logout clears the optional navigation intent through its existing owner callback; involuntary expiry may
+  retain only the existing bounded validated route. No form/credential/private data enters that callback or
+  channel. Every fresh principal must still come from `/me`; a peer token never supplies permissions.
+
+The mounted journey disposes channels, timers, subscriptions and volatile services on teardown/pagehide. It
+removes secret form DOM on context end. Loading, expiry, network and signed-out states have atomic status
+announcements, explicit controls and focused completion headings. Existing semantic themes/reduced-motion
+styles apply; actual assistive-technology and broad browser certification remain outside this local evidence.
 
 ## Verification and safe reproduction
 

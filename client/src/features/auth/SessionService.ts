@@ -5,7 +5,7 @@ import type { ApiClient } from '@/api/ApiClient';
 import type { CsrfProofService } from '@/features/auth/CsrfProofService';
 import type { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
 
-/** Owns explicit single-tab refresh/logout. Scheduling and cross-tab recovery belong to TASK-00048. */
+/** Owns explicit cookie-only mutations; the coordinator owns bounded scheduling and cross-tab recovery. */
 export class SessionService {
   readonly #api: ApiClient;
   readonly #csrf: CsrfProofService;
@@ -97,10 +97,15 @@ export class SessionService {
     return this.#active && this.#generation === generation;
   }
 
-  dispose(): void {
-    this.#active = false;
+  /** Fences results and retires nonce-bound proof without pretending to undo an HTTP mutation. */
+  invalidate(): void {
     ++this.#generation;
     this.#tokens.clear();
     this.#csrf.clear();
+  }
+
+  dispose(): void {
+    this.#active = false;
+    this.invalidate();
   }
 }
