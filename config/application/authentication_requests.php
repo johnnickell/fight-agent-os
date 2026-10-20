@@ -3,10 +3,14 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Action\Api\V1\Auth\LoginAction;
+use App\Adapter\Http\Action\Api\V1\Auth\LogoutAction;
+use App\Adapter\Http\Action\Api\V1\Auth\RefreshAction;
 use App\Adapter\Http\Api\V1\Auth\AuthOperation;
 use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
+use App\Adapter\Http\Api\V1\Auth\RefreshCookie;
 use App\Adapter\Http\Middleware\Api\Auth\AuthEndpointGuard;
 use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
+use App\Adapter\Http\Responder\Api\V1\Auth\SessionLifecycleResponder;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
 use App\Adapter\Persistence\Authentication\PostgresAuthAttempts;
 use App\Adapter\Security\Authentication\AuthAdmission;
@@ -16,11 +20,22 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
 use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
+use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
     $container->set(LoginAction::class, static fn(Container $c): LoginAction =>
         new LoginAction($c->get(AuthenticationService::class), $c->get(SessionResponder::class)));
+    $container->set(RefreshCookie::class, static fn(): RefreshCookie => new RefreshCookie());
+    $container->set(SessionLifecycleResponder::class, static fn(Container $c): SessionLifecycleResponder =>
+        new SessionLifecycleResponder($c->get(SessionResponder::class), $c->get(JSendResponseFactory::class)));
+    foreach ([RefreshAction::class, LogoutAction::class] as $action) {
+        $container->set($action, static fn(Container $c): RefreshAction|LogoutAction => new $action(
+            $c->get(AuthenticationService::class),
+            $c->get(RefreshCookie::class),
+            $c->get(SessionLifecycleResponder::class)
+        ));
+    }
     $container->set(BrowserSessionCookies::class, static fn(Container $c): BrowserSessionCookies =>
         new BrowserSessionCookies($c->get(Clock::class)));
     // A dedicated connection prevents a package login transaction from rolling back consumed attempts.

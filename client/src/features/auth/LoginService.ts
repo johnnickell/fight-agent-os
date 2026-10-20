@@ -25,6 +25,8 @@ export class LoginService {
   ): Promise<ApiResult<true>> {
     if (!this.#active || this.#pending) return apiFailure('cancelled');
     this.#pending = true;
+    this.#tokens.clear();
+    const generation = this.#tokens.generation;
     try {
       const current = this.#csrf.current();
       const proof = current ? { ok: true as const, value: current } : await this.#csrf.bootstrap();
@@ -45,7 +47,8 @@ export class LoginService {
       if (result.ok) {
         this.#csrf.clear();
         if (!this.#active) return apiFailure('cancelled');
-        this.#tokens.accept(result.value.accessToken, startedAt);
+        if (!this.#tokens.accept(result.value.accessToken, startedAt, generation))
+          return apiFailure('cancelled');
         return { ok: true, value: true, correlationId: result.correlationId };
       }
       if (result.error.kind === 'authorization') this.#csrf.clear();

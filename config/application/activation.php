@@ -8,6 +8,7 @@ use App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission;
 use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
 use App\Adapter\Security\Activation\RandomRefreshCredentials;
+use App\Adapter\Security\Authentication\AuthenticationEvents;
 use App\Adapter\Security\HmacCsrfProofs;
 use App\Application\Security\Activation\ActivateInvitation;
 use App\Application\Security\Csrf\Clock\CsrfClock;
@@ -48,6 +49,8 @@ return static function (Container $container): void {
         new RandomRefreshCredentials());
     $container->set(SessionRevocationService::class, static fn(Container $c): SessionRevocationService =>
         new SessionRevocationService($c->get(RefreshSessionRepository::class)));
+    $container->set(AuthenticationEvents::class, static fn(Container $c): AuthenticationEvents =>
+        new AuthenticationEvents($c->get(EventDispatcher::class)));
     $container->set(AuthenticationService::class, static fn(Container $c): AuthenticationService =>
         new AuthenticationService(
             $c->get(UserRepository::class),
@@ -63,7 +66,7 @@ return static function (Container $container): void {
             $c->get(TokenEncoder::class),
             $c->get(AuthenticationTokenPolicy::class),
             PasswordHash::fromString($c->get(PasswordHasher::class)->hash(bin2hex(random_bytes(32)))),
-            $c->get(EventDispatcher::class),
+            $c->get(AuthenticationEvents::class),
             $c->get(PasswordResetGrantRepository::class),
             $c->get(AuditEvidenceRepository::class),
             $c->get(EmailChangeGrantRepository::class)

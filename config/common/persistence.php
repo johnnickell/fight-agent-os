@@ -89,7 +89,10 @@ return static function (Container $container): void {
         );
     });
     $container->set(RefreshSessionRepository::class, static function (Container $container): RefreshSessionRepository {
-        return new PostgresRefreshSessionRepository($container->get(Connection::class));
+        return new PostgresRefreshSessionRepository(
+            $container->get(Connection::class),
+            $container->get(AuthenticationAuthorityFences::class)
+        );
     });
     $container->set(PasswordResetGrantRepository::class, static function (
         Container $container

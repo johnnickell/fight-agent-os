@@ -6,6 +6,7 @@ import { ContentState } from '@/components/ContentState';
 import { CsrfProofService } from '@/features/auth/CsrfProofService';
 import { LoginService } from '@/features/auth/LoginService';
 import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
+import { SessionService } from '@/features/auth/SessionService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { LoginPage } from '@/pages/LoginPage';
 
@@ -22,14 +23,17 @@ export function LoginJourney({
   const [dependencies] = useState(() => {
     const tokens = new MemoryAccessToken();
     const api = new ApiClient(runtime, { accessTokens: tokens });
+    const csrf = new CsrfProofService(api);
     return {
-      service: new LoginService(api, new CsrfProofService(api), tokens),
+      service: new LoginService(api, csrf, tokens),
+      session: new SessionService(api, csrf, tokens),
       schemas: new PublicSchemaService(api)
     };
   });
   useLayoutEffect(() => {
     const clear = () => {
       dependencies.service.dispose();
+      dependencies.session.dispose();
       dependencies.schemas.clear();
     };
     const retire = () => {

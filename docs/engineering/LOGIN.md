@@ -1,7 +1,7 @@
 # Canonical browser login
 
 TASK-00046 supplies `POST /api/v1/auth/login` and `/app/login`, pending independent Review/QA.
-This is existing-password authentication, not registration, refresh, logout, a `/me` client or a dashboard.
+This is existing-password authentication, not registration, a `/me` client or a dashboard. [TASK-00047](SESSION_CONTINUITY.md) adds refresh/current-session logout and the sign-out action on its success screen.
 
 ## Server contract
 
@@ -79,7 +79,7 @@ not select the new user's destination. The outer owner must load fresh post-logi
 calling the existing `consume()` seam, which re-resolves current route requirements and consumes once. It never
 receives email, password, form bodies or tokens. The current public shell has **no registered protected landing
 or `/me` client**, so ordinary login truthfully stops at “You’re signed in”, removes the form, focuses the
-success heading and keeps access only in the active page. No dashboard grant/principal is fabricated.
+success heading and keeps access only in the active page. TASK-00047 adds current-session logout here, with immediate local invalidation, matching cookie deletion, focused signed-out and honest server-uncertain states. No dashboard grant/principal is fabricated.
 TICKET-00018 must supply the shared navigation owner, actual protected registrations and fresh `/me` before
 protected entry; TASK-00047/48 own refresh/logout, reload restoration, scheduling and cross-tab continuity.
 

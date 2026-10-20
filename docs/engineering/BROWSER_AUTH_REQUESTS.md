@@ -1,13 +1,13 @@
 # Browser authentication request controls
 
 [ADR 0003](../../planning/adr/0003-browser-authentication-security-profile.md) governs these controls.
-TASK-00045 provides reusable login/refresh/logout controls. [TASK-00046 login](LOGIN.md) now supplies its Action, route and UI; refresh/logout consumers remain planned.
+TASK-00045 provides reusable login/refresh/logout controls. [TASK-00046 login](LOGIN.md) supplies its Action, route and UI; [TASK-00047 session continuity](SESSION_CONTINUITY.md) supplies refresh/logout consumers pending independent Review/QA.
 Activation continues using the shared browser guard and session responder. Its separate admission limits
 and invitation/password behavior are unchanged. Complete deployment qualification remains TASK-00063/64.
 
 ## Composition and request matrix
 
-Login and future refresh/logout Actions declare `#[JsonBody]` and `#[Validation]` and consume only the validated source attribute.
+Login, refresh and logout Actions declare `#[JsonBody]` and `#[Validation]` and consume only the validated source attribute.
 The API pipeline is failure/correlation → routing/security → `ApiInputValidation` → the registered
 `auth.guard.login`, `auth.guard.refresh` or `auth.guard.logout` → Action. These guards require the validated
 JSON attribute; attaching them without source validation fails closed. They combine `BrowserMutationGuard`,
@@ -104,4 +104,4 @@ Tests exercise real shared JSON middleware, safe correlated rejection before dis
 nonce replacement/expiry, rolling fractional expiry, known/unknown email equivalence, business rollback,
 capacity/outage, and four three-connection contention scenarios (email and each endpoint), using database lock
 barriers rather than sleeps. OpenAPI publishes reusable parameters/input/429 components without future paths.
-Canonical login now exercises these controls through its real package/HTTP/browser boundary; package refresh/logout, cross-tab browsers, deployment trust and integrated redaction retain their downstream owners. No production or live-inbox operation is authorized here.
+Canonical login and refresh/current-session logout now exercise these controls through real package/HTTP/browser boundaries; TASK-00047 records its scoped redaction/race evidence. Cross-tab browsers, deployment trust and integrated security retain their downstream owners. No production or live-inbox operation is authorized here.

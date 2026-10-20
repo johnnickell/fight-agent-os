@@ -87,7 +87,10 @@ final class ApiActionSecurityTest extends TestCase
             new AuthenticationAuthorityFences($this->connection)
         );
         $this->roles = new PostgresRoleRepository($this->connection, $fences);
-        $this->sessions = new PostgresRefreshSessionRepository($this->connection);
+        $this->sessions = new PostgresRefreshSessionRepository(
+            $this->connection,
+            new \App\Adapter\Persistence\Locking\AuthenticationAuthorityFences($this->connection)
+        );
         $this->tokens = new AccessTokens();
         $this->tokens->clock->time = new DateTimeImmutable('now');
         $now = $this->tokens->clock->now()->modify('-1 minute');
