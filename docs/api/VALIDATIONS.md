@@ -1,7 +1,7 @@
 # Public form validation metadata
 
-`GET /api/v1/validations/{form_name}` is an anonymous, read-only API-v1 Action (`ReadValidationAction`). It requires no Bearer token or `VIEW_DASHBOARD`; TASK-00117 must put **this exact Action** on its explicit public allowlist. It grants no authority to submit the named form and makes no change to server validation, CSRF, credential-flow protections or CORS. There is no enumeration endpoint. Only real owning journeys may register forms. The catalog now contains **`invitation_activation`**,
-owned by [public activation](../engineering/ACTIVATION.md); other canonical names return 404.
+`GET /api/v1/validations/{form_name}` is an anonymous, read-only API-v1 Action (`ReadValidationAction`). It requires no Bearer token or `VIEW_DASHBOARD`; TASK-00117 must put **this exact Action** on its explicit public allowlist. It grants no authority to submit the named form and makes no change to server validation, CSRF, credential-flow protections or CORS. There is no enumeration endpoint. Only real owning journeys may register forms. The catalog now contains **`invitation_activation`** and **`login`**,
+owned by [public activation](../engineering/ACTIVATION.md) and [canonical login](../engineering/LOGIN.md); other canonical names return 404. Login publishes only safe email/password structural string rules; remember's strict boolean and email format/canonicalization stay server-owned.
 
 ## Build and deployment
 

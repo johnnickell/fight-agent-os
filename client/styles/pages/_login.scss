@@ -1,0 +1,100 @@
+.login-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+  padding-block: clamp(0.5rem, 3vw, 3rem);
+}
+
+.login-eyebrow {
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--bs-secondary-color);
+}
+
+.login-introduction h1 {
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  line-height: 1.13;
+  max-width: 10ch;
+  margin-block: 1.5rem;
+}
+
+.login-introduction > p:not(.login-eyebrow) {
+  max-width: 36ch;
+}
+
+.login-invite-note,
+.login-help {
+  font-size: 0.9rem;
+  color: var(--bs-secondary-color);
+}
+
+.login-panel {
+  background: var(--ui-surface);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 5%);
+}
+
+.login-panel h2 {
+  font-size: 1.75rem;
+}
+
+.login-panel form {
+  display: grid;
+  gap: 1rem;
+}
+
+.login-panel a {
+  color: var(--ui-action);
+}
+
+.login-panel a:hover {
+  color: var(--ui-action-hover);
+}
+
+.login-panel .form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 0;
+}
+
+.login-panel .form-check-input {
+  float: none;
+  flex-shrink: 0;
+  margin: 0;
+  appearance: auto;
+  accent-color: var(--ui-action);
+  background-image: none;
+}
+
+.login-panel .form-check-input:focus-visible {
+  outline: 3px solid var(--ui-form-focus);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+
+.login-panel .form-check-label {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.login-help {
+  margin-block: 0.5rem 0;
+}
+
+@media (max-width: 860px) {
+  .login-page {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+
+  .login-introduction h1 {
+    max-width: 14ch;
+    margin-block: 1rem;
+  }
+}

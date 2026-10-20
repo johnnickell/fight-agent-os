@@ -44,6 +44,18 @@ final readonly class BrowserMutationGuard implements MiddlewareInterface
     {
         $uri = $request->getUri();
         $origin = $uri->getScheme().'://'.$uri->getHost().($uri->getPort() === null ? '' : ':'.$uri->getPort());
+        $host = $request->getHeaderLine('Host');
+        $hostAccepted = $this->proofs->acceptsOrigin('https://'.$host);
+        $server = $request->getServerParams();
+        if (array_key_exists('HTTP_HOST', $server)) {
+            // Slim PSR-7 reconstructs Host from URI::getHost(), dropping a nondefault port.
+            // Qualify the original ingress authority independently; never infer a missing port.
+            $rawHost = $server['HTTP_HOST'];
+            if (!is_string($rawHost) || !$this->proofs->acceptsOrigin('https://'.$rawHost)) {
+                throw new PermissionDenied();
+            }
+            $hostAccepted = $hostAccepted || $host === $uri->getHost();
+        }
         $fetch = $request->getHeader('Sec-Fetch-Site');
         $proof = $request->getHeader('X-CSRF-Proof');
         $cookies = $request->getHeader('Cookie');
@@ -66,7 +78,7 @@ final readonly class BrowserMutationGuard implements MiddlewareInterface
             $request->getMethod() !== 'POST' || !$this->proofs->acceptsOrigin($origin)
             || $uri->getScheme() !== 'https' || $uri->getUserInfo() !== '' || $uri->getFragment() !== ''
             || count($request->getHeader('Host')) !== 1
-            || !$this->proofs->acceptsOrigin('https://'.$request->getHeaderLine('Host'))
+            || !$hostAccepted
             || count($request->getHeader('Origin')) !== 1
             || !$this->proofs->acceptsOrigin($request->getHeaderLine('Origin'))
             || count($fetch) > 1 || ($fetch !== [] && $fetch !== ['same-origin'])

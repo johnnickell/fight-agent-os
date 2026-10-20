@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Adapter\Http\Action\Api\V1\Auth\ActivateInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
+use App\Adapter\Http\Action\Api\V1\Auth\LoginAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\CorrectInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\IssueInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ReadInvitationStatusAction;
@@ -27,6 +28,9 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     $api->get('/auth/csrf', CsrfBootstrapAction::class.':handle')
         ->add($container->get(CsrfBootstrapGuard::class))
         ->setName('api.v1.auth.csrf');
+    $api->post('/auth/login', LoginAction::class.':handle')
+        ->add($container->get('auth.guard.login'))
+        ->setName('api.v1.auth.login');
     $api->post('/auth/activate', ActivateInvitationAction::class.':handle')
         ->add($container->get(ActivationAdmission::class))
         ->add($container->get(BrowserMutationGuard::class))
