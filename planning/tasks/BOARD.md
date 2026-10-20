@@ -24,7 +24,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 48 | [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | ready-for-agent | — | — |
-| 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | [TICKET-00034 — Define the SDLC team templates and role-specific capabilities](../tickets/00034-TICKET.md) | ready-for-agent | — | — |
@@ -315,6 +314,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | needs-info | — | — |
 | — | [TASK-00186](00186-TASK.md) | Inspect private memory under scoped oversight | [TICKET-00046 — Keep scoped private Agent memory](../tickets/00046-TICKET.md) | needs-info | [TASK-00185](00185-TASK.md) | — |
 | — | [TASK-00189](00189-TASK.md) | Inspect retained lessons under historical authority | [TICKET-00047 — Share attributed Workflow and TASK learning](../tickets/00047-TICKET.md) | needs-info | [TASK-00188](00188-TASK.md) | — |
 | — | [TASK-00191](00191-TASK.md) | Review and publish guidance at an authorized target | [TICKET-00048 — Review and publish broader memory lessons](../tickets/00048-TICKET.md) | needs-info | [TASK-00190](00190-TASK.md) | — |
