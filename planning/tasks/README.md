@@ -50,7 +50,7 @@
 | [TASK-00045](00045-TASK.md) | Enforce browser authentication request controls | done | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00046](00046-TASK.md) | Deliver the canonical email and password login journey | done | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00047](00047-TASK.md) | Deliver rotating refresh and current-session logout | done | [TICKET-00017](../tickets/00017-TICKET.md) |
-| [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | in-progress | [TICKET-00017](../tickets/00017-TICKET.md) |
+| [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | done | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
