@@ -5,7 +5,10 @@ handwritten `docs/api/openapi.yaml`; no independently maintained YAML or tracked
 TASK-00021's YAML receipts are historical evidence, not the current input. The document describes **only
 `GET /api/v1/auth/csrf`, the public-safe `GET /api/v1/validations/{form_name}`, and authenticated
 `GET /api/v1/me`, the invitation issuance/status/recovery operations, and
-`POST /api/v1/auth/activate`, `POST /api/v1/auth/login`, and the five Workspace-scoped Repository registration/inspection/reference interactions**.
+`POST /api/v1/auth/activate`, `POST /api/v1/auth/login`, the four guarded role/permission catalog reads,
+and the five Workspace-scoped Repository registration/inspection/reference interactions**.
+See [authority catalogs](../engineering/AUTHORITY_CATALOGS.md) for exact protected read permissions,
+bounded pages and membership-free Views; no catalog mutations or UI are supplied.
 See [registration contracts and current access limits](../engineering/REPOSITORY_REGISTRATION.md) for explicit
 bootstrap, sources, idempotency and non-reserving references; no physical linking or access grant is supplied.
 See [canonical login](../engineering/LOGIN.md) for existing-password validation, generic failures and ordinary/remembered cookies.

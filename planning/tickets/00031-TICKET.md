@@ -46,7 +46,7 @@ Read Views must not expose member lists or internal tokens, grant/hash/audit/per
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00124](../tasks/00124-TASK.md) | Expose guarded role and permission catalogs | ready-for-agent |
+| [TASK-00124](../tasks/00124-TASK.md) | Expose guarded role and permission catalogs | in-progress |
 | [TASK-00125](../tasks/00125-TASK.md) | Manage custom role definitions without changing managed roles | ready-for-agent |
 | [TASK-00126](../tasks/00126-TASK.md) | Qualify the upstream authorization contract and consumer update | done |
 | [TASK-00127](../tasks/00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent |
@@ -55,4 +55,4 @@ Read Views must not expose member lists or internal tokens, grant/hash/audit/per
 
 ## Decisions and progress
 
-Human-approved TASK-00116 expansion of EPIC-00004. TASK-00126 qualifies the required upstream contract and consumer adapters before TASK-00036 reconciles stable protected managed authority. The selected upstream release may remove duplicate handler permission checks; cross-user session, email-change administration and pending-invitation correction actor/target authorization callbacks are separate and retained per upstream WF-013, subject to tagged contract verification. Treat tier eligibility as a required package invariant subject to consumer release qualification; Agent OS keeps delegation unavailable until that guarantee is verified and protects actor/scope at its own entry boundaries. No role/permission endpoints exist in the current application.
+Human-approved TASK-00116 expansion of EPIC-00004. TASK-00126 qualifies the required upstream contract and consumer adapters before TASK-00036 reconciles stable protected managed authority. The selected upstream release may remove duplicate handler permission checks; cross-user session, email-change administration and pending-invitation correction actor/target authorization callbacks are separate and retained per upstream WF-013, subject to tagged contract verification. Treat tier eligibility as a required package invariant subject to consumer release qualification; Agent OS keeps delegation unavailable until that guarantee is verified and protects actor/scope at its own entry boundaries. TASK-00124 implements the four guarded read-only catalog endpoints, pending independent Review/QA; custom-role mutation and delegation remain separate work.

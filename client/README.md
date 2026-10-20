@@ -274,7 +274,9 @@ or synthetic production principal is introduced.
   public bootstrap. Missing/unsafe credentials fail before dispatch; this is transport validation, not JWT authority.
 - Feature services own fixed paths and `ResponseDecoder<T>` codecs. Paths are root-relative **below** `/api/v1`,
   restricted to nonempty alphanumeric/underscore/hyphen segments and 2,048 characters. Query, fragment, encoded,
-  dot, backslash and external-origin forms are unsupported. No arbitrary header/body pass-through is exposed.
+  dot, backslash and external-origin forms are unsupported. A closed `pagination: { page, perPage }` GET option
+  generates only numeric `page` (1–1000) and `per_page` (1–100) query fields; raw query paths remain rejected.
+  No arbitrary header/body pass-through is exposed.
 - Requests send `Accept: application/json` and a fresh 32-hex correlation ID, no GET body or `Content-Type`.
   Fetch uses `same-origin` mode/credentials, `no-store`, `no-referrer` and redirect rejection. Browser-managed
   cookies are neither read nor constructed. Production-like bootstrap requires the existing trusted HTTPS origin.
@@ -311,6 +313,10 @@ CSRF shape. They prove strict decoding, safe outcomes, memory-token policy, abor
 fences, expiry and absence of cookie/storage/history/console interactions; they do not prove browser HttpOnly
 behavior or a live client/server journey. Existing PHP functional contract tests separately exercise issuance,
 cookie attributes/reuse, server guards and OpenAPI response validation. No test-only endpoint is needed.
+
+`features/authority/CatalogService` supplies protected role/permission page and get reads with exact safe
+snake_case-to-camelCase codecs, bounded pagination, current Bearer transport and no retained catalog cache.
+It adds no UI, mutation, restoration or permission bypass. See [catalog contracts](../docs/engineering/AUTHORITY_CATALOGS.md).
 
 ## Shared form validation boundary
 

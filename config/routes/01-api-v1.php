@@ -7,6 +7,10 @@ use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
 use App\Adapter\Http\Action\Api\V1\Auth\LoginAction;
 use App\Adapter\Http\Action\Api\V1\Auth\LogoutAction;
 use App\Adapter\Http\Action\Api\V1\Auth\RefreshAction;
+use App\Adapter\Http\Action\Api\V1\Authority\GetPermissionAction;
+use App\Adapter\Http\Action\Api\V1\Authority\GetRoleAction;
+use App\Adapter\Http\Action\Api\V1\Authority\ListPermissionsAction;
+use App\Adapter\Http\Action\Api\V1\Authority\ListRolesAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\CorrectInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\IssueInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ReadInvitationStatusAction;
@@ -73,6 +77,10 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
         ->setName('api.v1.repositories.list');
     $api->post('/workspaces/{workspace_id}/references', GenerateExceptionalReferenceAction::class.':handle')
         ->setName('api.v1.references.generate');
+    $api->get('/roles', ListRolesAction::class.':handle')->setName('api.v1.roles.list');
+    $api->get('/roles/{roleId}', GetRoleAction::class.':handle')->setName('api.v1.roles.get');
+    $api->get('/permissions', ListPermissionsAction::class.':handle')->setName('api.v1.permissions.list');
+    $api->get('/permissions/{permissionId}', GetPermissionAction::class.':handle')->setName('api.v1.permissions.get');
     $api->get('/me', ReadCurrentPrincipalAction::class.':handle')
         ->setName('api.v1.me');
     $api->get('/validations/{form_name}', ReadValidationAction::class.':handle')

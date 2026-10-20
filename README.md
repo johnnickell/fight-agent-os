@@ -76,7 +76,10 @@ Also configure the external `APP_ACCESS_TOKEN_CONFIG` HS256 keyring before boot;
 [access-token configuration](docs/engineering/ACCESS_TOKENS.md) for its exact shape and finite rotation bounds.
 JWT issuance/consumption, request-scoped PostgreSQL authentication and a JWT-by-default matched-Action
 API-v1 gate are available. The protected `GET /api/v1/me` returns safe identity and current role/permission
-names without a dashboard permission prerequisite. Permission-protected invitation issuance and safe status are available at `POST /api/v1/invitations` and
+names without a dashboard permission prerequisite. Protected read-only role and permission catalogs are implemented at `GET /api/v1/roles`, `/roles/{roleId}`,
+`/permissions` and `/permissions/{permissionId}`, pending independent Review/QA; see
+[guarded authority catalogs](docs/engineering/AUTHORITY_CATALOGS.md) for exact permissions, pagination and redaction.
+Permission-protected invitation issuance and safe status are available at `POST /api/v1/invitations` and
 `GET /api/v1/invitations/{user_id}`. Permission-controlled retry, resend and atomic pending-email correction
 are available at `POST /api/v1/invitations/{user_id}/retry`, `POST /api/v1/invitations/{user_id}/resend`, and
 `PATCH /api/v1/invitations/{user_id}/email`; see [invitation API](docs/engineering/INVITATION_API.md) for exact
