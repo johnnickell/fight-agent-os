@@ -1,29 +1,10 @@
 import { apiFailure, type ApiResult } from '@/api/ApiResult';
-import { hasExactKeys } from '@/api/decodeResponse';
+import { decodeSessionAccess } from '@/features/auth/SessionAccess';
 
 import type { ApiClient } from '@/api/ApiClient';
 import type { ActivationCredential } from '@/features/auth/ActivationCredential';
 import type { CsrfProofService } from '@/features/auth/CsrfProofService';
 import type { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
-
-type SessionAccess = Readonly<{ accessToken: string; issuedAt: number; expiresAt: number }>;
-
-export function decodeSessionAccess(data: unknown): SessionAccess | null {
-  if (
-    !hasExactKeys(data, ['access_token', 'issued_at', 'expires_at']) ||
-    typeof data.access_token !== 'string' ||
-    data.access_token.length > 2048 ||
-    !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(data.access_token) ||
-    typeof data.issued_at !== 'number' ||
-    typeof data.expires_at !== 'number' ||
-    !Number.isSafeInteger(data.issued_at) ||
-    !Number.isSafeInteger(data.expires_at) ||
-    data.issued_at < 1 ||
-    data.expires_at - data.issued_at !== 900
-  )
-    return null;
-  return { accessToken: data.access_token, issuedAt: data.issued_at, expiresAt: data.expires_at };
-}
 
 /** Keeps grant/session handling outside React state, errors and schema caches. */
 export class ActivationService {
