@@ -15,7 +15,7 @@ API validation/error handling, public-safe form metadata and local engineering s
 present. Explicit initial Workspace bootstrap and protected Repository registration/inspection are implemented under
 [TASK-00078's runbook](docs/engineering/REPOSITORY_REGISTRATION.md), pending fresh independent Review/QA after repair. They add no
 checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
-canonical login is implemented at `/app/login` pending independent acceptance; refresh/logout and the complete authenticated shell remain unfinished. A non-product React shell with
+canonical login is implemented at `/app/login`; refresh/current-session logout are implemented pending independent acceptance. The complete authenticated shell and multi-tab continuity remain unfinished. A non-product React shell with
 local system/light/dark appearance is available at `/app`; other product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
@@ -86,7 +86,7 @@ Configure independent external `APP_ACTIVATION_RATE_KEY` and `APP_AUTH_RATE_KEY`
 The reusable [browser authentication request controls](docs/engineering/BROWSER_AUTH_REQUESTS.md) provide
 fixed session/persistent refresh cookies, nonce lifecycle, strict browser guards and independently committed
 rolling email/network/endpoint admission. Production-like HTTP boot requires explicit direct TLS authority,
-no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/app/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Refresh/logout journeys are not registered yet. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
+no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/app/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Multi-tab coordination and the authenticated product shell remain planned. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`

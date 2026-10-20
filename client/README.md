@@ -3,7 +3,7 @@
 The production React shell is available at `/app` and `/app/`; these are not a dashboard
 or Planning workspace. Canonical login now mounts at `/app/login` (pending independent acceptance); see the [login contract](../docs/engineering/LOGIN.md). `/app/activate` now mounts the real [public invitation journey](../docs/engineering/ACTIVATION.md),
 pending independent acceptance. The semantic theme and three-state appearance selector are present; the
-rest of the authenticated application frame remains planned. `/` retains the PHP smoke response; `/api/v1` retains
+rest of the authenticated application frame remains planned. [Refresh/current-session logout](../docs/engineering/SESSION_CONTINUITY.md) now have explicit single-tab services and a sign-out action on login success, pending independent Review/QA; scheduling/restoration and cross-tab coordination remain TASK-00048. `/` retains the PHP smoke response; `/api/v1` retains
 its independent API contract. Unknown `/app/...` paths render the shell's not-found page (HTTP 200),
 not an API response. Paths outside `/app` never fall back to React.
 
@@ -304,7 +304,7 @@ The shared normalization matrix distinguishes validation (400/422 fail), authent
 are transport tests against documented mapper contracts, **not implemented protected endpoints**. Activation now consumes these seams through `ActivationService`, which owns its fixed path/codec, accepts the
 returned access token only into `MemoryAccessToken` and never retries mutations. POST sends JSON plus the explicit
 CSRF proof, keeps all transport privacy controls and deliberately does not abort an observed server mutation
-success. Login now consumes the same response codec and memory-token seam through `LoginService`; `/me` client, refresh, retry/coordination, cross-tab and persistence remain outside activation.
+success. Login now consumes the same response codec and memory-token seam through `LoginService`; `/me` client, retry/coordination, cross-tab and persistence remain outside activation. `SessionService` now supplies explicit single-tab refresh/logout using that shared memory seam; it never retries conflicts, persists authority or invents a principal. Login success mounts current-session logout and truthful uncertain-server outcomes.
 
 Client tests use deterministic fetch/controlled-promise doubles, synthetic non-live values and the published
 CSRF shape. They prove strict decoding, safe outcomes, memory-token policy, abort and independent generation
@@ -446,8 +446,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **59** named examples across eight story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states. The form composition demonstrates rejection,
+`stories/` holds **64** named examples across nine story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states and 5 production-backed current-session states. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -474,7 +474,7 @@ do not write real browser preferences or perform production prepaint.
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 59 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 64 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases

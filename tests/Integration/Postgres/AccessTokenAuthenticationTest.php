@@ -87,7 +87,10 @@ final class AccessTokenAuthenticationTest extends TestCase
             new AuthorizationReferenceFences($this->connection),
             new AuthenticationAuthorityFences($this->connection)
         );
-        $this->sessions = new PostgresRefreshSessionRepository($this->connection);
+        $this->sessions = new PostgresRefreshSessionRepository(
+            $this->connection,
+            new \App\Adapter\Persistence\Locking\AuthenticationAuthorityFences($this->connection)
+        );
         $this->fixture = new AccessTokens();
     }
 

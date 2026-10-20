@@ -48,7 +48,10 @@ TRUNCATE refresh_session_used_credentials, refresh_sessions, user_role_assignmen
     user_email_claims, users, role_permissions, roles, permissions CASCADE
 SQL
         );
-        $this->sessions = new PostgresRefreshSessionRepository($this->connection);
+        $this->sessions = new PostgresRefreshSessionRepository(
+            $this->connection,
+            new \App\Adapter\Persistence\Locking\AuthenticationAuthorityFences($this->connection)
+        );
         $this->users = new PostgresUserRepository(
             $this->connection,
             new AuthorizationReferenceFences($this->connection),
@@ -405,7 +408,10 @@ SQL
         $loser = $expected->rotate($this->credential(), $base->modify('+11 minutes'), $base->modify('+71 minutes'));
 
         $competingConnection = $this->connection();
-        $competingSessions = new PostgresRefreshSessionRepository($competingConnection);
+        $competingSessions = new PostgresRefreshSessionRepository(
+            $competingConnection,
+            new \App\Adapter\Persistence\Locking\AuthenticationAuthorityFences($competingConnection)
+        );
 
         $this->connection->beginTransaction();
         $competingConnection->beginTransaction();

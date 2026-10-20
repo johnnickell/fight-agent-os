@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\Repository;
 
+use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\PostgresAtomicOperation;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use DateTimeImmutable;
@@ -11,6 +12,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\Exception\RefreshSessionNotFoundException;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
@@ -35,8 +37,10 @@ final readonly class PostgresRefreshSessionRepository implements RefreshSessionR
     /**
      * Constructs PostgresRefreshSessionRepository
      */
-    public function __construct(private Connection $connection)
-    {
+    public function __construct(
+        private Connection $connection,
+        private AuthenticationAuthorityFences $authenticationFences
+    ) {
     }
 
     /**
@@ -158,6 +162,21 @@ final readonly class PostgresRefreshSessionRepository implements RefreshSessionR
                 $this->connection,
                 function () use ($expected, $replacement): bool {
                     $isRotation = $replacement->getCredentialDigest() !== $expected->getCredentialDigest();
+                    if ($isRotation) {
+                        // Share the lifecycle/password mutation fence and recheck authority at the
+                        // persistence boundary, not merely the package's earlier captured snapshot.
+                        $this->authenticationFences->hold($expected->getUserId());
+                        if (
+                            !(bool) $this->connection->fetchOne(
+                                <<<'SQL'
+SELECT EXISTS (SELECT 1 FROM users WHERE id = ? AND state = 'active' AND authentication_version = ?)
+SQL,
+                                [$expected->getUserId()->toString(), $expected->getAuthenticationVersion()]
+                            )
+                        ) {
+                            throw new RefreshSessionNotFoundException('The refresh session is not authoritative.');
+                        }
+                    }
                     $builder = $this->connection->createQueryBuilder()->update('refresh_sessions');
                     $builder
                         ->set('credential_digest', ':replacement_credential_digest')

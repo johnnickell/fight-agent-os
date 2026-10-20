@@ -5,10 +5,12 @@ import { Button } from '@/components/Button';
 import { ContentState } from '@/components/ContentState';
 import { TextField } from '@/components/forms/TextField';
 import { Notice } from '@/components/Notice';
+import { CurrentSessionControls } from '@/features/auth/CurrentSessionControls';
 import { usePublicForm } from '@/features/validation/usePublicForm';
 
 import type { ApiFailure } from '@/api/ApiResult';
 import type { LoginService } from '@/features/auth/LoginService';
+import type { SessionService } from '@/features/auth/SessionService';
 import type { PublicSchema } from '@/features/validation/PublicSchema';
 import type { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 
@@ -25,10 +27,12 @@ function failureMessage(failure: ApiFailure): string {
 export function LoginPage({
   service,
   schemas,
+  session,
   onAuthenticated
 }: {
   service: LoginService;
   schemas: PublicSchemaService;
+  session?: SessionService | undefined;
   onAuthenticated?: (() => void) | undefined;
 }) {
   const [schema, setSchema] = useState<PublicSchema | null>(null);
@@ -61,16 +65,16 @@ export function LoginPage({
       </div>
       <div className="login-panel">
         {complete ? (
-          <>
+          <CurrentSessionControls service={session}>
             <h2 ref={success} tabIndex={-1}>
               You’re signed in
             </h2>
             <Notice tone="success" title="Session established">
               Your password has been cleared. The authenticated dashboard and account controls are
-              not available yet. Access stays only in this page’s memory; reloading currently
-              requires sign-in.
+              not available yet. Access stays only in this page’s memory. You can end this session
+              below.
             </Notice>
-          </>
+          </CurrentSessionControls>
         ) : state === 'loading' ? (
           <ContentState
             kind="loading"

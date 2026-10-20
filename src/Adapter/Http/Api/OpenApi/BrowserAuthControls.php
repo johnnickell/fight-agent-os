@@ -11,6 +11,16 @@ use OpenApi\Attributes as OA;
  *
  * Describes shared browser controls consumed by login and future refresh or logout operations
  */
+#[OA\SecurityScheme(
+    securityScheme: 'RefreshCookie',
+    type: 'apiKey',
+    description: <<<'TEXT'
+        Browser-managed host-only Secure HttpOnly SameSite=Strict cookie at /api/v1/auth;
+        never supply through JavaScript or Bearer
+        TEXT,
+    name: '__Secure-agent_os_refresh',
+    in: 'cookie'
+)]
 #[OA\Parameter(
     parameter: 'BrowserAuthOrigin',
     name: 'Origin',
@@ -31,13 +41,6 @@ use OpenApi\Attributes as OA;
         Never send refresh credentials or CSRF alternatives in query, JSON or Authorization.
         TEXT,
     schema: new OA\Schema(type: 'string', maxLength: 75)
-)]
-#[OA\Schema(
-    schema: 'BrowserAuthEmptyInput',
-    description: 'Refresh/logout require exactly an empty JSON object, not an absent body or array',
-    type: 'object',
-    maxProperties: 0,
-    additionalProperties: false
 )]
 #[OA\Response(
     response: 'BrowserAuthThrottled',

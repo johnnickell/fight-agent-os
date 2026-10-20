@@ -70,7 +70,10 @@ final class PersistenceBoundaryTest extends TestCase
         $connection = $this->createMock(Connection::class);
         $connection->method('isTransactionActive')->willReturnOnConsecutiveCalls(true, false);
         $connection->expects(self::never())->method('createQueryBuilder');
-        $repository = new PostgresRefreshSessionRepository($connection);
+        $repository = new PostgresRefreshSessionRepository(
+            $connection,
+            new \App\Adapter\Persistence\Locking\AuthenticationAuthorityFences($connection)
+        );
         self::assertFalse($repository->replace($session, $session));
         $this->expectException(LogicException::class);
         $repository->replace($session, $session->revoke());
