@@ -2,7 +2,7 @@
 id: TICKET-00016
 epic: EPIC-00004
 title: Deliver the invitation and activation lifecycle
-status: ready-for-agent
+status: done
 ---
 
 # Deliver the invitation and activation lifecycle
@@ -53,7 +53,7 @@ Public activation needs possession of the valid grant but reveals no account sta
 | [TASK-00040](../tasks/00040-TASK.md) | Deliver recoverable secret-safe invitation email | done |
 | [TASK-00041](../tasks/00041-TASK.md) | Expose authorized invitation issuance and safe status | done |
 | [TASK-00042](../tasks/00042-TASK.md) | Expose permission-controlled invitation recovery | done |
-| [TASK-00043](../tasks/00043-TASK.md) | Deliver the public invitation activation journey | in-progress |
+| [TASK-00043](../tasks/00043-TASK.md) | Deliver the public invitation activation journey | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
