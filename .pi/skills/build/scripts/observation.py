@@ -47,7 +47,9 @@ class Observation:
 
     @staticmethod
     def encode(record):
-        return (json.dumps(record, ensure_ascii=True) + "\n").encode("ascii")
+        # UTF-8 avoids surrogate-escape expansion exceeding the pane's framing cap
+        # when multiple bounded identity fields contain supplementary Unicode.
+        return (json.dumps(record, ensure_ascii=False) + "\n").encode("utf-8")
 
     def drop(self, client):
         self.clients.pop(client, None)

@@ -65,6 +65,23 @@ test('display memory and entry counts stay bounded and disclose eviction under a
   assert.ok(observation.history.length <= 100); assert.ok(observation.units <= 32768); assert.ok(observation.omitted > 0);
   assert.equal(observation.last.sequence, 1000); observation.close();
 });
+test('supplementary Unicode uses code-point field limits without losing later lifecycle', () => {
+  const { observation, send } = fixture();
+  send(packet(0, { text: '😀'.repeat(350), identity: { ...identity, worktree: '😀'.repeat(1025), attempt: '😀'.repeat(1025) } }));
+  assert.equal(observation.state, 'connected');
+  assert.equal(observation.last.text, '😀'.repeat(350));
+  send(packet(1, { text: 'completed', identity: observation.last.identity, lifecycle: 'completed', exitCode: 0 }));
+  assert.equal(observation.last.sequence, 1); assert.equal(observation.last.lifecycle, 'completed');
+  observation.close();
+});
+test('code-point limits reject oversized Unicode fields while retained memory stays in UTF-16 units', () => {
+  const { observation, send } = fixture(); send(packet());
+  for (let i = 1; i <= 100; i++) send(packet(i, { text: '😀'.repeat(600) }));
+  assert.equal(observation.last.sequence, 100); assert.ok(observation.units <= 32768); assert.ok(observation.omitted > 0);
+  send(packet(101, { text: '😀'.repeat(601) })); assert.equal(observation.state, 'disconnected'); observation.close();
+  const other = fixture(); other.send(packet(0, { identity: { ...identity, attempt: '😀'.repeat(1101) } }));
+  assert.equal(other.observation.state, 'disconnected'); other.observation.close();
+});
 test('sequence gaps, stale sequences and partial stream loss are truthful, not successful completion', () => {
   const { observation, sockets, send } = fixture(); send(packet()); send(packet(4)); assert.equal(observation.gaps, 3);
   send(packet(4)); assert.equal(observation.state, 'disconnected'); assert.match(observation.view(), /liveness unknown/);

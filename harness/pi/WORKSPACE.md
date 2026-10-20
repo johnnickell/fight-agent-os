@@ -113,6 +113,14 @@ Keep the path short: Unix socket pathname limits are platform-specific (about 10
 does not change stage model, authority, request or settlement requirements. An already-running monitor without
 the option cannot be retrofitted; do not relaunch its child or fall back to transcript/scratch tailing.
 
+If the monitor lives in a candidate worktree while a different checkout's Harness is already installed,
+inspect `pi list` first. Select that trusted installed package explicitly on the monitor with
+`--harness-package /absolute/installed/harness/pi`. Pi deduplicates the same resolved package path; different
+checkout paths are distinct resources and can conflict. This selects the bootstrap and complete protected
+package, retaining normal resource discovery and `--fight-screening-required`; it does not disable extensions,
+change settings/trust/enrollment, copy credentials or fall back after failure. Qualify startup/status before
+provider work. An unknown installation or conflict remains a prerequisite, not permission to bypass protections.
+
 In the workspace, supply only sockets you own and are permitted to observe:
 
 ```sh
@@ -140,7 +148,11 @@ The producer keeps at most four readers, each with a 64 KiB nonblocking send que
 closed rather than holding up stage progress. Workspace rendering drops obsolete frames while terminal output
 is backpressured and redraws the latest state on drain, rather than accumulating a frame queue. Each connection begins with the current snapshot; earlier progress
 is not replayed. The pane retains at most 100 progress entries / 32 Ki UTF-16 units with omission counts, admits
-records up to 32 Ki units, and rejects malformed records, stale sequences or subscription generations. Identity
+records up to 32 Ki units, and rejects malformed records, stale sequences or subscription generations.
+Progress/identity field limits use Unicode code points consistently with the Python monitor (600/1100 maximum
+accepted points); the monitor truncates progress at 480 points plus an ellipsis and identity at its field-specific
+limit plus an ellipsis. It encodes JSON as UTF-8 rather than expanding supplementary characters into surrogate
+escapes. Framing and retained-memory caps still use UTF-16 units and are unchanged. Identity
 is pinned per endpoint for this workspace lifetime; a replacement attempt at the same path is refused. Use a
 new explicit socket path for a new attempt. Gaps and snapshot omissions are disclosed. No automatic reconnect
 loop runs. A missing/closed stream or overdue heartbeat means unknown liveness, never inferred success/death.
@@ -148,9 +160,12 @@ Known settlement awaits process exit; only the monitor's effective zero exit plu
 produces `completed`, and that is **not** review/acceptance. Final status is memory-only; the endpoint disappears
 when the monitor exits. Owner-only filesystem checks are a local trust boundary, not same-user process isolation.
 
-This initial candidate has owned behavior tests and controlled monitor qualification. Genuine two-child-attempt
-observation, active producer terminal captures and independent Review/QA remain required; controlled streams
-are not live agent proof. See [TASK-00448](../../planning/tasks/00448-TASK.md) for current evidence and limitations.
+The initial candidate had only controlled monitor qualification. TASK-00448 repair cycle 1 adds genuine
+sequential two-attempt observation through the candidate monitor and workspace, including assistant/tool/heartbeat
+progress, pause/drain, primary shell input, close/reconnect, completion and inspected active-producer dark/light
+wide/narrow images. These are implementer qualification, not independent acceptance. Stale-callback and hostile/
+slow-reader stress remain controlled checks; the two live fixtures were deliberately not concurrent. Independent
+Review/QA remain required. See [TASK-00448](../../planning/tasks/00448-TASK.md) for exact receipts and limitations.
 
 ## Policy and normal Pi paths
 

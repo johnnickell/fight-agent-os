@@ -224,8 +224,11 @@ def run(args):
     names = ("events.jsonl", "progress.log", "stderr.log", "final.txt", "exit-code", "pi-exit-code", "process.json")
     if any((attempt / name).exists() for name in names) or (attempt / "sessions").exists():
         raise ValueError("attempt already contains execution evidence; use a fresh attempt")
-    # Resolve resources beside the owning provider skill, not in a downstream target checkout.
-    bootstrap = Path(__file__).resolve().parents[4] / "harness/pi/src/screening-bootstrap.mjs"
+    # Default to the owning provider, with an explicit trusted installed package choice
+    # for checkouts whose mutable candidate would otherwise duplicate that installation.
+    package = (Path(args.harness_package).resolve(strict=True) if args.harness_package else
+               Path(__file__).resolve().parents[4] / "harness/pi")
+    bootstrap = package / "src/screening-bootstrap.mjs"
     prepared = subprocess.run(["node", str(bootstrap), "prepare", str(Path.cwd())],
                               stdin=subprocess.DEVNULL, capture_output=True, timeout=15)
     if prepared.returncode:
@@ -375,6 +378,7 @@ def main():
     parser.add_argument("--thinking", required=True)
     parser.add_argument("--timeout", type=positive_seconds, default=1800)
     parser.add_argument("--heartbeat", type=positive_seconds, default=30)
+    parser.add_argument("--harness-package", help="Explicit trusted Harness package directory; match the installed resource identity to avoid duplicate loading")
     parser.add_argument("--observe-socket", help="Optional absolute owner-only live socket under checkout var/; never a transcript")
     parser.add_argument("--screening-dispatch", action="store_true", help="Relay safe screening observations only; keep child prose private")
     args = parser.parse_args()

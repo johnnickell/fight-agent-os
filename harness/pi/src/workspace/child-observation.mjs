@@ -8,13 +8,15 @@ const states = new Set(['starting', 'running', 'settled-awaiting-exit', 'complet
 const identityKeys = ['task', 'role', 'provider', 'model', 'thinking', 'worktree', 'attempt'];
 const line = value => clean(value).replace(/\n/g, ' ');
 const count = (value, amount = 1) => Math.min(Number.MAX_SAFE_INTEGER, value + amount);
+// Field limits match Python's Unicode code points; framing/retention remain UTF-16 bounded.
+const points = value => [...value].length;
 
 function record(value) {
   if (!value || value.version !== version || !['snapshot', 'progress'].includes(value.kind) ||
     !Number.isSafeInteger(value.sequence) || value.sequence < 0 || !states.has(value.lifecycle) ||
     !Number.isFinite(value.heartbeatSeconds) || value.heartbeatSeconds <= 0 ||
-    typeof value.text !== 'string' || value.text.length > 600 ||
-    !identityKeys.every(key => typeof value.identity?.[key] === 'string' && value.identity[key].length > 0 && value.identity[key].length <= 1100) ||
+    typeof value.text !== 'string' || points(value.text) > 600 ||
+    !identityKeys.every(key => typeof value.identity?.[key] === 'string' && points(value.identity[key]) > 0 && points(value.identity[key]) <= 1100) ||
     (['completed', 'failed'].includes(value.lifecycle) ? !Number.isInteger(value.exitCode) || value.exitCode < 0 || value.exitCode > 255 || (value.lifecycle === 'completed') !== (value.exitCode === 0) : value.exitCode !== null)) {
     throw new Error('Invalid safe progress record');
   }
