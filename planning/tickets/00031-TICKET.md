@@ -46,7 +46,7 @@ Read Views must not expose member lists or internal tokens, grant/hash/audit/per
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00124](../tasks/00124-TASK.md) | Expose guarded role and permission catalogs | in-progress |
+| [TASK-00124](../tasks/00124-TASK.md) | Expose guarded role and permission catalogs | done |
 | [TASK-00125](../tasks/00125-TASK.md) | Manage custom role definitions without changing managed roles | ready-for-agent |
 | [TASK-00126](../tasks/00126-TASK.md) | Qualify the upstream authorization contract and consumer update | done |
 | [TASK-00127](../tasks/00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent |
