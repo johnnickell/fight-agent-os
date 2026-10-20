@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00501](00501-TASK.md) | Restore local PHP diagnostics and bound development processes | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 

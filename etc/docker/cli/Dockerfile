@@ -18,8 +18,8 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && docker-php-ext-install pdo_pgsql \
     && pecl install xdebug-3.5.0 \
     && docker-php-ext-enable xdebug \
-    && printf 'xdebug.mode=off\n' > /usr/local/etc/php/conf.d/zz-xdebug-mode.ini \
     && rm -rf /var/lib/apt/lists/*
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 COPY etc/docker/cli/Dockerfile /usr/local/share/fight-build/Dockerfile
+COPY etc/docker/php/development.ini /usr/local/etc/php/conf.d/zz-development.ini
 WORKDIR /app

@@ -503,4 +503,5 @@
 | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
 | [TASK-00499](00499-TASK.md) | Remove harness denials from native file reads | done | — |
 | [TASK-00500](00500-TASK.md) | Restore native file tools and use Terra for Land | done | — |
+| [TASK-00501](00501-TASK.md) | Restore local PHP diagnostics and bound development processes | in-progress | — |
 <!-- /planning:records -->
