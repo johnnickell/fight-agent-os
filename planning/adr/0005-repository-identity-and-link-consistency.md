@@ -38,7 +38,9 @@ A confirmed move can preserve IDs; a fresh clone gets new Checkout/Worktree IDs.
 ### 2. Keep registration state and its consistency rules in Workspace
 
 Workspace owns separate Repository, Host, Checkout and Worktree records, authoritative current state and
-append-only audit. Bootstrap explicitly creates the initial Workspace and local Host together, once.
+append-only audit. Bootstrap explicitly creates the initial Workspace once in TASK-00078; explicit initial
+Host enrollment remains TASK-00079. Each operation commits its own state, audit and original result atomically
+and retries return its original identities. Neither startup nor a query implicitly bootstraps either identity.
 Use the existing shared PostgreSQL connection and transaction authority, expected revisions and database
 constraints for active Workspace slug/source uniqueness, relationships and physical-link reservations.
 State, required audit and original command result commit together; competing writers cannot both win a claim.
@@ -101,6 +103,15 @@ Exact URL grammars, the ten-minute confirmation default, marker encoding/key spe
 They remain fully specified and unchanged by this editorial split; amendments must be explicit, not silent
 implementation substitutions. Package/Git observations support the proposal, not proof of a working link writer.
 TASK-00078/00079/00080 own later implementation; physical writers also require approved-root/platform qualification.
+
+## Approved bootstrap amendment — TASK-00078
+
+During TASK-00078 intake on 2026-10-20, the coordinator asked John: “I recommend preserving the TASK split:
+Workspace now, explicit Host enrollment in TASK-00079. Approve amending ADR 0005 and its supporting contract
+accordingly?” John replied exactly **“approved”**. This amendment separates the two explicit operations;
+it adds no Host persistence or physical authority to TASK-00078. Per-operation atomic state/audit/original
+results, idempotency and all other identity, source, uniqueness, transaction and recovery rules remain unchanged.
+The original acceptance below remains historical evidence for the original subjects, not for this amendment.
 
 ## Human acceptance
 

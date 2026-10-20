@@ -5,7 +5,9 @@ handwritten `docs/api/openapi.yaml`; no independently maintained YAML or tracked
 TASK-00021's YAML receipts are historical evidence, not the current input. The document describes **only
 `GET /api/v1/auth/csrf`, the public-safe `GET /api/v1/validations/{form_name}`, and authenticated
 `GET /api/v1/me`, the invitation issuance/status/recovery operations, and
-`POST /api/v1/auth/activate`**. See [public activation](../engineering/ACTIVATION.md) for the implemented
+`POST /api/v1/auth/activate`, and the five Workspace-scoped Repository registration/inspection/reference interactions**.
+See [registration contracts and current access limits](../engineering/REPOSITORY_REGISTRATION.md) for explicit
+bootstrap, sources, idempotency and non-reserving references; no physical linking or access grant is supplied. See [public activation](../engineering/ACTIVATION.md) for the implemented
 possession-only JSON/Origin/CSRF/rate/session contract, not public registration. See
 [invitation API](../engineering/INVITATION_API.md) for exact permissions, confirmation, rate policy and
 independently committed partial/uncertain outcomes. See
@@ -100,8 +102,8 @@ After successful validation the Action reads `$request->getAttribute(JsonBody::c
 `$request->getAttribute(QueryString::class)` as a checked field map. This is an adapter request attribute,
 not an authority grant; map to the actual package/use-case message explicitly, and never reread
 `getParsedBody()`/`getQueryParams()` to dispatch. JSON requires Content-Type `application/json` (optional
-UTF-8 charset), a nonempty unique-key object within 65,536 bytes and scalar/null fields. JSON retains
-native types. The query string has a 4,096-byte maximum, at most 32 `&`-separated flat fields, zero
+UTF-8 charset), a nonempty unique-key object within 65,536 bytes and declared native-typed fields. Scalar/null remains the default; only explicit object/array type rules opt into
+the concrete nested-consumer boundary below. JSON retains native types. The query string has a 4,096-byte maximum, at most 32 `&`-separated flat fields, zero
 bracket/nesting depth, valid percent-encoding/UTF-8 and unique decoded lowercase snake_case names. When
 available, the original server `REQUEST_URI` query is checked before PSR URI normalization can hide bad
 percent triplets; later real-route owners must verify that server-provided target with HTTP requests. Values
@@ -110,8 +112,11 @@ An `&` separates fields; each field has zero or one `=`, and `+` decodes as a sp
 repeated, malformed, oversized or wrong-source input receives sanitized `400` JSend field errors
 under `body`/`body.<declared_field>` or `query`/`query.<declared_field>`, never arbitrary submitted keys.
 Only declared endpoint rules can allow pagination, ordering, filters or boolean literals; they never
-confer permission to see deleted records or choose raw database expressions. Nested/list shapes and
-implicit conversions are deferred until a concrete endpoint qualifies them.
+confer permission to see deleted records or choose raw database expressions. TASK-00078 qualifies exact package `type[?object]`/`type[array]` declarations for registration's optional
+`primary_source` and bounded `equivalent_sources`. Only explicitly declared JSON complex types pass the generic
+scalar guard; the owning registration mapper validates each closed `{type, locator}` descriptor and rejects unknown
+nested fields or unsupported authority. Duplicate keys are still rejected at every depth. Existing scalar-only
+Actions and query input retain their former boundary; implicit conversions and other nested consumers remain deferred.
 
 The original qualification used `johnnickell/fight-common` **v1.2.0** source at
 `a2cd615d9b5064c9c30e994655536176249cd73b`; current installation is locked to **v1.3.0** at

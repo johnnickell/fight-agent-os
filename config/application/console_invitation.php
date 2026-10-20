@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Adapter\Console\AddUserRoleCommand;
 use App\Adapter\Console\BootstrapSuperAdminCommand;
+use App\Adapter\Console\BootstrapWorkspaceCommand;
 use App\Adapter\Console\InviteUserCommand;
 use App\Adapter\Console\SafeConsoleApplication;
 use App\Adapter\CredentialDelivery\RandomActivationCredentialGenerator;
@@ -70,6 +71,7 @@ return static function (Container $container): void {
         $application->addCommand($c->get(InviteUserCommand::class));
         $application->addCommand($c->get(AddUserRoleCommand::class));
         $application->addCommand($c->get(BootstrapSuperAdminCommand::class));
+        $application->addCommand($c->get(BootstrapWorkspaceCommand::class));
         $application->setAutoExit(false);
 
         return $application;

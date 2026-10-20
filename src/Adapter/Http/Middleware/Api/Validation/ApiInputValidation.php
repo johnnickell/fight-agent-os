@@ -237,7 +237,14 @@ final readonly class ApiInputValidation implements MiddlewareInterface
         }
         foreach ($input as $field => $value) {
             if (!is_scalar($value) && $value !== null) {
-                return $this->reject([$location.'.'.$field => ['Invalid type.']]);
+                // Concrete nested consumers opt in with an exact package type rule. Their mapper owns
+                // the closed nested shape; existing scalar-only Actions retain their former boundary.
+                $types = array_filter($parsed[$field], static fn(array $rule): bool =>
+                    $rule['type'] === 'Type'
+                    && in_array($rule['args'][0] ?? null, ['object', '?object', 'array'], true));
+                if ($source !== JsonBody::class || $types === []) {
+                    return $this->reject([$location.'.'.$field => ['Invalid type.']]);
+                }
             }
         }
 

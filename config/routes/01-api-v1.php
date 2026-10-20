@@ -10,6 +10,11 @@ use App\Adapter\Http\Action\Api\V1\Invitations\ReadInvitationStatusAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\ResendInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Invitations\RetryInvitationAction;
 use App\Adapter\Http\Action\Api\V1\Me\ReadCurrentPrincipalAction;
+use App\Adapter\Http\Action\Api\V1\Repositories\GenerateExceptionalReferenceAction;
+use App\Adapter\Http\Action\Api\V1\Repositories\GetRepositoryRegistrationAction;
+use App\Adapter\Http\Action\Api\V1\Repositories\ListRepositoryRegistrationsAction;
+use App\Adapter\Http\Action\Api\V1\Repositories\PreviewRepositoryConflictsAction;
+use App\Adapter\Http\Action\Api\V1\Repositories\RegisterRepositoryAction;
 use App\Adapter\Http\Action\Api\V1\Validations\ReadValidationAction;
 use App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission;
 use App\Adapter\Http\Middleware\Api\Auth\ApiActionSecurity;
@@ -40,6 +45,22 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
         ->setName('api.v1.invitations.correct');
     $api->get('/invitations/{user_id}', ReadInvitationStatusAction::class.':handle')
         ->setName('api.v1.invitations.status');
+    $api->post('/workspaces/{workspace_id}/repositories', RegisterRepositoryAction::class.':handle')
+        ->setName('api.v1.repositories.register');
+    $api->post(
+        '/workspaces/{workspace_id}/repositories/conflict-preview',
+        PreviewRepositoryConflictsAction::class.':handle'
+    )
+        ->setName('api.v1.repositories.preview');
+    $api->get(
+        '/workspaces/{workspace_id}/repositories/{repository_id}',
+        GetRepositoryRegistrationAction::class.':handle'
+    )
+        ->setName('api.v1.repositories.get');
+    $api->get('/workspaces/{workspace_id}/repositories', ListRepositoryRegistrationsAction::class.':handle')
+        ->setName('api.v1.repositories.list');
+    $api->post('/workspaces/{workspace_id}/references', GenerateExceptionalReferenceAction::class.':handle')
+        ->setName('api.v1.references.generate');
     $api->get('/me', ReadCurrentPrincipalAction::class.':handle')
         ->setName('api.v1.me');
     $api->get('/validations/{form_name}', ReadValidationAction::class.':handle')
