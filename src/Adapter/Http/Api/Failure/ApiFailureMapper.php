@@ -17,6 +17,7 @@ use App\Application\Security\Activation\ActivationPasswordRejected;
 use App\Domain\Workspace\RegistrationConflict;
 use App\Domain\Workspace\RegistrationInputRejected;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
+use Fight\AccessControl\Domain\AccessControl\User\Exception\LoginRejectedException;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use Fight\Common\Application\Validation\Exception\ValidationException as TransportValidationException;
 use Fight\Common\Domain\EventSourcing\Exception\OptimisticConcurrencyException;
@@ -79,6 +80,7 @@ final readonly class ApiFailureMapper
         }
 
         $known = match (true) {
+            $exception instanceof LoginRejectedException,
             $exception instanceof AuthenticationRequired,
             $exception instanceof HttpUnauthorizedException => [401, 'Unauthorized.'],
             $exception instanceof PermissionDenied,

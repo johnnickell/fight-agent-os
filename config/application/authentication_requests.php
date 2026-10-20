@@ -2,20 +2,25 @@
 
 declare(strict_types=1);
 
+use App\Adapter\Http\Action\Api\V1\Auth\LoginAction;
 use App\Adapter\Http\Api\V1\Auth\AuthOperation;
 use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
 use App\Adapter\Http\Middleware\Api\Auth\AuthEndpointGuard;
 use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
+use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
 use App\Adapter\Persistence\Authentication\PostgresAuthAttempts;
 use App\Adapter\Security\Authentication\AuthAdmission;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
 use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
 use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
+    $container->set(LoginAction::class, static fn(Container $c): LoginAction =>
+        new LoginAction($c->get(AuthenticationService::class), $c->get(SessionResponder::class)));
     $container->set(BrowserSessionCookies::class, static fn(Container $c): BrowserSessionCookies =>
         new BrowserSessionCookies($c->get(Clock::class)));
     // A dedicated connection prevents a package login transaction from rolling back consumed attempts.

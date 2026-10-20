@@ -1,18 +1,18 @@
 # Browser authentication request controls
 
 [ADR 0003](../../planning/adr/0003-browser-authentication-security-profile.md) governs these controls.
-TASK-00045 provides reusable login/refresh/logout controls, **not their Actions, routes or UI**.
+TASK-00045 provides reusable login/refresh/logout controls. [TASK-00046 login](LOGIN.md) now supplies its Action, route and UI; refresh/logout consumers remain planned.
 Activation continues using the shared browser guard and session responder. Its separate admission limits
 and invitation/password behavior are unchanged. Complete deployment qualification remains TASK-00063/64.
 
 ## Composition and request matrix
 
-Future Actions declare `#[JsonBody]` and `#[Validation]` and consume only the validated source attribute.
+Login and future refresh/logout Actions declare `#[JsonBody]` and `#[Validation]` and consume only the validated source attribute.
 The API pipeline is failure/correlation → routing/security → `ApiInputValidation` → the registered
 `auth.guard.login`, `auth.guard.refresh` or `auth.guard.logout` → Action. These guards require the validated
 JSON attribute; attaching them without source validation fails closed. They combine `BrowserMutationGuard`,
 endpoint shape and independently committed admission. They never call an authentication service themselves.
-No blanket public-route exemption, new bootstrap, credential store or permissive CORS policy is supplied.
+No blanket public-route exemption, new bootstrap, credential store or permissive CORS policy is supplied. The login integration independently qualifies raw server `HTTP_HOST` when Slim's reconstructed Host drops a nondefault port; a matching configured URI is still mandatory.
 
 | Boundary | Accepted | Rejected before Action dispatch |
 |---|---|---|
@@ -104,5 +104,4 @@ Tests exercise real shared JSON middleware, safe correlated rejection before dis
 nonce replacement/expiry, rolling fractional expiry, known/unknown email equivalence, business rollback,
 capacity/outage, and four three-connection contention scenarios (email and each endpoint), using database lock
 barriers rather than sleeps. OpenAPI publishes reusable parameters/input/429 components without future paths.
-Real login, package refresh/logout, cross-tab browsers, deployment trust and integrated redaction remain with
-their owning downstream TASKs. No production or live-inbox operation is authorized here.
+Canonical login now exercises these controls through its real package/HTTP/browser boundary; package refresh/logout, cross-tab browsers, deployment trust and integrated redaction retain their downstream owners. No production or live-inbox operation is authorized here.

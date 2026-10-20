@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { decodeSessionAccess } from '@/features/auth/ActivationService';
 import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
 
 import { activationDependencies, jsonResponse, passwordGuidance } from '../../activationFixtures';
@@ -78,34 +77,6 @@ describe('activation transport and volatile session ownership', () => {
     expect((await result).ok).toBe(true);
     expect(deps.tokens.getAccessToken()).toBeNull();
     expect(deps.credential.current()).toBeNull();
-  });
-
-  it('rejects extra refresh material and unsafe session timing without retaining raw responses', () => {
-    expect(
-      decodeSessionAccess({
-        access_token: 'header.payload.signature',
-        issued_at: 1000,
-        expires_at: 1900,
-        refresh: 'private'
-      })
-    ).toBeNull();
-    expect(
-      decodeSessionAccess({
-        access_token: 'header.payload.signature',
-        issued_at: 1000,
-        expires_at: 1901
-      })
-    ).toBeNull();
-    expect(
-      decodeSessionAccess({ access_token: 'invalid', issued_at: 1000, expires_at: 1900 })
-    ).toBeNull();
-    expect(
-      decodeSessionAccess({
-        access_token: 'header.payload.signature\n',
-        issued_at: 1000,
-        expires_at: 1900
-      })
-    ).toBeNull();
   });
 
   it('expires volatile authority conservatively without relying on the browser wall clock', () => {

@@ -54,8 +54,7 @@ claims remain unchanged; serialized `exp` must equal `iat + 900`. Expiry that fl
 refused, not repaired by computing another deadline. Package DateTime/`TokenSet` expiry retains its original
 fractional precision, while JWT expiry can be less than one second earlier, never later. Their whole-second
 timing representations agree; they are not subsecond-identical. Future login/refresh responses must expose
-whole-second timing no later than JWT expiry, not round package DateTime upward. [Activation](ACTIVATION.md) now supplies this response mapping through `SessionResponder`; login/refresh
-responses remain unfinished. Tests use representative fractional clocks and persisted hard deadlines, not only
+whole-second timing no later than JWT expiry, not round package DateTime upward. [Activation](ACTIVATION.md) now supplies this response mapping through `SessionResponder`; [canonical login](LOGIN.md) now reuses that response mapping and refresh remains unfinished. Tests use representative fractional clocks and persisted hard deadlines, not only
 whole-second fixtures.
 
 `AuthenticateAccessToken` resolves session and user fresh on every request using package repository ports,
@@ -69,8 +68,7 @@ extractor/authentication service, then constructs a fresh package `CurrentPrinci
 request. It overwrites authentication/current-principal/security attributes only after verified resolution;
 no shared caching provider or client-supplied authority is used. `/me` is the first protected operation.
 See [matched-Action security](../api/README.md#matched-action-security-task-00117) for the exact public
-allowlist, metadata placement, permission conjunction and safe projection. Login/refresh/logout and the first
-real permission-protected operation's HTTP matrix remain with their owning TASKs.
+allowlist, metadata placement, permission conjunction and safe projection. [Login](LOGIN.md) now supplies its real HTTP/browser matrix. Refresh/logout retain their owning TASKs.
 
 The extractor accepts exact case-sensitive `Bearer ` plus one compact token, at most 2048 token bytes (2055
 header bytes). It rejects duplicated/folded headers, whitespace/control ambiguity, alternative credential
@@ -83,5 +81,5 @@ need an explicitly planned transport policy rather than silently bypassing inspe
 
 Known refusals use generic JSend `401 Unauthorized.`, `Cache-Control: no-store`, and safe `X-Correlation-ID`.
 No token, claim, key, SQL, decoder diagnostic or authentication audit event is logged by this boundary.
-Existing approved public reads remain public. OpenAPI describes the real `/me` read, not a login/refresh
+Existing approved public reads remain public. OpenAPI describes the real `/me` and login operations, not an unimplemented refresh
 journey or fabricated permission-protected resource route.

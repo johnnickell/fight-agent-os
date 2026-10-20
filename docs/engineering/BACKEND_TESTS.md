@@ -18,7 +18,26 @@ before subsequent focused PostgreSQL tests. `phpunit.xml` partitions all tests i
 
 Do not run this destructive test phase concurrently against the same test database. Development data is not
 reset. PostgreSQL races use separate connections, transaction-held locks and bounded `lock_timeout` failures;
-they do not depend on sleep-based scheduling. Test clocks are fixed or injected for deadline assertions.
+they do not depend on sleep-based scheduling.
+
+## Deterministic test time
+
+For scenarios involving time, construct an explicit fixed UTC `DateTimeImmutable` and inject the existing
+`Tests\Support\AccessClock` before resolving time-dependent services. Derive fixture creation, token claims,
+session/grant deadlines and relative dates from that clock; do not use wall time, sleeps or retries to keep
+requests inside a window. Advance the fake explicitly to test expiry or rollover, including denial just before
+and admission at the exact documented boundary.
+
+Keep every participating clock coherent: delivery's `Clock` binding does not replace access-token verification
+or authoritative session/principal clocks. Use their existing constructor seams with the same fake and the real
+JWT verifier/repositories; never bypass API authentication or retain stale credentials to reach the target check.
+When advancing beyond authentication expiry, establish a fresh valid fixture session/token at the advanced time.
+Pass the fixed instant to race workers before they construct their services. See
+`tests/Integration/Postgres/InvitationRecoveryApiTest.php` and its support worker for the complete pattern.
+If a required consumer has no injectable seam, stop and report that boundary rather than mixing fixed and real
+time or changing production behavior solely to make a test pass. This convention does not authorize a broad
+conversion of unrelated fixtures.
+
 Package-generated IDs/nonces remain opaque values held stable within each scenario; ordering expectations
 come from the specified order, not generation timing. These are not byte-identical fixture snapshots.
 

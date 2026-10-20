@@ -7,13 +7,16 @@ namespace Tests\Integration\Postgres;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
 use App\Adapter\Persistence\RefreshSessionRecords;
+use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Application\Invitation\InvitationRateLimiter;
+use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\InvitationRatePolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
@@ -22,10 +25,13 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepo
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
@@ -44,6 +50,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Slim\App;
+use Slim\Factory\AppFactory;
+use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Tests\Support\AccessClock;
 use Tests\Support\AccessTokens;
@@ -61,6 +69,8 @@ final class InvitationRecoveryApiTest extends TestCase
     private User $actor;
     private RefreshSession $session;
     private string $token;
+    private AccessTokens $tokens;
+    private AccessClock $clock;
     private UserId $target;
     private int $providerCalls = 0;
     private string $credential;
@@ -90,16 +100,42 @@ final class InvitationRecoveryApiTest extends TestCase
         $this->connection->executeStatement(
             'TRUNCATE users, roles, permissions, audit_evidence, invitation_rate_limits CASCADE'
         );
-        $tokens = new AccessTokens();
-        $tokens->clock->time = new DateTimeImmutable();
-        $now = $tokens->clock->now()->modify('-1 minute');
+        $this->tokens = new AccessTokens();
+        $this->clock = $this->tokens->clock;
+        $this->clock->time = new DateTimeImmutable('2026-10-20T12:00:00Z');
+        $now = $this->clock->now()->modify('-1 minute');
         putenv('DATABASE_URL='.$url);
-        putenv('APP_ACCESS_TOKEN_CONFIG='.json_encode($tokens->configuration, JSON_THROW_ON_ERROR));
+        putenv('APP_ACCESS_TOKEN_CONFIG='.json_encode($this->tokens->configuration, JSON_THROW_ON_ERROR));
         putenv('APP_CREDENTIAL_DELIVERY_KEY='.bin2hex(random_bytes(32)));
-        $this->app = require dirname(__DIR__, 3).'/bootstrap/app.php';
-        $container = $this->app->getContainer();
+        $container = require dirname(__DIR__, 3).'/config/services.php';
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
+        // Install every security-time consumer before resolving buses, middleware or recovery services.
+        $container->set(Clock::class, fn(): Clock => $this->clock);
+        $container->set(AccessJwt::class, fn(): AccessJwt => $this->tokens->jwt);
+        $container->set(AuthenticateAccessToken::class, fn(Container $c): AuthenticateAccessToken =>
+            new AuthenticateAccessToken(
+                $this->tokens->jwt,
+                $c->get(UserRepository::class),
+                $c->get(RefreshSessionRepository::class),
+                $this->clock
+            ));
+        $container->set(AuthoritativePrincipalResolver::class, fn(Container $c): AuthoritativePrincipalResolver =>
+            new AuthoritativePrincipalResolver(
+                $c->get(UserRepository::class),
+                $c->get(RefreshSessionRepository::class),
+                $c->get(RoleRepository::class),
+                $c->get(PermissionRepository::class),
+                $this->clock
+            ));
+        AppFactory::setContainer($container);
+        AppFactory::setResponseFactory(new ResponseFactory());
+        /** @var App<Container> $app */
+        $app = AppFactory::create();
+        $container->set(App::class, static fn(): App => $app);
+        require dirname(__DIR__, 3).'/config/routes.php';
+        require dirname(__DIR__, 3).'/config/middleware.php';
+        $this->app = $app;
         $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(InstallationManagedPolicy::create()));
         $this->actor = User::invite(UserId::generate(), EmailAddress::fromString('actor@example.test'), $now);
         $this->actor->activate(PasswordHash::fromString((string) password_hash('fixture', PASSWORD_BCRYPT)), $now);
@@ -107,22 +143,7 @@ final class InvitationRecoveryApiTest extends TestCase
         $container->get(Connection::class)->transactional(
             fn() => $container->get(UserRepository::class)->add($this->actor)
         );
-        $this->session = RefreshSession::start(
-            RefreshSessionId::generate(),
-            $this->actor->getId(),
-            RefreshCredential::fromString(bin2hex(random_bytes(32))),
-            $now,
-            $now->modify('+1 day'),
-            $now->modify('+2 days'),
-            $this->actor->getAuthenticationVersion(),
-            false
-        );
-        $this->connection->transactional(fn() => RefreshSessionRecords::insert($this->connection, $this->session));
-        $claims = $tokens->claims();
-        $claims['sub'] = $this->actor->getId()->toString();
-        $claims['sid'] = $this->session->getId()->toString();
-        $claims['auth_version'] = $this->actor->getAuthenticationVersion();
-        $this->token = $tokens->signed(json_encode($claims, JSON_THROW_ON_ERROR));
+        $this->authenticateFixture();
         $provider = $this->createStub(CredentialDeliveryProvider::class);
         $provider->method('deliver')->willReturnCallback(function (
             CredentialDeliveryInvocation $invocation
@@ -392,7 +413,7 @@ final class InvitationRecoveryApiTest extends TestCase
     #[DataProvider('claimCases')]
     public function testEmailClaim(bool $reserved): void
     {
-        $now = new DateTimeImmutable('-1 minute');
+        $now = $this->clock->now()->modify('-1 minute');
         $other = User::invite(
             UserId::generate(),
             EmailAddress::fromString($reserved ? 'other@example.test' : 'corrected@example.test'),
@@ -561,8 +582,9 @@ final class InvitationRecoveryApiTest extends TestCase
     public function testExpiredRetry(): void
     {
         $before = $this->grant();
-        $clock = new AccessClock(new DateTimeImmutable($before['expires_at']));
-        $this->container->set(Clock::class, static fn(): Clock => $clock);
+        $this->clock->time = new DateTimeImmutable($before['expires_at']);
+        // The old access token and session have expired too; establish fresh real authentication at this time.
+        $this->authenticateFixture();
         $this->assertResponse($this->recover('retry'), 409, 'retry');
         self::assertSame($before, $this->grant());
         self::assertSame(0, $this->auditCount('user.invitation_delivery.retry_requested'));
@@ -570,14 +592,14 @@ final class InvitationRecoveryApiTest extends TestCase
     }
 
     /**
-     * Denies exhausted operation budgets without changing grants or invoking the provider
+     * Denies same-window exhaustion until the exact boundary renews admission without early side effects
      */
     #[DataProvider('replacementOperations')]
     public function testThrottle(string $operation, string $audit): void
     {
         $limiter = new PostgresInvitationRateLimiter(
             $this->container->get(Connection::class),
-            $this->container->get(Clock::class),
+            $this->clock,
             new InvitationRatePolicy(60, 10, 60, 100, 1, 1, 1)
         );
         $this->container->set(InvitationRateLimiter::class, static fn(): InvitationRateLimiter => $limiter);
@@ -586,13 +608,40 @@ final class InvitationRecoveryApiTest extends TestCase
         $calls = $this->providerCalls;
         $response = $this->recover($operation);
         $this->assertResponse($response, 429, $operation);
-        self::assertGreaterThanOrEqual(1, (int) $response->getHeaderLine('Retry-After'));
-        self::assertLessThanOrEqual(60, (int) $response->getHeaderLine('Retry-After'));
+        self::assertSame('60', $response->getHeaderLine('Retry-After'));
         self::assertSame($before, $this->grant());
         self::assertSame($calls, $this->providerCalls);
         self::assertSame(1, $this->auditCount($audit));
         self::assertSame([1, 1], array_map('intval', $this->connection->fetchFirstColumn(
             'SELECT attempts FROM invitation_rate_limits ORDER BY target_scope'
+        )));
+        $this->clock->time = $this->clock->now()->modify('+59 seconds');
+        $lastSecond = $this->recover($operation);
+        $this->assertResponse($lastSecond, 429, $operation);
+        self::assertSame('1', $lastSecond->getHeaderLine('Retry-After'));
+        self::assertSame($before, $this->grant());
+        self::assertSame($calls, $this->providerCalls);
+        self::assertSame(1, $this->auditCount($audit));
+
+        $this->clock->time = $this->clock->now()->modify('+1 second');
+        // A second correction needs a different destination to remain valid after admission renews.
+        $renewed = $operation === 'email' ? $this->request(
+            'PATCH',
+            '/api/v1/invitations/'.$this->target.'/email',
+            '{"email":"next@example.test"}'
+        ) : $this->recover($operation);
+        $this->assertResponse($renewed, 200, $operation);
+        self::assertNotSame($before['id'], $this->grant()['id']);
+        self::assertSame($calls + ($operation === 'resend' ? 1 : 0), $this->providerCalls);
+        self::assertSame(2, $this->auditCount($audit));
+        self::assertSame([1, 1], array_map('intval', $this->connection->fetchFirstColumn(
+            'SELECT attempts FROM invitation_rate_limits ORDER BY target_scope'
+        )));
+        self::assertSame([
+            $this->clock->now()->modify('+1 minute')->getTimestamp(),
+            $this->clock->now()->modify('+1 minute')->getTimestamp()
+        ], array_map('intval', $this->connection->fetchFirstColumn(
+            'SELECT window_end FROM invitation_rate_limits ORDER BY target_scope'
         )));
     }
 
@@ -756,7 +805,8 @@ SQL,
             'actor'     => $this->actor->getId()->toString(),
             'session'   => $this->session->getId()->toString(),
             'version'   => $this->actor->getAuthenticationVersion(),
-            'target'    => $target->toString()
+            'target'    => $target->toString(),
+            'now'       => $this->clock->now()->format(DATE_ATOM)
         ], JSON_THROW_ON_ERROR)."\n");
         fflush($pipes[0]);
         self::assertSame('ready', trim((string) fgets($pipes[1])));
@@ -793,6 +843,30 @@ SQL,
             }
             proc_close($process);
         }
+    }
+
+    /**
+     * Establishes a real session and signed access claims relative to the current fixed fixture time
+     */
+    private function authenticateFixture(): void
+    {
+        $now = $this->clock->now()->modify('-1 minute');
+        $this->session = RefreshSession::start(
+            RefreshSessionId::generate(),
+            $this->actor->getId(),
+            RefreshCredential::fromString(bin2hex(random_bytes(32))),
+            $now,
+            $now->modify('+1 day'),
+            $now->modify('+2 days'),
+            $this->actor->getAuthenticationVersion(),
+            false
+        );
+        $this->connection->transactional(fn() => RefreshSessionRecords::insert($this->connection, $this->session));
+        $claims = $this->tokens->claims();
+        $claims['sub'] = $this->actor->getId()->toString();
+        $claims['sid'] = $this->session->getId()->toString();
+        $claims['auth_version'] = $this->actor->getAuthenticationVersion();
+        $this->token = $this->tokens->signed(json_encode($claims, JSON_THROW_ON_ERROR));
     }
 
     /**

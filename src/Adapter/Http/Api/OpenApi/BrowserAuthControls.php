@@ -9,7 +9,7 @@ use OpenApi\Attributes as OA;
 /**
  * Class BrowserAuthControls
  *
- * Describes reusable controls without advertising login, refresh or logout operations
+ * Describes shared browser controls consumed by login and future refresh or logout operations
  */
 #[OA\Parameter(
     parameter: 'BrowserAuthOrigin',
@@ -31,24 +31,6 @@ use OpenApi\Attributes as OA;
         Never send refresh credentials or CSRF alternatives in query, JSON or Authorization.
         TEXT,
     schema: new OA\Schema(type: 'string', maxLength: 75)
-)]
-#[OA\Schema(
-    schema: 'BrowserAuthLoginInput',
-    description: 'Reusable input contract, not a registered login operation; bounded unique-key UTF-8 JSON only',
-    required: ['email', 'password', 'remember'],
-    properties: [
-        new OA\Property(
-            property: 'email',
-            description: 'Canonical email',
-            type: 'string',
-            maxLength: 254,
-            writeOnly: true
-        ),
-        new OA\Property(property: 'password', type: 'string', minLength: 1, maxLength: 128, writeOnly: true),
-        new OA\Property(property: 'remember', type: 'boolean')
-    ],
-    type: 'object',
-    additionalProperties: false
 )]
 #[OA\Schema(
     schema: 'BrowserAuthEmptyInput',

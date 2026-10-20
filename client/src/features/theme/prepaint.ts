@@ -3,8 +3,10 @@ import {
   discardActivationFragment,
   takeActivation
 } from '@/features/auth/ActivationCredential';
+import { clearLoginLocation } from '@/features/auth/LoginLocation';
 import { browserThemeEnvironment, prepaintTheme } from '@/features/theme/ThemePreference';
 
+if (!clearLoginLocation(window.location, window.history)) window.location.replace('/app/login');
 if (
   !captureActivation(window, window.location, window.history) &&
   (window.location.hash !== '' || window.location.search !== '')
@@ -12,6 +14,7 @@ if (
   window.location.replace('/app/activate');
 window.addEventListener('pagehide', () => takeActivation(window).clear(), { once: true });
 window.addEventListener('hashchange', () => {
+  if (!clearLoginLocation(window.location, window.history)) window.location.replace('/app/login');
   if (discardActivationFragment(window, window.location, window.history))
     window.dispatchEvent(new Event('fight:activation-retired'));
   if (window.location.pathname === '/app/activate' && window.location.hash !== '')

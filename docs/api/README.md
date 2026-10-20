@@ -5,9 +5,11 @@ handwritten `docs/api/openapi.yaml`; no independently maintained YAML or tracked
 TASK-00021's YAML receipts are historical evidence, not the current input. The document describes **only
 `GET /api/v1/auth/csrf`, the public-safe `GET /api/v1/validations/{form_name}`, and authenticated
 `GET /api/v1/me`, the invitation issuance/status/recovery operations, and
-`POST /api/v1/auth/activate`, and the five Workspace-scoped Repository registration/inspection/reference interactions**.
+`POST /api/v1/auth/activate`, `POST /api/v1/auth/login`, and the five Workspace-scoped Repository registration/inspection/reference interactions**.
 See [registration contracts and current access limits](../engineering/REPOSITORY_REGISTRATION.md) for explicit
-bootstrap, sources, idempotency and non-reserving references; no physical linking or access grant is supplied. See [public activation](../engineering/ACTIVATION.md) for the implemented
+bootstrap, sources, idempotency and non-reserving references; no physical linking or access grant is supplied.
+See [canonical login](../engineering/LOGIN.md) for existing-password validation, generic failures and ordinary/remembered cookies.
+See [public activation](../engineering/ACTIVATION.md) for the implemented
 possession-only JSON/Origin/CSRF/rate/session contract, not public registration. See
 [invitation API](../engineering/INVITATION_API.md) for exact permissions, confirmation, rate policy and
 independently committed partial/uncertain outcomes. See
@@ -177,7 +179,7 @@ APP_DEBUG, public validation metadata nor this export command enables that futur
 ## Reusable browser authentication controls
 
 TASK-00045 adds `BrowserAuthOrigin`/`BrowserAuthCsrf` parameters, login/empty-object input schemas and a safe
-`BrowserAuthThrottled` response component. These do not register login, refresh or logout paths. The shared
+`BrowserAuthThrottled` response component. The components alone do not register operations; TASK-00046 now registers canonical login, while refresh/logout remain planned. The shared
 [browser request runbook](../engineering/BROWSER_AUTH_REQUESTS.md) owns pipeline ordering, fixed cookie identity,
 rolling admission, direct HTTPS configuration and deployment limitations. Activation reuses the strengthened
 browser guard and typed session-cookie factory; its operation contract remains unchanged.

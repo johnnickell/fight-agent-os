@@ -7,15 +7,23 @@ namespace Tests\Support;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Application\Failure\StateConflict;
 use App\Application\Invitation\RecoverInvitation;
+use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
+use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Messaging\Event\Sync\ServiceAwareEventDispatcher;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
+use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use RuntimeException;
 use Throwable;
@@ -46,6 +54,17 @@ final class InvitationRecoveryRaceWorker
             putenv('DATABASE_URL='.$url);
             $container = require dirname(__DIR__, 2).'/config/services.php';
             $container->set(Connection::class, static fn(): Connection => $connection);
+            $clock = new AccessClock(new DateTimeImmutable($input['now']));
+            $container->set(Clock::class, static fn(): Clock => $clock);
+            $container->set(AuthoritativePrincipalResolver::class, static fn(
+                Container $c
+            ): AuthoritativePrincipalResolver => new AuthoritativePrincipalResolver(
+                $c->get(UserRepository::class),
+                $c->get(RefreshSessionRepository::class),
+                $c->get(RoleRepository::class),
+                $c->get(PermissionRepository::class),
+                $clock
+            ));
             $inner = $container->get(ActivationGrantRepository::class);
             $waited = false;
             $barrier = new RecoveryGrantBarrier($inner, static function () use ($connection, &$waited): void {
