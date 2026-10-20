@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { ApiClient } from '@/api/ApiClient';
 import { Button } from '@/components/Button';
 import { ContentPanel } from '@/components/ContentPanel';
 import { PermissionButton } from '@/components/PermissionButton';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
+import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
 import { GuardedRoute } from '@/routes/GuardedRoute';
 
 import type { PrincipalLoadResult } from '@/features/authority/AuthorityCache';
@@ -36,7 +38,7 @@ function ExampleOutlet() {
 function AuthorityExample({ scenario }: { scenario: Scenario }) {
   const [cache] = useState(
     () =>
-      new AuthorityCache(() => {
+      new AuthorityCache((signal) => {
         if (scenario === 'loading') return new Promise<PrincipalLoadResult>(() => {});
         if (
           scenario === 'anonymous' ||
@@ -46,15 +48,31 @@ function AuthorityExample({ scenario }: { scenario: Scenario }) {
         ) {
           return Promise.resolve({ status: scenario });
         }
-        return Promise.resolve({
-          status: 'principal',
-          principal: {
-            userId: exampleUserId,
-            email: 'example@example.test',
-            roles: ['ROLE_EXAMPLE'],
-            permissions: scenario === 'forbidden' ? [] : ['VIEW_EXAMPLE', 'EDIT_EXAMPLE']
-          }
-        });
+        // Exercise the production transport/codec with a local safe View, never real credentials.
+        return new CurrentPrincipalService(
+          new ApiClient(
+            { schemaVersion: 1, apiBasePath: '/api/v1' },
+            {
+              accessTokens: { getAccessToken: () => 'catalog-only' },
+              fetch: () =>
+                Promise.resolve(
+                  new Response(
+                    JSON.stringify({
+                      status: 'success',
+                      data: {
+                        user_id: exampleUserId,
+                        email: 'example@example.test',
+                        roles: ['ROLE_EXAMPLE'],
+                        permissions:
+                          scenario === 'forbidden' ? [] : ['EDIT_EXAMPLE', 'VIEW_EXAMPLE']
+                      }
+                    }),
+                    { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
+                  )
+                )
+            }
+          )
+        ).load(signal);
       })
   );
   const [acted, setActed] = useState(false);
@@ -72,7 +90,10 @@ function AuthorityExample({ scenario }: { scenario: Scenario }) {
   }, [cache, scenario]);
   return (
     <ContentPanel title="Client authority foundation">
-      <p>Injected example only. No authentication endpoint or product route is implemented.</p>
+      <p>
+        Synthetic catalog responses exercise the production /me codec and cache. No live session or
+        product route is created.
+      </p>
       <div className="d-flex flex-column align-items-start gap-3">
         <GuardedRoute cache={cache} route={route} outlet={ExampleOutlet} />
         <PermissionButton
@@ -114,7 +135,9 @@ export const Allowed: Story = {
   args: { scenario: 'allowed' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'Example action' })).toBeEnabled();
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: 'Example action' })).toBeEnabled()
+    );
     await userEvent.click(canvas.getByRole('button', { name: 'Example action' }));
     await expect(canvas.getByRole('status')).toHaveTextContent('no server operation');
   }
@@ -123,7 +146,7 @@ export const Forbidden: Story = {
   args: { scenario: 'forbidden' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('Access forbidden')).toBeVisible();
+    await expect(await canvas.findByText('Access forbidden')).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Example action' })).toBeDisabled();
   }
 };
@@ -136,6 +159,7 @@ export const SessionEnds: Story = {
   args: { scenario: 'allowed' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await canvas.findByText(/Example protected outlet/);
     await userEvent.click(canvas.getByRole('button', { name: 'End example session' }));
     await expect(canvas.getByText('Session ended')).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Example action' })).toBeDisabled();

@@ -14,22 +14,28 @@ use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRefreshSessionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
+use App\Adapter\Security\AccessToken\SystemAccessClock;
+use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
 use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
@@ -40,7 +46,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Slim\App;
+use Slim\Factory\AppFactory;
+use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use Tests\Support\AccessClock;
 use Tests\Support\AccessTokens;
 use Tooling\OpenApi\Document;
 
@@ -64,6 +73,7 @@ final class ApiActionSecurityTest extends TestCase
     private TestHandler $logs;
     private string $configuration;
     private string $databaseUrl;
+    private bool $routesMounted = false;
 
     /**
      * Seeds package state and boots only the real route table on a guarded test connection
@@ -92,7 +102,7 @@ final class ApiActionSecurityTest extends TestCase
             new \App\Adapter\Persistence\Locking\AuthenticationAuthorityFences($this->connection)
         );
         $this->tokens = new AccessTokens();
-        $this->tokens->clock->time = new DateTimeImmutable('now');
+        $this->tokens->clock->time = new DateTimeImmutable('2026-09-28T12:00:00Z');
         $now = $this->tokens->clock->now()->modify('-1 minute');
         $this->user = User::invite(UserId::generate(), EmailAddress::fromString('current@example.test'), $now);
         $this->user->activate(
@@ -118,9 +128,14 @@ final class ApiActionSecurityTest extends TestCase
         $this->token = $this->tokens->signed(json_encode($claims, JSON_THROW_ON_ERROR));
         putenv('APP_ACCESS_TOKEN_CONFIG='.json_encode($this->tokens->configuration, JSON_THROW_ON_ERROR));
         putenv('DATABASE_URL='.$url);
-        $this->app = require dirname(__DIR__, 3).'/bootstrap/app.php';
-        $container = $this->app->getContainer();
-        self::assertInstanceOf(Container::class, $container);
+        // Install deterministic dependencies before the real route table captures its middleware.
+        $container = require dirname(__DIR__, 3).'/config/services.php';
+        $container->set(SystemAccessClock::class, fn(): AccessClock => $this->tokens->clock);
+        AppFactory::setContainer($container);
+        AppFactory::setResponseFactory(new ResponseFactory());
+        /** @var App<Container> $app */
+        $app = AppFactory::create();
+        $this->app = $app;
         $this->logs = new TestHandler();
         $container->get('http.failure.logger')->setHandlers([$this->logs]);
         $realQueries = $container->get(QueryBus::class);
@@ -193,12 +208,53 @@ final class ApiActionSecurityTest extends TestCase
             $replacement = clone $this->user;
             $replacement->changePassword(
                 PasswordHash::fromString((string) password_hash('replacement', PASSWORD_BCRYPT)),
-                new DateTimeImmutable()
+                $this->tokens->clock->now()
             );
             $replacement->advanceAuthenticationAuthorityRevision();
             self::assertTrue($this->connection->transactional(
                 fn() => $this->users->replaceAuthenticationAuthority($this->user, $replacement)
             ));
+        } elseif (in_array($case, ['idle expired', 'absolute expired', 'inactive'], true)) {
+            if ($case === 'inactive') {
+                $this->connection->executeStatement("UPDATE users SET state = 'disabled' WHERE id = ?", [
+                    $this->user->getId()->toString()
+                ]);
+            } else {
+                $deadline = $this->tokens->clock->now();
+                $absolute = $case === 'absolute expired' ? $deadline : $this->session->getAbsoluteExpiresAt();
+                // Persist an exact boundary without advancing JWT time past its independent expiry.
+                $this->connection->executeStatement(
+                    'UPDATE refresh_sessions SET idle_expires_at = ?, absolute_expires_at = ? WHERE id = ?',
+                    [$deadline->format('Y-m-d H:i:s.uP'), $absolute->format('Y-m-d H:i:s.uP'),
+                        $this->session->getId()->toString()]
+                );
+            }
+        } elseif (in_array($case, ['wrong subject', 'wrong session', 'expired access', 'wrong owner'], true)) {
+            $claims = $this->tokens->claims();
+            $claims['sub'] = $this->user->getId()->toString();
+            $claims['sid'] = $this->session->getId()->toString();
+            if ($case === 'wrong subject') {
+                $claims['sub'] = UserId::generate()->toString();
+            } elseif ($case === 'wrong session') {
+                $claims['sid'] = RefreshSessionId::generate()->toString();
+            } elseif ($case === 'wrong owner') {
+                $other = User::invite(
+                    UserId::generate(),
+                    EmailAddress::fromString('other@example.test'),
+                    $this->tokens->clock->now()
+                );
+                $other->activate(
+                    PasswordHash::fromString((string) password_hash('private-other', PASSWORD_BCRYPT)),
+                    $this->tokens->clock->now()
+                );
+                $this->connection->transactional(fn() => $this->users->add($other));
+                $claims['sub'] = $other->getId()->toString();
+            } else {
+                $claims['iat'] -= 900;
+                $claims['nbf'] -= 900;
+                $claims['exp'] -= 900;
+            }
+            $token = $this->tokens->signed(json_encode($claims, JSON_THROW_ON_ERROR));
         } elseif ($case === 'role claim') {
             $claims = $this->tokens->claims();
             $claims['sub'] = $this->user->getId()->toString();
@@ -224,7 +280,12 @@ final class ApiActionSecurityTest extends TestCase
      */
     public static function refusals(): iterable
     {
-        foreach (['anonymous', 'invalid', 'revoked', 'stale', 'role claim'] as $case) {
+        foreach (
+            [
+            'anonymous', 'invalid', 'revoked', 'stale', 'role claim', 'idle expired', 'absolute expired',
+            'inactive', 'wrong subject', 'wrong session', 'expired access', 'wrong owner'
+            ] as $case
+        ) {
             yield $case => [$case];
         }
     }
@@ -234,7 +295,7 @@ final class ApiActionSecurityTest extends TestCase
      */
     public function testAuthorityFreshness(): void
     {
-        $now = new DateTimeImmutable();
+        $now = $this->tokens->clock->now();
         $permission = Permission::define(PermissionId::generate(), PermissionName::fromString('READ_USERS'), $now);
         $permissions = new PostgresPermissionRepository(
             $this->connection,
@@ -265,6 +326,126 @@ final class ApiActionSecurityTest extends TestCase
     }
 
     /**
+     * Projects each managed membership through the real HTTP route without inferring new grants
+     *
+     * @param string $name
+     * @param array<int, string> $expectedPermissions
+     */
+    #[DataProvider('managedMemberships')]
+    public function testManagedMemberships(string $name, array $expectedPermissions): void
+    {
+        $container = $this->app->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        $container->get(SynchronousCommandBus::class)->execute(
+            new ReconcileManagedPolicy(InstallationManagedPolicy::create())
+        );
+        $role = $this->roles->getByName(RoleName::fromString($name));
+        self::assertNotNull($role);
+        $replacement = clone $this->user;
+        $replacement->assignRole($role->getId(), $this->tokens->clock->now());
+        self::assertTrue($this->connection->transactional(
+            fn() => $this->users->replaceRoleAssignments($this->user, $replacement)
+        ));
+        $response = $this->request($this->token);
+        $this->assertResponse($response, 200);
+        self::assertSame([
+            'user_id'     => $this->user->getId()->toString(),
+            'email'       => 'current@example.test',
+            'roles'       => [$name],
+            'permissions' => $expectedPermissions
+        ], json_decode((string) $response->getBody(), true)['data']);
+        self::assertSame([], $this->logs->getRecords());
+    }
+
+    /**
+     * Supplies independently enumerated approved role grants, not catalog-derived expectations
+     *
+     * @return iterable<string, array{string, list<string>}>
+     */
+    public static function managedMemberships(): iterable
+    {
+        yield 'ordinary' => ['ROLE_USER', ['DELETE_OWN_SESSIONS', 'READ_OWN_SESSIONS', 'VIEW_DASHBOARD']];
+        yield 'super admin' => ['ROLE_SUPER_ADMIN', [
+            'ASSIGN_SUPER_ADMIN', 'CREATE_ROLES', 'DELETE_OWN_SESSIONS', 'DELETE_ROLES', 'DELETE_SESSIONS',
+            'DELETE_USERS', 'DISABLE_USERS', 'ENABLE_USERS', 'INVITE_USERS', 'MANAGE_ROLE_PERMISSIONS',
+            'MANAGE_USER_INVITATIONS', 'MANAGE_USER_ROLES', 'READ_OWN_SESSIONS', 'READ_PERMISSIONS',
+            'READ_ROLES', 'READ_SESSIONS', 'READ_SWAGGER', 'READ_USERS', 'REMOVE_SUPER_ADMIN', 'RESTORE_USERS',
+            'UPDATE_ROLES', 'VIEW_DASHBOARD'
+        ]];
+    }
+
+    /**
+     * Rejects incomplete and duplicated repository authority without partial identity or diagnostic leaks
+     */
+    #[DataProvider('referenceFailures')]
+    public function testReferenceFailures(string $failure): void
+    {
+        $now = $this->tokens->clock->now();
+        $permission = Permission::define(PermissionId::generate(), PermissionName::fromString('VIEW_DASHBOARD'), $now);
+        $permissions = new PostgresPermissionRepository(
+            $this->connection,
+            new AuthorizationReferenceFences($this->connection)
+        );
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_READER'), [$permission->getId()], $now);
+        $replacement = clone $this->user;
+        $replacement->assignRole($role->getId(), $now);
+        $this->connection->transactional(function () use ($permissions, $permission, $role, $replacement): void {
+            $permissions->add($permission);
+            $this->roles->add($role);
+            $this->users->replaceRoleAssignments($this->user, $replacement);
+        });
+        $container = $this->app->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        if (str_contains($failure, 'role')) {
+            $repository = $this->createStub(RoleRepository::class);
+            $repository->method('getByIds')->willReturn($failure === 'missing role' ? [] : [$role, $role]);
+            $repository->method('getByName')->willReturn(null);
+            $container->set(RoleRepository::class, static fn(): RoleRepository => $repository);
+        } else {
+            $repository = $this->createStub(PermissionRepository::class);
+            $repository->method('getByIds')->willReturn(
+                $failure === 'missing permission' ? [] : [$permission, $permission]
+            );
+            $container->set(PermissionRepository::class, static fn(): PermissionRepository => $repository);
+        }
+        $response = $this->request($this->token);
+        $this->assertResponse($response, 401);
+        self::assertSame(
+            ['status' => 'error', 'message' => 'Unauthorized.'],
+            json_decode((string) $response->getBody(), true)
+        );
+        self::assertSame(0, $this->queries);
+        self::assertSame([], $this->logs->getRecords());
+    }
+
+    /**
+     * Supplies corrupt authoritative-reference responses behind the real middleware boundary
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function referenceFailures(): iterable
+    {
+        foreach (['missing role', 'duplicate role', 'missing permission', 'duplicate permission'] as $failure) {
+            yield $failure => [$failure];
+        }
+    }
+
+    /**
+     * Resolves the package principal once across the middleware gate and Action, not once per consumer
+     */
+    public function testOneRequestSnapshot(): void
+    {
+        $container = $this->app->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        $roles = $this->createMock(RoleRepository::class);
+        $roles->expects(self::once())->method('getByIds')->willReturn([]);
+        $roles->expects(self::once())->method('getByName')->willReturn(null);
+        $container->set(RoleRepository::class, static fn(): RoleRepository => $roles);
+        $this->assertResponse($this->request($this->token), 200);
+        self::assertSame(1, $this->queries);
+    }
+
+    /**
      * Preserves true method and route misses instead of manufacturing authentication outcomes
      */
     public function testMissesAndRoot(): void
@@ -287,6 +468,13 @@ final class ApiActionSecurityTest extends TestCase
      */
     private function request(?string $token, string $method = 'GET', string $path = '/api/v1/me'): ResponseInterface
     {
+        if (!$this->routesMounted) {
+            $this->routesMounted = true;
+            $app = $this->app;
+            $container = $app->getContainer();
+            require dirname(__DIR__, 3).'/config/routes.php';
+            require dirname(__DIR__, 3).'/config/middleware.php';
+        }
         $request = new ServerRequestFactory()->createServerRequest($method, 'https://agent-os.test'.$path);
         if ($token !== null) {
             $request = $request->withHeader('Authorization', 'Bearer '.$token);

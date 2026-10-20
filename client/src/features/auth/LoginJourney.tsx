@@ -10,6 +10,8 @@ import { browserSessionPlatform } from '@/features/auth/SessionChannel';
 import { SessionContinuity } from '@/features/auth/SessionContinuity';
 import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
+import { AuthorityCache, observeAuthorityResume } from '@/features/authority/AuthorityCache';
+import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { LoginPage } from '@/pages/LoginPage';
 
@@ -27,9 +29,12 @@ export function LoginJourney({
     const tokens = new MemoryAccessToken();
     const api = new ApiClient(runtime, { accessTokens: tokens });
     const csrf = new CsrfProofService(api);
+    const authority = new AuthorityCache(new CurrentPrincipalService(api).load);
     return {
+      authority,
       coordinator: new SessionCoordinator({
         tokens,
+        authority,
         session: new SessionService(api, csrf, tokens),
         login: new LoginService(api, csrf, tokens),
         ...browserSessionPlatform()
@@ -38,8 +43,11 @@ export function LoginJourney({
     };
   });
   useLayoutEffect(() => {
+    const stopAuthorityResume = observeAuthorityResume(dependencies.authority, document, window);
     const clear = () => {
+      stopAuthorityResume();
       dependencies.coordinator.dispose();
+      dependencies.authority.dispose();
       dependencies.schemas.clear();
     };
     const retire = () => {
