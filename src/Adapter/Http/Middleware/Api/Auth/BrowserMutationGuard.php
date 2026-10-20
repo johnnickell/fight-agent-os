@@ -32,6 +32,16 @@ final readonly class BrowserMutationGuard implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        $this->assertRequest($request);
+
+        return $handler->handle($request);
+    }
+
+    /**
+     * Rejects unsafe transport before any authentication or admission dispatch
+     */
+    public function assertRequest(ServerRequestInterface $request): void
+    {
         $uri = $request->getUri();
         $origin = $uri->getScheme().'://'.$uri->getHost().($uri->getPort() === null ? '' : ':'.$uri->getPort());
         $fetch = $request->getHeader('Sec-Fetch-Site');
@@ -40,19 +50,38 @@ final readonly class BrowserMutationGuard implements MiddlewareInterface
         $rawCookies = $cookies[0] ?? '';
         $count = preg_match_all('/(?:\A|;)\s*'.preg_quote(CsrfCookie::NAME, '/').'=([^;]*)/', $rawCookies, $matches);
         $nonce = $matches[1][0] ?? '';
+        foreach (array_keys($request->getHeaders()) as $name) {
+            $unsafe = '/\A(?:forwarded|x-forwarded-.*|x-original-.*|x-method-override|x-http-method)\z/iD';
+            if (preg_match($unsafe, $name)) {
+                throw new PermissionDenied();
+            }
+        }
+        foreach (['Sec-Fetch-Mode' => ['cors', 'same-origin'], 'Sec-Fetch-Dest' => ['empty']] as $name => $values) {
+            $header = $request->getHeader($name);
+            if ($header !== [] && (count($header) !== 1 || !in_array($header[0], $values, true))) {
+                throw new PermissionDenied();
+            }
+        }
         if (
-            $request->getMethod() !== 'POST' || $origin !== $this->proofs->origin()
+            $request->getMethod() !== 'POST' || !$this->proofs->acceptsOrigin($origin)
             || $uri->getScheme() !== 'https' || $uri->getUserInfo() !== '' || $uri->getFragment() !== ''
-            || $request->getHeader('Origin') !== [$this->proofs->origin()]
+            || count($request->getHeader('Host')) !== 1
+            || !$this->proofs->acceptsOrigin('https://'.$request->getHeaderLine('Host'))
+            || count($request->getHeader('Origin')) !== 1
+            || !$this->proofs->acceptsOrigin($request->getHeaderLine('Origin'))
             || count($fetch) > 1 || ($fetch !== [] && $fetch !== ['same-origin'])
             || count($proof) !== 1 || count($cookies) !== 1 || strlen($rawCookies) > 4096 || $count !== 1
             || !$this->proofs->verify($nonce, $proof[0], $this->clock->now())
             || $request->hasHeader('Authorization') || $request->hasHeader('X-HTTP-Method-Override')
-            || $request->hasHeader('Access-Control-Request-Method')
+            || $request->hasHeader('Access-Control-Request-Method') || $request->hasHeader('Sec-Fetch-User')
+            || $uri->getQuery() !== '' || count($request->getHeader('Content-Type')) !== 1
+            || preg_match(
+                '/\Aapplication\/json(?:\s*;\s*charset=utf-8)?\z/iD',
+                $request->getHeaderLine('Content-Type')
+            ) !== 1
+            || $request->hasHeader('Content-Encoding')
         ) {
             throw new PermissionDenied();
         }
-
-        return $handler->handle($request);
     }
 }

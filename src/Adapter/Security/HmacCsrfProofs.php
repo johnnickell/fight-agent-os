@@ -26,19 +26,16 @@ final readonly class HmacCsrfProofs implements CsrfProofs
             throw new InvalidArgumentException('Invalid CSRF MAC key configuration.');
         }
 
-        $parts = parse_url($origin);
-        if (
-            $parts === false || !isset($parts['scheme'], $parts['host'])
-            || $parts['scheme'] !== 'https'
-            || preg_match('/\A[a-z0-9.-]+\z/D', $parts['host']) !== 1
-            || isset($parts['user']) || isset($parts['pass'])
-            || isset($parts['path']) || isset($parts['query']) || isset($parts['fragment'])
-            || $origin !== 'https://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : '')
-        ) {
+        $origin = self::normalizeOrigin($origin);
+        if ($origin === null) {
             throw new InvalidArgumentException('Invalid browser origin configuration.');
         }
 
-        $this->key = (string) hex2bin($hexKey);
+        $key = (string) hex2bin($hexKey);
+        if (count(array_unique(str_split($key))) < 16) {
+            throw new InvalidArgumentException('Invalid CSRF MAC key configuration.');
+        }
+        $this->key = $key;
         $this->origin = $origin;
     }
 
@@ -56,6 +53,14 @@ final readonly class HmacCsrfProofs implements CsrfProofs
     public function origin(): string
     {
         return $this->origin;
+    }
+
+    /**
+     * Checks a parsed HTTPS origin for the same host and effective port
+     */
+    public function acceptsOrigin(string $origin): bool
+    {
+        return self::normalizeOrigin($origin) === $this->origin;
     }
 
     /**
@@ -90,5 +95,38 @@ final readonly class HmacCsrfProofs implements CsrfProofs
         }
 
         return hash_equals($this->sign($nonce, $expiresAt), $proof);
+    }
+
+    /**
+     * Normalizes bounded HTTPS origins without paths, suffix matching or authority ambiguity
+     */
+    private static function normalizeOrigin(string $origin): ?string
+    {
+        if (
+            strlen($origin) > 300
+            || preg_match('/\Ahttps:\/\/([a-zA-Z0-9.-]+)(?::([1-9][0-9]{0,4}))?\z/D', $origin, $match) !== 1
+        ) {
+            return null;
+        }
+        $host = strtolower($match[1]);
+        $port = isset($match[2]) ? (int) $match[2] : 443;
+        if (
+            $port > 65535 || str_ends_with($host, '.')
+            || filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) === false
+        ) {
+            return null;
+        }
+
+        return 'https://'.$host.($port === 443 ? '' : ':'.$port);
+    }
+
+    /**
+     * Returns only public origin metadata to diagnostic snapshots
+     *
+     * @return array<string, string>
+     */
+    public function __debugInfo(): array
+    {
+        return ['origin' => $this->origin, 'key' => '[redacted]'];
     }
 }

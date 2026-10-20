@@ -104,8 +104,9 @@ user and session writes, and independently committed admission are exercised wit
 
 TICKET-00017 should reuse `BrowserMutationGuard`, the configured package `AuthenticationService`/token policy,
 `SessionResponder`, `SessionAccessData`, `ApiClient.post()` and `MemoryAccessToken`. The registered login throttle
-is deliberately **deny-all** until that TICKET implements its real persistent email throttle; the existence of
-this service graph does not enable login. Remembered responses, refresh/logout endpoints, cross-tab coordination,
+now uses TASK-00045's independently committed rolling email admission; see
+[browser request controls](BROWSER_AUTH_REQUESTS.md). Shared cookie/session responders support remembered
+responses and matching expiry, but no login/refresh/logout route is registered. Cross-tab coordination,
 restoration, authority projection and scheduling still need their owning implementations and tests. TICKET-00018
 must load real `/me` authority before any protected landing; activation currently presents a bounded truthful
 success page with a link to the application foundation, not an invented dashboard.

@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Action\Api\V1\Auth\ActivateInvitationAction;
+use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
 use App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission;
 use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
 use App\Adapter\Security\Activation\RandomRefreshCredentials;
-use App\Adapter\Security\Activation\UnavailableLoginThrottle;
 use App\Adapter\Security\HmacCsrfProofs;
 use App\Application\Security\Activation\ActivateInvitation;
 use App\Application\Security\Csrf\Clock\CsrfClock;
@@ -44,7 +44,6 @@ return static function (Container $container): void {
             new DateInterval('P1Y'),
             new DateInterval('PT5S')
         ));
-    $container->set(LoginThrottle::class, static fn(): LoginThrottle => new UnavailableLoginThrottle());
     $container->set(RefreshCredentialGenerator::class, static fn(): RefreshCredentialGenerator =>
         new RandomRefreshCredentials());
     $container->set(SessionRevocationService::class, static fn(Container $c): SessionRevocationService =>
@@ -72,7 +71,7 @@ return static function (Container $container): void {
     $container->set(ActivateInvitation::class, static fn(Container $c): ActivateInvitation =>
         new ActivateInvitation($c->get(PasswordSetting::class), $c->get(AuthenticationService::class)));
     $container->set(SessionResponder::class, static fn(Container $c): SessionResponder =>
-        new SessionResponder($c->get(JSendResponseFactory::class)));
+        new SessionResponder($c->get(JSendResponseFactory::class), $c->get(BrowserSessionCookies::class)));
     $container->set(ActivateInvitationAction::class, static fn(Container $c): ActivateInvitationAction =>
         new ActivateInvitationAction($c->get(ActivateInvitation::class), $c->get(SessionResponder::class)));
     $container->set(BrowserMutationGuard::class, static fn(Container $c): BrowserMutationGuard =>

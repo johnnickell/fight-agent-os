@@ -16,6 +16,12 @@ return static function (Container $container): void {
     $container->set(HmacCsrfProofs::class, static function (): HmacCsrfProofs {
         $key = getenv('APP_CSRF_MAC_KEY');
         $origin = getenv('APP_BROWSER_ORIGIN');
+        $signing = json_decode(getenv('APP_ACCESS_TOKEN_CONFIG') ?: '{}', true);
+        foreach ($signing['keys'] ?? [] as $entry) {
+            if ($key !== false && $key === ($entry['secret_hex'] ?? null)) {
+                throw new InvalidArgumentException('CSRF requires an independent key.');
+            }
+        }
 
         return new HmacCsrfProofs($key === false ? '' : $key, $origin === false ? '' : $origin);
     });

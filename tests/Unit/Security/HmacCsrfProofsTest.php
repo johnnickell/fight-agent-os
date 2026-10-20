@@ -107,6 +107,7 @@ final class HmacCsrfProofsTest extends TestCase
     public static function invalid_configurations(): iterable
     {
         yield 'missing key' => ['', 'https://agent-os.test'];
+        yield 'repeated-byte key' => [str_repeat('a', 64), 'https://agent-os.test'];
         yield 'weak key' => [str_repeat('a', 62), 'https://agent-os.test'];
         yield 'invalid key encoding' => [str_repeat('z', 64), 'https://agent-os.test'];
         yield 'insecure origin' => [str_repeat('a', 64), 'http://agent-os.test'];
