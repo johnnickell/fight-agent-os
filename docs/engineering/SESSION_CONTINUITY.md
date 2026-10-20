@@ -95,13 +95,20 @@ TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-
   any failed recovery is terminal. `try/finally`/callback return release locks. A 50 ms discovery wait and,
   with Locks+Channel, another 50 ms acquired-lock delivery grace permit a winner's posted result to arrive.
   Maximum local refresh flow is 20.35 seconds (including two acquisition windows); held work is at most
-  16.30 seconds. Logout acquisition is 2 seconds and observation is 8 seconds. No failure starts a timer loop.
+  16.30 seconds. Logout acquisition is 2 seconds and observation is 8 seconds. At lock entry, logout
+  rechecks its captured local generation before calling the service or clearing credentials; a retired queued
+  logout cannot select a newer login's cookie. No failure starts a timer loop.
 - BroadcastChannel `fight-agent-os.session.v1` accepts exact version-1 envelopes: `version`, random 32-hex
   `sender`, positive safe-integer `sequence`, and `kind`. `request` adds random 32-hex `round`; `token` adds
   that round, a bounded compact access token (≤2,048 characters), and `remaining` (0 < ms ≤840,000).
   `invalidate`, `logout`, `terminal` add nothing. Extra fields/versions/malformed values are rejected.
   At most 64 senders and 64 outstanding challenges are retained. Per-sender sequences reject duplicates;
-  independent tab counters are never compared. Only the current local challenge can accept a token.
+  independent tab counters are never compared. At sender capacity, unknown senders cannot supply nonterminal
+  progress, but valid logout/terminal signals still clear authority without adding bookkeeping. Such untracked
+  session-end signals may repeat conservatively; saturation never makes later tabs' logout invisible.
+  Only the current local challenge can accept a token. An invalidation replaces any pending challenge and
+  its elapsed-time origin, rejecting earlier replies even from a different sender. This does not restart the
+  restoration flow, renew its mutation deadlines or grant another election/conflict recovery.
 - Access lifetime is conservatively request-start +840 seconds (validated `exp - iat =900`, minus60 seconds),
   not browser wall time. Peer hints subtract full local challenge elapsed time and cannot extend that maximum.
   Backwards/nonfinite monotonic reads retire access. Early expiry and hidden-tab resume coordinate a new bounded

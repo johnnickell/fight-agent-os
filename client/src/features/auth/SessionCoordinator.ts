@@ -226,19 +226,25 @@ export class SessionCoordinator {
     this.#end('logout');
     this.#send({ kind: 'logout' });
     const generation = this.#generation;
-    const result = await this.#withLogoutLock();
+    const result = await this.#withLogoutLock(generation);
     if (!this.#active || generation !== this.#generation) return apiFailure('cancelled');
     this.#state = Object.freeze({ status: 'anonymous', signOutUnconfirmed: !result.ok });
     this.#notify();
     return result;
   };
 
-  async #withLogoutLock(): Promise<ApiResult<true>> {
+  async #withLogoutLock(generation: number): Promise<ApiResult<true>> {
     let result: ApiResult<true> = apiFailure('network');
     const abort = new AbortController();
     const timer = setTimeout(() => abort.abort(), 2_000);
     const work = async () => {
       clearTimeout(timer);
+      // A peer session end/new login can retire this queued operation before lock entry.
+      // Fence the service call itself: logout clears memory and selects the current browser cookie.
+      if (!this.#active || generation !== this.#generation) {
+        result = apiFailure('cancelled');
+        return;
+      }
       result = await this.#bounded(this.#session.logout(), 8_000, new AbortController().signal);
     };
     try {
@@ -286,9 +292,12 @@ export class SessionCoordinator {
     const message = decodeSessionMessage(value);
     if (!this.#active || !message || message.sender === this.#sender) return;
     const prior = this.#peers.get(message.sender) ?? 0;
-    if (message.sequence <= prior || (!this.#peers.has(message.sender) && this.#peers.size >= 64))
-      return;
-    this.#peers.set(message.sender, message.sequence);
+    if (message.sequence <= prior) return;
+    if (!this.#peers.has(message.sender) && this.#peers.size >= 64) {
+      // Keep bounded replay bookkeeping, but never retain authority by dropping a valid session end.
+      // Unknown senders at capacity cannot supply credentials or other nonterminal progress.
+      if (message.kind !== 'logout' && message.kind !== 'terminal') return;
+    } else this.#peers.set(message.sender, message.sequence);
     if (message.kind === 'logout' || message.kind === 'terminal') {
       this.#end(message.kind);
       if (message.kind === 'logout') {
@@ -300,6 +309,13 @@ export class SessionCoordinator {
     if (message.kind === 'invalidate') {
       this.#tokens.clear();
       this.#signal('refresh-started');
+      const round = this.#round;
+      if (round && this.#current(round)) {
+        // Retire pre-invalidation peer replies without restarting the bounded mutation/retry flow.
+        round.id = this.#id();
+        round.started = this.#now();
+        this.#send({ kind: 'request', round: round.id });
+      }
       if (this.#state.status === 'authenticated') {
         this.#retire();
         this.#publish('unknown');

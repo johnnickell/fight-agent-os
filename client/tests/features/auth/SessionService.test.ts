@@ -4,6 +4,7 @@ import { ApiClient } from '@/api/ApiClient';
 import { CsrfProofService } from '@/features/auth/CsrfProofService';
 import { LoginService } from '@/features/auth/LoginService';
 import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
+import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
 
 import { jsonResponse } from '../../activationFixtures';
@@ -11,6 +12,8 @@ import { deferred } from '../../apiFixtures';
 import { loginSuccess } from '../../loginFixtures';
 
 import type { ApiTransport } from '@/api/ApiClient';
+import type { SessionChannel } from '@/features/auth/SessionChannel';
+import type { SessionLocks } from '@/features/auth/SessionCoordinator';
 
 function dependencies(post: ApiTransport) {
   const tokens = new MemoryAccessToken();
@@ -143,6 +146,62 @@ describe('single-tab cookie-only refresh and logout', () => {
     loginPending.resolve(loginSuccess());
     expect(await result).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
     expect(tokens.getAccessToken()).toBeNull();
+  });
+
+  it('does not dispatch a retired queued logout or clear a newer composed login', async () => {
+    const queued = deferred<void>();
+    const locks: SessionLocks = {
+      request: async (_name, _options, work) => {
+        await queued.promise;
+        await work();
+      }
+    };
+    let cookieContext = 'old';
+    const revokedContexts: string[] = [];
+    const post = vi.fn<ApiTransport>().mockImplementation((url) => {
+      if (url.endsWith('/auth/login')) {
+        cookieContext = 'new';
+        return Promise.resolve(loginSuccess());
+      }
+      if (url.endsWith('/auth/logout')) {
+        revokedContexts.push(cookieContext);
+        return Promise.resolve(jsonResponse(null));
+      }
+      throw new Error('Unexpected mutation');
+    });
+    const { service, tokens, csrf, api } = dependencies(post);
+    const channel: SessionChannel = { onmessage: null, postMessage: () => {}, close: () => {} };
+    const coordinator = new SessionCoordinator({
+      session: service,
+      login: new LoginService(api, csrf, tokens),
+      tokens,
+      locks,
+      channel
+    });
+    try {
+      const oldLogout = coordinator.logout();
+      channel.onmessage?.({
+        data: {
+          version: 1,
+          sender: crypto.randomUUID().replaceAll('-', ''),
+          sequence: 1,
+          kind: 'logout'
+        }
+      } as MessageEvent<unknown>);
+      coordinator.showLogin();
+      expect(
+        await coordinator.submit({ email: 'person@example.test', password: 'synthetic' }, false)
+      ).toMatchObject({ ok: true });
+      expect(tokens.getAccessToken()).toBe('header.payload.signature');
+      queued.resolve();
+      expect(await oldLogout).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
+      expect(revokedContexts).toEqual([]);
+      expect(post).toHaveBeenCalledOnce();
+      expect(tokens.getAccessToken()).toBe('header.payload.signature');
+      expect(coordinator.getSnapshot().status).toBe('authenticated');
+    } finally {
+      coordinator.dispose();
+    }
   });
 
   it('rejects malformed refresh/logout success without adopting untrusted material', async () => {

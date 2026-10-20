@@ -374,6 +374,73 @@ describe('bounded volatile session continuity', () => {
     expect(d.coordinator.getSnapshot().status).toBe('authenticated');
   });
 
+  it.each([false, true])(
+    'fences a delayed peer token across another sender’s invalidation (Locks=%s)',
+    async (withLocks) => {
+      const channels = new Channels();
+      const d = setup({ channels, ...(withLocks ? { locks: new Locks() } : {}) });
+      const pending = d.coordinator.restore();
+      const request = channels.messages
+        .map(decodeSessionMessage)
+        .find((m) => m?.kind === 'request');
+      if (!request || request.kind !== 'request') throw new Error('Expected demand');
+      const send = (data: unknown) => d.channel?.onmessage?.({ data } as MessageEvent<unknown>);
+      // B's reply was sent before C replaced the browser authentication context.
+      send({ version: 1, sender: id(), sequence: 1, kind: 'invalidate' });
+      send({
+        version: 1,
+        sender: id(),
+        sequence: 1,
+        kind: 'token',
+        round: request.round,
+        token: 'old.identity.signature',
+        remaining: 800_000
+      });
+      expect(d.tokens.getAccessToken()).toBeNull();
+      expect(d.coordinator.getSnapshot().status).toBe('restoring');
+      const requests = channels.messages
+        .map(decodeSessionMessage)
+        .filter((m) => m?.kind === 'request');
+      const current = requests.at(-1);
+      if (!current || current.kind !== 'request') throw new Error('Expected current demand');
+      expect(current.round).not.toBe(request.round);
+      send({
+        version: 1,
+        sender: id(),
+        sequence: 1,
+        kind: 'token',
+        round: current.round,
+        token: 'current.identity.signature',
+        remaining: 800_000
+      });
+      await tick(200);
+      await pending;
+      expect(d.tokens.getAccessToken()).toBe('current.identity.signature');
+      expect(d.coordinator.getSnapshot().status).toBe('authenticated');
+      expect(d.session.refresh).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(['logout', 'terminal'] as const)(
+    'honors a new sender’s %s after 64 historical senders',
+    async (kind) => {
+      const channels = new Channels();
+      const d = setup({ channels });
+      await d.coordinator.submit({}, false);
+      const send = (data: unknown) => d.channel?.onmessage?.({ data } as MessageEvent<unknown>);
+      for (let n = 0; n < 64; n++)
+        send({ version: 1, sender: id(), sequence: 1, kind: 'request', round: id() });
+      send({ version: 1, sender: id(), sequence: 1, kind });
+      expect(d.tokens.getAccessToken()).toBeNull();
+      expect(d.coordinator.getSnapshot().status).toBe(kind === 'logout' ? 'anonymous' : 'terminal');
+      expect(d.session.logout).not.toHaveBeenCalled();
+      expect(await d.coordinator.restore()).toMatchObject({
+        ok: false,
+        error: { kind: 'cancelled' }
+      });
+    }
+  );
+
   it('fails closed and restores on wake without retaining stale access', async () => {
     const delayed = deferred<ApiResult<true>>();
     const d = setup();
