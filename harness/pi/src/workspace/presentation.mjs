@@ -90,6 +90,10 @@ export class Workspace {
       this.offsets[this.focus] = Math.max(0, this.offsets[this.focus] + delta); return;
     }
     if (key.ctrl && key.name === 'c' || key.name === 'escape') return { type: 'abort' };
+    if (this.focus === 1 && !key.ctrl && !key.meta) {
+      const action = { '[': 'previous', ']': 'next', p: 'pause', c: 'toggle', r: 'reconnect' }[text];
+      if (action) return { type: 'observation', action };
+    }
     if (this.focus !== 0 || !this.ready) return;
     if (key.name === 'return') {
       const message = this.draft.trim();
@@ -142,7 +146,7 @@ export class Workspace {
     if (response) { this.dialogs.shift(); return { type: 'dialog', id: dialog.id, ...response }; }
   }
   paneText(pane) {
-    if (pane === 1) return 'Observation only — child agent\nUnavailable: no child selected\nTASK-00448 supplies the producer.\nFocus cannot send commands or change an agent directory, session or grants.';
+    if (pane === 1) return this.childObservation?.view() ?? 'Observation only — child agent\nUnavailable: no child selected\nNo discovery, launch or child control.';
     if (pane === 2) return 'Observation only — runtime logs\nUnavailable: no runtime connected\nTASK-00449 supplies the producer.\nNo Docker access or lifecycle operations.\nRuntime identity: none (not worktree-isolated).';
     return [this.omitted ? '[Older display content omitted; Pi session remains authoritative]' : '', ...this.transcript, this.live || this.liveOmitted ? `${this.liveOmitted ? '[assistant stream: earlier content omitted]\n' : ''}${this.live}${this.liveOmitted ? '\n[assistant stream truncated; Pi history is authoritative]' : ''}` : ''].filter(Boolean).join('\n');
   }

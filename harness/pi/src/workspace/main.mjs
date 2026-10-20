@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { Workspace, clean } from './presentation.mjs';
 import { PiRpc, messageText } from './rpc.mjs';
 import { Terminal } from './terminal.mjs';
+import { ChildObservation, observationPaths } from './child-observation.mjs';
 
 // Optional evaluator readiness does not own input authority. Older providers can prove only
 // the two unambiguous healthy states; degraded providers must report independent access health.
@@ -18,10 +19,12 @@ function permitsInput(status) {
 
 export function options(argv, cwd) {
   const args = [], values = new Set(['--provider', '--model', '--thinking', '--session', '--session-dir', '--name', '--extension']);
-  let theme = 'system';
+  let theme = 'system'; const children = [];
   for (let index = 0; index < argv.length; index++) {
     const option = argv[index];
-    if (option === '--theme') {
+    if (option === '--observe-child') {
+      const path = argv[++index]; if (!path) throw new Error('Missing --observe-child socket path'); children.push(path);
+    } else if (option === '--theme') {
       theme = argv[++index]; if (!['system', 'dark', 'light'].includes(theme)) throw new Error('Use --theme system|dark|light');
     } else if (values.has(option)) {
       const value = argv[++index]; if (!value || value.startsWith('-')) throw new Error(`Missing value for ${option}`);
@@ -30,14 +33,15 @@ export function options(argv, cwd) {
     else throw new Error(`Unsupported workspace option: ${clean(option)} (see harness/pi/WORKSPACE.md)`);
   }
   if (!args.includes('--no-session') && !args.includes('--session-dir')) args.push('--session-dir', resolve(cwd, 'var/terminal/sessions'));
-  return { args, theme };
+  return { args, theme, children: observationPaths(children) };
 }
 export async function run(argv = process.argv.slice(2), {
   input = process.stdin, output = process.stdout,
   connect = options => new PiRpc(options), createTerminal = (input, output) => new Terminal(input, output),
+  observe = (paths, changed) => new ChildObservation(paths, changed),
 } = {}) {
   if (argv.includes('--help')) {
-    console.log('Fight workspace: ./bin/terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH]\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See harness/pi/WORKSPACE.md.'); return;
+    console.log('Fight workspace: ./bin/terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus: [ / ] select · p pause · c close/open reader · r reconnect\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See harness/pi/WORKSPACE.md.'); return;
   }
   const cwd = process.cwd(), config = options(argv, cwd);
   if (!input.isTTY || !output.isTTY) throw new Error('Workspace needs a real terminal');
@@ -55,11 +59,14 @@ export async function run(argv = process.argv.slice(2), {
       catch { void close(1); }
     }, 25);
   };
+  const observation = observe(config.children, render); model.childObservation = observation;
+  const freshnessTimer = config.children.length ? setInterval(render, 1000) : undefined;
   const close = async (code = 0) => {
     if (closing) return; closing = true; model.ready = false;
-    clearTimeout(renderTimer); clearTimeout(startupTimer);
+    clearTimeout(renderTimer); clearTimeout(startupTimer); clearInterval(freshnessTimer);
+    observation.close();
     for (const timer of dialogTimers.values()) clearTimeout(timer);
-    output.removeListener('resize', render);
+    output.removeListener('resize', render); output.removeListener('drain', render);
     for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.removeListener(signal, onSignal);
     try { terminal.stop(); } catch { code = 1; } finally { await rpc.close(); process.exitCode = code; }
   };
@@ -69,13 +76,14 @@ export async function run(argv = process.argv.slice(2), {
   };
   const updateReady = () => {
     model.ready = !fault && policyReady && stateSeen && commandsSeen;
-    if (model.ready) { clearTimeout(startupTimer); model.status = `Conversation: ${cwd} · Pi owns session storage; observation contexts: none`; }
+    if (model.ready) { clearTimeout(startupTimer); model.status = `Conversation: ${cwd} · children: ${config.children.length} explicit; runtime: none`; }
     render();
   };
   const sendAction = async action => {
     if (!action || closing) return;
     try {
       if (action.type === 'quit') { await close(); return; }
+      if (action.type === 'observation') { observation.action(action.action); model.offsets[1] = 0; render(); return; }
       if (action.type === 'dialog') {
         clearTimeout(dialogTimers.get(action.id)); dialogTimers.delete(action.id);
         await rpc.send({ ...action, type: 'extension_ui_response' });
@@ -146,12 +154,13 @@ export async function run(argv = process.argv.slice(2), {
     render();
   });
   try {
+    observation.start();
     terminal.start((text, key) => { void sendAction(model.key(text, key)); render(); }, (text, retention = {}) => {
       if (model.dialogs.length) { model.append('Paste ignored during Pi interaction; type an explicit response.'); }
       else if (model.focus === 0 && model.ready) { model.insert(text); if (retention.discarded) model.inputLoss(); }
       render();
     });
-    output.on('resize', render);
+    output.on('resize', render); output.on('drain', render);
     for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, onSignal);
     startupTimer = setTimeout(() => fail('Pi qualification incomplete: healthy Harness access, get_state and get_commands required. Exit with Ctrl+Q; diagnose in normal Pi.'), 30000);
     render();
