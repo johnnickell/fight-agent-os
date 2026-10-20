@@ -19,7 +19,7 @@
 | [TICKET-00014](00014-TICKET.md) | Accept the authentication and dashboard design language | done | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00015](00015-TICKET.md) | Establish managed authority and guarded bootstrap | done | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00016](00016-TICKET.md) | Deliver the invitation and activation lifecycle | done | [EPIC-00004](../epics/00004-EPIC.md) |
-| [TICKET-00017](00017-TICKET.md) | Deliver secure browser authentication and session continuity | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
+| [TICKET-00017](00017-TICKET.md) | Deliver secure browser authentication and session continuity | done | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00018](00018-TICKET.md) | Deliver the authoritative application shell and dashboard | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00019](00019-TICKET.md) | Deliver password recovery and authenticated password change | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00020](00020-TICKET.md) | Deliver self-service active-session management | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |

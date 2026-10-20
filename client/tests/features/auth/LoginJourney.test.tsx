@@ -10,8 +10,12 @@ const runtime = { schemaVersion: 1, apiBasePath: '/api/v1' } as const;
 
 describe('document-scoped login retirement', () => {
   it('removes secret fields synchronously on pagehide rather than retaining a frozen form', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(loginSchemaSource)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => Promise.resolve(jsonResponse(loginSchemaSource)))
+    );
     const mounted = render(<LoginJourney runtime={runtime} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Use sign in instead' }));
     const password = await screen.findByLabelText('Password (required)');
     fireEvent.change(password, { target: { value: 'synthetic' } });
     act(() => {
