@@ -514,7 +514,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #126](https://github.com/johnnickell/fight-agent-os/pull/126) |
-| 75 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | — |
+| 75 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #130](https://github.com/johnnickell/fight-agent-os/pull/130) |
 | 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #79](https://github.com/johnnickell/fight-agent-os/pull/79) |
 | — | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | — (standalone chore) | done | — | [PR #19](https://github.com/johnnickell/fight-agent-os/pull/19) |
 | — | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | — (standalone bug) | done | — | — |
