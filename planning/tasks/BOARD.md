@@ -549,4 +549,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00497](00497-TASK.md) | Restore optional-Jev workspace startup and child QA instruction reads | — (standalone bug) | done | — | [PR #115](https://github.com/johnnickell/fight-agent-os/pull/115) |
 | — | [TASK-00499](00499-TASK.md) | Remove harness denials from native file reads | — (standalone bug) | done | — | [PR #119](https://github.com/johnnickell/fight-agent-os/pull/119) |
 | — | [TASK-00500](00500-TASK.md) | Restore native file tools and use Terra for Land | — (standalone chore) | done | — | [PR #122](https://github.com/johnnickell/fight-agent-os/pull/122) |
+| — | [TASK-00501](00501-TASK.md) | Restore local PHP diagnostics and bound development processes | — (standalone bug) | done | — | [PR #131](https://github.com/johnnickell/fight-agent-os/pull/131) |
 <!-- /planning:board -->

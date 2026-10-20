@@ -158,3 +158,28 @@ journeys or database Planning cutover. TICKET-00087 consumes publication manifes
 observations; define that contract without reversing the resource-storage dependency. The original requirement
 approval left exact TASK mappings and qualification for decomposition. The approved split above now supplies
 resource owners; unresolved mappings and actual runtime qualification remain held.
+
+### Requested Super Admin capability inspection — 2026-10-20
+
+John requested a browser page to inspect MCP tools and resources, static Skills and their supporting files with associated
+Permissions, then compare those capabilities with Agent templates and actual Agent authority. This is a read-only
+administration outcome under the existing Harness resource ownership, not a generic Skill editor or another registry.
+Restrict the page and every supporting read to a dedicated managed `SUPER_ADMIN_ONLY` inspection Permission granted
+only through the authoritative managed Super Admin Role; select its exact definition/identity during decomposition.
+A role label or hidden navigation item is not authorization. Do not alter existing consumer read Permissions.
+
+Reuse TICKET-00061/TASK-00245's first-party tool definitions and current-use policy, TICKET-00087/TASK-00335's
+authorized MCP Skill manifests, this TICKET's type-specific resource facts, TICKET-00076/TASK-00300's template browser, and TICKET-00063/TASK-00259/00260 plus
+TICKET-00078/TASK-00303's requested-versus-actual Agent inspection. Show stable IDs, types, descriptions, origins,
+exact revisions, lifecycle/availability, required Permissions and links to the applicable template/Agent views.
+Keep Skill `allowed-tools` requests, template desired Permissions, actual Agent grants and context-dependent tool
+eligibility visibly distinct; explain scope/delegation/host restrictions without implying that a listed tool can run.
+A complete tool catalog is not the current user's permission-filtered MCP discovery response, and must not impersonate
+an Agent or invoke tools to inspect them. Do not expose credentials, secret configuration or unauthorized resource
+bodies; unavailable owners or incomplete results must remain visibly incomplete.
+
+Existing TASKs supply backend inspection and template/Agent journeys but do not explicitly deliver this combined
+Super Admin browser catalog. Record it as an undecomposed browser requirement here, with a scoped read contract from
+TICKET-00061; no new TASK, priority, reverse blocker or readiness claim is introduced by this request. Map its exact
+end-to-end delivery slice through existing owners before implementation. Native browser rendering, access denial,
+revocation, empty/unavailable states and accurate capability-to-Permission/template/Agent links are required evidence.

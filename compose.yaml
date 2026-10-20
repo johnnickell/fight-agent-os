@@ -14,6 +14,7 @@ services:
       postgres_test:
         condition: service_healthy
     environment: &application-environment
+      XDEBUG_MODE: ${XDEBUG_MODE:-off}
       APP_ENV: ${APP_ENV:-development}
       APP_ACCESS_TOKEN_CONFIG: ${APP_ACCESS_TOKEN_CONFIG:-}
       APP_BROWSER_ORIGIN: ${APP_BROWSER_ORIGIN:-}
@@ -73,6 +74,10 @@ services:
 
   https_php:
     profiles: [https]
+    init: true
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 64
     build:
       context: .
       dockerfile: etc/docker/fpm/Dockerfile

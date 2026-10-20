@@ -92,6 +92,7 @@ no trusted forwarding proxies, and available migrated limiter storage. Canonical
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`
 for the separate HTTP listener. Neither local TLS nor the inherited HTTP port is a complete authenticated browser
 deployment; integrated security and production enrollment remain separate work.
+For PHP error logs, process limits and opt-in IDE debugging, see [local PHP diagnostics](docs/engineering/LOCAL_PHP.md).
 Development and test PostgreSQL identities are separate; override their local-only Compose defaults through the
 variables shown in `.env.example`. Destructive test operations require explicit test mode and a guarded `_test`
 database, role, and allowlisted host. PostgreSQL migrations live in `database/migrations/`; future database
