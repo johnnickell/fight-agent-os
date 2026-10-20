@@ -80,8 +80,13 @@ const exampleSchema = decodePublicSchema({
     display_name: {
       client_field: 'displayName',
       rules: [
-        { type: 'MinLength', args: '2', message: 'Use at least two characters.', depends_on: [] },
-        { type: 'MaxLength', args: '30', message: 'Use at most thirty characters.', depends_on: [] }
+        { type: 'MinLength', args: ['2'], message: 'Use at least two characters.', depends_on: [] },
+        {
+          type: 'MaxLength',
+          args: ['30'],
+          message: 'Use at most thirty characters.',
+          depends_on: []
+        }
       ]
     }
   }

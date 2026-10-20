@@ -40,13 +40,17 @@ final readonly class CanonicalCredentialLink
     /**
      * Builds the existing invitation fragment only for the provider invocation
      */
-    public function forCredential(#[SensitiveParameter] string $credential): string
-    {
+    public function forCredential(
+        #[SensitiveParameter] string $credential,
+        UserId $userId
+    ): string {
         if ($credential === '') {
             throw new InvalidArgumentException('Missing activation material.');
         }
 
-        return $this->base.'#credential='.rawurlencode($credential);
+        $identity = '&user_id='.rawurlencode($userId->toString());
+
+        return $this->base.'#credential='.rawurlencode($credential).$identity;
     }
 
     /**

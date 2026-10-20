@@ -21,6 +21,36 @@ function setup(response = jsonResponse()) {
 
 // Future protected operations below exercise the shared transport only, not a server endpoint.
 describe('shared API transport', () => {
+  it.each(['invalid', `${csrfData.proof}\n`])(
+    'refuses mutation without an exact bounded CSRF proof before dispatch (%#)',
+    async (proof) => {
+      const { client, fetch } = setup();
+      expect(await client.post('/auth/activate', {}, proof, () => true)).toEqual(
+        apiFailure('protocol')
+      );
+      expect(fetch).not.toHaveBeenCalled();
+    }
+  );
+
+  it('discards unexpected mutation setup exceptions instead of retaining private diagnostics', async () => {
+    const { client, fetch } = setup();
+    const random = vi.spyOn(crypto, 'randomUUID').mockImplementationOnce(() => {
+      throw new Error('private-marker');
+    });
+    try {
+      expect(
+        await client.post(
+          '/auth/activate',
+          { password: 'private-marker' },
+          csrfData.proof,
+          () => true
+        )
+      ).toEqual(apiFailure('system'));
+      expect(fetch).not.toHaveBeenCalled();
+    } finally {
+      random.mockRestore();
+    }
+  });
   it('maps the real bootstrap and sends only permitted same-origin GET metadata', async () => {
     const { client, fetch } = setup();
     expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual({

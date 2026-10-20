@@ -29,6 +29,7 @@ use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\Cre
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredential;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\DeliverUserInvitation;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindCredentialDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\Query\FindDueCredentialDeliveries;
@@ -243,7 +244,7 @@ SQL
                 ),
                 'html_link_matches'   => str_contains(
                     $html,
-                    'href="https://example.test/activate#credential='.self::RAW_MARKER.'"'
+                    'href="https://example.test/activate#credential='.self::RAW_MARKER.'&amp;user_id='
                 ),
                 'protected_at_rest'   => is_array($row)
                     && !str_contains(json_encode($row, JSON_THROW_ON_ERROR), self::RAW_MARKER),
@@ -255,7 +256,8 @@ SQL
         $provider = new InvitationMailProvider(
             new CanonicalCredentialLink('https://example.test', '/activate'),
             $this->container->get(TemplateEngine::class),
-            $mail
+            $mail,
+            $this->container->get(ActivationGrantRepository::class)
         );
         $this->container->set(CredentialDeliveryProvider::class, static fn(): CredentialDeliveryProvider => $provider);
         try {

@@ -39,11 +39,14 @@ return static function (Container $container): void {
         return $cipher('password_reset');
     });
     $container->set(Clock::class, static fn(): Clock => new SystemDeliveryClock());
-    $container->set('credential-delivery.activation-link', static fn(): CanonicalCredentialLink =>
-        new CanonicalCredentialLink(
-            getenv('APP_ACTIVATION_ORIGIN') ?: '',
-            getenv('APP_ACTIVATION_PATH') ?: ''
-        ));
+    $container->set('credential-delivery.activation-link', static function (): CanonicalCredentialLink {
+        $origin = getenv('APP_ACTIVATION_ORIGIN') ?: '';
+        if (getenv('APP_ACTIVATION_PATH') !== '/app/activate' || $origin !== getenv('APP_BROWSER_ORIGIN')) {
+            throw new InvalidArgumentException('Configure activation for the trusted browser origin and public path.');
+        }
+
+        return new CanonicalCredentialLink($origin, '/app/activate');
+    });
     $container->set('credential-delivery.password-reset-link', static fn(): CanonicalCredentialLink =>
         new CanonicalCredentialLink(
             getenv('APP_PASSWORD_RESET_ORIGIN') ?: '',
@@ -67,7 +70,8 @@ return static function (Container $container): void {
         new InvitationMailProvider(
             $c->get('credential-delivery.activation-link'),
             $c->get(TemplateEngine::class),
-            $c->get(MailDelivery::class)
+            $c->get(MailDelivery::class),
+            $c->get(\Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository::class)
         ));
     $container->set(PasswordResetMailProvider::class, static fn(Container $c): PasswordResetMailProvider =>
         new PasswordResetMailProvider(

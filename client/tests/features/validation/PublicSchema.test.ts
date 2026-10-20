@@ -7,6 +7,43 @@ import { fixture } from './fixtures';
 const schema = decodePublicSchema(fixture)!;
 
 describe('public validation metadata and PHP-compatible rules', () => {
+  it('consumes the real PHP array-argument wire shape instead of a synthetic string shape', () => {
+    const actualWire = {
+      ...fixture,
+      fields: {
+        display_name: {
+          client_field: 'displayName',
+          rules: [
+            { type: 'Required', args: [], message: 'Provide a value.', depends_on: [] },
+            { type: 'Type', args: ['string'], message: 'Use text.', depends_on: [] },
+            { type: 'MinLength', args: ['2'], message: 'Use two characters.', depends_on: [] }
+          ]
+        }
+      }
+    };
+    const decoded = decodePublicSchema(actualWire);
+    expect(decoded).not.toBeNull();
+    expect(validatePublicSchema(decoded!, { displayName: 'x' })).toEqual({
+      displayName: ['Use two characters.']
+    });
+  });
+  it.each(['', [''], ['string', 'extra'], [4]])(
+    'rejects invalid argument arity/types rather than coercing them (%#)',
+    (args) => {
+      expect(
+        decodePublicSchema({
+          ...fixture,
+          fields: {
+            display_name: {
+              client_field: 'displayName',
+              rules: [{ type: 'Required', args, message: 'Required.', depends_on: [] }]
+            }
+          }
+        })
+      ).toBeNull();
+    }
+  );
+
   it('accepts a mapped, bounded schema with declared comparison dependencies', () => {
     expect(schema.formName).toBe('example_form');
     expect(schema.fields.confirmation?.rules[0]?.dependsOn).toEqual(['displayName']);
@@ -16,6 +53,8 @@ describe('public validation metadata and PHP-compatible rules', () => {
   it.each([
     { ...fixture, schema_version: 2 },
     { ...fixture, revision: 'bad' },
+    { ...fixture, revision: `${'a'.repeat(64)}\n` },
+    { ...fixture, form_name: 'example_form\n' },
     { ...fixture, extra: 'not public' },
     { ...fixture, fields: {} },
     {
@@ -23,7 +62,7 @@ describe('public validation metadata and PHP-compatible rules', () => {
       fields: {
         display_name: {
           client_field: 'displayName',
-          rules: [{ type: 'Eval', args: '', message: 'bad', depends_on: [] }]
+          rules: [{ type: 'Eval', args: [], message: 'bad', depends_on: [] }]
         }
       }
     },
@@ -32,7 +71,7 @@ describe('public validation metadata and PHP-compatible rules', () => {
       fields: {
         display_name: {
           client_field: 'displayName',
-          rules: [{ type: 'Required', args: '', message: '<private>', depends_on: [] }]
+          rules: [{ type: 'Required', args: [], message: '<private>', depends_on: [] }]
         }
       }
     },

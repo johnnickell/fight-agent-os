@@ -13,6 +13,7 @@ use App\Application\Failure\PermissionDenied;
 use App\Application\Failure\RateLimited;
 use App\Application\Failure\ResourceNotFound;
 use App\Application\Failure\StateConflict;
+use App\Application\Security\Activation\ActivationPasswordRejected;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use Fight\Common\Application\Validation\Exception\ValidationException as TransportValidationException;
@@ -40,6 +41,11 @@ final readonly class ApiFailureMapper
      */
     public function classify(Throwable $exception): ?MappedApiFailure
     {
+        if ($exception instanceof ActivationPasswordRejected) {
+            return new MappedApiFailure(422, JSendEnvelope::fail(new InputFailures([
+                'body.password' => [\App\Domain\Security\Password\PasswordStructure::GUIDANCE]
+            ])));
+        }
         if ($exception instanceof RateLimited) {
             return new MappedApiFailure(429, JSendEnvelope::error('Too many requests.'), [
                 'Retry-After' => (string) $exception->retryAfter

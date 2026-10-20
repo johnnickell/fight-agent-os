@@ -13,6 +13,11 @@ use SensitiveParameter;
  */
 final class PasswordStructure
 {
+    public const int MIN_LENGTH = 8;
+    public const int MAX_LENGTH = 128;
+    public const string COMPOSITION_GUIDANCE = 'Use 8–128 characters: uppercase, lowercase, number and symbol.';
+    public const string GUIDANCE = self::COMPOSITION_GUIDANCE.' Known-common passwords cannot be used.';
+
     /**
      * Returns the first structural rejection without retaining the candidate
      */
@@ -23,7 +28,7 @@ final class PasswordStructure
         }
 
         $length = preg_match_all('/./us', $candidate);
-        if ($length < 8 || $length > 128) {
+        if ($length < self::MIN_LENGTH || $length > self::MAX_LENGTH) {
             return PasswordRejection::LENGTH;
         }
 

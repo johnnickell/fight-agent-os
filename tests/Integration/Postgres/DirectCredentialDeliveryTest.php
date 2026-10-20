@@ -583,7 +583,8 @@ final class DirectCredentialDeliveryTest extends TestCase
         $provider = new InvitationMailProvider(
             new CanonicalCredentialLink('https://example.test', '/activate'),
             $this->container->get(TemplateEngine::class),
-            $mail
+            $mail,
+            $this->container->get(ActivationGrantRepository::class)
         );
         $worker = $this->freshWorker($provider);
         $real = $worker->get(TransactionalUnitOfWork::class);
@@ -665,7 +666,8 @@ final class DirectCredentialDeliveryTest extends TestCase
         $provider = new InvitationMailProvider(
             new CanonicalCredentialLink('https://example.test', '/activate'),
             $this->container->get(TemplateEngine::class),
-            $mail
+            $mail,
+            $this->container->get(ActivationGrantRepository::class)
         );
         $this->container->set(CredentialDeliveryProvider::class, static fn(): CredentialDeliveryProvider => $provider);
         try {

@@ -52,6 +52,62 @@ const rejection = (messages: readonly string[]) =>
   });
 
 describe('Formik shared error lifecycle', () => {
+  it('leaves same-form submit focus free of blur layout changes, then validates and focuses on submission', async () => {
+    const user = userEvent.setup();
+    const submit = vi.fn();
+    render(<Example submit={submit} />);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    const button = screen.getByRole('button', { name: 'Submit' });
+    name.focus();
+    // Native focus transfer happens between pointer press and release, before click/submit.
+    act(() => button.focus());
+    expect(name).not.toHaveAttribute('aria-invalid');
+    await user.keyboard('{Enter}');
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(name).toHaveFocus();
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it('still validates ordinary field blur, focus leaving the form and unrelated submit controls', () => {
+    render(<Example submit={vi.fn()} />);
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    const confirmation = screen.getByRole('textbox', { name: 'Confirm' });
+    name.focus();
+    act(() => confirmation.focus());
+    expect(name).toHaveAccessibleDescription('Error: Use two characters.');
+    fireEvent.change(name, { target: { value: 'Valid' } });
+    fireEvent.blur(confirmation);
+    expect(confirmation).toHaveAccessibleDescription('Error: Values must match.');
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(name).not.toHaveAttribute('aria-invalid');
+    const unrelatedForm = document.createElement('form');
+    const unrelatedSubmit = document.createElement('button');
+    unrelatedForm.append(unrelatedSubmit);
+    document.body.append(unrelatedForm);
+    try {
+      fireEvent.blur(name, { relatedTarget: unrelatedSubmit });
+      expect(name).toHaveAccessibleDescription('Error: Use two characters.');
+    } finally {
+      unrelatedForm.remove();
+    }
+  });
+
+  it('discards an obsolete non-field rejection after an edit while preserving real success', async () => {
+    const pending = deferred<ApiResult<string>>();
+    render(<Example submit={() => pending.promise} activeSchema={singleFieldSchema} />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value: 'Valid' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+      target: { value: 'Edited' }
+    });
+    await act(async () => {
+      pending.resolve(apiFailure('rate-limited'));
+      await pending.promise;
+    });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled();
+  });
   it('focuses invalid input, shows current multiple messages, clears on edits and retains unrelated errors', async () => {
     const user = userEvent.setup();
     const submit = vi
