@@ -441,6 +441,108 @@ describe('bounded volatile session continuity', () => {
     }
   );
 
+  it('honors new-sender invalidation at capacity without admitting its credentials', async () => {
+    const channels = new Channels();
+    const d = setup({ channels });
+    await d.coordinator.submit({}, false);
+    const send = (data: unknown) => d.channel?.onmessage?.({ data } as MessageEvent<unknown>);
+    for (let n = 0; n < 64; n++)
+      send({ version: 1, sender: id(), sequence: 1, kind: 'request', round: id() });
+    const untracked = id();
+    send({ version: 1, sender: untracked, sequence: 1, kind: 'invalidate' });
+    expect(d.tokens.getAccessToken()).toBeNull();
+    expect(d.coordinator.getSnapshot().status).toBe('restoring');
+    const request = channels.messages
+      .map(decodeSessionMessage)
+      .filter((m) => m?.kind === 'request')
+      .at(-1);
+    if (!request || request.kind !== 'request') throw new Error('Expected fresh demand');
+    send({
+      version: 1,
+      sender: untracked,
+      sequence: 2,
+      kind: 'token',
+      round: request.round,
+      token: 'untracked.identity.signature',
+      remaining: 800_000
+    });
+    expect(d.tokens.getAccessToken()).toBeNull();
+    await tick(50);
+    expect(d.session.refresh).toHaveBeenCalledOnce();
+    expect(d.tokens.getAccessToken()).toBe('access.current.signature');
+  });
+
+  it.each([false, true])(
+    'fences outstanding handoffs on untracked invalidation at capacity (Locks=%s)',
+    async (withLocks) => {
+      const channels = new Channels();
+      const d = setup({ channels, ...(withLocks ? { locks: new Locks() } : {}) });
+      const send = (data: unknown) => d.channel?.onmessage?.({ data } as MessageEvent<unknown>);
+      const tracked = id();
+      send({ version: 1, sender: tracked, sequence: 1, kind: 'request', round: id() });
+      for (let n = 1; n < 64; n++)
+        send({ version: 1, sender: id(), sequence: 1, kind: 'request', round: id() });
+      const pending = d.coordinator.restore();
+      const request = () => {
+        const message = channels.messages
+          .map(decodeSessionMessage)
+          .filter((m) => m?.kind === 'request')
+          .at(-1);
+        if (!message || message.kind !== 'request') throw new Error('Expected demand');
+        return message.round;
+      };
+      const oldRound = request();
+      const untracked = id();
+      send({ version: 1, sender: untracked, sequence: 1, kind: 'invalidate' });
+      const currentRound = request();
+      expect(currentRound).not.toBe(oldRound);
+      const reply = {
+        version: 1,
+        kind: 'token',
+        token: 'old.identity.signature',
+        remaining: 800_000
+      };
+      send({ ...reply, sender: tracked, sequence: 2, round: oldRound });
+      send({ ...reply, sender: untracked, sequence: 2, round: currentRound });
+      expect(d.tokens.getAccessToken()).toBeNull();
+      expect(d.coordinator.getSnapshot().status).toBe('restoring');
+      send({
+        ...reply,
+        sender: tracked,
+        sequence: 3,
+        round: currentRound,
+        token: 'current.identity.signature'
+      });
+      await tick(200);
+      await pending;
+      expect(d.tokens.getAccessToken()).toBe('current.identity.signature');
+      expect(d.session.refresh).not.toHaveBeenCalled();
+    }
+  );
+
+  it('does not renew observation deadlines or admit new senders under invalidation churn at capacity', async () => {
+    const channels = new Channels();
+    const locks = new Locks();
+    const d = setup({ channels, locks, outcome: () => new Promise<ApiResult<true>>(() => {}) });
+    const send = (data: unknown) => d.channel?.onmessage?.({ data } as MessageEvent<unknown>);
+    for (let n = 0; n < 64; n++)
+      send({ version: 1, sender: id(), sequence: 1, kind: 'request', round: id() });
+    const pending = d.coordinator.restore();
+    await tick(100);
+    for (let n = 0; n < 8; n++) {
+      send({ version: 1, sender: id(), sequence: 1, kind: 'invalidate' });
+      await tick(1_000);
+    }
+    await pending;
+    expect(d.tokens.getAccessToken()).toBeNull();
+    expect(d.coordinator.getSnapshot().status).toBe('network-degraded');
+    expect(d.session.refresh).toHaveBeenCalledOnce();
+    expect(locks.count).toBe(1);
+    expect(locks.busy).toBe(false);
+    await tick(100_000);
+    expect(d.session.refresh).toHaveBeenCalledOnce();
+  });
+
   it('fails closed and restores on wake without retaining stale access', async () => {
     const delayed = deferred<ApiResult<true>>();
     const d = setup();

@@ -201,6 +201,8 @@ export class SessionCoordinator {
     if (!this.#active || this.#state.status === 'restoring' || this.#state.status === 'logout')
       return apiFailure('cancelled');
     this.#retire();
+    // Retire deferred service mutations too, before a replacement login can change the cookie.
+    this.#session.invalidate();
     this.#barrier = true;
     const generation = this.#generation;
     const attempt = this.#authority?.beginAuthentication();
@@ -294,9 +296,10 @@ export class SessionCoordinator {
     const prior = this.#peers.get(message.sender) ?? 0;
     if (message.sequence <= prior) return;
     if (!this.#peers.has(message.sender) && this.#peers.size >= 64) {
-      // Keep bounded replay bookkeeping, but never retain authority by dropping a valid session end.
-      // Unknown senders at capacity cannot supply credentials or other nonterminal progress.
-      if (message.kind !== 'logout' && message.kind !== 'terminal') return;
+      // Bound replay bookkeeping, not fail-closed safety signals from later tabs.
+      // Untracked senders can remove authority, but cannot supply credentials or progress.
+      if (message.kind !== 'invalidate' && message.kind !== 'logout' && message.kind !== 'terminal')
+        return;
     } else this.#peers.set(message.sender, message.sequence);
     if (message.kind === 'logout' || message.kind === 'terminal') {
       this.#end(message.kind);
@@ -308,6 +311,8 @@ export class SessionCoordinator {
     }
     if (message.kind === 'invalidate') {
       this.#tokens.clear();
+      // Peer context changes must fence deferred cookie mutations, not only token adoption.
+      this.#session.invalidate();
       this.#signal('refresh-started');
       const round = this.#round;
       if (round && this.#current(round)) {

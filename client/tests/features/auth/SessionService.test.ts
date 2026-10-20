@@ -4,6 +4,7 @@ import { ApiClient } from '@/api/ApiClient';
 import { CsrfProofService } from '@/features/auth/CsrfProofService';
 import { LoginService } from '@/features/auth/LoginService';
 import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
+import { decodeSessionMessage } from '@/features/auth/SessionChannel';
 import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
 
@@ -112,6 +113,33 @@ describe('single-tab cookie-only refresh and logout', () => {
     expect(tokens.getAccessToken()).toBeNull();
   });
 
+  it('coalesces only current-context refresh and keeps newer work pending after an old body settles', async () => {
+    const oldBody = deferred<Response>();
+    const newBody = deferred<Response>();
+    const post = vi
+      .fn<ApiTransport>()
+      .mockImplementationOnce(() => oldBody.promise)
+      .mockImplementationOnce(() => newBody.promise);
+    const { service, tokens } = dependencies(post);
+    try {
+      const oldRefresh = service.refresh();
+      await vi.waitFor(() => expect(post).toHaveBeenCalledOnce());
+      service.invalidate();
+      const newRefresh = service.refresh();
+      await vi.waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+      oldBody.resolve(loginSuccess());
+      expect(await oldRefresh).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
+      expect(service.refresh()).toBe(newRefresh);
+      expect(tokens.getAccessToken()).toBeNull();
+      newBody.resolve(loginSuccess());
+      expect(await newRefresh).toMatchObject({ ok: true });
+      expect(tokens.getAccessToken()).toBe('header.payload.signature');
+      expect(post).toHaveBeenCalledTimes(2);
+    } finally {
+      service.dispose();
+    }
+  });
+
   it('reports failed logout as uncertainty while retaining no local authority or proof', async () => {
     const post = vi.fn().mockRejectedValue(new Error('private-token SQL marker'));
     const { service, tokens, csrf } = dependencies(post);
@@ -197,6 +225,148 @@ describe('single-tab cookie-only refresh and logout', () => {
       expect(await oldLogout).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
       expect(revokedContexts).toEqual([]);
       expect(post).toHaveBeenCalledOnce();
+      expect(tokens.getAccessToken()).toBe('header.payload.signature');
+      expect(coordinator.getSnapshot().status).toBe('authenticated');
+    } finally {
+      coordinator.dispose();
+    }
+  });
+
+  it.each(['login', 'dispose', 'terminal', 'invalidation', 'none', 'new-logout'] as const)(
+    'fences a body-deferred logout after %s, preserving same-context revocation',
+    async (replacement) => {
+      vi.useFakeTimers();
+      const body = deferred<void>();
+      const response = loginSuccess();
+      const read = response.text.bind(response);
+      vi.spyOn(response, 'text').mockImplementation(async () => {
+        await body.promise;
+        return read();
+      });
+      let cookieContext = 'old';
+      const revoked: string[] = [];
+      const post = vi.fn<ApiTransport>().mockImplementation((url) => {
+        if (url.endsWith('/auth/refresh')) return Promise.resolve(response);
+        if (url.endsWith('/auth/login')) {
+          cookieContext = 'new';
+          return Promise.resolve(loginSuccess());
+        }
+        if (url.endsWith('/auth/logout')) {
+          revoked.push(cookieContext);
+          return Promise.resolve(jsonResponse(null));
+        }
+        throw new Error('Unexpected mutation');
+      });
+      const { service, tokens, csrf, api } = dependencies(post);
+      const sent: unknown[] = [];
+      const channel: SessionChannel = {
+        onmessage: null,
+        postMessage: (message) => {
+          sent.push(message);
+        },
+        close: () => {}
+      };
+      const coordinator = new SessionCoordinator({
+        session: service,
+        login: new LoginService(api, csrf, tokens),
+        tokens,
+        channel
+      });
+      try {
+        const restoration = coordinator.restore();
+        await vi.advanceTimersByTimeAsync(50);
+        expect(post).toHaveBeenCalledOnce();
+        // Refresh headers/cookie have arrived, but application body observation is pending.
+        // A valid current peer handoff admits credentials without finishing that service request.
+        const demand = sent.map(decodeSessionMessage).find((m) => m?.kind === 'request');
+        if (!demand || demand.kind !== 'request') throw new Error('Expected peer challenge');
+        channel.onmessage?.({
+          data: {
+            version: 1,
+            sender: crypto.randomUUID().replaceAll('-', ''),
+            sequence: 1,
+            kind: 'token',
+            round: demand.round,
+            token: 'peer.current.signature',
+            remaining: 800_000
+          }
+        } as MessageEvent<unknown>);
+        await restoration;
+        expect(coordinator.getSnapshot().status).toBe('authenticated');
+        const logout = coordinator.logout();
+        await vi.advanceTimersByTimeAsync(8_000);
+        expect(await logout).toMatchObject({ ok: false, error: { kind: 'network' } });
+        expect(coordinator.getSnapshot()).toEqual({
+          status: 'anonymous',
+          signOutUnconfirmed: true
+        });
+        expect(revoked).toEqual([]);
+        let currentLogout: Promise<unknown> | undefined;
+        if (replacement === 'login' || replacement === 'new-logout') {
+          coordinator.showLogin();
+          expect(
+            await coordinator.submit({ email: 'person@example.test', password: 'synthetic' }, false)
+          ).toMatchObject({ ok: true });
+          if (replacement === 'new-logout') currentLogout = coordinator.logout();
+        } else if (replacement === 'dispose') coordinator.dispose();
+        else if (replacement === 'terminal' || replacement === 'invalidation')
+          channel.onmessage?.({
+            data: {
+              version: 1,
+              sender: crypto.randomUUID().replaceAll('-', ''),
+              sequence: 1,
+              kind: replacement === 'terminal' ? 'terminal' : 'invalidate'
+            }
+          } as MessageEvent<unknown>);
+        body.resolve();
+        await vi.advanceTimersByTimeAsync(0);
+        if (currentLogout) await currentLogout;
+        expect(revoked).toEqual(
+          replacement === 'none' ? ['old'] : replacement === 'new-logout' ? ['new'] : []
+        );
+        if (replacement === 'login') {
+          expect(tokens.getAccessToken()).toBe('header.payload.signature');
+          expect(coordinator.getSnapshot().status).toBe('authenticated');
+          // Completed obsolete work must not prevent a later current-session revocation.
+          expect(await coordinator.logout()).toMatchObject({ ok: true });
+          expect(revoked).toEqual(['new']);
+        } else {
+          expect(tokens.getAccessToken()).toBeNull();
+          expect(coordinator.getSnapshot().status).toBe(
+            replacement === 'terminal' ? 'terminal' : 'anonymous'
+          );
+        }
+      } finally {
+        coordinator.dispose();
+        vi.useRealTimers();
+      }
+    }
+  );
+
+  it('does not let a late dispatched logout clear proof or credentials of a replacement context', async () => {
+    const oldResponse = deferred<Response>();
+    const post = vi
+      .fn<ApiTransport>()
+      .mockImplementation((url) =>
+        url.endsWith('/auth/logout') ? oldResponse.promise : Promise.resolve(loginSuccess())
+      );
+    const { service, tokens, csrf, api } = dependencies(post);
+    const coordinator = new SessionCoordinator({
+      session: service,
+      login: new LoginService(api, csrf, tokens),
+      tokens
+    });
+    try {
+      const oldLogout = coordinator.logout();
+      await vi.waitFor(() => expect(post).toHaveBeenCalledOnce());
+      coordinator.terminal();
+      coordinator.showLogin();
+      expect(await coordinator.submit({}, false)).toMatchObject({ ok: true });
+      expect(await csrf.bootstrap()).toMatchObject({ ok: true });
+      const currentProof = csrf.current();
+      oldResponse.resolve(jsonResponse(null));
+      expect(await oldLogout).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
+      expect(csrf.current()).toEqual(currentProof);
       expect(tokens.getAccessToken()).toBe('header.payload.signature');
       expect(coordinator.getSnapshot().status).toBe('authenticated');
     } finally {

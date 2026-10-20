@@ -5,6 +5,8 @@ import type { ApiClient } from '@/api/ApiClient';
 import type { CsrfProofService } from '@/features/auth/CsrfProofService';
 import type { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
 
+type Mutation = Readonly<{ generation: number; pending: Promise<ApiResult<true>> }>;
+
 /** Owns explicit cookie-only mutations; the coordinator owns bounded scheduling and cross-tab recovery. */
 export class SessionService {
   readonly #api: ApiClient;
@@ -12,8 +14,8 @@ export class SessionService {
   readonly #tokens: MemoryAccessToken;
   #active = true;
   #generation = 0;
-  #refresh: Promise<ApiResult<true>> | null = null;
-  #logout: Promise<ApiResult<true>> | null = null;
+  #refresh: Mutation | null = null;
+  #logout: Mutation | null = null;
 
   constructor(api: ApiClient, csrf: CsrfProofService, tokens: MemoryAccessToken) {
     this.#api = api;
@@ -22,15 +24,17 @@ export class SessionService {
   }
 
   refresh(): Promise<ApiResult<true>> {
-    if (!this.#active || this.#logout) return Promise.resolve(apiFailure('cancelled'));
-    if (this.#refresh) return this.#refresh;
+    if (!this.#active || (this.#logout && this.#current(this.#logout.generation)))
+      return Promise.resolve(apiFailure('cancelled'));
+    if (this.#refresh && this.#current(this.#refresh.generation)) return this.#refresh.pending;
     this.#tokens.clear();
     const generation = ++this.#generation;
     const tokenGeneration = this.#tokens.generation;
-    this.#refresh = this.#rotate(generation, tokenGeneration).finally(() => {
-      this.#refresh = null;
+    const pending = this.#rotate(generation, tokenGeneration).finally(() => {
+      if (this.#refresh?.pending === pending) this.#refresh = null;
     });
-    return this.#refresh;
+    this.#refresh = { generation, pending };
+    return pending;
   }
 
   async #rotate(generation: number, tokenGeneration: number): Promise<ApiResult<true>> {
@@ -57,15 +61,16 @@ export class SessionService {
 
   logout(): Promise<ApiResult<true>> {
     if (!this.#active) return Promise.resolve(apiFailure('cancelled'));
-    if (this.#logout) return this.#logout;
+    if (this.#logout && this.#current(this.#logout.generation)) return this.#logout.pending;
     this.#tokens.clear();
     const generation = ++this.#generation;
     // A dispatched refresh cannot be undone by AbortSignal. Let its browser cookie land before
     // revoking the current cookie, while its stale access result is fenced out immediately.
-    this.#logout = this.#end(generation, this.#refresh).finally(() => {
-      this.#logout = null;
+    const pending = this.#end(generation, this.#refresh?.pending ?? null).finally(() => {
+      if (this.#logout?.pending === pending) this.#logout = null;
     });
-    return this.#logout;
+    this.#logout = { generation, pending };
+    return pending;
   }
 
   async #end(
@@ -84,7 +89,8 @@ export class SessionService {
       if (!this.#current(generation)) return apiFailure('cancelled');
       return result;
     } finally {
-      this.#csrf.clear();
+      // A late result cannot clear the replacement context's proof/bootstrap.
+      if (this.#current(generation)) this.#csrf.clear();
     }
   }
 

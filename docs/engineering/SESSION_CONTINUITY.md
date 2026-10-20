@@ -62,10 +62,13 @@ interceptor restoration, scheduler, channel, lock, principal fabrication or cred
 
 Logout clears access and advances local generation synchronously. If this same owner has a dispatched refresh,
 logout waits for that response's browser cookie to land, fences out its access result, then sends one protected
-logout using the browser's **current** cookie. Aborting fetch cannot undo a committed mutation or Set-Cookie.
-Failed bootstrap/transport/server calls retain no access and produce uncertainty, not a successful-revocation
-claim. Disposal/pagehide fence late results and clear volatile proof/access. The shared memory seam also fences
-late login success after local invalidation. It uses request-start monotonic expiry; empty reads never revive
+logout using the browser's **current** cookie, only while its service context is still current. Explicit login
+and validated peer invalidation retire the service context, so an older logout waiting on refresh/proof cannot
+later select the replacement cookie. Coalescing and completion cleanup are context/operation-fenced: new demand does not reuse a
+retired mutation, and its completion cannot detach newer pending work or clear its proof. Aborting fetch cannot undo a committed mutation or
+Set-Cookie. Failed bootstrap/transport/server calls retain no access and produce uncertainty, not a
+successful-revocation claim. Disposal/pagehide fence late results and clear volatile proof/access. The shared
+memory seam also fences late login success after local invalidation. It uses request-start monotonic expiry; empty reads never revive
 or change a pending credential generation.
 
 The real `/app/login` success panel exposes “Sign out of this session.” Busy state suppresses repeat activation;
@@ -97,15 +100,21 @@ TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-
   Maximum local refresh flow is 20.35 seconds (including two acquisition windows); held work is at most
   16.30 seconds. Logout acquisition is 2 seconds and observation is 8 seconds. At lock entry, logout
   rechecks its captured local generation before calling the service or clearing credentials; a retired queued
-  logout cannot select a newer login's cookie. No failure starts a timer loop.
+  logout cannot select a newer login's cookie. The service also rechecks its own context after waiting for an
+  earlier refresh or CSRF proof, immediately before dispatch. A later explicit login retires that context even
+  after logout observation has timed out; the old continuation cannot send an undispatched logout against it.
+  Without a context replacement, same-context refresh-before-logout may still finish after an observation
+  timeout. The displayed uncertainty remains honest; timeout alone is not revocation or cancellation of a
+  dispatched server effect. No failure starts a timer loop.
 - BroadcastChannel `fight-agent-os.session.v1` accepts exact version-1 envelopes: `version`, random 32-hex
   `sender`, positive safe-integer `sequence`, and `kind`. `request` adds random 32-hex `round`; `token` adds
   that round, a bounded compact access token (≤2,048 characters), and `remaining` (0 < ms ≤840,000).
   `invalidate`, `logout`, `terminal` add nothing. Extra fields/versions/malformed values are rejected.
   At most 64 senders and 64 outstanding challenges are retained. Per-sender sequences reject duplicates;
-  independent tab counters are never compared. At sender capacity, unknown senders cannot supply nonterminal
-  progress, but valid logout/terminal signals still clear authority without adding bookkeeping. Such untracked
-  session-end signals may repeat conservatively; saturation never makes later tabs' logout invisible.
+  independent tab counters are never compared. At sender capacity, unknown senders cannot supply credentials
+  or progress, but valid invalidate/logout/terminal signals still retire authority and pending peer challenges
+  without adding bookkeeping. Such untracked safety signals may repeat conservatively; saturation never makes
+  later tabs' authority invalidation or logout invisible. Repeated invalidations do not renew flow deadlines.
   Only the current local challenge can accept a token. An invalidation replaces any pending challenge and
   its elapsed-time origin, rejecting earlier replies even from a different sender. This does not restart the
   restoration flow, renew its mutation deadlines or grant another election/conflict recovery.
