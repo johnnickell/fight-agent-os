@@ -59,10 +59,18 @@ Application transaction and database constraints. Planning and Execution referen
 recreate its aggregate or use a remote/path foreign key. Access Control retains User/Agent identity, Roles and
 Permissions. No Access Control command/entity alias is introduced.
 
-An explicit installation bootstrap transaction creates the one initial Workspace and the explicitly selected
-initial local Host together, their audit records and original result. A uniquely constrained installation
-bootstrap slot prevents two winners. Retry reads the same committed IDs; startup/query failure never creates
-another pair. This is not Runner enrollment, a browser auto-registration flow or a multi-workspace access model.
+An explicit installation bootstrap transaction in TASK-00078 creates the one initial Workspace, its audit
+record and original result. A uniquely constrained installation bootstrap slot prevents two winners. Retry reads
+the same committed Workspace ID; startup/query failure never creates another Workspace. Explicit initial local
+Host enrollment remains TASK-00079, with its own atomic state, audit and original result and idempotent retries.
+This is not Runner enrollment, a browser auto-registration flow or a multi-workspace access model.
+
+**Approved amendment, 2026-10-20:** During TASK-00078 intake John replied exactly **“approved”** to the
+coordinator's proposal to preserve Workspace bootstrap in TASK-00078 and explicit Host enrollment in TASK-00079.
+[ADR 0005 records the exact question](../../planning/adr/0005-repository-identity-and-link-consistency.md#approved-bootstrap-amendment--task-00078).
+This replaces only the original joint-bootstrap requirement; original acceptance history and every other source,
+authority, uniqueness, transaction, recovery and per-operation atomicity/idempotency guarantee remain intact.
+No Host/Checkout/Worktree persistence or physical observation/linking, Planning or Execution effect is added.
 
 Use authoritative **current state**, independent monotonic expected revisions for the fields being changed,
 append-only owned audit and immutable operation results. Owned events such as `RepositoryRegistered`,

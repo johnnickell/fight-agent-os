@@ -113,7 +113,7 @@ final class ManagedPolicyTest extends TestCase
         $this->connection->commit();
         self::assertSame([], $this->observedEvents());
         self::assertSame('0', (string) $this->connection->fetchOne('SELECT count(*) FROM permissions'));
-        self::assertSame(array_fill(0, 22, 'CREATE'), array_column($preview['plan']['permissions'], 'action'));
+        self::assertSame(array_fill(0, 25, 'CREATE'), array_column($preview['plan']['permissions'], 'action'));
         self::assertSame(['CREATE', 'CREATE'], array_column($preview['plan']['roles'], 'action'));
         $this->runConsole($console, 'apply');
         self::assertCount(1, $this->events);
@@ -121,7 +121,7 @@ final class ManagedPolicyTest extends TestCase
         $this->assertExactPolicy();
         $state = $this->snapshot();
         $preview = $this->runConsole($console, 'preview');
-        self::assertSame(array_fill(0, 22, 'UNCHANGED'), array_column($preview['plan']['permissions'], 'action'));
+        self::assertSame(array_fill(0, 25, 'UNCHANGED'), array_column($preview['plan']['permissions'], 'action'));
         self::assertSame(['UNCHANGED', 'UNCHANGED'], array_column($preview['plan']['roles'], 'action'));
         $this->runConsole($console, 'apply');
         self::assertSame($state, $this->snapshot());
@@ -513,7 +513,7 @@ final class ManagedPolicyTest extends TestCase
     private function assertExactPolicy(): void
     {
         $policy = InstallationManagedPolicy::create();
-        self::assertCount(22, $this->permissions->getManaged());
+        self::assertCount(25, $this->permissions->getManaged());
         self::assertCount(2, $this->roles->getManaged());
         foreach ($policy->getPermissions() as $definition) {
             $actual = $this->permissions->getById($definition->getId());

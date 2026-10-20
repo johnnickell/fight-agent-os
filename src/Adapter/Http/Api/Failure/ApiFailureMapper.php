@@ -14,6 +14,8 @@ use App\Application\Failure\RateLimited;
 use App\Application\Failure\ResourceNotFound;
 use App\Application\Failure\StateConflict;
 use App\Application\Security\Activation\ActivationPasswordRejected;
+use App\Domain\Workspace\RegistrationConflict;
+use App\Domain\Workspace\RegistrationInputRejected;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\User\Exception\LoginRejectedException;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
@@ -42,6 +44,11 @@ final readonly class ApiFailureMapper
      */
     public function classify(Throwable $exception): ?MappedApiFailure
     {
+        if ($exception instanceof RegistrationInputRejected) {
+            return new MappedApiFailure(422, JSendEnvelope::fail(new InputFailures([
+                'input' => ['Invalid repository registration input.']
+            ])));
+        }
         if ($exception instanceof ActivationPasswordRejected) {
             return new MappedApiFailure(422, JSendEnvelope::fail(new InputFailures([
                 'body.password' => [\App\Domain\Security\Password\PasswordStructure::GUIDANCE]
@@ -80,6 +87,7 @@ final readonly class ApiFailureMapper
             $exception instanceof InvitationAdministrationAuthorizationException,
             $exception instanceof HttpForbiddenException => [403, 'Forbidden.'],
             $exception instanceof StateConflict,
+            $exception instanceof RegistrationConflict,
             $exception instanceof OptimisticConcurrencyException => [409, 'Conflict.'],
             $exception instanceof ResourceNotFound,
             $exception instanceof HttpNotFoundException => [404, 'Not found.'],

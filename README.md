@@ -12,7 +12,9 @@ those belong to a separate future project.
 
 **Status: application foundation in progress.** Slim/PHP, guarded PostgreSQL persistence, identity/grant storage,
 API validation/error handling, public-safe form metadata and local engineering skills are
-present. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
+present. Explicit initial Workspace bootstrap and protected Repository registration/inspection are implemented under
+[TASK-00078's runbook](docs/engineering/REPOSITORY_REGISTRATION.md), pending fresh independent Review/QA after repair. They add no
+checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
 canonical login is implemented at `/app/login` pending independent acceptance; refresh/logout and the complete authenticated shell remain unfinished. A non-product React shell with
 local system/light/dark appearance is available at `/app`; other product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).

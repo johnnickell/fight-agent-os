@@ -3,14 +3,16 @@
 Use this operation when preparing an installation or reconciling managed authority after an approved policy
 change. It does not create users, invite anyone, bootstrap a Super Admin, expose Swagger, or enable live Agents.
 The required protected-tier and PostgreSQL contracts were qualified in
-[TASK-00126](../../planning/tasks/00126-TASK.md); the current lock selects Fight Access Control **v0.5.0** at
-`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`. Agent storage/reference observations do not qualify credential delivery.
+[TASK-00126](../../planning/tasks/00126-TASK.md), historically with Fight Access Control **v0.5.0** at
+`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`. TASK-00078 inspects the current lock/installation at **v0.6.0**,
+`dc4621d13851dd08cdf85ed9715ead24b1051e80`, and exercises its current authority and reference-fence contracts. Agent storage/reference observations do not qualify credential delivery.
 
 ## Policy ownership
 
 [`InstallationManagedPolicy`](../../src/Domain/Authorization/InstallationManagedPolicy.php) is the typed,
 version-controlled source of all stable identities, definitions, memberships and application references.
-The initial catalog is exactly [TICKET-00015](../../planning/tickets/00015-TICKET.md)'s 22 permissions:
+The original foundation catalog was [TICKET-00015](../../planning/tickets/00015-TICKET.md)'s 22 permissions;
+its approved memberships are preserved:
 
 - Managed `ROLE_USER` (`01a132ed-a1d6-4d5a-ba84-55c8cafc8f43`) receives only `VIEW_DASHBOARD`,
   `READ_OWN_SESSIONS` and `DELETE_OWN_SESSIONS`; these definitions are `ADMIN_SAFE`.
@@ -24,7 +26,12 @@ The IDs were generated once with the owning package's UUID factory, then committ
 on startup or reconciliation. The initial canonical representation is `ManagedPolicy::toArray()` encoded with
 PHP `json_encode(..., JSON_THROW_ON_ERROR)`; its SHA-256 is
 `bcf091f15a00e0611174a14344242bff0e448a8b2e3dde2300cc3c64a0129e8b`.
-This hash identifies desired policy, **not** a database snapshot, signed approval or concurrency token.
+This historical hash identifies the original desired policy, **not** a database snapshot, signed approval or
+concurrency token. TASK-00078 extends definitions/references to 25 with `READ_REPOSITORY_REGISTRATIONS`,
+`REGISTER_REPOSITORIES` and `GENERATE_REFERENCE_IDS`, all `ADMIN_SAFE`. Neither managed Role gains any of them;
+no User/Agent assignment follows. The current complete policy SHA-256 is
+`7d978dcc346bce2d0252fe861c1926e7b0cba6052c40a5f13beebb935e17ea38`.
+See [registration setup and access limits](REPOSITORY_REGISTRATION.md) before attempting these operations.
 Preserve existing identities when extending the complete catalog. Before removing a definition or reference,
 inspect every consumer check and persisted assignment; do not submit a one-permission replacement policy.
 
@@ -44,13 +51,11 @@ Existing approved memberships remain effective; this rule does not revoke them o
 of already authorized operations. Repository access remains distinct from operation Permissions.
 
 The initial three `ROLE_USER` defaults and 22 `ROLE_SUPER_ADMIN` members above are explicit foundation decisions,
-not rules to automatically assign future definitions. Current `InstallationManagedPolicy::create()` couples
-`SELF_SERVICE` tier selection with `ROLE_USER` membership and assigns the complete catalog to `ROLE_SUPER_ADMIN`.
-That represents the original approved sets but does not keep these decisions independent. Before extending the
-catalog, separate explicit tier definitions, explicit managed Role memberships and application references;
-do not extend the coupled lists and infer grants from eligibility or catalog inclusion. Preserve the existing
-approved IDs and memberships while making this separation. This documentation records the required contract,
-not a completed source repair or changed installation grants.
+not rules to automatically assign future definitions. TASK-00078 separates the previously coupled lists in
+`InstallationManagedPolicy::create()`: tiers, each managed Role's approved membership and application references
+are now independent. Preserve that separation, existing IDs and approved memberships when extending the catalog.
+The three new registration/reference definitions are referenced by the application but assigned to neither Role.
+Actual grants require an independently authorized existing Role/Permission assignment operation.
 
 ## Trusted local operation
 
@@ -72,12 +77,12 @@ migrations explicitly before running policy operations. The command itself never
 Preview dispatches package `PreviewManagedPolicy`; it performs reads only and emits one JSON line with
 `operation`, `policy_sha256`, and `plan`. The plan has `permissions` and `roles`, sorted by canonical name, with
 stable IDs, desired names/tiers/memberships and `CREATE`, `RECONCILE`, `REMOVE` or `UNCHANGED` actions.
-A fresh installation shows 22 Permission creates and two Role creates. After apply, preview should show all
-24 definitions unchanged. Inspect this plan before authorizing apply; the preview is advisory and is **not** saved
+A fresh installation shows 25 Permission creates and two Role creates. After apply, preview should show all
+27 definitions unchanged. Inspect this plan before authorizing apply; the preview is advisory and is **not** saved
 as an executable plan.
 
 Apply synchronously dispatches package `ReconcileManagedPolicy`. Its planner re-reads state inside the canonical
-Doctrine transaction and owned PostgreSQL reference/optimistic fences protect writes. Successful output is:
+Doctrine transaction and owned PostgreSQL reference/optimistic fences protect writes. The original 22-definition policy's historical successful output was:
 
 ```json
 {"operation":"apply","policy_sha256":"bcf091f15a00e0611174a14344242bff0e448a8b2e3dde2300cc3c64a0129e8b","status":"applied"}
