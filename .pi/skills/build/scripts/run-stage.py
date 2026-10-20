@@ -15,6 +15,10 @@ import sys
 import time
 import unicodedata
 
+# Runtime imports must not create bytecode caches beside provider source.
+sys.dont_write_bytecode = True
+from observation import Observation
+
 
 def positive_seconds(value):
     seconds = float(value)
@@ -32,8 +36,11 @@ def display(value, limit=320):
 
 
 class Progress:
-    def __init__(self, role, log, safe=False):
+    def __init__(self, role, log, safe=False, observation=None):
         self.safe = safe
+        self.observation = observation
+        self.lifecycle = "starting"
+        self.exit_code = None
         self.role, self.log = display(role, 60), log
         self.started = time.monotonic()
         self.last_output = self.started
@@ -50,12 +57,17 @@ class Progress:
         line = f"[{self.role} {elapsed // 60:02d}:{elapsed % 60:02d}] {display(message, 480)}"
         self.log.write(line + "\n")
         self.log.flush()
+        if self.observation:
+            # Screening-only dispatch must not export child prose through a second channel.
+            text = "Private stage activity (screening-only dispatch)" if self.safe else display(message, 480)
+            self.observation.publish(text, self.lifecycle, self.exit_code)
         if not self.safe:
             print(line, flush=True)
 
     def event(self, event):
         kind = event.get("type")
         if kind == "agent_start":
+            self.lifecycle = "running"
             self.settled = False
             self.stop_reason = None
             self.activity = "agent working"
@@ -95,6 +107,8 @@ class Progress:
             self.settled = True
             self.aborted = event.get("aborted") is not False
             self.activity = "Pi settled; waiting for process exit"
+            self.lifecycle = "settled-awaiting-exit"
+            self.emit(self.activity)
 
     def screening(self, line):
         """Relay only declared safe fields, never arbitrary child stderr or source bodies."""
@@ -233,7 +247,18 @@ def run(args):
         signal.signal(signum, on_signal)
 
     with (attempt / "events.jsonl").open("xb", buffering=0) as raw, (attempt / "stderr.log").open("xb") as errors, (attempt / "progress.log").open("x") as log:
-        progress = Progress(args.role, log, args.screening_dispatch)
+        observation = None
+        if args.observe_socket:
+            endpoint = Path(args.observe_socket)
+            runtime = Path.cwd().resolve() / "var"
+            if not endpoint.is_absolute() or runtime not in endpoint.resolve().parents:
+                raise ValueError("observation socket must be under this checkout's var directory")
+            identity = {"task": display(args.task, 80), "role": display(args.role, 60),
+                        "provider": display(args.provider, 120), "model": display(args.model, 120),
+                        "thinking": display(args.thinking, 40), "worktree": display(Path.cwd().resolve(), 1024),
+                        "attempt": display(attempt, 1024)}
+            observation = Observation(str(endpoint), identity, args.heartbeat)
+        progress = Progress(args.role, log, args.screening_dispatch, observation)
         progress.emit(f"Starting {args.task} — {args.provider}/{args.model}, thinking={args.thinking}")
         child = None
         code = 1
@@ -251,6 +276,8 @@ def run(args):
             forced_code = 0
             while selector.get_map() or child.poll() is None:
                 now = time.monotonic()
+                if observation:
+                    observation.poll()
                 if not forced_code and (cancelled[0] or now >= stop_at):
                     forced_code = cancelled[0] or 124
                     progress.emit("Cancellation requested" if cancelled[0] else "Stage timed out")
@@ -323,7 +350,11 @@ def run(args):
                     (attempt / "pi-exit-code").write_text(str(child.returncode) + "\n")
             (attempt / "final.txt").write_text(progress.final)
             (attempt / "exit-code").write_text(str(code) + "\n")
+            progress.lifecycle = "completed" if code == 0 else "failed"
+            progress.exit_code = code
             progress.emit(f"Process complete (exit {code}); evidence still requires coordinator review")
+            if observation:
+                observation.close()
     return code
 
 
@@ -344,6 +375,7 @@ def main():
     parser.add_argument("--thinking", required=True)
     parser.add_argument("--timeout", type=positive_seconds, default=1800)
     parser.add_argument("--heartbeat", type=positive_seconds, default=30)
+    parser.add_argument("--observe-socket", help="Optional absolute owner-only live socket under checkout var/; never a transcript")
     parser.add_argument("--screening-dispatch", action="store_true", help="Relay safe screening observations only; keep child prose private")
     args = parser.parse_args()
     for value in (args.task, args.role, args.provider, args.model, args.thinking):

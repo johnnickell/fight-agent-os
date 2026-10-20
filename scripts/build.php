@@ -219,7 +219,8 @@ try {
             '../harness/pi/tests/monthly-budget.test.mjs',
             '../harness/pi/tests/screening-profile.test.mjs',
             '../harness/pi/tests/tool-policy.test.mjs',
-            '../harness/pi/tests/workspace.test.mjs'
+            '../harness/pi/tests/workspace.test.mjs',
+            '../harness/pi/tests/child-observation.test.mjs'
         ]
     ];
     $frontendChecks = [

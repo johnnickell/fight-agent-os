@@ -77,9 +77,10 @@ for exact paths, image hashes, final gate result, warnings and remaining accepta
 ## Conversation and observations
 
 At 100 columns / 20 rows or larger, the conversation occupies the left half and each read-only observation
-occupies a right quarter. Smaller terminals show one selectable view. The child and runtime panes intentionally
-say unavailable: no child selected and no runtime connected. They do not run producers, subscribe to another
-session, invoke Docker, or change directories/grants. TASK-00448 and TASK-00449 own those integrations.
+occupies a right quarter. Smaller terminals show one selectable view. The child pane can subscribe to an
+explicitly selected local stage monitor (below); without a socket it says no child selected. The runtime pane
+still says unavailable: TASK-00449 owns that producer. Neither observation changes directories/grants or launches
+an observed agent. Docker access and managed execution remain outside this candidate.
 
 | Key/input | Behavior |
 |---|---|
@@ -101,6 +102,55 @@ PageUp/PageDown can inspect a label taller than the pane without losing that ide
 support literal text, Ctrl+J and Escape cancellation. Their viewport follows the caret initially, on editing
 (including backspace/newline), and on resize while following. PageUp/PageDown deliberately suspends following
 across redraw/resize; the next edit reveals the edit point again. Paste is ignored in dialogs. Focus returns to its previous pane after answering; the conversation draft stays separate.
+
+## Local child observation (TASK-00448 candidate)
+
+Observation is opt-in on the **existing** stage-monitor invocation. Before launching an authorized stage, prepare
+an unused owner-only runtime directory under that stage checkout's `var/` and add
+`--observe-socket /absolute/checkout/var/o/a.sock` to its existing `run-stage.py` command. The directory must already
+exist with mode `0700`; the monitor exclusively binds a `0600` Unix socket and never replaces an existing path.
+Keep the path short: Unix socket pathname limits are platform-specific (about 104 bytes on macOS). The option
+does not change stage model, authority, request or settlement requirements. An already-running monitor without
+the option cannot be retrofitted; do not relaunch its child or fall back to transcript/scratch tailing.
+
+In the workspace, supply only sockets you own and are permitted to observe:
+
+```sh
+./bin/terminal --provider openai-codex --model gpt-6.1-sol --thinking high \
+  --observe-child /absolute/checkout/var/o/a.sock \
+  --observe-child /absolute/checkout/var/o/b.sock
+```
+
+Up to eight distinct absolute paths are allowed. There is no directory scan, session attachment, durable replay
+store or model-facing observation tool. Socket paths are not forwarded to Pi. Attempt/TASK/worktree/role and
+configured provider/model/thinking arrive from the selected monitor; provider-reported identity is explicitly
+unavailable in this safe contract. The attempt path is a label only, never opened. The monitor emits bounded
+completed assistant progress, safe tool names/file targets/outcomes, lifecycle and heartbeats from its existing
+safe boundary—not deltas, hidden reasoning, source/results, shell arguments or arbitrary stderr. Existing
+`--screening-dispatch` privacy is preserved: pane text is a private-activity placeholder in that mode.
+
+With the child pane focused: `[` / `]` select the previous/next supplied endpoint; `p` pauses/resumes progress
+display; `c` closes/opens **only the reader**; `r` explicitly reconnects the same reader. Pause continues draining
+and updating known lifecycle/heartbeat, counting undisplayed progress. Closing, switching and workspace exit
+never send a command to an observed child. Ctrl+W is a layout-only collapse, not reader close; use `c` to stop
+subscription. Global abort still targets only the workspace's primary conversation. Other side-pane typing and
+Enter remain inert. PageUp/PageDown inspect the child identity/history without editing the primary draft.
+
+The producer keeps at most four readers, each with a 64 KiB nonblocking send queue; excess/slow readers are
+closed rather than holding up stage progress. Workspace rendering drops obsolete frames while terminal output
+is backpressured and redraws the latest state on drain, rather than accumulating a frame queue. Each connection begins with the current snapshot; earlier progress
+is not replayed. The pane retains at most 100 progress entries / 32 Ki UTF-16 units with omission counts, admits
+records up to 32 Ki units, and rejects malformed records, stale sequences or subscription generations. Identity
+is pinned per endpoint for this workspace lifetime; a replacement attempt at the same path is refused. Use a
+new explicit socket path for a new attempt. Gaps and snapshot omissions are disclosed. No automatic reconnect
+loop runs. A missing/closed stream or overdue heartbeat means unknown liveness, never inferred success/death.
+Known settlement awaits process exit; only the monitor's effective zero exit plus normal non-aborted settlement
+produces `completed`, and that is **not** review/acceptance. Final status is memory-only; the endpoint disappears
+when the monitor exits. Owner-only filesystem checks are a local trust boundary, not same-user process isolation.
+
+This initial candidate has owned behavior tests and controlled monitor qualification. Genuine two-child-attempt
+observation, active producer terminal captures and independent Review/QA remain required; controlled streams
+are not live agent proof. See [TASK-00448](../../planning/tasks/00448-TASK.md) for current evidence and limitations.
 
 ## Policy and normal Pi paths
 
@@ -155,13 +205,13 @@ qualification. Resuming a session does not reset enrollment, budgets, accounting
 changes still need the native TUI; inherited launcher-role environment flags are deliberately not forwarded.
 
 The wrapper accepts only `--theme system|light|dark`, `--provider`, `--model`, `--thinking`, `--session`,
-`--session-dir`, `--name`, `--extension`, `--continue`, `--no-session` and `--help`. It does not accept API keys,
+`--session-dir`, `--name`, `--extension`, repeatable `--observe-child`, `--continue`, `--no-session` and `--help`. It does not accept API keys,
 initial prompts, arbitrary process modes or extension-disabling flags. The child gets only HOME, PATH, TMPDIR,
 locale and terminal variables. Pi may resolve its configured credentials through HOME normally; this is not
 credential isolation, nor a promise that ambient-environment-only providers work. No provider values are copied
 into child environment variables, UI preferences or another credential store.
 
-Presentation state is memory-only. Display retention is 500 entries / 256 Ki UTF-16 units, each entry 64 Ki units;
+Presentation state is memory-only. The child pane's separate bounds are described above. Conversation display retention is 500 entries / 256 Ki UTF-16 units, each entry 64 Ki units;
 whole-entry eviction, per-entry clipping and streaming-tail clipping carry explicit notices, without editing Pi
 history. Clipped entries preserve a bounded role/source header and a grapheme-safe tail; a trailing notice stays
 visible while following the newest content. Input is capped at 32 Ki units across typed text, bracketed paste,
@@ -190,7 +240,8 @@ read private runtime code or fork Pi. Installed examples previously denied acces
 
 Run `node --test harness/pi/tests/workspace.test.mjs` for owned layout, focus, editor, Unicode, paste, dialog,
 transport and lifecycle checks; `./bin/harness-check` and the canonical `./bin/build` Harness phase run them
-with the other selected Harness tests. Controlled peers
+with the other selected Harness tests. `node --test harness/pi/tests/child-observation.test.mjs` covers the
+owned child subscription/generation/buffer and lifecycle behavior; the full gate includes both files. Controlled peers
 are explicitly **not** real-Pi integration proof. For acceptance, run the actual entry point in a PTY, inspect
 active Harness identity, exercise a real authorized conversation and file/command boundaries, test narrow/resize,
 scrolling, dialog cancellation, normal/error exit and capture real terminal images. Existing held-state images
