@@ -3,8 +3,9 @@
 The [authoritative application frame](../docs/engineering/APPLICATION_FRAME.md) now mounts at `/`, `/app`
 and `/app/` (TASK-00051 implementation; independent Review/QA pending). One route manifest and the existing sole
 principal/session graph drive bounded root/restoration, exact protected guards, responsive navigation, current-user/
-theme/logout controls and truthful future account/admin destinations. Dashboard content and later operations are
-not implemented. Canonical login `/app/login` and public invitation activation `/app/activate` retain their existing
+theme/logout controls and truthful future account/admin destinations. TASK-00052 adds the honest permission-aware
+Dashboard with safe cache identity, independently allowed account/admin links and explicit unavailable-product
+copy (independent Review/QA pending). Later operations are not implemented. Canonical login `/app/login` and public invitation activation `/app/activate` retain their existing
 feature owners. See [login](../docs/engineering/LOGIN.md), [activation](../docs/engineering/ACTIVATION.md) and
 [session continuity](../docs/engineering/SESSION_CONTINUITY.md). `/api/v1` retains its independent API contract.
 Unknown `/app/...` paths render generic not-found HTML (HTTP 200), not an API response. Apart from `/`, unrelated
@@ -469,8 +470,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **82** named examples across eleven story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 12 production-backed Frame examples. The form composition demonstrates rejection,
+`stories/` holds **93** named examples across twelve story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 12 production-backed Frame examples, plus 11 production-backed Dashboard examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -497,7 +498,7 @@ do not write real browser preferences or perform production prepaint.
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 82 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 93 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases

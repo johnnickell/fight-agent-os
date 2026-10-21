@@ -93,7 +93,9 @@ describe('authoritative frame transitions', () => {
       render(<Mounted owner={owner} initial={route.pathname} />);
       await act(() => owner.coordinator.restore());
       expect(await screen.findByRole('heading', { name: route.title, level: 1 })).toBeVisible();
-      expect(screen.getByText(route.availability ?? '')).toBeVisible();
+      if (route.destination === 'dashboard')
+        expect(screen.getByRole('heading', { name: 'Not installed yet' })).toBeVisible();
+      else expect(screen.getByText(route.availability ?? '')).toBeVisible();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Sign out' })).toBeVisible();
     }

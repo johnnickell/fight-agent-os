@@ -4,7 +4,7 @@ export type ApplicationRoute = RegisteredRoute &
   Readonly<{
     title: string;
     access: 'public' | 'protected';
-    destination: 'root' | 'login' | 'recovery' | 'activation' | 'landing';
+    destination: 'root' | 'login' | 'recovery' | 'activation' | 'dashboard' | 'landing';
     group?: 'Workspace' | 'Security' | 'Administration';
     availability?: string;
   }>;
@@ -49,10 +49,9 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     title: 'Dashboard',
     access: 'protected',
     requirements: permission('VIEW_DASHBOARD'),
-    destination: 'landing',
+    destination: 'dashboard',
     group: 'Workspace',
-    intendedRoute: {},
-    availability: 'This is the Dashboard destination. Dashboard content is not available yet.'
+    intendedRoute: {}
   },
   {
     pathname: '/app/account',

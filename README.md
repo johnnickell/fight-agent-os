@@ -18,7 +18,9 @@ checkout, access grant, Planning or execution authority. Public invitation activ
 canonical login is implemented at `/app/login`; refresh/current-session logout are implemented pending independent acceptance. Bounded multi-tab continuity at `/app/login` is implemented pending independent Review/QA; TASK-00049 connects the sole typed client `/me` authority cache to login/restoration, pending independent Review/QA;
 TASK-00051 mounts the [responsive authoritative application frame](docs/engineering/APPLICATION_FRAME.md),
 pending independent Review/QA, at `/`, `/app` and registered protected destinations. Local system/light/dark
-appearance and truthful future account/admin seams are available; dashboard content and other product UI journeys,
+appearance and truthful future account/admin seams are available. TASK-00052 adds the honest permission-aware
+Dashboard using the sole principal cache, safe identity, independent administration shortcuts and explicit
+unavailable-capability copy (independent Review/QA pending). Other product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
 ## Start planning

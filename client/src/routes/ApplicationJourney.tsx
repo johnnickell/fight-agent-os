@@ -18,6 +18,7 @@ import type { ThemePreferenceStore } from '@/features/theme/ThemePreference';
 import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 
 export function ApplicationJourney({
   runtime,
@@ -230,7 +231,11 @@ export function ApplicationView({
           route={route}
           outlet={() => (
             <Suspense fallback={<LoadingPage />}>
-              <LandingPage route={route} />
+              {route.destination === 'dashboard' ? (
+                <DashboardPage cache={session.authority} />
+              ) : (
+                <LandingPage route={route} />
+              )}
             </Suspense>
           )}
         />

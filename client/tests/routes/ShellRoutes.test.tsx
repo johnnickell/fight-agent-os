@@ -12,7 +12,7 @@ const load = vi.hoisted(() => {
   });
   return { promise, resolve };
 });
-vi.mock('@/pages/LandingPage', async (importOriginal) => {
+vi.mock('@/pages/DashboardPage', async (importOriginal) => {
   await load.promise;
   return importOriginal();
 });
