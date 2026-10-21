@@ -2,8 +2,8 @@
 
 TASK-00047 implements `POST /api/v1/auth/refresh` and `POST /api/v1/auth/logout`, plus the current-session
 logout action on the real login success screen. TASK-00048 adds bounded reload/multi-tab continuity at
-`/app/login`, pending independent Review/QA. This is not a `/me` client, authenticated product frame or
-session-management UI. Public activation and future email-confirmation landings do not mount restoration.
+`/app/login`, pending independent Review/QA. TASK-00049 now adds the [sole production `/me` client/cache](CURRENT_PRINCIPAL.md), pending independent Review/QA.
+This is not an authenticated product frame or session-management UI. Public activation and future email-confirmation landings do not mount restoration.
 
 ## Protected browser contract
 
@@ -82,8 +82,8 @@ shared authenticated shell around it.
 
 `SessionCoordinator` composes the existing `SessionService`, `LoginService` and `MemoryAccessToken`; it stores
 credential progress only, never identity/roles/permissions. `SessionContinuity` subscribes directly. Its
-`authenticated` state means credential-ready, not an authenticated principal or permission grant. Optional
-`AuthorityCache` notifications use the existing sole-cache seam; no production principal loader is constructed.
+`authenticated` state means credential-ready, not an authenticated principal or permission grant. `AuthorityCache` notifications use the existing sole-cache seam; TASK-00049's `LoginJourney` supplies its production
+principal loader and terminal-result subscription.
 TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-session management.
 
 - States: unknown → restoring → credential-ready (`authenticated`), conflict, network-degraded or terminal;
@@ -109,7 +109,8 @@ TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-
 - BroadcastChannel `fight-agent-os.session.v1` accepts exact version-1 envelopes: `version`, random 32-hex
   `sender`, positive safe-integer `sequence`, and `kind`. `request` adds random 32-hex `round`; `token` adds
   that round, a bounded compact access token (≤2,048 characters), and `remaining` (0 < ms ≤840,000).
-  `invalidate`, `logout`, `terminal` add nothing. Extra fields/versions/malformed values are rejected.
+  `invalidate`, `authority-changed`, `logout`, `terminal` add nothing. TASK-00049's `authority-changed` means
+  refetch each tab's own `/me` with usable credentials, not replace credentials or trust a peer projection. Extra fields/versions/malformed values are rejected.
   At most 64 senders and 64 outstanding challenges are retained. Per-sender sequences reject duplicates;
   independent tab counters are never compared. At sender capacity, unknown senders cannot supply credentials
   or progress, but valid invalidate/logout/terminal signals still retire authority and pending peer challenges

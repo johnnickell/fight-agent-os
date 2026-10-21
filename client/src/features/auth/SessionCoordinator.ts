@@ -33,7 +33,7 @@ export type SessionLocks = {
 type SignalBody =
   | { kind: 'request'; round: string }
   | { kind: 'token'; round: string; token: string; remaining: number }
-  | { kind: 'invalidate' | 'logout' | 'terminal' };
+  | { kind: 'invalidate' | 'authority-changed' | 'logout' | 'terminal' };
 type Round = { id: string; generation: number; started: number; abort: AbortController };
 const success = (): ApiResult<true> => ({ ok: true, value: true, correlationId: null });
 
@@ -46,6 +46,7 @@ export class SessionCoordinator {
   readonly #channel: SessionChannel | undefined;
   readonly #authority: AuthorityCache | undefined;
   readonly #clearIntent: (() => void) | undefined;
+  readonly #unsubscribeAuthority: (() => void) | undefined;
   readonly #now: () => number;
   readonly #id: () => string;
   readonly #sender: string;
@@ -79,6 +80,10 @@ export class SessionCoordinator {
     this.#locks = dependencies.locks;
     this.#channel = dependencies.channel;
     this.#authority = dependencies.authority;
+    this.#unsubscribeAuthority = this.#authority?.subscribe(() => {
+      // The cache fences results first. A superseded /me rejection must not clear new credentials.
+      if (this.#authority?.getSnapshot().status === 'terminal' && !this.#barrier) this.terminal();
+    });
     this.#clearIntent = dependencies.clearIntent;
     this.#now = dependencies.now ?? (() => performance.now());
     this.#id = dependencies.id ?? (() => crypto.randomUUID().replaceAll('-', ''));
@@ -265,6 +270,13 @@ export class SessionCoordinator {
     return result;
   }
 
+  /** Retires current authority locally and asks peers to refetch their own /me, without token exchange. */
+  authorityChanged = (): void => {
+    if (!this.#active || this.#barrier) return;
+    this.#signal(this.#tokens.getAccessToken() ? 'authority-changed' : 'refresh-started');
+    this.#send({ kind: 'authority-changed' });
+  };
+
   terminal = (): void => {
     if (!this.#active) return;
     this.#end('terminal');
@@ -298,7 +310,12 @@ export class SessionCoordinator {
     if (!this.#peers.has(message.sender) && this.#peers.size >= 64) {
       // Bound replay bookkeeping, not fail-closed safety signals from later tabs.
       // Untracked senders can remove authority, but cannot supply credentials or progress.
-      if (message.kind !== 'invalidate' && message.kind !== 'logout' && message.kind !== 'terminal')
+      if (
+        message.kind !== 'invalidate' &&
+        message.kind !== 'authority-changed' &&
+        message.kind !== 'logout' &&
+        message.kind !== 'terminal'
+      )
         return;
     } else this.#peers.set(message.sender, message.sequence);
     if (message.kind === 'logout' || message.kind === 'terminal') {
@@ -307,6 +324,10 @@ export class SessionCoordinator {
         this.#state = Object.freeze({ status: 'anonymous', signOutUnconfirmed: false });
         this.#notify();
       }
+      return;
+    }
+    if (message.kind === 'authority-changed') {
+      this.#signal(this.#tokens.getAccessToken() ? 'authority-changed' : 'refresh-started');
       return;
     }
     if (message.kind === 'invalidate') {
@@ -444,6 +465,7 @@ export class SessionCoordinator {
   dispose = (): void => {
     if (!this.#active) return;
     this.#active = false;
+    this.#unsubscribeAuthority?.();
     this.#retire();
     if (this.#channel) {
       this.#channel.onmessage = null;

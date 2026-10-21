@@ -13,7 +13,7 @@ export type PrincipalLoadResult =
   | Readonly<{ status: 'anonymous' | 'terminal' | 'network' | 'protocol' }>;
 
 /**
- * Leaves HTTP mapping to the future feature service; no production loader exists yet
+ * Accepts the production feature service or a deterministic test/catalog loader
  */
 export type PrincipalLoader = (signal: AbortSignal) => Promise<PrincipalLoadResult>;
 export type AuthoritySignal =

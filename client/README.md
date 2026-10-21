@@ -263,7 +263,7 @@ Loading/errors are actual boot/import states, not pretend product routes or a pe
 Malformed config never mounts routes; failed page imports show generic recovery. Initial entry-script/network
 failure cannot execute React recovery; the base document retains its loading/noscript fallback. The home/not-found foundation routes make no API calls. Activation loads its real public schema and submits through the typed
 feature service without automatic restoration. Login now mounts bounded cookie-backed restoration through the existing
-memory/session seams; no route yet mounts principal ownership or protected product UI. The transport,
+memory/session seams; the login/restoration journey now mounts the sole production principal owner, pending independent Review/QA. Protected product UI remains planned. The transport,
 CSRF service and authority foundation below are available for later feature composition; no browser persistence
 or synthetic production principal is introduced.
 
@@ -307,11 +307,11 @@ The shared normalization matrix distinguishes validation (400/422 fail), authent
 are transport tests against documented mapper contracts, **not implemented protected endpoints**. Activation now consumes these seams through `ActivationService`, which owns its fixed path/codec, accepts the
 returned access token only into `MemoryAccessToken` and never retries mutations. POST sends JSON plus the explicit
 CSRF proof, keeps all transport privacy controls and deliberately does not abort an observed server mutation
-success. Login now consumes the same response codec and memory-token seam through `LoginService`; `/me` client, retry/coordination, cross-tab and persistence remain outside activation. `SessionService` now supplies explicit single-tab refresh/logout using that shared memory seam; it never retries conflicts, persists authority or invents a principal. Login success mounts current-session logout and truthful uncertain-server outcomes. TASK-00048’s `SessionCoordinator`
+success. Login consumes the same response codec and memory-token seam through `LoginService`; activation does not mount restoration or a principal cache. `SessionService` now supplies explicit single-tab refresh/logout using that shared memory seam; it never retries conflicts, persists authority or invents a principal. Login success mounts current-session logout and truthful uncertain-server outcomes. TASK-00048’s `SessionCoordinator`
 now owns bounded lock/channel restoration, one conflict recovery, monotonic scheduling, generation barriers and
 accessible state presentation at `/app/login`; see the [exact protocol and timeout contract](../docs/engineering/SESSION_CONTINUITY.md#bounded-multi-tab-coordinator-task-00048).
-It emits existing AuthorityCache signals when an owner is supplied, never constructs a second authority cache,
-and leaves activation/confirmation landings inert. The production `/me` loader remains deferred.
+It emits existing AuthorityCache signals, never constructs a second authority cache,
+and leaves activation/confirmation landings inert. `LoginJourney` supplies its sole production `/me` owner. TASK-00049 supplies the production `/me` service/cache integration; see [current authority](../docs/engineering/CURRENT_PRINCIPAL.md).
 
 Client tests use deterministic fetch/controlled-promise doubles, synthetic non-live values and the published
 CSRF shape. They prove strict decoding, safe outcomes, memory-token policy, abort and independent generation
@@ -361,14 +361,14 @@ interactions, not endpoints or authentication E2E evidence.
 ## Client authority foundation
 
 TASK-00028 implements [ADR 0004](../planning/adr/0004-client-authority-and-runtime-state.md) as reusable
-in-process capabilities. The public shell deliberately does not construct them: **`/api/v1/me` is not
-implemented**, and there is no fake production authentication. Tests and the Authority catalog inject bounded
-example loaders. TASK-00117/TASK-00049 still own the server projection and real HTTP feature service.
+in-process capabilities. The login/restoration journey now constructs one production `AuthorityCache` with `CurrentPrincipalService`,
+using TASK-00117's existing server projection. Other public routes do not mount authority. Tests and the Authority
+catalog use synthetic inputs, not production grants. See [current authority ownership and transitions](../docs/engineering/CURRENT_PRINCIPAL.md).
 
 - `features/authority/CurrentPrincipal.ts` accepts exactly `userId`, canonical lowercase `email`, `roles` and
   `permissions`; it atomically rejects malformed/incomplete/extra fields, duplicate names and sparse arrays.
-  UUID identity, bounded display email and bounded exact name lists are copied and frozen. The injected model
-  is camelCase, not a transport View; the future feature service must qualify its snake_case codec. No token,
+  UUID identity, bounded display email and bounded exact name lists are copied and frozen. The client model
+  is camelCase; `CurrentPrincipalService` strictly maps the existing snake_case HTTP View and package name grammar. No token,
   session identifier, lifecycle state or credential belongs in this model.
 - `AuthorityCache` owns one immutable snapshot and subscriptions per tab context. `load()` coalesces demand;
   decoded success alone authenticates. Network/protocol errors are distinct non-authoritative outcomes.
@@ -377,13 +377,13 @@ example loaders. TASK-00117/TASK-00049 still own the server projection and real 
   `observeAuthorityResume` attaches once per owner and returns listener cleanup. Hidden-tab return/focus removes
   authority; resumption/expiry does not start a polling loop. Navigation/feature demand or an explicit retry calls
   `load()`; the guard itself does not initiate authentication or automatically retry a denied route.
-- The future credential coordinator calls `signal('refresh-started')` before refresh, `credentials-changed`
+- The credential coordinator calls `signal('refresh-started')` before refresh, `credentials-changed`
   after accepting current credentials, and `refresh-failed` on recoverable failure. `authority-changed` retires
   and refetches when loading is permitted. Logout/terminal signals clear authority immediately and establish a
   context barrier. `beginAuthentication()` returns a single-use, context-fenced attempt; only its
   `acceptCredentials()` can cross that barrier. Its `fail()` reports recoverable failure. These notifications
   carry no credentials or principal; the credential owner must also clear its memory, fence its own login/refresh
-  results and implement ADR 0003's bounded restoration. Those integrations are not supplied here.
+  results and implement ADR 0003's bounded restoration. `LoginJourney` now supplies these integrations through the production service and existing coordinator.
 - Request and context generations reject old successes **and** failures even if the injected loader ignores
   abort. `captureScope()` supplies an abort signal and `isCurrent()` fence for protected data/actions. A future
   private-data owner must clear retained data on abort and check this fence before adopting either success or

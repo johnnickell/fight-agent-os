@@ -8,20 +8,19 @@ export type CurrentPrincipal = Readonly<{
   permissions: readonly string[];
 }>;
 
-function names(value: unknown): value is string[] {
+function names(value: unknown, pattern: RegExp): value is string[] {
   return (
     Array.isArray(value) &&
     value.length <= 1024 &&
     [...(value as unknown[])].every(
-      (name: unknown) =>
-        typeof name === 'string' && /^[A-Za-z][A-Za-z0-9_-]{0,127}(?![\s\S])/.test(name)
+      (name: unknown) => typeof name === 'string' && name.length <= 255 && pattern.test(name)
     ) &&
     new Set(value).size === value.length
   );
 }
 
 /**
- * Validates the injected model atomically, not a JWT or the future HTTP View
+ * Validates the safe client model atomically; transport mapping belongs to CurrentPrincipalService
  */
 export function decodeCurrentPrincipal(value: unknown): CurrentPrincipal | null {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
@@ -39,8 +38,8 @@ export function decodeCurrentPrincipal(value: unknown): CurrentPrincipal | null 
     value.email.length > 254 ||
     value.email !== value.email.toLowerCase() ||
     !/^[^\s@\p{Cc}]+@[^\s@\p{Cc}]+\.[^\s@\p{Cc}]+(?![\s\S])/u.test(value.email) ||
-    !names(value.roles) ||
-    !names(value.permissions)
+    !names(value.roles, /^ROLE_[A-Z_]+(?![\s\S])/) ||
+    !names(value.permissions, /^[A-Z]+(?:_[A-Z]+)*(?![\s\S])/)
   )
     return null;
   return Object.freeze({
