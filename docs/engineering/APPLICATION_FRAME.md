@@ -32,7 +32,11 @@ role-name bypass, workspace switcher, planning/agent/observability content or Fe
 
 The HTTP `/` now serves the same no-store client document as `/app`; the old PHP root smoke representation
 is intentionally superseded by the accepted root decision. Other unrelated paths and API routing remain
-server-owned. Unknown `/app/...` paths produce a generic application not-found page without echoing the path.
+server-owned. Missing/incomplete production assets retain the shell's generic no-store HTTP 503, with no
+broken asset references or authentication challenge; a deployable shell requires an explicit client build.
+HTTP/security tests supply isolated available/unavailable deployment inputs rather than depending on
+`var/client/build/`. The canonical gate checks scratch assets and does not publish a live deployment.
+Unknown `/app/...` paths produce a generic application not-found page without echoing the path.
 Native links remain real destinations. Same-origin registered, unmodified clicks use null-state history
 push/replace to preserve the single owner. Back/forward reads the pathname. Download/modified/target/external
 links and fixed reload recovery remain native. Refresh/direct load creates a fresh context and restores once.
