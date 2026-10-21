@@ -140,17 +140,29 @@ completed assistant progress, safe tool names/file targets/outcomes, lifecycle a
 safe boundary—not deltas, hidden reasoning, source/results, shell arguments or arbitrary stderr. Existing
 `--screening-dispatch` privacy is preserved: pane text is a private-activity placeholder in that mode.
 
-With the child pane focused: `[` / `]` select the previous/next supplied endpoint; `p` pauses/resumes progress
-display; `c` closes/opens **only the reader**; `r` explicitly reconnects the same reader. Pause continues draining
-and updating known lifecycle/heartbeat, counting undisplayed progress. Closing, switching and workspace exit
-never send a command to an observed child. Ctrl+W is a layout-only collapse, not reader close; use `c` to stop
-subscription. Global abort still targets only the workspace's primary conversation. Other side-pane typing and
-Enter remain inert. PageUp/PageDown inspect the child identity/history without editing the primary draft.
+TASK-00502's current **explicit legacy** selector subscribes to all supplied endpoints after obtaining the actual
+Pi session ID. One active source is selected automatically; concurrent output/new siblings do not steal an active
+selection. With child focus, `[` / `]` chooses among active sources (plus a pinned inactive source), and `f` toggles
+a session-local pin. A pin retains completed/disconnected status; explicit choice may move it. Unpinning recomputes
+the active choice. With none active and no pin, the pane says idle. The v1 monitor has no authenticated start
+order: fallback uses host snapshot-admission order, **not** the TASK's required trusted launch order.
+
+`p` pauses/resumes the selected source's progress display; `c` closes/opens **all observation readers**; `r`
+explicitly reconnects all supplied sources. Pause continues draining and observing lifecycle/heartbeat, counting
+undisplayed progress. Closing, switching and workspace exit never send a command to a child. Ctrl+W changes layout
+only. Global abort still targets the workspace's primary conversation. Other side-pane typing and Enter remain
+inert. PageUp/PageDown inspect identities/history without editing the primary draft. These controls never trust
+the reported worktree as log authority, and never infer parent membership from an endpoint.
+
+Actual session identity is checked with one read-only `get_state` request per second, at most one outstanding.
+A changed/unavailable identity closes readers, clears the pin and holds conversation input; reopen explicitly in
+the intended native session. Old endpoint admission is never inherited by another session. This limits legacy
+presentation state; it is **not** authenticated registration or cross-parent discovery isolation.
 
 The producer keeps at most four readers, each with a 64 KiB nonblocking send queue; excess/slow readers are
 closed rather than holding up stage progress. Workspace rendering drops obsolete frames while terminal output
 is backpressured and redraws the latest state on drain, rather than accumulating a frame queue. Each connection begins with the current snapshot; earlier progress
-is not replayed. The pane retains at most 100 progress entries / 32 Ki UTF-16 units with omission counts, admits
+is not replayed. Each of at most eight simultaneous readers retains 100 progress entries / 32 Ki UTF-16 units with omission counts (at most 256 Ki retained progress units in total), admits
 records up to 32 Ki units, and rejects malformed records, stale sequences or subscription generations.
 Progress/identity field limits use Unicode code points consistently with the Python monitor (600/1100 maximum
 accepted points); the monitor truncates progress at 480 points plus an ellipsis and identity at its field-specific
@@ -235,10 +247,16 @@ transcripts; sanitize explicitly authorized evidence.
 
 ## Existing worktree test bindings (partial TASK-00502 implementation)
 
-**Incomplete:** automatic current-session child registration, child selection/pinning and native-launch/resume
-association are not implemented. Explicit `--observe-child` remains the legacy human-selected observation mode;
-its reported worktree is not trusted as a test-log selector. The controls below deliver only the existing-stack
-binding and primary-worktree portion. They are not acceptance of TASK-00502.
+**Incomplete:** authenticated current-session child registration/discovery, trusted launch-order selection and
+native-launch/resume **association** remain unimplemented. Explicit `--observe-child` now has the concurrent
+legacy selector/pin controls described above; its reported worktree is still not trusted as a test-log selector.
+These are partial improvements, not a substitute for the approved automatic path or acceptance of TASK-00502.
+
+Native **continuity** has now been recovered independently of association: a genuine native user/assistant
+conversation persisted normally, then the actual workspace resumed the same session ID, file and configured
+Sol/high model. Both exited zero without forced termination; no RPC prompt or native workflow command was sent
+on resume. Evidence: `.runs/tasks/TASK-00502/runs/repair1-native/summary.json`. Earlier ENOTTY/missing-file probes
+remain retained failures. The recovered probe does not claim terminal-attribute restoration or child provenance.
 
 Bind an **already existing, explicitly authorized test stack** at workspace launch:
 

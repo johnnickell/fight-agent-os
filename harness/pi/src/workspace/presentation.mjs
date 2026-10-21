@@ -91,7 +91,7 @@ export class Workspace {
     }
     if (key.ctrl && key.name === 'c' || key.name === 'escape') return { type: 'abort' };
     if (this.focus === 1 && !key.ctrl && !key.meta) {
-      const action = { '[': 'previous', ']': 'next', p: 'pause', c: 'toggle', r: 'reconnect' }[text];
+      const action = { '[': 'previous', ']': 'next', f: 'pin', p: 'pause', c: 'toggle', r: 'reconnect' }[text];
       if (action) return { type: 'observation', action };
     }
     if (this.focus === 2 && !key.ctrl && !key.meta) {
@@ -231,7 +231,8 @@ export class Workspace {
     output[rows - 2] = fit(this.status, columns);
     const logHelp = this.runtimeLogs?.bindings ? 'Logs: { / } stack  [ / ] service  m mode  p pause  c close/open  r reconnect  i details  Tab focus  ^Q exit' :
       'Logs: [ / ] service  p pause  c reader close/open  r reconnect  i source details  Tab focus  PgUp/PgDn scroll  ^Q exit';
-    output[rows - 1] = fit(this.focus === 2 && !this.dialogs.length ? logHelp : 'Tab focus/views  PgUp/PgDn scroll  ^W split  ^T theme  Esc abort  ^J newline  ^Q exit', columns);
+    const childHelp = 'Child: [ / ] choose  f pin/unpin  p pause  c all readers  r reconnect  Tab focus  ^Q exit';
+    output[rows - 1] = fit(!this.dialogs.length && this.focus === 1 ? childHelp : this.focus === 2 && !this.dialogs.length ? logHelp : 'Tab focus/views  PgUp/PgDn scroll  ^W split  ^T theme  Esc abort  ^J newline  ^Q exit', columns);
     return output;
   }
   dialogText() {

@@ -213,6 +213,21 @@ test('child pane reader actions never enter Pi RPC and conversation remains usab
   } finally { await app.dispose(); }
   assert.equal(observer.closed, 1);
 });
+test('entrypoint binds explicit observation to actual session and clears it on identity replacement without submitting authority', async () => {
+  const observer = { session: null, invalidated: [], start(id) { this.session = id; }, tick() {},
+    sessionChanged(id) { this.invalidated.push(id); }, close() {}, action() {}, view() { return 'session-scoped fixture'; } };
+  const app = await controller({ observe: () => observer, children: ['/explicit/source.sock'] });
+  try {
+    assert.equal(observer.session, 'fixture-session');
+    const previous = app.rpc.request;
+    app.rpc.request = async (type, ...args) => type === 'get_state' ? { sessionId: 'replacement-session' } : previous(type, ...args);
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.deepEqual(observer.invalidated, ['replacement-session']);
+    app.terminal.paste('must not submit'); app.terminal.key('', { name: 'return' }); await tick();
+    assert.match(app.terminal.frames.at(-1), /observation admission\/pin cleared/);
+    assert.ok(!app.rpc.requests.some(item => ['prompt', 'bash', 'abort'].includes(item.type)));
+  } finally { await app.dispose(); }
+});
 // WORKSPACE.md promises wide panes at physical 100×20, while the final column must
 // remain unused to prevent terminal autowrap. Exercise both contracts at the controller.
 for (const rows of [20, 30]) test(`QA-01 entrypoint shows all panes at physical 100×${rows} without filling the final column`, async () => {

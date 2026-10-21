@@ -4,7 +4,8 @@ import { pathToFileURL } from 'node:url';
 import { Workspace, clean } from './presentation.mjs';
 import { PiRpc, messageText } from './rpc.mjs';
 import { Terminal } from './terminal.mjs';
-import { ChildObservation, observationPaths } from './child-observation.mjs';
+import { observationPaths } from './child-observation.mjs';
+import { ConcurrentChildren } from './concurrent-children.mjs';
 import { RuntimeLogs, runtimeSelection } from './runtime-logs.mjs';
 import { WorktreeLogs, testBindings } from './worktree-logs.mjs';
 
@@ -48,11 +49,11 @@ export function options(argv, cwd) {
 export async function run(argv = process.argv.slice(2), {
   input = process.stdin, output = process.stdout,
   connect = options => new PiRpc(options), createTerminal = (input, output) => new Terminal(input, output),
-  observe = (paths, changed) => new ChildObservation(paths, changed),
+  observe = (paths, changed) => new ConcurrentChildren(paths, changed),
   readLogs = (source, changed, tests, cwd) => tests.length ? new WorktreeLogs(cwd, tests, source, changed) : new RuntimeLogs(source, changed),
 } = {}) {
   if (argv.includes('--help')) {
-    console.log('Fight workspace: ./bin/terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus: [ / ] select · p pause · c close/open reader · r reconnect\nLogs: --logs-main /main/checkout --logs-context NAME --logs-project NAME --logs-service NAME\nWorktree test logs (partial TASK-00502): --logs-test WORKTREE CONTEXT PROJECT SERVICE (repeat up to 8); { / } select stack; m explicit shared/follow\nRuntime focus: [ / ] service · p pause · c close/open reader · r reconnect (human display only)\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See harness/pi/WORKSPACE.md.'); return;
+    console.log('Fight workspace: ./bin/terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus (explicit legacy sources): [ / ] select · f pin/unpin · p pause · c all readers · r reconnect\nLogs: --logs-main /main/checkout --logs-context NAME --logs-project NAME --logs-service NAME\nWorktree test logs (partial TASK-00502): --logs-test WORKTREE CONTEXT PROJECT SERVICE (repeat up to 8); { / } select stack; m explicit shared/follow\nRuntime focus: [ / ] service · p pause · c close/open reader · r reconnect (human display only)\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See harness/pi/WORKSPACE.md.'); return;
   }
   const cwd = process.cwd(), config = options(argv, cwd);
   if (!input.isTTY || !output.isTTY) throw new Error('Workspace needs a real terminal');
@@ -60,7 +61,7 @@ export async function run(argv = process.argv.slice(2), {
   const model = new Workspace(cwd); model.theme = config.theme;
   const terminal = createTerminal(input, output);
   const rpc = connect({ cwd, args: config.args });
-  let closing = false, fault = false, renderTimer, startupTimer, sessionFile, policyReady = false, stateSeen = false, commandsSeen = false;
+  let closing = false, fault = false, renderTimer, startupTimer, sessionFile, sessionId, checkingSession = false, policyReady = false, stateSeen = false, commandsSeen = false;
   const dialogTimers = new Map();
   const render = () => {
     if (closing || renderTimer) return;
@@ -72,7 +73,22 @@ export async function run(argv = process.argv.slice(2), {
   };
   const observation = observe(config.children, render); model.childObservation = observation;
   const logs = readLogs(config.logs, render, config.tests, cwd); model.runtimeLogs = logs;
-  const freshnessTimer = config.children.length ? setInterval(render, 1000) : undefined;
+  const freshnessTimer = config.children.length ? setInterval(() => {
+    observation.tick?.(); render();
+    // One bounded read-only identity query at a time; never submit native workflow commands.
+    if (closing || !stateSeen || checkingSession) return;
+    checkingSession = true;
+    void rpc.request('get_state').then(state => {
+      if (closing) return;
+      if (state.sessionId !== sessionId) {
+        clearInterval(freshnessTimer);
+        observation.sessionChanged?.(state.sessionId);
+        fail('Pi session changed: observation admission/pin cleared. Exit and resume explicitly in native Pi.');
+      }
+    }).catch(() => {
+      if (!closing) { clearInterval(freshnessTimer); observation.sessionChanged?.(null); fail('Pi session identity unavailable; observation readers closed.'); }
+    }).finally(() => { checkingSession = false; });
+  }, 1000) : undefined;
   const close = async (code = 0) => {
     if (closing) return; closing = true; model.ready = false;
     clearTimeout(renderTimer); clearTimeout(startupTimer); clearInterval(freshnessTimer);
@@ -89,7 +105,7 @@ export async function run(argv = process.argv.slice(2), {
   };
   const updateReady = () => {
     model.ready = !fault && policyReady && stateSeen && commandsSeen;
-    if (model.ready) { clearTimeout(startupTimer); model.status = `Conversation: ${cwd} · children: ${config.children.length} explicit; runtime: ${config.tests.length ? 'primary worktree test bindings (child following incomplete)' : config.logs ? 'explicit shared source (human-only)' : 'none'}`; }
+    if (model.ready) { clearTimeout(startupTimer); model.status = `Conversation: ${cwd} · children: ${config.children.length} explicit legacy (f pin); runtime: ${config.tests.length ? 'primary worktree test bindings (authenticated child following unavailable)' : config.logs ? 'explicit shared source (human-only)' : 'none'}`; }
     render();
   };
   const sendAction = async action => {
@@ -175,7 +191,7 @@ export async function run(argv = process.argv.slice(2), {
     render();
   });
   try {
-    observation.start(); logs.start();
+    logs.start();
     terminal.start((text, key) => { void sendAction(model.key(text, key)); render(); }, (text, retention = {}) => {
       if (model.dialogs.length) { model.append('Paste ignored during Pi interaction; type an explicit response.'); }
       else if (model.focus === 0 && model.ready) { model.insert(text); if (retention.discarded) model.inputLoss(); }
@@ -187,7 +203,8 @@ export async function run(argv = process.argv.slice(2), {
     render();
     const state = await rpc.request('get_state');
     model.identity = `${state.model?.provider ?? '?'}/${state.model?.id ?? '?'} · ${state.thinkingLevel ?? '?'} · session ${state.sessionId}`;
-    model.busy = state.isStreaming; sessionFile = state.sessionFile; stateSeen = true;
+    model.busy = state.isStreaming; sessionFile = state.sessionFile; sessionId = state.sessionId; stateSeen = true;
+    observation.start(sessionId);
     model.append(`Conversation directory: ${cwd}\nSession: ${state.sessionId}\nStorage: ${state.sessionFile ?? 'in memory (not resumable)'}\nConfigured model: ${state.model?.provider}/${state.model?.id}; actual provider identity is available only after a response.`);
     const commands = await rpc.request('get_commands');
     model.commands = new Set(commands.commands.map(command => command.name));
