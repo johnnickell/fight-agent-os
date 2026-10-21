@@ -36,6 +36,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00502](00502-TASK.md) | Follow current-session children and their worktree test logs automatically | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
