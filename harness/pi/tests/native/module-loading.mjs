@@ -25,7 +25,7 @@ const runtime = await sdk.ModelRuntime.create({ authPath: join(agentDir, 'auth.j
 let credentialReads = 0;
 runtime.getApiKeyForProvider = async () => { credentialReads++; throw new Error('Unexpected credential resolution'); };
 const model = runtime.getModel('openai-codex', 'gpt-6.1-sol'); assert.ok(model);
-const expectedCommands = ['fight-header', 'fight-policy', 'fight-stage', 'file-screening', 'jev'];
+const expectedCommands = ['fight-header', 'fight-policy', 'file-screening', 'jev'];
 const expectedFlags = ['fight-header', 'fight-screening-required', 'fight-tool-policy'];
 // file_locate is session/enrollment-dependent and exercised by optional-jev.mjs.
 const expectedTools = ['file_screening_status', 'jev_read_file'];

@@ -121,8 +121,8 @@ bridge is a prerequisite to resolve, not a request for the operator to manually 
 
 Use the bundled [stage monitor](scripts/run-stage.py) (Python 3.9+) to launch Pi in JSON mode. Resolve its absolute
 path beside the **owning provider skill**, even when the TASK checkout belongs to another project; do not assume
-the target contains this script. Qualify the installed Pi's JSON events, `agent_settled`, native extension context,
-`createBashToolDefinition`/operations and lifecycle APIs; tested versions are evidence, never equality gates.
+the target contains this script. Qualify the installed Pi's JSON events, `agent_settled`, native extension context and notification-only lifecycle
+APIs; tested versions are evidence, never equality gates.
 Missing support holds the affected path, not permission to hide progress or bypass existing protections.
 For an explicitly enrolled [file-screening profile](../../../harness/pi/FILE_SCREENING_PROFILE.md), the monitor
 preflights the target through its owning provider package, explicitly loads that package in the child and binds
@@ -151,39 +151,23 @@ TASK/branch/base/head/status, independence, evidence and verdict before advancem
 hold malformed/wrong-subject/stale evidence. No host stamp or successful shell result makes a report current
 or independently accepted. The same shell example below is usable by enrolled coordinators within existing authority.
 
-**Default native association:** when the owning Harness supplies `native-observation-extension.ts`, submit one standalone
-`fight-stage ` prefix followed by a literal JSON object as the native **bash tool's command**. This is a provider
-operation, not an OS executable: do not wrap it in a shell, subshell, pipeline, variable expansion or script.
-The supported native extension takes the actual Pi session context and directly launches the fixed provider
-monitor with inherited custody; caller JSON cannot supply a parent session, endpoint, generation or executable.
-This assumes trusted local Pi/provider processes: it does not prevent malicious same-user process/agent/bootstrap
-impersonation or independently attest native origin. Keep actual-session binding, stale/cross-session payload
-refusal and existing tool/dispatch restrictions; the accepted limitation does not grant authority.
-Use these fields, populated from the current ledger (not ambient model settings):
+**Ordinary launch, passive visibility:** use the existing provider monitor invocation below through Pi's
+independently selected executor. The unshipped `fight-stage JSON` bash interception and `/fight-stage` command
+were rejected and removed; fully restart Pi to unload the old extension runtime before continuing the same
+ledger/session. There is no replacement execution tool or per-child observation flag. Do not translate an
+executor refusal into a local launch, activate disabled bash, bypass a custom shell, or change settings/environment
+to obtain observation. Native/RPC workflow authority remains unchanged.
 
-| JSON field | Required value |
-|---|---|
-| `worktree` | Exact canonical selected registered checkout |
-| `attempt` | Fresh absolute task-owned attempt containing `request.md` |
-| `task`, `role` | Actual TASK ID and `work`, `review`, `qa` or `land` |
-| `provider`, `model`, `thinking` | Exact pinned stage identities |
-| `timeout` | Approved positive seconds, at most 7200; default 1800 |
-| `heartbeat` | Optional 1–60 seconds; default 30 |
-| `screeningDispatch` | Optional boolean retaining the monitor's screening-only privacy mode |
+When the owning Harness supplies passive `native-observation-extension.ts` and the updated monitor, actual native
+session lifecycle plus the fixed monitor's private bootstrap, exact live native ancestry/lifetime and registered
+worktree establish automatic observation within the accepted trusted-local-process boundary. Monitor progress
+uses a separate best-effort nonblocking channel; observation cannot launch/cancel a child, change a command/result,
+retry execution or block it on a reader. Same-user malicious bootstrap impersonation remains outside protection
+(R1, not repaired). Unsupported executors without a qualifying local monitor association remain explicitly
+unavailable; never guess membership, manually relaunch an existing child, or silently substitute another executor.
+Report exact missing capability/coverage. See [association and limits](../../../harness/pi/WORKSPACE.md#automatic-session-following-and-worktree-test-bindings-task-00502-candidate).
 
-The native bash operation streams the existing safe monitor progress and waits for its effective exit. Keep the
-ordinary progress/poll obligations below. It establishes observation membership only; existing Build/task/role
-and revision authority still governs dispatch. It does not grant another stage. The separate human native
-`/fight-stage JSON` convenience returns the editor immediately and reports eventual completion; it is not a
-replacement for the coordinator's waited bash operation. Neither route is available through workspace RPC.
-A selected deterministic/custom executor is never replaced, disabled bash is not enabled, and a configured
-shell path/prefix is not bypassed to obtain association. If the native bridge is
-unavailable, report that exact capability/installation state; never silently claim a legacy child is registered.
-See [session custody and its limits](../../../harness/pi/WORKSPACE.md#automatic-session-following-and-worktree-test-bindings-task-00502-candidate).
-
-**Explicit legacy compatibility only:** an already-authorized launch through another executor can still use the
-ordinary monitor invocation below, without authenticated automatic association. Do not relaunch an existing
-child to add association. Populate the quoted variables from the ledger: `attempt` is fresh and already contains `request.md`,
+Populate the quoted variables from the ledger: `attempt` is fresh and already contains `request.md`,
 `task_checkout` is the selected checkout, `task_id`/`role` identify the stage, and model fields are exact pins.
 Set `stage_timeout_seconds` to the stage's bounded runtime. Ambient coordinator model settings cannot supply
 missing pins. The monitor exports the pinned settings only to its child. Do not redirect its stdout: that is the
@@ -205,8 +189,8 @@ The live stream shows role/model, bounded completed assistant updates, tool name
 retry/compaction activity and a heartbeat every 30 seconds during silence. Ask children for brief ordinary progress
 messages before substantial actions and when blocked; never request private reasoning. Raw thinking, shell arguments,
 source/tool output and stderr are not echoed. Assistant progress text must not contain credentials or copied source.
-Supported native `fight-stage` launches appear automatically for their actual parent, including same-session
-workspace resume; no observation socket flag is needed. Runtime registration and pin preferences live under
+Qualified ordinary native monitor launches appear automatically for their actual parent, including same-session
+workspace resume; no observation socket flag is needed. A saved ID/command/attempt path alone is not membership. Runtime registration and pin preferences live under
 ignored `var/`; attempts remain private evidence, never a discovery registry. For an explicitly requested
 **legacy** local observation pane, the same monitor can optionally publish to an owner-only
 Unix socket under the selected checkout's `var/` with `--observe-socket`. Follow the

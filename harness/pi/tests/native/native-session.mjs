@@ -1,10 +1,10 @@
-// Owning installed-SDK qualification for fresh-session persistence and human refusals.
-// No provider requests, credential reads, fixed monitor launches or origin-attestation claim.
+// Owning installed-SDK qualification: passive observation adds no execution route.
+// No provider, credential, monitor or claimed native-origin operation.
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { NativeLauncher } from '../../src/observation/native-launch.mjs';
+import { NativeObservation } from '../../src/observation/native-observation.mjs';
 
 const modules = resolve(process.argv[2]), evidence = resolve(process.argv[3]);
 mkdirSync(evidence, { recursive: true });
@@ -21,47 +21,51 @@ const model = runtime.getModel('openai-codex', 'gpt-6.1-sol'); assert.ok(model);
 const extension = resolve(dirname(fileURLToPath(import.meta.url)), '../../src/native-observation-extension.ts');
 const scenarios = [];
 for (const [name, mode, noTools, shellPath, customBash] of [
-  ['fresh-malformed', 'tui', false, undefined, false],
-  ['rpc-refusal', 'rpc', false, undefined, false],
+  ['fresh-native-context', 'tui', false, undefined, false],
+  ['rpc-no-native-bootstrap', 'rpc', false, undefined, false],
   ['disabled-bash', 'tui', true, undefined, false],
   ['shell-override', 'tui', false, '/bin/sh', false],
   ['custom-executor', 'tui', false, undefined, true],
 ]) {
-  const settings = sdk.SettingsManager.inMemory({ shellPath, compaction: { enabled: false }, retry: { enabled: false } });
+  const settings = sdk.SettingsManager.inMemory({ shellPath, shellCommandPrefix: name === 'shell-override' ? 'printf SDK_PREFIX; ' : undefined,
+    compaction: { enabled: false }, retry: { enabled: false } });
+  let customCalls = 0;
   const loader = new sdk.DefaultResourceLoader({ cwd: root, agentDir, settingsManager: settings,
     noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true,
     additionalExtensionPaths: [extension], extensionFactories: customBash ? [pi => {
-      pi.registerTool({ ...sdk.createBashToolDefinition(root),
-        execute: async () => { throw new Error('Custom executor must not be invoked'); } });
+      pi.registerTool({ ...sdk.createBashToolDefinition(root), execute: async () => { customCalls++; throw new Error('SDK_CUSTOM_REFUSAL'); } });
     }] : [] });
   await loader.reload(); assert.deepEqual(loader.getExtensions().errors, []);
   const manager = sdk.SessionManager.create(root, join(fixture, name));
   manager.appendCustomEntry('setup-only', { version: 1 });
   const file = manager.getSessionFile(); assert.ok(file); assert.equal(existsSync(file), false);
-  const launcher = new NativeLauncher({ cwd: root, sessionManager: manager });
-  assert.equal(launcher.parentFile, null); assert.equal(launcher.pendingParentFile, file); launcher.close();
+  const observation = new NativeObservation({ cwd: root, sessionManager: manager });
+  assert.equal(observation.parentFile, null); assert.equal(observation.pendingParentFile, file); observation.close();
   const { session } = await sdk.createAgentSession({ cwd: root, agentDir, modelRuntime: runtime, model,
     settingsManager: settings, resourceLoader: loader, sessionManager: manager, noTools });
   session.agent.streamFunction = async () => { providerRequests++; throw new Error('Unexpected provider request'); };
-  const notices = [], errors = [];
+  const errors = [];
   try {
-    await session.bindExtensions({ mode, uiContext: { notify: message => notices.push(message) }, onError: error => errors.push(error) });
-    await session.prompt(name === 'fresh-malformed' ? '/fight-stage {private-invalid-json}' : '/fight-stage {}');
-    await new Promise(resolve => setTimeout(resolve, 20));
-    const expected = name === 'fresh-malformed' ? /supply valid JSON/ : name === 'rpc-refusal' ? /Native-only launch/ :
-      name === 'shell-override' ? /configured shell override/ : /existing authorized launch route/;
-    assert.ok(notices.some(text => expected.test(text)), JSON.stringify({ name, notices }));
-    assert.ok(notices.every(text => !text.includes('private-invalid-json')));
-    assert.equal(existsSync(file), false, 'commands must not fabricate a persisted conversation');
-    assert.equal(existsSync(join(root, 'var/terminal/children')), false, 'refusal must occur before custody/bootstrap');
+    await session.bindExtensions({ mode, uiContext: { notify() {} }, onError: error => errors.push(error) });
+    assert.ok(!session.extensionRunner.getRegisteredCommands().some(command => command.name === 'fight-stage'));
+    const bash = session.agent.state.tools.find(tool => tool.name === 'bash');
+    if (noTools) assert.equal(bash, undefined);
+    else if (customBash) { await assert.rejects(bash.execute(name, { command: 'printf SDK_UNEXPECTED' }), /SDK_CUSTOM_REFUSAL/); assert.equal(customCalls, 1); }
+    else {
+      const result = await bash.execute(name, { command: 'printf SDK_UNCHANGED' });
+      const output = result.content.map(block => block.text ?? '').join('');
+      assert.match(output, /SDK_UNCHANGED/);
+      if (name === 'shell-override') assert.match(output, /SDK_PREFIX/);
+    }
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(existsSync(file), false, 'observation cannot fabricate persisted conversation');
+    assert.equal(existsSync(join(root, 'var/terminal/children')), false, 'SDK host is not a native bootstrap');
     assert.deepEqual(errors, []);
-    if (noTools) assert.equal(session.getActiveToolNames().includes('bash'), false);
-    await session.extensionRunner.emit({ type: 'session_shutdown' });
-    scenarios.push({ name, mode, notices, fileCreated: false, custodyStarted: false });
+    scenarios.push({ name, mode, fileCreated: false, customCalls, bashEnabled: Boolean(bash) });
   } finally { await session.extensionRunner.emit({ type: 'session_shutdown' }); session.dispose(); }
 }
 assert.equal(providerRequests, 0); assert.equal(credentialReads, 0);
 const summary = { result: 'passed', runtime: sdk.VERSION, scenarios, providerRequests, credentialReads,
-  boundary: 'Actual SDK contexts/refusals; live native launches qualified separately; no independently attested origin' };
+  boundary: 'Actual SDK execution/settings/disabled tools; real native automatic launch/resume qualified separately' };
 writeFileSync(join(evidence, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
 console.log(JSON.stringify(summary, null, 2));

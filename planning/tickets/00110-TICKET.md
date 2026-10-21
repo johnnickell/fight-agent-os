@@ -99,6 +99,19 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 
 ## Decisions and progress
 
+### Approved passive visibility redesign — 2026-10-21
+
+John rejected replacing bash now and approved a fresh observation-only implementation round for TASK-00502,
+followed by independent Review/QA. Remove the unshipped `/fight-stage`/replacement-bash execution bridge.
+Operators keep the ordinary authorized provider-monitor shell launch; observation must neither launch/cancel
+children nor alter commands, executors, tools, shells/settings/environment or refusals. Observe supported actual
+session lifecycle and genuine monitor evidence. Observer failure cannot affect execution. Missing association is
+explicitly unavailable, not guessed. Automatic actual-parent appearance, same-session native/workspace resume,
+selector/pin/lifetime, honest-parent isolation and verified two-source following remain required without per-child
+socket/per-switch flags. The trusted-local R1 limitation and original failures remain history, not repaired origin
+attestation. See the [controlling TASK checkpoint](../tasks/00502-TASK.md#owner-approved-observation-only-redesign--2026-10-21).
+
+
 ### Approved trusted-local-process boundary and feasibility follow-up — 2026-10-21
 
 John explicitly selected: **"Explicitly accept a trusted-local-process assumption, leaving malicious local

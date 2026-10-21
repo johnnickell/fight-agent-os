@@ -15,9 +15,19 @@ import sys
 import time
 import unicodedata
 
+# Observation-only cross-runtime birth stamp. Never change the execution timeout clock.
+try:
+    OBSERVATION_STARTED = int(time.clock_gettime(time.CLOCK_MONOTONIC_RAW) * 1000)
+except (AttributeError, OSError):
+    OBSERVATION_STARTED = None
+
 # Runtime imports must not create bytecode caches beside provider source.
 sys.dont_write_bytecode = True
-from observation import CustodyObservation, Observation
+from observation import Observation
+try:
+    from automatic_observation import AutomaticObservation
+except Exception:
+    AutomaticObservation = None  # Missing/broken optional observer never disables the monitor.
 
 
 def positive_seconds(value):
@@ -255,11 +265,7 @@ def run(args):
                     "provider": display(args.provider, 120), "model": display(args.model, 120),
                     "thinking": display(args.thinking, 40), "worktree": display(Path.cwd().resolve(), 1024),
                     "attempt": display(attempt, 1024)}
-        if args.custody_fd is not None:
-            if args.custody_fd != 3 or args.observe_socket:
-                raise ValueError("invalid inherited custody channel")
-            observation = CustodyObservation(args.custody_fd, identity, args.heartbeat)
-        elif args.observe_socket:
+        if args.observe_socket:
             endpoint = Path(args.observe_socket)
             runtime = Path.cwd().resolve() / "var"
             if not endpoint.is_absolute() or runtime not in endpoint.resolve().parents:
@@ -273,6 +279,12 @@ def run(args):
             child = subprocess.Popen(command, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, start_new_session=True)
             (attempt / "process.json").write_text(json.dumps({"monitor_pid": os.getpid(), "pi_pid": child.pid}) + "\n")
+            if observation is None and AutomaticObservation is not None:
+                try:
+                    observation = AutomaticObservation(identity, args.heartbeat, OBSERVATION_STARTED)
+                    progress.observation = observation
+                except Exception:
+                    pass  # Passive observation cannot change execution or its effective result.
             selector = selectors.DefaultSelector()
             selector.register(child.stdout, selectors.EVENT_READ, "events")
             selector.register(child.stderr, selectors.EVENT_READ, "diagnostics")
@@ -383,7 +395,6 @@ def main():
     parser.add_argument("--timeout", type=positive_seconds, default=1800)
     parser.add_argument("--heartbeat", type=positive_seconds, default=30)
     parser.add_argument("--harness-package", help="Explicit trusted Harness package directory; match the installed resource identity to avoid duplicate loading")
-    parser.add_argument("--custody-fd", type=int, help=argparse.SUPPRESS)
     parser.add_argument("--observe-socket", help="Optional absolute owner-only live socket under checkout var/; never a transcript")
     parser.add_argument("--screening-dispatch", action="store_true", help="Relay safe screening observations only; keep child prose private")
     args = parser.parse_args()

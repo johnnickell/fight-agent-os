@@ -153,7 +153,11 @@ export async function run(argv = process.argv.slice(2), {
           model.append(`Shell exit: ${result.exitCode ?? 'unknown'}${result.cancelled ? ' (cancelled)' : ''}\n${result.output ?? ''}`);
         } else {
           const command = message.match(/^\/(\S+)/)?.[1];
-          if (command?.startsWith('skill:') || command === 'file-screening' || command === 'fight-stage') {
+          if (command === 'fight-stage') {
+            model.append('The unshipped /fight-stage execution bridge was removed. Use the existing authorized provider-monitor launch in native Pi; observation never launches children. Nothing submitted.');
+            render(); return;
+          }
+          if (command?.startsWith('skill:') || command === 'file-screening') {
             model.append('Workflow selector not submitted: RPC cannot select role, workflow, task, checkout or query/status mode. Current binding is unchanged.');
             model.append(sessionFile ? `Use native Pi in the same session: exit (^Q), run pi --session ${JSON.stringify(sessionFile)} from ${cwd}, select the workflow and inspect /file-screening to verify its binding. Exit native Pi, then resume ./bin/terminal --session ${JSON.stringify(sessionFile)}. Resume alone never selects authority.` : 'Use native Pi for workflow selection and verify /file-screening. This in-memory session has no same session resume path; do not assume a new session inherits its binding.');
             render(); return;

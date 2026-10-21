@@ -60,8 +60,8 @@ export default function (pi) {
       await session.prompt('/executor-state');
       const state = JSON.parse(readFileSync(stateFile, 'utf8'));
       for (const command of ['printf NATIVE_EXECUTOR_UNEXPECTED_LOCAL_EXECUTION', 'fight-stage {']) {
-        // Malformed fixed request must reach the selected refusing executor too. It cannot launch
-        // a custodian even on the defective observer route; this is not a live native-launch proof.
+        // Keep the literal formerly intercepted prefix as the R3 regression: neither ordinary
+        // commands nor the removed bridge's prefix may bypass the independently selected executor.
         const tool = session.agent.state.tools.find(tool => tool.name === 'bash'); assert.ok(tool);
         try {
           const result = await tool.execute(name, { command }, new AbortController().signal);

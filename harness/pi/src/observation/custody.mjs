@@ -10,7 +10,8 @@ export const custodianScript = fileURLToPath(new URL('./custodian.mjs', import.m
 export const limits = Object.freeze({ brokers: 8, children: 8, records: 100, units: 32768, frame: 2 * 1024 * 1024, lifetime: 24 * 60 * 60 * 1000, retention: 10 * 60 * 1000 });
 export const sessionKey = session => createHash('sha256').update(session).digest('hex').slice(0, 24);
 export const directory = (cwd, session) => join(realpathSync(cwd), 'var/terminal/children', sessionKey(session));
-export const endpointPath = (cwd, session, generation) => join(directory(cwd, session), `${generation.replaceAll('-', '').slice(0, 24)}.sock`);
+// Keep relative cross-worktree paths below AF_UNIX limits without changing any agent cwd.
+export const endpointPath = (cwd, _session, generation) => join(realpathSync(cwd), 'var/terminal/s', `${generation.replaceAll('-', '').slice(0, 24)}.sock`);
 export function privateDirectory(path) {
   mkdirSync(path, { recursive: true, mode: 0o700 });
   const info = lstatSync(path);

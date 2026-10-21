@@ -3,16 +3,17 @@ import assert from 'node:assert/strict';
 import { generateKeyPairSync, randomUUID, sign } from 'node:crypto';
 import { chmodSync, lstatSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { challenge, candidates, custodianScript, directory, endpointPath, privateDirectory, pruneCandidates, sessionFileIdentity } from '../src/observation/custody.mjs';
-import { stageRequest, nativeExecutorAllowed, NativeLauncher } from '../src/observation/native-launch.mjs';
-import * as nativeLaunch from '../src/observation/native-launch.mjs';
-import { launchOptions, startCustodian, applyProgress, bindParentFile } from '../src/observation/custodian.mjs';
+import { NativeObservation } from '../src/observation/native-observation.mjs';
+import { startCustodian, applyProgress, bindParentFile, monitorWitness } from '../src/observation/custodian.mjs';
 
 async function fixture(t, respond) {
   const cwd = realpathSync(mkdtempSync('/tmp/fc-')), parent = randomUUID(), generation = randomUUID();
   const root = directory(cwd, parent); privateDirectory(root);
   const endpoint = endpointPath(cwd, parent, generation), path = join(root, `${generation}.json`);
+  privateDirectory(dirname(endpoint));
   const { privateKey, publicKey } = generateKeyPairSync('ed25519'); const at = Date.now();
   let alter = value => value;
   const sockets = new Set();
@@ -41,7 +42,7 @@ async function fixture(t, respond) {
   return { cwd, parent, generation, path, endpoint, descriptor, options, alter: fn => { alter = fn; }, read: () => challenge(cwd, parent, path, descriptor, options) };
 }
 
-test('a fresh signed challenge binds the actual parent, generation, endpoint inode and native-launch custodian', async t => {
+test('a fresh signed challenge binds the actual parent, generation, endpoint inode and passive observation daemon', async t => {
   const f = await fixture(t); const value = await f.read(); assert.equal(value.parent, f.parent); assert.equal(value.generation, f.generation);
   assert.equal(candidates(f.cwd, f.parent).length, 1); assert.deepEqual(value.children, []);
 });
@@ -106,23 +107,11 @@ test('candidate cleanup removes only dead exact private runtime identities; live
   pruneCandidates(f.cwd, f.parent); assert.deepEqual(candidates(f.cwd, f.parent), []);
   assert.throws(() => readFileSync(f.path));
 });
-test('qualified builtin:bash metadata permits the native bridge without replacing another extension executor', () => {
-  assert.equal(nativeExecutorAllowed({ path: 'builtin:bash', source: 'builtin' }, '/provider/native.ts'), true);
-  assert.equal(nativeExecutorAllowed({ path: '/provider/native.ts', source: 'cli' }, '/provider/native.ts'), true);
-  assert.equal(nativeExecutorAllowed({ path: '/other/restricted-executor.ts', source: 'cli' }, '/provider/native.ts'), false);
-  assert.equal(nativeExecutorAllowed({ path: 'builtin:bash', source: 'cli' }, '/provider/native.ts'), false);
-  assert.equal(nativeExecutorAllowed({ path: 'builtin:bash', source: 'builtin' }, '/provider/native.ts', false), false);
-});
-
-test('the fixed native request grammar does not evaluate a shell or accept a caller parent field as context', () => {
-  assert.equal(stageRequest('printf ordinary-native-shell'), null);
-  assert.throws(() => stageRequest('fight-stage $(anything)'));
-  const value = { parent: 'caller-data', worktree: '/untrusted' };
-  assert.deepEqual(stageRequest(`fight-stage ${JSON.stringify(value)}`), value);
-  // Parsing is not admission. The fixed custodian rejects undeclared identity keys before any spawn.
-  assert.throws(() => launchOptions(value), /Invalid fixed stage identity/);
+test('caller payloads cannot initialize native observation or invent a provider monitor witness', () => {
   assert.throws(() => startCustodian({ native: { pid: process.pid } }), /native-parent-pid-mismatch/);
-  assert.throws(() => stageRequest('fight-stage ' + 'a'.repeat(8193)));
+  for (const message of [{}, { type: 'launch' }, { type: 'cancel' }, { type: 'monitor', pid: process.pid, token: 'forged', worktree: process.cwd() }]) {
+    assert.throws(() => monitorWitness(message, { pid: process.pid }), /Invalid monitor bootstrap/);
+  }
 });
 test('monitor sequence gaps and history eviction are counted separately without accepting identity from progress', () => {
   const identity = { worktree: '/verified/source' }, registration = { identity, sequence: 0, gaps: 0, history: [], units: 0, omitted: 0 };
@@ -136,36 +125,19 @@ test('monitor sequence gaps and history eviction are counted separately without 
   assert.equal(registration.history.length, 100); assert.equal(registration.omitted, 7); assert.equal(registration.gaps, 3);
 });
 
-test('native cancellation is request-bound and does not cancel a concurrent sibling or turn monitor zero into success', async () => {
-  const launcher = new NativeLauncher({ cwd: process.cwd(), sessionManager: { getSessionId: () => 'actual-context', getSessionFile: () => null } });
-  const sent = []; launcher.ready = async () => {};
-  launcher.child = { connected: true, send(message, callback) { sent.push(message); callback?.(); }, disconnect() { this.connected = false; }, unref() {} };
-  const controller = new AbortController();
-  const first = launcher.execute({ attempt: 'one' }, { onData() {}, signal: controller.signal });
-  const second = launcher.execute({ attempt: 'two' }, { onData() {} }); await Promise.resolve();
-  const launched = sent.filter(x => x.type === 'launch'); assert.equal(launched.length, 2);
-  controller.abort(); assert.deepEqual(sent.filter(x => x.type === 'cancel'), [{ type: 'cancel', id: launched[0].id }]);
-  for (const message of launched) { const request = launcher.requests.get(message.id); launcher.requests.delete(message.id); request.cleanup(); request.resolve({ exitCode: 0 }); }
-  await assert.rejects(first, /aborted/); assert.deepEqual(await second, { exitCode: 0 }); launcher.close();
-});
-test('native operation deadlines request normal monitor cancellation; closing presentation never sends cancellation', async () => {
-  const launcher = new NativeLauncher({ cwd: process.cwd(), sessionManager: { getSessionId: () => 'actual-context', getSessionFile: () => null } });
-  const sent = []; launcher.ready = async () => {};
-  launcher.child = { connected: true, send(message, callback) { sent.push(message); callback?.(); }, disconnect() { this.connected = false; }, unref() {} };
-  const pending = launcher.execute({}, { onData() {}, timeout: 0.01 });
-  await new Promise(resolve => setTimeout(resolve, 25));
-  const launch = sent.find(x => x.type === 'launch'); assert.deepEqual(sent.filter(x => x.type === 'cancel'), [{ type: 'cancel', id: launch.id }]);
-  const request = launcher.requests.get(launch.id); launcher.requests.delete(launch.id); request.cleanup(); request.resolve({ exitCode: 0 });
-  await assert.rejects(pending, /timeout/);
-  const waiting = launcher.execute({}, { onData() {} }); await Promise.resolve(); const count = sent.filter(x => x.type === 'cancel').length;
-  launcher.close(); await assert.rejects(waiting, /context closed/); assert.equal(sent.filter(x => x.type === 'cancel').length, count);
+test('closing observation releases only its IPC/read resource and never sends execution control', () => {
+  const observation = new NativeObservation({ cwd: process.cwd(), sessionManager: { getSessionId: () => 'actual-context', getSessionFile: () => null } });
+  const sent = []; let released = 0;
+  observation.child = { connected: true, send(message) { sent.push(message); }, disconnect() { this.connected = false; released++; }, unref() {} };
+  observation.close(); observation.close();
+  assert.equal(released, 1); assert.deepEqual(sent, []);
 });
 
-test('a fresh actual native session can launch before Pi creates its file, then binds only that file lifetime', t => {
+test('pending observation publishes no fabricated file and binds only its actual native file lifetime', t => {
   const cwd = realpathSync(mkdtempSync('/tmp/fc-pending-')); t.after(() => rmSync(cwd, { recursive: true, force: true }));
   const parent = randomUUID(), path = join(cwd, 'actual-session.jsonl');
   const context = { cwd, sessionManager: { getSessionId: () => parent, getSessionFile: () => path } };
-  const launcher = new NativeLauncher(context); t.after(() => launcher.close());
+  const launcher = new NativeObservation(context); t.after(() => launcher.close());
   assert.equal(launcher.parentFile, null); assert.equal(launcher.pendingParentFile, path);
   const sent = [];
   launcher.child = { connected: true, send(value) { sent.push(value); }, disconnect() { this.connected = false; }, unref() {} };
@@ -196,12 +168,37 @@ test('custodian promotion requires the expected real native file and cannot down
   assert.throws(() => bindParentFile(path, witness), /witness refused/);
 });
 
-test('native human failure guidance identifies parsing and prerequisites without echoing private exception data', () => {
-  assert.match(nativeLaunch.nativeLaunchFailure(new SyntaxError('private invalid input')), /valid JSON/);
-  assert.match(nativeLaunch.nativeLaunchFailure(Object.assign(new Error('private path'), { code: 'ENOENT' })), /missing/);
-  assert.match(nativeLaunch.nativeLaunchFailure(new Error('Native session file replaced')), /session file replaced/);
-  const text = nativeLaunch.nativeLaunchFailure(new Error('secret\x1b[31m\n' + 'x'.repeat(10000)));
-  assert.doesNotMatch(text, /secret|\x1b|\n/); assert.ok(text.length < 300);
+test('terminal progress cannot resurrect a completed observed child', () => {
+  const registration = { sequence: 0, history: [], units: 0, omitted: 0 };
+  applyProgress(registration, { sequence: 1, text: 'done', lifecycle: 'completed', exitCode: 0 });
+  assert.throws(() => applyProgress(registration, { sequence: 2, text: 'forged restart', lifecycle: 'running', exitCode: null }));
+  assert.equal(registration.lifecycle, 'completed'); assert.equal(registration.sequence, 1);
+});
+
+test('monitor admission combines private bootstrap, exact live ancestry, fixed provider identity and registered worktree', t => {
+  const cwd = realpathSync(mkdtempSync('/tmp/fc-monitor-')); t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const runtime = join(cwd, 'var/terminal/monitors'); privateDirectory(runtime);
+  const token = 'a'.repeat(64), pid = 9876, native = { pid: 8765, process: 'actual-native-lifetime', started: Number(process.hrtime.bigint() / 1000000n) - 1000, wallUs: Date.now() * 1000 - 1000000 };
+  const monitor = fileURLToPath(new URL('../../../.pi/skills/build/scripts/run-stage.py', import.meta.url));
+  const identity = { task: 'TASK-00502', role: 'work', provider: 'openai-codex', model: 'gpt-6.1-sol', thinking: 'high', worktree: cwd, attempt: '/display-only/not-read' };
+  const witness = { pid, nativePid: native.pid, nativeProcess: native.process, token, worktree: cwd, identity, heartbeat: 1, started: Number(process.hrtime.bigint() / 1000000n), created: Date.now(), process: `monitor-start python3 -u ${monitor} --ordinary-args` };
+  const path = join(runtime, `${pid}-${token}.json`), message = { type: 'monitor', pid, token, worktree: cwd };
+  const options = { inspect: value => value === pid ? witness.process : native.process, births: [{ pid, parent: 9000, bornUs: native.wallUs + 50000 }, { pid: 9000, parent: native.pid, bornUs: native.wallUs + 30000 }, { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000 }], registrations: () => `worktree ${cwd}\0` };
+  assert.throws(() => monitorWitness(message, native, options), /ENOENT/);
+  writeFileSync(path, JSON.stringify(witness), { mode: 0o600 });
+  assert.deepEqual(monitorWitness(message, native, options).identity, identity);
+  assert.throws(() => monitorWitness(message, { ...native, pid: 1234 }, options), /refused/);
+  assert.throws(() => monitorWitness(message, { ...native, started: witness.started + 1 }, options), /refused/);
+  assert.throws(() => monitorWitness(message, { ...native, started: undefined }, options), /refused/);
+  assert.throws(() => monitorWitness(message, native, { ...options, births: [{ pid, parent: 1111, bornUs: native.wallUs + 50000 }, { pid: 1111, parent: 1, bornUs: native.wallUs + 30000 }] }), /native context/);
+  assert.throws(() => monitorWitness(message, native, { ...options, births: options.births.map(entry => entry.pid === 9000 ? { ...entry, bornUs: native.wallUs - 1000000 } : entry) }), /birth/);
+  assert.throws(() => monitorWitness(message, native, { ...options, births: options.births.map(entry => entry.pid === 9000 ? { ...entry, bornUs: native.wallUs + 1000 } : entry) }), /birth/);
+  assert.throws(() => monitorWitness(message, native, { ...options, registrations: () => 'worktree /unrelated\0' }), /Unregistered/);
+  assert.throws(() => monitorWitness(message, native, { ...options, inspect: () => 'reused-pid-lifetime' }), /refused/);
+  writeFileSync(path, JSON.stringify({ ...witness, token: 'b'.repeat(64) }));
+  assert.throws(() => monitorWitness(message, native, options), /refused/);
+  writeFileSync(path, JSON.stringify({ ...witness, created: 1 }));
+  assert.throws(() => monitorWitness(message, native, options), /refused/);
 });
 
 test('session file identity includes native file lifetime, not just its caller-selectable ID', t => {
