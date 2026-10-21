@@ -52,7 +52,8 @@ describe('current-session logout presentation', () => {
           : jsonResponse({ status: 'error', message: 'Internal server error.' }, 500, false)
       );
       const heading = await screen.findByRole('heading', { name: 'Signed out of this page' });
-      expect(heading).toHaveFocus();
+      // DOM arrival can precede the passive effect that transfers terminal focus.
+      await waitFor(() => expect(heading).toHaveFocus());
       expect(screen.queryByRole('heading', { name: 'You’re signed in' })).not.toBeInTheDocument();
       expect(
         screen.getByText(ok ? 'Current session ended' : 'Server sign-out unconfirmed')
