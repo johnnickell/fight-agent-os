@@ -69,8 +69,10 @@ Activation's existing fragment intake remains separately owned and precedes Reac
 The frame recreates the accepted C/round-4 264px grouped rail and existing Ubuntu-heading/Open-Sans-body theme.
 At ≤860px it starts closed; Open is a 44×52 edge control. Expanded navigation has only its internal Close.
 The narrow React-Bootstrap Offcanvas inerts background, enforces modal focus, cycles native Tab boundaries,
-handles Escape/backdrop/Close and returns focus. Route/breakpoint changes remount rail mechanics; terminal
-changes unmount them immediately. Wide Open focuses Close. Group disclosures are independent native details;
+handles Escape/backdrop/Close and returns focus. Route changes reset the frame; breakpoint changes reset
+only navigation mechanics while preserving the mounted workspace. Focus owned by disappearing navigation moves
+to the available Close (wide) or Open (narrow); workspace/outside focus is not claimed. Terminal changes unmount
+protected presentation immediately. Wide Open focuses Close. Group disclosures are independent native details;
 current navigation uses `aria-current`. A skip link, focusable named main, route-title/status announcements,
 wrapping email, 44px controls, reduced motion and the existing three-state appearance selector remain available.
 Bootstrap link RGB variables now map to the accepted action colors rather than its inherited blue fallback.

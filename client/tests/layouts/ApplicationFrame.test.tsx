@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -83,7 +83,51 @@ describe('responsive application navigation', () => {
     expect(last).toHaveFocus();
     geometry.mockRestore();
     await user.keyboard('{Escape}');
-    expect(await screen.findByRole('button', { name: 'Open navigation' })).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Open navigation' })).toHaveFocus()
+    );
+  });
+  it('keeps a visible navigation focus position when the focused drawer or rail disappears', async () => {
+    const { resize } = await frame(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
+    const close = screen.getByRole('button', { name: 'Close navigation' });
+    close.focus();
+    expect(close).toHaveFocus();
+
+    resize(false);
+    expect(screen.getByRole('button', { name: 'Close navigation' })).toHaveFocus();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('main').closest('[inert]')).toBeNull();
+
+    resize(true);
+    expect(screen.getByRole('button', { name: 'Open navigation' })).toHaveFocus();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await userEvent.keyboard('{Enter}');
+    expect(await screen.findByRole('dialog', { name: 'Application navigation' })).toBeVisible();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Open navigation' })).toHaveFocus()
+    );
+  });
+  it('preserves workspace focus and does not claim focus from outside navigation on resize', async () => {
+    const { resize } = await frame(false);
+    const account = within(screen.getByRole('banner')).getByRole('link', {
+      name: 'Account / Security'
+    });
+    account.focus();
+    resize(true);
+    expect(account).toHaveFocus();
+    await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Open navigation' })).toHaveFocus()
+    );
+    account.focus();
+    resize(false);
+    expect(account).toHaveFocus();
+    account.blur();
+    resize(true);
+    expect(document.body).toHaveFocus();
   });
   it('resets rail ownership at breakpoint and removes all controls immediately with authority', async () => {
     const { owner, resize, logout } = await frame(false);
@@ -98,6 +142,10 @@ describe('responsive application navigation', () => {
     });
     expect(screen.queryByText('Owned content')).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Primary' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Close navigation' })).not.toBeInTheDocument();
+    resize(true);
+    resize(false);
+    expect(screen.queryByRole('button', { name: 'Open navigation' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Close navigation' })).not.toBeInTheDocument();
   });
 });

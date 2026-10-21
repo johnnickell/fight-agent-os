@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 
 import { Button } from '@/components/Button';
@@ -9,20 +9,45 @@ import { applicationRoutes } from '@/routes/applicationRoutes';
 
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 import type { ThemePreferenceStore } from '@/features/theme/ThemePreference';
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, RefObject } from 'react';
 
-function useNarrowFrame() {
-  const [narrow, setNarrow] = useState(
-    () => window.matchMedia?.('(max-width: 860px)').matches ?? true
-  );
+function useFrameNavigation(frame: RefObject<HTMLDivElement | null>) {
+  const [{ narrow, expanded }, setNavigation] = useState(() => {
+    const narrow = window.matchMedia?.('(max-width: 860px)').matches ?? true;
+    return { narrow, expanded: !narrow };
+  });
+  const transferFocus = useRef(false);
   useEffect(() => {
     const media = window.matchMedia?.('(max-width: 860px)');
     if (!media) return;
-    const update = () => setNarrow(media.matches);
+    const update = () => {
+      if (media.matches === narrow) return;
+      const active = document.activeElement;
+      // Capture ownership before responsive navigation is removed. Workspace focus
+      // stays in place; only disappearing navigation needs an available successor.
+      transferFocus.current =
+        active instanceof HTMLElement &&
+        Boolean(frame.current?.contains(active)) &&
+        Boolean(active.closest('.application-rail, .application-drawer, .application-open'));
+      setNavigation({ narrow: media.matches, expanded: !media.matches });
+    };
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
-  }, []);
-  return narrow;
+  }, [frame, narrow]);
+  useLayoutEffect(() => {
+    if (!transferFocus.current) return;
+    transferFocus.current = false;
+    frame.current
+      ?.querySelector<HTMLButtonElement>(
+        narrow ? '[aria-label="Open navigation"]' : '[aria-label="Close navigation"]'
+      )
+      ?.focus();
+  }, [frame, narrow]);
+  const setExpanded = useCallback(
+    (expanded: boolean) => setNavigation((state) => ({ ...state, expanded })),
+    []
+  );
+  return { narrow, expanded, setExpanded };
 }
 
 /** Presents only current allowed destinations; the shared evaluator never substitutes for server checks */
@@ -36,23 +61,14 @@ type FrameProps = {
 };
 
 export function ApplicationFrame(props: FrameProps) {
-  const narrow = useNarrowFrame();
-  return <FrameContent key={`${String(narrow)}:${props.pathname}`} {...props} narrow={narrow} />;
+  return <FrameContent key={props.pathname} {...props} />;
 }
 
-function FrameContent({
-  narrow,
-  cache,
-  pathname,
-  title,
-  theme,
-  onLogout,
-  children
-}: FrameProps & { narrow: boolean }) {
+function FrameContent({ cache, pathname, title, theme, onLogout, children }: FrameProps) {
   const state = useAuthority(cache);
-  const [expanded, setExpanded] = useState(!narrow);
   const opener = useRef<HTMLButtonElement>(null);
   const frame = useRef<HTMLDivElement>(null);
+  const { narrow, expanded, setExpanded } = useFrameNavigation(frame);
   const returnFocus = useRef(false);
   const enterFocus = useRef(false);
   useEffect(() => {
@@ -64,7 +80,7 @@ function FrameContent({
     };
     window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
-  }, [expanded, narrow]);
+  }, [expanded, narrow, setExpanded]);
   useEffect(() => {
     if (expanded && !narrow && enterFocus.current) {
       frame.current?.querySelector<HTMLButtonElement>('[aria-label="Close navigation"]')?.focus();
@@ -137,7 +153,7 @@ function FrameContent({
             ref={opener}
             className="application-open"
             onClick={() => {
-              enterFocus.current = true;
+              enterFocus.current = !narrow;
               setExpanded(true);
             }}
             aria-label="Open navigation"
