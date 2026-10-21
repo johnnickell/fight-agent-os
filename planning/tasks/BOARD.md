@@ -17,12 +17,13 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 49 | [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 51 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | — | — |
 | 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
@@ -44,7 +45,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00377](00377-TASK.md) | — |
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
-| 51 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00049](00049-TASK.md) | — |
 | 52 | [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | ready-for-agent | [TASK-00051](00051-TASK.md) | — |
 | 53 | [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | [TASK-00051](00051-TASK.md) | — |
 | 54 | [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | ready-for-agent | [TASK-00051](00051-TASK.md) | — |
@@ -264,7 +264,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00386](00386-TASK.md) | Capture and inspect sanitized phase activity | [TICKET-00096 — Expose trustworthy Workflow history and live state](../tickets/00096-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md), [TASK-00378](00378-TASK.md) | — |
 | — | [TASK-00387](00387-TASK.md) | Search stable history and scope-labelled summaries | [TICKET-00096 — Expose trustworthy Workflow history and live state](../tickets/00096-TICKET.md) | ready-for-agent | [TASK-00385](00385-TASK.md), [TASK-00386](00386-TASK.md), [TASK-00390](00390-TASK.md), [TASK-00396](00396-TASK.md), [TASK-00397](00397-TASK.md) | — |
 | — | [TASK-00388](00388-TASK.md) | Retain and redact history across derived copies | [TICKET-00096 — Expose trustworthy Workflow history and live state](../tickets/00096-TICKET.md) | ready-for-agent | [TASK-00387](00387-TASK.md), [TASK-00380](00380-TASK.md) | — |
-| — | [TASK-00389](00389-TASK.md) | Follow committed Workflow updates through Mercure | [TICKET-00096 — Expose trustworthy Workflow history and live state](../tickets/00096-TICKET.md) | ready-for-agent | [TASK-00388](00388-TASK.md), [TASK-00049](00049-TASK.md) | — |
+| — | [TASK-00389](00389-TASK.md) | Follow committed Workflow updates through Mercure | [TICKET-00096 — Expose trustworthy Workflow history and live state](../tickets/00096-TICKET.md) | ready-for-agent | [TASK-00388](00388-TASK.md) | — |
 | — | [TASK-00390](00390-TASK.md) | Control Workflow visibility without hiding running work | [TICKET-00097 — Inspect and control execution through the sessions Dashboard](../tickets/00097-TICKET.md) | ready-for-agent | [TASK-00385](00385-TASK.md) | — |
 | — | [TASK-00391](00391-TASK.md) | Find and follow Workflows in the sessions Dashboard | [TICKET-00097 — Inspect and control execution through the sessions Dashboard](../tickets/00097-TICKET.md) | ready-for-agent | [TASK-00390](00390-TASK.md), [TASK-00052](00052-TASK.md), [TASK-00389](00389-TASK.md) | — |
 | — | [TASK-00392](00392-TASK.md) | Inspect immutable changes and retained evidence | [TICKET-00097 — Inspect and control execution through the sessions Dashboard](../tickets/00097-TICKET.md) | ready-for-agent | [TASK-00391](00391-TASK.md) | — |
@@ -504,6 +504,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 46 | [TASK-00046](00046-TASK.md) | Deliver the canonical email and password login journey | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | done | — | [PR #129](https://github.com/johnnickell/fight-agent-os/pull/129) |
 | 47 | [TASK-00047](00047-TASK.md) | Deliver rotating refresh and current-session logout | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | done | — | [PR #132](https://github.com/johnnickell/fight-agent-os/pull/132) |
 | 48 | [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | [TICKET-00017 — Deliver secure browser authentication and session continuity](../tickets/00017-TICKET.md) | done | — | [PR #135](https://github.com/johnnickell/fight-agent-os/pull/135) |
+| 49 | [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | done | — | — |
 | 49 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | done | — | [PR #92](https://github.com/johnnickell/fight-agent-os/pull/92) |
 | 50 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | [TICKET-00018 — Deliver the authoritative application shell and dashboard](../tickets/00018-TICKET.md) | done | — | [PR #73](https://github.com/johnnickell/fight-agent-os/pull/73) |
 | 53 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | done | — | [PR #125](https://github.com/johnnickell/fight-agent-os/pull/125) |
