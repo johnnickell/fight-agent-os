@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Action\ClientShellAction;
-use App\Adapter\Http\Action\IndexAction;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -11,11 +10,11 @@ use Slim\App;
 
 /** @var App $app */
 /** @var ContainerInterface $container */
-// app.index route
+// Application root shares the bounded browser restoration and routing decision.
 $app->get(
     '/',
     function (ServerRequestInterface $request, ResponseInterface $response) use ($container): ResponseInterface {
-        return $container->get(IndexAction::class)->handle($request, $response);
+        return $container->get(ClientShellAction::class)->handle($request, $response);
     }
 )->setName('app.index');
 

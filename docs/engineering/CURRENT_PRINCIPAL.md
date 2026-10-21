@@ -1,7 +1,8 @@
 # Current client authority
 
 TASK-00049 connects the existing authenticated `GET /api/v1/me` to the login/restoration lifecycle.
-Implementation is pending independent Review/QA; no authenticated frame or dashboard is added.
+That slice adds no frame or dashboard. TASK-00051 now mounts the [authoritative application frame](APPLICATION_FRAME.md)
+using the same sole graph; its independent Review/QA remains pending. Dashboard content remains unavailable.
 [ADR 0004](../../planning/adr/0004-client-authority-and-runtime-state.md) owns the state contract;
 [ADR 0003](../../planning/adr/0003-browser-authentication-security-profile.md) owns credentials.
 
@@ -22,10 +23,11 @@ Custom package-shaped names remain valid: a client-side managed-catalog allowlis
 current server authority. Only exact permissions, never role names, grant presentation through `evaluateAccess`.
 
 The service retains no projection. `AuthorityCache` remains the single volatile owner/evaluator input.
-`LoginJourney` constructs one cache with this service, passes it to `SessionCoordinator`, attaches foreground
-observation once, and disposes all owners/listeners on unmount/pagehide. Public activation remains inert:
-it does not initiate restoration or create a second principal store. Other public foundation routes do not
-fetch authority. The login success panel still describes credential readiness, not an authorized product frame.
+`useApplicationSession` now lifts `LoginJourney`'s original graph into root/Login/protected routing: one cache
+with this service is passed to `SessionCoordinator`, with foreground observation once and disposal on unmount/
+pagehide. Public activation, sign-in help and unknown routes remain inert: they do not initiate restoration or
+create another principal store. The production frame withholds protected pages/navigation until both the
+credential coordinator and the sole cache are current; no credential-ready panel is treated as route authority.
 
 ## Transitions and handoff
 
@@ -50,8 +52,8 @@ fetch authority. The login success panel still describes credential readiness, n
   `captureScope()` abort/current fences, and explicit retry remain unchanged. There is no authority polling,
   persistence, HTML hydration, URL state or projection broadcast.
 
-Future frame/private-data owners subscribe to this cache and use its scopes; they must not mirror the principal
-in another context/store. The authenticated frame and protected navigation remain TASK-00051.
+The TASK-00051 frame subscribes directly. Future private-data owners use this same cache/scopes and must not
+mirror the principal in another context/store. See its route, restoration and safe intent matrix in the frame runbook.
 
 ## Verification boundaries
 

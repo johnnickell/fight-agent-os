@@ -3,7 +3,9 @@
 TASK-00047 implements `POST /api/v1/auth/refresh` and `POST /api/v1/auth/logout`, plus the current-session
 logout action on the real login success screen. TASK-00048 adds bounded reload/multi-tab continuity at
 `/app/login`, pending independent Review/QA. TASK-00049 now adds the [sole production `/me` client/cache](CURRENT_PRINCIPAL.md), pending independent Review/QA.
-This is not an authenticated product frame or session-management UI. Public activation and future email-confirmation landings do not mount restoration.
+Those slices do not add a session-management UI. TASK-00051 now lifts the sole graph into the
+[responsive authenticated frame](APPLICATION_FRAME.md), pending independent Review/QA. Public activation and
+future email-confirmation landings do not mount restoration.
 
 ## Protected browser contract
 
@@ -71,7 +73,9 @@ successful-revocation claim. Disposal/pagehide fence late results and clear vola
 memory seam also fences late login success after local invalidation. It uses request-start monotonic expiry; empty reads never revive
 or change a pending credential generation.
 
-The real `/app/login` success panel exposes “Sign out of this session.” Busy state suppresses repeat activation;
+The standalone login-success composition exposes “Sign out of this session.” The production TASK-00051 frame
+now provides its current-session “Sign out” control using the same coordinator/service; the older standalone
+composition remains a focused test/catalog seam. Busy state suppresses repeat activation;
 completion removes the signed-in panel and focuses “Signed out of this page.” Failure uses the same terminal
 local state with explicit “Server sign-out unconfirmed” guidance. The fixed return link is `/app/login`, not
 caller-supplied navigation authority. No dashboard, principal, account or other-session controls are invented.
@@ -83,15 +87,18 @@ shared authenticated shell around it.
 `SessionCoordinator` composes the existing `SessionService`, `LoginService` and `MemoryAccessToken`; it stores
 credential progress only, never identity/roles/permissions. `SessionContinuity` subscribes directly. Its
 `authenticated` state means credential-ready, not an authenticated principal or permission grant. `AuthorityCache` notifications use the existing sole-cache seam; TASK-00049's `LoginJourney` supplies its production
-principal loader and terminal-result subscription.
+principal loader and terminal-result subscription, now lifted into `useApplicationSession` by TASK-00051.
 TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-session management.
 
 - States: unknown → restoring → credential-ready (`authenticated`), conflict, network-degraded or terminal;
   explicit login may cross a terminal/logout barrier. Logout clears memory immediately, then reports anonymous
   completion or unconfirmed server sign-out. No protected operation may use a missing/expired token.
 - Cold `/app/login` performs one controlled refresh (or accepts a response to its fresh peer challenge).
-  Network/protocol/service failure clears access and requires explicit retry. A 401 or exhausted conflict ends
-  the context and broadcasts terminal. There is no interceptor or automatic business-mutation replay.
+  Network/protocol/service failure clears access and requires explicit retry. Exhausted conflict or established-
+  session 401 ends the context and broadcasts terminal. TASK-00051's production graph opts into cold-anonymous
+  401 presentation before any credentials have been established: fence work, keep the barrier, offer Login and
+  retain only the classified intended path, without broadcasting a fabricated terminal principal. No interceptor
+  or automatic business-mutation replay is introduced.
 - Secure-origin Web Locks use fixed `fight-agent-os.session-mutation.v1`, exclusively for refresh/logout.
   Acquisition aborts after 2 seconds, with at most one successor election for refresh. A dispatched refresh has
   an 8-second observation bound. A conflict waits 250 ms for a winner, then permits exactly one 8-second retry;
@@ -131,8 +138,8 @@ TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-
   result; logout waits for a same-owner dispatched refresh through `SessionService`. A timed-out/failed server
   observation is not proof of revocation. Reload may still find a server session after uncertain logout;
   cookies/server state remain server-owned. Do not claim atomic logout across crashed/suspended/unsupported tabs.
-- Logout clears the optional navigation intent through its existing owner callback; involuntary expiry may
-  retain only the existing bounded validated route. No form/credential/private data enters that callback or
+- Logout and terminal session end now clear optional navigation intent through the existing owner callback.
+  Only the explicit production cold-anonymous rejection retains the bounded classified route for Login. No form/credential/private data enters that callback or
   channel. Every fresh principal must still come from `/me`; a peer token never supplies permissions.
 
 The mounted journey disposes channels, timers, subscriptions and volatile services on teardown/pagehide. It

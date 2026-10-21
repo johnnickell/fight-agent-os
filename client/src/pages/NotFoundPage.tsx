@@ -4,9 +4,9 @@ export function NotFoundPage() {
   return (
     <>
       <PageHeading>Page not found</PageHeading>
-      <p>This page is not part of the application foundation.</p>
+      <p>This page is not available.</p>
       <a className="btn btn-outline-primary" href="/app">
-        Return to foundation
+        Return to application
       </a>
     </>
   );
