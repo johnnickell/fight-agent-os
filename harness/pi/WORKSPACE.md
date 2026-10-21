@@ -262,7 +262,9 @@ Ordinary bash/read/write/edit remain ordinary Pi operations; effective shell set
 bash is not re-enabled. A deterministic or another custom bash executor is not replaced; a configured shell
 path/prefix holds the direct fixed-launch bridge rather than silently bypassing that override. Observation never
 broadens executor authority. The human `/fight-stage JSON` command also supports
-concurrent native launches, with pending/progress/eventual-exit notifications. Build uses the waited bash
+concurrent native launches, including before the first conversation message, with pending/progress/eventual-exit
+notifications. Parsing, missing-path, permission and supported-executor refusals give bounded safe guidance rather
+than echoing arbitrary exceptions or request JSON. Pending is not a dispatch receipt. Build uses the waited bash
 operation, not the asynchronous human convenience. A launch request is not proof of successful completion.
 
 The provider must contain its fixed `.pi/skills/build/scripts/run-stage.py` monitor. Local checkout-loaded
@@ -275,8 +277,14 @@ and tools when qualifying a candidate observation extension.
 ### Custody and admission
 
 In the normal native path, the extension takes `ExtensionContext.mode`, `sessionManager.getSessionId()`, the
-session file lifetime and canonical primary checkout. Pi persists a non-context custom entry before taking the
-file witness; that entry is **not** admission authority. A fixed provider custodian is forked with inherited
+session file lifetime and canonical primary checkout. A new persistent session can advertise a path before Pi
+creates its file; custom setup entries do not force persistence. Human launches can proceed in that state, but
+the custodian publishes **no discovery descriptor** for a pending file. Once Pi persists a real conversation
+message, the native provider-request/end/shutdown hooks bind that same actual session/path to its current inode
+over inherited IPC. The custodian validates the expected canonical path and exact file witness, then publishes
+once. A changed session/path, missing bound file or replacement inode cannot rebind that generation. No prompt,
+conversation entry or session file is fabricated to force persistence; exiting without any real conversation
+leaves no resumable parent file. Existing persisted sessions bind immediately. A fixed provider custodian is forked with inherited
 Node IPC. Its bootstrap checks its immediate parent's live PID/start identity and that the supplied CLI path
 exists. These checks do **not** independently establish that this parent is Pi or owns the asserted session.
 Pi changes its OS process title; `ps` is a lifetime check, not a session/mode attestation. The bootstrap's

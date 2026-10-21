@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, randomUUID, sign } from 'node:crypto';
-import { chmodSync, lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, lstatSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { join, relative } from 'node:path';
 import { challenge, candidates, custodianScript, directory, endpointPath, privateDirectory, pruneCandidates, sessionFileIdentity } from '../src/observation/custody.mjs';
 import { stageRequest, nativeExecutorAllowed, NativeLauncher } from '../src/observation/native-launch.mjs';
-import { launchOptions, startCustodian, applyProgress } from '../src/observation/custodian.mjs';
+import * as nativeLaunch from '../src/observation/native-launch.mjs';
+import { launchOptions, startCustodian, applyProgress, bindParentFile } from '../src/observation/custodian.mjs';
 
 async function fixture(t, respond) {
   const cwd = realpathSync(mkdtempSync('/tmp/fc-')), parent = randomUUID(), generation = randomUUID();
@@ -158,6 +159,49 @@ test('native operation deadlines request normal monitor cancellation; closing pr
   await assert.rejects(pending, /timeout/);
   const waiting = launcher.execute({}, { onData() {} }); await Promise.resolve(); const count = sent.filter(x => x.type === 'cancel').length;
   launcher.close(); await assert.rejects(waiting, /context closed/); assert.equal(sent.filter(x => x.type === 'cancel').length, count);
+});
+
+test('a fresh actual native session can launch before Pi creates its file, then binds only that file lifetime', t => {
+  const cwd = realpathSync(mkdtempSync('/tmp/fc-pending-')); t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const parent = randomUUID(), path = join(cwd, 'actual-session.jsonl');
+  const context = { cwd, sessionManager: { getSessionId: () => parent, getSessionFile: () => path } };
+  const launcher = new NativeLauncher(context); t.after(() => launcher.close());
+  assert.equal(launcher.parentFile, null); assert.equal(launcher.pendingParentFile, path);
+  const sent = [];
+  launcher.child = { connected: true, send(value) { sent.push(value); }, disconnect() { this.connected = false; }, unref() {} };
+  launcher.syncSessionFile(context); assert.deepEqual(sent, [], 'no fabricated or null witness is sent');
+  writeFileSync(path, JSON.stringify({ type: 'session', id: parent }) + '\n');
+  launcher.syncSessionFile(context);
+  assert.deepEqual(sent, [{ type: 'bind-session', parentFile: sessionFileIdentity(path) }]);
+  assert.equal(launcher.pendingParentFile, undefined);
+  launcher.syncSessionFile(context); assert.equal(sent.length, 1, 'binding is one-way and idempotent');
+  assert.throws(() => launcher.syncSessionFile({ ...context, sessionManager: { ...context.sessionManager, getSessionId: () => randomUUID() } }), /session context/);
+  assert.throws(() => launcher.syncSessionFile({ ...context, sessionManager: { ...context.sessionManager, getSessionFile: () => join(cwd, 'other') } }), /session context/);
+  renameSync(path, path + '.old'); writeFileSync(path, 'replaced');
+  assert.throws(() => launcher.syncSessionFile(context), /session file replaced/);
+  assert.equal(sent.length, 1, 'replacement never rebinds an existing witness');
+});
+
+test('custodian promotion requires the expected real native file and cannot downgrade, change path or reuse a replaced inode', t => {
+  const cwd = realpathSync(mkdtempSync('/tmp/fc-bind-')); t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const path = join(cwd, 'native-session');
+  assert.throws(() => bindParentFile(path, null), /witness refused/);
+  assert.throws(() => bindParentFile(path, { path }), /ENOENT/);
+  writeFileSync(path, 'actual native fixture');
+  const witness = sessionFileIdentity(path);
+  assert.deepEqual(bindParentFile(path, witness), witness);
+  assert.throws(() => bindParentFile(undefined, witness), /witness refused/);
+  assert.throws(() => bindParentFile(join(cwd, 'other'), witness), /witness refused/);
+  renameSync(path, path + '.old'); writeFileSync(path, 'replaced');
+  assert.throws(() => bindParentFile(path, witness), /witness refused/);
+});
+
+test('native human failure guidance identifies parsing and prerequisites without echoing private exception data', () => {
+  assert.match(nativeLaunch.nativeLaunchFailure(new SyntaxError('private invalid input')), /valid JSON/);
+  assert.match(nativeLaunch.nativeLaunchFailure(Object.assign(new Error('private path'), { code: 'ENOENT' })), /missing/);
+  assert.match(nativeLaunch.nativeLaunchFailure(new Error('Native session file replaced')), /session file replaced/);
+  const text = nativeLaunch.nativeLaunchFailure(new Error('secret\x1b[31m\n' + 'x'.repeat(10000)));
+  assert.doesNotMatch(text, /secret|\x1b|\n/); assert.ok(text.length < 300);
 });
 
 test('session file identity includes native file lifetime, not just its caller-selectable ID', t => {

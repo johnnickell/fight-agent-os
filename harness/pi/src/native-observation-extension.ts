@@ -2,7 +2,7 @@ import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-a
 import { createBashToolDefinition, createLocalBashOperations } from '@earendil-works/pi-coding-agent';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { NativeLauncher, stageRequest, nativeExecutorAllowed } from './observation/native-launch.mjs';
+import { NativeLauncher, stageRequest, nativeExecutorAllowed, nativeLaunchFailure } from './observation/native-launch.mjs';
 
 /** Associate fixed provider monitor launches with actual native Pi session context */
 export default function installNativeObservation(pi: ExtensionAPI) {
@@ -28,16 +28,24 @@ export default function installNativeObservation(pi: ExtensionAPI) {
       const actual = ctx.sessionManager.getSessionId();
       if (actual !== session || !launcher) {
         close(); session = actual;
-        // Ask Pi to persist its genuine session before taking a file-lifetime witness.
-        pi.appendEntry('fight-native-observation', { version: 1 });
         // Retain the actual loaded screening provider resource identity; candidate observation
         // must not load a second copy of installed flags/tools in the monitored Pi.
         const owner = pi.getAllTools().find(tool => tool.name === 'file_screening_status')?.sourceInfo?.path;
         launcher = new NativeLauncher(ctx, { harnessPackage: owner ? resolve(dirname(owner), '..') : undefined });
       }
+      launcher!.syncSessionFile(ctx);
       return launcher!.execute(request, options);
     } };
   }
+  const syncSessionFile = (ctx: ExtensionContext) => {
+    if (!launcher) return;
+    try { launcher.syncSessionFile(ctx); }
+    catch (error) { close(); ctx.ui.notify(nativeLaunchFailure(error), 'warning'); }
+  };
+  // Pi persists real conversation messages, not custom setup entries. Bind after that
+  // supported lifecycle boundary, without submitting a prompt or fabricating a session.
+  pi.on('before_provider_request', (_event, ctx) => { syncSessionFile(ctx); });
+  pi.on('agent_end', (_event, ctx) => { syncSessionFile(ctx); });
   pi.on('session_start', (_event, ctx) => {
     close();
     // Do not replace the independently selected deterministic executor.
@@ -64,9 +72,9 @@ export default function installNativeObservation(pi: ExtensionAPI) {
       commandEpoch = epoch;
       void completion.then(result => {
         if (epoch === commandEpoch) ctx.ui.notify(`Fixed monitor exit ${result.exitCode}; not acceptance`, result.exitCode === 0 ? 'info' : 'warning');
-      }).catch(() => { if (epoch === commandEpoch) ctx.ui.notify('Native fixed-monitor launch failed; inspect the owned attempt', 'warning'); });
-      ctx.ui.notify('Native launch request pending; safe progress and owned attempt record its outcome', 'info');
+      }).catch(error => { if (epoch === commandEpoch) ctx.ui.notify(nativeLaunchFailure(error), 'warning'); });
+      ctx.ui.notify('Native launch request pending; not a dispatch receipt. A fresh session becomes discoverable when Pi persists its first real message', 'info');
     } });
   pi.on('session_before_switch', close); pi.on('session_before_fork', close);
-  pi.on('session_shutdown', close);
+  pi.on('session_shutdown', (_event, ctx) => { syncSessionFile(ctx); close(); });
 }

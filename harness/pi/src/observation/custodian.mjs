@@ -5,9 +5,9 @@ import { spawn, execFileSync } from 'node:child_process';
 import { createHash, generateKeyPairSync, randomUUID, sign } from 'node:crypto';
 import { chmodSync, lstatSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
-import { join, relative, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { directory, limits, privateDirectory, processIdentity, endpointPath } from './custody.mjs';
+import { directory, limits, privateDirectory, processIdentity, endpointPath, sessionFileIdentity } from './custody.mjs';
 import { clean } from '../workspace/presentation.mjs';
 
 const script = fileURLToPath(import.meta.url);
@@ -41,7 +41,13 @@ export function applyProgress(registration, event) {
   while (registration.history.length > limits.records || registration.units > limits.units) { registration.units -= registration.history.shift().length; registration.omitted++; }
 }
 
-export function startCustodian({ primary, parent, parentFile, generation, harnessPackage, native }) {
+export function bindParentFile(pendingPath, witness) {
+  if (typeof pendingPath !== 'string' || witness?.path !== pendingPath ||
+      JSON.stringify(sessionFileIdentity(pendingPath)) !== JSON.stringify(witness)) throw new Error('Native session file witness refused');
+  return witness;
+}
+
+export function startCustodian({ primary, parent, parentFile, pendingParentFile, generation, harnessPackage, native }) {
   if (!native || native.pid !== process.ppid) throw new Error('native-parent-pid-mismatch');
   if (processIdentity(process.ppid) !== native.process) throw new Error('native-parent-lifetime-mismatch');
   if (typeof native.entry !== 'string' || !/@earendil-works\/pi-coding-agent\/dist\/(?:bundle\/)?cli\.js$/.test(realpathSync(native.entry))) throw new Error('native-entry-unsupported');
@@ -49,6 +55,8 @@ export function startCustodian({ primary, parent, parentFile, generation, harnes
   // Normal mode/session come from extension IPC, never launch JSON; a malicious local caller can impersonate it.
   if (native.mode !== 'tui') throw new Error('native-mode-unavailable');
   if (!process.send || typeof parent !== 'string' || !parent || !/^[a-f0-9-]{36}$/.test(generation)) throw new Error('Inherited native bootstrap required');
+  if (pendingParentFile !== undefined && (parentFile !== null || typeof pendingParentFile !== 'string' ||
+      join(realpathSync(dirname(pendingParentFile)), basename(pendingParentFile)) !== pendingParentFile)) throw new Error('native-session-path-unavailable');
   const launcher = { pid: native.pid, entry: realpathSync(native.entry), processId: createHash('sha256').update(native.process).digest('hex') };
   primary = realpathSync(primary);
   const root = directory(primary, parent); privateDirectory(root);
@@ -56,6 +64,11 @@ export function startCustodian({ primary, parent, parentFile, generation, harnes
   const { privateKey, publicKey } = generateKeyPairSync('ed25519');
   const created = Date.now(), children = new Map(); let sequence = 0, attached = true, lastLive = created, clients = 0;
   let descriptor, descriptorFile;
+  const publish = () => {
+    if (!descriptor || descriptorFile || pendingParentFile !== undefined) return;
+    writeFileSync(descriptorPath, JSON.stringify(descriptor), { flag: 'wx', mode: 0o600 });
+    descriptorFile = lstatSync(descriptorPath);
+  };
   let pendingMessages = 0;
   const send = value => {
     if (!process.connected || pendingMessages >= 64 && value.type === 'output') return;
@@ -88,13 +101,22 @@ export function startCustodian({ primary, parent, parentFile, generation, harnes
     chmodSync(endpoint, 0o600); const info = lstatSync(endpoint);
     descriptor = { version: 1, parent, parentFile, primary, generation, pid: process.pid, created, launcher,
       process: processIdentity(process.pid), publicKey: publicKey.export({ type: 'spki', format: 'pem' }), endpoint: { dev: info.dev, ino: info.ino } };
-    writeFileSync(descriptorPath, JSON.stringify(descriptor), { flag: 'wx', mode: 0o600 });
-    descriptorFile = lstatSync(descriptorPath);
+    publish();
     send({ type: 'ready', descriptor });
   });
   process.on('disconnect', () => { attached = false; });
   process.on('message', message => {
     if (!attached) return;
+    if (message.type === 'bind-session') {
+      // One-way native IPC promotion. A pending path/null witness is never a discovery candidate.
+      // Do not accept another path, a replaced inode, or a later attempt to rebind this generation.
+      try {
+        parentFile = bindParentFile(pendingParentFile, message.parentFile); pendingParentFile = undefined;
+        if (descriptor) descriptor.parentFile = parentFile;
+        publish();
+      } catch { cleanup(1); }
+      return;
+    }
     if (message.type === 'cancel') {
       const child = [...children.values()].find(child => child.request === message.id);
       if (child?.process) child.process.kill('SIGTERM');
@@ -138,16 +160,16 @@ export function startCustodian({ primary, parent, parentFile, generation, harnes
       send({ type: 'launched', id: message.id, attempt: id });
     } catch { send({ type: 'exit', id: message.id, code: 1, error: 'Fixed monitor launch refused; verify fresh attempt, identity, worktree and capacity' }); }
   });
-  const cleanup = () => {
+  function cleanup(code = 0) {
     try { const info = lstatSync(endpoint); if (info.dev === descriptor?.endpoint.dev && info.ino === descriptor?.endpoint.ino) unlinkSync(endpoint); } catch {}
     try { const info = lstatSync(descriptorPath); if (info.dev === descriptorFile?.dev && info.ino === descriptorFile?.ino) unlinkSync(descriptorPath); } catch {}
-    process.exit(0);
-  };
+    process.exit(code);
+  }
   const timer = setInterval(() => {
     if ([...children.values()].some(child => child.process)) lastLive = Date.now();
     if ((!attached && Date.now() - lastLive > limits.retention) || Date.now() - created > limits.lifetime) cleanup();
   }, 1000);
-  process.on('SIGTERM', cleanup); process.on('SIGINT', cleanup);
+  process.on('SIGTERM', () => cleanup()); process.on('SIGINT', () => cleanup());
   return { children, server, timer };
 }
 if (process.argv[1] && resolve(process.argv[1]) === script) {
