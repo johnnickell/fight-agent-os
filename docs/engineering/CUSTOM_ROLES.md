@@ -7,12 +7,15 @@ registration, managed-policy editing or User assignment endpoint is enabled by t
 
 | Operation | Endpoint | Exact protected permission | JSON input | Success |
 |---|---|---|---|---|
-| Create | `POST /api/v1/roles` | `CREATE_ROLES` | `role_id`, `name` | 201, current safe Role |
+| Create | `POST /api/v1/roles` | `CREATE_ROLES` | `name` only | 201, current safe Role with generated `role_id` and `revision` |
 | Rename | `PATCH /api/v1/roles/{roleId}` | `UPDATE_ROLES` | `name`, `expected_revision` | 200, current safe Role |
 | Remove | `DELETE /api/v1/roles/{roleId}` | `DELETE_ROLES` | `expected_revision`, `confirm: true` | 200, null data |
 
 Send a Bearer credential and a closed JSON object. Actor, membership, managed ownership and grant fields are never
-caller inputs. The early Action gate and `ManageCustomRoles` independently require current invocation authentication
+caller inputs. Creation also rejects a caller-supplied `role_id`: send, for example, `{"name":"ROLE_CUSTOM"}`.
+`ManageCustomRoles::create(authentication, name)` authorizes `CREATE_ROLES` before generating the new identity with
+package `RoleId::generate()`. The package command receives that generated ID; callers obtain it and the revision
+from the safe response, then use the existing route ID and exact revision for rename/removal. The early Action gate and `ManageCustomRoles` independently require current invocation authentication
 and the exact installation-managed `SUPER_ADMIN_ONLY` Permission. Mutation does not additionally require
 `READ_ROLES`, `READ_PERMISSIONS` or another mutation permission. Non-HTTP consumers must use this Application service;
 the package bus remains trusted internal infrastructure, not an authenticated entry point.
@@ -35,7 +38,10 @@ Role, and the package publishes success only after confirmed commit. No email, c
 entity is stored in the Role audit context. Publication failure or a lost response can occur after a durable commit;
 a 500 is not proof of rollback. Reconcile current state under current authorization, never blindly replay. There is
 no outbox or guaranteed replay. `CustomRoleService` refetches authority after every attempted network mutation,
-including conflict/uncertainty, and preserves the caller's displayed token without retry. It is not mounted as new UI.
+including conflict/uncertainty, and preserves the caller's displayed token without retry. Its name-only create validates
+the returned generated UUID, revision and custom Role view, rather than comparing against a nonexistent caller ID.
+A lost creation response may leave a Role whose ID the caller has not received; reconcile the authorized catalog instead
+of retrying creation. The service is not mounted as new UI.
 
 ## Deliberate v0.8.0 adoption
 

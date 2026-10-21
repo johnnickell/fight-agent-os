@@ -24,6 +24,7 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionReposi
 use Fight\AccessControl\Domain\AccessControl\Role\Command\CreateCustomRole;
 use Fight\AccessControl\Domain\AccessControl\Role\Command\RemoveCustomRole;
 use Fight\AccessControl\Domain\AccessControl\Role\Command\RenameCustomRole;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
@@ -52,6 +53,10 @@ final class ManageCustomRolesTest extends TestCase
     private Role $target;
     private mixed $result;
     private string $fault = '';
+    /** @var list<RoleId> */
+    private array $queriedIds = [];
+    /** @var list<string> */
+    private array $admission = [];
     /** @var list<CreateCustomRole|RenameCustomRole|RemoveCustomRole> */
     private array $commands = [];
 
@@ -99,15 +104,33 @@ final class ManageCustomRolesTest extends TestCase
         $roles->method('getByName')->willReturn($admin);
         $permissions = $this->createStub(PermissionRepository::class);
         $permissions->method('getByIds')->willReturn([$definition]);
-        $permissions->method('getByName')->willReturnCallback(
-            fn() => $this->fault === 'installation' ? null : $definition
-        );
+        $permissions->method('getByName')->willReturnCallback(function () use ($definition): ?Permission {
+            $this->admission[] = 'installation';
+
+            return $this->fault === 'installation' ? null : $definition;
+        });
         $commands = $this->createStub(CommandBus::class);
         $commands->method('execute')->willReturnCallback(function ($command): void {
+            $this->admission[] = 'dispatch';
             $this->commands[] = $command;
+            if ($command instanceof CreateCustomRole) {
+                $this->target = Role::define(
+                    $command->getRoleId(),
+                    $command->getName(),
+                    [],
+                    new DateTimeImmutable('2026-10-20T12:00:00Z')
+                );
+                if ($this->fault !== 'read') {
+                    $this->result = RoleView::fromRole($this->target);
+                }
+            }
         });
         $queries = $this->createStub(QueryBus::class);
-        $queries->method('fetch')->willReturnCallback(fn() => $this->result);
+        $queries->method('fetch')->willReturnCallback(function (GetRoleById $query): mixed {
+            $this->queriedIds[] = $query->getRoleId();
+
+            return $this->result;
+        });
         $this->target = Role::define(RoleId::generate(), RoleName::fromString('ROLE_CUSTOM'), [], $now);
         $this->result = RoleView::fromRole($this->target);
 
@@ -135,10 +158,31 @@ final class ManageCustomRolesTest extends TestCase
         self::assertSame($commandType, $command::class);
         self::assertEquals($this->actor->getId(), $command->getActorId());
         self::assertEquals($this->target->getId(), $command->getRoleId());
+        self::assertSame(['installation', 'dispatch'], $this->admission);
         if ($command instanceof RenameCustomRole || $command instanceof RemoveCustomRole) {
             self::assertTrue($this->target->getRevision()->equals($command->getExpectedRevision()));
         }
         self::assertSame($operation === 'remove' ? null : $this->result, $result);
+    }
+
+    /**
+     * Generates distinct creation identities after authorization and reads back that exact command identity
+     */
+    public function testGeneratedCreationIdentity(): void
+    {
+        $service = $this->service('CREATE_ROLES');
+        $existing = $this->target->getId();
+        $first = $service->create($this->authentication, RoleName::fromString('ROLE_FIRST'));
+        $second = $service->create($this->authentication, RoleName::fromString('ROLE_SECOND'));
+        self::assertFalse($existing->equals($first->getRoleId()));
+        self::assertFalse($first->getRoleId()->equals($second->getRoleId()));
+        foreach ([$first, $second] as $index => $view) {
+            self::assertTrue($view->getRoleId()->equals($this->commands[$index]->getRoleId()));
+            self::assertTrue($view->getRoleId()->equals($this->queriedIds[$index]));
+            self::assertNotEmpty($view->getRevision()->toString());
+            self::assertFalse($view->isManaged());
+        }
+        self::assertSame(['installation', 'dispatch', 'installation', 'dispatch'], $this->admission);
     }
 
     /**
@@ -155,6 +199,7 @@ final class ManageCustomRolesTest extends TestCase
                 self::fail('Invalid authority dispatched.');
             } catch (PermissionDenied) {
                 self::assertSame([], $this->commands);
+                self::assertSame([], $this->queriedIds);
             }
         }
     }
@@ -196,6 +241,7 @@ final class ManageCustomRolesTest extends TestCase
             [],
             new DateTimeImmutable('2026-10-20T12:00:00Z')
         );
+        $this->fault = 'read';
         foreach ([null, 'unavailable', RoleView::fromRole($other)] as $result) {
             $this->result = $result;
             try {
@@ -225,7 +271,7 @@ final class ManageCustomRolesTest extends TestCase
     private function invoke(ManageCustomRoles $service, string $operation): ?RoleView
     {
         if ($operation === 'create') {
-            return $service->create($this->authentication, $this->target->getId(), $this->target->getName());
+            return $service->create($this->authentication, $this->target->getName());
         }
         if ($operation === 'rename') {
             return $service->rename(

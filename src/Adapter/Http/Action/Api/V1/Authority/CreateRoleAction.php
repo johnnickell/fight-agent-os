@@ -10,7 +10,6 @@ use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Authority\RoleMutationResponder;
 use App\Application\Authorization\ManageCustomRoles;
-use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\Common\Application\Attribute\Validation;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -37,14 +36,14 @@ final readonly class CreateRoleAction
         operationId: 'createCustomRole',
         summary: 'Create a custom role definition',
         description: <<<'TEXT'
-            Requires exact CREATE_ROLES. No assignment or Permission grant. Conflict requires refresh;
+            Requires exact CREATE_ROLES. The server generates and returns the Role identity; input is name only.
+            No assignment or Permission grant. Conflict requires refresh;
             never automatically retry an uncertain failure.
             TEXT,
         security: [['AccessBearer' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
-            required: ['role_id', 'name'],
+            required: ['name'],
             properties: [
-                new OA\Property(property: 'role_id', type: 'string', format: 'uuid'),
                 new OA\Property(
                     property: 'name',
                     type: 'string',
@@ -75,17 +74,15 @@ final readonly class CreateRoleAction
     )]
     #[JsonBody]
     #[Validation(rules: [
-        ['field' => 'role_id', 'label' => 'Role', 'rules' => 'required|type[string]|uuid'],
         ['field' => 'name', 'label' => 'Name', 'rules' => 'required|type[string]|min_length[6]|max_length[255]']
     ])]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $authentication = CatalogInput::authentication($request);
-        /** @var array{role_id: string, name: string} $input */
+        /** @var array{name: string} $input */
         $input = $request->getAttribute(JsonBody::class);
-        $id = RoleId::fromString($input['role_id']);
         $name = RoleMutationInput::name($input['name']);
 
-        return $this->responder->respond(fn() => $this->roles->create($authentication, $id, $name), 201);
+        return $this->responder->respond(fn() => $this->roles->create($authentication, $name), 201);
     }
 }

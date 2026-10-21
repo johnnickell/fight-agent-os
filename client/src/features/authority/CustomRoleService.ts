@@ -13,10 +13,18 @@ export class CustomRoleService {
     private readonly authority: AuthorityCache
   ) {}
 
-  create(roleId: string, name: string): Promise<ApiResult<CatalogRole>> {
-    if (!this.validId(roleId)) return Promise.resolve(apiFailure('protocol'));
+  create(name: string): Promise<ApiResult<CatalogRole>> {
     return this.refreshAfter(
-      this.api.mutate('POST', '/roles', { role_id: roleId, name }, this.roleFor(roleId), 201)
+      this.api.mutate(
+        'POST',
+        '/roles',
+        { name },
+        (value) => {
+          const decoded = decodeCatalogRole(value);
+          return decoded && !decoded.managed ? decoded : null;
+        },
+        201
+      )
     );
   }
 

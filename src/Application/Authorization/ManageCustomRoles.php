@@ -43,9 +43,10 @@ final readonly class ManageCustomRoles
     /**
      * Creates a custom definition without assigning any authority
      */
-    public function create(AuthenticationContext $authentication, RoleId $id, RoleName $name): RoleView
+    public function create(AuthenticationContext $authentication, RoleName $name): RoleView
     {
         $actor = $this->authorize($authentication, 'CREATE_ROLES');
+        $id = RoleId::generate();
         $this->commands->execute(new CreateCustomRole($actor, $id, $name));
 
         return $this->current($id);

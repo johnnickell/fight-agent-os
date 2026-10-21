@@ -34,21 +34,21 @@ function setup(status: number, data: unknown) {
 }
 
 describe('CustomRoleService', () => {
-  it('creates only a definition, accepts 201 and refetches authority', async () => {
+  it('sends only a name, accepts the generated identity with 201 and refetches authority', async () => {
     const { service, load, fetch } = setup(201, {
       role_id: roleId,
       name: 'ROLE_CUSTOM',
       managed: false,
       revision
     });
-    expect(await service.create(roleId, 'ROLE_CUSTOM')).toMatchObject({
+    expect(await service.create('ROLE_CUSTOM')).toMatchObject({
       ok: true,
       value: displayed
     });
     const init = fetch.mock.calls[0]?.[1] as RequestInit;
     expect(init.method).toBe('POST');
     expect(new Headers(init.headers).get('Authorization')).toBe('Bearer current-token');
-    expect(JSON.parse(init.body as string)).toEqual({ role_id: roleId, name: 'ROLE_CUSTOM' });
+    expect(JSON.parse(init.body as string)).toEqual({ name: 'ROLE_CUSTOM' });
     expect(load).toHaveBeenCalledOnce();
   });
 
@@ -90,27 +90,81 @@ describe('CustomRoleService', () => {
     expect(load).toHaveBeenCalledOnce();
   });
 
-  it.each(['create', 'rename'] as const)(
-    'rejects a mismatched %s response identity and still refetches',
-    async (operation) => {
-      const { service, load } = setup(operation === 'create' ? 201 : 200, {
-        role_id: crypto.randomUUID(),
-        name: 'ROLE_CUSTOM',
-        managed: false,
-        revision
-      });
-      const result =
-        operation === 'create'
-          ? await service.create(roleId, 'ROLE_CUSTOM')
-          : await service.rename(displayed, 'ROLE_CUSTOM');
-      expect(result).toMatchObject({ ok: false, error: { kind: 'protocol' } });
-      expect(load).toHaveBeenCalledOnce();
-    }
-  );
+  it('rejects a mismatched rename response identity and still refetches', async () => {
+    const { service, load } = setup(200, {
+      role_id: crypto.randomUUID(),
+      name: 'ROLE_CUSTOM',
+      managed: false,
+      revision
+    });
+    expect(await service.rename(displayed, 'ROLE_CUSTOM')).toMatchObject({
+      ok: false,
+      error: { kind: 'protocol' }
+    });
+    expect(load).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    { role_id: 'invalid' },
+    { role_id: undefined },
+    { revision: 'invalid' },
+    { revision: undefined },
+    { managed: true },
+    { permission_ids: [] }
+  ])('rejects malformed or non-custom creation data %j without replaying', async (patch) => {
+    const { service, fetch, load } = setup(201, {
+      role_id: roleId,
+      name: 'ROLE_CUSTOM',
+      managed: false,
+      revision,
+      ...patch
+    });
+    expect(await service.create('ROLE_CUSTOM')).toMatchObject({
+      ok: false,
+      error: { kind: 'protocol' }
+    });
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(load).toHaveBeenCalledOnce();
+  });
+
+  it.each([409, 500])('refetches an unsuccessful create (%s) without replaying', async (status) => {
+    const { service, fetch, load } = setup(status, null);
+    expect(await service.create('ROLE_CUSTOM')).toMatchObject({
+      ok: false,
+      error: { kind: status === 409 ? 'conflict' : 'system' }
+    });
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(load).toHaveBeenCalledOnce();
+  });
+
+  it('refetches after a lost creation response without retrying', async () => {
+    const { service, fetch, load } = setup(201, null);
+    fetch.mockRejectedValueOnce(new TypeError('Connection lost'));
+    expect(await service.create('ROLE_CUSTOM')).toMatchObject({
+      ok: false,
+      error: { kind: 'network' }
+    });
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(load).toHaveBeenCalledOnce();
+  });
+
+  it('rejects an unexpected creation status even with a valid generated view', async () => {
+    const { service, fetch, load } = setup(200, {
+      role_id: roleId,
+      name: 'ROLE_CUSTOM',
+      managed: false,
+      revision
+    });
+    expect(await service.create('ROLE_CUSTOM')).toMatchObject({
+      ok: false,
+      error: { kind: 'protocol' }
+    });
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(load).toHaveBeenCalledOnce();
+  });
 
   it('rejects malformed target paths before transport', async () => {
     const { service, fetch } = setup(200, null);
-    expect(await service.create('../roles', 'ROLE_CUSTOM')).toMatchObject({ ok: false });
     expect(await service.rename({ ...displayed, roleId: '../roles' }, 'ROLE_OTHER')).toMatchObject({
       ok: false
     });
