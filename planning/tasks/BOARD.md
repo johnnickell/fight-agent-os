@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -29,6 +29,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 56 | [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | ready-for-agent | — | — |
 | 57 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | ready-for-agent | — | — |
 | 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
+| 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | [TICKET-00034 — Define the SDLC team templates and role-specific capabilities](../tickets/00034-TICKET.md) | ready-for-agent | — | — |
@@ -104,8 +105,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 115 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md) | — |
 | 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00058](00058-TASK.md), [TASK-00118](00118-TASK.md) | — |
 | 117 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md), [TASK-00121](00121-TASK.md), [TASK-00122](00122-TASK.md), [TASK-00062](00062-TASK.md) | — |
-| 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00125](00125-TASK.md) | — |
-| 122 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00125](00125-TASK.md), [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
+| 122 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
 | — | [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | [TASK-00164](00164-TASK.md) | — |
 | — | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | [TASK-00164](00164-TASK.md) | — |
 | — | [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | [TASK-00164](00164-TASK.md) | — |
@@ -514,6 +514,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #126](https://github.com/johnnickell/fight-agent-os/pull/126) |
 | 75 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #130](https://github.com/johnnickell/fight-agent-os/pull/130) |
 | 118 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #133](https://github.com/johnnickell/fight-agent-os/pull/133) |
+| 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #141](https://github.com/johnnickell/fight-agent-os/pull/141) |
 | 120 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #79](https://github.com/johnnickell/fight-agent-os/pull/79) |
 | — | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | — (standalone chore) | done | — | [PR #19](https://github.com/johnnickell/fight-agent-os/pull/19) |
 | — | [TASK-00129](00129-TASK.md) | Limit build CI triggers to primary branches and PRs | — (standalone bug) | done | — | — |
