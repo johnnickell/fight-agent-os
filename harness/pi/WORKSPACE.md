@@ -233,6 +233,51 @@ Controlled peers are not live integration proof. TASK-00449 records the existing
 PTY, sanitized terminal image, input denial, counts and limitations. Keep live pane contents out of model/tool
 transcripts; sanitize explicitly authorized evidence.
 
+## Existing worktree test bindings (partial TASK-00502 implementation)
+
+**Incomplete:** automatic current-session child registration, child selection/pinning and native-launch/resume
+association are not implemented. Explicit `--observe-child` remains the legacy human-selected observation mode;
+its reported worktree is not trusted as a test-log selector. The controls below deliver only the existing-stack
+binding and primary-worktree portion. They are not acceptance of TASK-00502.
+
+Bind an **already existing, explicitly authorized test stack** at workspace launch:
+
+```sh
+./bin/terminal --provider openai-codex --model gpt-6.1-sol --thinking high \
+  --logs-test /absolute/worktree desktop-linux existing-test-project web
+```
+
+`--logs-test WORKTREE CONTEXT PROJECT SERVICE` is an explicit human statement of test purpose, not inferred
+from a project prefix or repository configuration. Repeat it for up to eight distinct worktree/context/project
+bindings. These options are consumed by the host and never sent to Pi. No container is started or changed.
+Current repository test preparation (`bin/database`) uses Compose's selected project and shared `web`/
+`postgres_test` services; it does not publish a trusted worktree/test association. This candidate therefore uses
+only explicit human bindings, held in memory. It does not scan or reload files as authority, and adds no
+per-worktree provisioning. Runtime preferences and sessions remain under `var/`; evidence is not runtime input.
+
+Logs initially follow the primary process's canonical worktree. Several bindings for that worktree show an
+ambiguous state without starting a reader; with runtime focus, `{` / `}` explicitly selects a labelled stack,
+`[` / `]` selects its verified service, and `i` shows full source details. A missing binding, missing/stopped
+service or mismatched metadata is explicit; there is no silent shared fallback. To offer the separate shared
+choice, also supply all four existing `--logs-main/context/project/service` options. With test bindings present,
+`m` explicitly switches between follow and **EXPLICIT SHARED** modes; without test bindings, shared launch
+behavior is unchanged. Pause/close/reconnect affect readers only. No pane output enters the conversation.
+
+The fixed Docker adapter revalidates the local context endpoint, exact canonical checkout labels, full container
+IDs and selected running service before subscribing. Test bindings pin the complete observed service/container
+ID set after their first successful validation. A recreated/added/removed container generation or changed
+endpoint is refused on revalidation: relaunch with a fresh human binding after inspecting the change. Stack or
+worktree transitions stop/reap the old reader, clear its live and paused buffers and reject late callbacks.
+An unreaped reader blocks replacements. There is at most one active Docker reader, no automatic retry and no
+additional buffers beyond the existing reader limits. Choices and service selections are session-local.
+No authenticated child source currently calls the worktree transition path; child following remains unfinished.
+
+Controlled owning-tool tests cover binding validation, ambiguity, service/stack choice, source changes,
+recreation refusal, late events, pause buffers, close races and human-only input/output. They are **not** live
+two-worktree integration proof. Intake found only the main Agent OS stack. A separate uniquely named canonical
+gate stack is verification setup, not an observation acceptance source. Two authorized pre-existing worktree
+test stacks and real Before/After wide/narrow selector/pin captures remain required.
+
 ## Policy and normal Pi paths
 
 The client requires genuine healthy Harness access plus `get_state` and the `jev`/`file-screening` commands
@@ -285,7 +330,8 @@ an existing Pi session and `--session-dir PATH` explicitly selects another store
 qualification. Resuming a session does not reset enrollment, budgets, accounting or role history. Operator role
 changes still need the native TUI; inherited launcher-role environment flags are deliberately not forwarded.
 
-The wrapper accepts only `--theme system|light|dark`, `--provider`, `--model`, `--thinking`, `--session`,
+The wrapper accepts repeatable `--logs-test WORKTREE CONTEXT PROJECT SERVICE` for the partial binding mode above,
+plus `--theme system|light|dark`, `--provider`, `--model`, `--thinking`, `--session`,
 `--session-dir`, `--name`, `--extension`, repeatable `--observe-child`, the four `--logs-*` source options above, `--continue`, `--no-session` and `--help`. It does not accept API keys,
 initial prompts, arbitrary process modes or extension-disabling flags. The child gets only HOME, PATH, TMPDIR,
 locale and terminal variables. Pi may resolve its configured credentials through HOME normally; this is not

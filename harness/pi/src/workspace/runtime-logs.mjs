@@ -17,7 +17,9 @@ export function runtimeSelection(value) {
       !name.test(value.context ?? '') || !projectName.test(value.project ?? '') || !name.test(value.service ?? '')) {
     throw new Error('Logs require explicit absolute --logs-main and validated --logs-context, --logs-project, --logs-service');
   }
-  return Object.freeze({ main: realpathSync(value.main), context: value.context, project: value.project, service: value.service });
+  if (value.purpose !== undefined && value.purpose !== 'test') throw new Error('Unknown runtime purpose');
+  return Object.freeze({ main: realpathSync(value.main), context: value.context, project: value.project, service: value.service,
+    ...(value.purpose === 'test' ? { purpose: 'test' } : {}) });
 }
 const listing = '{"id":{{json .ID}},"service":{{json (.Label "com.docker.compose.service")}},"directory":{{json (.Label "com.docker.compose.project.working_dir")}},"state":{{json .State}}}';
 // Minimal host-only environment. Docker resolves the operator's context through HOME, not repository env/options.
@@ -30,6 +32,7 @@ export class RuntimeLogs {
     this.generation = 0; this.processes = new Set(); this.pending = new Set(); this.open = false; this.paused = false;
     this.history = []; this.units = 0; this.omitted = 0; this.clipped = 0; this.gaps = 0; this.state = 'unselected';
     this.notice = 'No runtime selected'; this.services = []; this.endpoint = null; this.timer = null; this.frozen = null;
+    this.containers = null;
   }
   start() { if (this.source) { this.open = true; void this.subscribe(); } }
   launch(args) {
@@ -71,7 +74,7 @@ export class RuntimeLogs {
   async subscribe() {
     if (this.disposed || !this.source || !this.open || this.processes.size) return;
     const generation = ++this.generation, current = () => generation === this.generation && this.open;
-    this.state = 'checking'; this.notice = 'Verifying explicitly selected shared source'; this.changed();
+    this.state = 'checking'; this.notice = `Verifying explicitly selected ${this.source.purpose === 'test' ? 'worktree test' : 'shared'} source`; this.changed();
     try {
       const endpoint = JSON.parse(await this.query(['context', 'inspect', this.source.context, '--format', '{{json .Endpoints.docker.Host}}']));
       if (!current()) return;
@@ -82,11 +85,17 @@ export class RuntimeLogs {
       const rows = raw.trim() ? raw.trim().split('\n').map(line => JSON.parse(line)) : [];
       if (rows.length > 32) throw new Error('Too many Compose containers; source refused');
       const verified = rows.filter(row => /^[a-f0-9]{64}$/.test(row.id) && name.test(row.service) && row.directory === this.source.main);
-      if (verified.length !== rows.length) throw new Error('Compose main-checkout identity mismatch; source refused');
+      if (verified.length !== rows.length) throw new Error('Compose checkout identity mismatch; source refused');
+      const containers = verified.map(row => `${row.service}:${row.id}`).sort().join('\n');
+      if (this.source.purpose === 'test' && this.containers !== null && containers !== this.containers) {
+        throw new Error('Test-stack container generation changed; fresh human binding required');
+      }
       this.services = [...new Set(verified.map(row => row.service))].sort();
       const selected = verified.filter(row => row.service === this.source.service);
       if (selected.length !== 1) throw new Error('Selected service missing or replicated; select one existing single-container service');
       if (selected[0].state !== 'running') throw new Error('Selected source stopped; no container will be started');
+      // Pin only a fully validated running source. A saved file never establishes this identity.
+      if (this.source.purpose === 'test') this.containers = containers;
       if (this.persist) this.savePreference();
       this.state = 'following'; this.notice = 'Finite tail; incomplete history. No task attribution inferred.';
       const child = this.launch(['container', 'logs', '--tail', String(logLimits.tail), '--timestamps', '--follow', selected[0].id]);
@@ -156,7 +165,7 @@ export class RuntimeLogs {
   }
   summary() {
     if (!this.source) return 'SHARED runtime · unselected';
-    return `SHARED ${this.source.context}/${this.source.project}/${this.source.service}\n${this.state}${this.paused ? ' · PAUSED' : ''} · omitted ${this.omitted} · clipped ${this.clipped} · gaps ${this.gaps}`;
+    return `${this.source.purpose === 'test' ? 'WORKTREE TEST' : 'SHARED'} ${this.source.context}/${this.source.project}/${this.source.service}\n${this.state}${this.paused ? ' · PAUSED' : ''} · omitted ${this.omitted} · clipped ${this.clipped} · gaps ${this.gaps}`;
   }
   body() {
     const display = (this.paused ? this.frozen : this.history) ?? [];
@@ -164,10 +173,10 @@ export class RuntimeLogs {
   }
   view() {
     if (!this.source) return 'Human-only shared runtime logs\nNo runtime selected; use explicit --logs-main/context/project/service options.\nNo log content enters Pi/model context.';
-    return [`SHARED main-checkout logs · ${this.source.context}/${this.source.project}/${this.source.service}`,
+    return [`${this.source.purpose === 'test' ? 'WORKTREE TEST logs' : 'SHARED main-checkout logs'} · ${this.source.context}/${this.source.project}/${this.source.service}`,
       `Reader ${this.state}${this.paused ? ' · PAUSED (draining; bounded recent window on resume)' : ''}`,
       '[ / ] service · p pause · c reader close/open · r reconnect',
-      `Main: ${this.source.main}`, `Endpoint: ${this.endpoint ?? 'not verified'}`,
+      `${this.source.purpose === 'test' ? 'Worktree' : 'Main'}: ${this.source.main}`, `Endpoint: ${this.endpoint ?? 'not verified'}`,
       this.notice, `Omitted ${this.omitted} · clipped ${this.clipped} · reconnect/switch gaps ${this.gaps} (unknown loss; up to 100 duplicate tail lines)`,
       ...(this.paused ? this.frozen ?? [] : this.history).slice(-8),
       '--- bounded scrollback ---', ...(this.paused ? this.frozen ?? [] : this.history)].join('\n');

@@ -221,7 +221,8 @@ try {
             '../harness/pi/tests/tool-policy.test.mjs',
             '../harness/pi/tests/workspace.test.mjs',
             '../harness/pi/tests/child-observation.test.mjs',
-            '../harness/pi/tests/runtime-logs.test.mjs'
+            '../harness/pi/tests/runtime-logs.test.mjs',
+            '../harness/pi/tests/worktree-logs.test.mjs'
         ]
     ];
     $frontendChecks = [

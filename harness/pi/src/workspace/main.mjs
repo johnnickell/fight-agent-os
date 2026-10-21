@@ -6,6 +6,7 @@ import { PiRpc, messageText } from './rpc.mjs';
 import { Terminal } from './terminal.mjs';
 import { ChildObservation, observationPaths } from './child-observation.mjs';
 import { RuntimeLogs, runtimeSelection } from './runtime-logs.mjs';
+import { WorktreeLogs, testBindings } from './worktree-logs.mjs';
 
 // Optional evaluator readiness does not own input authority. Older providers can prove only
 // the two unambiguous healthy states; degraded providers must report independent access health.
@@ -20,10 +21,14 @@ function permitsInput(status) {
 
 export function options(argv, cwd) {
   const args = [], values = new Set(['--provider', '--model', '--thinking', '--session', '--session-dir', '--name', '--extension']);
-  let theme = 'system'; const children = [], logs = {};
+  let theme = 'system'; const children = [], logs = {}, tests = [];
   for (let index = 0; index < argv.length; index++) {
     const option = argv[index];
-    if (['--logs-main', '--logs-context', '--logs-project', '--logs-service'].includes(option)) {
+    if (option === '--logs-test') {
+      const [main, context, project, service] = argv.slice(index + 1, index + 5);
+      if ([main, context, project, service].some(value => !value || value.startsWith('-'))) throw new Error('--logs-test needs WORKTREE CONTEXT PROJECT SERVICE');
+      tests.push({ main, context, project, service }); index += 4;
+    } else if (['--logs-main', '--logs-context', '--logs-project', '--logs-service'].includes(option)) {
       const key = option.slice(7), value = argv[++index];
       if (logs[key] || !value || value.startsWith('-')) throw new Error('Each logs selection option requires one explicit value');
       logs[key] = value;
@@ -38,16 +43,16 @@ export function options(argv, cwd) {
     else throw new Error(`Unsupported workspace option: ${clean(option)} (see harness/pi/WORKSPACE.md)`);
   }
   if (!args.includes('--no-session') && !args.includes('--session-dir')) args.push('--session-dir', resolve(cwd, 'var/terminal/sessions'));
-  return { args, theme, children: observationPaths(children), logs: runtimeSelection(Object.keys(logs).length ? logs : null) };
+  return { args, theme, children: observationPaths(children), logs: runtimeSelection(Object.keys(logs).length ? logs : null), tests: testBindings(tests) };
 }
 export async function run(argv = process.argv.slice(2), {
   input = process.stdin, output = process.stdout,
   connect = options => new PiRpc(options), createTerminal = (input, output) => new Terminal(input, output),
   observe = (paths, changed) => new ChildObservation(paths, changed),
-  readLogs = (source, changed) => new RuntimeLogs(source, changed),
+  readLogs = (source, changed, tests, cwd) => tests.length ? new WorktreeLogs(cwd, tests, source, changed) : new RuntimeLogs(source, changed),
 } = {}) {
   if (argv.includes('--help')) {
-    console.log('Fight workspace: ./bin/terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus: [ / ] select · p pause · c close/open reader · r reconnect\nLogs: --logs-main /main/checkout --logs-context NAME --logs-project NAME --logs-service NAME\nRuntime focus: [ / ] service · p pause · c close/open reader · r reconnect (human display only)\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See harness/pi/WORKSPACE.md.'); return;
+    console.log('Fight workspace: ./bin/terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus: [ / ] select · p pause · c close/open reader · r reconnect\nLogs: --logs-main /main/checkout --logs-context NAME --logs-project NAME --logs-service NAME\nWorktree test logs (partial TASK-00502): --logs-test WORKTREE CONTEXT PROJECT SERVICE (repeat up to 8); { / } select stack; m explicit shared/follow\nRuntime focus: [ / ] service · p pause · c close/open reader · r reconnect (human display only)\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See harness/pi/WORKSPACE.md.'); return;
   }
   const cwd = process.cwd(), config = options(argv, cwd);
   if (!input.isTTY || !output.isTTY) throw new Error('Workspace needs a real terminal');
@@ -66,7 +71,7 @@ export async function run(argv = process.argv.slice(2), {
     }, 25);
   };
   const observation = observe(config.children, render); model.childObservation = observation;
-  const logs = readLogs(config.logs, render); model.runtimeLogs = logs;
+  const logs = readLogs(config.logs, render, config.tests, cwd); model.runtimeLogs = logs;
   const freshnessTimer = config.children.length ? setInterval(render, 1000) : undefined;
   const close = async (code = 0) => {
     if (closing) return; closing = true; model.ready = false;
@@ -84,7 +89,7 @@ export async function run(argv = process.argv.slice(2), {
   };
   const updateReady = () => {
     model.ready = !fault && policyReady && stateSeen && commandsSeen;
-    if (model.ready) { clearTimeout(startupTimer); model.status = `Conversation: ${cwd} · children: ${config.children.length} explicit; runtime: ${config.logs ? 'explicit shared source (human-only)' : 'none'}`; }
+    if (model.ready) { clearTimeout(startupTimer); model.status = `Conversation: ${cwd} · children: ${config.children.length} explicit; runtime: ${config.tests.length ? 'primary worktree test bindings (child following incomplete)' : config.logs ? 'explicit shared source (human-only)' : 'none'}`; }
     render();
   };
   const sendAction = async action => {
