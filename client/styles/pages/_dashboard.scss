@@ -1,0 +1,41 @@
+.dashboard-page {
+  display: grid;
+  gap: 24px;
+  max-width: 1200px;
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.dashboard-introduction {
+  color: var(--ui-muted);
+  font-size: 1.125rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 18px;
+}
+
+.dashboard-destinations {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li + li {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--ui-border);
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    max-width: 100%;
+    padding-block: 8px;
+    font-weight: 600;
+  }
+}

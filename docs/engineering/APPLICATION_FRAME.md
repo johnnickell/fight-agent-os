@@ -1,7 +1,8 @@
 # Application frame
 
 TASK-00051 mounts the responsive application frame and route decisions. Implementation verification is not
-independent acceptance. Dashboard content and later account/administration operations remain unavailable.
+independent acceptance. TASK-00052 adds the honest Dashboard described below (independent Review/QA pending);
+later account/administration operations remain unavailable.
 
 ## Ownership and routing
 
@@ -18,7 +19,7 @@ Server authorization remains authoritative; an SPA route response is not an acce
 | `/`, `/app`, `/app/` | Public root decision: wait for restoration; anonymous → Login; fresh principal → permitted intent or Dashboard; denied Dashboard → authenticated Forbidden |
 | `/app/login` | Public; fresh authenticated authority selects one permitted landing |
 | `/app/login/recovery`, `/app/activate` | Public/inert: no automatic cookie restoration; existing recovery/activation owners |
-| `/app/dashboard` | Authenticated + `VIEW_DASHBOARD`; destination only, not dashboard content |
+| `/app/dashboard` | Authenticated + `VIEW_DASHBOARD`; honest Dashboard, no product data |
 | `/app/account`, `/app/account/password` | Authenticated; truthful Account/Security and Change password seams |
 | `/app/account/sessions` | Authenticated + `READ_OWN_SESSIONS` |
 | `/app/admin/users` | Authenticated + `READ_USERS` |
@@ -80,6 +81,28 @@ protected presentation immediately. Wide Open focuses Close. Group disclosures a
 current navigation uses `aria-current`. A skip link, focusable named main, route-title/status announcements,
 wrapping email, 44px controls, reduced motion and the existing three-state appearance selector remain available.
 Bootstrap link RGB variables now map to the accepted action colors rather than its inherited blue fallback.
+
+## Honest Dashboard (TASK-00052)
+
+`pages/DashboardPage.tsx` is a guarded lazy page within the same application session, not a second authority or
+capability registry. It subscribes directly to the sole cache, shows only its safe email, and uses the existing
+manifest requirements and shared evaluator for every shortcut. Unknown, invalid, expired or invalidated authority
+removes the page and links; late projection results remain fenced by the existing cache. A resolved principal
+without exact `VIEW_DASHBOARD` receives authenticated Forbidden, not Login.
+
+The accepted C composition uses the existing semantic tokens, Ubuntu headings/Open Sans body, named panels,
+wrapping link lists and responsive account/administration cards. Account / Security requires authentication;
+Active sessions independently needs `READ_OWN_SESSIONS`. Users, Invite user and Invitation administration independently
+need `READ_USERS`, `INVITE_USERS` and `MANAGE_USER_INVITATIONS`. The Dashboard does not advertise elevated assignment;
+the existing elevated route/rail still needs both `INVITE_USERS` and `ASSIGN_SUPER_ADMIN`. Role names grant nothing.
+Each Dashboard link includes the manifest's truthful pre-feature availability copy and reaches its registered
+landing. There are no enabled mutation controls, fake forms, records or session rows.
+
+“Available today” describes installed sign-in/restoration/current-access/appearance/current-session sign-out.
+“Not installed yet” explicitly names planning, observability, agent sessions, charts, metrics and workspace
+switching. It is not a zero-result query or synthetic telemetry. The page makes no API request; only existing
+session and `/me` owners supply authority. All linked APIs still require server authorization/owner checks when
+those journeys ship. No principal, role, permission or credential is persisted for Dashboard presentation.
 
 ## Verification boundary
 
