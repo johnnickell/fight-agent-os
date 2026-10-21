@@ -11,7 +11,7 @@ const owner = vi.hoisted(() => ({ session: null as ApplicationSession | null }))
 vi.mock('@/features/auth/useApplicationSession', () => ({
   useApplicationSession: () => ({ session: owner.session, retired: false })
 }));
-vi.mock('@/pages/LandingPage', () => {
+vi.mock('@/pages/DashboardPage', () => {
   throw new Error('token-cookie-password-stack-SQL-private-module-failure');
 });
 
