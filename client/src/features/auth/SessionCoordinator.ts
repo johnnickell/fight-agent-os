@@ -46,6 +46,8 @@ export class SessionCoordinator {
   readonly #channel: SessionChannel | undefined;
   readonly #authority: AuthorityCache | undefined;
   readonly #clearIntent: (() => void) | undefined;
+  readonly #coldAnonymous: boolean;
+  #established = false;
   readonly #unsubscribeAuthority: (() => void) | undefined;
   readonly #now: () => number;
   readonly #id: () => string;
@@ -71,6 +73,7 @@ export class SessionCoordinator {
     channel?: SessionChannel;
     authority?: AuthorityCache;
     clearIntent?: () => void;
+    coldAnonymous?: boolean;
     now?: () => number;
     id?: () => string;
   }) {
@@ -85,6 +88,7 @@ export class SessionCoordinator {
       if (this.#authority?.getSnapshot().status === 'terminal' && !this.#barrier) this.terminal();
     });
     this.#clearIntent = dependencies.clearIntent;
+    this.#coldAnonymous = dependencies.coldAnonymous ?? false;
     this.#now = dependencies.now ?? (() => performance.now());
     this.#id = dependencies.id ?? (() => crypto.randomUUID().replaceAll('-', ''));
     this.#sender = this.#id();
@@ -175,7 +179,15 @@ export class SessionCoordinator {
       }
     }
     this.#tokens.clear();
-    if (result.error.kind === 'authentication' || result.error.kind === 'conflict') {
+    if (result.error.kind === 'authentication' && this.#coldAnonymous && !this.#established) {
+      // A cold browser cannot distinguish an absent from an expired cookie. Fence all
+      // work, require explicit login, and retain only its classified navigation intent.
+      this.#retire();
+      this.#barrier = true;
+      this.#session.invalidate();
+      this.#signal('terminal');
+      this.#publish('anonymous');
+    } else if (result.error.kind === 'authentication' || result.error.kind === 'conflict') {
       this.terminal();
     } else {
       this.#signal('refresh-failed');
@@ -383,6 +395,7 @@ export class SessionCoordinator {
     this.#requests.clear();
   }
   #adopt(): void {
+    this.#established = true;
     this.#signal('credentials-changed');
     this.#publish('authenticated');
     clearTimeout(this.#expiry);
@@ -424,7 +437,7 @@ export class SessionCoordinator {
     this.#retire();
     this.#barrier = true;
     this.#session.invalidate();
-    if (status === 'logout') this.#clearIntent?.();
+    this.#clearIntent?.();
     this.#signal(status);
     this.#publish(status);
   }

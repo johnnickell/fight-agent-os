@@ -10,5 +10,19 @@ declare module 'vitest' {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type
   interface Assertion<T = any> extends TestingLibraryMatchers<void, T> {}
 }
+// jsdom has no media implementation; browser catalog/smoke separately exercises real breakpoints.
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: (media: string): MediaQueryList => ({
+    media,
+    matches: false,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => true
+  })
+});
 expect.extend(matchers);
 afterEach(cleanup);

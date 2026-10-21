@@ -4,7 +4,10 @@ import { SystemErrorPage } from '@/pages/SystemErrorPage';
 
 import type { ReactNode } from 'react';
 
-export class SystemErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+export class SystemErrorBoundary extends Component<
+  { children: ReactNode; fallback?: ReactNode },
+  { failed: boolean }
+> {
   override state = { failed: false };
 
   static getDerivedStateFromError() {
@@ -12,6 +15,6 @@ export class SystemErrorBoundary extends Component<{ children: ReactNode }, { fa
   }
 
   override render() {
-    return this.state.failed ? <SystemErrorPage /> : this.props.children;
+    return this.state.failed ? (this.props.fallback ?? <SystemErrorPage />) : this.props.children;
   }
 }

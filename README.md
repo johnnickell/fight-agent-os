@@ -16,8 +16,9 @@ present. Explicit initial Workspace bootstrap and protected Repository registrat
 [TASK-00078's runbook](docs/engineering/REPOSITORY_REGISTRATION.md), pending fresh independent Review/QA after repair. They add no
 checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
 canonical login is implemented at `/app/login`; refresh/current-session logout are implemented pending independent acceptance. Bounded multi-tab continuity at `/app/login` is implemented pending independent Review/QA; TASK-00049 connects the sole typed client `/me` authority cache to login/restoration, pending independent Review/QA;
-the complete authenticated shell remains unfinished. A non-product React shell with
-local system/light/dark appearance is available at `/app`; other product UI journeys,
+TASK-00051 mounts the [responsive authoritative application frame](docs/engineering/APPLICATION_FRAME.md),
+pending independent Review/QA, at `/`, `/app` and registered protected destinations. Local system/light/dark
+appearance and truthful future account/admin seams are available; dashboard content and other product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
 ## Start planning
@@ -64,7 +65,7 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/database migrate
 ```
 
-The inherited root endpoint runs at http://localhost:18087. Build the browser foundation with
+The application root runs at http://localhost:18087 (authentication still requires the trusted HTTPS origin). Build the browser foundation with
 `./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
 `/app`; see [client commands and boundaries](client/README.md).
 `./bin/build` is the [complete read-only gate](docs/engineering/BUILD.md), including backend coverage and
@@ -91,7 +92,7 @@ Configure independent external `APP_ACTIVATION_RATE_KEY` and `APP_AUTH_RATE_KEY`
 The reusable [browser authentication request controls](docs/engineering/BROWSER_AUTH_REQUESTS.md) provide
 fixed session/persistent refresh cookies, nonce lifecycle, strict browser guards and independently committed
 rolling email/network/endpoint admission. Production-like HTTP boot requires explicit direct TLS authority,
-no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/app/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Bounded multi-tab coordination at `/app/login` is implemented pending independent Review/QA; the authenticated product shell remains planned. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
+no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/app/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Bounded multi-tab coordination at `/app/login` is implemented pending independent Review/QA; TASK-00051 now mounts the responsive authenticated frame, pending independent Review/QA. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`

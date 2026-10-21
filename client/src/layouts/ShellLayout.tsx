@@ -19,7 +19,7 @@ export function ShellLayout({
       </a>
       <header className={`border-bottom py-3${publicJourney ? ' activation-header' : ''}`}>
         <div className="container shell-width">
-          <nav aria-label="Foundation">
+          <nav aria-label="Application">
             <a href="/app">Fight Agent OS</a>
           </nav>
           {theme && <ThemeSelector theme={theme} />}
@@ -29,7 +29,7 @@ export function ShellLayout({
         {children}
       </main>
       <footer className="border-top py-3">
-        <div className="container shell-width">Application foundation</div>
+        <div className="container shell-width">Fight Agent OS</div>
       </footer>
     </>
   );

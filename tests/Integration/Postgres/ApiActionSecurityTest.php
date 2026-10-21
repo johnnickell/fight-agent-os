@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Integration\Postgres;
 
 use App\Adapter\Http\Action\Api\V1\Me\ReadCurrentPrincipalAction;
+use App\Adapter\Http\Action\ClientShellAction;
 use App\Adapter\Http\Responder\Api\V1\Me\ReadCurrentPrincipalResponder;
+use App\Adapter\Http\Web\ClientAssetManifest;
+use App\Adapter\Http\Web\ClientShellResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
@@ -446,21 +449,89 @@ final class ApiActionSecurityTest extends TestCase
     }
 
     /**
-     * Preserves true method and route misses instead of manufacturing authentication outcomes
+     * Preserves true misses and public root delivery without invoking protected API authority
      */
-    public function testMissesAndRoot(): void
+    #[DataProvider('rootDeployments')]
+    public function testMissesAndRoot(bool $available, int $rootStatus): void
     {
         $cases = [
             ['POST', '/api/v1/me', 405],
             ['GET', '/api/v1/absent', 404],
-            ['GET', '/mcp', 404],
-            ['GET', '/', 200]
+            ['GET', '/mcp', 404]
         ];
         foreach ($cases as [$method, $path, $status]) {
             self::assertSame($status, $this->request(null, $method, $path)->getStatusCode());
         }
+        $response = $this->requestRootWithAssets($available);
+        $body = (string) $response->getBody();
+        self::assertSame($rootStatus, $response->getStatusCode());
+        self::assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
+        self::assertSame('no-referrer', $response->getHeaderLine('Referrer-Policy'));
+        self::assertStringContainsString("default-src 'none'", $response->getHeaderLine('Content-Security-Policy'));
+        self::assertFalse($response->hasHeader('WWW-Authenticate'));
+        self::assertFalse($response->hasHeader('Set-Cookie'));
+        if ($available) {
+            self::assertStringContainsString('id="app"', $body);
+            self::assertStringContainsString('src="/build/main-AAAAAAAA.js"', $body);
+        } else {
+            self::assertStringContainsString('Application unavailable', $body);
+            self::assertStringNotContainsString('<script', $body);
+            self::assertStringNotContainsString('/build/', $body);
+            self::assertStringNotContainsString('runtime-config', $body);
+        }
+        self::assertStringNotContainsString($this->token, $body);
+        self::assertStringNotContainsString($this->user->getId()->toString(), $body);
+        self::assertStringNotContainsString('permissions', $body);
+        self::assertStringNotContainsString('roles', $body);
         self::assertSame(0, $this->constructions);
         self::assertSame(0, $this->queries);
+    }
+
+    /**
+     * Supplies public shell deployment outcomes rather than authentication outcomes
+     *
+     * @return iterable<string, array{bool, int}>
+     */
+    public static function rootDeployments(): iterable
+    {
+        yield 'available shell' => [true, 200];
+        yield 'unavailable shell' => [false, 503];
+    }
+
+    /**
+     * Requests the real root with isolated deployment inputs, never the developer's published assets
+     */
+    private function requestRootWithAssets(bool $available): ResponseInterface
+    {
+        $directory = dirname(__DIR__, 3).'/.runs/build/tmp/test-api-root/'.bin2hex(random_bytes(8));
+        mkdir($directory, 0700, true);
+        try {
+            if ($available) {
+                foreach (['prepaint-CCCCCCCC.js', 'main-AAAAAAAA.js', 'main-BBBBBBBB.css'] as $asset) {
+                    file_put_contents($directory.'/'.$asset, '');
+                }
+                file_put_contents($directory.'/manifest.json', json_encode([
+                    'prepaint'   => '/build/prepaint-CCCCCCCC.js',
+                    'script'     => '/build/main-AAAAAAAA.js',
+                    'stylesheet' => '/build/main-BBBBBBBB.css'
+                ], JSON_THROW_ON_ERROR));
+            }
+            $container = $this->app->getContainer();
+            self::assertInstanceOf(Container::class, $container);
+            $container->set(ClientShellAction::class, static fn(Container $container) => new ClientShellAction(
+                new ClientAssetManifest($directory),
+                $container->get(ClientShellResponder::class)
+            ));
+
+            return $this->request(null, 'GET', '/');
+        } finally {
+            foreach (glob($directory.'/*') ?: [] as $file) {
+                unlink($file);
+            }
+            rmdir($directory);
+        }
     }
 
     /**

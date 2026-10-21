@@ -1,10 +1,14 @@
+import { useLayoutEffect } from 'react';
+
 import { SystemErrorBoundary } from '@/components/SystemErrorBoundary';
 import { ActivationJourney } from '@/features/auth/ActivationJourney';
-import { LoginJourney } from '@/features/auth/LoginJourney';
 import { ShellLayout } from '@/layouts/ShellLayout';
 import { LoginRecoveryPage } from '@/pages/LoginPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SystemErrorPage } from '@/pages/SystemErrorPage';
-import { ShellRoutes } from '@/routes/ShellRoutes';
+import { ApplicationJourney } from '@/routes/ApplicationJourney';
+import { matchApplicationRoute } from '@/routes/applicationRoutes';
+import { useApplicationNavigation } from '@/routes/useApplicationNavigation';
 import { decodeRuntimeConfiguration } from '@/runtimeConfiguration';
 
 import type { ActivationCredential } from '@/features/auth/ActivationCredential';
@@ -12,7 +16,7 @@ import type { ThemePreferenceStore } from '@/features/theme/ThemePreference';
 
 export function ShellApplication({
   configuration,
-  pathname,
+  pathname: initialPathname,
   theme,
   activation,
   onAuthenticated
@@ -24,26 +28,53 @@ export function ShellApplication({
   onAuthenticated?: () => void;
 }) {
   const runtime = decodeRuntimeConfiguration(configuration);
-  // Only validated public configuration reaches the activation composition.
-  // Protected routes and principal restoration remain separately owned.
+  const validRuntime = runtime !== null;
+  const { pathname, navigate } = useApplicationNavigation(initialPathname);
+  const route = matchApplicationRoute(pathname);
+  const inertPublic =
+    route?.destination === 'activation' || route?.destination === 'recovery' || !route;
+  useLayoutEffect(() => {
+    if (!validRuntime) {
+      window.history.replaceState(null, '', '/app');
+    } else if (inertPublic && route?.destination !== 'activation') {
+      if (
+        window.location.pathname === pathname &&
+        (!route || window.location.search || window.location.hash)
+      )
+        window.history.replaceState(null, '', route ? pathname : '/app/not-found');
+    }
+  }, [validRuntime, inertPublic, pathname, route]);
   return (
-    <ShellLayout
-      theme={theme}
-      publicJourney={pathname === '/app/activate' || pathname.startsWith('/app/login')}
-    >
-      <SystemErrorBoundary>
-        {runtime === null ? (
+    <SystemErrorBoundary
+      fallback={
+        <ShellLayout theme={theme} publicJourney>
           <SystemErrorPage />
-        ) : pathname === '/app/login' ? (
-          <LoginJourney runtime={runtime} onAuthenticated={onAuthenticated} />
-        ) : pathname === '/app/login/recovery' ? (
-          <LoginRecoveryPage />
-        ) : pathname === '/app/activate' ? (
-          <ActivationJourney runtime={runtime} credential={activation} />
-        ) : (
-          <ShellRoutes pathname={pathname} />
-        )}
-      </SystemErrorBoundary>
-    </ShellLayout>
+        </ShellLayout>
+      }
+    >
+      {runtime === null ? (
+        <ShellLayout theme={theme}>
+          <SystemErrorPage />
+        </ShellLayout>
+      ) : inertPublic ? (
+        <ShellLayout theme={theme} publicJourney>
+          {route?.destination === 'activation' ? (
+            <ActivationJourney runtime={runtime} credential={activation} />
+          ) : route?.destination === 'recovery' ? (
+            <LoginRecoveryPage />
+          ) : (
+            <NotFoundPage />
+          )}
+        </ShellLayout>
+      ) : (
+        <ApplicationJourney
+          runtime={runtime}
+          pathname={pathname}
+          navigate={navigate}
+          theme={theme}
+          onAuthenticated={onAuthenticated}
+        />
+      )}
+    </SystemErrorBoundary>
   );
 }

@@ -21,16 +21,24 @@ const preview: Preview = {
     }
   },
   decorators: [
-    (Story, { parameters }) => (
-      <main
-        className="catalog-preview"
-        data-bs-theme={parameters.mode === 'dark' ? 'dark' : 'light'}
-      >
-        <h1>Neutral component foundation</h1>
-        <p>Invented local examples. Not final product design or authorization.</p>
-        <Story />
-      </main>
-    )
+    (Story, { parameters }) =>
+      parameters.applicationFrame ? (
+        <div
+          className="catalog-preview catalog-frame-preview"
+          data-bs-theme={parameters.mode === 'dark' ? 'dark' : 'light'}
+        >
+          <Story />
+        </div>
+      ) : (
+        <main
+          className="catalog-preview"
+          data-bs-theme={parameters.mode === 'dark' ? 'dark' : 'light'}
+        >
+          <h1>Neutral component foundation</h1>
+          <p>Invented local examples. Not final product design or authorization.</p>
+          <Story />
+        </main>
+      )
   ]
 };
 
