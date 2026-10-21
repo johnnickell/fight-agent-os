@@ -94,9 +94,34 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | done |
 | [TASK-00502](../tasks/00502-TASK.md) | Follow current-session children and their worktree test logs automatically | in-progress |
 | [TASK-00503](../tasks/00503-TASK.md) | Launch the Pi terminal workspace globally from any project | ready-for-agent |
+| [TASK-00504](../tasks/00504-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved trusted-local-process boundary and feasibility follow-up — 2026-10-21
+
+John explicitly selected: **"Explicitly accept a trusted-local-process assumption, leaving malicious local
+impersonation outside protection."** He requested: **"let’s do this and create a bounded feasibility investigation
+task to see if we can harden the installation in the future without making the process too cumbersome for users"**.
+This amends [TASK-00502's controlling boundary](../tasks/00502-TASK.md#owner-approved-trusted-local-process-amendment--2026-10-21)
+and the 2026-10-20 follow-up below, not the historical first-release acceptance.
+
+Current automatic observation trusts local Pi/provider processes and their bootstrap assertions. Malicious
+same-user local process/agent/bootstrap impersonation is not prevented; independent Review R1 is an
+**owner-accepted limitation, not repaired**. There is no independently attested native origin or OS sandbox claim.
+Normal actual-session/file binding, disjoint honest parents, stale/replaced/malformed/cross-session payload refusal,
+finite elapsed deadlines/cancellation, safe observation-only UI, tool restrictions and Docker exact-source
+validation remain required. The R2 repair in `66737c3…` still requires independent re-review; this owner decision
+is not independent code acceptance or QA. TASK-00502 remains in-progress with unchecked acceptance criteria.
+
+[TASK-00504 — Assess low-friction native-session origin hardening](../tasks/00504-TASK.md) records the explicitly
+requested future go/no-go/needs-upstream decision: at most two approaches, at most one strongest-candidate
+disposable proof, explicit trust/API/platform limits and counted setup/daily/lifecycle UX burden. Negative feasibility
+is valid. No investigation is executed by this amendment; production/global/upstream changes remain excluded.
+It is unranked, does not block TASK-00502 under the amended boundary and adds no speculative dependency. Existing
+Board priorities and this parent's already-terminal historical status are preserved under planning conventions.
+Prior R1 failures, scope holds and independent reports remain historical, not rewritten as successes.
 
 ### Approved global workspace command — 2026-10-20
 

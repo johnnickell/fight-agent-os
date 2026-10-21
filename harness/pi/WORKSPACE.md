@@ -294,24 +294,27 @@ examines only that session's bounded directory. A descriptor is a **candidate**,
 its current owner-only endpoint inode, fixed custodian process/start/generation, a fresh Ed25519-signed nonce
 reply, matching native parent session/file inode and immutable attempt identity/sequence. The signing key stays
 in custodian memory, never in a registry or child environment. Replayed, malformed, stale, cross-parent,
-key-substituted and replaced candidates are refused. A copied session ID in a different file does not match the
-native file lifetime. No `.runs/` ledger, transcript or request is read to discover children; attempt paths in
+key-substituted and replaced candidates are refused within the trusted-local bootstrap boundary below. A copied
+session ID in a different file does not match the native file lifetime. No `.runs/` ledger, transcript or request is read to discover children; attempt paths in
 observations are display labels only.
 
-**Unresolved native-origin defect (independent Review R1):** an ordinary Node parent can fork the genuine fixed
-custodian, assert an existing Pi session/file plus installed CLI path, and obtain a signer accepted by production
-discovery. The signature proves which custodian replied, not that its initializer originated in that Pi session.
-An existing session file's inode is not proof of native origin. Thus automatic admission does **not yet meet**
-TASK-00502's required rejection of agent-controlled cross-session membership payloads. Forged bootstrap is a
-blocking defect, not an approved exclusion or a demand for a general hostile-host sandbox.
+**Owner-accepted native-origin limitation (independent Review R1, not repaired):** on 2026-10-21 John explicitly
+accepted the [trusted-local-process assumption](../../planning/tasks/00502-TASK.md#owner-approved-trusted-local-process-amendment--2026-10-21).
+Local Pi/provider processes and their bootstrap assertions are trusted. Malicious same-user process, agent or
+bootstrap impersonation is outside current protection. An ordinary Node parent can fork the genuine fixed
+custodian, assert an existing Pi session/file plus installed CLI path, and obtain a signer accepted by discovery.
+The signature proves which custodian replied, not that its initializer originated in that Pi session. An existing
+session file's inode is not proof of native origin. The earlier owner-decision hold is superseded by this explicit
+requirement amendment, not a repaired R1 or independent acceptance.
 
 The qualified supported context/session/RPC APIs provide IDs, paths and lifecycle callbacks, but no native-origin
-attestation verifiable independently of that initializer. A new self-generated signer, extra caller fields or
-another editable session entry would not fix this. The owner must explicitly authorize a separately anchored
-native-bootstrap capability (including durable same-session rediscovery) or explicitly amend the requirement;
-neither decision has been made. Do not mark this candidate fixed/ready or accept custody signatures as proof
-of actual session origin. Normal native launch/resume remains present for investigation. This warning does not
-change TASK scope, grant Workflow authority, or claim OS/credential isolation.
+attestation verifiable independently of that initializer. Another self-generated signer or caller field would not
+supply it. [TASK-00504](../../planning/tasks/00504-TASK.md) owns a future bounded low-friction hardening feasibility
+decision; it is unstarted and does not block TASK-00502 under the amended scope. Do not treat custody signatures
+as independently attested native origin or claim OS/credential isolation. Normal actual-session/file binding,
+disjoint honestly bootstrapped parents, stale/replaced/malformed/cross-session payload refusal, finite elapsed
+deadlines/cancellation, safe observation-only UI, existing tool restrictions and exact Docker-source validation
+remain required. R2's deadline/cancellation repair still needs independent re-review; Review/QA remain pending.
 
 ### Selection, lifetime and bounds
 
@@ -369,8 +372,8 @@ human binding is therefore necessary. Saved source files cannot grant a binding.
 requires explicit binding again, but selection changes within it need no socket/runtime flags. No provisioning,
 Compose override, lifecycle action or database write is implemented.
 
-Follow mode uses the selected/pinned child's **custody-verified worktree**, otherwise the primary checkout. The
-conversation directory, grants and log source are distinct identities. Within one worktree, a valid reader can
+Follow mode uses the selected/pinned child's **custody-verified worktree within the trusted-local-process
+assumption**, otherwise the primary checkout. The conversation directory, grants and log source are distinct identities. Within one worktree, a valid reader can
 remain; changing worktree/stack/generation stops/reaps it, clears live/paused buffers and rejects late callbacks.
 At most one Docker reader runs. Missing, stopped, denied or mismatched sources are explicit, never shared fallback.
 Several bound stacks require labelled `{` / `}` selection; service choice is retained only while eligible and its

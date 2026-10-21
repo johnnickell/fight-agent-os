@@ -506,4 +506,5 @@
 | [TASK-00501](00501-TASK.md) | Restore local PHP diagnostics and bound development processes | done | — |
 | [TASK-00502](00502-TASK.md) | Follow current-session children and their worktree test logs automatically | in-progress | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00504](00504-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 <!-- /planning:records -->

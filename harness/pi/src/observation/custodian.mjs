@@ -1,4 +1,5 @@
 // Only inherited Node IPC can initialize custody or launch/cancel a fixed provider monitor.
+// Trust local bootstrap callers; IPC does not independently attest native Pi/session origin (R1).
 // The public socket answers bounded read-only nonce challenges; it never registers callers.
 import { spawn, execFileSync } from 'node:child_process';
 import { createHash, generateKeyPairSync, randomUUID, sign } from 'node:crypto';
@@ -45,7 +46,7 @@ export function startCustodian({ primary, parent, parentFile, generation, harnes
   if (processIdentity(process.ppid) !== native.process) throw new Error('native-parent-lifetime-mismatch');
   if (typeof native.entry !== 'string' || !/@earendil-works\/pi-coding-agent\/dist\/(?:bundle\/)?cli\.js$/.test(realpathSync(native.entry))) throw new Error('native-entry-unsupported');
   // Pi changes its OS process title, so ps is a lifetime check, not a CLI/mode parser.
-  // Mode and session come from the trusted extension's direct IPC bootstrap, never launch JSON.
+  // Normal mode/session come from extension IPC, never launch JSON; a malicious local caller can impersonate it.
   if (native.mode !== 'tui') throw new Error('native-mode-unavailable');
   if (!process.send || typeof parent !== 'string' || !parent || !/^[a-f0-9-]{36}$/.test(generation)) throw new Error('Inherited native bootstrap required');
   const launcher = { pid: native.pid, entry: realpathSync(native.entry), processId: createHash('sha256').update(native.process).digest('hex') };

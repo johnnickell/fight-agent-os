@@ -156,6 +156,9 @@ or independently accepted. The same shell example below is usable by enrolled co
 operation, not an OS executable: do not wrap it in a shell, subshell, pipeline, variable expansion or script.
 The supported native extension takes the actual Pi session context and directly launches the fixed provider
 monitor with inherited custody; caller JSON cannot supply a parent session, endpoint, generation or executable.
+This assumes trusted local Pi/provider processes: it does not prevent malicious same-user process/agent/bootstrap
+impersonation or independently attest native origin. Keep actual-session binding, stale/cross-session payload
+refusal and existing tool/dispatch restrictions; the accepted limitation does not grant authority.
 Use these fields, populated from the current ledger (not ambient model settings):
 
 | JSON field | Required value |

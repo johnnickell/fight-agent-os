@@ -83,7 +83,7 @@ export class RegisteredChildren {
         if (lost && !next.has(this.pin)) next.set(this.pin, { ...lost, verified: false, state: 'disconnected' });
         const sorted = [...next.entries()].sort(([a, x], [b, y]) => (b === this.pin || b === this.selected ? 1 : 0) - (a === this.pin || a === this.selected ? 1 : 0) || y.started - x.started || a.localeCompare(b));
         this.sources = new Map(sorted.slice(0, limits.children)); this.recompute();
-        this.notice = `${refused ? `${refused} stale/replaced/mismatched custody candidate(s) refused. ` : ''}${next.size > limits.children ? 'Capacity: newest eight plus retained selection/pin only. ' : ''}Live launch custody verified; pane is human-only`;
+        this.notice = `${refused ? `${refused} stale/replaced/mismatched custody candidate(s) refused. ` : ''}${next.size > limits.children ? 'Capacity: newest eight plus retained selection/pin only. ' : ''}Trusted-local launch custody verified; pane is human-only`;
         this.restorePreference(); this.savePreference(); this.changed();
       } catch { if (epoch === this.epoch && !this.closed) { for (const item of this.sources.values()) item.verified = false; this.recompute(); this.notice = 'Registration discovery unavailable/capacity exceeded; no unverified source admitted'; this.changed(); } }
     })().finally(() => {

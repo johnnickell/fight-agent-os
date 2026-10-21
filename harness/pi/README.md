@@ -63,7 +63,9 @@ native format and output handling.
 `./bin/terminal` at the repository root starts a dedicated Pi RPC terminal client with a persistent half/quarter/
 quarter split and narrow selectable views. TASK-00502 adds current-session native-child custody and automatic
 selected/pinned worktree following; explicit human bindings observe existing test services through the fixed
-Docker reader. No managed integration, container lifecycle operation or global launcher/installation is added. Read the [workspace runbook](WORKSPACE.md) for input, policy,
+Docker reader. Its owner-approved trusted-local-process assumption does not prevent malicious same-user bootstrap
+impersonation or independently attest native origin; see the [custody boundary](WORKSPACE.md#custody-and-admission).
+No managed integration, container lifecycle operation or global launcher/installation is added. Read the [workspace runbook](WORKSPACE.md) for input, policy,
 session and cleanup boundaries. Coordinator RPC/PTY/provider/file-hook checks, real held-state images and a
 recovered passing pre-commit full gate are recorded there with limitations; the coordinator's post-commit gate
 and independent Review/QA remain pending.

@@ -1,4 +1,4 @@
-// Provider-process custody, not a same-user hostile-code sandbox.
+// Trusted-local provider-process custody, not independent native-origin attestation or a same-user sandbox.
 import { createHash, randomBytes, verify } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { lstatSync, mkdirSync, opendirSync, readFileSync, realpathSync, unlinkSync } from 'node:fs';
