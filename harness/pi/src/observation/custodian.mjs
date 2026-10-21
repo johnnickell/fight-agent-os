@@ -64,8 +64,10 @@ export function startCustodian({ primary, parent, parentFile, generation, harnes
   const server = createServer({ allowHalfOpen: true }, socket => {
     if (++clients > 8) { clients--; socket.destroy(); return; }
     let buffer = '', answered = false;
-    socket.setEncoding('utf8'); socket.setTimeout(1000, () => socket.destroy());
-    socket.on('error', () => {}); socket.on('close', () => { clients--; });
+    // Bound the entire request/response lifetime, including trickling or blocked peers.
+    const deadline = setTimeout(() => socket.destroy(), 1000);
+    socket.setEncoding('utf8');
+    socket.on('error', () => {}); socket.on('close', () => { clearTimeout(deadline); clients--; });
     socket.on('data', chunk => {
       if (answered) { socket.destroy(); return; }
       buffer += chunk;

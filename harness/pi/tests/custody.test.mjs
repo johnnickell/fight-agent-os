@@ -8,13 +8,16 @@ import { challenge, candidates, custodianScript, directory, endpointPath, privat
 import { stageRequest, nativeExecutorAllowed, NativeLauncher } from '../src/observation/native-launch.mjs';
 import { launchOptions, startCustodian, applyProgress } from '../src/observation/custodian.mjs';
 
-async function fixture(t) {
+async function fixture(t, respond) {
   const cwd = realpathSync(mkdtempSync('/tmp/fc-')), parent = randomUUID(), generation = randomUUID();
   const root = directory(cwd, parent); privateDirectory(root);
   const endpoint = endpointPath(cwd, parent, generation), path = join(root, `${generation}.json`);
   const { privateKey, publicKey } = generateKeyPairSync('ed25519'); const at = Date.now();
   let alter = value => value;
+  const sockets = new Set();
   const server = createServer({ allowHalfOpen: true }, socket => {
+    sockets.add(socket); socket.once('close', () => sockets.delete(socket));
+    if (respond) { respond(socket); return; }
     let buffer = ''; socket.setEncoding('utf8'); socket.on('error', () => {});
     socket.on('data', chunk => {
       buffer += chunk;
@@ -32,7 +35,7 @@ async function fixture(t) {
     launcher: { pid: 1234, entry: '/qualified/native/pi', process: 'native bootstrap tested separately' },
     process: `qualified-start node ${custodianScript} ${generation}`, publicKey: publicKey.export({ type: 'spki', format: 'pem' }), endpoint: { dev: info.dev, ino: info.ino } };
   writeFileSync(path, JSON.stringify(descriptor), { mode: 0o600 });
-  t.after(async () => { await new Promise(resolve => server.close(resolve)); rmSync(cwd, { force: true, recursive: true }); });
+  t.after(async () => { for (const socket of sockets) socket.destroy(); await new Promise(resolve => server.close(resolve)); rmSync(cwd, { force: true, recursive: true }); });
   const options = { now: () => at, inspectProcess: () => descriptor.process };
   return { cwd, parent, generation, path, endpoint, descriptor, options, alter: fn => { alter = fn; }, read: () => challenge(cwd, parent, path, descriptor, options) };
 }
@@ -41,6 +44,42 @@ test('a fresh signed challenge binds the actual parent, generation, endpoint ino
   const f = await fixture(t); const value = await f.read(); assert.equal(value.parent, f.parent); assert.equal(value.generation, f.generation);
   assert.equal(candidates(f.cwd, f.parent).length, 1); assert.deepEqual(value.children, []);
 });
+test('a slow-trickle custody response has an absolute one-second deadline, not an activity timeout', async t => {
+  let closed;
+  const peerClosed = new Promise(resolve => { closed = resolve; });
+  const f = await fixture(t, socket => {
+    socket.on('error', () => {}); socket.resume();
+    const timer = setInterval(() => socket.write(' '), 100);
+    socket.once('close', () => { clearInterval(timer); closed(); });
+  });
+  const started = performance.now();
+  const result = await Promise.race([
+    f.read().then(() => 'accepted', error => error.message),
+    new Promise(resolve => { const timer = setTimeout(() => resolve('watchdog exceeded'), 1600); timer.unref(); }),
+  ]);
+  assert.match(result, /Custody challenge timeout/);
+  assert.ok(performance.now() - started < 1500, 'trickle must not reset the elapsed bound');
+  await peerClosed;
+});
+test('challenge cancellation immediately closes a live transport and pre-aborted challenges never connect', async t => {
+  let connected, closed;
+  const connection = new Promise(resolve => { connected = resolve; });
+  const disconnection = new Promise(resolve => { closed = resolve; });
+  let connections = 0;
+  const f = await fixture(t, socket => {
+    connections++; connected(); socket.resume(); socket.on('error', () => {});
+    const timer = setInterval(() => socket.write(' '), 20);
+    socket.once('close', () => { clearInterval(timer); closed(); });
+  });
+  const controller = new AbortController();
+  const pending = challenge(f.cwd, f.parent, f.path, f.descriptor, { ...f.options, signal: controller.signal });
+  await connection; controller.abort();
+  const result = await Promise.race([pending.catch(error => error.name), new Promise(resolve => { const timer = setTimeout(() => resolve('not cancelled'), 250); timer.unref(); })]);
+  assert.equal(result, 'AbortError'); await disconnection;
+  await assert.rejects(challenge(f.cwd, f.parent, f.path, f.descriptor, { ...f.options, signal: controller.signal }), { name: 'AbortError' });
+  assert.equal(connections, 1);
+});
+
 test('caller parent IDs, renamed descriptors and expired lifetimes cannot borrow a live custodian', async t => {
   const f = await fixture(t);
   await assert.rejects(challenge(f.cwd, randomUUID(), f.path, f.descriptor, f.options), /cross-session/);

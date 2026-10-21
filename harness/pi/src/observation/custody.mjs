@@ -64,7 +64,9 @@ export function pruneCandidates(cwd, session) {
     privateFile(path); unlinkSync(path);
   }
 }
-export async function challenge(cwd, session, file, descriptor, { now = Date.now, inspectProcess = processIdentity } = {}) {
+export async function challenge(cwd, session, file, descriptor, { now = Date.now, inspectProcess = processIdentity, signal } = {}) {
+  const started = performance.now();
+  signal?.throwIfAborted();
   const root = directory(cwd, session), expected = join(root, `${descriptor.generation}.json`);
   if (file !== expected || descriptor.version !== 1 || descriptor.parent !== session || descriptor.primary !== realpathSync(cwd) ||
       !/^[a-f0-9-]{36}$/.test(descriptor.generation) || typeof descriptor.publicKey !== 'string' || descriptor.publicKey.length > 256 ||
@@ -78,10 +80,19 @@ export async function challenge(cwd, session, file, descriptor, { now = Date.now
   const local = relative(process.cwd(), endpoint);
   const socketPath = Buffer.byteLength(local) < Buffer.byteLength(endpoint) ? local : endpoint;
   if (Buffer.byteLength(socketPath) > 100) throw new Error('Custody socket path too long from this workspace');
+  if (performance.now() - started >= 1000) throw new Error('Custody challenge timeout');
   const response = await new Promise((accept, reject) => {
     const socket = createConnection({ path: socketPath }); let buffer = '', settled = false;
-    const finish = (error, value) => { if (settled) return; settled = true; socket.destroy(); error ? reject(error) : accept(value); };
-    socket.setEncoding('utf8'); socket.setTimeout(1000, () => finish(new Error('Custody challenge timeout')));
+    const finish = (error, value) => {
+      if (settled) return;
+      settled = true; clearTimeout(timer); signal?.removeEventListener('abort', abort); socket.destroy();
+      error ? reject(error) : accept(value);
+    };
+    const abort = () => finish(signal.reason ?? new DOMException('Custody challenge aborted', 'AbortError'));
+    // An elapsed watchdog, not socket inactivity: bytes cannot extend this deadline.
+    const timer = setTimeout(() => finish(new Error('Custody challenge timeout')), Math.max(0, 1000 - (performance.now() - started)));
+    signal?.addEventListener('abort', abort, { once: true });
+    socket.setEncoding('utf8');
     socket.on('connect', () => socket.end(JSON.stringify({ nonce }) + '\n'));
     socket.on('data', chunk => {
       buffer += chunk;
@@ -90,7 +101,9 @@ export async function challenge(cwd, session, file, descriptor, { now = Date.now
       if (end >= 0) { try { finish(null, JSON.parse(buffer.slice(0, end))); } catch (error) { finish(error); } }
     });
     socket.on('error', error => finish(error));
-    socket.on('end', () => { if (!settled) finish(new Error('Incomplete custody response')); });
+    socket.on('end', () => finish(new Error('Incomplete custody response')));
+    socket.on('close', () => finish(new Error('Custody transport closed')));
+    if (signal?.aborted) abort();
   });
   const { body, signature } = response;
   if (typeof body !== 'string' || typeof signature !== 'string' || !verify(null, Buffer.from(body), descriptor.publicKey, Buffer.from(signature, 'base64'))) throw new Error('Invalid custody signature');

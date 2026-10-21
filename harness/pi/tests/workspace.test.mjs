@@ -216,6 +216,23 @@ test('child pane reader actions never enter Pi RPC and conversation remains usab
   } finally { await app.dispose(); }
   assert.equal(observer.closed, 1);
 });
+test('pending side-pane discovery does not delay qualified conversation startup or input', async () => {
+  let complete;
+  const pending = new Promise(resolve => { complete = resolve; });
+  const observer = { start: () => pending, close() { complete(); }, action() {}, view: () => 'Discovery pending; no child admitted' };
+  const starting = controller({ observe: () => observer });
+  let watchdog;
+  const ready = await Promise.race([starting, new Promise(resolve => { watchdog = setTimeout(() => resolve(null), 250); })]);
+  clearTimeout(watchdog);
+  if (!ready) { complete(); const delayed = await starting; await delayed.dispose(); }
+  assert.ok(ready, 'conversation must not await the discovery promise');
+  try {
+    ready.terminal.paste('usable while discovering'); ready.terminal.key('', { name: 'return' }); await tick();
+    assert.deepEqual(ready.rpc.requests.find(item => item.type === 'prompt'), { type: 'prompt', message: 'usable while discovering' });
+    assert.match(ready.terminal.frames.at(-1), /Discovery pending/);
+  } finally { await ready.dispose(); }
+});
+
 test('entrypoint binds explicit observation to actual session and clears it on identity replacement without submitting authority', async () => {
   const observer = { session: null, invalidated: [], start(id) { this.session = id; }, tick() {},
     sessionChanged(id) { this.invalidated.push(id); }, close() {}, action() {}, view() { return 'session-scoped fixture'; } };

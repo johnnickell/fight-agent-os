@@ -216,7 +216,8 @@ export async function run(argv = process.argv.slice(2), {
     const state = await rpc.request('get_state');
     model.identity = `${state.model?.provider ?? '?'}/${state.model?.id ?? '?'} · ${state.thinkingLevel ?? '?'} · session ${state.sessionId}`;
     model.busy = state.isStreaming; sessionFile = state.sessionFile; sessionId = state.sessionId; stateSeen = true;
-    await observation.start(sessionId, sessionFile);
+    // Side-pane discovery is independently bounded and must not delay conversation readiness.
+    void observation.start(sessionId, sessionFile);
     model.append(`Conversation directory: ${cwd}\nSession: ${state.sessionId}\nStorage: ${state.sessionFile ?? 'in memory (not resumable)'}\nConfigured model: ${state.model?.provider}/${state.model?.id}; actual provider identity is available only after a response.`);
     const commands = await rpc.request('get_commands');
     model.commands = new Set(commands.commands.map(command => command.name));

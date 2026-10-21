@@ -36,7 +36,7 @@ export class RegisteredChildren {
   }
   sessionChanged(session, file) {
     if (session === this.session && file === this.file?.path) return;
-    this.epoch++; this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null;
+    this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null;
     this.session = null; this.file = null; this.notice = 'Session changed: old readers, pin and source context cleared'; this.changed();
     if (session) return this.start(session, file);
   }
@@ -51,15 +51,20 @@ export class RegisteredChildren {
         b.started - a.started || a.id.localeCompare(b.id)).map(sourceKey)[0] ?? null;
     }
   }
+  invalidateRefresh() {
+    this.epoch++; this.refreshController?.abort(); this.refreshController = null; this.pending = null;
+  }
   async refresh() {
     if (this.closed || !this.open || !this.session || this.pending) return this.pending;
     const epoch = this.epoch, session = this.session, file = this.file;
-    this.pending = (async () => {
+    const controller = new AbortController(); this.refreshController = controller;
+    const pending = (async () => {
       const next = new Map(); let refused = 0;
       try {
         for (const candidate of this.discover(this.cwd, session)) {
+          if (controller.signal.aborted) return;
           try {
-            const witness = await this.verify(this.cwd, session, candidate.path, candidate.descriptor);
+            const witness = await this.verify(this.cwd, session, candidate.path, candidate.descriptor, { signal: controller.signal });
             if (epoch !== this.epoch || this.closed || !this.open) return;
             if (JSON.stringify(witness.parentFile) !== JSON.stringify(file)) throw new Error('Actual Pi session file does not match launch custody');
             if (!Array.isArray(witness.children) || witness.children.length > limits.children) throw new Error('Custody child capacity exceeded');
@@ -81,12 +86,15 @@ export class RegisteredChildren {
         this.notice = `${refused ? `${refused} stale/replaced/mismatched custody candidate(s) refused. ` : ''}${next.size > limits.children ? 'Capacity: newest eight plus retained selection/pin only. ' : ''}Live launch custody verified; pane is human-only`;
         this.restorePreference(); this.savePreference(); this.changed();
       } catch { if (epoch === this.epoch && !this.closed) { for (const item of this.sources.values()) item.verified = false; this.recompute(); this.notice = 'Registration discovery unavailable/capacity exceeded; no unverified source admitted'; this.changed(); } }
-    })().finally(() => { this.pending = null; });
-    return this.pending;
+    })().finally(() => {
+      // A late old-session completion must not release the current refresh's lock.
+      if (this.refreshController === controller) { this.pending = null; this.refreshController = null; }
+    });
+    this.pending = pending; return pending;
   }
   tick() {
     if (!this.file && this.sessionFile) {
-      try { this.file = sessionFileIdentity(this.sessionFile); this.epoch++; } catch {}
+      try { this.file = sessionFileIdentity(this.sessionFile); this.invalidateRefresh(); } catch {}
     }
     this.recompute(); void this.refresh();
   }
@@ -94,7 +102,7 @@ export class RegisteredChildren {
   action(type) {
     if (this.closed || !this.session) return;
     if (type === 'toggle') {
-      this.open = !this.open; this.epoch++;
+      this.open = !this.open; this.invalidateRefresh();
       if (!this.open) { for (const item of this.sources.values()) { item.verified = false; item.state = 'disconnected'; } this.recompute(); this.notice = 'Readers closed; children unchanged'; }
       else void this.refresh();
     } else if (type === 'reconnect') { this.open = true; void this.refresh(); }
@@ -141,5 +149,5 @@ export class RegisteredChildren {
       this.notice, item ? `Last known ${item.lifecycle}${item.exitCode === null ? '' : ` (exit ${item.exitCode}; not acceptance)`} · sequence ${item.sequence} · omitted ${item.omitted} · pipe gaps ${item.gaps ?? 'unknown (earlier custodian)'}${this.paused ? ' · DISPLAY PAUSED' : ''}` : 'Legacy/unregistered children unavailable; never relaunched',
       ...(this.paused ? this.frozen ?? [] : item?.history ?? []), 'Conversation cwd/grants unchanged; no pane output enters Pi/model context.'].join('\n');
   }
-  close() { if (this.closed) return; this.savePreference(); this.closed = true; this.epoch++; this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null; }
+  close() { if (this.closed) return; this.savePreference(); this.closed = true; this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null; }
 }

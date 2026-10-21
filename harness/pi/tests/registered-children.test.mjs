@@ -81,10 +81,51 @@ test('in-flight old-session challenges cannot repopulate a changed session or a 
   f.observe.verify = () => new Promise(resolve => { complete = resolve; });
   const starting = f.observe.start(f.parent, f.file); await Promise.resolve();
   const old = { parent: f.parent, parentFile: sessionFileIdentity(f.file), generation: f.generation, at: 100000, children: f.values() };
-  void f.observe.sessionChanged(randomUUID(), f.file); complete(old); await starting;
+  f.observe.verify = async () => { throw new Error('New session has no custody'); };
+  const replacement = f.observe.sessionChanged(randomUUID(), f.file); complete(old); await starting; await replacement;
   assert.equal(f.observe.sources.size, 0); assert.equal(f.observe.selected, null);
   f.observe.close(); assert.equal(f.observe.verifiedWorktree, null);
 });
+test('session replacement cancels a pending refresh and discovers the new session without waiting for old replies', async t => {
+  const f = fixture(t); await f.observe.start(f.parent, f.file); f.observe.action('pin');
+  const oldWitness = { parent: f.parent, parentFile: sessionFileIdentity(f.file), generation: f.generation, at: 100000, children: f.values() };
+  let oldSignal, completeOld;
+  f.observe.verify = (_cwd, _session, _path, _descriptor, options) => {
+    oldSignal = options?.signal; return new Promise(resolve => { completeOld = resolve; });
+  };
+  const oldRefresh = f.observe.refresh(); await Promise.resolve();
+  const newParent = randomUUID(), newChild = f.child({ parent: newParent });
+  let completeNew, newSignal, newCalls = 0;
+  f.observe.verify = (_cwd, session, _path, _descriptor, options) => {
+    newCalls++; newSignal = options?.signal;
+    assert.equal(session, newParent);
+    return new Promise(resolve => { completeNew = () => resolve({ ...oldWitness, parent: newParent, children: [newChild] }); });
+  };
+  const replacement = f.observe.sessionChanged(newParent, f.file); await Promise.resolve();
+  assert.equal(oldSignal?.aborted, true, 'old transport cancelled synchronously');
+  assert.equal(f.observe.verifiedWorktree, null); assert.equal(f.observe.pin, null);
+  assert.equal(newCalls, 1, 'new discovery is not serialized behind old work');
+  const currentPending = f.observe.pending;
+  completeOld(oldWitness); await oldRefresh;
+  assert.equal(f.observe.pending, currentPending, 'late finalizer cannot release the new refresh lock');
+  assert.equal(newSignal.aborted, false); assert.equal(f.observe.sources.size, 0);
+  completeNew(); await replacement;
+  assert.equal(f.observe.sources.get(f.observe.selected).id, newChild.id);
+});
+for (const operation of ['pane-close', 'close']) test(`${operation} cancels in-flight discovery and immediately removes pinned log authority`, async t => {
+  const f = fixture(t); await f.observe.start(f.parent, f.file); f.observe.action('pin');
+  let signal, complete;
+  f.observe.verify = (_cwd, _session, _path, _descriptor, options) => {
+    signal = options?.signal; return new Promise(resolve => { complete = resolve; });
+  };
+  const waiting = f.observe.refresh(); await Promise.resolve();
+  if (operation === 'close') f.observe.close(); else f.observe.action('toggle');
+  assert.equal(signal?.aborted, true); assert.equal(f.observe.pending, null);
+  assert.equal(f.observe.verifiedWorktree, null);
+  complete({ parent: f.parent, parentFile: sessionFileIdentity(f.file), generation: f.generation, at: 100000, children: f.values() });
+  await waiting; assert.equal(f.observe.verifiedWorktree, null);
+});
+
 test('paused output is scoped to one selected child and never follows an explicit source switch', async t => {
   const f = fixture(t); f.set([...f.values(), f.child({ started: 2000, history: ['second source'] })]);
   await f.observe.start(f.parent, f.file); f.observe.action('pause'); assert.deepEqual(f.observe.frozen, ['second source']);

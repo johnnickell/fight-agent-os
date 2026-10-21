@@ -274,12 +274,13 @@ and tools when qualifying a candidate observation extension.
 
 ### Custody and admission
 
-The trusted native extension takes `ExtensionContext.mode`, `sessionManager.getSessionId()`, the genuine session
-file lifetime and canonical primary checkout. Pi persists a non-context custom entry before taking the file
-witness; that entry is **not** admission authority. A fixed provider custodian is forked directly with inherited
-Node IPC. Its bootstrap checks the live native parent PID/start identity and installed CLI entry. Pi changes its
-OS process title, so `ps` supplies a lifetime check, not a session/mode parser. Session/mode come from the supported
-extension context over that direct bootstrap, never from launch JSON, environment session IDs, cwd or names.
+In the normal native path, the extension takes `ExtensionContext.mode`, `sessionManager.getSessionId()`, the
+session file lifetime and canonical primary checkout. Pi persists a non-context custom entry before taking the
+file witness; that entry is **not** admission authority. A fixed provider custodian is forked with inherited
+Node IPC. Its bootstrap checks its immediate parent's live PID/start identity and that the supplied CLI path
+exists. These checks do **not** independently establish that this parent is Pi or owns the asserted session.
+Pi changes its OS process title; `ps` is a lifetime check, not a session/mode attestation. The bootstrap's
+session/mode/CLI claims remain caller assertions even though ordinary launch JSON cannot supply them.
 
 Only that inherited IPC can launch the fixed monitor or request ordinary operation cancellation. Each new launch
 gets a random attempt ID, custodian generation, host monotonic start order, validated canonical registered
@@ -297,15 +298,20 @@ key-substituted and replaced candidates are refused. A copied session ID in a di
 native file lifetime. No `.runs/` ledger, transcript or request is read to discover children; attempt paths in
 observations are display labels only.
 
-**Trust assumptions:** this authenticates the reviewed provider's live custody process and direct launch chain,
-not arbitrary same-user executable identity against hostile code. The loaded native extension, Pi, provider
-monitor/custodian and host process/filesystem facilities are trusted. Same-user arbitrary shell, malicious loaded
-extensions, provider-code replacement or a forged native-process bootstrap are not contained by this Harness.
-Owner-only sockets/files and process names alone are not membership; neither signatures nor these checks create
-an OS sandbox, credential isolation or new Workflow grants. A model-written registry/preference or monitor payload
-alone cannot register a child. The human-facing client does not expose discovery to tools/model context; this is
-not a promise to prevent an independently authorized same-user process reading host state. Independent Review
-must challenge this precise trust model rather than infer hostile-code isolation.
+**Unresolved native-origin defect (independent Review R1):** an ordinary Node parent can fork the genuine fixed
+custodian, assert an existing Pi session/file plus installed CLI path, and obtain a signer accepted by production
+discovery. The signature proves which custodian replied, not that its initializer originated in that Pi session.
+An existing session file's inode is not proof of native origin. Thus automatic admission does **not yet meet**
+TASK-00502's required rejection of agent-controlled cross-session membership payloads. Forged bootstrap is a
+blocking defect, not an approved exclusion or a demand for a general hostile-host sandbox.
+
+The qualified supported context/session/RPC APIs provide IDs, paths and lifecycle callbacks, but no native-origin
+attestation verifiable independently of that initializer. A new self-generated signer, extra caller fields or
+another editable session entry would not fix this. The owner must explicitly authorize a separately anchored
+native-bootstrap capability (including durable same-session rediscovery) or explicitly amend the requirement;
+neither decision has been made. Do not mark this candidate fixed/ready or accept custody signatures as proof
+of actual session origin. Normal native launch/resume remains present for investigation. This warning does not
+change TASK scope, grant Workflow authority, or claim OS/credential isolation.
 
 ### Selection, lifetime and bounds
 
@@ -317,7 +323,9 @@ not move a pin. Unpin recomputes activity; no active member means honest idle an
 `c` closes/opens observation readers and `r` rediscovers. A lost custodian retains a pinned last-known label but
 removes its verified log authority until fresh admission succeeds. Closing panes never cancels execution.
 
-Actual session/file replacement invalidates old subscriptions, pins and in-flight replies before rediscovery.
+Actual session/file replacement aborts in-flight challenges and invalidates old subscriptions and pins before
+rediscovery. Closing observation readers also aborts pending discovery immediately; reopening or a new session
+can start fresh discovery without waiting for old work. Late old finalizers cannot clear a new refresh lock.
 Conversation input remains held for explicit native-session recovery under the existing policy boundary; RPC
 never selects workflow/role authority. Native exit followed by `./bin/terminal --session PATH` from the same
 canonical parent checkout rediscovers valid still-live custodians without relaunching children. Editable saved
@@ -328,10 +336,13 @@ sequence gaps are reported separately from retained-history eviction; an older c
 says unknown rather than inventing zero loss. Completed entries
 can be pruned after ten minutes. Each workspace inspects at most **eight custodians / seventeen directory entries**
 and retains at most **eight children**, preserving its selected/pinned entry under overflow. One refresh is in
-flight; ticks skip while it runs. Each custodian challenge has a **one-second** deadline and **2 MiB** response
-cap; challenges are sequential, not an unbounded subscription fanout. Each custodian admits at most eight public
-readers with one-second deadlines, a 64 KiB monitor pipe queue per child, and 64 bounded native-progress IPC
-messages. Slow/absent consumers cannot hold stage progress. Unknown liveness is not inferred success.
+flight per current session; ticks skip while it runs. Each custodian challenge has an absolute **one-second
+elapsed transport deadline** and **2 MiB** response cap; trickling bytes do not extend it. Challenges are
+sequential, not an unbounded subscription fanout. Discovery does not block conversation startup. Each custodian
+admits at most eight public readers with an absolute one-second request/response transport lifetime, a 64 KiB
+monitor pipe queue per child, and 64 bounded native-progress IPC messages. Socket completion/error/close/abort
+paths clear watchdogs and abort listeners. As with other event-loop timers, deadlines run when the loop can
+service them; they are not hard real-time scheduling guarantees. Slow/absent consumers cannot hold stage progress. Unknown liveness is not inferred success.
 
 Custodians expire ten minutes after all monitors exit and the original native connection closes, with an absolute
 24-hour custody lifetime. Normal cleanup removes only its exact endpoint/descriptor inodes. A subsequent native
