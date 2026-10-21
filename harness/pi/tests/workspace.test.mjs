@@ -85,7 +85,7 @@ test('conversation scrolling is clamped and independent of observation focus', (
 });
 test('observation states disclose missing producers and cannot impersonate conversation', () => {
   const model = workspace(); assert.match(model.paneText(1), /no child selected/);
-  assert.match(model.paneText(2), /no runtime connected/); assert.match(model.paneText(2), /not worktree-isolated/);
+  assert.match(model.paneText(2), /No runtime selected/); assert.match(model.paneText(2), /shared runtime/);
 });
 test('Pi confirmations are modal, explicit, request-bound and deny by default', () => {
   const model = workspace(); model.focus = 2; model.insert('draft');
@@ -151,6 +151,17 @@ test('terminal restores original raw mode and alternate screen once, including d
   const failed = new Terminal(input, { isTTY: true, write: text => { if (text.includes('boom')) throw new Error('render'); output.push(text); } });
   failed.start(() => {}, () => {}); assert.throws(() => failed.draw(['boom'], 'dark')); failed.stop(); assert.equal(modes.at(-1), false);
 });
+test('slow terminal output drops obsolete frames instead of growing a display write queue', () => {
+  const input = new EventEmitter(); input.isTTY = true; input.setRawMode = () => {}; input.setEncoding = () => {}; input.resume = () => {}; input.pause = () => {};
+  const writes = [], output = { isTTY: true, writableNeedDrain: false, write: text => writes.push(text) };
+  const terminal = new Terminal(input, output); terminal.start(() => {}, () => {});
+  output.writableNeedDrain = true;
+  for (let i = 0; i < 1000; i++) terminal.draw([`obsolete ${i}`], 'dark');
+  assert.equal(writes.length, 1);
+  output.writableNeedDrain = false; terminal.draw(['latest frame'], 'dark');
+  assert.match(writes.at(-1), /latest frame/); assert.equal(writes.length, 2);
+  terminal.stop(); assert.match(writes.at(-1), /\?1049l/);
+});
 test('nonterminal launch is rejected without changing raw mode', () => {
   assert.throws(() => new Terminal({ isTTY: false }, { isTTY: false }).start(), /terminal/);
 });
@@ -162,7 +173,7 @@ test('workspace uses Pi-owned var session storage and rejects startup prompts or
 
 // Controller checks drive the owned entrypoint with controlled Pi records; not real PTY qualification.
 const tick = () => new Promise(resolve => setTimeout(resolve, 45));
-async function controller({ policy = 'active', status, commands = ['jev', 'file-screening', 'safe'], drawError = false, sessionFile, columns = 140, rows = 40 } = {}) {
+async function controller({ policy = 'active', status, commands = ['jev', 'file-screening', 'safe'], drawError = false, sessionFile, columns = 140, rows = 40, observe, children = [] } = {}) {
   const rpc = new EventEmitter(); rpc.requests = []; rpc.sent = []; rpc.closed = 0;
   rpc.request = async (type, data) => {
     rpc.requests.push({ type, ...data });
@@ -181,10 +192,27 @@ async function controller({ policy = 'active', status, commands = ['jev', 'file-
     stop() { this.stopped++; },
   };
   const originalExitCode = process.exitCode;
-  const close = await run(['--no-session'], { input, output, connect: () => rpc, createTerminal: () => terminal });
+  const close = await run(['--no-session', ...children.flatMap(path => ['--observe-child', path])], { input, output, connect: () => rpc, createTerminal: () => terminal, ...(observe ? { observe } : {}) });
   const dispose = async () => { await close(); process.exitCode = originalExitCode; };
   return { rpc, terminal, output, dispose };
 }
+test('child pane reader actions never enter Pi RPC and conversation remains usable while observation is paused', async () => {
+  const observer = { started: 0, closed: 0, actions: [], start() { this.started++; }, close() { this.closed++; },
+    action(action) { this.actions.push(action); }, view() { return 'TASK-00448 · owned child status'; } };
+  const app = await controller({ observe: () => observer, children: ['/var/explicit-child.sock'] });
+  try {
+    app.terminal.paste('primary draft'); app.terminal.key('', { name: 'tab' });
+    for (const text of ['p', ']', '[', 'c', 'r']) app.terminal.key(text, { name: text });
+    await tick(); assert.match(app.terminal.frames.at(-1), /owned child status/);
+    assert.match(app.terminal.frames.at(-1), /children: 1 explicit/);
+    assert.deepEqual(observer.actions, ['pause', 'next', 'previous', 'toggle', 'reconnect']);
+    assert.ok(!app.rpc.requests.some(item => ['prompt', 'abort', 'bash'].includes(item.type)));
+    app.terminal.key('', { name: 'tab', shift: true }); app.terminal.key('', { name: 'return' }); await tick();
+    assert.deepEqual(app.rpc.requests.find(item => item.type === 'prompt'), { type: 'prompt', message: 'primary draft' });
+    assert.equal(observer.started, 1);
+  } finally { await app.dispose(); }
+  assert.equal(observer.closed, 1);
+});
 // WORKSPACE.md promises wide panes at physical 100×20, while the final column must
 // remain unused to prevent terminal autowrap. Exercise both contracts at the controller.
 for (const rows of [20, 30]) test(`QA-01 entrypoint shows all panes at physical 100×${rows} without filling the final column`, async () => {

@@ -30,7 +30,7 @@ export function LoginPage({
   session,
   onAuthenticated
 }: {
-  service: LoginService;
+  service: Pick<LoginService, 'submit'>;
   schemas: PublicSchemaService;
   session?: SessionService | undefined;
   onAuthenticated?: (() => void) | undefined;
@@ -114,7 +114,7 @@ function LoginForm({
   onSuccess
 }: {
   schema: PublicSchema;
-  service: LoginService;
+  service: Pick<LoginService, 'submit'>;
   onSuccess: () => void;
 }) {
   const [remember, setRemember] = useState(false);

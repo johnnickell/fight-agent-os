@@ -24,6 +24,7 @@
   --bs-body-bg-rgb: 246, 243, 239;
   --bs-body-color-rgb: 37, 36, 42;
   --bs-primary-rgb: 142, 73, 48;
+  --bs-link-hover-color-rgb: 113, 57, 34;
   color-scheme: light;
 }
 
@@ -51,6 +52,7 @@
   --bs-body-bg-rgb: 18, 20, 23;
   --bs-body-color-rgb: 242, 240, 235;
   --bs-primary-rgb: 235, 176, 142;
+  --bs-link-hover-color-rgb: 245, 201, 173;
   color-scheme: dark;
 }
 
@@ -70,6 +72,7 @@
   --bs-border-color: var(--ui-border);
   --bs-border-radius: var(--ui-radius);
   --bs-link-color: var(--ui-action);
+  --bs-link-color-rgb: var(--bs-primary-rgb);
   --bs-link-hover-color: var(--ui-action-hover);
   --bs-primary: var(--ui-action);
   --bs-emphasis-color: var(--ui-text);

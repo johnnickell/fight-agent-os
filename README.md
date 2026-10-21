@@ -15,8 +15,10 @@ API validation/error handling, public-safe form metadata and local engineering s
 present. Explicit initial Workspace bootstrap and protected Repository registration/inspection are implemented under
 [TASK-00078's runbook](docs/engineering/REPOSITORY_REGISTRATION.md), pending fresh independent Review/QA after repair. They add no
 checkout, access grant, Planning or execution authority. Public invitation activation is implemented at `/app/activate`, pending independent acceptance;
-canonical login is implemented at `/app/login`; refresh/current-session logout are implemented pending independent acceptance. The complete authenticated shell and multi-tab continuity remain unfinished. A non-product React shell with
-local system/light/dark appearance is available at `/app`; other product UI journeys,
+canonical login is implemented at `/app/login`; refresh/current-session logout are implemented pending independent acceptance. Bounded multi-tab continuity at `/app/login` is implemented pending independent Review/QA; TASK-00049 connects the sole typed client `/me` authority cache to login/restoration, pending independent Review/QA;
+TASK-00051 mounts the [responsive authoritative application frame](docs/engineering/APPLICATION_FRAME.md),
+pending independent Review/QA, at `/`, `/app` and registered protected destinations. Local system/light/dark
+appearance and truthful future account/admin seams are available; dashboard content and other product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
 ## Start planning
@@ -42,7 +44,8 @@ See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and r
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
 An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through `./bin/terminal`, with
-responsive conversation/observation panes and honest producer placeholders. Earlier real PTY/provider/file-hook
+responsive conversation/observation panes, opt-in local child observation (TASK-00448 candidate), and an opt-in
+human-only shared main-runtime log reader (TASK-00449 candidate). Earlier real PTY/provider/file-hook
 checks, held-state terminal images and a passing exact-head baseline gate are recorded. Review's long-dialog
 visibility repair passes focused checks and the coordinator's frozen-candidate full gate. Coordinator-owned real
 native-selection/same-session resume qualification now passes, preserving conversation and actual workflow binding;
@@ -62,7 +65,7 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/database migrate
 ```
 
-The inherited root endpoint runs at http://localhost:18087. Build the browser foundation with
+The application root runs at http://localhost:18087 (authentication still requires the trusted HTTPS origin). Build the browser foundation with
 `./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
 `/app`; see [client commands and boundaries](client/README.md).
 `./bin/build` is the [complete read-only gate](docs/engineering/BUILD.md), including backend coverage and
@@ -89,7 +92,7 @@ Configure independent external `APP_ACTIVATION_RATE_KEY` and `APP_AUTH_RATE_KEY`
 The reusable [browser authentication request controls](docs/engineering/BROWSER_AUTH_REQUESTS.md) provide
 fixed session/persistent refresh cookies, nonce lifecycle, strict browser guards and independently committed
 rolling email/network/endpoint admission. Production-like HTTP boot requires explicit direct TLS authority,
-no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/app/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Multi-tab coordination and the authenticated product shell remain planned. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
+no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/app/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Bounded multi-tab coordination at `/app/login` is implemented pending independent Review/QA; TASK-00051 now mounts the responsive authenticated frame, pending independent Review/QA. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For opt-in local TLS at
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup`, `./bin/https up`, then `./bin/https status`. Setup preserves your CSRF key and changes only
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`

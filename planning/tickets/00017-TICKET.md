@@ -2,7 +2,7 @@
 id: TICKET-00017
 epic: EPIC-00004
 title: Deliver secure browser authentication and session continuity
-status: ready-for-agent
+status: done
 ---
 
 # Deliver secure browser authentication and session continuity
@@ -53,7 +53,7 @@ Login is public but throttled; refresh/logout require the ambient credential plu
 | [TASK-00045](../tasks/00045-TASK.md) | Enforce browser authentication request controls | done |
 | [TASK-00046](../tasks/00046-TASK.md) | Deliver the canonical email and password login journey | done |
 | [TASK-00047](../tasks/00047-TASK.md) | Deliver rotating refresh and current-session logout | done |
-| [TASK-00048](../tasks/00048-TASK.md) | Coordinate bounded multi-tab session continuity | ready-for-agent |
+| [TASK-00048](../tasks/00048-TASK.md) | Coordinate bounded multi-tab session continuity | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

@@ -7,14 +7,14 @@ system or an Internet homepage. It starts with the Slim composition from `johnni
 - `src/Domain/`: business state, invariants, value objects, and capability interfaces as introduced
 - `src/Application/`: command/query handlers and application coordination as introduced
 - `src/Adapter/`: HTTP Actions/Responders, persistence, external services, and runtime integrations
-- `client/`: React/strict TypeScript non-product shell at `/app`; Routes/Layouts/Pages/Components, typed public
+- `client/`: React/strict TypeScript application frame at `/` and `/app`; Routes/Layouts/Pages/Components, typed public
   boot config, Docker-pinned tooling, typed API/CSRF service boundary, and a semantic production-component
   Storybook catalog; injectable fail-closed authority cache, shared permissions, guarded outlets/actions and
-  bounded in-memory navigation intent are available but not mounted into the public shell; an independently
+  bounded in-memory navigation intent now drive the single production route manifest and responsive frame (TASK-00051, pending independent Review/QA); an independently
   scoped semantic system/light/dark presentation selector and CSP-compatible prepaint are mounted; the server `/api/v1/me` safe identity/current-authority query and JWT-by-default matched-Action gate are
   available; public invitation activation is now mounted at `/app/activate` using real schema/Formik, protected JSON
   activation and memory/cookie session seams, pending independent acceptance; canonical login at `/app/login` reuses package authentication, browser guards,
-  schema/Formik and memory/cookie seams, also pending independent acceptance; rotating cookie-only refresh and current-session logout now have HTTP/client services and login-success UI pending independent Review/QA; typed client `/me`, multi-tab continuity and the protected product frame remain planned
+  schema/Formik and memory/cookie seams, also pending independent acceptance; rotating cookie-only refresh and current-session logout now have HTTP/client services and login-success UI pending independent Review/QA; TASK-00048 adds bounded memory-only multi-tab continuity/restoration at `/app/login`, pending independent Review/QA; TASK-00049 connects one strict typed client `/me` service and the existing cache to login/restoration, pending independent Review/QA; the protected frame now uses that same sole graph, with truthful future landing seams and no dashboard content
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)
 - `.pi/skills/`: local planning, engineering, Graphify and instruction-writing guidance; managed runtime execution remains planned
 - `harness/pi/`: installable terminal identity, Jev/file-screening capabilities and an opt-in

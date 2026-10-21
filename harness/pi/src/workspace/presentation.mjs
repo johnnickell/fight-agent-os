@@ -86,10 +86,18 @@ export class Workspace {
     if (key.ctrl && key.name === 'w') { this.collapsed = !this.collapsed; return; }
     if (key.ctrl && key.name === 't') { this.theme = this.theme === 'light' ? 'dark' : 'light'; return; }
     if (key.name === 'pageup' || key.name === 'pagedown') {
-      const delta = (key.name === 'pageup' ? 5 : -5) * (this.focus === 0 ? 1 : -1);
+      const delta = (key.name === 'pageup' ? 5 : -5) * (this.focus === 0 || this.focus === 2 && !this.runtimeLogs?.info ? 1 : -1);
       this.offsets[this.focus] = Math.max(0, this.offsets[this.focus] + delta); return;
     }
     if (key.ctrl && key.name === 'c' || key.name === 'escape') return { type: 'abort' };
+    if (this.focus === 1 && !key.ctrl && !key.meta) {
+      const action = { '[': 'previous', ']': 'next', p: 'pause', c: 'toggle', r: 'reconnect' }[text];
+      if (action) return { type: 'observation', action };
+    }
+    if (this.focus === 2 && !key.ctrl && !key.meta) {
+      const action = { '[': 'previous', ']': 'next', p: 'pause', c: 'toggle', r: 'reconnect', i: 'info' }[text];
+      if (action) return { type: 'runtime', action };
+    }
     if (this.focus !== 0 || !this.ready) return;
     if (key.name === 'return') {
       const message = this.draft.trim();
@@ -142,8 +150,8 @@ export class Workspace {
     if (response) { this.dialogs.shift(); return { type: 'dialog', id: dialog.id, ...response }; }
   }
   paneText(pane) {
-    if (pane === 1) return 'Observation only — child agent\nUnavailable: no child selected\nTASK-00448 supplies the producer.\nFocus cannot send commands or change an agent directory, session or grants.';
-    if (pane === 2) return 'Observation only — runtime logs\nUnavailable: no runtime connected\nTASK-00449 supplies the producer.\nNo Docker access or lifecycle operations.\nRuntime identity: none (not worktree-isolated).';
+    if (pane === 1) return this.childObservation?.view() ?? 'Observation only — child agent\nUnavailable: no child selected\nNo discovery, launch or child control.';
+    if (pane === 2) return this.runtimeLogs?.view() ?? 'Human-only shared runtime logs\nNo runtime selected. No Docker reader started.';
     return [this.omitted ? '[Older display content omitted; Pi session remains authoritative]' : '', ...this.transcript, this.live || this.liveOmitted ? `${this.liveOmitted ? '[assistant stream: earlier content omitted]\n' : ''}${this.live}${this.liveOmitted ? '\n[assistant stream truncated; Pi history is authoritative]' : ''}` : ''].filter(Boolean).join('\n');
   }
   render(columns, rows, availableColumns = columns) {
@@ -166,7 +174,13 @@ export class Workspace {
       const end = lines.length - this.offsets[pane];
       // Observation and dialogs start at the top; conversation follows the newest content.
       if (pane === 0 && !this.dialogs.length) lines = lines.slice(Math.max(0, end - viewport), end);
-      else {
+      else if (pane === 2 && this.runtimeLogs?.source && !this.runtimeLogs.info) {
+        const header = wrap(this.runtimeLogs.summary(), inner).slice(0, Math.max(0, viewport - 2));
+        const body = wrap(this.runtimeLogs.body(), inner), available = viewport - header.length;
+        this.offsets[2] = Math.min(this.offsets[2], Math.max(0, body.length - available));
+        const end = body.length - this.offsets[2];
+        lines = [...header, ...body.slice(Math.max(0, end - available), end)];
+      } else {
         const dialog = this.dialogs.length && pane === 0 ? this.dialogs[0] : undefined;
         let offset = dialog ? Math.min(dialog.scroll ?? 0, Math.max(0, lines.length - viewport)) : this.offsets[pane];
         if (dialog?.method === 'select') {
@@ -215,7 +229,7 @@ export class Workspace {
       if (pieces[row].length) output[row] = pieces[row].sort((a, b) => a.x - b.x).map(piece => piece.text).join('');
     }
     output[rows - 2] = fit(this.status, columns);
-    output[rows - 1] = fit('Tab focus/views  PgUp/PgDn scroll  ^W split  ^T theme  Esc abort  ^J newline  ^Q exit', columns);
+    output[rows - 1] = fit(this.focus === 2 && !this.dialogs.length ? 'Logs: [ / ] service  p pause  c reader close/open  r reconnect  i source details  Tab focus  PgUp/PgDn scroll  ^Q exit' : 'Tab focus/views  PgUp/PgDn scroll  ^W split  ^T theme  Esc abort  ^J newline  ^Q exit', columns);
     return output;
   }
   dialogText() {

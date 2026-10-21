@@ -31,7 +31,7 @@ export function evaluateAccess(state: AuthorityState, requirements: unknown): Ac
           requirement.all.length === 0 ||
           ![...(requirement.all as unknown[])].every(
             (name: unknown) =>
-              typeof name === 'string' && /^[A-Za-z][A-Za-z0-9_-]{0,127}(?![\s\S])/.test(name)
+              typeof name === 'string' && /^[A-Za-z][A-Za-z0-9_-]{0,254}(?![\s\S])/.test(name)
           )
         )
           return 'invalid';

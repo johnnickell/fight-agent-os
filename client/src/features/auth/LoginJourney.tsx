@@ -1,17 +1,11 @@
-import { useLayoutEffect, useState } from 'react';
-import { flushSync } from 'react-dom';
-
-import { ApiClient } from '@/api/ApiClient';
 import { ContentState } from '@/components/ContentState';
-import { CsrfProofService } from '@/features/auth/CsrfProofService';
-import { LoginService } from '@/features/auth/LoginService';
-import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
-import { SessionService } from '@/features/auth/SessionService';
-import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
+import { SessionContinuity } from '@/features/auth/SessionContinuity';
+import { useApplicationSession } from '@/features/auth/useApplicationSession';
 import { LoginPage } from '@/pages/LoginPage';
 
 import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 
+/** Standalone login composition; production frame uses the same sole session graph */
 export function LoginJourney({
   runtime,
   onAuthenticated
@@ -19,33 +13,7 @@ export function LoginJourney({
   runtime: RuntimeConfiguration;
   onAuthenticated?: (() => void) | undefined;
 }) {
-  const [retired, setRetired] = useState(false);
-  const [dependencies] = useState(() => {
-    const tokens = new MemoryAccessToken();
-    const api = new ApiClient(runtime, { accessTokens: tokens });
-    const csrf = new CsrfProofService(api);
-    return {
-      service: new LoginService(api, csrf, tokens),
-      session: new SessionService(api, csrf, tokens),
-      schemas: new PublicSchemaService(api)
-    };
-  });
-  useLayoutEffect(() => {
-    const clear = () => {
-      dependencies.service.dispose();
-      dependencies.session.dispose();
-      dependencies.schemas.clear();
-    };
-    const retire = () => {
-      clear();
-      flushSync(() => setRetired(true));
-    };
-    window.addEventListener('pagehide', retire);
-    return () => {
-      window.removeEventListener('pagehide', retire);
-      clear();
-    };
-  }, [dependencies]);
+  const { session, retired } = useApplicationSession(runtime);
   if (retired)
     return (
       <ContentState
@@ -54,5 +22,13 @@ export function LoginJourney({
         message="Reload this page to sign in again. Browser history does not restore credentials."
       />
     );
-  return <LoginPage {...dependencies} onAuthenticated={onAuthenticated} />;
+  return (
+    <SessionContinuity coordinator={session.coordinator}>
+      <LoginPage
+        service={session.coordinator}
+        schemas={session.schemas}
+        onAuthenticated={onAuthenticated}
+      />
+    </SessionContinuity>
+  );
 }

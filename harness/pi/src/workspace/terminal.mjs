@@ -52,6 +52,8 @@ export class Terminal {
     this.output.write('\x1b[?1049h\x1b[?25l\x1b[?2004h');
   }
   draw(lines, theme) {
+    // A slow terminal gets the latest state after drain, not an unbounded queue of stale frames.
+    if (this.output.writableNeedDrain) return;
     const palette = theme === 'light' ? '\x1b[30;47m' : theme === 'dark' ? '\x1b[97;40m' : '\x1b[0m';
     // Never write the final column: avoid terminal autowrap and scrolling at the bottom-right cell.
     this.output.write('\x1b[H' + palette + lines.join('\x1b[K\r\n') + '\x1b[K\x1b[0m');

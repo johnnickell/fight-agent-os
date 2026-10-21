@@ -2,7 +2,7 @@
 id: TICKET-00110
 epic: EPIC-00006
 title: Work in a Pi terminal workspace with agent activity and live Docker logs
-status: ready-for-agent
+status: done
 ---
 
 # Work in a Pi terminal workspace with agent activity and live Docker logs
@@ -37,8 +37,10 @@ consumer, not another collector. It does not need the planned logging backend, b
 Planning cutover or managed execution. Preserve available emitted content and source/service/timestamp detail;
 missing task attribution stays unknown. No new instrumentation or log-coverage guarantee is included.
 
-Per-worktree containers, Compose overrides and automatic worktree-to-runtime switching are separate future work,
-not prerequisites or implicitly created TASKs. Existing managed preparation ownership remains with
+Per-worktree container provisioning and Compose overrides remain separate future work. Automatic observation
+switching to existing worktree test stacks is now approved in the
+[2026-10-20 follow-up](#approved-session-and-worktree-following--2026-10-20), after the first release.
+Existing managed preparation ownership remains with
 [TICKET-00032](00032-TICKET.md). Full log search, collection, retention and archive policy remain with the ongoing
 Operational logs and failure diagnostics planning. Do not change that map or wait for its delivery here.
 
@@ -88,11 +90,58 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00447](../tasks/00447-TASK.md) | Work in the responsive Pi terminal workspace | done |
-| [TASK-00448](../tasks/00448-TASK.md) | Observe the selected local child agent in the terminal workspace | ready-for-agent |
-| [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent |
+| [TASK-00448](../tasks/00448-TASK.md) | Observe the selected local child agent in the terminal workspace | done |
+| [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | done |
+| [TASK-00502](../tasks/00502-TASK.md) | Follow current-session children and their worktree test logs automatically | ready-for-agent |
+| [TASK-00503](../tasks/00503-TASK.md) | Launch the Pi terminal workspace globally from any project | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved global workspace command — 2026-10-20
+
+John prefers a global command because repository `bin/*` scripts are generally Docker execution wrappers.
+[TASK-00503](../tasks/00503-TASK.md) delivers a package-owned `fight-terminal` command on PATH, preserving the
+caller's project/worktree and existing Harness policy. It includes user-level installation/update/removal,
+retirement of `bin/terminal` and migration of current launch/resume help. Historical receipts remain unchanged.
+The initial local launcher was an implementation entry point, not the desired distribution interface.
+
+This is independently deliverable after completed TASK-00447; neither TASK-00449 nor TASK-00502 blocks it. Normal
+`pi` stays available and no global installation is performed by planning. The actual installation mechanism must
+be qualified: a Pi package declaration alone does not establish a command on PATH. Existing Board priority/order
+is unchanged. Planning validation for the amendment is recorded below.
+
+### Approved session and worktree following — 2026-10-20
+
+John approved [TASK-00502](../tasks/00502-TASK.md): automatically follow the current session's active child,
+provide a selector for concurrent children and pin/unpin, and follow the observed worktree's existing test Docker
+stack. With no selected child, logs follow the primary session's worktree. Trusted session-child registration and
+verified worktree/test-stack associations are included because the initial monitor and shared-runtime reader do
+not establish them. Missing or ambiguous associations remain visible; no silent main-checkout fallback is allowed.
+
+This supersedes the original automatic-switching deferral for this follow-up only. TASK-00449 retains its original
+shared-runtime delivery scope. Container provisioning/Compose overrides, managed execution and the full logging
+backend remain separate. TASK-00502 depends on TASK-00448 and TASK-00449, stays unranked and does not alter existing
+Board priorities. Pinning and switching affect observation only, never execution permissions or directories.
+
+Prepared on `feature/terminal-context-follow-plan` from `develop` at `c4e4b7b`, refreshed to `f59f870` before
+publication, in an isolated managed worktree.
+Active-worktree task inventories were checked before allocating TASK-00502 and TASK-00503. `./bin/planning-check --write` and
+`./bin/planning-check` passed with 639 records, 500 active and current generated views. Local planning links and
+whitespace checks passed. TASK-00449 merged during publication preparation, so both follow-up TASKs now have
+completed prerequisites.
+The refreshed records preserve its completed state. Implementation and runtime qualification of the planned
+features remain outstanding.
+
+Publication gate: `./bin/build` passed in 493.32 seconds in a temporary, uniquely named Docker check stack mounted
+to this worktree, with matching locked dependencies mounted read-only. Receipt:
+`.runs/build/20261020T235535Z-508/receipt.json`; source remained unchanged during the gate. A first gate stopped at
+OpenAPI freshness because this fresh worktree lacked generated artifacts; the owning export commands prepared
+ignored OpenAPI/validation artifacts before the successful rerun. Initial stack startup also required preparing
+empty dependency mount directories. No tracked implementation files changed. Bootstrap/Sass deprecation and
+asset-size warnings remain disclosed in build output. The final receipt-note edit is verified by planning and
+whitespace checks; it does not claim a second full build. These checks validate publication of the plan, not
+implementation of either TASK or independent technical/behavioral acceptance.
 
 ### Local workspace candidate — 2026-10-17
 

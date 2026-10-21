@@ -50,10 +50,10 @@
 | [TASK-00045](00045-TASK.md) | Enforce browser authentication request controls | done | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00046](00046-TASK.md) | Deliver the canonical email and password login journey | done | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00047](00047-TASK.md) | Deliver rotating refresh and current-session logout | done | [TICKET-00017](../tickets/00017-TICKET.md) |
-| [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | ready-for-agent | [TICKET-00017](../tickets/00017-TICKET.md) |
-| [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
+| [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | done | [TICKET-00017](../tickets/00017-TICKET.md) |
+| [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | done | [TICKET-00018](../tickets/00018-TICKET.md) |
-| [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
+| [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | done | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
@@ -450,8 +450,8 @@
 | [TASK-00445](00445-TASK.md) | Record independent managed Reviews | needs-info | [TICKET-00083](../tickets/00083-TICKET.md) |
 | [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | done | — |
 | [TASK-00447](00447-TASK.md) | Work in the responsive Pi terminal workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
-| [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
-| [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00448](00448-TASK.md) | Observe the selected local child agent in the terminal workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00449](00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00450](00450-TASK.md) | Keep Pi Jev setup valid without periodic renewal | done | — |
 | [TASK-00451](00451-TASK.md) | Emit useful native diagnostics without disrupting operations | needs-info | [TICKET-00111](../tickets/00111-TICKET.md) |
 | [TASK-00452](00452-TASK.md) | Explain HTTP failures without changing public responses | ready-for-agent | [TICKET-00111](../tickets/00111-TICKET.md) |
@@ -504,4 +504,6 @@
 | [TASK-00499](00499-TASK.md) | Remove harness denials from native file reads | done | — |
 | [TASK-00500](00500-TASK.md) | Restore native file tools and use Terra for Land | done | — |
 | [TASK-00501](00501-TASK.md) | Restore local PHP diagnostics and bound development processes | done | — |
+| [TASK-00502](00502-TASK.md) | Follow current-session children and their worktree test logs automatically | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 <!-- /planning:records -->

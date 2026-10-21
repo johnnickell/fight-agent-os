@@ -7,7 +7,11 @@
   overflow-wrap: anywhere;
 }
 
-.catalog-preview h1 {
+.catalog-frame-preview {
+  padding: 0;
+}
+
+.catalog-preview:not(.catalog-frame-preview) h1 {
   font-size: 1.75rem;
 }
 

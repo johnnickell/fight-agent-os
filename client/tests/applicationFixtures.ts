@@ -1,0 +1,67 @@
+import { vi } from 'vitest';
+
+import { ApiClient } from '@/api/ApiClient';
+import { apiFailure } from '@/api/ApiResult';
+import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
+import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
+import { AuthorityCache } from '@/features/authority/AuthorityCache';
+import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
+import { applicationRoutes } from '@/routes/applicationRoutes';
+import { IntendedRoute } from '@/routes/IntendedRoute';
+
+import { jsonResponse } from './activationFixtures';
+import { principal } from './authorityFixtures';
+import { loginSchemaSource } from './loginFixtures';
+
+import type { ApiResult } from '@/api/ApiResult';
+import type { PrincipalLoader } from '@/features/authority/AuthorityCache';
+
+export function applicationSession(
+  permissions: string[] = ['VIEW_DASHBOARD', 'READ_OWN_SESSIONS'],
+  loader?: PrincipalLoader
+) {
+  const tokens = new MemoryAccessToken();
+  const load = vi.fn<PrincipalLoader>(
+    loader ??
+      (() => Promise.resolve({ status: 'principal', principal: { ...principal, permissions } }))
+  );
+  const authority = new AuthorityCache(load);
+  const intent = new IntendedRoute(authority, () => applicationRoutes, window.location.origin);
+  const accept = (): Promise<ApiResult<true>> => {
+    tokens.accept('test.access.signature', performance.now());
+    return Promise.resolve({ ok: true as const, value: true as const, correlationId: null });
+  };
+  const refresh = vi.fn(accept);
+  const logout = vi.fn((): Promise<ApiResult<true>> =>
+    Promise.resolve({ ok: true as const, value: true as const, correlationId: null })
+  );
+  const coordinator = new SessionCoordinator({
+    tokens,
+    authority,
+    clearIntent: () => intent.clear(),
+    session: { refresh, logout, invalidate: () => tokens.clear(), dispose: () => tokens.clear() },
+    login: { submit: accept, dispose: () => tokens.clear() }
+  });
+  const schemas = new PublicSchemaService(
+    new ApiClient(
+      { schemaVersion: 1, apiBasePath: '/api/v1' },
+      { fetch: () => Promise.resolve(jsonResponse(loginSchemaSource)) }
+    )
+  );
+  return {
+    authority,
+    intent,
+    coordinator,
+    schemas,
+    load,
+    refresh,
+    logout,
+    apiFailure,
+    dispose: () => {
+      intent.dispose();
+      coordinator.dispose();
+      authority.dispose();
+      schemas.clear();
+    }
+  };
+}
