@@ -138,7 +138,8 @@ final class ApiFailureMapperTest extends TestCase
         $delivery = new InvitationDeliveryStatusView(
             $userId,
             CredentialDeliveryStatus::PENDING,
-            new DateTimeImmutable('2026-10-24T12:00:00+00:00')
+            new DateTimeImmutable('2026-10-24T12:00:00+00:00'),
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId::generate()
         );
         $classification = (new ApiFailureMapper())->classify(new IncompleteInvitation(
             new InvitationIssuance($userId, 'unconfirmed', false, $delivery)
@@ -153,9 +154,10 @@ final class ApiFailureMapperTest extends TestCase
                 'assignment' => 'unconfirmed',
                 'audit'      => 'unconfirmed',
                 'delivery'   => [
-                    'user_id'    => $userId->toString(),
-                    'status'     => 'pending',
-                    'expires_at' => '2026-10-24T12:00:00+00:00'
+                    'user_id'                => $userId->toString(),
+                    'status'                 => 'pending',
+                    'expires_at'             => '2026-10-24T12:00:00+00:00',
+                    'activation_delivery_id' => $delivery->getActivationDeliveryId()->toString()
                 ]
             ]
         ], json_decode($classification->envelope->toJson(), true, 512, JSON_THROW_ON_ERROR));

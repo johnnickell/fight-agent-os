@@ -45,7 +45,8 @@ final class ActivationGrantTransitions
         $oldDelivery = $before->getDelivery();
         $newDelivery = $after->getDelivery();
         if (
-            !$after->getId()->equals($before->getId())
+            $after->getOrigin() !== $before->getOrigin()
+            || !$after->getId()->equals($before->getId())
             || !$after->getUserId()->equals($before->getUserId())
             || $after->getCredentialHash() !== $before->getCredentialHash()
             || $after->getExpiresAt() != $before->getExpiresAt()

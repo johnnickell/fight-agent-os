@@ -56,9 +56,10 @@ final readonly class CatalogData implements Arrayable
     {
         if ($view instanceof RoleView) {
             return [
-                'role_id' => $view->getRoleId()->toString(),
-                'name'    => $view->getName()->toString(),
-                'managed' => $view->isManaged()
+                'role_id'  => $view->getRoleId()->toString(),
+                'name'     => $view->getName()->toString(),
+                'managed'  => $view->isManaged(),
+                'revision' => $view->getRevision()->toString()
             ];
         }
 

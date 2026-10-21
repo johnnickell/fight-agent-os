@@ -400,7 +400,8 @@ final class InvitationApiTest extends TestCase
                 return $this->fault === 'delivery-null' ? null : new InvitationDeliveryStatusView(
                     $this->fault === 'delivery-wrong' ? UserId::generate() : $query->getUserId(),
                     CredentialDeliveryStatus::PENDING,
-                    $now->modify('+7 days')
+                    $now->modify('+7 days'),
+                    \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId::generate()
                 );
             }
             if ($this->fault === 'policy') {

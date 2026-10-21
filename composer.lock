@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f6b5bba2898933c9682a1f0c3b2f0cd5",
+    "content-hash": "9f62aee1f4a4638fd6460e873d64c367",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -1315,16 +1315,16 @@
         },
         {
             "name": "johnnickell/fight-access-control",
-            "version": "v0.6.0",
+            "version": "v0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/johnnickell/fight-access-control",
-                "reference": "dc4621d13851dd08cdf85ed9715ead24b1051e80"
+                "reference": "319738255e682d587642b67856039f882b9588d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/johnnickell/fight-access-control/zipball/dc4621d13851dd08cdf85ed9715ead24b1051e80",
-                "reference": "dc4621d13851dd08cdf85ed9715ead24b1051e80",
+                "url": "https://api.github.com/repos/johnnickell/fight-access-control/zipball/319738255e682d587642b67856039f882b9588d6",
+                "reference": "319738255e682d587642b67856039f882b9588d6",
                 "shasum": ""
             },
             "require": {
@@ -1360,7 +1360,7 @@
                 "MIT"
             ],
             "description": "Framework-neutral identity, credential, session, authorization, and account-lifecycle contracts",
-            "time": "2026-10-19T17:06:05+00:00"
+            "time": "2026-10-21T17:59:41+00:00"
         },
         {
             "name": "johnnickell/fight-common",

@@ -218,7 +218,8 @@ final class BootstrapTest extends TestCase
                     $query->getRoleId(),
                     RoleName::fromString('ROLE_SUPER_ADMIN'),
                     true,
-                    []
+                    [],
+                    \Fight\AccessControl\Domain\AccessControl\Role\RoleRevision::initial()
                 );
             }
             $policy = InstallationManagedPolicy::create();

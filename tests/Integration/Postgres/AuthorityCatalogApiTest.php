@@ -36,6 +36,8 @@ use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\User\Command\DeleteUser;
+use Fight\AccessControl\Domain\AccessControl\User\Command\DisableUser;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
@@ -224,7 +226,7 @@ final class AuthorityCatalogApiTest extends TestCase
                 $ids[] = $record[$key];
                 $single = $this->assertResponse($this->request('/api/v1/'.$catalog.'/'.$record[$key]), 200)['data'];
                 self::assertSame($record, $single);
-                $fields = ['role_id', 'name', 'managed'];
+                $fields = ['role_id', 'name', 'managed', 'revision'];
                 if ($catalog === 'permissions') {
                     $fields = ['permission_id', 'name', 'tier', 'managed'];
                 }
@@ -237,7 +239,10 @@ final class AuthorityCatalogApiTest extends TestCase
         }
         $custom = $this->assertResponse($this->request('/api/v1/roles/'.$role->getId()->toString()), 200)['data'];
         self::assertSame([
-            'role_id' => $role->getId()->toString(), 'name' => 'ROLE_CUSTOM', 'managed' => false
+            'role_id'  => $role->getId()->toString(),
+            'name'     => 'ROLE_CUSTOM',
+            'managed'  => false,
+            'revision' => $role->getRevision()->toString()
         ], $custom);
         $response = $this->request('/api/v1/permissions/'.$permission->getId()->toString());
         $custom = $this->assertResponse($response, 200)['data'];
@@ -274,7 +279,7 @@ final class AuthorityCatalogApiTest extends TestCase
     }
 
     /**
-     * Keeps authorized absence safe and refuses all catalog mutation methods
+     * Keeps absence safe and refuses undeclared catalog mutation methods
      */
     public function testNotFoundAndNoMutations(): void
     {
@@ -283,7 +288,9 @@ final class AuthorityCatalogApiTest extends TestCase
             $this->assertResponse($this->request('/api/v1/'.$catalog.'/'.$id), 404);
             foreach (['POST', 'PATCH', 'PUT', 'DELETE'] as $method) {
                 foreach (['/api/v1/'.$catalog, '/api/v1/'.$catalog.'/'.$id] as $path) {
-                    self::assertSame(405, $this->request($path, true, $method)->getStatusCode());
+                    $declared = $catalog === 'roles' && (($method === 'POST' && $path === '/api/v1/roles')
+                        || (in_array($method, ['PATCH', 'DELETE'], true) && $path !== '/api/v1/roles'));
+                    self::assertSame($declared ? 400 : 405, $this->request($path, true, $method)->getStatusCode());
                 }
             }
         }
@@ -359,6 +366,333 @@ final class AuthorityCatalogApiTest extends TestCase
         );
         $this->assertResponse($this->request('/api/v1/permissions'), 403);
         $this->assertQueries(1);
+    }
+
+    /**
+     * Carries exact displayed revisions through create, no-op rename, stale conflict and confirmed removal
+     */
+    public function testCustomRoleJourney(): void
+    {
+        $id = RoleId::generate()->toString();
+        $created = $this->mutation('POST', '/api/v1/roles', ['role_id' => $id, 'name' => 'ROLE_CUSTOM'], 201);
+        $revision = $created['data']['revision'];
+        $same = $this->mutation(
+            'PATCH',
+            '/api/v1/roles/'.$id,
+            ['name' => 'ROLE_CUSTOM', 'expected_revision' => $revision],
+            200
+        );
+        self::assertSame($created['data'], $same['data']);
+        self::assertSame(1, $this->roleAuditCount());
+        $renamed = $this->mutation(
+            'PATCH',
+            '/api/v1/roles/'.$id,
+            ['name' => 'ROLE_RENAMED', 'expected_revision' => $revision],
+            200
+        );
+        self::assertNotSame($revision, $renamed['data']['revision']);
+        $this->mutation(
+            'DELETE',
+            '/api/v1/roles/'.$id,
+            ['expected_revision' => $renamed['data']['revision'], 'confirm' => false],
+            400
+        );
+        $this->mutation(
+            'DELETE',
+            '/api/v1/roles/'.$id,
+            ['expected_revision' => $renamed['data']['revision'], 'confirm' => true],
+            200
+        );
+        self::assertFalse($this->connection->fetchOne('SELECT id FROM roles WHERE id = ?', [$id]));
+        $audits = $this->connection->fetchAllAssociative(<<<'SQL'
+SELECT actor_id, action, subject_id, context FROM audit_evidence WHERE subject_type = 'role' ORDER BY id
+SQL);
+        self::assertSame(
+            ['role.custom_created', 'role.custom_renamed', 'role.custom_removed'],
+            array_column($audits, 'action')
+        );
+        foreach ($audits as $audit) {
+            self::assertSame($this->actor->getId()->toString(), $audit['actor_id']);
+            self::assertSame($id, $audit['subject_id']);
+            self::assertSame('{}', $audit['context']);
+        }
+    }
+
+    /**
+     * Rejects stale intent atomically without recording success or substituting current authority
+     */
+    #[DataProvider('staleOperations')]
+    public function testStaleRoleIntent(string $method): void
+    {
+        $id = RoleId::generate()->toString();
+        $created = $this->mutation('POST', '/api/v1/roles', ['role_id' => $id, 'name' => 'ROLE_CUSTOM'], 201);
+        $current = $this->mutation(
+            'PATCH',
+            '/api/v1/roles/'.$id,
+            ['name' => 'ROLE_RENAMED', 'expected_revision' => $created['data']['revision']],
+            200
+        );
+        $body = $method === 'DELETE' ? ['confirm' => true] : ['name' => 'ROLE_RENAMED'];
+        $body['expected_revision'] = $created['data']['revision'];
+        $this->mutation($method, '/api/v1/roles/'.$id, $body, 409);
+        self::assertSame($current['data']['revision'], $this->connection->fetchOne(
+            'SELECT revision FROM roles WHERE id = ?',
+            [$id]
+        ));
+        self::assertSame(2, $this->roleAuditCount());
+    }
+
+    /**
+     * Supplies both stale token mutations
+     *
+     * @return iterable<array{string}>
+     */
+    public static function staleOperations(): iterable
+    {
+        yield ['PATCH'];
+        yield ['DELETE'];
+    }
+
+    /**
+     * Accepts only each exact operation permission, independently of catalog visibility
+     */
+    #[DataProvider('roleOperations')]
+    public function testMutationPermissions(string $method, string $required): void
+    {
+        $id = RoleId::generate()->toString();
+        $created = $this->mutation('POST', '/api/v1/roles', ['role_id' => $id, 'name' => 'ROLE_CUSTOM'], 201);
+        $this->connection->executeStatement(
+            'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name <> ?)',
+            [$required]
+        );
+        $path = $method === 'POST' ? '/api/v1/roles' : '/api/v1/roles/'.$id;
+        $body = match ($method) {
+            'POST' => ['role_id' => RoleId::generate()->toString(), 'name' => 'ROLE_OTHER'],
+            'PATCH' => ['name' => 'ROLE_RENAMED', 'expected_revision' => $created['data']['revision']],
+            default => ['confirm' => true, 'expected_revision' => $created['data']['revision']]
+        };
+        $this->mutation($method, $path, $body, $method === 'POST' ? 201 : 200);
+        $this->connection->executeStatement('DELETE FROM role_permissions');
+        $this->mutation($method, $path, $body, 403);
+        $authentication = new AuthenticationContext($this->actor->getId(), $this->session->getId(), 1);
+        try {
+            $this->container->get(\App\Application\Authorization\ManageCustomRoles::class)->create(
+                $authentication,
+                RoleId::generate(),
+                RoleName::fromString('ROLE_DENIED')
+            );
+            self::fail('Direct Application caller bypassed authorization.');
+        } catch (PermissionDenied) {
+            self::assertSame(0, (int) $this->connection->fetchOne(
+                "SELECT count(*) FROM roles WHERE name = 'ROLE_DENIED'"
+            ));
+        }
+    }
+
+    /**
+     * Supplies the operation permission matrix
+     *
+     * @return iterable<array{string, string}>
+     */
+    public static function roleOperations(): iterable
+    {
+        yield ['POST', 'CREATE_ROLES'];
+        yield ['PATCH', 'UPDATE_ROLES'];
+        yield ['DELETE', 'DELETE_ROLES'];
+    }
+
+    /**
+     * Rejects spoofed actors, injected grants, duplicate names, managed targets and retained assignments
+     */
+    public function testMutationSecurity(): void
+    {
+        $id = RoleId::generate()->toString();
+        $injected = ['actor_id' => $this->actor->getId()->toString(), 'permission_ids' => [], 'managed' => false];
+        foreach ($injected as $field => $value) {
+            $this->mutation(
+                'POST',
+                '/api/v1/roles',
+                ['role_id' => $id, 'name' => 'ROLE_CUSTOM', $field => $value],
+                400
+            );
+        }
+        $created = $this->mutation('POST', '/api/v1/roles', ['role_id' => $id, 'name' => 'ROLE_CUSTOM'], 201);
+        $this->mutation(
+            'POST',
+            '/api/v1/roles',
+            ['role_id' => RoleId::generate()->toString(), 'name' => 'ROLE_CUSTOM'],
+            409
+        );
+        $this->mutation('PATCH', '/api/v1/roles/'.$id, ['name' => 'ROLE_OTHER'], 400);
+        $this->mutation('PATCH', '/api/v1/roles/'.$id, ['name' => 'ROLE_OTHER', 'expected_revision' => 'invalid'], 400);
+        $managed = $this->container->get(RoleRepository::class)->getById(
+            RoleId::fromString(InstallationManagedPolicy::SUPER_ADMIN_ROLE_ID)
+        );
+        $this->mutation(
+            'PATCH',
+            '/api/v1/roles/'.$managed->getId()->toString(),
+            ['name' => 'ROLE_OTHER', 'expected_revision' => $managed->getRevision()->toString()],
+            409
+        );
+        $this->mutation(
+            'DELETE',
+            '/api/v1/roles/'.$managed->getId()->toString(),
+            ['confirm' => true, 'expected_revision' => $managed->getRevision()->toString()],
+            409
+        );
+        $user = User::invite(
+            UserId::generate(),
+            EmailAddress::fromString('reference@example.test'),
+            new DateTimeImmutable('2026-10-20T12:00:00Z')
+        );
+        $user->assignRole(RoleId::fromString($id), $user->getCreatedAt());
+        $this->container->get(Connection::class)->transactional(
+            fn() => $this->container->get(UserRepository::class)->add($user)
+        );
+        $this->mutation(
+            'DELETE',
+            '/api/v1/roles/'.$id,
+            ['confirm' => true, 'expected_revision' => $created['data']['revision']],
+            409
+        );
+        self::assertSame($id, $this->connection->fetchOne('SELECT id FROM roles WHERE id = ?', [$id]));
+    }
+
+    /**
+     * Rolls back Role persistence when required consumer audit fails
+     */
+    public function testRoleAuditRollback(): void
+    {
+        $audit = $this->createStub(\App\Domain\Authorization\RoleMutationAudit::class);
+        $audit->method('record')->willThrowException(new \RuntimeException('private audit diagnostics'));
+        $this->container->set(\App\Domain\Authorization\RoleMutationAudit::class, static fn() => $audit);
+        $id = RoleId::generate()->toString();
+        $response = $this->mutation('POST', '/api/v1/roles', ['role_id' => $id, 'name' => 'ROLE_ROLLBACK'], 500);
+        self::assertStringNotContainsString('private', json_encode($response, JSON_THROW_ON_ERROR));
+        self::assertFalse($this->connection->fetchOne('SELECT id FROM roles WHERE id = ?', [$id]));
+        self::assertSame(0, $this->roleAuditCount());
+    }
+
+    /**
+     * Cancels reset authority and material with lifecycle mutation and required audit on the real shared graph
+     */
+    #[DataProvider('lifecycleOperations')]
+    public function testRecoveryLifecycle(string $command, bool $auditFails): void
+    {
+        $now = new DateTimeImmutable('2026-10-20T12:00:00Z');
+        $target = User::invite(UserId::generate(), EmailAddress::fromString('recovery@example.test'), $now);
+        $target->activate(
+            PasswordHash::fromString((string) password_hash('fixture', PASSWORD_BCRYPT, ['cost' => 4])),
+            $now
+        );
+        $grants = $this->container->get(
+            \Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrantRepository::class
+        );
+        $grant = \Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetGrant::issue(
+            $target->getId(),
+            \Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetCredential::fromString(
+                bin2hex(random_bytes(32))
+            ),
+            $now,
+            $now->modify('+1 hour'),
+            $target->getEmail(),
+            'fixture-encrypted-material',
+            $target->getRecoveryAuthority()
+        );
+        $this->container->get(Connection::class)->transactional(function () use ($target, $grant, $grants): void {
+            $this->container->get(UserRepository::class)->add($target);
+            self::assertTrue($grants->add($grant));
+        });
+        if ($auditFails) {
+            $audit = $this->createStub(\Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository::class);
+            $audit->method('add')->willThrowException(new \RuntimeException('private audit diagnostics'));
+            $this->container->set(
+                \Fight\AccessControl\Domain\AccessControl\Audit\AuditEvidenceRepository::class,
+                static fn() => $audit
+            );
+        }
+        $message = match ($command) {
+            'disable' => new DisableUser($this->actor->getId(), $target->getId()),
+            default => new DeleteUser($this->actor->getId(), $target->getId())
+        };
+        try {
+            $this->container->get(CommandBus::class)->execute($message);
+            self::assertFalse($auditFails);
+        } catch (\RuntimeException) {
+            self::assertTrue($auditFails);
+        }
+        $stored = $this->container->get(UserRepository::class)->getById($target->getId());
+        $reset = $grants->getById($grant->getId());
+        self::assertSame(
+            $target->getAuthenticationVersion() + ($auditFails ? 0 : 1),
+            $stored->getAuthenticationVersion()
+        );
+        self::assertSame($auditFails, $reset->isIssued());
+        self::assertSame($auditFails, $reset->getDelivery()->hasRecoverableMaterial());
+        self::assertSame($auditFails ? 0 : 1, (int) $this->connection->fetchOne(
+            'SELECT count(*) FROM audit_evidence WHERE subject_id = ?',
+            [$target->getId()->toString()]
+        ));
+    }
+
+    /**
+     * Supplies both lifecycle writers and atomic-audit failure schedules
+     *
+     * @return iterable<array{string, bool}>
+     */
+    public static function lifecycleOperations(): iterable
+    {
+        foreach (['disable', 'delete'] as $command) {
+            yield [$command, false];
+            yield [$command, true];
+        }
+    }
+
+    /**
+     * Retains committed Role and audit when success and failure publication both fail
+     */
+    public function testRolePublicationFailure(): void
+    {
+        $events = $this->createStub(\Fight\Common\Application\Messaging\Event\EventDispatcher::class);
+        $events->method('trigger')->willThrowException(new \RuntimeException('private publisher diagnostic'));
+        $this->container->set(\Fight\Common\Application\Messaging\Event\EventDispatcher::class, static fn() => $events);
+        $id = RoleId::generate()->toString();
+        $result = $this->mutation('POST', '/api/v1/roles', ['role_id' => $id, 'name' => 'ROLE_COMMITTED'], 500);
+        self::assertStringNotContainsString('private', json_encode($result, JSON_THROW_ON_ERROR));
+        self::assertSame($id, $this->connection->fetchOne('SELECT id FROM roles WHERE id = ?', [$id]));
+        self::assertSame(1, $this->roleAuditCount());
+    }
+
+    /**
+     * Sends real mutation bytes and validates the actual operation response contract
+     *
+     * @phpstan-param array<string, mixed> $body
+     *
+     * @return array<string, mixed>
+     */
+    private function mutation(string $method, string $path, array $body, int $status): array
+    {
+        $request = new ServerRequestFactory()->createServerRequest($method, 'https://agent-os.test'.$path)
+            ->withHeader('Authorization', 'Bearer '.$this->token)->withHeader('Content-Type', 'application/json');
+        $request->getBody()->write(json_encode($body, JSON_THROW_ON_ERROR));
+        $response = $this->app->handle($request);
+        self::assertSame($status, $response->getStatusCode(), (string) $response->getBody());
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        $operationPath = $method === 'POST' ? '/api/v1/roles' : '/api/v1/roles/{roleId}';
+        (new ValidatorBuilder())->fromJson(Document::generate())->getResponseValidator()->validate(
+            new OperationAddress($operationPath, strtolower($method)),
+            $response
+        );
+
+        return json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Counts only committed definition audit records
+     */
+    private function roleAuditCount(): int
+    {
+        return (int) $this->connection->fetchOne("SELECT count(*) FROM audit_evidence WHERE subject_type = 'role'");
     }
 
     /**

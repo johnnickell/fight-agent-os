@@ -50,7 +50,11 @@ final readonly class PostgresPasswordResetGrantRepository implements PasswordRes
         $rows = $this->connection->fetchAllAssociative(
             <<<'SQL'
 SELECT g.* FROM password_reset_grants g
-WHERE g.generation = (SELECT MAX(other.generation) FROM password_reset_grants other WHERE other.user_id = g.user_id)
+JOIN users u ON u.id = g.user_id
+WHERE u.state = 'active' AND u.authentication_version = g.recovery_authentication_version
+  AND u.canonical_email_revision = g.recovery_canonical_email_revision
+  AND lower(u.email) = g.delivery_email AND g.consumed_at IS NULL AND g.revoked_at IS NULL
+  AND g.generation = (SELECT MAX(other.generation) FROM password_reset_grants other WHERE other.user_id = g.user_id)
   AND g.delivery_ciphertext IS NOT NULL AND ? < g.delivery_expires_at
   AND ((g.delivery_status IN ('pending', 'retry_pending') AND g.delivery_due_at <= ?)
     OR (g.delivery_status = 'claimed' AND g.delivery_lease_until <= ?))
@@ -136,7 +140,10 @@ SQL,
             return false;
         }
         $this->hold($passwordResetGrant->getUserId());
-        if ($this->latestRow($passwordResetGrant->getUserId()) !== false) {
+        if (
+            !$this->currentAuthority($passwordResetGrant)
+            || $this->latestRow($passwordResetGrant->getUserId()) !== false
+        ) {
             return false;
         }
 
@@ -154,7 +161,7 @@ SQL,
         if (
             $row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $terminalPredecessor)
             || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->hasRecoverableMaterial()
-            || !$this->successorValid($terminalPredecessor, $successor)
+            || !$this->successorValid($terminalPredecessor, $successor) || !$this->currentAuthority($successor)
         ) {
             return false;
         }
@@ -173,6 +180,11 @@ SQL,
         if (
             $row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $predecessor)
             || !$this->allowedReplacement($predecessor, $replacement)
+            || ($replacement->isIssued()
+                && !in_array($replacement->getDelivery()->getStatus(), [
+                    CredentialDeliveryStatus::EXPIRED, CredentialDeliveryStatus::INVALIDATED
+                ], true)
+                && !$this->currentAuthority($replacement))
         ) {
             return false;
         }
@@ -195,7 +207,7 @@ SQL,
             $row === false || !$this->sameState(PasswordResetGrantRecords::hydrate($row), $predecessor)
             || $terminalPredecessor->isIssued() || $terminalPredecessor->getDelivery()->hasRecoverableMaterial()
             || !$this->allowedReplacement($predecessor, $terminalPredecessor)
-            || !$this->successorValid($predecessor, $successor)
+            || !$this->successorValid($predecessor, $successor) || !$this->currentAuthority($successor)
         ) {
             return false;
         }
@@ -227,6 +239,9 @@ SQL,
         if (!$this->connection->isTransactionActive()) {
             throw new LogicException('Password-reset persistence requires an enclosing transaction.');
         }
+        if ($this->connection->fetchOne('SHOW transaction_isolation') !== 'read committed') {
+            throw new LogicException('Recovery writes require READ COMMITTED isolation.');
+        }
     }
 
     /**
@@ -234,6 +249,10 @@ SQL,
      */
     private function hold(UserId $userId): void
     {
+        $this->connection->executeQuery(
+            'SELECT pg_advisory_xact_lock(hashtextextended(?, ?))',
+            [$userId->toString(), 24122]
+        );
         $this->connection->executeQuery(
             'SELECT pg_advisory_xact_lock(hashtextextended(?, ?))',
             [$userId->toString(), 24123]
@@ -337,6 +356,7 @@ SQL,
             && $left->getExpiresAt() == $right->getExpiresAt()
             && $left->getConsumedAt() == $right->getConsumedAt()
             && $left->getRevokedAt() == $right->getRevokedAt()
+            && $left->getAuthority()->equals($right->getAuthority())
             && $left->getRevision() === $right->getRevision()
             && $left->getDelivery()->sameStateAs($right->getDelivery());
     }
@@ -354,6 +374,7 @@ SQL,
             || !$before->getDelivery()->getUserId()->equals($after->getDelivery()->getUserId())
             || $before->getDelivery()->getEmail()->canonical() !== $after->getDelivery()->getEmail()->canonical()
             || $before->getDelivery()->getExpiresAt() != $after->getDelivery()->getExpiresAt()
+            || !$before->getAuthority()->equals($after->getAuthority())
             || $after->getRevision() !== $before->getRevision() + 1
         ) {
             return false;
@@ -420,6 +441,25 @@ SQL,
         }
 
         return $expired;
+    }
+
+    /**
+     * Validates the persisted issuing authority while the User fence is held
+     */
+    private function currentAuthority(PasswordResetGrant $grant): bool
+    {
+        return $this->connection->fetchOne(
+            <<<'SQL'
+SELECT 1 FROM users WHERE id = ? AND state = 'active'
+    AND authentication_version = ? AND canonical_email_revision = ? AND lower(email) = ?
+SQL,
+            [
+                $grant->getUserId()->toString(),
+                $grant->getAuthority()->getAuthenticationVersion(),
+                $grant->getAuthority()->getCanonicalEmailRevision(),
+                $grant->getDelivery()->getEmail()->canonical()
+            ]
+        ) !== false;
     }
 
     /**

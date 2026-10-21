@@ -273,6 +273,7 @@ SQL
     {
         [$change, $credential] = $this->grant();
         $activation = ActivationGrant::issue(
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
             $this->userId,
             ActivationCredential::fromString(bin2hex(random_bytes(32))),
             $this->now,
@@ -280,13 +281,18 @@ SQL
             EmailAddress::fromString('audit@example.test'),
             'encrypted-activation'
         );
+        $this->connection->executeStatement(
+            "UPDATE users SET state = 'active', password_hash = ? WHERE id = ?",
+            [password_hash('fixture-password', PASSWORD_BCRYPT, ['cost' => 4]), $this->userId->toString()]
+        );
         $reset = PasswordResetGrant::issue(
             $this->userId,
             PasswordResetCredential::fromString(bin2hex(random_bytes(32))),
             $this->now,
             $this->now->modify('+1 hour'),
             EmailAddress::fromString('audit@example.test'),
-            'encrypted-reset'
+            'encrypted-reset',
+            new \Fight\AccessControl\Domain\AccessControl\User\RecoveryAuthority(1, 0)
         );
         $activations = new PostgresActivationGrantRepository($this->connection);
         $resets = new PostgresPasswordResetGrantRepository($this->connection);

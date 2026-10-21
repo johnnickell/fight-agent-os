@@ -337,6 +337,7 @@ final class InvitationRecoveryTest extends TestCase
             $this->admissions[] = $operation;
         });
         $initial = ActivationGrant::issue(
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
             $this->target->getId(),
             ActivationCredential::fromString(bin2hex(random_bytes(32))),
             $now,
@@ -356,6 +357,7 @@ final class InvitationRecoveryTest extends TestCase
             return $this->fault === 'grant-missing' ? null : $after;
         });
         $replacement = ActivationGrant::issue(
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
             $this->target->getId(),
             ActivationCredential::fromString(bin2hex(random_bytes(32))),
             $now,
@@ -400,7 +402,8 @@ final class InvitationRecoveryTest extends TestCase
             return $this->fault === 'view-missing' ? null : new InvitationDeliveryStatusView(
                 $this->fault === 'view-wrong' ? UserId::generate() : $this->target->getId(),
                 CredentialDeliveryStatus::PENDING,
-                $now->modify('+7 days')
+                $now->modify('+7 days'),
+                \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId::generate()
             );
         });
 

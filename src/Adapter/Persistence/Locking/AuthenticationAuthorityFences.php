@@ -37,6 +37,10 @@ final readonly class AuthenticationAuthorityFences
             throw new LogicException('The authentication-authority fence requires an enclosing transaction.');
         }
 
+        if ($this->connection->fetchOne('SHOW transaction_isolation') !== 'read committed') {
+            throw new LogicException('Authentication authority writes require READ COMMITTED isolation.');
+        }
+
         $this->connection->executeQuery(
             'SELECT pg_advisory_xact_lock(hashtextextended(?, ?))',
             [$userId->toString(), self::NAMESPACE]

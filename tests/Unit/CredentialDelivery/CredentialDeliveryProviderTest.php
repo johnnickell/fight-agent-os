@@ -9,6 +9,7 @@ use App\Adapter\CredentialDelivery\NullCredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin;
 use Fight\AccessControl\Domain\AccessControl\PasswordResetGrant\PasswordResetDeliveryId;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
@@ -142,7 +143,8 @@ final class CredentialDeliveryProviderTest extends TestCase
             $purpose,
             $id,
             EmailAddress::fromString('private@example.test'),
-            $credential
+            $credential,
+            $purpose === 'activation' ? ActivationOrigin::PRIVATE_INVITATION : null
         );
     }
 }

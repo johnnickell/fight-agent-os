@@ -19,10 +19,11 @@ use Psr\Http\Message\ResponseInterface;
  */
 #[OA\Schema(
     schema: 'CatalogRole',
-    required: ['role_id', 'name', 'managed'],
+    required: ['role_id', 'name', 'managed', 'revision'],
     properties: [
         new OA\Property(property: 'role_id', type: 'string', format: 'uuid'),
         new OA\Property(property: 'name', type: 'string'),
+        new OA\Property(property: 'revision', ref: '#/components/schemas/RoleRevision'),
         new OA\Property(
             property: 'managed',
             description: 'Managed roles are not custom-role mutation targets',
@@ -31,6 +32,13 @@ use Psr\Http\Message\ResponseInterface;
     ],
     type: 'object',
     additionalProperties: false
+)]
+#[OA\Schema(
+    schema: 'RoleRevision',
+    description: 'Opaque state expectation; never authority. Refresh and reconfirm after conflict.',
+    type: 'string',
+    maxLength: 46,
+    pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:[1-9][0-9]{0,8}$'
 )]
 #[OA\Schema(
     schema: 'CatalogPermission',

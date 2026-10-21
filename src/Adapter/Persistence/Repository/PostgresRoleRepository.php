@@ -18,6 +18,7 @@ use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRevision;
 use Fight\Common\Domain\Collection\ArrayList;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Repository\ResultSet;
@@ -41,15 +42,25 @@ final readonly class PostgresRoleRepository implements RoleRepository
      */
     public function add(Role $role): void
     {
-        $this->referenceFences->holdPermissionReferences();
-        if (!$this->lockEligiblePermissions($role)) {
+        $this->holdWriters();
+        if (!str_ends_with($role->getRevision()->toString(), ':1') || !$this->lockEligiblePermissions($role)) {
             throw new PersistenceConflict('Role permission membership is not authoritative.');
+        }
+
+        $incarnation = explode(':', $role->getRevision()->toString())[0];
+        if (
+            $this->connection->executeStatement(
+                'INSERT INTO role_incarnations (incarnation, role_id) VALUES (?, ?) ON CONFLICT DO NOTHING',
+                [$incarnation, $role->getId()->toString()]
+            ) !== 1
+        ) {
+            throw new PersistenceConflict('The role identity or name is already in use.');
         }
 
         $inserted = $this->connection->executeStatement(
             <<<'SQL'
-INSERT INTO roles (id, name, managed, created_at, updated_at)
-VALUES (:id, :name, :managed, :created_at, :updated_at)
+INSERT INTO roles (id, name, managed, created_at, updated_at, revision)
+VALUES (:id, :name, :managed, :created_at, :updated_at, :revision)
 ON CONFLICT DO NOTHING
 SQL,
             $this->values($role),
@@ -200,6 +211,17 @@ SQL,
     /**
      * @inheritDoc
      */
+    public function validateCurrent(Role $expected): bool
+    {
+        $this->holdWriters();
+        $current = $this->getById($expected->getId());
+
+        return $current !== null && $expected->hasSameState($current);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function replace(Role $expected, Role $replacement): bool
     {
         if (
@@ -210,8 +232,16 @@ SQL,
             return false;
         }
 
-        $this->referenceFences->holdPermissionReferences();
-        if (!$this->lockEligiblePermissions($replacement)) {
+        $this->holdWriters();
+        if ($expected->hasSameState($replacement)) {
+            return $this->validateCurrent($expected);
+        }
+        if (
+            !$expected->getRevision()->next()->equals($replacement->getRevision())
+            || ($expected->getName()->equals($replacement->getName())
+                && $this->permissionSet($expected) === $this->permissionSet($replacement))
+            || !$this->lockEligiblePermissions($replacement)
+        ) {
             return false;
         }
 
@@ -234,6 +264,7 @@ SQL,
                 ->set('name', ':name')
                 ->set('managed', ':managed')
                 ->set('updated_at', ':updated_at')
+                ->set('revision', ':revision')
                 ->where('id = :id')
                 ->andWhere('name = :expected_name')
                 ->andWhere('managed = :expected_managed')
@@ -249,6 +280,7 @@ SQL
                     'name'                => $replacement->getName()->toString(),
                     'managed'             => $replacement->isManaged(),
                     'updated_at'          => $this->date($replacement->getUpdatedAt()),
+                    'revision'            => $replacement->getRevision()->toString(),
                     'expected_name'       => $expected->getName()->toString(),
                     'expected_managed'    => $expected->isManaged(),
                     'created_at'          => $this->date($expected->getCreatedAt()),
@@ -271,7 +303,10 @@ SQL
      */
     public function remove(Role $role): bool
     {
-        $this->referenceFences->holdRoleReferences();
+        $this->holdWriters();
+        if (!$this->validateCurrent($role)) {
+            return false;
+        }
 
         return $this->connection->createQueryBuilder()
             ->delete('roles')
@@ -280,12 +315,15 @@ SQL
             ->andWhere('managed = :managed')
             ->andWhere('created_at = :created_at')
             ->andWhere('updated_at = :updated_at')
+            ->andWhere('revision = :revision')
+            ->andWhere('NOT EXISTS (SELECT 1 FROM user_role_assignments WHERE role_id = :id)')
             ->setParameters([
                 'id'         => $role->getId()->toString(),
                 'name'       => $role->getName()->toString(),
                 'managed'    => $role->isManaged(),
                 'created_at' => $this->date($role->getCreatedAt()),
-                'updated_at' => $this->date($role->getUpdatedAt())
+                'updated_at' => $this->date($role->getUpdatedAt()),
+                'revision'   => $role->getRevision()->toString()
             ], ['managed' => ParameterType::BOOLEAN])
             ->executeStatement() === 1;
     }
@@ -379,22 +417,16 @@ SQL,
             static fn(mixed $permissionId): PermissionId => PermissionId::fromString((string) $permissionId),
             $this->membershipIds((string) $row['id'])
         );
-        if ($this->boolean($row['managed'])) {
-            $role = Role::defineManaged($id, $name, $permissionIds, $createdAt);
-        } else {
-            $role = Role::define($id, $name, $permissionIds, $createdAt);
-        }
-        $updatedAt = new DateTimeImmutable((string) $row['updated_at']);
 
-        if ($role->getUpdatedAt() != $updatedAt) {
-            if ($role->isManaged()) {
-                $role = $role->reconcileManaged($name, $permissionIds, $updatedAt);
-            } else {
-                $role = $role->renameCustom($name, $updatedAt);
-            }
-        }
-
-        return $role;
+        return Role::reconstitute(
+            $id,
+            $name,
+            $permissionIds,
+            $this->boolean($row['managed']),
+            $createdAt,
+            new DateTimeImmutable((string) $row['updated_at']),
+            RoleRevision::fromString($row['revision'])
+        );
     }
 
     /**
@@ -405,7 +437,8 @@ SQL,
     private function matches(Role $expected, array $row): bool
     {
         if (
-            (string) $row['name'] !== $expected->getName()->toString()
+            (string) $row['revision'] !== $expected->getRevision()->toString()
+            || (string) $row['name'] !== $expected->getName()->toString()
             || $this->boolean($row['managed']) !== $expected->isManaged()
             || new DateTimeImmutable((string) $row['created_at']) != $expected->getCreatedAt()
             || new DateTimeImmutable((string) $row['updated_at']) != $expected->getUpdatedAt()
@@ -454,8 +487,31 @@ SQL,
             'name'       => $role->getName()->toString(),
             'managed'    => $role->isManaged(),
             'created_at' => $this->date($role->getCreatedAt()),
-            'updated_at' => $this->date($role->getUpdatedAt())
+            'updated_at' => $this->date($role->getUpdatedAt()),
+            'revision'   => $role->getRevision()->toString()
         ];
+    }
+
+    /**
+     * Serializes Role writers with registration and Permission reference changes
+     */
+    private function holdWriters(): void
+    {
+        $this->referenceFences->holdPermissionReferences();
+        $this->referenceFences->holdRoleReferences();
+    }
+
+    /**
+     * Returns canonical membership for change admission
+     *
+     * @return list<string>
+     */
+    private function permissionSet(Role $role): array
+    {
+        $ids = array_map(static fn(PermissionId $id): string => $id->toString(), $role->getPermissionIds());
+        sort($ids);
+
+        return $ids;
     }
 
     /**

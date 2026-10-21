@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -311,7 +311,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | needs-info | — | — |
 | — | [TASK-00186](00186-TASK.md) | Inspect private memory under scoped oversight | [TICKET-00046 — Keep scoped private Agent memory](../tickets/00046-TICKET.md) | needs-info | [TASK-00185](00185-TASK.md) | — |
 | — | [TASK-00189](00189-TASK.md) | Inspect retained lessons under historical authority | [TICKET-00047 — Share attributed Workflow and TASK learning](../tickets/00047-TICKET.md) | needs-info | [TASK-00188](00188-TASK.md) | — |
 | — | [TASK-00191](00191-TASK.md) | Review and publish guidance at an authorized target | [TICKET-00048 — Review and publish broader memory lessons](../tickets/00048-TICKET.md) | needs-info | [TASK-00190](00190-TASK.md) | — |

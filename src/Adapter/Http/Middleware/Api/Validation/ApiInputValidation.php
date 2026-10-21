@@ -97,7 +97,7 @@ final readonly class ApiInputValidation implements MiddlewareInterface
         $verb = $request->getMethod();
         $validMethod = match ($source) {
             QueryString::class => $verb === 'GET',
-            JsonBody::class => in_array($verb, ['POST', 'PUT', 'PATCH'], true),
+            JsonBody::class => in_array($verb, ['POST', 'PUT', 'PATCH', 'DELETE'], true),
             default => true,
         };
         if (!$validMethod) {
