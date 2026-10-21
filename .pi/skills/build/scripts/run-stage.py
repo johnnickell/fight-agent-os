@@ -17,7 +17,7 @@ import unicodedata
 
 # Runtime imports must not create bytecode caches beside provider source.
 sys.dont_write_bytecode = True
-from observation import Observation
+from observation import CustodyObservation, Observation
 
 
 def positive_seconds(value):
@@ -251,15 +251,19 @@ def run(args):
 
     with (attempt / "events.jsonl").open("xb", buffering=0) as raw, (attempt / "stderr.log").open("xb") as errors, (attempt / "progress.log").open("x") as log:
         observation = None
-        if args.observe_socket:
+        identity = {"task": display(args.task, 80), "role": display(args.role, 60),
+                    "provider": display(args.provider, 120), "model": display(args.model, 120),
+                    "thinking": display(args.thinking, 40), "worktree": display(Path.cwd().resolve(), 1024),
+                    "attempt": display(attempt, 1024)}
+        if args.custody_fd is not None:
+            if args.custody_fd != 3 or args.observe_socket:
+                raise ValueError("invalid inherited custody channel")
+            observation = CustodyObservation(args.custody_fd, identity, args.heartbeat)
+        elif args.observe_socket:
             endpoint = Path(args.observe_socket)
             runtime = Path.cwd().resolve() / "var"
             if not endpoint.is_absolute() or runtime not in endpoint.resolve().parents:
                 raise ValueError("observation socket must be under this checkout's var directory")
-            identity = {"task": display(args.task, 80), "role": display(args.role, 60),
-                        "provider": display(args.provider, 120), "model": display(args.model, 120),
-                        "thinking": display(args.thinking, 40), "worktree": display(Path.cwd().resolve(), 1024),
-                        "attempt": display(attempt, 1024)}
             observation = Observation(str(endpoint), identity, args.heartbeat)
         progress = Progress(args.role, log, args.screening_dispatch, observation)
         progress.emit(f"Starting {args.task} — {args.provider}/{args.model}, thinking={args.thinking}")
@@ -379,6 +383,7 @@ def main():
     parser.add_argument("--timeout", type=positive_seconds, default=1800)
     parser.add_argument("--heartbeat", type=positive_seconds, default=30)
     parser.add_argument("--harness-package", help="Explicit trusted Harness package directory; match the installed resource identity to avoid duplicate loading")
+    parser.add_argument("--custody-fd", type=int, help=argparse.SUPPRESS)
     parser.add_argument("--observe-socket", help="Optional absolute owner-only live socket under checkout var/; never a transcript")
     parser.add_argument("--screening-dispatch", action="store_true", help="Relay safe screening observations only; keep child prose private")
     args = parser.parse_args()

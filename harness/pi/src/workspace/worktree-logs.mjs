@@ -24,8 +24,8 @@ export class WorktreeLogs {
   get state() { return this.current?.state ?? (this.candidates().length > 1 ? 'ambiguous' : 'unavailable'); }
   candidates() { return this.bindings.flatMap((binding, index) => binding.main === this.worktree ? [index] : []); }
   start() { void this.rebind(this.primary); }
-  // Only the host's canonical primary directory is currently admitted. Child-reported worktrees
-  // are NOT passed here: authenticated parent/child launch admission is still incomplete.
+  // The host passes only its primary directory or a freshly custody-admitted selected child.
+  // Legacy monitor reports never reach this boundary.
   async rebind(worktree) {
     const canonical = realpathSync(worktree), generation = ++this.generation;
     this.transition = this.transition.then(async () => {
@@ -84,12 +84,12 @@ export class WorktreeLogs {
   view() {
     const candidates = this.candidates();
     return [this.summary(), `Primary: ${clean(this.primary)}`, `Follow context: ${clean(this.worktree)}`,
-      'Automatic child context: unavailable (trusted launch association incomplete)',
+      'Automatic context: custody-verified selected/pinned child, or primary when idle',
       '{ / } stack · [ / ] service · m explicit shared/follow · i details',
       ...candidates.map(index => {
         const source = this.bindings[index];
         return `${this.current === this.readers[index] ? '>' : ' '} TEST ${source.context}/${source.project} · ${source.main}`;
-      }), 'Bindings: human launch choices; metadata revalidated, container generations pinned; never loaded from files.',
+      }), 'Bindings: explicit eligible test services; live metadata revalidated, container generations pinned; files cannot grant a source.',
       this.current?.view() ?? this.unavailable(), 'No log data is sent to Pi or model context.'].join('\n');
   }
   async close() {

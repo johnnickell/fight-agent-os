@@ -1,0 +1,111 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { RegisteredChildren } from '../src/workspace/registered-children.mjs';
+import { directory, sessionFileIdentity } from '../src/observation/custody.mjs';
+
+function fixture(t, preferences = false) {
+  const cwd = realpathSync(mkdtempSync(join(tmpdir(), 'registered-'))), other = join(cwd, 'other'); mkdirSync(other);
+  const file = join(cwd, 'session.jsonl'); writeFileSync(file, 'genuine-context-placeholder-for-unit-boundary');
+  const generation = randomUUID(), parent = randomUUID(); let at = 100000;
+  const identity = { task: 'TASK-00502', role: 'work', provider: 'openai-codex', model: 'configured-only', thinking: 'high', worktree: other, attempt: '/owned/attempt' };
+  const child = (overrides = {}) => ({ id: randomUUID(), parent, generation, started: 1000, order: 1, identity, state: 'connected', lifecycle: 'running', exitCode: null,
+    heartbeatSeconds: 2, sequence: 1, receivedAt: at, history: ['safe progress'], omitted: 0, ...overrides });
+  let values = [child()]; let refusal = false;
+  const witness = () => ({ parent, parentFile: sessionFileIdentity(file), generation, primary: cwd, at, children: values });
+  const options = { preferences, now: () => at, discover: () => [{ path: '/candidate', descriptor: {} }], verify: async (_cwd, session) => { if (refusal || session !== parent) throw new Error('Cross-session/stale witness refused'); return witness(); } };
+  const changes = []; const observe = new RegisteredChildren(cwd, () => changes.push(observe.verifiedWorktree), options);
+  t.after(() => { observe.close(); rmSync(cwd, { force: true, recursive: true }); });
+  return { cwd, other, file, parent, generation, child, options, observe, changes, values: () => values, set: next => { values = next; }, refuse: value => { refusal = value; }, advance: amount => { at += amount; } };
+}
+
+test('only actual-session matching launch custody admits a canonical worktree; legacy payloads cannot create membership', async t => {
+  const f = fixture(t); await f.observe.start(f.parent, f.file);
+  assert.equal(f.observe.sources.size, 1); assert.equal(f.observe.verifiedWorktree, f.other);
+  assert.match(f.observe.view(), /AUTOMATIC/); assert.doesNotMatch(f.observe.view(), /parent membership unverified/);
+  await f.observe.sessionChanged(randomUUID(), f.file); await f.observe.refresh();
+  assert.equal(f.observe.sources.size, 0); assert.equal(f.observe.pin, null); assert.equal(f.observe.verifiedWorktree, null);
+});
+test('loss at the bounded monitor pipe remains visibly distinct from retained-history eviction', async t => {
+  const f = fixture(t); f.set([{ ...f.values()[0], sequence: 5, gaps: 3, omitted: 0 }]);
+  await f.observe.start(f.parent, f.file); assert.match(f.observe.view(), /gaps 3/); assert.match(f.observe.view(), /omitted 0/);
+});
+
+test('a custody-launched starting child is selected before its first progress frame, then a failed spawn becomes idle', async t => {
+  const f = fixture(t); f.set([{ ...f.values()[0], state: 'starting', lifecycle: 'starting', sequence: 0, history: [] }]);
+  await f.observe.start(f.parent, f.file); assert.notEqual(f.observe.selected, null); assert.equal(f.observe.verifiedWorktree, f.other);
+  f.set([{ ...f.values()[0], state: 'disconnected' }]); await f.observe.refresh(); assert.equal(f.observe.selected, null);
+});
+
+test('trusted start order selects newest initially, concurrent output/new siblings never steal an active choice', async t => {
+  const f = fixture(t), older = f.values()[0], newer = f.child({ started: 2000, order: 2 }); f.set([newer, older]);
+  await f.observe.start(f.parent, f.file); const choice = f.observe.selected;
+  assert.equal(f.observe.sources.get(choice).id, newer.id);
+  f.set([older, { ...newer, sequence: 2, history: ['new text'] }, f.child({ started: 3000, order: 3 })]);
+  await f.observe.refresh(); assert.equal(f.observe.selected, choice);
+  f.observe.action('next'); assert.notEqual(f.observe.selected, choice);
+  const explicit = f.observe.selected; await f.observe.refresh(); assert.equal(f.observe.selected, explicit);
+});
+test('completion selects an active sibling by trusted start; same start uses stable child attempt ID', async t => {
+  const f = fixture(t), first = f.child({ started: 2000 }), second = f.child({ started: 2000 });
+  f.set([second, first]); await f.observe.start(f.parent, f.file);
+  const expected = [first.id, second.id].sort()[0]; assert.equal(f.observe.sources.get(f.observe.selected).id, expected);
+  const completed = f.observe.selected;
+  f.set([first, second].map(item => item.id === expected ? { ...item, sequence: 2, lifecycle: 'completed', exitCode: 0 } : item));
+  await f.observe.refresh(); assert.notEqual(f.observe.selected, completed);
+});
+test('pin survives completion/disconnection with verified context; unpin returns honest idle and primary context', async t => {
+  const f = fixture(t); await f.observe.start(f.parent, f.file); f.observe.action('pin'); const pinned = f.observe.pin;
+  f.set([{ ...f.values()[0], sequence: 2, state: 'disconnected', lifecycle: 'completed', exitCode: 0 }]);
+  await f.observe.refresh(); assert.equal(f.observe.selected, pinned); assert.equal(f.observe.verifiedWorktree, f.other);
+  assert.match(f.observe.view(), /PINNED/); assert.match(f.observe.view(), /exit 0; not acceptance/);
+  f.observe.action('pin'); assert.equal(f.observe.selected, null); assert.equal(f.observe.verifiedWorktree, null); assert.match(f.observe.view(), /IDLE/);
+});
+test('heartbeat expiry, lost/replaced custody and regressed sequences cannot retain log authority or infer completion', async t => {
+  const f = fixture(t); await f.observe.start(f.parent, f.file); f.advance(7000); f.observe.recompute(); assert.equal(f.observe.selected, null);
+  f.set([{ ...f.values()[0], sequence: 2, receivedAt: 107000 }]); await f.observe.refresh(); f.observe.action('pin');
+  f.refuse(true); await f.observe.refresh(); assert.equal(f.observe.verifiedWorktree, null); assert.match(f.observe.view(), /CUSTODY LOST/);
+  assert.match(f.observe.view(), /running/); assert.doesNotMatch(f.observe.view(), /completed/);
+  f.refuse(false); f.set([{ ...f.values()[0], sequence: 1 }]); await f.observe.refresh(); assert.equal(f.observe.verifiedWorktree, null);
+});
+test('attempt identity replacement is refused; old progress cannot be attributed to a replacement generation', async t => {
+  const f = fixture(t); await f.observe.start(f.parent, f.file); f.observe.action('pin');
+  f.set([{ ...f.values()[0], identity: { ...f.values()[0].identity, worktree: f.cwd }, sequence: 2, history: ['replacement-injection'] }]);
+  await f.observe.refresh(); assert.equal(f.observe.verifiedWorktree, null); assert.doesNotMatch(f.observe.view(), /replacement-injection/);
+});
+test('in-flight old-session challenges cannot repopulate a changed session or a closed pane', async t => {
+  const f = fixture(t); let complete;
+  f.observe.verify = () => new Promise(resolve => { complete = resolve; });
+  const starting = f.observe.start(f.parent, f.file); await Promise.resolve();
+  const old = { parent: f.parent, parentFile: sessionFileIdentity(f.file), generation: f.generation, at: 100000, children: f.values() };
+  void f.observe.sessionChanged(randomUUID(), f.file); complete(old); await starting;
+  assert.equal(f.observe.sources.size, 0); assert.equal(f.observe.selected, null);
+  f.observe.close(); assert.equal(f.observe.verifiedWorktree, null);
+});
+test('paused output is scoped to one selected child and never follows an explicit source switch', async t => {
+  const f = fixture(t); f.set([...f.values(), f.child({ started: 2000, history: ['second source'] })]);
+  await f.observe.start(f.parent, f.file); f.observe.action('pause'); assert.deepEqual(f.observe.frozen, ['second source']);
+  f.observe.action('next'); assert.equal(f.observe.paused, false); assert.equal(f.observe.frozen, null);
+});
+test('same-session resume restores a pin only after fresh admission; forged preference cannot grant membership', async t => {
+  const f = fixture(t, true); await f.observe.start(f.parent, f.file); f.observe.action('pin'); const pin = f.observe.pin; f.observe.close();
+  const resumed = new RegisteredChildren(f.cwd, () => {}, f.options); t.after(() => resumed.close());
+  await resumed.start(f.parent, f.file); assert.equal(resumed.pin, pin); assert.equal(resumed.verifiedWorktree, f.other);
+  resumed.close();
+  writeFileSync(join(directory(f.cwd, f.parent), 'preference.json'), JSON.stringify({ selected: 'forged', pin: 'forged' }));
+  const forged = new RegisteredChildren(f.cwd, () => {}, f.options); t.after(() => forged.close());
+  await forged.start(f.parent, f.file); assert.equal(forged.pin, null); assert.notEqual(forged.selected, 'forged'); forged.close();
+});
+test('an actual session file replacement with the same caller ID does not match the native launch lifetime', async t => {
+  const f = fixture(t); const original = sessionFileIdentity(f.file); rmSync(f.file); writeFileSync(f.file, 'replacement');
+  f.observe.verify = async () => ({ parent: f.parent, parentFile: original, generation: f.generation, at: 100000, children: f.values() });
+  await f.observe.start(f.parent, f.file); assert.equal(f.observe.sources.size, 0); assert.equal(f.observe.verifiedWorktree, null);
+});
+test('discovery and retention are bounded to eight sources, with an explicit overflow notice', async t => {
+  const f = fixture(t); const values = Array.from({ length: 8 }, (_, i) => f.child({ started: 1000 + i }));
+  f.set(values); await f.observe.start(f.parent, f.file); assert.equal(f.observe.sources.size, 8);
+  f.set([...values, f.child()]); await f.observe.refresh(); assert.equal(f.observe.sources.size, 0); assert.match(f.observe.view(), /refused/);
+});

@@ -7,6 +7,52 @@ import socket
 import stat
 
 
+class CustodyObservation:
+    """Publish only through the provider's inherited launch pipe, never caller discovery"""
+
+    def __init__(self, fd, identity, heartbeat):
+        self.channel = socket.socket(fileno=fd)
+        self.channel.settimeout(1)
+        bootstrap = b""
+        while b"\n" not in bootstrap and len(bootstrap) < 8192:
+            chunk = self.channel.recv(8192 - len(bootstrap))
+            if not chunk:
+                raise ValueError("custody bootstrap lost")
+            bootstrap += chunk
+        witness = json.loads(bootstrap)
+        if witness.get("identity") != identity or not witness.get("parent") or not witness.get("generation") or not witness.get("id"):
+            raise ValueError("custody launch identity mismatch")
+        self.channel.setblocking(False)
+        self.pending = b""
+        self.sequence = 0
+
+    def publish(self, text, lifecycle, code=None):
+        self.sequence += 1
+        record = (json.dumps(dict(sequence=self.sequence, text=text, lifecycle=lifecycle, exitCode=code), ensure_ascii=False) + "\n").encode("utf-8")
+        if len(self.pending) + len(record) <= 65536:
+            self.pending += record
+        self.poll()
+
+    def poll(self):
+        if not self.pending or self.channel is None:
+            return
+        try:
+            sent = self.channel.send(self.pending)
+            self.pending = self.pending[sent:]
+        except BlockingIOError:
+            pass
+        except OSError:
+            self.channel.close()
+            self.channel = None
+            self.pending = b""
+
+    def close(self):
+        self.poll()
+        if self.channel is not None:
+            self.channel.close()
+            self.channel = None
+
+
 class Observation:
     """Keep slow or absent readers independent of stage execution"""
 

@@ -6,6 +6,7 @@ import { PiRpc, messageText } from './rpc.mjs';
 import { Terminal } from './terminal.mjs';
 import { observationPaths } from './child-observation.mjs';
 import { ConcurrentChildren } from './concurrent-children.mjs';
+import { RegisteredChildren } from './registered-children.mjs';
 import { RuntimeLogs, runtimeSelection } from './runtime-logs.mjs';
 import { WorktreeLogs, testBindings } from './worktree-logs.mjs';
 
@@ -49,11 +50,11 @@ export function options(argv, cwd) {
 export async function run(argv = process.argv.slice(2), {
   input = process.stdin, output = process.stdout,
   connect = options => new PiRpc(options), createTerminal = (input, output) => new Terminal(input, output),
-  observe = (paths, changed) => new ConcurrentChildren(paths, changed),
-  readLogs = (source, changed, tests, cwd) => tests.length ? new WorktreeLogs(cwd, tests, source, changed) : new RuntimeLogs(source, changed),
+  observe = (paths, changed, cwd) => paths.length ? new ConcurrentChildren(paths, changed) : new RegisteredChildren(cwd, changed),
+  readLogs = (source, changed, tests, cwd) => tests.length || !source ? new WorktreeLogs(cwd, tests, source, changed) : new RuntimeLogs(source, changed),
 } = {}) {
   if (argv.includes('--help')) {
-    console.log('Fight workspace: ./bin/terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus (explicit legacy sources): [ / ] select · f pin/unpin · p pause · c all readers · r reconnect\nLogs: --logs-main /main/checkout --logs-context NAME --logs-project NAME --logs-service NAME\nWorktree test logs (partial TASK-00502): --logs-test WORKTREE CONTEXT PROJECT SERVICE (repeat up to 8); { / } select stack; m explicit shared/follow\nRuntime focus: [ / ] service · p pause · c close/open reader · r reconnect (human display only)\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See harness/pi/WORKSPACE.md.'); return;
+    console.log('Fight workspace: ./bin/terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus (automatic current session by default; flags select explicit legacy): [ / ] select · f pin/unpin · p pause · c all readers · r reconnect\nLogs: --logs-main /main/checkout --logs-context NAME --logs-project NAME --logs-service NAME\nExisting worktree test logs: --logs-test WORKTREE CONTEXT PROJECT SERVICE (repeat up to 8); { / } select stack; m explicit shared/follow\nRuntime focus: [ / ] service · p pause · c close/open reader · r reconnect (human display only)\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See harness/pi/WORKSPACE.md.'); return;
   }
   const cwd = process.cwd(), config = options(argv, cwd);
   if (!input.isTTY || !output.isTTY) throw new Error('Workspace needs a real terminal');
@@ -71,24 +72,35 @@ export async function run(argv = process.argv.slice(2), {
       catch { void close(1); }
     }, 25);
   };
-  const observation = observe(config.children, render); model.childObservation = observation;
-  const logs = readLogs(config.logs, render, config.tests, cwd); model.runtimeLogs = logs;
-  const freshnessTimer = config.children.length ? setInterval(() => {
-    observation.tick?.(); render();
+  let logs, logContext = cwd;
+  const observationChanged = () => {
+    if (closing) return;
+    const next = observation.verifiedWorktree ?? cwd;
+    if (logs?.rebind && logContext !== next) {
+      logContext = next;
+      void logs.rebind(next).catch(() => { model.append('Verified log worktree unavailable; reader held'); });
+    }
+    render();
+  };
+  const observation = observe(config.children, observationChanged, cwd); model.childObservation = observation;
+  logs = readLogs(config.logs, render, config.tests, cwd); model.runtimeLogs = logs;
+  const freshnessTimer = setInterval(() => {
+    observation.tick?.(); observationChanged();
     // One bounded read-only identity query at a time; never submit native workflow commands.
     if (closing || !stateSeen || checkingSession) return;
     checkingSession = true;
     void rpc.request('get_state').then(state => {
       if (closing) return;
-      if (state.sessionId !== sessionId) {
-        clearInterval(freshnessTimer);
-        observation.sessionChanged?.(state.sessionId);
+      if (state.sessionId !== sessionId || state.sessionFile !== sessionFile) {
+        if (config.children.length) clearInterval(freshnessTimer);
+        sessionId = state.sessionId; sessionFile = state.sessionFile;
+        observation.sessionChanged?.(state.sessionId, state.sessionFile);
         fail('Pi session changed: observation admission/pin cleared. Exit and resume explicitly in native Pi.');
       }
     }).catch(() => {
       if (!closing) { clearInterval(freshnessTimer); observation.sessionChanged?.(null); fail('Pi session identity unavailable; observation readers closed.'); }
     }).finally(() => { checkingSession = false; });
-  }, 1000) : undefined;
+  }, 1000);
   const close = async (code = 0) => {
     if (closing) return; closing = true; model.ready = false;
     clearTimeout(renderTimer); clearTimeout(startupTimer); clearInterval(freshnessTimer);
@@ -105,7 +117,7 @@ export async function run(argv = process.argv.slice(2), {
   };
   const updateReady = () => {
     model.ready = !fault && policyReady && stateSeen && commandsSeen;
-    if (model.ready) { clearTimeout(startupTimer); model.status = `Conversation: ${cwd} · children: ${config.children.length} explicit legacy (f pin); runtime: ${config.tests.length ? 'primary worktree test bindings (authenticated child following unavailable)' : config.logs ? 'explicit shared source (human-only)' : 'none'}`; }
+    if (model.ready) { clearTimeout(startupTimer); model.status = `Conversation: ${cwd} · children: ${config.children.length ? `${config.children.length} explicit legacy` : 'automatic session follow'} (f pin); runtime: ${config.tests.length ? 'verified selected worktree test bindings' : config.logs ? 'explicit shared source (human-only)' : 'worktree test association unavailable'}`; }
     render();
   };
   const sendAction = async action => {
@@ -141,7 +153,7 @@ export async function run(argv = process.argv.slice(2), {
           model.append(`Shell exit: ${result.exitCode ?? 'unknown'}${result.cancelled ? ' (cancelled)' : ''}\n${result.output ?? ''}`);
         } else {
           const command = message.match(/^\/(\S+)/)?.[1];
-          if (command?.startsWith('skill:') || command === 'file-screening') {
+          if (command?.startsWith('skill:') || command === 'file-screening' || command === 'fight-stage') {
             model.append('Workflow selector not submitted: RPC cannot select role, workflow, task, checkout or query/status mode. Current binding is unchanged.');
             model.append(sessionFile ? `Use native Pi in the same session: exit (^Q), run pi --session ${JSON.stringify(sessionFile)} from ${cwd}, select the workflow and inspect /file-screening to verify its binding. Exit native Pi, then resume ./bin/terminal --session ${JSON.stringify(sessionFile)}. Resume alone never selects authority.` : 'Use native Pi for workflow selection and verify /file-screening. This in-memory session has no same session resume path; do not assume a new session inherits its binding.');
             render(); return;
@@ -204,7 +216,7 @@ export async function run(argv = process.argv.slice(2), {
     const state = await rpc.request('get_state');
     model.identity = `${state.model?.provider ?? '?'}/${state.model?.id ?? '?'} · ${state.thinkingLevel ?? '?'} · session ${state.sessionId}`;
     model.busy = state.isStreaming; sessionFile = state.sessionFile; sessionId = state.sessionId; stateSeen = true;
-    observation.start(sessionId);
+    await observation.start(sessionId, sessionFile);
     model.append(`Conversation directory: ${cwd}\nSession: ${state.sessionId}\nStorage: ${state.sessionFile ?? 'in memory (not resumable)'}\nConfigured model: ${state.model?.provider}/${state.model?.id}; actual provider identity is available only after a response.`);
     const commands = await rpc.request('get_commands');
     model.commands = new Set(commands.commands.map(command => command.name));

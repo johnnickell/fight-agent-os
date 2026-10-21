@@ -18,8 +18,9 @@ export function runtimeSelection(value) {
     throw new Error('Logs require explicit absolute --logs-main and validated --logs-context, --logs-project, --logs-service');
   }
   if (value.purpose !== undefined && value.purpose !== 'test') throw new Error('Unknown runtime purpose');
+  if (value.allowedServices !== undefined && (!Array.isArray(value.allowedServices) || !value.allowedServices.length || value.allowedServices.length > 32 || value.allowedServices.some(service => !name.test(service)) || !value.allowedServices.includes(value.service))) throw new Error('Invalid eligible test services');
   return Object.freeze({ main: realpathSync(value.main), context: value.context, project: value.project, service: value.service,
-    ...(value.purpose === 'test' ? { purpose: 'test' } : {}) });
+    ...(value.purpose === 'test' ? { purpose: 'test', allowedServices: Object.freeze([...(value.allowedServices ?? [value.service])]) } : {}) });
 }
 const listing = '{"id":{{json .ID}},"service":{{json (.Label "com.docker.compose.service")}},"directory":{{json (.Label "com.docker.compose.project.working_dir")}},"state":{{json .State}}}';
 // Minimal host-only environment. Docker resolves the operator's context through HOME, not repository env/options.
@@ -80,18 +81,20 @@ export class RuntimeLogs {
       if (!current()) return;
       if (typeof endpoint !== 'string' || !endpoint.startsWith('unix:///') || endpoint.length > 1000 || this.endpoint && endpoint !== this.endpoint) throw new Error('Local Docker context identity changed or is not a Unix endpoint; relaunch with explicit selection');
       this.endpoint = endpoint;
-      const raw = await this.query(['container', 'ls', '--all', '--no-trunc', '--filter', `label=com.docker.compose.project=${this.source.project}`, '--format', listing]);
+      const filters = this.source.purpose === 'test' && this.source.allowedServices.length === 1 ? ['--filter', `label=com.docker.compose.service=${this.source.allowedServices[0]}`] : [];
+      const raw = await this.query(['container', 'ls', '--all', '--no-trunc', '--filter', `label=com.docker.compose.project=${this.source.project}`, ...filters, '--format', listing]);
       if (!current()) return;
       const rows = raw.trim() ? raw.trim().split('\n').map(line => JSON.parse(line)) : [];
       if (rows.length > 32) throw new Error('Too many Compose containers; source refused');
       const verified = rows.filter(row => /^[a-f0-9]{64}$/.test(row.id) && name.test(row.service) && row.directory === this.source.main);
       if (verified.length !== rows.length) throw new Error('Compose checkout identity mismatch; source refused');
-      const containers = verified.map(row => `${row.service}:${row.id}`).sort().join('\n');
+      const eligible = this.source.purpose === 'test' ? verified.filter(row => this.source.allowedServices.includes(row.service)) : verified;
+      const containers = eligible.map(row => `${row.service}:${row.id}`).sort().join('\n');
       if (this.source.purpose === 'test' && this.containers !== null && containers !== this.containers) {
         throw new Error('Test-stack container generation changed; fresh human binding required');
       }
-      this.services = [...new Set(verified.map(row => row.service))].sort();
-      const selected = verified.filter(row => row.service === this.source.service);
+      this.services = [...new Set(eligible.map(row => row.service))].sort();
+      const selected = eligible.filter(row => row.service === this.source.service);
       if (selected.length !== 1) throw new Error('Selected service missing or replicated; select one existing single-container service');
       if (selected[0].state !== 'running') throw new Error('Selected source stopped; no container will be started');
       // Pin only a fully validated running source. A saved file never establishes this identity.
@@ -177,6 +180,8 @@ export class RuntimeLogs {
       `Reader ${this.state}${this.paused ? ' · PAUSED (draining; bounded recent window on resume)' : ''}`,
       '[ / ] service · p pause · c reader close/open · r reconnect',
       `${this.source.purpose === 'test' ? 'Worktree' : 'Main'}: ${this.source.main}`, `Endpoint: ${this.endpoint ?? 'not verified'}`,
+      `Eligible services: ${this.source.allowedServices?.join(', ') ?? 'explicit shared project services'}`,
+      `Container generation: ${this.containers ?? 'not pinned (shared mode or unverified)'}`,
       this.notice, `Omitted ${this.omitted} · clipped ${this.clipped} · reconnect/switch gaps ${this.gaps} (unknown loss; up to 100 duplicate tail lines)`,
       ...(this.paused ? this.frozen ?? [] : this.history).slice(-8),
       '--- bounded scrollback ---', ...(this.paused ? this.frozen ?? [] : this.history)].join('\n');

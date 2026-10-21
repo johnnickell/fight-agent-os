@@ -25,7 +25,7 @@ const runtime = await sdk.ModelRuntime.create({ authPath: join(agentDir, 'auth.j
 let credentialReads = 0;
 runtime.getApiKeyForProvider = async () => { credentialReads++; throw new Error('Unexpected credential resolution'); };
 const model = runtime.getModel('openai-codex', 'gpt-6.1-sol'); assert.ok(model);
-const expectedCommands = ['fight-header', 'fight-policy', 'file-screening', 'jev'];
+const expectedCommands = ['fight-header', 'fight-policy', 'fight-stage', 'file-screening', 'jev'];
 const expectedFlags = ['fight-header', 'fight-screening-required', 'fight-tool-policy'];
 // file_locate is session/enrollment-dependent and exercised by optional-jev.mjs.
 const expectedTools = ['file_screening_status', 'jev_read_file'];
@@ -43,11 +43,12 @@ for (const [name, paths, mode] of [
   ['package', [harness], 'tui'], ['explicit', entries, 'tui'],
   ['package-and-explicit-deduplicated', [harness, ...entries], 'tui'],
   ['header-only', [entries[0]], 'tui'], ['package-json', [harness], 'json'],
+  ['package-no-tools', [harness], 'json'],
 ]) {
   const { settings, loader, loaded } = await load(paths);
   assert.deepEqual(loaded.errors, []); assert.deepEqual(loaded.warnings ?? [], []);
   const headerOnly = name === 'header-only';
-  assert.equal(loaded.extensions.length, headerOnly ? 1 : 3);
+  assert.equal(loaded.extensions.length, headerOnly ? 1 : 4);
   const registrations = key => loaded.extensions.flatMap(extension => [...extension[key].keys()]).sort();
   assert.deepEqual(registrations('commands'), headerOnly ? ['fight-header'] : expectedCommands);
   assert.deepEqual(registrations('flags'), headerOnly ? ['fight-header'] : expectedFlags);
@@ -56,7 +57,7 @@ for (const [name, paths, mode] of [
   let header, headerCalls = 0;
   const notices = [], errors = [];
   const { session } = await sdk.createAgentSession({ cwd: root, agentDir, modelRuntime: runtime, model,
-    settingsManager: settings, resourceLoader: loader, sessionManager: sdk.SessionManager.inMemory(root) });
+    settingsManager: settings, resourceLoader: loader, sessionManager: sdk.SessionManager.inMemory(root), noTools: name === 'package-no-tools' });
   // A command must not fall through to a model/provider request.
   session.agent.streamFunction = async () => { throw new Error('Unexpected model request'); };
   try {
@@ -64,6 +65,7 @@ for (const [name, paths, mode] of [
       setHeader(value) { header = value; headerCalls++; }, setFooter() {}, setStatus() {},
       notify(message) { notices.push(message); }, select: async () => undefined,
     } : undefined, onError: error => errors.push(error) });
+    if (name === 'package-no-tools') { assert.equal(session.getActiveToolNames().includes('bash'), false); outcomes++; }
     const theme = { name: 'dark', getColorMode: () => 'truecolor', fg: (_role, value) => value };
     const render = width => header?.({}, theme).render(width) ?? [];
     if (mode === 'tui') {

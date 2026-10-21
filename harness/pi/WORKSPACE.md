@@ -1,5 +1,9 @@
 # Local terminal workspace (implementation candidate)
 
+TASK-00502 adds default current-session following and verified child worktree test-log context; see
+[automatic following](#automatic-session-following-and-worktree-test-bindings-task-00502-candidate) for its native
+launch contract, custody assumptions, limits and fresh qualification. Independent acceptance remains pending.
+
 TASK-00449 adds the human-only shared-runtime reader below. Its frozen-candidate full gate passed; local
 qualification is implementation evidence, not independent acceptance. See the TASK for visual limits and
 `.runs/tasks/TASK-00449/runs/initial-finalization/handoff.md` for the committed-head gate result.
@@ -81,8 +85,10 @@ for exact paths, image hashes, final gate result, warnings and remaining accepta
 ## Conversation and observations
 
 At 100 columns / 20 rows or larger, the conversation occupies the left half and each read-only observation
-occupies a right quarter. Smaller terminals show one selectable view. The child pane can subscribe to an
-explicitly selected local stage monitor (below); without a socket it says no child selected. The runtime pane is opt-in through explicit human launch options (below). Neither observation changes
+occupies a right quarter. Smaller terminals show one selectable view. By default the child pane discovers eligible
+current-session launches; `--observe-child` instead selects explicitly labelled legacy endpoints. Test logs follow
+the verified selected/pinned worktree when an existing stack has an explicit human binding; shared logs remain a
+separate choice. Neither observation changes
 conversation directories/grants or launches an observed agent. Managed execution remains outside this candidate.
 
 | Key/input | Behavior |
@@ -108,7 +114,7 @@ across redraw/resize; the next edit reveals the edit point again. Paste is ignor
 
 ## Local child observation (TASK-00448 candidate)
 
-Observation is opt-in on the **existing** stage-monitor invocation. Before launching an authorized stage, prepare
+This is the explicit **legacy** path, not default authenticated discovery. Observation is opt-in on the **existing** stage-monitor invocation. Before launching an authorized stage, prepare
 an unused owner-only runtime directory under that stage checkout's `var/` and add
 `--observe-socket /absolute/checkout/var/o/a.sock` to its existing `run-stage.py` command. The directory must already
 exist with mode `0700`; the monitor exclusively binds a `0600` Unix socket and never replaces an existing path.
@@ -245,56 +251,151 @@ Controlled peers are not live integration proof. TASK-00449 records the existing
 PTY, sanitized terminal image, input denial, counts and limitations. Keep live pane contents out of model/tool
 transcripts; sanitize explicitly authorized evidence.
 
-## Existing worktree test bindings (partial TASK-00502 implementation)
+<a id="existing-worktree-test-bindings-partial-task-00502-implementation"></a>
 
-**Incomplete:** authenticated current-session child registration/discovery, trusted launch-order selection and
-native-launch/resume **association** remain unimplemented. Explicit `--observe-child` now has the concurrent
-legacy selector/pin controls described above; its reported worktree is still not trusted as a test-log selector.
-These are partial improvements, not a substitute for the approved automatic path or acceptance of TASK-00502.
+## Automatic session following and worktree test bindings (TASK-00502 candidate)
 
-Native **continuity** has now been recovered independently of association: a genuine native user/assistant
-conversation persisted normally, then the actual workspace resumed the same session ID, file and configured
-Sol/high model. Both exited zero without forced termination; no RPC prompt or native workflow command was sent
-on resume. Evidence: `.runs/tasks/TASK-00502/runs/repair1-native/summary.json`. Earlier ENOTTY/missing-file probes
-remain retained failures. The recovered probe does not claim terminal-attribute restoration or child provenance.
+Automatic following is the default when no legacy socket flags are supplied. In native Pi, the provider's
+`native-observation-extension.ts` extension recognizes a standalone `fight-stage ` plus literal JSON as a native bash
+operation. [Build](../../.pi/skills/build/SKILL.md) owns the authorized stage identity and exact model pins.
+Ordinary bash/read/write/edit remain ordinary Pi operations; effective shell settings are retained. Disabled
+bash is not re-enabled. A deterministic or another custom bash executor is not replaced; a configured shell
+path/prefix holds the direct fixed-launch bridge rather than silently bypassing that override. Observation never
+broadens executor authority. The human `/fight-stage JSON` command also supports
+concurrent native launches, with pending/progress/eventual-exit notifications. Build uses the waited bash
+operation, not the asynchronous human convenience. A launch request is not proof of successful completion.
 
-Bind an **already existing, explicitly authorized test stack** at workspace launch:
+The provider must contain its fixed `.pi/skills/build/scripts/run-stage.py` monitor. Local checkout-loaded
+packages qualify this path; a distribution without that monitor cannot launch through this bridge. No global
+launcher or installation is introduced here. Existing monitors launched outside the bridge remain legacy;
+never relaunch them for observation. The monitor retains its normal private request/evidence and settlement
+checks. Its actual loaded screening-provider package identity is retained to avoid duplicate installed flags
+and tools when qualifying a candidate observation extension.
+
+### Custody and admission
+
+The trusted native extension takes `ExtensionContext.mode`, `sessionManager.getSessionId()`, the genuine session
+file lifetime and canonical primary checkout. Pi persists a non-context custom entry before taking the file
+witness; that entry is **not** admission authority. A fixed provider custodian is forked directly with inherited
+Node IPC. Its bootstrap checks the live native parent PID/start identity and installed CLI entry. Pi changes its
+OS process title, so `ps` supplies a lifetime check, not a session/mode parser. Session/mode come from the supported
+extension context over that direct bootstrap, never from launch JSON, environment session IDs, cwd or names.
+
+Only that inherited IPC can launch the fixed monitor or request ordinary operation cancellation. Each new launch
+gets a random attempt ID, custodian generation, host monotonic start order, validated canonical registered
+worktree and direct monitor pipe. The monitor's inherited FD 3 exports only its existing safe progress boundary;
+its Pi child does not inherit that descriptor. Progress cannot rewrite launch identity or create another member.
+The public observation socket accepts only nonce queries; it cannot register, launch, cancel or feed a child.
+
+Runtime descriptors and selection/pin preferences live under the primary checkout's ignored
+`var/terminal/children/<session-key>/`. The workspace first obtains actual Pi `get_state` identity/file, then
+examines only that session's bounded directory. A descriptor is a **candidate**, not authority: admission checks
+its current owner-only endpoint inode, fixed custodian process/start/generation, a fresh Ed25519-signed nonce
+reply, matching native parent session/file inode and immutable attempt identity/sequence. The signing key stays
+in custodian memory, never in a registry or child environment. Replayed, malformed, stale, cross-parent,
+key-substituted and replaced candidates are refused. A copied session ID in a different file does not match the
+native file lifetime. No `.runs/` ledger, transcript or request is read to discover children; attempt paths in
+observations are display labels only.
+
+**Trust assumptions:** this authenticates the reviewed provider's live custody process and direct launch chain,
+not arbitrary same-user executable identity against hostile code. The loaded native extension, Pi, provider
+monitor/custodian and host process/filesystem facilities are trusted. Same-user arbitrary shell, malicious loaded
+extensions, provider-code replacement or a forged native-process bootstrap are not contained by this Harness.
+Owner-only sockets/files and process names alone are not membership; neither signatures nor these checks create
+an OS sandbox, credential isolation or new Workflow grants. A model-written registry/preference or monitor payload
+alone cannot register a child. The human-facing client does not expose discovery to tools/model context; this is
+not a promise to prevent an independently authorized same-user process reading host state. Independent Review
+must challenge this precise trust model rather than infer hostile-code isolation.
+
+### Selection, lifetime and bounds
+
+With one active member, follow it. With several, retain an active selection despite new siblings/output; when no
+active selection remains, choose newest trusted start order, then stable attempt ID. `[` / `]` explicitly selects
+an active child (or the pinned inactive child); `f` pins/unpins. Completion, disconnection and stale heartbeat do
+not move a pin. Unpin recomputes activity; no active member means honest idle and primary worktree log context.
+`p` freezes only the selected display, never lifecycle polling; selecting another child clears that frozen view.
+`c` closes/opens observation readers and `r` rediscovers. A lost custodian retains a pinned last-known label but
+removes its verified log authority until fresh admission succeeds. Closing panes never cancels execution.
+
+Actual session/file replacement invalidates old subscriptions, pins and in-flight replies before rediscovery.
+Conversation input remains held for explicit native-session recovery under the existing policy boundary; RPC
+never selects workflow/role authority. Native exit followed by `./bin/terminal --session PATH` from the same
+canonical parent checkout rediscovers valid still-live custodians without relaunching children. Editable saved
+pin/selection preferences are restored only after fresh membership admission; they cannot create authority.
+
+Each custodian holds at most **eight launches** and **100 entries / 32 Ki UTF-16 units per child**. Monitor-pipe
+sequence gaps are reported separately from retained-history eviction; an older custodian without that field
+says unknown rather than inventing zero loss. Completed entries
+can be pruned after ten minutes. Each workspace inspects at most **eight custodians / seventeen directory entries**
+and retains at most **eight children**, preserving its selected/pinned entry under overflow. One refresh is in
+flight; ticks skip while it runs. Each custodian challenge has a **one-second** deadline and **2 MiB** response
+cap; challenges are sequential, not an unbounded subscription fanout. Each custodian admits at most eight public
+readers with one-second deadlines, a 64 KiB monitor pipe queue per child, and 64 bounded native-progress IPC
+messages. Slow/absent consumers cannot hold stage progress. Unknown liveness is not inferred success.
+
+Custodians expire ten minutes after all monitors exit and the original native connection closes, with an absolute
+24-hour custody lifetime. Normal cleanup removes only its exact endpoint/descriptor inodes. A subsequent native
+launch prunes bounded dead candidates for that session. Crash leftovers remain visibly rejected until this
+cleanup; excessive/unrelated entries hold discovery instead of widening a scan. Preferences can remain as small
+non-authoritative session-local state. No transcript collector or lossless replay guarantee is added.
+
+### Existing test stacks
+
+Bind already-existing, explicitly authorized **test** stacks once at workspace launch, not per child switch:
 
 ```sh
-./bin/terminal --provider openai-codex --model gpt-6.1-sol --thinking high \
-  --logs-test /absolute/worktree desktop-linux existing-test-project web
+./bin/terminal --session /absolute/native-session.jsonl \
+  --logs-test /absolute/worktree-a desktop-linux existing-test-a postgres_test \
+  --logs-test /absolute/worktree-b desktop-linux existing-test-b postgres_test
 ```
 
-`--logs-test WORKTREE CONTEXT PROJECT SERVICE` is an explicit human statement of test purpose, not inferred
-from a project prefix or repository configuration. Repeat it for up to eight distinct worktree/context/project
-bindings. These options are consumed by the host and never sent to Pi. No container is started or changed.
-Current repository test preparation (`bin/database`) uses Compose's selected project and shared `web`/
-`postgres_test` services; it does not publish a trusted worktree/test association. This candidate therefore uses
-only explicit human bindings, held in memory. It does not scan or reload files as authority, and adds no
-per-worktree provisioning. Runtime preferences and sessions remain under `var/`; evidence is not runtime input.
+These are explicit human declarations of canonical worktree, test purpose, context, Compose project and eligible
+service, never inferred project prefixes, cwd, model output or arbitrary configuration. Up to eight distinct
+worktree/context/project bindings are held in host memory; only the explicitly bound service is eligible by
+default, so choosing a test stack cannot expose another production/shared service. The repository's qualified
+`bin/database` preparation uses selected Compose services but publishes no trusted association; this supported
+human binding is therefore necessary. Saved source files cannot grant a binding. A later workspace invocation
+requires explicit binding again, but selection changes within it need no socket/runtime flags. No provisioning,
+Compose override, lifecycle action or database write is implemented.
 
-Logs initially follow the primary process's canonical worktree. Several bindings for that worktree show an
-ambiguous state without starting a reader; with runtime focus, `{` / `}` explicitly selects a labelled stack,
-`[` / `]` selects its verified service, and `i` shows full source details. A missing binding, missing/stopped
-service or mismatched metadata is explicit; there is no silent shared fallback. To offer the separate shared
-choice, also supply all four existing `--logs-main/context/project/service` options. With test bindings present,
-`m` explicitly switches between follow and **EXPLICIT SHARED** modes; without test bindings, shared launch
-behavior is unchanged. Pause/close/reconnect affect readers only. No pane output enters the conversation.
+Follow mode uses the selected/pinned child's **custody-verified worktree**, otherwise the primary checkout. The
+conversation directory, grants and log source are distinct identities. Within one worktree, a valid reader can
+remain; changing worktree/stack/generation stops/reaps it, clears live/paused buffers and rejects late callbacks.
+At most one Docker reader runs. Missing, stopped, denied or mismatched sources are explicit, never shared fallback.
+Several bound stacks require labelled `{` / `}` selection; service choice is retained only while eligible and its
+container generation remains valid. `i` displays full source/endpoint/generation details. Shared mode remains a
+separate explicit `--logs-main/context/project/service` choice; with test bindings, `m` toggles it deliberately.
 
-The fixed Docker adapter revalidates the local context endpoint, exact canonical checkout labels, full container
-IDs and selected running service before subscribing. Test bindings pin the complete observed service/container
-ID set after their first successful validation. A recreated/added/removed container generation or changed
-endpoint is refused on revalidation: relaunch with a fresh human binding after inspecting the change. Stack or
-worktree transitions stop/reap the old reader, clear its live and paused buffers and reject late callbacks.
-An unreaped reader blocks replacements. There is at most one active Docker reader, no automatic retry and no
-additional buffers beyond the existing reader limits. Choices and service selections are session-local.
-No authenticated child source currently calls the worktree transition path; child following remains unfinished.
+Before every subscription, the fixed adapter checks the current local Unix endpoint, exact canonical checkout
+label, eligible service and full running container ID. Test bindings pin the eligible service/container generation;
+a recreated/removed/added eligible container or changed endpoint requires inspecting and supplying a fresh human
+binding. No source is trusted because of an old receipt. One-service test bindings also narrow metadata queries
+to that service. All existing Docker record/buffer/lifetime/reaping limits above remain intact. Pane data and
+source choices never enter Pi/model context.
 
-Controlled owning-tool tests cover binding validation, ambiguity, service/stack choice, source changes,
-recreation refusal, late events, pause buffers, close races and human-only input/output. They are **not** live
-two-worktree integration proof. Intake found only the main Agent OS stack. A separate uniquely named canonical
-gate stack is verification setup, not an observation acceptance source. Two authorized pre-existing worktree
-test stacks and real Before/After wide/narrow selector/pin captures remain required.
+### TASK-00502 qualification
+
+Fresh implementer evidence is under `.runs/tasks/TASK-00502/runs/repair2-imwfDZ3L/` (private, not runtime input):
+actual concurrent native parents, direct harmless monitor launches, same-session real workspace resume, disjoint
+parent membership, actual supported RPC session replacement, stale/cross-parent/key-substituted registration
+rejection, and automatic worktree log switching. The two user-authorized existing sources are main and TASK-00051
+`postgres_test`, each checked against its exact live container ID, checkout label and local endpoint; no new stack
+was used as observation proof. After observation closed, the TASK-00051 owner replaced its container. The
+replacement was inspected only as metadata, and the fixed reader with the prior verified pin refused it before
+issuing any log operation; observing that new ID requires fresh human binding/approval. Real 156×40 and 80×24 images show selector, focus, pin/completion, custody loss and
+idle-primary states. Raw log-bearing images remain private; inspected header-only crops and metadata/hashes are
+sanitized evidence. Disposable capture HOME has no provider credentials and submits no provider prompt on resume;
+its Harness is truthfully labelled not-enrolled, not claimed active enrolled qualification.
+
+Pi **1.3.0** and Node **22.23.1** are observed qualification versions, not equality pins. Earlier duplicate-resource,
+builtin-metadata, CLI-layout/process-title and capture-helper failures remain preserved, not relabelled success.
+Owning Node tests cover admission/selection, signed challenge attacks, source-generation/late-event isolation and
+native operation cancellation; Python monitor behavior is qualified directly. The actual installed-SDK loading
+probe qualifies package/explicit/deduplicated loading and preserves disabled bash (208 outcomes, no provider or
+credential calls). Early native captures used the unpublished `native-observation.ts` filename; the final
+package entry follows the repository convention as `native-observation-extension.ts`. The final frozen gate/head,
+warning inventory, cleanup and remaining limits are recorded in the task's durable Engineer handoff. This is
+implementation evidence, not independent Review/QA acceptance.
 
 ## Policy and normal Pi paths
 
@@ -348,7 +449,7 @@ an existing Pi session and `--session-dir PATH` explicitly selects another store
 qualification. Resuming a session does not reset enrollment, budgets, accounting or role history. Operator role
 changes still need the native TUI; inherited launcher-role environment flags are deliberately not forwarded.
 
-The wrapper accepts repeatable `--logs-test WORKTREE CONTEXT PROJECT SERVICE` for the partial binding mode above,
+The wrapper accepts repeatable `--logs-test WORKTREE CONTEXT PROJECT SERVICE` for existing test bindings above,
 plus `--theme system|light|dark`, `--provider`, `--model`, `--thinking`, `--session`,
 `--session-dir`, `--name`, `--extension`, repeatable `--observe-child`, the four `--logs-*` source options above, `--continue`, `--no-session` and `--help`. It does not accept API keys,
 initial prompts, arbitrary process modes or extension-disabling flags. The child gets only HOME, PATH, TMPDIR,
@@ -356,7 +457,8 @@ locale and terminal variables. Pi may resolve its configured credentials through
 credential isolation, nor a promise that ambient-environment-only providers work. No provider values are copied
 into child environment variables, UI preferences or another credential store.
 
-Presentation state is memory-only. The child pane's separate bounds are described above. Conversation display retention is 500 entries / 256 Ki UTF-16 units, each entry 64 Ki units;
+Conversation presentation state is memory-only; automatic child selection/pin preferences are scoped under
+`var/terminal/children/` as described above. The child pane's separate bounds are described above. Conversation display retention is 500 entries / 256 Ki UTF-16 units, each entry 64 Ki units;
 whole-entry eviction, per-entry clipping and streaming-tail clipping carry explicit notices, without editing Pi
 history. Clipped entries preserve a bounded role/source header and a grapheme-safe tail; a trailing notice stays
 visible while following the newest content. Input is capped at 32 Ki units across typed text, bracketed paste,

@@ -15,7 +15,7 @@ async function fixture(t, multiple = false) {
   const directory = realpathSync(mkdtempSync(join(tmpdir(), 'worktree-logs-')));
   const primary = join(directory, 'A'), second = join(directory, 'B'), missing = join(directory, 'missing');
   for (const path of [primary, second, missing]) mkdirSync(path);
-  const binding = (main, project) => ({ main, context: 'local', project, service: 'web' });
+  const binding = (main, project) => ({ main, context: 'local', project, service: 'web', allowedServices: ['web', 'db'] });
   const bindings = [binding(primary, 'test-a'), binding(second, 'test-b')];
   if (multiple) bindings.push(binding(primary, 'test-a-alternate'));
   const rows = new Map([...bindings, binding(primary, 'shared')].map((source, index) => [source.project, [
@@ -49,7 +49,7 @@ test('explicit human test bindings are bounded, canonical and excluded from Pi a
   const main = realpathSync('.');
   const config = options(['--no-session', '--logs-test', main, 'local', 'test-a', 'web'], main);
   assert.deepEqual(config.args, ['--no-session']);
-  assert.deepEqual(config.tests, [{ main, context: 'local', project: 'test-a', service: 'web', purpose: 'test' }]);
+  assert.deepEqual(config.tests, [{ main, context: 'local', project: 'test-a', service: 'web', purpose: 'test', allowedServices: ['web'] }]);
   assert.equal(config.logs, null);
   assert.throws(() => options(['--logs-test', main, 'local', 'test-a'], main));
   assert.throws(() => testBindings(Array(9).fill(config.tests[0])));
@@ -61,7 +61,7 @@ test('only the primary matching test source starts, without a container lifecycl
   assert.equal(logs.source.main, primary); assert.equal(logs.source.project, 'test-a');
   assert.equal(logs.source.purpose, 'test'); assert.equal(streams.length, 1);
   assert.match(logs.summary(), /FOLLOW WORKTREE TEST/);
-  assert.match(logs.view(), /trusted launch association incomplete/);
+  assert.match(logs.view(), /custody-verified selected\/pinned child/);
   assert.ok(logs.view().includes(`Worktree: ${primary}`));
   for (const call of calls) {
     assert.equal(call.command, 'docker'); assert.equal(call.opts.shell, false);
