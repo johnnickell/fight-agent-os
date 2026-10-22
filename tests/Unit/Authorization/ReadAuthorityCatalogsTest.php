@@ -232,7 +232,7 @@ final class ReadAuthorityCatalogsTest extends TestCase
     #[DataProvider('badResults')]
     public function testResultFailures(string $operation, string $kind): void
     {
-        $mismatch = new RoleView(RoleId::generate(), $this->role->getName(), false, []);
+        $mismatch = new RoleView(RoleId::generate(), $this->role->getName(), false, [], $this->role->getRevision());
         if ($operation === 'permission') {
             $mismatch = new PermissionView(
                 PermissionId::generate(),

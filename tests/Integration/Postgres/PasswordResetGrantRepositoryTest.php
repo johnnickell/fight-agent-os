@@ -55,8 +55,8 @@ SQL
         $this->connection->insert('users', [
             'id'                                => $this->userId->toString(),
             'email'                             => 'reset@example.test',
-            'state'                             => 'pending_activation',
-            'password_hash'                     => null,
+            'state'                             => 'active',
+            'password_hash'                     => password_hash('fixture-password', PASSWORD_BCRYPT, ['cost' => 4]),
             'authentication_version'            => 1,
             'authentication_authority_revision' => 0,
             'authorization_assignment_revision' => 0,
@@ -322,6 +322,7 @@ SQL, [$otherUser->toString(), $this->userId->toString()]);
             $fresh->getCredentialHash(),
             $fresh->getExpiresAt(),
             $duplicateDelivery,
+            $fresh->getAuthority(),
             null,
             null,
             0
@@ -358,6 +359,7 @@ SQL, [$otherUser->toString(), $this->userId->toString()]);
                 $first->getExpiresAt(),
                 $this->now
             ),
+            $first->getAuthority(),
             null,
             null,
             0
@@ -517,13 +519,17 @@ SQL, [$otherUser->toString(), $this->userId->toString()]);
     {
         $credential ??= PasswordResetCredential::fromString(bin2hex(random_bytes(32)));
 
+        $other = $userId !== null && !$userId->equals($this->userId);
+        $email = $other ? 'other-reset@example.test' : 'reset@example.test';
+
         return [PasswordResetGrant::issue(
             $userId ?? $this->userId,
             $credential,
             $this->now,
             $this->now->modify('+1 hour'),
-            EmailAddress::fromString('reset@example.test'),
-            'encrypted-material'
+            EmailAddress::fromString($email),
+            'encrypted-material',
+            new \Fight\AccessControl\Domain\AccessControl\User\RecoveryAuthority(1, 0)
         ), $credential];
     }
 

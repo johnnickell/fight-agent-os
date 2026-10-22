@@ -58,7 +58,9 @@ Issuance `data` contains exactly `user_id` (nullable only for uncertainty), `ass
 (`confirmed`, `unconfirmed`, `unknown`), `audit` (`confirmed`, `unconfirmed`), and nullable `delivery`.
 These assignment/audit fields describe observed steps, not a parallel invitation-delivery lifecycle.
 `delivery` and status-read `data` use the package `InvitationDeliveryStatusView` directly: `user_id`, `status`,
-`expires_at`. The qualified package statuses are `pending`, `claimed`, `retry_pending`, `delivered`,
+`expires_at`, `activation_delivery_id`. TASK-00125's current package adoption adds the safe generation identifier;
+it is an expectation for protected operational inspection, never authentication or recovery authority.
+The qualified package statuses are `pending`, `claimed`, `retry_pending`, `delivered`,
 `permanent_failure`, `expired`, `invalidated`. `delivered` records the provider's accepted attempt outcome, not
 inbox receipt. `expires_at` is the grant's expiry; the View reports stored lifecycle, not an invented clock-based
 transition. A retryable/permanent provider failure can coexist with a 201 successfully recorded invitation;

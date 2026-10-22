@@ -12,6 +12,7 @@ use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\Cre
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin;
 use Fight\Common\Application\Templating\TemplateEngine;
 use LogicException;
 use SensitiveParameter;
@@ -41,7 +42,10 @@ final readonly class InvitationMailProvider implements CredentialDeliveryProvide
     public function deliver(#[SensitiveParameter] CredentialDeliveryInvocation $invocation): CredentialDeliveryOutcome
     {
         // Never send an activation link for another purpose.
-        if ($invocation->getPurpose() !== 'activation') {
+        if (
+            $invocation->getPurpose() !== 'activation'
+            || $invocation->getActivationOrigin() !== ActivationOrigin::PRIVATE_INVITATION
+        ) {
             return CredentialDeliveryOutcome::RETRYABLE_FAILURE;
         }
 

@@ -4,7 +4,12 @@ import { hasExactKeys } from '@/api/decodeResponse';
 import type { ApiClient } from '@/api/ApiClient';
 import type { ResponseDecoder } from '@/api/decodeResponse';
 
-export type CatalogRole = Readonly<{ roleId: string; name: string; managed: boolean }>;
+export type CatalogRole = Readonly<{
+  roleId: string;
+  name: string;
+  managed: boolean;
+  revision: string;
+}>;
 export type CatalogPermission = Readonly<{
   permissionId: string;
   name: string;
@@ -25,9 +30,13 @@ const uuid = (value: unknown): value is string =>
 const integer = (value: unknown, min: number, max = Number.MAX_SAFE_INTEGER): value is number =>
   typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max;
 
-const role: ResponseDecoder<CatalogRole> = (value) => {
+export const decodeCatalogRole: ResponseDecoder<CatalogRole> = (value) => {
   if (
-    !hasExactKeys(value, ['role_id', 'name', 'managed']) ||
+    !hasExactKeys(value, ['role_id', 'name', 'managed', 'revision']) ||
+    typeof value.revision !== 'string' ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:[1-9][0-9]{0,8}(?![\s\S])/.test(
+      value.revision
+    ) ||
     !uuid(value.role_id) ||
     typeof value.name !== 'string' ||
     value.name.length > 255 ||
@@ -35,7 +44,12 @@ const role: ResponseDecoder<CatalogRole> = (value) => {
     typeof value.managed !== 'boolean'
   )
     return null;
-  return Object.freeze({ roleId: value.role_id, name: value.name, managed: value.managed });
+  return Object.freeze({
+    roleId: value.role_id,
+    name: value.name,
+    managed: value.managed,
+    revision: value.revision
+  });
 };
 const permission: ResponseDecoder<CatalogPermission> = (value) => {
   if (
@@ -103,7 +117,7 @@ export class CatalogService {
     pagination: CatalogPagination = { page: 1, perPage: 25 },
     signal?: AbortSignal
   ): Promise<ApiResult<CatalogPage<CatalogRole>>> {
-    return this.#api.get('/roles', page(role, pagination), {
+    return this.#api.get('/roles', page(decodeCatalogRole, pagination), {
       access: 'required',
       pagination,
       ...(signal ? { signal } : {})
@@ -126,7 +140,7 @@ export class CatalogService {
     return this.#api.get(
       `/roles/${id}`,
       (value) => {
-        const result = role(value);
+        const result = decodeCatalogRole(value);
         return result?.roleId === id ? result : null;
       },
       { access: 'required', ...(signal ? { signal } : {}) }

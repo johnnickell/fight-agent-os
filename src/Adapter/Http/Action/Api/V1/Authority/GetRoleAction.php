@@ -37,9 +37,9 @@ final readonly class GetRoleAction
         operationId: 'getRole',
         summary: 'Read one safe managed or custom role',
         description: <<<'TEXT'
-            Requires current protected READ_ROLES before lookup. No membership, persistence data or mutation route.
-            Managed roles are not custom-role mutation targets; custom presentation does not imply an available
-            mutation API. Responses are no-store.
+            Requires current protected READ_ROLES before lookup. No membership or persistence internals.
+            The revision is an exact state expectation, not authority. Managed roles are not mutation targets;
+            custom definition mutations require their separate exact permission. Responses are no-store.
             TEXT,
         security: [['AccessBearer' => []]],
         parameters: [new OA\Parameter(

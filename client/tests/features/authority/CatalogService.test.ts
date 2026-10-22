@@ -5,7 +5,8 @@ import { CatalogService } from '@/features/authority/CatalogService';
 
 const roleId = crypto.randomUUID();
 const permissionId = crypto.randomUUID();
-const role = { role_id: roleId, name: 'ROLE_CUSTOM', managed: false };
+const revision = `${crypto.randomUUID()}:1`;
+const role = { role_id: roleId, name: 'ROLE_CUSTOM', managed: false, revision };
 const permission = {
   permission_id: permissionId,
   name: 'READ_ROLES',
@@ -130,6 +131,9 @@ describe('CatalogService', () => {
     { ...role, name: 'admin' },
     { ...role, role_id: crypto.randomUUID() },
     { ...role, name: 'ROLE_CUSTOM\n' },
+    { ...role, revision: undefined },
+    { ...role, revision: `${crypto.randomUUID()}:01` },
+    { ...role, revision: `${crypto.randomUUID()}:1000000000` },
     null
   ])('fails closed on broader or malformed role representations', async (data) => {
     const { service } = setup(data);

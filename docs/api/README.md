@@ -95,7 +95,7 @@ attributes, generated JSON, wrappers or deliberately corrupted validator fixture
 
 ## Explicit input sources (TASK-00155)
 
-On an Action's `handle`, use argument-free `#[JsonBody]` for POST/PUT/PATCH JSON objects or
+On an Action's `handle`, use argument-free `#[JsonBody]` for POST/PUT/PATCH/DELETE JSON objects or
 `#[QueryString]` for GET query fields, followed by Fight Common `#[Validation(rules: [...])]`.
 Each rule's `field` is the **snake_case wire key** and the sole field allowlist; no DTO constructor,
 reflection hydration, fallback source, implicit default, type cast or form-schema publication is involved.

@@ -365,6 +365,12 @@ interactions, not endpoints or authentication E2E evidence.
 
 ## Client authority foundation
 
+TASK-00125's unmounted `CustomRoleService` sends Bearer-authorized definition mutations only, using the exact
+`CatalogRole.revision` displayed to the caller and explicit removal confirmation. It never substitutes a token or
+retries; all attempted network outcomes retire/refetch authority, including conflicts and uncertain failures.
+`ApiClient.mutate()` requires a current access credential and an explicit expected success status (201 for creation,
+200 otherwise). No Role UI, membership grant or new shell route is introduced. See the [server contract](../docs/engineering/CUSTOM_ROLES.md).
+
 TASK-00028 implements [ADR 0004](../planning/adr/0004-client-authority-and-runtime-state.md) as reusable
 in-process capabilities. The application session graph now constructs one production `AuthorityCache` with `CurrentPrincipalService`,
 using TASK-00117's existing server projection, for root/Login/protected routes. Activation, recovery and unknown

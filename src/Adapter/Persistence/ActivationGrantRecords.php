@@ -11,6 +11,7 @@ use DateTimeZone;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantId;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryClaimToken;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryFailure;
 use Fight\AccessControl\Domain\AccessControl\CredentialDelivery\CredentialDeliveryStatus;
@@ -42,6 +43,7 @@ final class ActivationGrantRecords
         $delivery = $grant->getDelivery();
 
         return [
+            'origin'                   => $grant->getOrigin()->value,
             'id'                       => $grant->getId()->toString(),
             'user_id'                  => $grant->getUserId()->toString(),
             'credential_digest'        => $grant->getCredentialHash(),
@@ -105,6 +107,7 @@ final class ActivationGrantRecords
         );
 
         return PersistedActivationGrant::reconstitute(
+            ActivationOrigin::from((string) $row['origin']),
             ActivationGrantId::fromString((string) $row['id']),
             $userId,
             (string) $row['credential_digest'],

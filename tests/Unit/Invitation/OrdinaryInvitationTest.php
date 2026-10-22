@@ -224,7 +224,8 @@ final class OrdinaryInvitationTest extends TestCase
                 $defect === 'target' && $query instanceof GetUserById => $this->view(UserId::generate()),
                 $defect === 'role' && $query instanceof GetRoleById => new RoleView(
                     RoleId::generate(),
-                    RoleName::fromString('ROLE_CUSTOM'), false, []
+                    RoleName::fromString('ROLE_CUSTOM'), false, [],
+                    \Fight\AccessControl\Domain\AccessControl\Role\RoleRevision::initial()
                 ),
                 $defect === 'protected' && $query instanceof GetPermissionById => new PermissionView(
                     $query->getPermissionId(),
@@ -273,7 +274,8 @@ final class OrdinaryInvitationTest extends TestCase
             $id,
             RoleName::fromString($kind === 'alias' ? 'ROLE_SUPER_ADMIN' : 'ROLE_RENAMED'),
             $kind !== 'alias',
-            []
+            [],
+            \Fight\AccessControl\Domain\AccessControl\Role\RoleRevision::initial()
         ));
     }
 
@@ -450,7 +452,8 @@ final class OrdinaryInvitationTest extends TestCase
                 $query instanceof GetUserById => $this->user,
                 $query instanceof GetRoleById => new RoleView(
                     $query->getRoleId(),
-                    RoleName::fromString('ROLE_USER'), true, [PermissionId::generate()]
+                    RoleName::fromString('ROLE_USER'), true, [PermissionId::generate()],
+                    \Fight\AccessControl\Domain\AccessControl\Role\RoleRevision::initial()
                 ),
                 $query instanceof GetPermissionById => new PermissionView(
                     $query->getPermissionId(),

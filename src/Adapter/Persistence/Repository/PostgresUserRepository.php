@@ -7,6 +7,7 @@ namespace App\Adapter\Persistence\Repository;
 use App\Adapter\Persistence\Hydration\PersistedUser;
 use App\Adapter\Persistence\Locking\AuthenticationAuthorityFences;
 use App\Adapter\Persistence\Locking\AuthorizationReferenceFences;
+use App\Adapter\Persistence\PasswordResetGrantRecords;
 use App\Adapter\Persistence\PersistenceConflict;
 use App\Adapter\Persistence\PostgresAtomicOperation;
 use App\Adapter\Persistence\PostgresUniqueConstraintRace;
@@ -18,6 +19,7 @@ use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
+use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\User\Exception\DuplicateEmailException;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
@@ -58,6 +60,12 @@ final readonly class PostgresUserRepository implements UserRepository
     public function add(User $user): void
     {
         $this->assertTransaction();
+        $this->authenticationFences->hold($user->getId());
+        $this->referenceFences->holdPermissionReferences();
+        $this->referenceFences->holdRoleReferences();
+        if (!$this->lockAuthoritativeRoles($user->getRoleIds())) {
+            throw new PersistenceConflict('The user identity or role reference is invalid.');
+        }
 
         try {
             $inserted = PostgresUniqueConstraintRace::execute(
@@ -80,6 +88,86 @@ final readonly class PostgresUserRepository implements UserRepository
         if ($inserted !== 1) {
             throw new DuplicateEmailException('The email address is already reserved.');
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addWithRoleAssignments(User $user, array $expectedRoles): bool
+    {
+        $this->assertTransaction();
+        if (
+            $user->getState() !== UserState::PENDING_ACTIVATION
+            || $user->getPasswordHash() !== null
+            || $user->getPendingEmailChange() !== null
+        ) {
+            return false;
+        }
+        $this->authenticationFences->hold($user->getId());
+        $this->referenceFences->holdPermissionReferences();
+        $this->referenceFences->holdRoleReferences();
+        $ids = [];
+        $names = [];
+        foreach ($expectedRoles as $role) {
+            $id = $role->getId()->toString();
+            $name = $role->getName()->toString();
+            if (isset($ids[$id]) || isset($names[$name]) || !$this->currentRoleMatches($role)) {
+                return false;
+            }
+            $ids[$id] = true;
+            $names[$name] = true;
+        }
+        if ($ids === [] || count($ids) !== count($user->getRoleIds())) {
+            return false;
+        }
+        foreach ($user->getRoleIds() as $id) {
+            if (!isset($ids[$id->toString()])) {
+                return false;
+            }
+        }
+        $this->add($user);
+
+        return true;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function validateRecoveryAuthority(User $expected): bool
+    {
+        $this->assertTransaction();
+        $this->authenticationFences->hold($expected->getId());
+        if ($expected->getState() !== UserState::ACTIVE) {
+            return false;
+        }
+        $builder = $this->connection->createQueryBuilder()->select('1')->from('users');
+        $this->applyExpectedState($builder, $expected);
+
+        return $builder->fetchOne() !== false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function replacePendingRegistration(User $expected, User $replacement): bool
+    {
+        $this->assertTransaction();
+        $this->authenticationFences->hold($expected->getId());
+        if (
+            $expected->getState() !== UserState::PENDING_ACTIVATION
+            || $expected->getPendingEmailChange() !== null
+            || $expected->getPasswordHash() !== null
+        ) {
+            return false;
+        }
+        if ($expected == $replacement) {
+            $builder = $this->connection->createQueryBuilder()->select('1')->from('users');
+            $this->applyExpectedState($builder, $expected);
+
+            return $builder->fetchOne() !== false;
+        }
+
+        return $this->replacePendingInvitationEmail($expected, $replacement);
     }
 
     /**
@@ -133,7 +221,11 @@ final readonly class PostgresUserRepository implements UserRepository
             return false;
         }
 
-        return $this->conditionalAuthorityUpdate($expected, $replacement) === 1;
+        return $this->replaceAndCancelRecovery(
+            $expected,
+            $replacement,
+            fn(): bool => $this->conditionalAuthorityUpdate($expected, $replacement) === 1
+        );
     }
 
     /**
@@ -159,7 +251,13 @@ final readonly class PostgresUserRepository implements UserRepository
             return PostgresAtomicOperation::execute(
                 $this->connection,
                 function () use ($expected, $replacement, $refreshSession): bool {
-                    if ($this->conditionalAuthorityUpdate($expected, $replacement) !== 1) {
+                    if (
+                        !$this->replaceAndCancelRecovery(
+                            $expected,
+                            $replacement,
+                            fn(): bool => $this->conditionalAuthorityUpdate($expected, $replacement) === 1
+                        )
+                    ) {
                         return false;
                     }
 
@@ -190,6 +288,7 @@ final readonly class PostgresUserRepository implements UserRepository
     public function replaceRoleAssignments(User $expected, User $replacement): bool
     {
         $this->assertTransaction();
+        $this->authenticationFences->hold($expected->getId());
 
         if (!$this->roleAssignmentReplacementIsValid($expected, $replacement)) {
             return false;
@@ -228,6 +327,7 @@ final readonly class PostgresUserRepository implements UserRepository
     public function replaceEmailChangeReservation(User $expected, User $replacement): bool
     {
         $this->assertTransaction();
+        $this->authenticationFences->hold($expected->getId());
 
         if (!$this->emailChangeReservationReplacementIsValid($expected, $replacement)) {
             return false;
@@ -342,7 +442,13 @@ final readonly class PostgresUserRepository implements UserRepository
                             RefreshSessionRecords::date($replacement->getUpdatedAt())
                         );
 
-                    if ($builder->executeStatement() !== 1) {
+                    if (
+                        !$this->replaceAndCancelRecovery(
+                            $expected,
+                            $replacement,
+                            fn(): bool => $builder->executeStatement() === 1
+                        )
+                    ) {
                         return false;
                     }
 
@@ -371,6 +477,7 @@ final readonly class PostgresUserRepository implements UserRepository
     public function replacePendingInvitationEmail(User $expected, User $replacement): bool
     {
         $this->assertTransaction();
+        $this->authenticationFences->hold($expected->getId());
 
         if (!$this->pendingInvitationEmailReplacementIsValid($expected, $replacement)) {
             return false;
@@ -422,6 +529,7 @@ final readonly class PostgresUserRepository implements UserRepository
     public function replaceLifecycleState(User $expected, User $replacement): bool
     {
         $this->assertTransaction();
+        $this->authenticationFences->hold($expected->getId());
 
         if (!$this->lifecycleStateReplacementIsValid($expected, $replacement)) {
             return false;
@@ -430,18 +538,24 @@ final readonly class PostgresUserRepository implements UserRepository
         $builder = $this->connection->createQueryBuilder()->update('users');
         $builder
             ->set('state', ':replacement_state')
+            ->set('authentication_version', ':replacement_authentication_version')
             ->set('password_hash', ':replacement_password_hash')
             ->set('updated_at', ':replacement_updated_at');
         $this->applyExpectedState($builder, $expected);
         $builder
             ->setParameter('replacement_state', $replacement->getState()->value)
+            ->setParameter('replacement_authentication_version', $replacement->getAuthenticationVersion())
             ->setParameter(
                 'replacement_password_hash',
                 $replacement->getPasswordHash()?->toString()
             )
             ->setParameter('replacement_updated_at', RefreshSessionRecords::date($replacement->getUpdatedAt()));
 
-        return $builder->executeStatement() === 1;
+        return $this->replaceAndCancelRecovery(
+            $expected,
+            $replacement,
+            fn(): bool => $builder->executeStatement() === 1
+        );
     }
 
     /**
@@ -465,6 +579,46 @@ final readonly class PostgresUserRepository implements UserRepository
             (int) $this->connection->createQueryBuilder()->select('COUNT(*)')->from('users')->fetchOne(),
             $records
         );
+    }
+
+    /**
+     * Persists recovery-authority changes with cancellation even for direct repository writers
+     *
+     * @phpstan-param callable(): bool $operation
+     */
+    private function replaceAndCancelRecovery(User $expected, User $replacement, callable $operation): bool
+    {
+        return PostgresAtomicOperation::execute($this->connection, function () use (
+            $expected,
+            $replacement,
+            $operation
+        ): bool {
+            if (!$operation()) {
+                return false;
+            }
+            if ($expected->getRecoveryAuthority()->equals($replacement->getRecoveryAuthority())) {
+                return true;
+            }
+            $this->connection->executeQuery(
+                'SELECT pg_advisory_xact_lock(hashtextextended(?, ?))',
+                [$expected->getId()->toString(), 24123]
+            );
+            $row = $this->connection->fetchAssociative(
+                'SELECT * FROM password_reset_grants WHERE user_id = ? ORDER BY generation DESC LIMIT 1 FOR UPDATE',
+                [$expected->getId()->toString()]
+            );
+            if ($row !== false) {
+                $grant = PasswordResetGrantRecords::hydrate($row);
+                if ($grant->isIssued()) {
+                    $cancelled = $grant->revoke($replacement->getUpdatedAt());
+                    $fields = PasswordResetGrantRecords::fields($cancelled);
+                    unset($fields['id']);
+                    $this->connection->update('password_reset_grants', $fields, ['id' => $grant->getId()->toString()]);
+                }
+            }
+
+            return true;
+        });
     }
 
     /**
@@ -549,6 +703,39 @@ SQL
             ->setParameter('expected_created_at', RefreshSessionRecords::date($expected->getCreatedAt()))
             ->setParameter('expected_updated_at', RefreshSessionRecords::date($expected->getUpdatedAt()))
             ->setParameter('expected_roles', $this->roleLiteral($expected->getRoleIds()));
+    }
+
+    /**
+     * Checks the complete registration Role expectation under its shared writer fence
+     */
+    private function currentRoleMatches(Role $expected): bool
+    {
+        $row = $this->connection->fetchAssociative(
+            'SELECT * FROM roles WHERE id = ?',
+            [$expected->getId()->toString()]
+        );
+        if ($row === false) {
+            return false;
+        }
+        $permissions = array_map(
+            static fn(mixed $id): \Fight\AccessControl\Domain\AccessControl\Permission\PermissionId =>
+                \Fight\AccessControl\Domain\AccessControl\Permission\PermissionId::fromString((string) $id),
+            $this->connection->fetchFirstColumn(
+                'SELECT permission_id FROM role_permissions WHERE role_id = ? ORDER BY permission_id',
+                [$expected->getId()->toString()]
+            )
+        );
+        $current = Role::reconstitute(
+            RoleId::fromString((string) $row['id']),
+            \Fight\AccessControl\Domain\AccessControl\Role\RoleName::fromString((string) $row['name']),
+            $permissions,
+            in_array($row['managed'], [true, 1, '1', 't'], true),
+            new DateTimeImmutable((string) $row['created_at']),
+            new DateTimeImmutable((string) $row['updated_at']),
+            \Fight\AccessControl\Domain\AccessControl\Role\RoleRevision::fromString($row['revision'])
+        );
+
+        return $expected->hasSameState($current);
     }
 
     /**
@@ -841,10 +1028,12 @@ SQL
             return false;
         }
 
+        $versionAdvance = in_array($replacement->getState(), [UserState::DISABLED, UserState::DELETED], true) ? 1 : 0;
+
         return $expected->getId()->equals($replacement->getId())
             && $expected->getCreatedAt() == $replacement->getCreatedAt()
             && $this->emailStateMatches($expected, $replacement)
-            && $expected->getAuthenticationVersion() === $replacement->getAuthenticationVersion()
+            && $expected->getAuthenticationVersion() + $versionAdvance === $replacement->getAuthenticationVersion()
             && $expected->getAuthenticationAuthorityRevision() === $replacement->getAuthenticationAuthorityRevision()
             && $expected->getAuthorizationAssignmentRevision() === $replacement->getAuthorizationAssignmentRevision()
             && $this->roleAssignmentsMatch($expected, $replacement);
