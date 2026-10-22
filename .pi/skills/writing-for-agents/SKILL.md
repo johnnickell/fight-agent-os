@@ -24,6 +24,10 @@ creating implementation work, installing skills globally or publishing anything.
    that the reader reaches the needed reference, knows when to stop, and cannot mistake a proposal for execution.
    Validate metadata and relative links directly; remove placeholders, duplication and unsupported tool commands.
 
+Apply the shared [handoff readability rules](../../../docs/engineering/HANDOFFS.md#readable-handoff-text) to
+agent-facing requests and continuation summaries as well as human-facing handoffs. Check that authored skill
+instructions direct readers to those rules where they prepare a handoff, not only after execution.
+
 For skills with a useful continuation, make completion include a concrete `Next:` line under the [handoff
 rules](../../../docs/engineering/HANDOFFS.md). Use a supported command and actual target or name the pending
 human/prerequisite action; a recommendation must not silently dispatch the next skill or imply acceptance.
