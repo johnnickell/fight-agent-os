@@ -278,6 +278,16 @@ daemon and promotes a pending real session-file witness. No discoverable descrip
 persists the file; no prompt, custom setup entry or fabricated file forces persistence. Session/path/inode
 replacement cannot silently rebind a generation. RPC resume starts no native bootstrap.
 
+Native registration closes at supported `session_shutdown` (new/resume/fork/reload/quit), not the
+cancellable `session_before_switch`/`session_before_fork` proposals. Cancellation or target-validation failure
+leaves the actual session, route generation and original context-start stamp intact. Successful teardown
+invalidates queued observation callbacks; the replacement's `session_start` creates a fresh generation.
+No timer recovery, extra restart, command wrapper or child replay is involved. The owning
+[`native-lifecycle.py`](tests/native/native-lifecycle.py) check exercises genuine native routes; its explicit
+`--with-provider` option adds one harmless parent turn for persisted fork/resume. The companion
+[`session-lifecycle.mjs`](tests/native/session-lifecycle.mjs) qualifies public SDK validation/stale-context behavior
+without provider calls. These are Engineer diagnostics, not independent QA or a Pi version guarantee.
+
 The ordinary monitor starts its Pi child exactly as before. A best-effort background observer then discovers a
 route for its **exact live native ancestor**, across at most 32 registered worktree roots and eight route entries
 per root. It verifies native PID/start and the fixed live observation-daemon process/generation/endpoint inode.

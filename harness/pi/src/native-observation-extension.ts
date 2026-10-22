@@ -25,8 +25,9 @@ export default function installNativeObservation(pi: ExtensionAPI) {
   pi.on('tool_execution_start', (_event, ctx) => { later(ctx); });
   pi.on('tool_execution_end', (_event, ctx) => { later(ctx); });
   pi.on('agent_end', (_event, ctx) => { later(ctx); });
-  pi.on('session_before_switch', close);
-  pi.on('session_before_fork', close);
+  // Before-switch/fork are cancellable proposals; target validation can also fail.
+  // Only shutdown confirms teardown (new/resume/fork/reload/quit). Keep the current
+  // route and its original context-start stamp until that supported boundary.
   pi.on('session_shutdown', (_event, ctx) => {
     try { observation?.syncSessionFile(ctx); } catch { /* No execution effect. */ }
     close();
