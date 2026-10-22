@@ -23,6 +23,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 1 | [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | — (standalone bug) | ready-for-agent | — | — |
+| 2 | [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | — (standalone chore) | ready-for-agent | — | — |
 | 53 | [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | — | — |
 | 54 | [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | ready-for-agent | — | — |
 | 56 | [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | ready-for-agent | — | — |
