@@ -23,10 +23,18 @@ Run the target's generated-view/docs checks and complete gate for actual changes
 requesting any missing publication approval. A later docs repair still follows the target's delivery rules.
 After a release is tagged/published, repair docs on an appropriate new branch; never rewrite the published tag.
 
+Prepare the [release acceptance packet](acceptance.md) and obtain independent technical review of the exact
+candidate, using supported release dispatch or its explicit standalone fallback. Do not demand a TASK or attach
+preparation changes to a completed implementation TASK. Treat support/compatibility/authority policy changes as
+substantive. Repair only authorized preparation findings, obtain affected review and coordinate applicable QA,
+including required release-endpoint scenarios from earlier handoffs. Prose-only preparation cannot waive them.
+
 ## Integration and certification
 
-Use the existing release PR and independent acceptance. Honor local gate/hosted-check policy and actual branch
-protection. A required hosted check that is unavailable is unresolved, not green. Merge only within authorization.
+Use the existing release PR, release-scoped independent acceptance and applicable QA reports. The release
+coordinator owns authorized delivery under target rules, not the TASK-only `land` intake. Assess the actual
+integration diff under [release acceptance](acceptance.md), not only preparation edits. Honor local gate/hosted-check
+policy and actual branch protection. A required hosted check that is unavailable is unresolved, not green. Merge only within authorization.
 After merging, fetch and verify the actual merge commit against the PR and release line. Do not guess its hash
 from a branch name or claim the local `main` tip is the current remote tip.
 
