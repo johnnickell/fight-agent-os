@@ -511,4 +511,5 @@
 | [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | ready-for-agent | — |
 | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00508](00508-TASK.md) | Preserve readable prose in agent handoffs | ready-for-human | — |
+| [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | needs-info | — |
 <!-- /planning:records -->

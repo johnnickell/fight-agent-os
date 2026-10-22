@@ -29,12 +29,15 @@ Do not replace dependencies beneath a live gate. Missing/stale Compose configura
 fails with an explicit setup instruction.
 Export OpenAPI/validation metadata again after their source contracts change; checks only compare freshness.
 
-The CLI image includes Node 24.21.0/npm 11.19.0 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
+The CLI image includes Node 24.22.1/npm 11.19.1 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
 at image setup, not downloaded at runtime. The PHP image is larger; the focused frontend wrapper retains its
 separate Node/browser environments and requires `./bin/client storybook-setup` before focused browser checks.
-No Docker CLI or daemon socket is added to PHP. `./bin/composer` explicitly runs the maintenance-profile
-`composer` service as the calling host UID/GID, reusing the project's explicitly built web image. It inherits
+No Docker CLI or daemon socket is added to PHP. The October security candidate's strict catalog typing
+remains blocked; see [runtime security qualification](SECURITY_RUNTIME_UPDATES.md). Passing focused
+behavior checks does not replace this gate or waive that incompatibility.
+
+`./bin/composer` explicitly runs the maintenance-profile `composer` service as the calling host UID/GID, reusing the project's explicitly built web image. It inherits
 web's root protection, dropped capabilities, resource limits and ignored cache mounts, but resolves `/app`
 as a writable bind mount and publishes no port.
 The profile excludes it from ordinary startup; only explicit maintenance may change source/dependencies.
