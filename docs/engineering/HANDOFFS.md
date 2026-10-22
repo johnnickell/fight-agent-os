@@ -11,6 +11,20 @@ line instead of recommending a premature command. Where helpful, give the comman
 Do not replace a known next target with generic `/skill:next`. When several targets are genuinely unordered,
 present labeled choices without inventing priority; each command must identify its own target.
 
+## Readable handoff text
+
+Apply this to user-facing handoffs, delegated stage requests and continuation summaries. Agents and humans must
+be able to distinguish the requested action, current evidence, limits and next step without reconstructing words.
+Use normal word spacing and punctuation, with short paragraphs or bullets and clearly separated labels and values.
+Do not concatenate prose words or join labels to identifiers to shorten a prompt. Preserve literal paths, hashes,
+commands, code and identifiers exactly; format or label them separately from the surrounding prose.
+
+Reduce context by removing repetition and referencing canonical evidence with the relevant finding or section.
+Keep the facts, authority boundaries and unresolved conditions needed for the receiving stage; a reference must
+not conceal a blocker or imply acceptance. Before sending or saving, read back the text for joined words, ambiguous
+labels and lost constraints, and rewrite affected prose. These checks also apply when adapting a compressed prior
+handoff; do not carry its unreadable wording into the next request or silently repair quoted evidence.
+
 ## Engineering handoffs
 
 Apply current [review](REVIEW.md), [QA](QA.md) and [landing](LANDING.md) standards; this table summarizes routing,
