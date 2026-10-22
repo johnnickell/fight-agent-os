@@ -121,8 +121,9 @@ bridge is a prerequisite to resolve, not a request for the operator to manually 
 
 Use the bundled [stage monitor](scripts/run-stage.py) (Python 3.9+) to launch Pi in JSON mode. Resolve its absolute
 path beside the **owning provider skill**, even when the TASK checkout belongs to another project; do not assume
-the target contains this script. Check installed Pi supports `--mode json` and `agent_settled` events; the monitor
-uses the installed Pi 1.2.0 event contract. Missing support is a prerequisite hold, not a silent return to hidden output.
+the target contains this script. Qualify the installed Pi's JSON events, `agent_settled`, native extension context and notification-only lifecycle
+APIs; tested versions are evidence, never equality gates.
+Missing support holds the affected path, not permission to hide progress or bypass existing protections.
 For an explicitly enrolled [file-screening profile](../../../harness/pi/FILE_SCREENING_PROFILE.md), the monitor
 preflights the target through its owning provider package, explicitly loads that package in the child and binds
 its actual identity under the shared monthly cap. It relays safe screening diagnostics promptly, not raw stderr.
@@ -150,6 +151,22 @@ TASK/branch/base/head/status, independence, evidence and verdict before advancem
 hold malformed/wrong-subject/stale evidence. No host stamp or successful shell result makes a report current
 or independently accepted. The same shell example below is usable by enrolled coordinators within existing authority.
 
+**Ordinary launch, passive visibility:** use the existing provider monitor invocation below through Pi's
+independently selected executor. The unshipped `fight-stage JSON` bash interception and `/fight-stage` command
+were rejected and removed; fully restart Pi to unload the old extension runtime before continuing the same
+ledger/session. There is no replacement execution tool or per-child observation flag. Do not translate an
+executor refusal into a local launch, activate disabled bash, bypass a custom shell, or change settings/environment
+to obtain observation. Native/RPC workflow authority remains unchanged.
+
+When the owning Harness supplies passive `native-observation-extension.ts` and the updated monitor, actual native
+session lifecycle plus the fixed monitor's private bootstrap, exact live native ancestry/lifetime and registered
+worktree establish automatic observation within the accepted trusted-local-process boundary. Monitor progress
+uses a separate best-effort nonblocking channel; observation cannot launch/cancel a child, change a command/result,
+retry execution or block it on a reader. Same-user malicious bootstrap impersonation remains outside protection
+(R1, not repaired). Unsupported executors without a qualifying local monitor association remain explicitly
+unavailable; never guess membership, manually relaunch an existing child, or silently substitute another executor.
+Report exact missing capability/coverage. See [association and limits](../../../harness/pi/WORKSPACE.md#automatic-session-following-and-worktree-test-bindings-task-00502-candidate).
+
 Populate the quoted variables from the ledger: `attempt` is fresh and already contains `request.md`,
 `task_checkout` is the selected checkout, `task_id`/`role` identify the stage, and model fields are exact pins.
 Set `stage_timeout_seconds` to the stage's bounded runtime. Ambient coordinator model settings cannot supply
@@ -172,7 +189,10 @@ The live stream shows role/model, bounded completed assistant updates, tool name
 retry/compaction activity and a heartbeat every 30 seconds during silence. Ask children for brief ordinary progress
 messages before substantial actions and when blocked; never request private reasoning. Raw thinking, shell arguments,
 source/tool output and stderr are not echoed. Assistant progress text must not contain credentials or copied source.
-For an explicitly requested local observation pane, the same monitor can optionally publish to an owner-only
+Qualified ordinary native monitor launches appear automatically for their actual parent, including same-session
+workspace resume; no observation socket flag is needed. A saved ID/command/attempt path alone is not membership. Runtime registration and pin preferences live under
+ignored `var/`; attempts remain private evidence, never a discovery registry. For an explicitly requested
+**legacy** local observation pane, the same monitor can optionally publish to an owner-only
 Unix socket under the selected checkout's `var/` with `--observe-socket`. Follow the
 [workspace observation contract](../../../harness/pi/WORKSPACE.md#local-child-observation-task-00448-candidate)
 for directory/path prerequisites, explicit viewer selection, bounded lossy delivery and disconnect semantics.

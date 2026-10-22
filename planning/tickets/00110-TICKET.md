@@ -92,11 +92,52 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | [TASK-00447](../tasks/00447-TASK.md) | Work in the responsive Pi terminal workspace | done |
 | [TASK-00448](../tasks/00448-TASK.md) | Observe the selected local child agent in the terminal workspace | done |
 | [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | done |
-| [TASK-00502](../tasks/00502-TASK.md) | Follow current-session children and their worktree test logs automatically | ready-for-agent |
+| [TASK-00502](../tasks/00502-TASK.md) | Follow current-session children and their worktree test logs automatically | done |
 | [TASK-00503](../tasks/00503-TASK.md) | Launch the Pi terminal workspace globally from any project | ready-for-agent |
+| [TASK-00507](../tasks/00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved passive visibility redesign — 2026-10-21
+
+John rejected replacing bash now and approved a fresh observation-only implementation round for TASK-00502,
+followed by independent Review/QA. Remove the unshipped `/fight-stage`/replacement-bash execution bridge.
+Operators keep the ordinary authorized provider-monitor shell launch; observation must neither launch/cancel
+children nor alter commands, executors, tools, shells/settings/environment or refusals. Observe supported actual
+session lifecycle and genuine monitor evidence. Observer failure cannot affect execution. Missing association is
+explicitly unavailable, not guessed. Automatic actual-parent appearance, same-session native/workspace resume,
+selector/pin/lifetime, honest-parent isolation and verified two-source following remain required without per-child
+socket/per-switch flags. The trusted-local R1 limitation and original failures remain history, not repaired origin
+attestation. See the [controlling TASK checkpoint](../tasks/00502-TASK.md#owner-approved-observation-only-redesign--2026-10-21).
+
+
+### Approved trusted-local-process boundary and feasibility follow-up — 2026-10-21
+
+John explicitly selected: **"Explicitly accept a trusted-local-process assumption, leaving malicious local
+impersonation outside protection."** He requested: **"let’s do this and create a bounded feasibility investigation
+task to see if we can harden the installation in the future without making the process too cumbersome for users"**.
+This amends [TASK-00502's controlling boundary](../tasks/00502-TASK.md#owner-approved-trusted-local-process-amendment--2026-10-21)
+and the 2026-10-20 follow-up below, not the historical first-release acceptance.
+
+Current automatic observation trusts local Pi/provider processes and their bootstrap assertions. Malicious
+same-user local process/agent/bootstrap impersonation is not prevented; independent Review R1 is an
+**owner-accepted limitation, not repaired**. There is no independently attested native origin or OS sandbox claim.
+Normal actual-session/file binding, disjoint honest parents, stale/replaced/malformed/cross-session payload refusal,
+finite elapsed deadlines/cancellation, safe observation-only UI, tool restrictions and Docker exact-source
+validation remain required. The R2 repair in `66737c3…` still requires independent re-review; this owner decision
+is not independent code acceptance or QA. TASK-00502 remains in-progress with unchecked acceptance criteria.
+
+[TASK-00507 — Assess low-friction native-session origin hardening](../tasks/00507-TASK.md) records the explicitly
+requested future go/no-go/needs-upstream decision: at most two approaches, at most one strongest-candidate
+disposable proof, explicit trust/API/platform limits and counted setup/daily/lifecycle UX burden. Negative feasibility
+is valid. No investigation is executed by this amendment; production/global/upstream changes remain excluded.
+It is unranked, does not block TASK-00502 under the amended boundary and adds no speculative dependency. Existing
+Board priorities and this parent's already-terminal historical status are preserved under planning conventions.
+Prior R1 failures, scope holds and independent reports remain historical, not rewritten as successes. The
+follow-up was initially allocated as TASK-00504; authorized Land identity reconciliation reassigned it to unused
+TASK-00507 after preserving current `develop`'s different delivered release-scoped TASK-00504. Historical
+TASK-00504 references to this follow-up remain interpretable through that mapping.
 
 ### Approved global workspace command — 2026-10-20
 

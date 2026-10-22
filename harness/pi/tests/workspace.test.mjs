@@ -6,6 +6,7 @@ import { Workspace, width, fit, wrap, clean, layout } from '../src/workspace/pre
 import { JsonLines, PiRpc, childEnvironment, messageText } from '../src/workspace/rpc.mjs';
 import { Keyboard, Terminal } from '../src/workspace/terminal.mjs';
 import { options, run } from '../src/workspace/main.mjs';
+import { RegisteredChildren } from '../src/workspace/registered-children.mjs';
 
 const key = (model, name, extras = {}) => model.key('', { name, ...extras });
 const workspace = () => { const model = new Workspace('/checkout'); model.ready = true; return model; };
@@ -173,7 +174,7 @@ test('workspace uses Pi-owned var session storage and rejects startup prompts or
 
 // Controller checks drive the owned entrypoint with controlled Pi records; not real PTY qualification.
 const tick = () => new Promise(resolve => setTimeout(resolve, 45));
-async function controller({ policy = 'active', status, commands = ['jev', 'file-screening', 'safe'], drawError = false, sessionFile, columns = 140, rows = 40, observe, children = [] } = {}) {
+async function controller({ policy = 'active', status, commands = ['jev', 'file-screening', 'safe'], drawError = false, sessionFile, columns = 140, rows = 40, observe, readLogs, children = [] } = {}) {
   const rpc = new EventEmitter(); rpc.requests = []; rpc.sent = []; rpc.closed = 0;
   rpc.request = async (type, data) => {
     rpc.requests.push({ type, ...data });
@@ -192,7 +193,9 @@ async function controller({ policy = 'active', status, commands = ['jev', 'file-
     stop() { this.stopped++; },
   };
   const originalExitCode = process.exitCode;
-  const close = await run(['--no-session', ...children.flatMap(path => ['--observe-child', path])], { input, output, connect: () => rpc, createTerminal: () => terminal, ...(observe ? { observe } : {}) });
+  const close = await run(['--no-session', ...children.flatMap(path => ['--observe-child', path])], { input, output, connect: () => rpc, createTerminal: () => terminal,
+    observe: observe ?? ((_paths, changed, cwd) => new RegisteredChildren(cwd, changed, { preferences: false, discover: () => [] })),
+    ...(readLogs ? { readLogs } : {}) });
   const dispose = async () => { await close(); process.exitCode = originalExitCode; };
   return { rpc, terminal, output, dispose };
 }
@@ -212,6 +215,38 @@ test('child pane reader actions never enter Pi RPC and conversation remains usab
     assert.equal(observer.started, 1);
   } finally { await app.dispose(); }
   assert.equal(observer.closed, 1);
+});
+test('pending side-pane discovery does not delay qualified conversation startup or input', async () => {
+  let complete;
+  const pending = new Promise(resolve => { complete = resolve; });
+  const observer = { start: () => pending, close() { complete(); }, action() {}, view: () => 'Discovery pending; no child admitted' };
+  const starting = controller({ observe: () => observer });
+  let watchdog;
+  const ready = await Promise.race([starting, new Promise(resolve => { watchdog = setTimeout(() => resolve(null), 250); })]);
+  clearTimeout(watchdog);
+  if (!ready) { complete(); const delayed = await starting; await delayed.dispose(); }
+  assert.ok(ready, 'conversation must not await the discovery promise');
+  try {
+    ready.terminal.paste('usable while discovering'); ready.terminal.key('', { name: 'return' }); await tick();
+    assert.deepEqual(ready.rpc.requests.find(item => item.type === 'prompt'), { type: 'prompt', message: 'usable while discovering' });
+    assert.match(ready.terminal.frames.at(-1), /Discovery pending/);
+  } finally { await ready.dispose(); }
+});
+
+test('entrypoint binds explicit observation to actual session and clears it on identity replacement without submitting authority', async () => {
+  const observer = { session: null, invalidated: [], start(id) { this.session = id; }, tick() {},
+    sessionChanged(id) { this.invalidated.push(id); }, close() {}, action() {}, view() { return 'session-scoped fixture'; } };
+  const app = await controller({ observe: () => observer, children: ['/explicit/source.sock'] });
+  try {
+    assert.equal(observer.session, 'fixture-session');
+    const previous = app.rpc.request;
+    app.rpc.request = async (type, ...args) => type === 'get_state' ? { sessionId: 'replacement-session' } : previous(type, ...args);
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.deepEqual(observer.invalidated, ['replacement-session']);
+    app.terminal.paste('must not submit'); app.terminal.key('', { name: 'return' }); await tick();
+    assert.match(app.terminal.frames.at(-1), /observation admission\/pin cleared/);
+    assert.ok(!app.rpc.requests.some(item => ['prompt', 'bash', 'abort'].includes(item.type)));
+  } finally { await app.dispose(); }
 });
 // WORKSPACE.md promises wide panes at physical 100×20, while the final column must
 // remain unused to prevent terminal autowrap. Exercise both contracts at the controller.
@@ -505,6 +540,25 @@ test('R6 manual dialog scrolling survives redraw/resize until the next edit and 
   assert.match(model.render(78, 24).join('\n'), /▏/);
   assert.deepEqual(key(model, 'escape'), { type: 'dialog', id: 'manual-editor', cancelled: true });
   assert.equal(model.draft, 'separate draft'); assert.equal(model.focus, 2);
+});
+
+test('automatic custody selection rebinds only human-facing log context; idle returns primary and late closed events do nothing', async () => {
+  let changed;
+  const observer = { verifiedWorktree: null, start(id) { this.session = id; this.verifiedWorktree = '/verified/one'; changed(); },
+    action(type) { this.verifiedWorktree = type === 'next' ? '/verified/two' : null; changed(); },
+    tick() {}, close() {}, view() { return 'custody-only-pane-marker'; } };
+  const bindings = [], logs = { start() {}, close() {}, rebind(path) { bindings.push(path); return Promise.resolve(); },
+    action() {}, view() { return 'human-only-log-marker'; }, summary() { return 'verified log source'; }, body() { return 'human-only-log-marker'; } };
+  const app = await controller({ observe: (_paths, update) => { changed = update; return observer; }, readLogs: () => logs, commands: ['jev', 'file-screening', 'fight-stage'] });
+  try {
+    assert.equal(observer.session, 'fixture-session'); assert.deepEqual(bindings, ['/verified/one']);
+    app.terminal.key('', { name: 'tab' }); app.terminal.key(']', {}); await tick(); assert.equal(bindings.at(-1), '/verified/two');
+    app.terminal.key('f', {}); await tick(); assert.equal(bindings.at(-1), process.cwd());
+    app.terminal.key('', { name: 'tab', shift: true }); app.terminal.paste('/fight-stage {}'); app.terminal.key('', { name: 'return' }); await tick();
+    assert.ok(!app.rpc.requests.some(request => ['prompt', 'bash', 'abort'].includes(request.type)));
+    assert.ok(!JSON.stringify(app.rpc.sent).includes('pane-marker'));
+  } finally { await app.dispose(); }
+  const before = bindings.length; observer.verifiedWorktree = '/late/stale'; changed(); assert.equal(bindings.length, before);
 });
 
 // Transport integration uses a separate harmless protocol peer, not a substitute for real Pi qualification.

@@ -15,9 +15,19 @@ import sys
 import time
 import unicodedata
 
+# Observation-only cross-runtime birth stamp. Never change the execution timeout clock.
+try:
+    OBSERVATION_STARTED = int(time.clock_gettime(time.CLOCK_MONOTONIC_RAW) * 1000)
+except (AttributeError, OSError):
+    OBSERVATION_STARTED = None
+
 # Runtime imports must not create bytecode caches beside provider source.
 sys.dont_write_bytecode = True
 from observation import Observation
+try:
+    from automatic_observation import AutomaticObservation
+except Exception:
+    AutomaticObservation = None  # Missing/broken optional observer never disables the monitor.
 
 
 def positive_seconds(value):
@@ -251,15 +261,15 @@ def run(args):
 
     with (attempt / "events.jsonl").open("xb", buffering=0) as raw, (attempt / "stderr.log").open("xb") as errors, (attempt / "progress.log").open("x") as log:
         observation = None
+        identity = {"task": display(args.task, 80), "role": display(args.role, 60),
+                    "provider": display(args.provider, 120), "model": display(args.model, 120),
+                    "thinking": display(args.thinking, 40), "worktree": display(Path.cwd().resolve(), 1024),
+                    "attempt": display(attempt, 1024)}
         if args.observe_socket:
             endpoint = Path(args.observe_socket)
             runtime = Path.cwd().resolve() / "var"
             if not endpoint.is_absolute() or runtime not in endpoint.resolve().parents:
                 raise ValueError("observation socket must be under this checkout's var directory")
-            identity = {"task": display(args.task, 80), "role": display(args.role, 60),
-                        "provider": display(args.provider, 120), "model": display(args.model, 120),
-                        "thinking": display(args.thinking, 40), "worktree": display(Path.cwd().resolve(), 1024),
-                        "attempt": display(attempt, 1024)}
             observation = Observation(str(endpoint), identity, args.heartbeat)
         progress = Progress(args.role, log, args.screening_dispatch, observation)
         progress.emit(f"Starting {args.task} — {args.provider}/{args.model}, thinking={args.thinking}")
@@ -269,6 +279,12 @@ def run(args):
             child = subprocess.Popen(command, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, start_new_session=True)
             (attempt / "process.json").write_text(json.dumps({"monitor_pid": os.getpid(), "pi_pid": child.pid}) + "\n")
+            if observation is None and AutomaticObservation is not None:
+                try:
+                    observation = AutomaticObservation(identity, args.heartbeat, OBSERVATION_STARTED)
+                    progress.observation = observation
+                except Exception:
+                    pass  # Passive observation cannot change execution or its effective result.
             selector = selectors.DefaultSelector()
             selector.register(child.stdout, selectors.EVENT_READ, "events")
             selector.register(child.stderr, selectors.EVENT_READ, "diagnostics")

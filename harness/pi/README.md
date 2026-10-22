@@ -61,8 +61,11 @@ native format and output handling.
 ## Responsive local workspace candidate
 
 `./bin/terminal` at the repository root starts a dedicated Pi RPC terminal client with a persistent half/quarter/
-quarter split, narrow selectable views and read-only unavailable placeholders. No producer, managed integration,
-Docker operation or global installation is added. Read the [workspace runbook](WORKSPACE.md) for input, policy,
+quarter split and narrow selectable views. TASK-00502 adds current-session native-child custody and automatic
+selected/pinned worktree following; explicit human bindings observe existing test services through the fixed
+Docker reader. Its owner-approved trusted-local-process assumption does not prevent malicious same-user bootstrap
+impersonation or independently attest native origin; see the [custody boundary](WORKSPACE.md#custody-and-admission).
+No managed integration, container lifecycle operation or global launcher/installation is added. Read the [workspace runbook](WORKSPACE.md) for input, policy,
 session and cleanup boundaries. Coordinator RPC/PTY/provider/file-hook checks, real held-state images and a
 recovered passing pre-commit full gate are recorded there with limitations; the coordinator's post-commit gate
 and independent Review/QA remain pending.
@@ -93,7 +96,8 @@ authorize tools, or overwrite another theme. Pi's normal package/project trust r
 ## Module path migration
 
 Module names follow the repository's [Pi/TypeScript convention](../../docs/engineering/STANDARDS.md#pi-and-typescript-module-naming).
-The manifest loads `header-extension.ts`, `jev-extension.ts` and `tool-policy-extension.ts` exactly once.
+The manifest loads `header-extension.ts`, `jev-extension.ts`, `tool-policy-extension.ts` and
+`native-observation-extension.ts` exactly once.
 `file-screening-integration.ts` is internal to the Jev adapter; do not load it as an extension.
 
 | Old path under `harness/pi/src/` | Current path | Compatibility |
@@ -102,6 +106,7 @@ The manifest loads `header-extension.ts`, `jev-extension.ts` and `tool-policy-ex
 | `file-screening-extension.ts` | `file-screening-integration.ts` | Internal import moved; `installFileScreening` export unchanged |
 | `jev-extension.ts` | Unchanged | Default registration and named `installJev` export retained |
 | `tool-policy-extension.ts` | Unchanged | Independent policy selection unchanged |
+| — | `native-observation-extension.ts` | New native fixed-monitor association; ordinary tools and selected executors retain their restrictions |
 
 The consumer inventory found no supported caller requiring an old-path shim. Package-root installations
 (`pi install ./harness/pi` or `pi --extension ./harness/pi`) follow the manifest and need no path change.
