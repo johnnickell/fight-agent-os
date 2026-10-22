@@ -16,6 +16,7 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationCredentia
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationDeliveryId;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrant;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Templating\TwigEngine;
 use Fight\Common\Application\Templating\TemplateEngine;
@@ -332,6 +333,7 @@ HTML;
         $grants = $this->createStub(ActivationGrantRepository::class);
         $now = new DateTimeImmutable();
         $grants->method('getByDeliveryId')->willReturn(ActivationGrant::issue(
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
             $this->routingUser,
             ActivationCredential::fromString('synthetic-credential'),
             $now,
@@ -370,7 +372,8 @@ HTML;
             $purpose,
             ActivationDeliveryId::generate()->toString(),
             EmailAddress::fromString('private@example.test'),
-            $credential
+            $credential,
+            $purpose === 'activation' ? ActivationOrigin::PRIVATE_INVITATION : null
         );
     }
 }

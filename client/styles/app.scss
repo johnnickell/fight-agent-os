@@ -4,6 +4,7 @@
 @use 'base/tokens';
 @use 'base/document';
 @use 'layouts/shell';
+@use 'layouts/application-frame';
 @use 'components/button';
 @use 'components/text-field';
 @use 'components/notice';
@@ -14,4 +15,5 @@
 @use 'components/current-session';
 @use 'pages/activation';
 @use 'pages/login';
+@use 'pages/dashboard';
 @use 'base/accessibility';

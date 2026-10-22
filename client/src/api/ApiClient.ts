@@ -75,14 +75,37 @@ export class ApiClient {
   ): Promise<ApiResult<T>> {
     if (!/^[1-9][0-9]{0,9}\.[a-f0-9]{64}$/.test(csrfProof))
       return Promise.resolve(apiFailure('protocol'));
-    return this.#request(path, decode, {}, { body, csrfProof }).catch(() => apiFailure('system'));
+    return this.#request(path, decode, {}, { method: 'POST', body, csrfProof }).catch(() =>
+      apiFailure('system')
+    );
+  }
+
+  /** Sends one Bearer-authorized definition mutation without retry or cookie-derived authority. */
+  mutate<T>(
+    method: 'POST' | 'PATCH' | 'DELETE',
+    path: string,
+    body: Readonly<Record<string, unknown>>,
+    decode: ResponseDecoder<T>,
+    successStatus: 200 | 201 = 200
+  ): Promise<ApiResult<T>> {
+    return this.#request(
+      path,
+      decode,
+      { access: 'required' },
+      { method, body, successStatus }
+    ).catch(() => apiFailure('system'));
   }
 
   async #request<T>(
     path: string,
     decode: ResponseDecoder<T>,
     options: GetOptions,
-    mutation?: Readonly<{ body: Readonly<Record<string, unknown>>; csrfProof: string }>
+    mutation?: Readonly<{
+      method: 'POST' | 'PATCH' | 'DELETE';
+      body: Readonly<Record<string, unknown>>;
+      csrfProof?: string;
+      successStatus?: 200 | 201;
+    }>
   ): Promise<ApiResult<T>> {
     // Paths belong to feature services, not user input. No raw query, fragment,
     // encoding, dot segments, backslash, authority or alternative origin is supported.
@@ -118,12 +141,12 @@ export class ApiClient {
     }
     if (mutation) {
       headers.set('Content-Type', 'application/json');
-      headers.set('X-CSRF-Proof', mutation.csrfProof);
+      if (mutation.csrfProof) headers.set('X-CSRF-Proof', mutation.csrfProof);
     }
     let response: Response;
     try {
       response = await this.#fetch(`${this.#basePath}${path}${query}`, {
-        method: mutation ? 'POST' : 'GET',
+        method: mutation?.method ?? 'GET',
         headers,
         ...(mutation ? { body: JSON.stringify(mutation.body) } : {}),
         credentials: 'same-origin',
@@ -156,7 +179,13 @@ export class ApiClient {
     if (options.signal?.aborted) return apiFailure('cancelled');
     try {
       const envelope: unknown = JSON.parse(source);
-      return decodeResponse(response.status, envelope, decode, correlationId);
+      return decodeResponse(
+        response.status,
+        envelope,
+        decode,
+        correlationId,
+        mutation?.successStatus ?? 200
+      );
     } catch {
       // JSON/parser/codec exceptions can contain credentials or entire response bodies.
       return apiFailure('protocol', correlationId);

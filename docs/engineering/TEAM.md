@@ -56,7 +56,12 @@ runbooks naming exact commits, versions, checks, signing mechanism, effects, rol
 steps. Package signed tags and release publication are distinct from application migrations, deployment and health
 qualification. Team Lead coordinates decisions. The local [release skill](../../.pi/skills/release/SKILL.md),
 delivered by [TASK-00143](../../planning/tasks/00143-TASK.md), coordinates package release stages using target-owned
-policy and certification. Managed execution and application deployment still require their own accepted plans.
+policy and certification. Its [release acceptance protocol](../../.pi/skills/release/references/acceptance.md)
+uses version-owned requirements/reports without borrowing TASK identities. Release Manager coordinates separate
+independent Review and applicable QA, repairs authorized preparation findings and resumes delivery. Supported
+release dispatch is required for automation; the TASK-only Build launcher is not extended by these instructions.
+Independent assessors remain read-only over source/planning. Managed execution and application deployment still
+require their own accepted plans.
 
 Hotfix is a short path: identify incident and authority, record one bounded bug TASK and impact, isolate, repair,
 run focused regression and applicable gates, obtain independent Senior Engineer review, then targeted QA where

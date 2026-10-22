@@ -17,7 +17,7 @@ use Psr\Http\Message\ResponseInterface;
  */
 #[OA\Schema(
     schema: 'InvitationDelivery',
-    required: ['user_id', 'status', 'expires_at'],
+    required: ['user_id', 'status', 'expires_at', 'activation_delivery_id'],
     properties: [
         new OA\Property(property: 'user_id', type: 'string', format: 'uuid'),
         new OA\Property(
@@ -25,7 +25,8 @@ use Psr\Http\Message\ResponseInterface;
             type: 'string',
             enum: ['pending', 'claimed', 'retry_pending', 'delivered', 'permanent_failure', 'expired', 'invalidated']
         ),
-        new OA\Property(property: 'expires_at', type: 'string', format: 'date-time')
+        new OA\Property(property: 'expires_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'activation_delivery_id', type: 'string', format: 'uuid')
     ],
     type: 'object',
     additionalProperties: false

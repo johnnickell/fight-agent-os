@@ -354,6 +354,7 @@ final class ActivationGrantRepositoryTest extends TestCase
         [$first] = $this->grant($user->getId());
         self::assertTrue($this->transaction(fn(): bool => $this->grants->add($first)));
         $fabricated = PersistedActivationGrant::reconstitute(
+            $first->getOrigin(),
             $first->getId(),
             $first->getUserId(),
             $first->getCredentialHash(),
@@ -367,6 +368,7 @@ final class ActivationGrantRepositoryTest extends TestCase
         self::assertFalse($this->transaction(fn(): bool => $this->grants->replace($fabricated, $replacement)));
         self::assertFalse($this->transaction(fn(): bool => $this->grants->replace($first, $fabricated)));
         $skipped = PersistedActivationGrant::reconstitute(
+            $replacement->getOrigin(),
             $replacement->getId(),
             $replacement->getUserId(),
             $replacement->getCredentialHash(),
@@ -391,6 +393,7 @@ final class ActivationGrantRepositoryTest extends TestCase
         $other = $this->user('other@example.test');
         [$fresh] = $this->grant($other->getId());
         $duplicateId = PersistedActivationGrant::reconstitute(
+            $first->getOrigin(),
             $first->getId(),
             $other->getId(),
             $fresh->getCredentialHash(),
@@ -419,6 +422,7 @@ final class ActivationGrantRepositoryTest extends TestCase
             null
         );
         $duplicateDelivery = PersistedActivationGrant::reconstitute(
+            $fresh->getOrigin(),
             $fresh->getId(),
             $other->getId(),
             $fresh->getCredentialHash(),
@@ -468,6 +472,7 @@ final class ActivationGrantRepositoryTest extends TestCase
         $user = $this->user();
         [$grant] = $this->grant($user->getId());
         $invalid = PersistedActivationGrant::reconstitute(
+            $grant->getOrigin(),
             $grant->getId(),
             $user->getId(),
             'invalid-digest',
@@ -560,6 +565,7 @@ final class ActivationGrantRepositoryTest extends TestCase
         $issuedAt ??= $this->issuedAt;
 
         return [ActivationGrant::issue(
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
             $id,
             $credential,
             $issuedAt,

@@ -322,7 +322,7 @@ describe('bounded volatile session continuity', () => {
     await pending;
     expect(b.coordinator.getSnapshot().status).toBe('terminal');
     expect(b.tokens.getAccessToken()).toBeNull();
-    expect(b.clearIntent).not.toHaveBeenCalled();
+    expect(b.clearIntent).toHaveBeenCalledOnce();
     b.coordinator.showLogin();
     expect((await b.coordinator.restore()).ok).toBe(false);
     await b.coordinator.submit({ email: 'synthetic@example.test', password: 'synthetic' }, false);

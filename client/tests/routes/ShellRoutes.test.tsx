@@ -1,7 +1,9 @@
 import { act, render, screen } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 
-import { ShellRoutes } from '@/routes/ShellRoutes';
+import { ApplicationView } from '@/routes/ApplicationJourney';
+
+import { applicationSession } from '../applicationFixtures';
 
 const load = vi.hoisted(() => {
   let resolve!: () => void;
@@ -10,22 +12,26 @@ const load = vi.hoisted(() => {
   });
   return { promise, resolve };
 });
-
-vi.mock('@/pages/HomePage', async (importOriginal) => {
+vi.mock('@/pages/DashboardPage', async (importOriginal) => {
   await load.promise;
   return importOriginal();
 });
 
-it('announces pending navigation until the real page module becomes available', async () => {
-  render(<ShellRoutes pathname="/app" />);
+it('imports the protected page only after authority resolves, announcing the pending module', async () => {
+  const session = applicationSession();
+  const mounted = render(
+    <ApplicationView session={session} pathname="/app/dashboard" navigate={() => {}} />
+  );
+  expect(screen.getByText('Restoring your session')).toBeVisible();
+  await act(() => session.coordinator.restore());
   expect(screen.getByRole('heading', { name: 'Loading application' })).toBeVisible();
-  expect(screen.getByRole('status')).toHaveTextContent('Please wait');
-  expect(document.title).toBe('Loading application — Fight Agent OS');
+  expect(screen.getByText('Please wait while the page loads.')).toBeVisible();
   await act(() => {
     load.resolve();
     return load.promise;
   });
-  expect(await screen.findByRole('heading', { name: 'Application foundation' })).toBeVisible();
-  expect(screen.queryByRole('status')).not.toBeInTheDocument();
-  expect(document.title).toBe('Application foundation — Fight Agent OS');
+  expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  expect(screen.queryByText('Please wait while the page loads.')).not.toBeInTheDocument();
+  mounted.unmount();
+  session.dispose();
 });

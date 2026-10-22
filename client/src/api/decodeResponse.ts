@@ -72,10 +72,11 @@ export function decodeResponse<T>(
   status: number,
   envelope: unknown,
   decode: ResponseDecoder<T>,
-  correlationId: string | null
+  correlationId: string | null,
+  successStatus: 200 | 201 = 200
 ): ApiResult<T> {
   if (hasExactKeys(envelope, ['status', 'data'])) {
-    if (status === 200 && envelope.status === 'success') {
+    if (status === successStatus && envelope.status === 'success') {
       const value = decode(envelope.data);
       return value === null
         ? apiFailure('protocol', correlationId)

@@ -1,11 +1,15 @@
 # Browser foundation
 
-The production React shell is available at `/app` and `/app/`; these are not a dashboard
-or Planning workspace. Canonical login now mounts at `/app/login` (pending independent acceptance); see the [login contract](../docs/engineering/LOGIN.md). `/app/activate` now mounts the real [public invitation journey](../docs/engineering/ACTIVATION.md),
-pending independent acceptance. The semantic theme and three-state appearance selector are present; the
-rest of the authenticated application frame remains planned. [Refresh/current-session logout](../docs/engineering/SESSION_CONTINUITY.md) now have explicit single-tab services and a sign-out action on login success, plus TASK-00048’s bounded `/app/login` restoration, scheduling and cross-tab coordinator, pending independent Review/QA. `/` retains the PHP smoke response; `/api/v1` retains
-its independent API contract. Unknown `/app/...` paths render the shell's not-found page (HTTP 200),
-not an API response. Paths outside `/app` never fall back to React.
+The [authoritative application frame](../docs/engineering/APPLICATION_FRAME.md) now mounts at `/`, `/app`
+and `/app/` (TASK-00051 implementation; independent Review/QA pending). One route manifest and the existing sole
+principal/session graph drive bounded root/restoration, exact protected guards, responsive navigation, current-user/
+theme/logout controls and truthful future account/admin destinations. TASK-00052 adds the honest permission-aware
+Dashboard with safe cache identity, independently allowed account/admin links and explicit unavailable-product
+copy (independent Review/QA pending). Later operations are not implemented. Canonical login `/app/login` and public invitation activation `/app/activate` retain their existing
+feature owners. See [login](../docs/engineering/LOGIN.md), [activation](../docs/engineering/ACTIVATION.md) and
+[session continuity](../docs/engineering/SESSION_CONTINUITY.md). `/api/v1` retains its independent API contract.
+Unknown `/app/...` paths render generic not-found HTML (HTTP 200), not an API response. Apart from `/`, unrelated
+paths outside `/app` never fall back to React.
 
 ## Toolchain and commands
 
@@ -251,21 +255,22 @@ build. Local static output and PHP must belong to the same release.
 - `src/main.tsx`: one production React root, CSS and inert boot-config intake, safe last-resort failure.
 - `src/runtimeConfiguration.ts`: strictly decode `{"schema_version":1,"api_base_path":"/api/v1"}` to immutable
   camelCase properties. Reject absent/malformed/extra fields or any other API location, with no raw-value echo.
-- `src/routes/`: match only the public foundation and unknown state; lazy-load the home Page with Suspense.
-  Reusable guarded outlets and a volatile intended-route owner are available for future protected routes.
-  Navigation uses native same-origin links and browser history, not a second client router or state store.
-- `src/layouts/`: named navigation, skip link, focusable main outlet and footer.
-- `src/pages/`: home, not-found, pending page import, and generic boot/render/module failure.
+- `src/routes/`: one complete application manifest; bounded root/public/protected decisions, the existing guarded
+  lazy outlets and volatile intended-route owner. Native same-origin links and null-state browser history keep
+  the sole session graph alive; direct load/reload restores a fresh context, not a persisted authority snapshot.
+- `src/layouts/`: public layout and responsive 264px grouped application rail, inert narrow drawer, skip link,
+  current-user/theme/logout controls, focusable named main outlet and footer.
+- `src/pages/`: truthful landing seams, not-found, pending page import, and generic boot/render/module failure.
 - `src/components/`: reusable presentation, native controls/forms and the shared render-error boundary. Recovery reloads the
   fixed `/app` path; it never reconstructs a destination from caller input.
 
 Loading/errors are actual boot/import states, not pretend product routes or a permanent debug gallery.
 Malformed config never mounts routes; failed page imports show generic recovery. Initial entry-script/network
-failure cannot execute React recovery; the base document retains its loading/noscript fallback. The home/not-found foundation routes make no API calls. Activation loads its real public schema and submits through the typed
-feature service without automatic restoration. Login now mounts bounded cookie-backed restoration through the existing
-memory/session seams; the login/restoration journey now mounts the sole production principal owner, pending independent Review/QA. Protected product UI remains planned. The transport,
-CSRF service and authority foundation below are available for later feature composition; no browser persistence
-or synthetic production principal is introduced.
+failure cannot execute React recovery; the base document retains its loading/noscript fallback. Not-found,
+activation and sign-in help do not restore a session. Activation loads its real schema and typed feature service.
+The application session composition now lifts the login-owned bounded restoration and sole principal owner into
+root/Login/protected routing; landing operations remain unavailable. The transport, CSRF service and authority
+foundation below remain shared; no browser authority persistence or synthetic production principal is introduced.
 
 ## Typed API and CSRF boundary
 
@@ -360,9 +365,16 @@ interactions, not endpoints or authentication E2E evidence.
 
 ## Client authority foundation
 
+TASK-00125's unmounted `CustomRoleService` sends Bearer-authorized definition mutations only, using the exact
+`CatalogRole.revision` displayed to the caller and explicit removal confirmation. It never substitutes a token or
+retries; all attempted network outcomes retire/refetch authority, including conflicts and uncertain failures.
+`ApiClient.mutate()` requires a current access credential and an explicit expected success status (201 for creation,
+200 otherwise). No Role UI, membership grant or new shell route is introduced. See the [server contract](../docs/engineering/CUSTOM_ROLES.md).
+
 TASK-00028 implements [ADR 0004](../planning/adr/0004-client-authority-and-runtime-state.md) as reusable
-in-process capabilities. The login/restoration journey now constructs one production `AuthorityCache` with `CurrentPrincipalService`,
-using TASK-00117's existing server projection. Other public routes do not mount authority. Tests and the Authority
+in-process capabilities. The application session graph now constructs one production `AuthorityCache` with `CurrentPrincipalService`,
+using TASK-00117's existing server projection, for root/Login/protected routes. Activation, recovery and unknown
+routes remain inert. Tests and the Authority
 catalog use synthetic inputs, not production grants. See [current authority ownership and transitions](../docs/engineering/CURRENT_PRINCIPAL.md).
 
 - `features/authority/CurrentPrincipal.ts` accepts exactly `userId`, canonical lowercase `email`, `roles` and
@@ -407,12 +419,13 @@ catalog use synthetic inputs, not production grants. See [current authority owne
   credentials, auth/grant paths, external/scheme/relative targets, controls, backslashes, ambiguous paths/encoding
   and oversized input are rejected. Fragments are discarded. Parameterized paths need a later classified contract.
   The guard captures eligible confirmed-anonymous navigation when given this owner and the current location.
-  Logout clears intent through `AuthorityCache.subscribeLogout`, independently of snapshot subscriptions.
+  Logout clears intent through `AuthorityCache.subscribeLogout`, independently of snapshot subscriptions. TASK-00051's application coordinator also clears intent on terminal
+  established-session end; only cold-anonymous cookie rejection retains the classified destination.
   Cleanup recipients are captured at logout intake and notified after authority retirement even if an abort or
-  earlier subscriber replaces the logout snapshot with terminal; involuntary terminal expiry alone retains intent.
+  earlier subscriber replaces the logout snapshot with terminal; the reusable intent primitive alone does not subscribe to terminal events (the application coordinator now clears it).
   Dispose the navigation owner to unsubscribe. Repeated redirects do not replace intent or renew its deadline.
   After fresh authentication, `consume()` re-resolves current route requirements and consumes once. A null result
-  leaves landing selection to the future navigation owner: choose an authorized landing route or forbidden,
+  leaves landing selection to the application navigation owner: choose an authorized landing route or forbidden,
   never invent a Dashboard grant.
   No login return URL, history-state payload, form data, browser storage or cross-tab transfer is used.
 
@@ -457,8 +470,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **70** named examples across ten story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states and 6 production-backed continuity states. The form composition demonstrates rejection,
+`stories/` holds **93** named examples across twelve story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 12 production-backed Frame examples, plus 11 production-backed Dashboard examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -485,7 +498,7 @@ do not write real browser preferences or perform production prepaint.
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 70 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 93 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases

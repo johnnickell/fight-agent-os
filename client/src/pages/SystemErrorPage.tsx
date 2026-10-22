@@ -8,7 +8,7 @@ export function SystemErrorPage() {
         The application could not start. Try reloading. If the problem continues, contact the
         installation operator.
       </p>
-      <a className="btn btn-outline-primary" href="/app">
+      <a className="btn btn-outline-primary" href="/app" data-reload-application>
         Reload application
       </a>
     </>

@@ -303,6 +303,7 @@ HTML;
         $queries->expects(self::never())->method('fetch');
         $at = new DateTimeImmutable('2026-10-02T12:00:00Z');
         $activationGrant = ActivationGrant::issue(
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
             UserId::generate(),
             ActivationCredential::fromString('synthetic'),
             $at,
@@ -343,7 +344,8 @@ HTML;
                 $purpose,
                 $grant->getDelivery()->getId()->toString(),
                 EmailAddress::fromString('local@example.test'),
-                'synthetic'
+                'synthetic',
+                null
             );
             self::assertSame(CredentialDeliveryOutcome::RETRYABLE_FAILURE, $provider->deliver($invocation));
         }
@@ -351,7 +353,8 @@ HTML;
             'activation',
             $activationGrant->getDelivery()->getId()->toString(),
             EmailAddress::fromString('local@example.test'),
-            'synthetic'
+            'synthetic',
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION
         );
         self::assertSame(CredentialDeliveryOutcome::RETRYABLE_FAILURE, $resets->deliver($activation));
         self::assertSame(CredentialDeliveryOutcome::DELIVERED, $provider->deliver($activation));
@@ -383,7 +386,8 @@ HTML;
             $at,
             $at->modify('+1 hour'),
             EmailAddress::fromString('not-routing-authority@example.test'),
-            (new SodiumCredentialDeliveryCipher(bin2hex(random_bytes(32)), 'password_reset'))->encrypt('synthetic')
+            (new SodiumCredentialDeliveryCipher(bin2hex(random_bytes(32)), 'password_reset'))->encrypt('synthetic'),
+            new \Fight\AccessControl\Domain\AccessControl\User\RecoveryAuthority(1, 0)
         );
     }
 
@@ -396,7 +400,8 @@ HTML;
             'password_reset',
             $grant->getDelivery()->getId()->toString(),
             EmailAddress::fromString('invocation-only@example.test'),
-            'synthetic<&"credential'
+            'synthetic<&"credential',
+            null
         );
     }
 

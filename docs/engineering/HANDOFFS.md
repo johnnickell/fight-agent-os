@@ -42,6 +42,15 @@ not successful landing. Distinguish missing initial acceptance from land-owned d
 acceptance using the routes above; retain required evidence gates without a completion or repair loop.
 For an open-PR QA invocation, the observed PR URL can be the resume target; resolve its TASK for work/review/land.
 
+## Release handoffs
+
+[Release acceptance](../../.pi/skills/release/references/acceptance.md) owns version subjects and canonical reports.
+Release review/QA returns to the coordinator for authorized preparation repair, evidence recovery or delivery,
+not TASK `work`/`land`. Standalone assessors finish with `/skill:release <actual-version> resume`. Supported release
+dispatch can continue automatically within existing authority; the current TASK-only Build launcher cannot.
+When dispatch is unavailable, prepare the exact independent review/QA invocation and packet/context paths.
+Signing, publication and other human boundaries remain concrete actions; `status` never dispatches or repairs.
+
 ## Planning handoffs
 
 Follow [map-wide planning order](../../planning/CONVENTIONS.md#map-wide-planning-order). Recommend one next

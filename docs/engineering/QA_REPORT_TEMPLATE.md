@@ -1,5 +1,10 @@
 # QA report: TASK-NNNNN
 
+For release subjects, title this report with the actual version and apply
+[release acceptance](../../.pi/skills/release/references/acceptance.md): replace TASK identity/criteria with
+repository/version, candidate-packet digest and release criteria; use its canonical path and release resume route.
+Keep the remaining evidence, independence and disposition fields.
+
 ## Identity and disposition
 
 - Report version: 1

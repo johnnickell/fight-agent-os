@@ -4,7 +4,7 @@ TASK-00124 adds four read-only, JWT-by-default API Actions:
 
 | GET path | Exact current protected permission | Safe record fields |
 |---|---|---|
-| `/api/v1/roles` | `READ_ROLES` | `role_id`, `name`, `managed` |
+| `/api/v1/roles` | `READ_ROLES` | `role_id`, `name`, `managed`, `revision` |
 | `/api/v1/roles/{roleId}` | `READ_ROLES` | Same role fields |
 | `/api/v1/permissions` | `READ_PERMISSIONS` | `permission_id`, `name`, `tier`, `managed` |
 | `/api/v1/permissions/{permissionId}` | `READ_PERMISSIONS` | Same permission fields |
@@ -28,10 +28,11 @@ Pages are deterministic for a committed state, not snapshots across requests or 
 Authorization is freshly checked before dispatch, not held as a lock throughout response serialization.
 Revocations after the final authorization check are not retroactive cancellation of an in-flight read.
 
-No role permission IDs, user/agent memberships, grants, timestamps, revisions, sessions, credentials or raw
-entities are serialized. `managed` truthfully describes version-controlled policy ownership: managed roles
-are not custom-role mutation targets. Custom-role presentation does not promise an available mutation API;
-permission tiers and managed markers never confer CRUD authority. This TASK adds no mutation routes or UI.
+No role permission IDs, user/agent memberships, grants, timestamps, sessions, credentials or raw
+entities are serialized. TASK-00125 adds the opaque authoritative Role `revision` to detail/list Views so callers
+can retain exact displayed intent for [custom-role mutations](CUSTOM_ROLES.md). `managed` truthfully describes version-controlled policy ownership: managed roles
+are not custom-role mutation targets. Permission tiers and managed markers never confer CRUD authority.
+TASK-00124 added no mutations; TASK-00125 supplies separately authorized definition mutations, not a Role UI.
 
 Responses use `application/json`, JSend and `Cache-Control: no-store`, with safe correlation headers.
 Anonymous/stale authentication is refused, forbidden callers cannot probe target existence, and only an

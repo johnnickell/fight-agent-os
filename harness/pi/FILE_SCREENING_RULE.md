@@ -70,6 +70,12 @@ or role promotion based on `phase` alone. See the [status contract](FILE_SCREENI
   `.runs/build/<TASK-ID>/` for coordination and cannot edit source. All have task-owned execution scratch.
 - Land: read/edit project files and perform authorized Git delivery work.
 
+For an explicitly assigned release review/QA subject, the provider's release-acceptance protocol substitutes
+version-owned reports and run evidence under `.runs/handoffs/release-<version>/` for TASK report paths. Only the
+independent stage owner writes its report; this does not authorize source/planning repair, other-version writes
+or coordinator self-acceptance. Role selection remains operator/trusted-launcher owned. This documentation does
+not add release support to a TASK-only dispatcher or subject parser.
+
 These role responsibilities guide authorized work; the harness does not enforce them through native file tools.
 Project roots and exclusions constrain optional discovery and provider disclosure only. Role changes come from
 the operator. Independent review/QA obligations and task ownership remain. For discovery's

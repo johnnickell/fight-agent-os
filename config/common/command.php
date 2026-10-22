@@ -160,7 +160,8 @@ return static function (Container $container): void {
                 $container->get(PasswordResetDeliveryCipher::class),
                 $container->get(CredentialDeliveryProvider::class),
                 $container->get(Clock::class),
-                $container->get(EventDispatcher::class)
+                $container->get(EventDispatcher::class),
+                $container->get(UserRepository::class)
             );
         }
     ];

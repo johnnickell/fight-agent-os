@@ -53,8 +53,8 @@
 | [TASK-00048](00048-TASK.md) | Coordinate bounded multi-tab session continuity | done | [TICKET-00017](../tickets/00017-TICKET.md) |
 | [TASK-00049](00049-TASK.md) | Deliver the authoritative current-principal projection | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00050](00050-TASK.md) | Deliver the accessible production theme preference | done | [TICKET-00018](../tickets/00018-TICKET.md) |
-| [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
-| [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | ready-for-agent | [TICKET-00018](../tickets/00018-TICKET.md) |
+| [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | done | [TICKET-00018](../tickets/00018-TICKET.md) |
+| [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | done | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00055](00055-TASK.md) | Deliver one-time password-reset completion | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
@@ -127,7 +127,7 @@
 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | done | [TICKET-00031](../tickets/00031-TICKET.md) |
-| [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
+| [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00126](00126-TASK.md) | Qualify the upstream authorization contract and consumer update | done | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | ready-for-agent | [TICKET-00031](../tickets/00031-TICKET.md) |
@@ -506,5 +506,8 @@
 | [TASK-00501](00501-TASK.md) | Restore local PHP diagnostics and bound development processes | done | — |
 | [TASK-00502](00502-TASK.md) | Follow current-session children and their worktree test logs automatically | in-progress | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | done | — |
+| [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | ready-for-agent | — |
+| [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | ready-for-agent | — |
 | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 <!-- /planning:records -->

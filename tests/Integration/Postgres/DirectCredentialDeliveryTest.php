@@ -103,8 +103,8 @@ final class DirectCredentialDeliveryTest extends TestCase
         $this->connection->insert('users', [
             'id'                                => $this->userId->toString(),
             'email'                             => 'delivery@example.test',
-            'state'                             => 'pending_activation',
-            'password_hash'                     => null,
+            'state'                             => 'active',
+            'password_hash'                     => password_hash('fixture-password', PASSWORD_BCRYPT, ['cost' => 4]),
             'authentication_version'            => 1,
             'authentication_authority_revision' => 0,
             'authorization_assignment_revision' => 0,
@@ -390,6 +390,7 @@ final class DirectCredentialDeliveryTest extends TestCase
     {
         $raw = bin2hex(random_bytes(32));
         $grant = ActivationGrant::issue(
+            \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
             $this->userId,
             ActivationCredential::fromString($raw),
             $this->now,
@@ -1514,6 +1515,7 @@ SQL);
         $raw = bin2hex(random_bytes(32));
         if ($purpose === 'activation') {
             $grant = ActivationGrant::issue(
+                \Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationOrigin::PRIVATE_INVITATION,
                 $this->userId,
                 ActivationCredential::fromString($raw),
                 $this->now,
@@ -1522,13 +1524,18 @@ SQL);
                 $this->activationCipher->encrypt($raw)
             );
         } else {
+            $user = $this->container->get(
+                \Fight\AccessControl\Domain\AccessControl\User\UserRepository::class
+            )->getById($this->userId);
+            self::assertNotNull($user);
             $grant = PasswordResetGrant::issue(
                 $this->userId,
                 PasswordResetCredential::fromString($raw),
                 $this->now,
                 $this->now->modify('+1 hour'),
-                EmailAddress::fromString('delivery@example.test'),
-                $this->resetCipher->encrypt($raw)
+                $user->getEmail(),
+                $this->resetCipher->encrypt($raw),
+                $user->getRecoveryAuthority()
             );
         }
 
