@@ -507,4 +507,6 @@
 | [TASK-00502](00502-TASK.md) | Follow current-session children and their worktree test logs automatically | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | done | — |
+| [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | ready-for-agent | — |
+| [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | ready-for-agent | — |
 <!-- /planning:records -->
