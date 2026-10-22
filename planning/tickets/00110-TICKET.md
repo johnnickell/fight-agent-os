@@ -93,7 +93,7 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | [TASK-00448](../tasks/00448-TASK.md) | Observe the selected local child agent in the terminal workspace | done |
 | [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | done |
 | [TASK-00502](../tasks/00502-TASK.md) | Follow current-session children and their worktree test logs automatically | done |
-| [TASK-00503](../tasks/00503-TASK.md) | Launch the Pi terminal workspace globally from any project | ready-for-agent |
+| [TASK-00503](../tasks/00503-TASK.md) | Launch the Pi terminal workspace globally from any project | in-progress |
 | [TASK-00507](../tasks/00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent |
 <!-- /planning:children -->
 

@@ -45,7 +45,8 @@ Restart Pi, then use `/fight-header` to choose a presentation or `off` to restor
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
-An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through `./bin/terminal`, with
+An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through the package-owned
+`fight-terminal` command after [explicit user-level installation](harness/pi/README.md#install-the-global-workspace-command), with
 responsive conversation/observation panes, opt-in local child observation (TASK-00448 candidate), and an opt-in
 human-only shared main-runtime log reader (TASK-00449 candidate). Earlier real PTY/provider/file-hook
 checks, held-state terminal images and a passing exact-head baseline gate are recorded. Review's long-dialog
