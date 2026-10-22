@@ -94,7 +94,7 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | [TASK-00449](../tasks/00449-TASK.md) | Display the existing main-checkout Docker logs in the terminal workspace | done |
 | [TASK-00502](../tasks/00502-TASK.md) | Follow current-session children and their worktree test logs automatically | in-progress |
 | [TASK-00503](../tasks/00503-TASK.md) | Launch the Pi terminal workspace globally from any project | ready-for-agent |
-| [TASK-00504](../tasks/00504-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent |
+| [TASK-00507](../tasks/00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -128,13 +128,16 @@ finite elapsed deadlines/cancellation, safe observation-only UI, tool restrictio
 validation remain required. The R2 repair in `66737c3…` still requires independent re-review; this owner decision
 is not independent code acceptance or QA. TASK-00502 remains in-progress with unchecked acceptance criteria.
 
-[TASK-00504 — Assess low-friction native-session origin hardening](../tasks/00504-TASK.md) records the explicitly
+[TASK-00507 — Assess low-friction native-session origin hardening](../tasks/00507-TASK.md) records the explicitly
 requested future go/no-go/needs-upstream decision: at most two approaches, at most one strongest-candidate
 disposable proof, explicit trust/API/platform limits and counted setup/daily/lifecycle UX burden. Negative feasibility
 is valid. No investigation is executed by this amendment; production/global/upstream changes remain excluded.
 It is unranked, does not block TASK-00502 under the amended boundary and adds no speculative dependency. Existing
 Board priorities and this parent's already-terminal historical status are preserved under planning conventions.
-Prior R1 failures, scope holds and independent reports remain historical, not rewritten as successes.
+Prior R1 failures, scope holds and independent reports remain historical, not rewritten as successes. The
+follow-up was initially allocated as TASK-00504; authorized Land identity reconciliation reassigned it to unused
+TASK-00507 after preserving current `develop`'s different delivered release-scoped TASK-00504. Historical
+TASK-00504 references to this follow-up remain interpretable through that mapping.
 
 ### Approved global workspace command — 2026-10-20
 

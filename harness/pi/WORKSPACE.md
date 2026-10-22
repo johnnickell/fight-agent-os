@@ -329,7 +329,7 @@ requirement amendment, not a repaired R1 or independent acceptance.
 
 The qualified supported context/session/RPC APIs provide IDs, paths and lifecycle callbacks, but no native-origin
 attestation verifiable independently of that initializer. Another self-generated signer or caller field would not
-supply it. [TASK-00504](../../planning/tasks/00504-TASK.md) owns a future bounded low-friction hardening feasibility
+supply it. [TASK-00507](../../planning/tasks/00507-TASK.md) owns a future bounded low-friction hardening feasibility
 decision; it is unstarted and does not block TASK-00502 under the amended scope. Do not treat custody signatures
 as independently attested native origin or claim OS/credential isolation. Normal actual-session/file binding,
 disjoint honestly bootstrapped parents, stale/replaced/malformed/cross-session payload refusal, finite elapsed
