@@ -552,5 +552,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00499](00499-TASK.md) | Remove harness denials from native file reads | — (standalone bug) | done | — | [PR #119](https://github.com/johnnickell/fight-agent-os/pull/119) |
 | — | [TASK-00500](00500-TASK.md) | Restore native file tools and use Terra for Land | — (standalone chore) | done | — | [PR #122](https://github.com/johnnickell/fight-agent-os/pull/122) |
 | — | [TASK-00501](00501-TASK.md) | Restore local PHP diagnostics and bound development processes | — (standalone bug) | done | — | [PR #131](https://github.com/johnnickell/fight-agent-os/pull/131) |
-| — | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | — (standalone chore) | done | — | — |
+| — | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | — (standalone chore) | done | — | [PR #142](https://github.com/johnnickell/fight-agent-os/pull/142) |
 <!-- /planning:board -->
