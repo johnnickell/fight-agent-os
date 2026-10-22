@@ -150,8 +150,8 @@ prohibit overwriting another run. Query/trace and status/preview/dry-run modes p
 | Installed skill | Authorized workflow outputs |
 |---|---|
 | `work` | Ordinary files in the selected implementation checkout, including planning, skills and `.env.example` |
-| `review` | `.runs/reviews/<TASK-ID>/` reports/history at base or selected checkout |
-| `qa` | `.runs/qa/<TASK-ID>/` evidence/captures at base or selected checkout |
+| `review` | `.runs/reviews/<TASK-ID>/` reports/history at base or selected checkout; explicit release subjects use the release report contract below |
+| `qa` | `.runs/qa/<TASK-ID>/` evidence/captures at base or selected checkout; explicit release subjects use the release report contract below |
 | `build` | `.runs/build/<TASK-ID>/` requests/ledger at base or selected checkout; no source promotion |
 | `land` | Selected checkout reconciliation, base `planning/` delivery metadata and owned task evidence |
 | `next`, `audit`, `architecture`, `security-audit`, `adopt` | Inspection and owned task evidence only |
@@ -172,6 +172,14 @@ three-part version with optional prerelease/build identifiers; target release po
 versions before preparation. A missing/invalid version grants no release mutations. Status/query modes retain
 only the exact selected version's ignored evidence, with no other-version, TASK, canonical Review/QA or source
 write grant. Resume retains the same version boundary; signing and publication require their existing authority.
+
+For explicitly assigned `/skill:review release <version>` and `/skill:qa release <version>`, follow the provider's
+[release acceptance protocol](../../.pi/skills/release/references/acceptance.md). Canonical packet/reports live at
+the base in `.runs/handoffs/release-<version>/`; review and QA each own only their respective report and run
+history/evidence, with packet assembly limited by that protocol. The coordinator owns its ledger/packet, never
+independent verdicts. Status cannot revise a packet or replace independent reports. These are documented workflow
+responsibilities, not new native-tool checks or a release-aware parser/launcher implementation. A missing parsed
+TASK does not authorize a fake TASK identity; role selection and supported dispatch requirements remain unchanged.
 
 Role aliases remain Engineer/Software Engineer → `work`, Reviewer/Senior Engineer → `review`, QA Engineer → `qa`,
 Team Lead → `build`, Release Manager → `land`. Auxiliary skills use Reviewer's workflow phase with their own

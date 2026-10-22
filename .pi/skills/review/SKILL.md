@@ -1,6 +1,6 @@
 ---
 name: review
-description: Independently challenge an implemented TASK or PR against its requirements, diff, tests and evidence; publish accept or revise without fixing it.
+description: Independently challenge a TASK, PR or versioned release candidate against its requirements, diff, tests and evidence; publish accept or revise without fixing it.
 ---
 
 # Review
@@ -10,7 +10,17 @@ Strongly prefer Jev before unfamiliar discovery; read known targets and core ins
 operator-selected role, actual file-access denials and any independently selected deterministic tool policy.
 Native shell requires no Jev command assessment or confirmation. Targets need no copy of this rule.
 
-Read [review standards](../../../docs/engineering/REVIEW.md) before starting and [engineering standards](../../../docs/engineering/STANDARDS.md) for application changes. The standards own report format, verdict rules and publication; keep those definitions there.
+Resolve [target project context](../../../docs/engineering/PROJECT_CONTEXT.md) and read the target's review,
+testing and delivery rules. In this repository, read [review standards](../../../docs/engineering/REVIEW.md)
+and [engineering standards](../../../docs/engineering/STANDARDS.md) for application changes. Apply target bindings
+to the shared workflow references below; provider application policy must not replace package-owned gates.
+
+For `/skill:review release <version>`, a release PR or a release coordinator's assignment, first read
+[release acceptance](../release/references/acceptance.md). Substitute its release subject, sourced criteria,
+version-4 report and canonical release path for TASK identity/paths and the version-3 header below. No TASK ID is
+required. Resolve ambiguous PR identity from its actual branch, diff and requirements; never adopt the last
+completed TASK. Return release findings/acceptance to the release coordinator for repair, QA and delivery.
+TASK-specific next-command routing below applies only to TASK subjects.
 
 1. **Frame the target.** Read the TASK, parent, decisions and completion claims. Identify the exact base/head, branch, status and all reviewed changes. Disclose contributions to implementation or its evidence; a contributor cannot independently accept. Resolve the base worktree through Git metadata and use only its canonical ignored `.runs/reviews/<TASK-ID>/review.md` for the report. Review is read-only over implementation and planning.
 2. **Challenge acceptance in two passes.** Establish the [local gate and any explicit hosted requirement](../../../docs/engineering/REVIEW.md#local-gate-and-optional-hosted-checks); missing optional CI is not a blocker. Inspect the actual diff and map every TASK criterion to the stable Spec IDs in [review standards](../../../docs/engineering/REVIEW.md); check scope, outcomes, validation/authorization, effects, failures and evidence. Separately apply the Standards IDs to ownership, placement, transport scope, naming, meaningful tests and delivery. For each ID record Pass/Fail/Unverified/N/A, exact evidence and limitations; justify N/A and leave missing required proof Unverified. A single independent reviewer can perform both named passes, but builder self-checks cannot approve the work. Run fresh focused checks and the full gate when needed; distinguish new results from inherited receipts and disclose warnings, skips and limits. A rebase is judged on its effective new-base diff, not rejected solely for changed commit IDs.

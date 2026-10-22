@@ -1,6 +1,6 @@
 ---
 name: release
-description: Prepare or resume a versioned package release by inspecting its current stage, updating release docs, certifying the commit, and coordinating human signing, publication and Packagist verification.
+description: Prepare or resume a versioned package release, coordinating independent review, applicable QA, certification, human signing, publication and Packagist verification.
 ---
 
 # Release
@@ -12,13 +12,15 @@ Examples: `/skill:release 0.5.0`, `/skill:release 0.4.0 status`, or
 within the user's existing authorization; it does not approve every external effect. Ask for a missing version
 before release mutations. Normalize an optional `v` prefix; validate against the target's supported version syntax.
 
-This is Release Manager guidance. TASK implementation/review/landing and application deployment retain their own
-workflows. Do not implement missing release features or turn this skill into a second release runner/certifier.
+This is Release Manager guidance. Own release preparation, independent acceptance, applicable QA and remaining
+authorized delivery stages. Use supported release dispatch when available; otherwise prepare the concrete
+independent-session handoff and retain the resumable ledger. TASK implementation/landing and application
+deployment retain their workflows. Do not implement missing product features or become a second runner/certifier.
 
 ## Establish authority and state
 
-1. Read the target's `AGENTS.md`, delivery/testing/review rules, release tooling, accepted release ADRs and
-   canonical planning. Resolve superseded rules from accepted decisions; ask about an unresolved conflict.
+1. Resolve [target project context](../../../docs/engineering/PROJECT_CONTEXT.md). Read the target's `AGENTS.md`,
+   delivery/testing/review rules, release tooling, accepted release ADRs and canonical planning. Resolve superseded rules from accepted decisions; ask about an unresolved conflict.
    Use [package profiles](references/package-profiles.md) for Fight Common or Access Control as discovery hints,
    then verify them against current files. Paths in profiles are relative to the target, never this skill's home.
 2. Confirm repository, package name, remote/fork identity, release line, checkout ownership and requested version.
@@ -27,9 +29,9 @@ workflows. Do not implement missing release features or turn this skill into a s
    Read hosted release and Packagist state when relevant. Failed authentication, transport or parsing means
    **unknown**, not “does not exist.” Do not infer the target from a hardcoded machine path.
 3. Build a short stage ledger: phase, observed identity, timestamp/evidence, completed/needed/blocked/unknown,
-   and next authorized action. Include docs/readiness, branch/PR, integration, final certification, local signed
-   tag, remote tag, GitHub release, Packagist, merge-back and cleanup. Determine these facts independently;
-   Packagist may observe a pushed tag before GitHub publication. Reconcile any old handoff against live state.
+   and next authorized action. Include docs/readiness, independent review, required QA, branch/PR, integration,
+   final certification, local signed tag, remote tag, GitHub release, Packagist, merge-back and cleanup.
+   Determine these facts independently; Packagist may observe a pushed tag before GitHub publication. Reconcile any old handoff against live state.
 4. State the next step and continue authorized work. Preserve approvals already supplied for the same effect
    and identity. Ask only for missing decisions or authority, with the concrete candidate and effect prepared.
    If local policy requires fresh per-effect approval, identify that rule. Never treat a skill as a grant.
@@ -37,6 +39,10 @@ workflows. Do not implement missing release features or turn this skill into a s
 ## Execute the next incomplete stage
 
 Read [release stages](references/stages.md) for preparation, certification, publication, Packagist and closeout.
+For independent review and QA, follow [release acceptance](references/acceptance.md): prepare a version-owned
+candidate packet, obtain independent reports, resolve authorized preparation findings and resume. No implementation
+TASK is needed solely to assess a release. That protocol also defines standalone recovery when supported release
+dispatch is unavailable; do not bypass the provider's TASK-only launcher. `status` never dispatches or repairs.
 Reuse the existing release branch/PR/tag/release when their identities and state match. Do not restart from
 `develop` simply because the skill was invoked again. If the release is already merged to `main`, discover that
 merge and proceed to its remaining checks; if already published, verify it and continue downstream.
@@ -60,8 +66,10 @@ unresolved boundary with a recovery step; complete independent authorized prepar
 Keep the resumable ledger, notes, scripts and raw receipts in the target's approved ignored evidence location
 (normally a version-scoped `.runs/` subfolder). Record approvals with their scope and identity, not secrets.
 Under the standing file-screening profile, use `.runs/handoffs/release-<version>/` for the ledger, scripts and
-receipts and `.runs/notes/release-<version>/` for notes, with the optional `v` prefix removed. These exact
-version-owned directories remain writable in `status`; other versions and independent TASK reports do not.
+receipts and `.runs/notes/release-<version>/` for notes, with the optional `v` prefix removed. Keep the canonical
+acceptance packet and independently owned reports at the base under the same version's handoff directory,
+following [release acceptance](references/acceptance.md). Status may write only owned status evidence there;
+it never replaces packets or independent reports. Other versions and independent TASK reports are not owned outputs.
 Target-owned certification tools retain their own documented output locations and existing command authority.
 Update canonical release/planning records only for verified facts using the target's normal delivery process.
 Scan public notes, scripts and attachments for private local paths, research identifiers and credentials.
@@ -70,3 +78,5 @@ Report version, commit, stage, evidence, effects actually performed and the next
 certification, signed tag, remote publication, registry projection and consumer installation. “Release complete”
 requires all stages required by this request and target policy, including merge-back/cleanup when included.
 If any remain blocked or unverified, name them rather than claiming completion. No automatic archive or deployment.
+At a human boundary, give the concrete approval, signing or prerequisite action and the actual version's
+`Next: /skill:release <version> resume` command. Do not restart completed stages.

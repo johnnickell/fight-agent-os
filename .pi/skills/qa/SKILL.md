@@ -1,6 +1,6 @@
 ---
 name: qa
-description: Challenge a reviewed TASK or PR with adversarial UI, API, CLI or implementation probes and visual evidence where applicable; report defects without repairing source.
+description: Challenge a reviewed TASK, PR or release candidate with adversarial behavioral probes and visual evidence where applicable; report defects without repairing source.
 ---
 
 # QA
@@ -10,9 +10,18 @@ Strongly prefer Jev before unfamiliar discovery; read known targets and core ins
 operator-selected role, actual file-access denials and any independently selected deterministic tool policy.
 Native shell requires no Jev command assessment or confirmation. Targets need no copy of this rule.
 
-Read [QA standards](../../../docs/engineering/QA.md). They own dispositions, report location, independence,
-runtime identity and evidence requirements. Use `/skill:qa TASK-NNNNN` or `/skill:qa <PR URL>`; an optional
-scenario narrows investigation but cannot silently waive the TASK's remaining required QA.
+Resolve [target project context](../../../docs/engineering/PROJECT_CONTEXT.md) and read the target's QA,
+testing and release rules alongside [QA standards](../../../docs/engineering/QA.md) for dispositions, independence,
+runtime identity and evidence. Apply target bindings throughout; provider application policy must not replace
+package-owned gates. Use `/skill:qa TASK-NNNNN` or `/skill:qa <PR URL>`; an optional scenario narrows investigation
+but cannot silently waive the TASK's remaining required QA.
+
+For `/skill:qa release <version>`, a release PR or a release coordinator's assignment, first read
+[release acceptance](../release/references/acceptance.md). Substitute its release subject, sourced criteria and
+canonical release paths for TASK identity/paths throughout this procedure and template. No TASK ID is required.
+Include required release-endpoint scenarios even for prose-only preparation. Return the durable result to the
+release coordinator; the TASK `work`/`review`/`land` routes below do not apply to release subjects. Standalone
+release QA ends with the actual version's release resume command.
 
 1. **Frame the subject.** Read the TASK, parent, accepted requirements, changed behavior and canonical technical
    review. For a PR, inspect its current base/head and resolve its TASK; ask only for missing target identity.

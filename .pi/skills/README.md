@@ -67,7 +67,11 @@ reasoned N/A. Visual changes use inspected, comparable before/after captures; no
 request/output/state evidence. This local skill does not provision managed QA Agents or enforce a hosted merge gate.
 
 [Release](release/SKILL.md) coordinates versioned package releases from their observed stage, using each target's
-own policy and certifier. It covers docs, branches, human signing scripts, publication, Packagist and merge-back.
+own policy and certifier. It covers docs, release-scoped independent review and applicable QA, branches, human
+signing scripts, publication, Packagist and merge-back. Release candidates use a version-owned requirements
+packet and independent reports, not borrowed TASK IDs. `/skill:review release 0.5.0` and
+`/skill:qa release 0.5.0` are standalone recovery entrypoints. Automatic coordination requires a provider-supported
+release dispatcher; the current TASK-only Build launcher is not one. See [release acceptance](release/references/acceptance.md).
 Use `/skill:release 0.4.0 status` for a read-only inventory or `/skill:release 0.5.0` to prepare and continue within
 the authorized scope. The existing global Pi skills link on the maintainer's machine also exposes this skill in
 other repositories; run `/reload` in an active Pi session after updating these files. No new installation is needed

@@ -1,5 +1,10 @@
 # Behavioral QA and visual evidence
 
+For a versioned release candidate, use [release acceptance](../../.pi/skills/release/references/acceptance.md).
+Substitute its release identity, sourced criteria and canonical paths for TASK fields below, retaining target-owned
+gates, independence and dispositions. Release QA returns to the release coordinator, not TASK `work`/`land`.
+Required package-endpoint scenarios remain required even if release preparation changed only prose.
+
 ## Sequence and authority
 
 The local [qa skill](../../.pi/skills/qa/SKILL.md) runs in an explicitly assigned independent session after

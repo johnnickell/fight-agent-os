@@ -2,6 +2,12 @@
 
 Review is an independent attempt to disprove a TASK's acceptance claims. It reports findings and evidence; implementation, publication, and merge are separate.
 
+For a versioned release candidate, use [release acceptance](../../.pi/skills/release/references/acceptance.md).
+It substitutes a sourced release packet, version-4 header and version-owned canonical path for TASK fields below;
+ordinary TASK reports remain version 3. Apply the target's substantive criteria and gates, retain independence,
+and return findings to the release coordinator rather than TASK `work`/`land`. A missing TASK alone is not a blocker;
+an explicit target policy or incompatible report consumer requires its named resolution.
+
 ## Target and independence
 
 Read the TASK, its accepted decisions, the diff against the identified base, current status, and claimed tests. Disclose whether the reviewer authored, directed, repaired, or supplied evidence for the implementation. A material contributor cannot independently accept it. Include staged, unstaged, and untracked target changes in the reviewed scope; a clean committed target is preferable for a landing handoff.
