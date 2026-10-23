@@ -100,12 +100,14 @@ export class HerdrWorkspace {
     this.directory = join(this.context.cwd, 'var', 'herdr-workspace');
     await mkdir(this.directory, { recursive: true, mode: 0o700 });
     this.file = join(this.directory, `${key}.json`);
-    try { this.state = JSON.parse(await readFile(this.file, 'utf8')); }
+    let candidate;
+    try { candidate = JSON.parse(await readFile(this.file, 'utf8')); }
     catch (error) { if (error.code !== 'ENOENT') throw new Error('Ownership state unreadable; no layout changes'); }
-    if (this.state && (JSON.stringify(this.state.primary) !== JSON.stringify(this.identity) || !Array.isArray(this.state.panes) || this.state.panes.length > 2)) {
+    if (candidate && (JSON.stringify(candidate.primary) !== JSON.stringify(this.identity) || !Array.isArray(candidate.panes) || candidate.panes.length > 2)) {
       throw new Error('Ownership state mismatched; no layout changes');
     }
-    this.state ||= { primary: this.identity, panes: [], uncertain: false };
+    // Only admitted ownership may be cached, saved or used by failure/shutdown cleanup.
+    this.state = candidate || { primary: this.identity, panes: [], uncertain: false };
     await this.save();
   }
 
@@ -202,7 +204,7 @@ export class HerdrWorkspace {
       await this.create(1, right);
       return 'Owned placeholder companions open; Herdr owns focus, resize and zoom';
     } catch (error) {
-      // Partial failures clean only live-proven companions. Lost split replies retain the uncertainty hold.
+      // Partial failures clean only admitted, live-proven companions. Lost split replies retain the uncertainty hold.
       if (this.state) {
         try { await this.closeOwned(); } catch { /* Preserve ambiguous effects for explicit recovery */ }
       }

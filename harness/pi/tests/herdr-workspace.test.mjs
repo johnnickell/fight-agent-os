@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import net from 'node:net';
@@ -67,6 +67,50 @@ test('Repeated open reuses healthy companions without more splits or commands', 
   const mutations = calls.filter((c) => ['split', 'run', 'rename'].includes(c[1])).length;
   await workspace.act('open');
   assert.equal(calls.filter((c) => ['split', 'run', 'rename'].includes(c[1])).length, mutations);
+});
+
+test('R1: rejected persisted ownership never mutates panes or becomes admitted on repeat', async (t) => {
+  const mismatches = {
+    sessionId: (saved) => { saved.primary.sessionId = 'prior-session'; },
+    sessionFile: (saved) => { saved.primary.sessionFile = 'prior-session.jsonl'; },
+    socket: (saved) => { saved.primary.inode += 1; },
+    panes: (saved) => { saved.panes.push({ ...saved.panes[0] }); },
+  };
+  for (const [name, change] of Object.entries(mismatches)) {
+    await t.test(name, async (t) => {
+      const { workspace, calls, panes } = await fixture(t);
+      await workspace.act('open');
+      const saved = JSON.parse(await readFile(workspace.file, 'utf8'));
+      change(saved);
+      const rejected = JSON.stringify(saved);
+      await writeFile(workspace.file, rejected);
+      // Keep real returned IDs and live process/probe facts; only disk admission is stale.
+      const subject = new HerdrWorkspace({ ...workspace.context, env: workspace.env, client: workspace.client, probe: workspace.probe });
+      const observations = [];
+      for (const action of ['open', 'open', 'close']) {
+        const start = calls.length;
+        let error;
+        try { await subject.act(action); } catch (failure) { error = failure.message; }
+        observations.push({
+          error,
+          mutations: calls.slice(start).filter((c) => ['split', 'run', 'rename', 'close'].includes(c[1])),
+          record: await readFile(workspace.file, 'utf8'),
+          admitted: subject.state !== undefined,
+          panes: [...panes.keys()],
+        });
+      }
+      for (const observed of observations) {
+        assert.match(observed.error || '', /Ownership state mismatched; no layout changes/);
+        assert.deepEqual(observed.mutations, []);
+        assert.equal(observed.record, rejected);
+        assert.equal(observed.admitted, false);
+        assert.deepEqual(observed.panes, ['caller', 'returned-1', 'returned-2']);
+      }
+      const start = calls.length;
+      await subject.shutdown();
+      assert.deepEqual(calls.slice(start).filter((c) => ['split', 'run', 'rename', 'close'].includes(c[1])), []);
+    });
+  }
 });
 
 test('A manually closed companion rebuilds only owned topology', async (t) => {
