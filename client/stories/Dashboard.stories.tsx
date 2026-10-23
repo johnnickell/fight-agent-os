@@ -126,7 +126,8 @@ export const SignOutRetiresDashboard: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole('heading', { name: 'Dashboard', level: 1 });
-    await userEvent.click(canvas.getByRole('button', { name: 'Sign out' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'User Menu' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Sign Out' }));
     await expect(canvas.queryByRole('heading', { name: 'Dashboard' })).not.toBeInTheDocument();
     await expect(canvas.queryByText('reader@example.test')).not.toBeInTheDocument();
     await expect(canvas.queryByRole('link', { name: 'Users' })).not.toBeInTheDocument();

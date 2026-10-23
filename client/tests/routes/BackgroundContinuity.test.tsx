@@ -27,7 +27,7 @@ async function mount(path = '/app/dashboard') {
   render(<ApplicationView session={owner} pathname={path} navigate={navigate} />);
   await act(() => owner.coordinator.restore());
   await screen.findByRole('heading', {
-    name: path === '/app/dashboard' ? 'Dashboard' : 'Account / Security',
+    name: path === '/app/dashboard' ? 'Dashboard' : 'Account & Security',
     level: 1
   });
   return { owner, navigate };
@@ -37,7 +37,7 @@ describe('background continuity through the composed credential/cache/frame grap
   it('revalidates each foreground interval without replacing the page, navigation or focus', async () => {
     const { owner, navigate } = await mount();
     const main = screen.getByRole('main');
-    const focus = screen.getByRole('button', { name: 'Sign out' });
+    const focus = screen.getByRole('button', { name: 'User Menu' });
     focus.focus();
     let now = Math.ceil(performance.now());
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
@@ -74,7 +74,7 @@ describe('background continuity through the composed credential/cache/frame grap
   it('coalesces hidden return without refreshing a usable credential or replacing a non-Dashboard page', async () => {
     const { owner, navigate } = await mount('/app/account');
     const main = screen.getByRole('main');
-    const focus = screen.getByRole('button', { name: 'Sign out' });
+    const focus = screen.getByRole('button', { name: 'User Menu' });
     focus.focus();
     let hidden = false;
     vi.spyOn(document, 'visibilityState', 'get').mockImplementation(() =>
@@ -218,7 +218,7 @@ describe('background continuity through the composed credential/cache/frame grap
       owner.authority.resume();
       await owner.authority.load();
     });
-    const unrelated = screen.getByRole('button', { name: 'Sign out' });
+    const unrelated = screen.getByRole('button', { name: 'User Menu' });
     unrelated.focus();
     const pending = deferred<PrincipalLoadResult>();
     owner.load.mockImplementationOnce(() => pending.promise);
@@ -248,7 +248,7 @@ describe('background continuity through the composed credential/cache/frame grap
       return accept();
     });
     fireEvent.click(retry);
-    const unrelated = screen.getByRole('button', { name: 'Sign out' });
+    const unrelated = screen.getByRole('button', { name: 'User Menu' });
     unrelated.focus();
     await act(async () => {
       pending.resolve();
@@ -275,7 +275,7 @@ describe('background continuity through the composed credential/cache/frame grap
     expect(owner.authority.getSnapshot().status).not.toBe('authenticated');
     await act(() => owner.coordinator.logout());
     expect(
-      screen.queryByRole('heading', { name: 'Account / Security', level: 1 })
+      screen.queryByRole('heading', { name: 'Account & Security', level: 1 })
     ).not.toBeInTheDocument();
     await act(async () => {
       pending.resolve({ ok: true, value: true, correlationId: null });

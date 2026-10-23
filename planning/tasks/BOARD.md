@@ -23,7 +23,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | — (standalone chore) | ready-for-agent | — | — |
 | 54 | [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | ready-for-agent | — | — |
 | 56 | [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | ready-for-agent | — | — |
 | 57 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | ready-for-agent | — | — |
@@ -447,6 +446,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 2 | [TASK-00138](00138-TASK.md) | Define and qualify tool-mediated execution boundaries | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | done | — | [PR #88](https://github.com/johnnickell/fight-agent-os/pull/88) |
 | 2 | [TASK-00145](00145-TASK.md) | Enable opt-in trusted local HTTPS | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | done | — | [PR #39](https://github.com/johnnickell/fight-agent-os/pull/39) |
 | 2 | [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | — (standalone chore) | done | — | [PR #100](https://github.com/johnnickell/fight-agent-os/pull/100) |
+| 2 | [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | — (standalone chore) | done | — | [PR #150](https://github.com/johnnickell/fight-agent-os/pull/150) |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |

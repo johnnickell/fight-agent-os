@@ -1,3 +1,4 @@
+import type { PresentationIconName } from '@/components/PresentationIcon';
 import type { RegisteredRoute } from '@/routes/GuardedRoute';
 
 export type ApplicationRoute = RegisteredRoute &
@@ -6,6 +7,7 @@ export type ApplicationRoute = RegisteredRoute &
     access: 'public' | 'protected';
     destination: 'root' | 'login' | 'recovery' | 'activation' | 'dashboard' | 'landing' | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
+    icon?: PresentationIconName;
     availability?: string;
   }>;
 
@@ -47,6 +49,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   {
     pathname: '/app/dashboard',
     title: 'Dashboard',
+    icon: 'dashboard',
     access: 'protected',
     requirements: permission('VIEW_DASHBOARD'),
     destination: 'dashboard',
@@ -64,7 +67,8 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   },
   {
     pathname: '/app/account',
-    title: 'Account / Security',
+    title: 'Account & Security',
+    icon: 'shield',
     access: 'protected',
     requirements: authenticated,
     destination: 'landing',
@@ -74,7 +78,8 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   },
   {
     pathname: '/app/account/password',
-    title: 'Change password',
+    title: 'Change Password',
+    icon: 'key',
     access: 'protected',
     requirements: authenticated,
     destination: 'landing',
@@ -83,7 +88,8 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   },
   {
     pathname: '/app/account/sessions',
-    title: 'Active sessions',
+    title: 'Active Sessions',
+    icon: 'sessions',
     access: 'protected',
     requirements: permission('READ_OWN_SESSIONS'),
     destination: 'landing',
@@ -95,6 +101,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   {
     pathname: '/app/admin/users',
     title: 'Users',
+    icon: 'users',
     access: 'protected',
     requirements: permission('READ_USERS'),
     destination: 'landing',
@@ -104,7 +111,8 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   },
   {
     pathname: '/app/admin/invite',
-    title: 'Invite user',
+    title: 'Invite User',
+    icon: 'invite',
     access: 'protected',
     requirements: permission('INVITE_USERS'),
     destination: 'landing',
@@ -114,6 +122,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   {
     pathname: '/app/admin/invite-super-admin',
     title: 'Invite Super Admin',
+    icon: 'elevatedInvite',
     access: 'protected',
     requirements: permission('INVITE_USERS', 'ASSIGN_SUPER_ADMIN'),
     destination: 'landing',
@@ -122,7 +131,8 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   },
   {
     pathname: '/app/admin/invitations',
-    title: 'Invitation administration',
+    title: 'Invitation Administration',
+    icon: 'invitations',
     access: 'protected',
     requirements: permission('MANAGE_USER_INVITATIONS'),
     destination: 'landing',

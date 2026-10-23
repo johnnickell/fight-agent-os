@@ -114,7 +114,7 @@ describe('foundation shell', () => {
       target: { value: 'synthetic' }
     });
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
-    expect(await screen.findByRole('heading', { name: 'Active sessions' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Active Sessions' })).toBeVisible();
     expect(window.location.pathname).toBe('/app/account/sessions');
     act(() => {
       window.history.pushState(null, '', '/app/dashboard');
@@ -125,7 +125,7 @@ describe('foundation shell', () => {
       window.history.pushState(null, '', '/app/account/sessions');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
-    expect(await screen.findByRole('heading', { name: 'Active sessions' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Active Sessions' })).toBeVisible();
     expect(projection).toBe(1);
     expect(fetch.mock.calls.filter(([url]) => url.endsWith('/auth/refresh'))).toHaveLength(1);
   });

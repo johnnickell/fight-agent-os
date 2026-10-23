@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 
 import { createApplicationSession } from '@/features/auth/useApplicationSession';
@@ -54,6 +54,7 @@ async function mount() {
           expires_at: 1900
         })
       );
+    if (url.endsWith('/auth/logout')) return Promise.resolve(jsonResponse(null));
     if (url.endsWith('/me')) return Promise.resolve(principal());
     if (url.endsWith('/documentation/bootstrap'))
       return Promise.resolve(
@@ -85,7 +86,7 @@ async function mount() {
 it('retains the frame during background verification but retires and reloads private Swagger under fresh authority', async () => {
   const f = await mount();
   const main = screen.getByRole('main');
-  const focus = screen.getByRole('button', { name: 'Sign out' });
+  const focus = screen.getByRole('button', { name: 'User Menu' });
   focus.focus();
   const scope = vi.mocked(mountSwagger).mock.calls[0]?.[3];
   const stop: unknown = vi.mocked(mountSwagger).mock.results[0]?.value;
@@ -127,14 +128,32 @@ it('uses renewed memory credentials without replay and removes private data on l
   const init = f.fetch.mock.calls.at(-1)?.[1];
   expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer header.payload.signature2');
   const pending = deferred<Response>();
+  const beforeRecheck = f.fetch.mock.calls.length;
   f.fetch.mockImplementationOnce(() => pending.promise);
   act(() => f.owner.authority.resume());
-  await act(() => f.owner.authority.signal('logout'));
+  await waitFor(() => expect(f.fetch).toHaveBeenCalledTimes(beforeRecheck + 1));
+  expect(f.fetch.mock.calls.at(-1)?.[0]).toBe('/api/v1/me');
+  fireEvent.click(screen.getByRole('button', { name: 'User Menu' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
+  expect(scope.isCurrent()).toBe(false);
+  expect(screen.queryByRole('region', { name: 'Private API explorer' })).not.toBeInTheDocument();
+  await waitFor(() =>
+    expect(f.owner.coordinator.getSnapshot()).toMatchObject({
+      status: 'anonymous',
+      signOutUnconfirmed: false
+    })
+  );
+  const logout = f.fetch.mock.calls.filter(([url]) => url.endsWith('/auth/logout'));
+  expect(logout).toHaveLength(1);
+  expect(logout[0]?.[1]?.method).toBe('POST');
+  const afterLogout = f.fetch.mock.calls.length;
   await act(async () => {
     pending.resolve(f.principal());
     await pending.promise;
   });
   expect(scope.isCurrent()).toBe(false);
   expect(mountSwagger).toHaveBeenCalledTimes(2);
+  expect(f.fetch).toHaveBeenCalledTimes(afterLogout);
+  expect(screen.queryByRole('button', { name: 'User Menu' })).not.toBeInTheDocument();
   expect(screen.queryByRole('region', { name: 'Private API explorer' })).not.toBeInTheDocument();
 });

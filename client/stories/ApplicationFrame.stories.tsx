@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
@@ -14,16 +14,19 @@ import { ApplicationView } from '@/routes/ApplicationJourney';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
 
+import type { ThemePreference } from '@/features/theme/ThemePreference';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 function FrameExample({
   outcome = 'ready',
   initial = '/app/dashboard',
-  longEmail = false
+  longEmail = false,
+  preference = 'system'
 }: {
   outcome?: 'ready' | 'denied' | 'pending' | 'protocol' | 'network' | 'terminal' | 'background';
   initial?: string;
   longEmail?: boolean;
+  preference?: ThemePreference;
 }) {
   const [pathname, setPathname] = useState(initial);
   const [session] = useState(() => {
@@ -112,11 +115,16 @@ function FrameExample({
     () =>
       new ThemePreferenceStore({
         root: document.createElement('div'),
-        storage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+        storage: {
+          getItem: () => (preference === 'system' ? null : preference),
+          setItem: () => {},
+          removeItem: () => {}
+        },
         media: () => window.matchMedia('(prefers-color-scheme: dark)'),
         subscribeStorage: () => () => {}
       })
   );
+  const appearance = useSyncExternalStore(theme.subscribe, theme.getSnapshot);
   useEffect(() => {
     void session.coordinator.restore().then(async () => {
       await session.authority.load();
@@ -130,7 +138,9 @@ function FrameExample({
     };
   }, [session, outcome]);
   return (
-    <ApplicationView session={session} pathname={pathname} navigate={setPathname} theme={theme} />
+    <div className="catalog-preview catalog-frame-preview" data-bs-theme={appearance.effective}>
+      <ApplicationView session={session} pathname={pathname} navigate={setPathname} theme={theme} />
+    </div>
   );
 }
 const meta = {
@@ -141,8 +151,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const WideLight: Story = {};
-export const WideDark: Story = { parameters: { mode: 'dark' } };
+export const WideDark: Story = { args: { preference: 'dark' }, parameters: { mode: 'dark' } };
 export const NarrowDark: Story = {
+  args: { preference: 'dark' },
   parameters: { mode: 'dark' },
   globals: { viewport: { value: 'narrow', isRotated: false } }
 };
@@ -163,6 +174,39 @@ export const BackgroundCheckUnavailable: Story = {
 };
 export const AccountSeam: Story = { args: { initial: '/app/account' } };
 export const InvitationSeam: Story = { args: { initial: '/app/admin/invitations' } };
+export const AccountMenuKeyboard: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const toggle = await canvas.findByRole('button', { name: 'User Menu' });
+    const account = within(canvas.getByRole('banner', { name: 'Application utilities' }));
+    toggle.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(account.getByRole('link', { name: 'Account & Security' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(account.getByRole('link', { name: 'Active Sessions' })).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    await expect(toggle).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.click(canvas.getByRole('radio', { name: 'Dark' }));
+    await expect(canvas.getByRole('radio', { name: 'Dark' })).toBeChecked();
+    await userEvent.click(canvas.getByRole('radio', { name: 'System' }));
+    await expect(canvas.getByRole('radio', { name: 'System' })).toBeChecked();
+  }
+};
+export const AccountMenuLongEmail: Story = {
+  args: { longEmail: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole('button', { name: 'User Menu' }));
+    await expect(canvas.getByRole('group', { name: 'Appearance' })).toBeVisible();
+  }
+};
+export const AccountMenuNarrowDark: Story = {
+  ...AccountMenuLongEmail,
+  args: { longEmail: true, preference: 'dark' },
+  parameters: { mode: 'dark' },
+  globals: { viewport: { value: 'narrow', isRotated: false } }
+};
 export const DrawerKeyboard: Story = {
   globals: { viewport: { value: 'narrow', isRotated: false } },
   play: async ({ canvasElement }) => {
