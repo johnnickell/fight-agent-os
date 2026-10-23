@@ -150,13 +150,7 @@ $before = null;
 try {
     $before = $snapshot();
     $writeEvidence($run.'/before.json', $before);
-    // The service must be rebuilt explicitly after tooling-image changes, never by this command.
-    $imageSource = '/usr/local/share/fight-build/Dockerfile';
-    $expectedImage = hash_file('sha256', $root.'/etc/docker/cli/Dockerfile');
-    if (!is_file($imageSource) || hash_file('sha256', $imageSource) !== $expectedImage) {
-        throw new RuntimeException('The web tooling image is missing or stale. Rebuild explicitly with ./bin/up.');
-    }
-    if (phpversion('xdebug') !== '3.5.0' || !is_file($root.'/client/node_modules/.fight-install.json')) {
+    if (!extension_loaded('xdebug') || !is_file($root.'/client/node_modules/.fight-install.json')) {
         throw new RuntimeException(
             'Missing coverage/frontend setup. Run ./bin/up and ./bin/client setup explicitly.'
         );

@@ -34,7 +34,12 @@ export class ApiClient {
       accessTokens?: AccessTokenProvider;
     }> = {}
   ) {
-    if (configuration.schemaVersion !== 1 || configuration.apiBasePath !== '/api/v1') {
+    if (
+      configuration.schemaVersion !== 2 ||
+      configuration.apiBasePath !== '/api/v1' ||
+      typeof configuration.appDebug !== 'boolean' ||
+      typeof configuration.swaggerAvailable !== 'boolean'
+    ) {
       throw new Error('Invalid API configuration');
     }
     this.#basePath = configuration.apiBasePath;
@@ -50,6 +55,20 @@ export class ApiClient {
     decode: ResponseDecoder<T>,
     options: GetOptions = {}
   ): Promise<ApiResult<T>> {
+    return this.#get(path, decode, options);
+  }
+
+  /** Reads only the guarded raw OpenAPI resource, never a caller-selected URL. */
+  getPrivateOpenApi<T>(decode: ResponseDecoder<T>, signal: AbortSignal): Promise<ApiResult<T>> {
+    return this.#get('/documentation/openapi', decode, { access: 'required', signal }, true);
+  }
+
+  #get<T>(
+    path: string,
+    decode: ResponseDecoder<T>,
+    options: GetOptions,
+    privateDocument = false
+  ): Promise<ApiResult<T>> {
     const { signal } = options;
     if (signal?.aborted) return Promise.resolve(apiFailure('cancelled'));
     return new Promise((resolve) => {
@@ -62,7 +81,9 @@ export class ApiClient {
       };
       const abort = () => finish(apiFailure('cancelled'));
       signal?.addEventListener('abort', abort, { once: true });
-      void this.#request(path, decode, options).then(finish, () => finish(apiFailure('system')));
+      void this.#request(path, decode, options, undefined, privateDocument).then(finish, () =>
+        finish(apiFailure('system'))
+      );
     });
   }
 
@@ -105,7 +126,8 @@ export class ApiClient {
       body: Readonly<Record<string, unknown>>;
       csrfProof?: string;
       successStatus?: 200 | 201;
-    }>
+    }>,
+    privateDocument = false
   ): Promise<ApiResult<T>> {
     // Paths belong to feature services, not user input. No raw query, fragment,
     // encoding, dot segments, backslash, authority or alternative origin is supported.
@@ -178,7 +200,14 @@ export class ApiClient {
     }
     if (options.signal?.aborted) return apiFailure('cancelled');
     try {
+      if (privateDocument && source.length > 2097152) return apiFailure('protocol', correlationId);
       const envelope: unknown = JSON.parse(source);
+      if (privateDocument && response.status === 200) {
+        const value = decode(envelope);
+        return value === null
+          ? apiFailure('protocol', correlationId)
+          : { ok: true, value, correlationId };
+      }
       return decodeResponse(
         response.status,
         envelope,

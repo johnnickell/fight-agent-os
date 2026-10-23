@@ -168,16 +168,17 @@ artifact and receipt together outside public assets. Do not install generation t
 HTTP request. A runtime installed with `--no-dev` needs no generator to execute current Actions; PHP leaves their
 OpenAPI attributes uninstantiated. An independently copied old artifact never substitutes for current build proof.
 
-No Swagger UI assets, HTTP spec endpoint, static copy, alias or symlink are enabled in **any environment**,
-including `local`. Unknown documentation/diagnostic requests retain safe routing failures; public PHP error
-display stays disabled and CORS stays absent. Repository access and local filesystem access are the only current
-document access boundaries. Do not submit tokens or cookies to an external viewer.
-
-[TASK-00154](../../planning/tasks/00154-TASK.md) separately owns the themed viewer and guarded document reads:
-the exact `APP_ENV` must be expressly included in a configured allowed-environments set (initial Agent OS value
-`["local"]`) **and** the caller must have current authoritative `READ_SWAGGER`. This later approved scope
-supersedes the originally local-only TASK/ADR rule; no viewer is implemented yet. Neither a role claim,
-APP_DEBUG, public validation metadata nor this export command enables that future permission boundary.
+[TASK-00154](../../planning/tasks/00154-TASK.md) implements the [private themed viewer](../engineering/SWAGGER.md)
+at `/app/swagger`, with separate Bearer-protected `/api/v1/documentation/bootstrap` and
+`/api/v1/documentation/openapi` reads. Both require an exact configured environment entry and current
+authoritative `READ_SWAGGER`; a role claim, APP_DEBUG, public validation metadata or export command grants
+neither. No public static copy, ref route, alias or symlink is enabled. PHP error display remains disabled and
+CORS absent. Do not submit credentials to an external viewer. Generation still never enables HTTP serving.
+The initial example list is `["local"]`; absent/invalid configuration fails closed. Deliberate non-local policy
+is separately qualified in controlled integration composition, not misrepresented as full production startup.
+That startup qualification is explicitly deferred until the independent real-mail supplier exists; production
+preflight is unchanged. See the runbook for atomic version-2 boot deployment, supported live-operation matrix,
+installed-library provenance, secret/display boundaries, themes, local evidence and remaining independent acceptance.
 
 ## Reusable browser authentication controls
 

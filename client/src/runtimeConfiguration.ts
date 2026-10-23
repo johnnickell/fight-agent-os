@@ -1,6 +1,8 @@
 export type RuntimeConfiguration = Readonly<{
-  schemaVersion: 1;
+  schemaVersion: 2;
   apiBasePath: '/api/v1';
+  appDebug: boolean;
+  swaggerAvailable: boolean;
 }>;
 
 /**
@@ -14,15 +16,24 @@ export function decodeRuntimeConfiguration(source: string | null): RuntimeConfig
       typeof value !== 'object' ||
       value === null ||
       Array.isArray(value) ||
-      Object.keys(value).length !== 2 ||
+      Object.keys(value).length !== 4 ||
       !('schema_version' in value) ||
-      value.schema_version !== 1 ||
+      value.schema_version !== 2 ||
       !('api_base_path' in value) ||
-      value.api_base_path !== '/api/v1'
+      value.api_base_path !== '/api/v1' ||
+      !('app_debug' in value) ||
+      typeof value.app_debug !== 'boolean' ||
+      !('swagger_available' in value) ||
+      typeof value.swagger_available !== 'boolean'
     ) {
       return null;
     }
-    return Object.freeze({ schemaVersion: 1, apiBasePath: '/api/v1' });
+    return Object.freeze({
+      schemaVersion: 2,
+      apiBasePath: '/api/v1',
+      appDebug: value.app_debug,
+      swaggerAvailable: value.swagger_available
+    });
   } catch {
     return null;
   }

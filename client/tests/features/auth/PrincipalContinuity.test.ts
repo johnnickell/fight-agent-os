@@ -45,7 +45,7 @@ function setup(
       : Promise.resolve(loginSuccess());
   });
   const api = new ApiClient(
-    { schemaVersion: 1, apiBasePath: '/api/v1' },
+    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
     { fetch, accessTokens: tokens }
   );
   const csrf = new CsrfProofService(api);

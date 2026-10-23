@@ -18,8 +18,10 @@ final class ClientShellResponder
     /**
      * Constructs ClientShellResponder
      */
-    public function __construct(private readonly TemplateEngine $templates)
-    {
+    public function __construct(
+        private readonly TemplateEngine $templates,
+        private readonly PublicRuntimeConfiguration $configuration = new PublicRuntimeConfiguration()
+    ) {
     }
 
     /**
@@ -38,7 +40,7 @@ final class ClientShellResponder
                 $body = $this->templates->render('@client/shell.html.twig', [
                     'assets' => $assets,
                     // Fixed ADR 0004 allowlist, never an environment/configuration-object dump.
-                    'config' => ['schema_version' => 1, 'api_base_path' => '/api/v1']
+                    'config' => $this->configuration->toArray()
                 ]);
                 $status = 200;
             } catch (Throwable) {

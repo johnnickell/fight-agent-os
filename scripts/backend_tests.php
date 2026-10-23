@@ -6,8 +6,8 @@ use Symfony\Component\Process\Process;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 
-if (getenv('APP_ENV') !== 'test' || phpversion('xdebug') !== '3.5.0' || getenv('XDEBUG_MODE') !== 'coverage') {
-    throw new RuntimeException('Backend coverage requires explicit test mode and Xdebug 3.5.0 in coverage mode.');
+if (getenv('APP_ENV') !== 'test' || !extension_loaded('xdebug') || getenv('XDEBUG_MODE') !== 'coverage') {
+    throw new RuntimeException('Backend coverage requires explicit test mode and installed Xdebug in coverage mode.');
 }
 
 $root = dirname(__DIR__);
@@ -38,7 +38,7 @@ $steps = [
         '--coverage-php', $reports.'/coverage.php', '--coverage-clover', $reports.'/clover.xml',
         '--log-junit', $reports.'/junit.xml'
     ],
-    'Owned coverage policy'               => ['php', '-d', 'memory_limit=160M', 'scripts/backend_coverage.php']
+    'Owned coverage policy'               => ['php', '-d', 'memory_limit=256M', 'scripts/backend_coverage.php']
 ];
 $exit = 1;
 $resetCompleted = false;

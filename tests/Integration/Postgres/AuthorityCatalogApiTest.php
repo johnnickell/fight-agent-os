@@ -47,6 +47,9 @@ use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
+use Monolog\Formatter\JsonFormatter;
+use Monolog\Handler\TestHandler;
+use Monolog\Level;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -593,11 +596,13 @@ SQL);
      */
     public function testRoleAuditRollback(): void
     {
+        $logs = $this->captureExpectedFailure();
         $audit = $this->createStub(\App\Domain\Authorization\RoleMutationAudit::class);
         $audit->method('record')->willThrowException(new \RuntimeException('private audit diagnostics'));
         $this->container->set(\App\Domain\Authorization\RoleMutationAudit::class, static fn() => $audit);
         $response = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_ROLLBACK'], 500);
-        self::assertStringNotContainsString('private', json_encode($response, JSON_THROW_ON_ERROR));
+        self::assertSame(['status' => 'error', 'message' => 'Internal server error.'], $response);
+        $this->assertSanitizedFailure($logs);
         self::assertSame(0, (int) $this->connection->fetchOne(
             "SELECT count(*) FROM roles WHERE name = 'ROLE_ROLLBACK'"
         ));
@@ -684,17 +689,56 @@ SQL);
      */
     public function testRolePublicationFailure(): void
     {
+        $logs = $this->captureExpectedFailure();
         $events = $this->createStub(\Fight\Common\Application\Messaging\Event\EventDispatcher::class);
         $events->method('trigger')->willThrowException(new \RuntimeException('private publisher diagnostic'));
         $this->container->set(\Fight\Common\Application\Messaging\Event\EventDispatcher::class, static fn() => $events);
         $result = $this->mutation('POST', '/api/v1/roles', ['name' => 'ROLE_COMMITTED'], 500);
-        self::assertStringNotContainsString('private', json_encode($result, JSON_THROW_ON_ERROR));
+        self::assertSame(['status' => 'error', 'message' => 'Internal server error.'], $result);
+        $this->assertSanitizedFailure($logs);
         $id = $this->connection->fetchOne("SELECT id FROM roles WHERE name = 'ROLE_COMMITTED'");
         self::assertIsString($id);
         self::assertSame($id, $this->connection->fetchOne(
             "SELECT subject_id FROM audit_evidence WHERE action = 'role.custom_created'"
         ));
         self::assertSame(1, $this->roleAuditCount());
+    }
+
+    /**
+     * Captures only deliberately injected HTTP failures without changing ordinary error visibility
+     */
+    private function captureExpectedFailure(): TestHandler
+    {
+        $logs = new TestHandler(Level::Error);
+        $logs->setFormatter(new JsonFormatter());
+        $this->container->get('http.failure.logger')->setHandlers([$logs]);
+
+        return $logs;
+    }
+
+    /**
+     * Requires one correlated safe record while excluding private failure, credential and identity material
+     */
+    private function assertSanitizedFailure(TestHandler $logs): void
+    {
+        self::assertCount(1, $logs->getRecords());
+        $record = $logs->getRecords()[0];
+        self::assertSame(Level::Error, $record->level);
+        self::assertSame('http-failure', $record->channel);
+        self::assertSame('Unhandled HTTP request failure.', $record->message);
+        self::assertMatchesRegularExpression('/\A[a-f0-9]{32}\z/', $record->context['correlation_id']);
+        self::assertSame([
+            'correlation_id'     => $record->context['correlation_id'],
+            'correlation_source' => 'generated',
+            'request_method'     => 'POST',
+            'exception_type'     => \RuntimeException::class
+        ], $record->context);
+        self::assertSame([], $record->extra);
+        self::assertIsString($record->formatted);
+        $secrets = ['private', $this->token, $this->actor->getId()->toString(), $this->session->getId()->toString()];
+        foreach ($secrets as $secret) {
+            self::assertStringNotContainsString($secret, $record->formatted);
+        }
     }
 
     /**

@@ -2,7 +2,7 @@
 id: TICKET-00010
 epic: EPIC-00003
 title: Establish safe versioned HTTP API delivery
-status: ready-for-agent
+status: done
 ---
 
 # Establish safe versioned HTTP API delivery
@@ -125,6 +125,12 @@ had narrowed eligibility to exact local; this explicit later choice supersedes t
 that any route or non-local deployment is currently enabled. [TASK-00063](../tasks/00063-TASK.md) verifies the
 chosen environment policy without broadening unrelated development tools.
 
+The maintainer subsequently explicitly approved TASK-00154's acceptance split: full local HTTPS testing
+with the isolated email catcher and separate controlled environment/current-permission integration tests;
+complete production-like HTTP startup qualification is deferred until a qualified real-mail supplier exists.
+The production delivery preflight is unchanged, no real emails are authorized, and isolated policy evidence
+must not be labeled full production startup. All other Swagger requirements remain; the prior hold is history.
+
 ### Attribute-owned OpenAPI export and restricted viewer
 
 The maintainer approved two implementation TASKs on 2026-09-30:
@@ -219,11 +225,16 @@ rather than bypassing auth or leaking credentials to make the viewer appear comp
 | [TASK-00021](../tasks/00021-TASK.md) | Publish and restrict the representative OpenAPI contract | done |
 | [TASK-00117](../tasks/00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | done |
 | [TASK-00153](../tasks/00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done |
-| [TASK-00154](../tasks/00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | ready-for-agent |
+| [TASK-00154](../tasks/00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | done |
 | [TASK-00155](../tasks/00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+TASK-00154 is reopened for the explicitly authorized cycle-3 hosted-memory, semantic develop integration
+and expected-negative-test logging repair. Its earlier acceptance/delivery is historical for candidate A;
+fresh independent Review, affected QA and successful hosted verification remain pending. Requirements and
+production-mail/startup deferral are unchanged.
 
 On 2026-09-30, the maintainer approved argument-free JSON/query source markers, Validation-owned input fields,
 checked request-value consumption without input DTOs, and canonical Action/Responder attribute ordering.
@@ -253,5 +264,13 @@ environment, including `test` or production, requires a deliberate exact-list op
 APP_DEBUG is independent and true in `prod`/`production` fails startup. The earlier local-only acceptance and
 verification remain historical, not proof of this changed behavior. The [ADR 0004](../adr/0004-client-authority-and-runtime-state.md)
 and [TASK-00063](../tasks/00063-TASK.md) requirements are aligned with this explicit owner decision.
+
+**Current TASK-00154 Engineer continuation (2026-10-23):** the approved local/controlled-policy acceptance split
+has been implemented with private server-guarded bootstrap/spec reads, version-2 safe flags, pinned shared-theme
+Swagger and bounded existing-memory transport. Real local catcher/HTTPS journeys, explicit read/201 mutation,
+denial, restoration, freshness expiry and session end are recorded in the TASK. Production mail preflight remains
+unchanged and full production startup is explicitly deferred. Full-gate provenance is recorded by the TASK's
+Engineer closeout; independent Review/QA and delivery remain pending. Earlier unimplemented/hold receipts above
+remain historical, not the current implementation status.
 
 Implements the HTTP direction approved by [WF-004](../wayfinder/tickets/WF-004-define-application-foundation-architecture.md) and records the browser-security gate required by [WF-007](../wayfinder/tickets/WF-007-prepare-implementation-handoff.md). It depends on [TICKET-00008](00008-TICKET.md) and may proceed alongside PostgreSQL work once shared contracts are stable.

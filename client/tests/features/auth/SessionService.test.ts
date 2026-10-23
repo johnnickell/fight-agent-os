@@ -20,7 +20,7 @@ function dependencies(post: ApiTransport) {
   const tokens = new MemoryAccessToken();
   const csrfCalls: string[] = [];
   const api = new ApiClient(
-    { schemaVersion: 1, apiBasePath: '/api/v1' },
+    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
     {
       accessTokens: tokens,
       fetch: (url, init) => {

@@ -7,7 +7,8 @@ import { ShellApplication } from '@/ShellApplication';
 import { jsonResponse } from './activationFixtures';
 import { loginSchemaSource, loginSuccess } from './loginFixtures';
 
-const configuration = '{"schema_version":1,"api_base_path":"/api/v1"}';
+const configuration =
+  '{"schema_version":2,"api_base_path":"/api/v1","app_debug":false,"swagger_available":false}';
 
 describe('foundation shell', () => {
   afterEach(() => {
