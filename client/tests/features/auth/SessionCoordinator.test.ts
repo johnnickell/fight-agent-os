@@ -543,10 +543,24 @@ describe('bounded volatile session continuity', () => {
     expect(d.session.refresh).toHaveBeenCalledOnce();
   });
 
-  it('fails closed and restores on wake without retaining stale access', async () => {
+  it('retains usable credentials on wake without a second rotation', async () => {
+    const d = setup();
+    await d.coordinator.restore();
+    d.coordinator.pause();
+    await tick(10_000);
+    d.coordinator.resume();
+    expect(d.tokens.getAccessToken()).toBe('access.current.signature');
+    expect(d.coordinator.getSnapshot().status).toBe('authenticated');
+    expect(d.session.refresh).toHaveBeenCalledOnce();
+  });
+
+  it('pauses hidden renewal, then restores expired access and fences disposal', async () => {
     const delayed = deferred<ApiResult<true>>();
     const d = setup();
     await d.coordinator.restore();
+    d.coordinator.pause();
+    await tick(840_000);
+    expect(d.session.refresh).toHaveBeenCalledOnce();
     d.session.refresh.mockImplementation(() => delayed.promise);
     d.coordinator.resume();
     expect(d.tokens.getAccessToken()).toBeNull();

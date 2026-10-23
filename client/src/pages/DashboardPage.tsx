@@ -1,7 +1,7 @@
 import { ContentPanel } from '@/components/ContentPanel';
 import { PageHeading } from '@/components/PageHeading';
 import { evaluateAccess } from '@/features/authority/evaluateAccess';
-import { useAuthority } from '@/features/authority/useAuthority';
+import { useAuthority, useAuthorityPresentation } from '@/features/authority/useAuthority';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
@@ -9,17 +9,28 @@ import type { ApplicationRoute } from '@/routes/applicationRoutes';
 
 function DestinationLinks({
   routes,
-  label
+  label,
+  cache
 }: {
   routes: readonly ApplicationRoute[];
   label: string;
+  cache: AuthorityCache;
 }) {
+  const state = useAuthority(cache);
   return (
     <nav aria-label={label}>
       <ul className="dashboard-destinations">
         {routes.map((route) => (
           <li key={route.pathname}>
-            <a href={route.pathname}>{route.title}</a>
+            <a
+              href={route.pathname}
+              aria-disabled={state.status !== 'authenticated' || undefined}
+              onClick={(event) => {
+                if (cache.getSnapshot().status !== 'authenticated') event.preventDefault();
+              }}
+            >
+              {route.title}
+            </a>
             <p>{route.availability}</p>
           </li>
         ))}
@@ -30,7 +41,7 @@ function DestinationLinks({
 
 /** Presents only safe current authority and honest registered destinations, never product data */
 export default function DashboardPage({ cache }: { cache: AuthorityCache }) {
-  const state = useAuthority(cache);
+  const state = useAuthorityPresentation(cache);
   const dashboard = applicationRoutes.find((route) => route.destination === 'dashboard');
   if (
     state.status !== 'authenticated' ||
@@ -68,7 +79,11 @@ export default function DashboardPage({ cache }: { cache: AuthorityCache }) {
       <div className="dashboard-grid">
         <ContentPanel title="Account and security">
           <p>Your account destinations, based on your current access.</p>
-          <DestinationLinks routes={security} label="Dashboard account and security" />
+          <DestinationLinks
+            cache={cache}
+            routes={security}
+            label="Dashboard account and security"
+          />
         </ContentPanel>
         {administration.length > 0 && (
           <ContentPanel title="Administration">
@@ -76,7 +91,11 @@ export default function DashboardPage({ cache }: { cache: AuthorityCache }) {
               Each shortcut is shown only for its own permission. These are destinations, not live
               tools.
             </p>
-            <DestinationLinks routes={administration} label="Dashboard administration" />
+            <DestinationLinks
+              cache={cache}
+              routes={administration}
+              label="Dashboard administration"
+            />
           </ContentPanel>
         )}
       </div>

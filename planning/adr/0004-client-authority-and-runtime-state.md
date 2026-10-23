@@ -20,6 +20,28 @@ It specializes [EPIC-00003](../epics/00003-EPIC.md), [EPIC-00004](../epics/00004
 refresh timing, cookie lifecycle, conflict recovery and browser coordination security. This ADR does not relax it.
 [ADR 0001](0001-application-ownership-and-orchestration.md) preserves package and server-policy ownership.
 
+## Approved background-continuity supersession — TASK-00505
+
+The maintainer explicitly authorized [TASK-00505](../tasks/00505-TASK.md) to supersede the original immediate
+presentation-removal rules below for **routine** freshness, hidden-return and credential-renewal checks only.
+The original text is retained as decision history; this section governs those cases.
+
+The sole cache owns both last-verified same-context presentation and current dispatch authority. At the maximum
+60-second request-start budget, coalesce one foreground background `/me` check; pause routine checks while hidden
+and resume once on return. A still-usable volatile token is not discarded just because visibility changed.
+An already admitted same-route outlet/frame can remain mounted without focus, scroll or navigation reset, but
+stale/pending/error state never admits a new protected outlet/loader or permission-dependent action. Existing
+work remains generation-fenced. Never copy the projection into another principal store or extend freshness on read.
+
+Successful verification replaces the sole projection in place and reevaluates route/controls. Confirmed route
+denial removes the outlet; known invalidation/authority-change, logout, terminal authentication failure and identity
+replacement retire affected private views and late results. A failed routine check retains only safe same-context
+layout/navigation presentation with unobtrusive unavailable status, disabled protected actions and explicit bounded
+retry, never implied logout/revocation or silently renewed authority. Automatic failure does not schedule retries.
+Clock discontinuity rejects authority. Cold boot remains unknown with no retained projection. Retained presentation
+is not offline authority or a private-data cache and guarantees no recovery after reload, discard or process loss.
+All server authorization, CSRF/cookie, no-persistence, 401/403 distinction and no-mutation-replay rules remain.
+
 ## Decision
 
 ### One principal projection and one owner

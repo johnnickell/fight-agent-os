@@ -81,8 +81,9 @@ receipt schedule no later than
 `(exp - iat) - elapsed_request - 60 seconds` from receipt (clamp at zero and refresh immediately when no safe
 budget remains). The initial request start predates token issuance, so subtracting the full request duration is
 conservative even with network latency. Recompute the remaining budget from the monotonic clock rather than a
-wall-clock offset; on tab wake/clock discontinuity, missing metadata, failed parsing, or `401`, fail closed and
-coordinate one server refresh instead of extending authority. Broadcasted volatile tokens carry only a bounded
+wall-clock offset; on clock discontinuity, missing metadata, failed parsing, or `401`, fail closed and
+coordinate one server refresh instead of extending authority. Under the TASK-00505 amendment below, tab wake
+alone rechecks the remaining conservative budget and revalidates `/me`; it does not discard a usable token. Broadcasted volatile tokens carry only a bounded
 remaining-time hint from the leader, never an issuer-clock offset; recipients further bound that hint, reject
 stale generations and must not treat it as server authority. The server alone validates expiry on every request.
 TASK-00048 owns deterministic skew, delay, wake and cross-tab scheduling tests; TASK-00046/00047 supply safe
@@ -294,6 +295,22 @@ access-expiry wording above, not shared-clock flooring, immutable package expiry
 new endpoints or vendor/dependency changes. Whole-second JWT/TokenSet timing representations must agree;
 subsecond identity is neither required nor claimed. All other accepted controls and independent acceptance
 requirements remain unchanged.
+
+## Approved background-continuity amendment — TASK-00505
+
+The maintainer explicitly authorized this bounded supersession in [TASK-00505](../tasks/00505-TASK.md).
+The original wake rule required restoration even with usable volatile credentials. Routine hidden-tab return
+now checks their conservative monotonic budget: retain a usable token and coalesce one background `/me` check;
+otherwise use the existing bounded refresh coordinator. Pause routine timers while hidden and resume once.
+Clock discontinuity, expiry and current-generation authentication rejection still fail closed. Failed automatic
+attempts require explicit recovery; no retry loop or business-mutation replay is authorized.
+
+Last-verified same-context presentation may remain mounted through routine checks/rotation, separately from
+admission of protected work as specified by ADR 0004's amendment. Known logout, revocation, terminal failure or
+identity replacement clears the old private view. This changes neither server lifetimes nor per-request server
+authorization, cookie/CSRF policy, volatile ownership, timing conservatism or cross-tab bounds. It provides no
+volatile-state recovery after document reload, tab discard or process termination. Historical decisions and
+receipts remain historical; implementation and independent acceptance are separate.
 
 ## Acceptance
 

@@ -1,3 +1,17 @@
+// Routine verification never changes the outlet's geometry or document scroll.
+.application-verification {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1040;
+  max-width: min(28rem, calc(100vw - 32px));
+  padding: 12px;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 6px;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
 .application-frame {
   min-height: 100vh;
   min-height: 100dvh;

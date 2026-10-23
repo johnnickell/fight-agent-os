@@ -23,7 +23,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | — (standalone bug) | ready-for-agent | — | — |
 | 2 | [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | — (standalone chore) | ready-for-agent | — | — |
 | 53 | [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | [TICKET-00010 — Establish safe versioned HTTP API delivery](../tickets/00010-TICKET.md) | ready-for-agent | — | — |
 | 54 | [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | ready-for-agent | — | — |
@@ -442,6 +441,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00135](00135-TASK.md) | Reconcile execution planning and add priority Pi skills | — (standalone chore) | done | — | — |
 | 1 | [TASK-00137](00137-TASK.md) | Package and install the Fight Pi terminal identity | [TICKET-00035 — Install the approved Fight terminal identity in Pi](../tickets/00035-TICKET.md) | done | — | — |
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | done | — | [PR #117](https://github.com/johnnickell/fight-agent-os/pull/117) |
+| 1 | [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | — (standalone bug) | done | — | [PR #148](https://github.com/johnnickell/fight-agent-os/pull/148) |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |

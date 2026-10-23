@@ -5,9 +5,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { PermissionButton } from '@/components/PermissionButton';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 
+import { deferred } from '../apiFixtures';
 import { principal } from '../authorityFixtures';
 
-import type { AuthorityScope } from '@/features/authority/AuthorityCache';
+import type { AuthorityScope, PrincipalLoadResult } from '@/features/authority/AuthorityCache';
 
 describe('permission-dependent actions', () => {
   it('hides or natively disables denied actions despite the SuperAdmin role', async () => {
@@ -46,10 +47,12 @@ describe('permission-dependent actions', () => {
 
   it('allows exact grants and carries a data fence; activation rechecks expiry before its delayed render/timer', async () => {
     let now = 0;
-    const cache = new AuthorityCache(
-      () => Promise.resolve({ status: 'principal', principal }),
-      () => now
-    );
+    const pending = deferred<PrincipalLoadResult>();
+    const loader = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 'principal', principal })
+      .mockReturnValueOnce(pending.promise);
+    const cache = new AuthorityCache(loader, () => now);
     await cache.load();
     const action = vi.fn<(scope: AuthorityScope) => void>();
     const { unmount } = render(
@@ -74,6 +77,12 @@ describe('permission-dependent actions', () => {
     expect(action).toHaveBeenCalledOnce();
     expect(button).toBeDisabled();
     expect(action.mock.calls[0]?.[0].signal.aborted).toBe(true);
+    await act(async () => {
+      pending.resolve({ status: 'principal', principal });
+      await cache.load();
+    });
+    expect(button).toBeEnabled();
+    expect(action).toHaveBeenCalledOnce();
     unmount();
     cache.dispose();
   });
