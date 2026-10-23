@@ -20,7 +20,7 @@ export function resetDependencies(
 ) {
   const calls: string[] = [];
   const api = new ApiClient(
-    { schemaVersion: 1, apiBasePath: '/api/v1' },
+    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
     {
       fetch: (url, init) => {
         calls.push(url);
