@@ -24,7 +24,11 @@ async function fixture(t, options = {}) {
     if (group !== 'pane') throw Error('Unsupported operation');
     if (options.fail?.(args, calls)) throw Error('transport failed');
     if (action === 'current') return { pane: primary };
-    if (action === 'process-info') return { process_info: processes.get(id === '--current' ? 'caller' : args[3]) };
+    if (action === 'process-info') {
+      const paneId = id === '--current' ? 'caller' : args[3];
+      const info = processes.get(paneId);
+      return { process_info: options.processInfo?.(paneId, info, calls) ?? info };
+    }
     if (action === 'layout') return { layout: { panes: [...panes.values()], zoomed: false } };
     if (action === 'get') { if (!panes.has(id)) throw Error('pane-not-found'); return { pane: panes.get(id) }; }
     if (action === 'split') {
@@ -59,6 +63,63 @@ test('Open keeps the native process and uses returned IDs, no-focus, same cwd an
   assert.deepEqual(calls.filter((c) => c[1] === 'rename').map((c) => c[3]), ['Child activity — placeholder', 'Runtime logs — placeholder']);
   assert.ok(calls.filter((c) => ['run', 'close', 'rename'].includes(c[1])).every((c) => c[2] !== 'caller'));
   assert.equal(JSON.parse(await readFile(workspace.file)).primary.pid, process.pid);
+});
+
+test('QA-01: newly split shells settle before initial admission and the final input check', async (t) => {
+  for (const transientAt of [2, 3, 'after-rename']) {
+    await t.test(`startup process sample ${transientAt}`, async (t) => {
+      const samples = new Map();
+      const interrupted = new Set();
+      const { workspace, calls, panes } = await fixture(t, {
+        processInfo: (id, info, all) => {
+          if (id === 'caller' || !info?.shell_pid) return info;
+          const sample = (samples.get(id) || 0) + 1;
+          samples.set(id, sample);
+          // Real Herdr observation: prompt initialization shares the shell's process group.
+          const transient = sample === transientAt || transientAt === 'after-rename' && !interrupted.has(id) && all.some((c) => c[1] === 'rename' && c[2] === id);
+          if (transient) interrupted.add(id);
+          return transient ? {
+            ...info, foreground_process_group_id: info.shell_pid,
+            foreground_processes: [...info.foreground_processes, { pid: 900, name: 'git' }],
+          } : info;
+        },
+      });
+      await workspace.act('open');
+      assert.equal(panes.size, 3);
+      assert.deepEqual(calls.filter((c) => c[1] === 'run').map((c) => c[2]), ['returned-1', 'returned-2']);
+      await workspace.act('open');
+      assert.equal(calls.filter((c) => c[1] === 'split').length, 2);
+      await workspace.act('close');
+      assert.deepEqual([...panes.keys()], ['caller']);
+    });
+  }
+});
+
+test('QA-01: readiness never submits to or cleans a changed terminal, shell or foreground job', async (t) => {
+  for (const change of ['terminal', 'shell', 'foreground', 'busy']) {
+    await t.test(change, async (t) => {
+      let subject;
+      const { workspace, calls, panes } = await fixture(t, {
+        processInfo: (id, info, all) => {
+          if (id === 'caller' || !info?.shell_pid) return info;
+          const sample = all.filter((c) => c[1] === 'process-info' && c[3] === id).length;
+          if (sample < (change === 'terminal' ? 1 : 2)) return info;
+          if (change === 'terminal') { subject.panes.get(id).terminal_id = 'replacement'; return info; }
+          if (change === 'shell') return { ...info, shell_pid: 777, foreground_processes: [{ pid: 777, name: 'zsh' }] };
+          if (change === 'foreground') return { ...info, foreground_process_group_id: 778, foreground_processes: [{ pid: 778, name: 'editor' }] };
+          return { ...info, foreground_process_group_id: info.shell_pid, foreground_processes: [...info.foreground_processes, { pid: 779, name: 'git' }] };
+        },
+      });
+      subject = { panes };
+      await assert.rejects(workspace.act('open'), /no input submitted/);
+      assert.equal(calls.filter((c) => ['run', 'rename', 'close'].includes(c[1])).length, 0);
+      assert.deepEqual([...panes.keys()], ['caller', 'returned-1']);
+      const start = calls.length;
+      await assert.rejects(workspace.act('open'));
+      await assert.rejects(workspace.act('close'));
+      assert.equal(calls.slice(start).filter((c) => ['split', 'run', 'rename', 'close'].includes(c[1])).length, 0);
+    });
+  }
 });
 
 test('Repeated open reuses healthy companions without more splits or commands', async (t) => {

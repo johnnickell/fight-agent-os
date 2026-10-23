@@ -119,15 +119,36 @@ export class HerdrWorkspace {
     const { process_info: info } = await this.client.call('pane', 'process-info', '--pane', owned.paneId);
     const live = await this.probe(owned.receipt, owned.token);
     if (live?.paneId === owned.paneId && info?.foreground_processes?.length === 1 && info.foreground_processes[0].pid === live.pid) return 'healthy';
-    if (owned.phase === 'shell' && info?.shell_pid === owned.shellPid && info.foreground_processes?.length === 1 && info.foreground_processes[0].pid === owned.shellPid && /^(?:-?bash|-?zsh|fish|sh)$/.test(info.foreground_processes[0].name)) return 'shell';
+    if (owned.phase === 'shell' && owned.shellPid && info?.shell_pid === owned.shellPid) {
+      const shell = info.foreground_processes?.find((p) => p.pid === owned.shellPid && /^(?:-?bash|-?zsh|fish|sh)$/.test(p.name));
+      if (shell && (info.foreground_process_group_id === undefined || info.foreground_process_group_id === owned.shellPid)) {
+        if (info.foreground_processes.length === 1) return 'shell';
+        // Prompt startup can briefly run jobs in the same shell group. Waiting grants no input/cleanup authority.
+        if (info.foreground_process_group_id === owned.shellPid) return 'pending-shell';
+      }
+    }
     return 'ambiguous';
+  }
+
+  async waitForShell(owned) {
+    const deadline = Date.now() + 2500;
+    let ready = 0;
+    do {
+      await this.primary();
+      const status = await this.inspect(owned);
+      if (status !== 'shell' && status !== 'pending-shell') throw new Error('Companion changed before startup; no input submitted');
+      ready = status === 'shell' ? ready + 1 : 0;
+      if (ready === 3) return;
+      await pause(100);
+    } while (Date.now() < deadline);
+    throw new Error('New shell is not ready; no input submitted');
   }
 
   async closeOwned() {
     for (const owned of [...this.state.panes].reverse()) {
       await this.primary(true);
       const status = await this.inspect(owned);
-      if (status === 'ambiguous') throw new Error('Companion ownership/process changed; retained without input or cleanup');
+      if (!['missing', 'healthy', 'shell'].includes(status)) throw new Error('Companion ownership/process changed; retained without input or cleanup');
       if (status !== 'missing') await this.client.call('pane', 'close', owned.paneId);
       this.state.panes = this.state.panes.filter((p) => p !== owned);
       await this.save();
@@ -153,14 +174,15 @@ export class HerdrWorkspace {
     const { process_info: info } = await this.client.call('pane', 'process-info', '--pane', owned.paneId);
     owned.shellPid = info?.shell_pid;
     await this.save();
-    if (!owned.shellPid || await this.inspect(owned) !== 'shell') throw new Error('New shell is not ready; no input submitted');
+    if (!owned.shellPid) throw new Error('New shell is not ready; no input submitted');
+    await this.waitForShell(owned);
     this.state.uncertain = false;
     await this.save();
     await this.primary();
     await this.client.call('pane', 'rename', owned.paneId, labels[index]);
     // The pane is a freshly returned, verified foreground shell. No primary input is sent.
     await this.primary();
-    if (await this.inspect(owned) !== 'shell') throw new Error('Companion changed before startup; no input submitted');
+    await this.waitForShell(owned);
     owned.phase = 'starting';
     await this.save();
     const command = ['exec', quote(process.execPath), quote(companion), quote(owned.receipt), quote(token), String(index)].join(' ');
@@ -194,7 +216,7 @@ export class HerdrWorkspace {
         return 'Owned companions closed; native Pi unchanged';
       }
       const states = await Promise.all(this.state.panes.map((p) => this.inspect(p)));
-      if (states.includes('ambiguous')) throw new Error('Saved companion is no longer proven-owned; no layout changes');
+      if (states.some((status) => !['missing', 'healthy', 'shell'].includes(status))) throw new Error('Saved companion is no longer proven-owned; no layout changes');
       if (states.length === 2 && states.every((s) => s === 'healthy')) return 'Owned companions already open; native Pi unchanged';
       const { layout } = await this.client.call('pane', 'layout', '--current');
       const allowed = new Set([this.identity.paneId, ...this.state.panes.map((p) => p.paneId)]);
