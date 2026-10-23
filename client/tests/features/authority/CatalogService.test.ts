@@ -20,7 +20,7 @@ const response = (data: unknown) =>
 function setup(data: unknown, token: string | null = 'memory-only') {
   const fetch = vi.fn().mockImplementation(() => Promise.resolve(response(data)));
   const api = new ApiClient(
-    { schemaVersion: 1, apiBasePath: '/api/v1' },
+    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
     {
       fetch,
       accessTokens: { getAccessToken: () => token }
@@ -186,7 +186,7 @@ describe('CatalogService', () => {
     );
     const service = new CatalogService(
       new ApiClient(
-        { schemaVersion: 1, apiBasePath: '/api/v1' },
+        { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
         {
           fetch,
           accessTokens: { getAccessToken: () => 'memory-only' }

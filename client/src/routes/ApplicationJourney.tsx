@@ -19,6 +19,7 @@ import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const SwaggerPage = lazy(() => import('@/pages/SwaggerPage'));
 
 export function ApplicationJourney({
   runtime,
@@ -231,7 +232,9 @@ export function ApplicationView({
           route={route}
           outlet={() => (
             <Suspense fallback={<LoadingPage />}>
-              {route.destination === 'dashboard' ? (
+              {route.destination === 'swagger' ? (
+                <SwaggerPage service={session.swagger} cache={session.authority} />
+              ) : route.destination === 'dashboard' ? (
                 <DashboardPage cache={session.authority} />
               ) : (
                 <LandingPage route={route} />

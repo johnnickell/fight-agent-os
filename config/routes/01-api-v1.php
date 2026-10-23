@@ -26,6 +26,8 @@ use App\Adapter\Http\Action\Api\V1\Repositories\ListRepositoryRegistrationsActio
 use App\Adapter\Http\Action\Api\V1\Repositories\PreviewRepositoryConflictsAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\RegisterRepositoryAction;
 use App\Adapter\Http\Action\Api\V1\Validations\ReadValidationAction;
+use App\Adapter\Http\Action\Documentation\ReadPrivateOpenApiAction;
+use App\Adapter\Http\Action\Documentation\ReadSwaggerBootstrapAction;
 use App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission;
 use App\Adapter\Http\Middleware\Api\Auth\ApiActionSecurity;
 use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
@@ -39,6 +41,8 @@ use Slim\Routing\RouteCollectorProxy;
 /** @var Container $container */
 // Group middleware executes after routing: security -> validation -> endpoint controls -> Action.
 $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): void {
+    $api->get('/documentation/bootstrap', ReadSwaggerBootstrapAction::class.':handle');
+    $api->get('/documentation/openapi', ReadPrivateOpenApiAction::class.':handle');
     $api->get('/auth/csrf', CsrfBootstrapAction::class.':handle')
         ->add($container->get(CsrfBootstrapGuard::class))
         ->setName('api.v1.auth.csrf');

@@ -21,7 +21,9 @@ it('removes the entire protected frame on render/import failure and presents saf
   await session.coordinator.restore();
   const mounted = render(
     <ShellApplication
-      configuration={'{"schema_version":1,"api_base_path":"/api/v1"}'}
+      configuration={
+        '{"schema_version":2,"api_base_path":"/api/v1","app_debug":false,"swagger_available":false}'
+      }
       pathname="/app/dashboard"
     />,
     { onCaughtError: () => {} }

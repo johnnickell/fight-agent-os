@@ -156,7 +156,7 @@
 | [TASK-00151](00151-TASK.md) | Export and serve public-safe form validation schemas | done | [TICKET-00036](../tickets/00036-TICKET.md) |
 | [TASK-00152](00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | done | [TICKET-00036](../tickets/00036-TICKET.md) |
 | [TASK-00153](00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | in-progress | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00155](00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | done | — |
 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | done | — |

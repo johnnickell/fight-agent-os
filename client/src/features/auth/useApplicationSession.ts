@@ -10,9 +10,11 @@ import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
 import { AuthorityCache, observeAuthorityResume } from '@/features/authority/AuthorityCache';
 import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
+import { SwaggerService } from '@/features/swagger/SwaggerService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
+import { safeDiagnostics } from '@/SafeDiagnostics';
 
 import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 
@@ -23,18 +25,34 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
   const csrf = new CsrfProofService(api);
   const authority = new AuthorityCache(new CurrentPrincipalService(api).load);
   const intent = new IntendedRoute(authority, () => applicationRoutes, window.location.origin);
+  const coordinator = new SessionCoordinator({
+    tokens,
+    authority,
+    clearIntent: () => intent.clear(),
+    coldAnonymous: true,
+    session: new SessionService(api, csrf, tokens),
+    login: new LoginService(api, csrf, tokens),
+    ...browserSessionPlatform()
+  });
   return {
     authority,
     intent,
-    coordinator: new SessionCoordinator({
-      tokens,
+    coordinator,
+    swagger: new SwaggerService(
+      api,
       authority,
-      clearIntent: () => intent.clear(),
-      coldAnonymous: true,
-      session: new SessionService(api, csrf, tokens),
-      login: new LoginService(api, csrf, tokens),
-      ...browserSessionPlatform()
-    }),
+      runtime.swaggerAvailable,
+      {
+        accessRejected: () => {
+          void coordinator.restore();
+        },
+        authorityChanged: () => {
+          void coordinator.authorityChanged();
+        }
+      },
+      window.location.origin,
+      safeDiagnostics(runtime)
+    ),
     schemas: new PublicSchemaService(api)
   };
 }

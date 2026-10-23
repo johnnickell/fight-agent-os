@@ -6,7 +6,12 @@ import { LoginJourney } from '@/features/auth/LoginJourney';
 import { jsonResponse } from '../../activationFixtures';
 import { loginSchemaSource, loginSuccess } from '../../loginFixtures';
 
-const runtime = { schemaVersion: 1, apiBasePath: '/api/v1' } as const;
+const runtime = {
+  schemaVersion: 2,
+  apiBasePath: '/api/v1',
+  appDebug: false,
+  swaggerAvailable: false
+} as const;
 
 describe('document-scoped login retirement', () => {
   it('ends the mounted credential-ready journey when its authoritative /me rejects authentication', async () => {

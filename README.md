@@ -173,8 +173,12 @@ then validate freshness and real responses with `./bin/openapi check`. Generate 
 form catalog (including the real `invitation_activation` form) with `./bin/validations export` and verify it with `./bin/validations check`; see
 [validation metadata](docs/api/VALIDATIONS.md). Generated JSON stays under ignored `var/openapi/` and
 `var/validations/`, not public assets. Compiled browser assets live in `var/client/build/` and local TLS state
-in `var/https/`. Application runtime never depends on `.runs/`. Swagger UI, spec-serving and diagnostic routes
-are disabled in every environment.
+in `var/https/`. Application runtime never depends on `.runs/`. The [private Swagger viewer](docs/engineering/SWAGGER.md)
+at `/app/swagger` requires an explicit exact environment allowlist and current server-side `READ_SWAGGER` for
+both initialization and direct spec reads. `.env.example` starts with `["local"]`; absent/malformed settings disable
+it. Independent strict APP_DEBUG supports only closed sanitized diagnostics and refuses true in prod/production.
+No public spec, long-lived Swagger credential or production-mail exception is supplied. Full production startup
+qualification remains explicitly deferred until the independent real-mail prerequisite exists.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots

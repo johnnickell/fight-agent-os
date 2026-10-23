@@ -18,7 +18,12 @@ describe('activation document lifecycle', () => {
       });
       render(
         <ShellApplication
-          configuration={JSON.stringify({ schema_version: 1, api_base_path: '/api/v1' })}
+          configuration={JSON.stringify({
+            schema_version: 2,
+            api_base_path: '/api/v1',
+            app_debug: false,
+            swagger_available: false
+          })}
           pathname="/app/activate"
           activation={credential}
         />

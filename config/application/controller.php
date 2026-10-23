@@ -13,6 +13,7 @@ use App\Adapter\Http\Responder\Api\V1\Me\ReadCurrentPrincipalResponder;
 use App\Adapter\Http\Responder\Api\V1\Validations\ReadValidationResponder;
 use App\Adapter\Http\Web\ClientAssetManifest;
 use App\Adapter\Http\Web\ClientShellResponder;
+use App\Adapter\Http\Web\PublicRuntimeConfiguration;
 use App\Adapter\Validation\Catalog;
 use App\Adapter\Validation\PublicForms;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
@@ -22,7 +23,10 @@ use Fight\Common\Application\Templating\TemplateEngine;
 
 return static function (Container $container): void {
     $container->set(ClientShellResponder::class, static function (Container $container): ClientShellResponder {
-        return new ClientShellResponder($container->get(TemplateEngine::class));
+        return new ClientShellResponder(
+            $container->get(TemplateEngine::class),
+            $container->get(PublicRuntimeConfiguration::class)
+        );
     });
     $container->set(ClientShellAction::class, static function (Container $container): ClientShellAction {
         return new ClientShellAction(

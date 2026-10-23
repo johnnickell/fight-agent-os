@@ -64,7 +64,7 @@ export function activationDependencies(
   });
   const tokens = new MemoryAccessToken();
   const api = new ApiClient(
-    { schemaVersion: 1, apiBasePath: '/api/v1' },
+    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
     {
       fetch: (url, init) => {
         if (url.endsWith('/validations/invitation_activation'))

@@ -78,7 +78,8 @@ PY
 ```
 
 Do not paste `.env`, `docker compose config`, messages, SMTP debug output or activation links into transcripts.
-Compose consumes `APP_ENV` (default `development`); `APP_DEBUG` remains unwired. `null` is the default retryable
+Compose consumes `APP_ENV` (default `local`) and strictly parsed independent `APP_DEBUG`; see the
+[documentation/debug contract](SWAGGER.md). `null` is the default retryable
 no-send provider; `memory` is simulation only. `catcher` supports activation invitations and
 [password-reset mail](PASSWORD_RESET_EMAIL.md). Catcher mode now also requires `APP_PASSWORD_RESET_ORIGIN` and
 `APP_PASSWORD_RESET_PATH`; configure them before boot even when sending invitations only. Other credential

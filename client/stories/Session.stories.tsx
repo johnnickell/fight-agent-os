@@ -15,7 +15,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 function SessionExample({ outcome = 'ended' }: { outcome?: 'ended' | 'uncertain' | 'pending' }) {
   const [service] = useState(() => {
     const api = new ApiClient(
-      { schemaVersion: 1, apiBasePath: '/api/v1' },
+      { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
       {
         fetch: (url) => {
           const expiry = Math.floor(Date.now() / 1000) + 900;

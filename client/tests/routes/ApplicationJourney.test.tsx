@@ -95,6 +95,8 @@ describe('authoritative frame transitions', () => {
       expect(await screen.findByRole('heading', { name: route.title, level: 1 })).toBeVisible();
       if (route.destination === 'dashboard')
         expect(screen.getByRole('heading', { name: 'Not installed yet' })).toBeVisible();
+      else if (route.destination === 'swagger')
+        expect(screen.getByText('Documentation disabled')).toBeVisible();
       else expect(screen.getByText(route.availability ?? '')).toBeVisible();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Sign out' })).toBeVisible();
@@ -102,6 +104,7 @@ describe('authoritative frame transitions', () => {
   );
 
   it.each([
+    ['/app/swagger', 'READ_SWAGGER'],
     ['/app/account/sessions', 'READ_OWN_SESSIONS'],
     ['/app/admin/users', 'READ_USERS'],
     ['/app/admin/invite', 'INVITE_USERS'],
