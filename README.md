@@ -45,6 +45,9 @@ Restart Pi, then use `/fight-header` to choose a presentation or `off` to restor
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
+TASK-00510 adds a native `/fight-workspace [open|close]` Herdr candidate with honest placeholder companions,
+keeping Pi's existing editor/completion/session intact; see [native ownership and recovery](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
+Independent Review/QA remain pending; child/log producers are not included.
 An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through the package-owned
 `fight-terminal` command after [explicit user-level installation](harness/pi/README.md#install-the-global-workspace-command), with
 responsive conversation/observation panes, opt-in local child observation (TASK-00448 candidate), and an opt-in

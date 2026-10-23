@@ -58,7 +58,15 @@ to the main model, not Jev; optional text relevance screening remains available.
 See [images and screenshots](FILE_SCREENING_PROFILE.md#images-and-screenshots) for supported forms and retained
 native format and output handling.
 
-## Responsive local workspace candidate
+## Native Herdr workspace candidate
+
+TASK-00510 adds `/fight-workspace [open|close]` to native Pi inside Herdr. It preserves the live native frontend
+and opens/reuses two truthful placeholders; child/log producers remain TASK-00511/00512. Herdr owns layout,
+focus, resize and zoom; Pi retains Tab completion. Missing or ambiguous prerequisites leave ordinary Pi usable,
+with no automatic RPC fallback. See [native setup, ownership and recovery](WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
+The action performs no global installation or workflow selection. Independent acceptance remains pending.
+
+## Responsive local workspace candidate (retained RPC client)
 
 The package-owned global `fight-terminal` command starts a dedicated Pi RPC terminal client with a persistent half/quarter/
 quarter split and narrow selectable views. TASK-00502 adds current-session native-child custody and automatic
@@ -174,7 +182,7 @@ Repository `bin/terminal` was retired by TASK-00503; replace current launch/resu
 
 Module names follow the repository's [Pi/TypeScript convention](../../docs/engineering/STANDARDS.md#pi-and-typescript-module-naming).
 The manifest loads `header-extension.ts`, `jev-extension.ts`, `tool-policy-extension.ts` and
-`native-observation-extension.ts` exactly once.
+`native-observation-extension.ts` and `herdr-workspace-extension.ts` exactly once.
 `file-screening-integration.ts` is internal to the Jev adapter; do not load it as an extension.
 
 | Old path under `harness/pi/src/` | Current path | Compatibility |
@@ -184,6 +192,7 @@ The manifest loads `header-extension.ts`, `jev-extension.ts`, `tool-policy-exten
 | `jev-extension.ts` | Unchanged | Default registration and named `installJev` export retained |
 | `tool-policy-extension.ts` | Unchanged | Independent policy selection unchanged |
 | — | `native-observation-extension.ts` | New native fixed-monitor association; ordinary tools and selected executors retain their restrictions |
+| — | `herdr-workspace-extension.ts` | Explicit native Herdr placeholder layout; no observation producer or RPC fallback |
 
 The consumer inventory found no supported caller requiring an old-path shim. Package-root installations
 (`pi install ./harness/pi` or `pi --extension ./harness/pi`) follow the manifest and need no path change.

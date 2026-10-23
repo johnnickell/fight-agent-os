@@ -15,5 +15,5 @@
     "@earendil-works/pi-tui": "*",
     "typebox": "*"
   },
-  "pi": {"extensions": ["./src/header-extension.ts", "./src/jev-extension.ts", "./src/tool-policy-extension.ts", "./src/native-observation-extension.ts"]}
+  "pi": {"extensions": ["./src/header-extension.ts", "./src/jev-extension.ts", "./src/tool-policy-extension.ts", "./src/native-observation-extension.ts", "./src/herdr-workspace-extension.ts"]}
 }

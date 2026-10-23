@@ -12,7 +12,7 @@ const home = join(fixture, 'home'), root = join(fixture, 'project'), agentDir = 
 for (const path of [home, root, agentDir]) mkdirSync(path, { recursive: true, mode: 0o700 });
 // Select the disposable HOME before importing any SDK or harness module with default operator paths.
 process.env.HOME = home; process.env.PI_CODING_AGENT_DIR = agentDir; process.env.PI_OFFLINE = '1';
-for (const key of ['FIGHT_SCREENING_PHASE', 'FIGHT_SCREENING_TASK', 'FIGHT_SCREENING_CHECKOUT', 'FIGHT_PI_HEADER', 'NO_COLOR']) delete process.env[key];
+for (const key of ['FIGHT_SCREENING_PHASE', 'FIGHT_SCREENING_TASK', 'FIGHT_SCREENING_CHECKOUT', 'FIGHT_PI_HEADER', 'NO_COLOR', 'HERDR_ENV', 'HERDR_SOCKET_PATH', 'HERDR_PANE_ID', 'HERDR_TAB_ID', 'HERDR_WORKSPACE_ID']) delete process.env[key];
 process.env.TERM = 'xterm-256color';
 const provider = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const harness = process.env.FIGHT_QUALIFICATION_HARNESS ? resolve(process.env.FIGHT_QUALIFICATION_HARNESS) : join(provider, 'harness/pi');
@@ -25,7 +25,7 @@ const runtime = await sdk.ModelRuntime.create({ authPath: join(agentDir, 'auth.j
 let credentialReads = 0;
 runtime.getApiKeyForProvider = async () => { credentialReads++; throw new Error('Unexpected credential resolution'); };
 const model = runtime.getModel('openai-codex', 'gpt-6.1-sol'); assert.ok(model);
-const expectedCommands = ['fight-header', 'fight-policy', 'file-screening', 'jev'];
+const expectedCommands = ['fight-header', 'fight-policy', 'fight-workspace', 'file-screening', 'jev'];
 const expectedFlags = ['fight-header', 'fight-screening-required', 'fight-tool-policy'];
 // file_locate is session/enrollment-dependent and exercised by optional-jev.mjs.
 const expectedTools = ['file_screening_status', 'jev_read_file'];
@@ -48,7 +48,7 @@ for (const [name, paths, mode] of [
   const { settings, loader, loaded } = await load(paths);
   assert.deepEqual(loaded.errors, []); assert.deepEqual(loaded.warnings ?? [], []);
   const headerOnly = name === 'header-only';
-  assert.equal(loaded.extensions.length, headerOnly ? 1 : 4);
+  assert.equal(loaded.extensions.length, headerOnly ? 1 : 5);
   const registrations = key => loaded.extensions.flatMap(extension => [...extension[key].keys()]).sort();
   assert.deepEqual(registrations('commands'), headerOnly ? ['fight-header'] : expectedCommands);
   assert.deepEqual(registrations('flags'), headerOnly ? ['fight-header'] : expectedFlags);
@@ -89,6 +89,7 @@ for (const [name, paths, mode] of [
       if (!headerOnly) {
         await session.prompt('/jev inspect'); assert.match(notices.at(-1), /missing-setup/); outcomes++;
         await session.prompt('/fight-policy'); assert.match(notices.at(-1), /not-selected/); outcomes++;
+        await session.prompt('/fight-workspace'); assert.match(notices.at(-1), /Requires native Pi inside Herdr/); outcomes++;
       }
     } else { assert.equal(headerCalls, 0); outcomes++; }
     assert.deepEqual(errors, []); assert.equal(session.model.id, model.id); outcomes += 2;

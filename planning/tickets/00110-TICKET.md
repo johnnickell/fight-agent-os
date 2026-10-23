@@ -10,21 +10,24 @@ status: done
 ## Problem statement
 
 The human operator needs to keep a primary Pi conversation visible while observing a delegated agent and the
-existing Agent OS runtime logs. Inline output obscures this context, and users should not need Herdr or tmux.
+existing Agent OS runtime logs without losing the native Pi working experience. The original release avoided
+requiring an external multiplexer; the approved 2026-10-23 follow-up uses the operator's existing Herdr installation.
 
 ## Solution and boundaries
 
-Deliver a custom Pi-based terminal workspace: primary conversation in the left half, selected child-agent
-activity at top right and current Docker logs at bottom right. Each right pane occupies approximately one
-quarter of a wide terminal; narrow terminals use keyboard-accessible selectable views. Reuse the accepted Fight
-identity from [TICKET-00035](00035-TICKET.md). Herdr remains optional, with no required external multiplexer.
+The [approved Herdr-native follow-up](#approved-herdr-native-workspace-and-task-decomposition--2026-10-23)
+keeps the existing native Pi conversation in the left half, child activity at top right and verified logs at
+bottom right. Herdr owns pane layout/focus/resize; Fight supplies observation companions, not a replacement editor.
+Reuse the accepted Fight identity from [TICKET-00035](00035-TICKET.md). Preserve native completion, editing,
+Markdown/tool rendering, themes, dialogs and workflow selection. Ordinary native Pi remains usable without Herdr;
+this follow-up's split workspace requires Herdr and has no automatic RPC-editor fallback.
 
-Qualify the currently installed Pi's supported extension APIs and behavior inside the first delivery TASK. If
-persistent layout cannot be implemented cleanly through those APIs, use a dedicated terminal client over supported
-Pi SDK/RPC. Reuse Pi's agent, provider and session machinery; do not fork Pi, nest another renderer in an extension
-or create a session engine. Never pin Pi to a version number or require version equality. Record required
-capabilities and actual tested versions as evidence only; documentation alone and a current version number do
-not establish runtime behavior or future compatibility.
+Qualify supported installed Pi and Herdr capabilities through actual behavior. Reuse Pi's agent, provider,
+session and frontend machinery; do not fork Pi, nest another renderer in an extension or create a session engine.
+Never pin Pi to a version number or require version equality. Record required capabilities and actual tested
+versions as evidence, not future compatibility guarantees. The original delivery allowed a dedicated SDK/RPC
+client when extension APIs could not support persistent layout; that client remains available during the staged
+replacement, but is not the target frontend for the approved follow-up.
 
 The first release has a read-only child pane using the existing local build monitor and a human-only live log
 pane for the existing, explicitly selected main-checkout Agent OS Compose runtime. Show actual conversation,
@@ -95,9 +98,60 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | [TASK-00502](../tasks/00502-TASK.md) | Follow current-session children and their worktree test logs automatically | done |
 | [TASK-00503](../tasks/00503-TASK.md) | Launch the Pi terminal workspace globally from any project | done |
 | [TASK-00507](../tasks/00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent |
+| [TASK-00510](../tasks/00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done |
+| [TASK-00511](../tasks/00511-TASK.md) | Observe current-session children beside native Pi in Herdr | ready-for-agent |
+| [TASK-00512](../tasks/00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved Herdr-native workspace and TASK decomposition — 2026-10-23
+
+John rejected the usability of the replacement RPC conversation frontend and confirmed that his normal Pi runs
+inside Herdr. He approved three implementation TASKs in one isolated worktree, used sequentially across
+TASK-specific feature branches/PRs:
+
+- [TASK-00510](../tasks/00510-TASK.md): preserve the existing native Pi pane and provide an explicit owned Herdr
+  layout action, honest companion placeholders, idempotent open/recovery and companion-only close/reopen.
+- [TASK-00511](../tasks/00511-TASK.md): reuse current-session child observation in the companion, including
+  concurrency, selection/pinning, bounded safe progress and validated log-context metadata; depends on TASK-00510.
+- [TASK-00512](../tasks/00512-TASK.md): reuse verified worktree-aware Docker readers in the log companion and
+  complete entry-point/runbook migration and accepted RPC retirement; depends on TASK-00510 and TASK-00511.
+
+This explicitly supersedes the no-required-multiplexer/replacement-frontend direction for the new delivery.
+Native Pi owns its editor, completion, colors, Markdown, dialogs, commands and session/authority handling.
+Herdr owns layout/focus. Do not replace those surfaces with another minimal conversation client. Keep the old
+client until the replacement is independently accepted; preserve historical evidence and existing session files.
+Outside Herdr or on missing/incompatible APIs, report the prerequisite without disrupting ordinary Pi or falling
+back automatically to RPC. No global installation, integration setup or current-pane mutation follows from approval.
+
+The baseline diagnosis used the installed package, whose three relevant workspace modules matched the checkout:
+`/next`, Tab, then an ordinary character moved focus into the read-only child pane and ignored that character;
+Shift+Tab restored editing. This explains apparent freezing, not proof that a separate deadlock is impossible.
+The old renderer provides only terminal-default or uniform light/dark colors, not Pi semantic themes. Installed
+Herdr CLI/server capability checks observed compatible 0.9.5, pane split/resize/rename/run controls and an advertised
+Pi integration; they did not mutate panes or qualify a completed workspace. Pi 1.4.0 documentation describes the
+native UI APIs; this is a version receipt, not a compatibility gate or runtime acceptance result.
+
+Acceptance must exercise the actual operator experience: `/next` plus Tab retains native completion, normal
+editing/colors/Markdown/dialogs/workflow selection remain native, focus is clear, real child/log updates coexist
+with primary work, and closing companions does not cancel Pi or children. Reuse TASK-00502's accepted trusted-local
+assumption without claiming independently attested native origin; TASK-00507 remains non-blocking. Test-stack
+bindings stay explicit, logs stay human-only, and provisioning/full observability/managed execution remain separate.
+
+All three records are approved `ready-for-agent` with unranked order and explicit dependencies; no other Board
+priority changes. Each owns checks, real integration/visual evidence and the full gate, followed by independent
+Review/QA, rather than extra testing TASKs. The TICKET's already-terminal status records historical delivery,
+not acceptance of these follow-ups. The isolated worktree path remains a human choice before implementation.
+The user explicitly required skipping TASK number 509; the new records use TASK-00510–00512.
+No new EPIC/TICKET or implementation is authorized by record creation. Next: choose that path for TASK-00510.
+
+Planning verification: live/archive and registered-worktree inventories were checked before allocation.
+`./bin/planning-check --write` and `./bin/planning-check` passed with 647 records / 500 active; generated views
+are current. Direct checks passed for 253 local Markdown links/anchors, new-record whitespace and skipped-number
+consistency; `git diff --check` passed. These are planning-only receipts, not implementation/runtime acceptance.
+The full `./bin/build` was not run and remains required before commit/publication. No commit, push, worktree
+creation, provider request, global setup or live Herdr pane mutation occurred.
 
 ### Approved passive visibility redesign — 2026-10-21
 
