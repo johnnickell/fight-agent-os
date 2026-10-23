@@ -48,7 +48,9 @@ export function options(argv, cwd) {
   return { args, theme, children: observationPaths(children), logs: runtimeSelection(Object.keys(logs).length ? logs : null), tests: testBindings(tests) };
 }
 export async function run(argv = process.argv.slice(2), {
-  input = process.stdin, output = process.stdout,
+  // Initialize stderr while the terminal is live. Node pipe teardown can lazily
+  // access it; opening a revoked macOS TTY then can block the entire event loop.
+  input = process.stdin, output = process.stdout, errorOutput = process.stderr,
   connect = options => new PiRpc(options), createTerminal = (input, output) => new Terminal(input, output),
   observe = (paths, changed, cwd) => paths.length ? new ConcurrentChildren(paths, changed) : new RegisteredChildren(cwd, changed),
   readLogs = (source, changed, tests, cwd) => tests.length || !source ? new WorktreeLogs(cwd, tests, source, changed) : new RuntimeLogs(source, changed),
@@ -69,7 +71,7 @@ export async function run(argv = process.argv.slice(2), {
   const model = new Workspace(cwd); model.theme = config.theme;
   const terminal = createTerminal(input, output);
   const rpc = connect({ cwd, args: config.args });
-  let closing = false, fault = false, renderTimer, startupTimer, sessionFile, sessionId, checkingSession = false, policyReady = false, stateSeen = false, commandsSeen = false;
+  let closing = false, terminalLost = false, fault = false, renderTimer, startupTimer, sessionFile, sessionId, checkingSession = false, policyReady = false, stateSeen = false, commandsSeen = false;
   const dialogTimers = new Map();
   const render = () => {
     if (closing || renderTimer) return;
@@ -115,6 +117,8 @@ export async function run(argv = process.argv.slice(2), {
     const logsClosed = logs.close();
     for (const timer of dialogTimers.values()) clearTimeout(timer);
     output.removeListener('resize', render); output.removeListener('drain', render);
+    input.removeListener('end', onTerminalLoss); input.removeListener('close', onTerminalLoss);
+    output.removeListener('close', onTerminalLoss);
     for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.removeListener(signal, onSignal);
     try { terminal.stop(); } catch { code = 1; } finally { await Promise.all([rpc.close(), logsClosed]); process.exitCode = code; }
   };
@@ -180,6 +184,7 @@ export async function run(argv = process.argv.slice(2), {
     render();
   };
   const onSignal = () => { void close(130); };
+  const onTerminalLoss = () => { terminalLost = true; void close(1); };
   rpc.on('failure', error => { fail(`Pi transport failure: ${clean(error.message)}`); void close(1); });
   rpc.on('exit', code => { if (!closing) { fail(`Pi exited (${code ?? 'signal'})`); void close(code || 1); } });
   rpc.on('policy', status => {
@@ -214,6 +219,11 @@ export async function run(argv = process.argv.slice(2), {
     render();
   });
   try {
+    // Window loss can report EOF/EIO before SIGHUP. Keep error listeners for the
+    // streams' remaining lifetime: restoration writes can fail asynchronously after close.
+    input.on('end', onTerminalLoss); input.on('close', onTerminalLoss); input.on('error', onTerminalLoss);
+    output.on('close', onTerminalLoss); output.on('error', onTerminalLoss);
+    errorOutput.on('error', onTerminalLoss);
     logs.start();
     terminal.start((text, key) => { void sendAction(model.key(text, key)); render(); }, (text, retention = {}) => {
       if (model.dialogs.length) { model.append('Paste ignored during Pi interaction; type an explicit response.'); }
@@ -225,23 +235,29 @@ export async function run(argv = process.argv.slice(2), {
     startupTimer = setTimeout(() => fail('Pi qualification incomplete: healthy Harness access, get_state and get_commands required. Exit with Ctrl+Q; inspect pi list in normal Pi for missing, moved, filtered or duplicate Harness resources.'), 30000);
     render();
     const state = await rpc.request('get_state');
+    if (closing) return close;
     model.identity = `${state.model?.provider ?? '?'}/${state.model?.id ?? '?'} · ${state.thinkingLevel ?? '?'} · session ${state.sessionId}`;
     model.busy = state.isStreaming; sessionFile = state.sessionFile; sessionId = state.sessionId; stateSeen = true;
     // Side-pane discovery is independently bounded and must not delay conversation readiness.
     void observation.start(sessionId, sessionFile);
     model.append(`Conversation directory: ${cwd}\nSession: ${state.sessionId}\nStorage: ${state.sessionFile ?? 'in memory (not resumable)'}\nConfigured model: ${state.model?.provider}/${state.model?.id}; actual provider identity is available only after a response.`);
     const commands = await rpc.request('get_commands');
+    if (closing) return close;
     model.commands = new Set(commands.commands.map(command => command.name));
     commandsSeen = ['jev', 'file-screening'].every(command => model.commands.has(command));
     if (!commandsSeen) fail('Required Harness commands unavailable; input held. Inspect pi list and qualify the trusted package in normal Pi; do not disable extensions.');
     const messages = await rpc.request('get_messages');
+    if (closing) return close;
     for (const message of messages.messages) { const text = messageText(message); if (text) model.append(text); }
     updateReady();
   } catch (error) {
+    // A terminal-loss shutdown can reject an in-flight startup request. Do not reopen
+    // a vanished TTY for diagnostics or restart presentation after cleanup.
+    if (terminalLost) return close;
     const message = `Startup failed: ${clean(error.message)}. Inspect pi list and qualify one trusted Harness in normal Pi; check missing, moved, filtered or duplicate resources. No policy bypass was attempted.`;
     fail(message);
     await close(1);
-    console.error(`fight-terminal: ${message}`);
+    errorOutput.write(`fight-terminal: ${message}\n`);
   }
   return close;
 }
