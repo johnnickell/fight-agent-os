@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -304,6 +304,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00480](00480-TASK.md) | Export selected requester-owned restored diagnostics | [TICKET-00116 — Export and download authorized diagnostic material](../tickets/00116-TICKET.md) | ready-for-agent | [TASK-00478](00478-TASK.md), [TASK-00474](00474-TASK.md), [TASK-00475](00475-TASK.md), [TASK-00476](00476-TASK.md) | — |
 | — | [TASK-00486](00486-TASK.md) | Inspect and recover observability through the existing operator guide | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | ready-for-agent | [TASK-00074](00074-TASK.md), [TASK-00075](00075-TASK.md), [TASK-00456](00456-TASK.md), [TASK-00460](00460-TASK.md), [TASK-00469](00469-TASK.md), [TASK-00472](00472-TASK.md), [TASK-00473](00473-TASK.md), [TASK-00477](00477-TASK.md) | — |
 | — | [TASK-00487](00487-TASK.md) | Complete the supported live-and-archived operator journey | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | ready-for-agent | [TASK-00486](00486-TASK.md), [TASK-00466](00466-TASK.md), [TASK-00480](00480-TASK.md) | — |
+| — | [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | [TASK-00510](00510-TASK.md) | — |
+| — | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | [TASK-00510](00510-TASK.md), [TASK-00511](00511-TASK.md) | — |
 
 ## Needs Info
 

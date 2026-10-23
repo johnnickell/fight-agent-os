@@ -1,4 +1,48 @@
-# Local terminal workspace (implementation candidate)
+# Local terminal workspaces
+
+## Native Pi in Herdr (TASK-00510 candidate)
+
+In native Pi inside Herdr, use `/fight-workspace` (or `/fight-workspace open`) to open two **placeholder**
+companions. `/fight-workspace close` closes only proven-owned companions. Repeated open reuses the same healthy
+panes. The existing Pi process, session/file, cwd, editor, Tab completion, themes, dialogs, tools and workflow
+binding are unchanged. Herdr owns focus, resize and zoom; Pi's Tab is not a pane-navigation shortcut here.
+No child observer or Docker reader is enabled by this TASK. TASK-00511/00512 own those producers.
+The legacy `fight-terminal` client below remains available; there is no automatic fallback to it.
+
+Load the updated trusted package once through your existing Pi installation. A **full process restart** is needed
+when adopting changed extension/module source; `/reload` did not replace cached imported `.mjs` code in the tested
+installation. Do not add a second checkout's package beside the existing one or reinstall global Herdr integrations.
+For a deliberate one-invocation development launch, use `pi --extension /absolute/trusted/harness/pi` with the
+ordinary installed resources/policy; select only one resolved Harness package identity.
+
+Prerequisites: native interactive Pi, `HERDR_ENV=1`, complete inherited pane/tab/workspace/socket context, the Pi
+process in that pane's foreground, and the supported Herdr pane current/process-info/layout/split/rename/run/close
+CLI operations. Initial/recovery open requires an unzoomed tab containing only this Pi and its owned companions;
+other layouts are left unchanged. Missing APIs or ambiguous identity leave ordinary Pi usable. Tested Pi/Herdr
+versions are evidence in TASK-00510, not version equality gates. The advertised official Herdr Pi integration was
+qualified read-only and may coexist; this action neither installs it nor relies on an arbitrary focused pane.
+
+Ownership is saved in the caller's ignored `var/herdr-workspace/`: actual primary/session/socket identity, returned
+opaque pane and terminal IDs, and non-secret companion tokens. Before reuse/cleanup, Herdr topology/process facts
+must match a live loopback companion handshake. A saved PID/label alone is insufficient. Loopback services are
+bounded identity responders, not observation or tool APIs. Same-user state/processes are trusted local inputs,
+not OS-isolated or independently attested. CLI requests have a 2.5-second deadline and 1 MiB response bound;
+startup probes and shutdown settling are finite. Closing a companion never sends input to or cancels Pi/children.
+
+Companions use their own alternate screen and restore raw/cursor state on `q`, Ctrl+C and ordinary signals.
+Native Pi shutdown/session replacement attempts companion-only cleanup; failed ownership checks retain resources
+and report incomplete cleanup. A manually closed companion is rebuilt with its healthy sibling on explicit open.
+Known partial effects are cleaned only with fresh ownership proof. A lost split reply is **uncertain**, not a
+reason to split again: automatic retry is held even if all known companions were cleaned. Inspect the named
+ownership file and the actual dedicated topology with Herdr. An operator must resolve any unknown effect before
+clearing that file's uncertainty hold; never close a guessed ID or remove state merely to obtain a green retry.
+Changed/replaced companion processes are retained, not killed. Unknown cleanup remains a disclosed limitation.
+
+Real native checks and captures belong to TASK-00510's implementation evidence; independent Review/QA remain
+pending. No layout action changes tool permission, workflow role, provider/model, enrollment or global settings.
+Model-invoked commands do not become trusted operator workflow selections. Native shell is not OS isolation.
+
+## Legacy RPC workspace (retained)
 
 TASK-00502 adds default current-session following and verified child worktree test-log context; see
 [automatic following](#automatic-session-following-and-worktree-test-bindings-task-00502-candidate) for its native
