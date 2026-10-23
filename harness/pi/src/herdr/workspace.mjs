@@ -149,6 +149,16 @@ export class HerdrWorkspace {
 
   invalidate() { this.activityContext?.close(); this.activityContext = undefined; }
 
+  async observationHealthy() {
+    try {
+      // Process ownership alone cannot prove a usable native/observer lifetime.
+      const context = this.activityContext.snapshot();
+      const owned = this.state.panes[0];
+      const live = await this.probe(owned.receipt, owned.token);
+      return live?.generation === context.generation && live.invalidated === false;
+    } catch { return false; }
+  }
+
   async closeOwned() {
     this.invalidate();
     for (const owned of [...this.state.panes].reverse()) {
@@ -237,7 +247,7 @@ export class HerdrWorkspace {
       }
       const states = await Promise.all(this.state.panes.map((p) => this.inspect(p)));
       if (states.some((status) => !['missing', 'healthy', 'shell'].includes(status))) throw new Error('Saved companion is no longer proven-owned; no layout changes');
-      if (this.activityContext && states.length === 2 && states.every((s) => s === 'healthy')) return 'Owned companions already open; native Pi unchanged';
+      if (states.length === 2 && states.every((s) => s === 'healthy') && await this.observationHealthy()) return 'Owned companions already open; native Pi unchanged';
       const { layout } = await this.client.call('pane', 'layout', '--current');
       const allowed = new Set([this.identity.paneId, ...this.state.panes.map((p) => p.paneId)]);
       if (!layout?.panes?.length || layout.panes.some((p) => !allowed.has(p.pane_id)) || layout.zoomed) throw new Error('Requires an unzoomed tab containing only this Pi and its owned companions; unrelated layout unchanged');

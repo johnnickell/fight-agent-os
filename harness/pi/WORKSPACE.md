@@ -26,7 +26,9 @@ qualified read-only and may coexist; this action neither installs it nor relies 
 Ownership is saved in the caller's ignored `var/herdr-workspace/`: actual primary/session/socket identity, returned
 opaque pane and terminal IDs, and non-secret companion tokens. Before reuse/cleanup, Herdr topology/process facts
 must match a live loopback companion handshake. A saved PID/label alone is insufficient. Loopback services are
-bounded identity responders; the child companion additionally serves only validated selection metadata as described below, never progress or tool APIs. Same-user state/processes are trusted local inputs,
+bounded identity responders; the child handshake also reports its generation and permanent observation-invalidation
+state. These health facts do not grant pane ownership. The child companion additionally serves only validated
+selection metadata as described below, never progress or tool APIs. Same-user state/processes are trusted local inputs,
 not OS-isolated or independently attested. CLI requests have a 2.5-second deadline and 1 MiB response bound;
 startup probes and shutdown settling are finite. Closing a companion never sends input to or cancels Pi/children.
 
@@ -73,9 +75,13 @@ Each open generation creates an owner-private canonical `var/herdr-workspace/*.c
 native session ID/file/cwd/PID and a read-only loopback responder. A pending native file can become persistent
 once; an inode/path/session replacement cannot rebind it. Supported shutdown invalidates the responder before
 layout cleanup, even if cleanup fails. The companion checks this lifetime around every child refresh, at most
-once per second with one refresh in flight. Lost/malformed/late lifetime data clears admissions and pins; reopen
-from the intended native session rather than guessing or reviving the old generation. A transient native-link
-failure also requires this explicit reopen. No provider turn is forced to persist a file.
+once per second with one refresh in flight. Lost/malformed/late lifetime data clears admissions and pins. From
+the intended native Pi session, run `/fight-workspace open` to recover, including after a transient native-link
+failure or same-path session-file replacement. Open checks both native lifetime and companion observation health;
+when invalid, it replaces only proven-owned companions with a fresh generation and freshly discovers existing
+work. It never clears the old invalidation or revives old metadata. Healthy repeated open (including intentionally
+closed readers or unavailable child custody) remains idempotent. Ownership, unrelated-layout and uncertain-split
+holds still apply. No provider turn is forced to persist a file.
 
 #### Selection contract for the future log companion
 

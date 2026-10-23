@@ -39,7 +39,7 @@ try {
   activity = new HerdrActivity(binding, changed);
   const identity = { token, pid: process.pid, paneId: process.env.HERDR_PANE_ID };
   server = await serveLocal(async query => {
-    if (query === token) return identity;
+    if (query === token) return { ...identity, generation: binding.generation, invalidated: activity.invalidated === true };
     if (query?.token === token && query.operation === 'selection' && query.generation === binding.generation) return activity.selection();
     throw Error('Unsupported query');
   });
