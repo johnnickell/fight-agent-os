@@ -150,7 +150,7 @@ $before = null;
 try {
     $before = $snapshot();
     $writeEvidence($run.'/before.json', $before);
-    if (phpversion('xdebug') !== '3.5.0' || !is_file($root.'/client/node_modules/.fight-install.json')) {
+    if (!extension_loaded('xdebug') || !is_file($root.'/client/node_modules/.fight-install.json')) {
         throw new RuntimeException(
             'Missing coverage/frontend setup. Run ./bin/up and ./bin/client setup explicitly.'
         );
