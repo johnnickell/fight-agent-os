@@ -10,8 +10,10 @@ Use this opt-in development path for **https://localhost:18443**. It serves the 
 
 Requirements: Docker Compose, host Python 3/OpenSSL/curl, and **mkcert v1.4.4**. The local gateway pins
 Nginx 1.30.6 Alpine and the PHP runtime pins PHP 8.5.12 FPM Bookworm, both by digest. These are development
-images, not a production deployment certification. The October security candidate still has a catalog-typing
-acceptance blocker; see [qualification, rebuild and safe rollback](SECURITY_RUNTIME_UPDATES.md).
+images, not a production deployment certification. The October security candidate resolves the catalog-typing
+blocker with the authorized catalog-only `skipLibCheck` exception and passes the local gate; independent
+Review/QA acceptance and operational adoption remain separate. See
+[qualification, rebuild and safe rollback](SECURITY_RUNTIME_UPDATES.md).
 Run commands from the repository root.
 
 1. Install Composer dependencies using `./bin/composer install --no-interaction --prefer-dist --no-progress`.
