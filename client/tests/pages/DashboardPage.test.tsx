@@ -149,7 +149,7 @@ describe('honest Dashboard permission and destination contracts', () => {
     }
   );
 
-  it('fails closed during render if freshness expires before its foreground timer fires', async () => {
+  it('retains last-verified display but pauses shortcut admission when freshness expires', async () => {
     let now = 0;
     const cache = new AuthorityCache(
       () =>
@@ -165,9 +165,15 @@ describe('honest Dashboard permission and destination contracts', () => {
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     now = 60_000;
     rerender(<DashboardPage cache={cache} />);
-    expect(screen.queryByRole('heading', { name: 'Dashboard' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
-    await act(async () => {});
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    for (const link of screen.getAllByRole('link'))
+      expect(link).toHaveAttribute('aria-disabled', 'true');
+    expect(cache.getSnapshot().status).not.toBe('authenticated');
+    await act(async () => {
+      await cache.load();
+    });
+    for (const link of screen.getAllByRole('link'))
+      expect(link).not.toHaveAttribute('aria-disabled');
   });
 
   it('retires identity and links immediately and ignores out-of-order successes and failures', async () => {

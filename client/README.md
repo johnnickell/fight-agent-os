@@ -384,11 +384,13 @@ catalog use synthetic inputs, not production grants. See [current authority owne
   session identifier, lifecycle state or credential belongs in this model.
 - `AuthorityCache` owns one immutable snapshot and subscriptions per tab context. `load()` coalesces demand;
   decoded success alone authenticates. Network/protocol errors are distinct non-authoritative outcomes.
-  Neither cache reads nor errors extend the 60-second monotonic request-start budget. A one-shot foreground
-  timer removes mounted authority; every render/action read also checks freshness in case that timer was delayed.
-  `observeAuthorityResume` attaches once per owner and returns listener cleanup. Hidden-tab return/focus removes
-  authority; resumption/expiry does not start a polling loop. Navigation/feature demand or an explicit retry calls
-  `load()`; the guard itself does not initiate authentication or automatically retry a denied route.
+  Neither reads nor errors extend the 60-second monotonic request-start budget. TASK-00505's authorized ADR
+  amendment makes foreground expiry a coalesced background `/me` trigger, pausing routine timers while hidden.
+  `observeAuthorityResume` attaches once per owner and coalesces return/focus demand. Each read is bounded to
+  8 seconds; failures stop automatic attempts until explicit retry. Render/action reads fail closed at expiry.
+  `getPresentationSnapshot()` exposes only the sole cache's last-verified same-context display, never dispatch
+  authority; already admitted outlets may remain mounted without admitting new protected loaders/actions.
+  Genuine invalidation/session end clears affected display. The guard never retries a denied operation.
 - The credential coordinator calls `signal('refresh-started')` before refresh, `credentials-changed`
   after accepting current credentials, and `refresh-failed` on recoverable failure. `authority-changed` retires
   and refetches when loading is permitted. Logout/terminal signals clear authority immediately and establish a
@@ -406,8 +408,10 @@ catalog use synthetic inputs, not production grants. See [current authority owne
   Every requirement must pass; even a public leaf cannot weaken its protected parent. Missing/malformed metadata
   is unavailable, never implicitly public. Exact names grant; displayed role names never do. Forbidden is derived
   presentation for a valid principal, not another stored principal state or a login/refresh loop.
-- `GuardedRoute` mounts a component outlet only after evaluation succeeds, so a denied lazy outlet is not imported
-  and its loaders do not run. Put protected loaders inside that outlet and honor its scope fence; do not prefetch
+- `GuardedRoute` admits a new component outlet only after fresh evaluation succeeds, so a denied lazy outlet is
+  not imported and its loaders do not run. An admitted same-context route can retain presentation during routine
+  verification; it cannot admit a different outlet. Put protected loaders inside the outlet, check current scope
+  before dispatch and honor its completion fence; do not prefetch
   above the guard. `PermissionButton` has explicit hide/disable policy and re-evaluates at activation, suppressing
   handlers if authority expired after render. `AuthorityStatus` renders safe pending/recovery/denial outcomes.
   **Server authorization remains authoritative.** A server 403 remains the operation's forbidden result even after
@@ -470,8 +474,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **93** named examples across twelve story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 12 production-backed Frame examples, plus 11 production-backed Dashboard examples. The form composition demonstrates rejection,
+`stories/` holds **94** named examples across twelve story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 13 production-backed Frame examples, plus 11 production-backed Dashboard examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -498,7 +502,7 @@ do not write real browser preferences or perform production prepaint.
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 93 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 94 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases

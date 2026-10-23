@@ -128,8 +128,12 @@ TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-
   restoration flow, renew its mutation deadlines or grant another election/conflict recovery.
 - Access lifetime is conservatively request-start +840 seconds (validated `exp - iat =900`, minus60 seconds),
   not browser wall time. Peer hints subtract full local challenge elapsed time and cannot extend that maximum.
-  Backwards/nonfinite monotonic reads retire access. Early expiry and hidden-tab resume coordinate a new bounded
-  refresh; errors never retain stale authority. Terminal/logout/disposal fence old login/refresh/network work.
+  Backwards/nonfinite monotonic reads retire access. Early expiry coordinates a new bounded refresh. Under
+  TASK-00505's authorized ADR amendment, hidden time pauses routine timers; return checks the remaining budget,
+  retains usable memory credentials and coalesces background `/me`, or restores once if expired/discontinuous.
+  Visibility alone never extends the token budget. Errors never retain dispatch authority and require explicit
+  recovery; last-verified same-context layout may remain with unavailable status. Terminal/logout/disposal
+  remove private presentation and fence old login/refresh/network work.
 - Unsupported or denied Channel uses own refresh under Locks; missing Locks permits independent-tab races.
   Missing both still permits only one conflict recovery. No storage polling, readable cookies, persistent queue,
   URL or HTML credential state is introduced. Without Channel, remote logout is learned on the next server
@@ -143,8 +147,11 @@ TICKET-00018 owns real `/me` and authorized navigation; TICKET-00020 owns other-
   channel. Every fresh principal must still come from `/me`; a peer token never supplies permissions.
 
 The mounted journey disposes channels, timers, subscriptions and volatile services on teardown/pagehide. It
-removes secret form DOM on context end. Loading, expiry, network and signed-out states have atomic status
-announcements, explicit controls and focused completion headings. Existing semantic themes/reduced-motion
+removes secret form DOM on context end. Cold loading, terminal expiry and signed-out states have atomic status
+announcements and focused completion headings. Routine background checks keep the admitted outlet/frame mounted,
+with unobtrusive status, paused protected actions and no unsolicited focus/scroll/navigation change. Failure
+provides explicit bounded retry without implying logout or confirmed revocation. Reload/tab discard/process loss
+still loses volatile page state; no browser persistence or automatic business-mutation replay is supplied. Existing semantic themes/reduced-motion
 styles apply; actual assistive-technology and broad browser certification remain outside this local evidence.
 
 ## Verification and safe reproduction

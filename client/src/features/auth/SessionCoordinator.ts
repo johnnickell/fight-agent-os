@@ -64,6 +64,7 @@ export class SessionCoordinator {
   #pending: Promise<ApiResult<true>> | null = null;
   #expiry: ReturnType<typeof setTimeout> | undefined;
   #lastClock: number;
+  #foreground = true;
 
   constructor(dependencies: {
     session: Pick<SessionService, 'refresh' | 'logout' | 'dispose' | 'invalidate'>;
@@ -295,16 +296,26 @@ export class SessionCoordinator {
     this.#send({ kind: 'terminal' });
   };
 
-  /** A hidden-tab return/discontinuous clock retires authority before any restoration demand. */
+  /** Pauses routine renewal while hidden; conservative memory expiry still applies at dispatch */
+  pause = (): void => {
+    this.#foreground = false;
+    clearTimeout(this.#expiry);
+  };
+
+  /** Rechecks the volatile budget; visibility alone does not discard usable credentials */
   resume = (): void => {
+    this.#foreground = true;
     const now = this.#now();
-    if (this.#state.status === 'authenticated' || now < this.#lastClock || !Number.isFinite(now)) {
-      this.#retire();
-      this.#signal('refresh-started');
-      this.#publish('unknown');
-      if (!this.#barrier) void this.restore();
-    }
+    const discontinuous = now < this.#lastClock || !Number.isFinite(now);
     this.#lastClock = now;
+    if (!this.#active || this.#barrier || this.#pending) return;
+    if (this.#state.status === 'authenticated' && !discontinuous && this.#tokens.getAccessToken()) {
+      this.#authority?.resume();
+      this.#schedule();
+    } else if (this.#state.status === 'authenticated' || discontinuous) {
+      this.#retire();
+      void this.restore();
+    }
   };
 
   showLogin = (): void => {
@@ -398,10 +409,14 @@ export class SessionCoordinator {
     this.#established = true;
     this.#signal('credentials-changed');
     this.#publish('authenticated');
+    this.#schedule();
+  }
+  #schedule(): void {
     clearTimeout(this.#expiry);
-    this.#expiry = setTimeout(() => {
-      if (this.#active && !this.#barrier) void this.restore();
-    }, this.#tokens.remaining());
+    if (this.#foreground)
+      this.#expiry = setTimeout(() => {
+        if (this.#active && !this.#barrier) void this.restore();
+      }, this.#tokens.remaining());
   }
   #send(body: SignalBody): void {
     const message: SessionMessage = {

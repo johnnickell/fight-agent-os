@@ -8,7 +8,7 @@ import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
 import { browserSessionPlatform } from '@/features/auth/SessionChannel';
 import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
-import { AuthorityCache, observeAuthorityResume } from '@/features/authority/AuthorityCache';
+import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { applicationRoutes } from '@/routes/applicationRoutes';
@@ -21,20 +21,30 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
   const tokens = new MemoryAccessToken();
   const api = new ApiClient(runtime, { accessTokens: tokens });
   const csrf = new CsrfProofService(api);
-  const authority = new AuthorityCache(new CurrentPrincipalService(api).load);
+  const principals = new CurrentPrincipalService(api);
+  const authority = new AuthorityCache((signal) => {
+    // A delayed cache timer may run before the credential timer after suspension.
+    // Missing local access is not evidence of server rejection: renew through the sole owner.
+    if (!tokens.getAccessToken()) {
+      void coordinator.restore();
+      return Promise.resolve({ status: 'network' });
+    }
+    return principals.load(signal);
+  });
   const intent = new IntendedRoute(authority, () => applicationRoutes, window.location.origin);
+  const coordinator = new SessionCoordinator({
+    tokens,
+    authority,
+    clearIntent: () => intent.clear(),
+    coldAnonymous: true,
+    session: new SessionService(api, csrf, tokens),
+    login: new LoginService(api, csrf, tokens),
+    ...browserSessionPlatform()
+  });
   return {
     authority,
     intent,
-    coordinator: new SessionCoordinator({
-      tokens,
-      authority,
-      clearIntent: () => intent.clear(),
-      coldAnonymous: true,
-      session: new SessionService(api, csrf, tokens),
-      login: new LoginService(api, csrf, tokens),
-      ...browserSessionPlatform()
-    }),
+    coordinator,
     schemas: new PublicSchemaService(api)
   };
 }
@@ -45,9 +55,26 @@ export function useApplicationSession(runtime: RuntimeConfiguration) {
   const [session] = useState(() => createApplicationSession(runtime));
   const [retired, setRetired] = useState(false);
   useLayoutEffect(() => {
-    const stopAuthorityResume = observeAuthorityResume(session.authority, document, window);
+    // One lifecycle owner consumes the hidden -> visible edge, regardless of event order.
+    let hidden = document.hidden;
+    session.authority.setForeground(!hidden);
+    if (hidden) session.coordinator.pause();
+    const focus = () => {
+      if (!hidden || document.hidden) return;
+      hidden = false;
+      session.authority.setForeground(true);
+      session.coordinator.resume();
+    };
+    const visibility = () => {
+      if (document.hidden) {
+        hidden = true;
+        session.authority.setForeground(false);
+        session.coordinator.pause();
+      } else focus();
+    };
     const clear = () => {
-      stopAuthorityResume();
+      window.removeEventListener('focus', focus);
+      document.removeEventListener('visibilitychange', visibility);
       session.intent.dispose();
       session.coordinator.dispose();
       session.authority.dispose();
@@ -56,14 +83,6 @@ export function useApplicationSession(runtime: RuntimeConfiguration) {
     const retire = () => {
       clear();
       flushSync(() => setRetired(true));
-    };
-    let hidden = document.hidden;
-    const visibility = () => {
-      if (hidden && !document.hidden) session.coordinator.resume();
-      hidden = document.hidden;
-    };
-    const focus = () => {
-      if (hidden) session.coordinator.resume();
     };
     window.addEventListener('pagehide', retire);
     window.addEventListener('focus', focus);

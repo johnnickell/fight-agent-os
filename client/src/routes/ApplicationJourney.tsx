@@ -5,7 +5,7 @@ import { Button } from '@/components/Button';
 import { ContentState } from '@/components/ContentState';
 import { useApplicationSession } from '@/features/auth/useApplicationSession';
 import { evaluateAccess } from '@/features/authority/evaluateAccess';
-import { useAuthority } from '@/features/authority/useAuthority';
+import { useAuthority, useAuthorityPresentation } from '@/features/authority/useAuthority';
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
 import { ShellLayout } from '@/layouts/ShellLayout';
 import { LoadingPage } from '@/pages/LoadingPage';
@@ -61,7 +61,8 @@ export function ApplicationView({
   theme?: ThemePreferenceStore | undefined;
   onAuthenticated?: (() => void) | undefined;
 }) {
-  const authority = useAuthority(session.authority);
+  const dispatch = useAuthority(session.authority);
+  const authority = useAuthorityPresentation(session.authority);
   const credential = useSyncExternalStore(
     session.coordinator.subscribe,
     session.coordinator.getSnapshot
@@ -124,7 +125,10 @@ export function ApplicationView({
     )
       void session.authority.load();
   }, [pathname, session]);
-  const busy = ['unknown', 'restoring', 'conflict'].includes(credential.status);
+  const retained =
+    authority.status === 'authenticated' &&
+    !['terminal', 'logout', 'anonymous'].includes(credential.status);
+  const busy = !retained && ['unknown', 'restoring', 'conflict'].includes(credential.status);
   const denied =
     authority.status === 'authenticated' &&
     route?.access === 'protected' &&
@@ -135,7 +139,7 @@ export function ApplicationView({
       ? 'Session ended'
       : credential.status === 'logout' || credential.signOutUnconfirmed !== undefined
         ? 'Signed out'
-        : credential.status === 'network-degraded'
+        : credential.status === 'network-degraded' && !retained
           ? 'Session connection unavailable'
           : credential.status === 'anonymous'
             ? 'Sign in'
@@ -147,7 +151,7 @@ export function ApplicationView({
   useEffect(() => {
     document.title = `${title} — Fight Agent OS`;
     document.getElementById('main-content')?.focus();
-  }, [pathname, title, authority.status, credential.status]);
+  }, [pathname, title]);
   let content;
   if (busy)
     content = (
@@ -157,7 +161,7 @@ export function ApplicationView({
         message="Protected content stays unavailable while this browser’s session is checked."
       />
     );
-  else if (credential.status === 'network-degraded')
+  else if (credential.status === 'network-degraded' && !retained)
     content = (
       <>
         <ContentState
@@ -226,19 +230,15 @@ export function ApplicationView({
         );
     } else
       content = (
-        <GuardedRoute
-          cache={session.authority}
-          route={route}
-          outlet={() => (
-            <Suspense fallback={<LoadingPage />}>
-              {route.destination === 'dashboard' ? (
-                <DashboardPage cache={session.authority} />
-              ) : (
-                <LandingPage route={route} />
-              )}
-            </Suspense>
-          )}
-        />
+        <GuardedRoute cache={session.authority} route={route}>
+          <Suspense fallback={<LoadingPage />}>
+            {route.destination === 'dashboard' ? (
+              <DashboardPage cache={session.authority} />
+            ) : (
+              <LandingPage route={route} />
+            )}
+          </Suspense>
+        </GuardedRoute>
       );
   } else
     content = (
@@ -264,7 +264,7 @@ export function ApplicationView({
   }, [credential, route, navigate]);
   const statusOnly =
     credential.status !== 'anonymous' &&
-    (credential.status !== 'authenticated' ||
+    ((!retained && credential.status !== 'authenticated') ||
       authority.status !== 'authenticated' ||
       route?.destination === 'root' ||
       route?.destination === 'login' ||
@@ -275,10 +275,11 @@ export function ApplicationView({
       {content}
     </>
   );
-  // No frame/principal display is mounted until both independent prerequisites are current.
+  // Initial admission needs both owners; routine checks retain only the cache-owned same-context display.
   const frame =
-    authority.status === 'authenticated' && credential.status === 'authenticated' ? (
+    retained && authority.status === 'authenticated' ? (
       <ApplicationFrame
+        key={authority.principal.userId}
         cache={session.authority}
         pathname={pathname}
         title={title}
@@ -287,6 +288,33 @@ export function ApplicationView({
           void session.coordinator.logout();
         }}
       >
+        {dispatch.status !== 'authenticated' && (
+          <div className="application-verification" role="status" aria-live="polite">
+            {dispatch.status === 'loading' ||
+            credential.status === 'restoring' ||
+            credential.status === 'conflict'
+              ? 'Checking current access in the background. Protected actions are paused.'
+              : 'Current access could not be verified. Protected actions are unavailable.'}
+            {session.authority.canRetry() && (
+              <Button
+                onClick={() => {
+                  void session.authority.load();
+                }}
+              >
+                Retry access check
+              </Button>
+            )}
+            {credential.status === 'network-degraded' && (
+              <Button
+                onClick={() => {
+                  void session.coordinator.restore();
+                }}
+              >
+                Retry session connection
+              </Button>
+            )}
+          </div>
+        )}
         {outlet}
       </ApplicationFrame>
     ) : (

@@ -33,8 +33,10 @@ credential coordinator and the sole cache are current; no credential-ready panel
 
 - Login retires the previous context. Its single-use authentication attempt starts `/me` only after accepted
   credentials; token readiness alone cannot authenticate a principal.
-- Every refresh clears authority before dispatch; successful local rotation or validated peer token handoff
-  invalidates/refetches `/me` for that tab. Recoverable refresh failure leaves no usable projection.
+- Every refresh clears dispatch authority before sending; successful local rotation or validated peer token
+  handoff refetches `/me` for that tab. Under TASK-00505's authorized ADR amendment, the sole cache may retain
+  last-verified same-context presentation through routine checks, never permission to dispatch protected work.
+  Recoverable failure exposes unavailable status and explicit retry without claiming revocation.
 - Logout/terminal failure immediately retire scopes and establish a context barrier. A current `/me` 401
   becomes terminal and clears coordinator credentials; it never starts an interceptor loop or replays a mutation.
   Only explicit login crosses the barrier. Old success **and** error results are ignored by cache generations
@@ -48,9 +50,14 @@ credential coordinator and the sole cache are current; no credential-ready panel
   `invalidate` retains its separate refresh/context meaning. Tabs without usable credentials invalidate without
   starting `/me` or restoration. Logout/terminal barriers still reject peer resurrection. Older clients ignore
   the new kind; freshness and independent server checks remain the backstop, not instant cross-version sync.
-- Existing 60-second request-start monotonic freshness, resume invalidation, coalesced demand, private-data
-  `captureScope()` abort/current fences, and explicit retry remain unchanged. There is no authority polling,
-  persistence, HTML hydration, URL state or projection broadcast.
+- A maximum 60-second request-start monotonic budget triggers one coalesced foreground background read.
+  Routine timers pause while hidden; return coalesces a check with other demand, retaining a usable memory token.
+  Reads have an 8-second observation bound, including transports that ignore abort. Failed attempts do not
+  schedule automatic retries. `getSnapshot()` and `captureScope()` always fail closed at expiry/pending/error;
+  `getPresentationSnapshot()` is display-only and references the same cache-owned projection. No new protected
+  outlet/loader or permission action may use it for admission. Genuine authority invalidation removes affected
+  presentation; logout, terminal failure and identity replacement retire the old private context. No persistence,
+  HTML hydration, URL state or principal broadcast is introduced.
 
 The TASK-00051 frame subscribes directly. Future private-data owners use this same cache/scopes and must not
 mirror the principal in another context/store. See its route, restoration and safe intent matrix in the frame runbook.

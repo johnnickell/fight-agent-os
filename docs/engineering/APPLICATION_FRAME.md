@@ -50,10 +50,15 @@ links and fixed reload recovery remain native. Refresh/direct load creates a fre
   presentation: retire deferred work, establish a credential barrier and offer canonical Login, retaining only a
   classified destination. It does not broadcast an invented authenticated principal. A later `/me` `401` or
   established-session termination is terminal, clears intent and removes protected UI before explicit sign-in.
-- Credential readiness alone never renders private pages, email or navigation. Unknown/loading/stale/malformed/
-  failed projections fail closed. `/me` retains its 60-second monotonic request-start budget and generation fences.
-  Foreground return and refresh retire authority; navigation demand or explicit retry can load stale authority.
-  Errors require explicit retry. The cache does not poll or extend freshness through reads.
+- Credential readiness alone never admits private pages, email or navigation. Cold unknown/loading states
+  withhold them. TASK-00505's authorized ADR amendment separates an already admitted same-context display from
+  dispatch authority: routine freshness/return/renewal checks retain the mounted frame and outlet, without
+  resetting route, scroll, focus or navigation state. The sole cache triggers coalesced foreground `/me` at its
+  maximum 60-second request-start budget, pauses timers while hidden and resumes once. Pending/stale/error
+  authority denies new protected outlets/loaders and permission actions, even while last-verified display remains.
+  Reads are bounded to 8 seconds; failure stops automatic attempts and shows explicit recovery. Reads never
+  extend freshness. Authority-change signals, confirmed denial, identity replacement and session end retire
+  affected private presentation; late results cannot resurrect it.
 - A fresh principal lacking exact route requirements sees Forbidden, not Login; no role name grants access.
 - Network recovery and unconfirmed logout do not claim revocation. Logout retires local authority immediately;
   the existing API attempts only current-session revocation. No command is replayed automatically.
@@ -75,7 +80,9 @@ The frame recreates the accepted C/round-4 264px grouped rail and existing Ubunt
 At ≤860px it starts closed; Open is a 44×52 edge control. Expanded navigation has only its internal Close.
 The narrow React-Bootstrap Offcanvas inerts background, enforces modal focus, cycles native Tab boundaries,
 handles Escape/backdrop/Close and returns focus. Route changes reset the frame; breakpoint changes reset
-only navigation mechanics while preserving the mounted workspace. Focus owned by disappearing navigation moves
+only navigation mechanics while preserving the mounted workspace. Routine background verification does neither.
+Its fixed status notice does not change outlet geometry; route changes and genuine forbidden/session-end states
+retain accessible main focus behavior. Focus owned by disappearing navigation moves
 to the available Close (wide) or Open (narrow); workspace/outside focus is not claimed. Terminal changes unmount
 protected presentation immediately. Wide Open focuses Close. Group disclosures are independent native details;
 current navigation uses `aria-current`. A skip link, focusable named main, route-title/status announcements,
@@ -86,8 +93,10 @@ Bootstrap link RGB variables now map to the accepted action colors rather than i
 
 `pages/DashboardPage.tsx` is a guarded lazy page within the same application session, not a second authority or
 capability registry. It subscribes directly to the sole cache, shows only its safe email, and uses the existing
-manifest requirements and shared evaluator for every shortcut. Unknown, invalid, expired or invalidated authority
-removes the page and links; late projection results remain fenced by the existing cache. A resolved principal
+manifest requirements and shared evaluator for every shortcut. Unknown or genuinely invalidated authority
+removes the page and links. Routine checks retain last-verified same-context display; shortcuts suppress navigation
+while dispatch authority is pending/stale/error. Newly admitted routes still require fresh evaluation. Late
+projection results remain fenced by the existing cache. A resolved principal
 without exact `VIEW_DASHBOARD` receives authenticated Forbidden, not Login.
 
 The accepted C composition uses the existing semantic tokens, Ubuntu headings/Open Sans body, named panels,
@@ -107,9 +116,9 @@ those journeys ship. No principal, role, permission or credential is persisted f
 ## Verification boundary
 
 Owned tests use controlled principal/session promises and real production evaluators, caches and coordinators;
-existing stale-response, permission, deadline and intended-route fuzz coverage remains applicable. Twelve
+existing stale-response, permission, deadline and intended-route fuzz coverage remains applicable. Thirteen
 production-backed Frame stories cover narrow/wide, light/dark, long email, forbidden, pending/malformed authority,
-network/expired session, account/invitation seams and drawer keyboard interaction. Automated axe/browser results
+network/expired session, retained-display background failure, account/invitation seams and drawer keyboard interaction. Automated axe/browser results
 are samples, not universal WCAG or physical AT/device certification.
 
 TASK evidence records exact initial-source Before captures, fresh After captures and real trusted-HTTPS
