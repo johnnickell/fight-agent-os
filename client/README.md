@@ -497,7 +497,9 @@ TASK-00050 supplies the public local appearance selector; this does not authoriz
 
 Composition's SystemPreview, ThemeLight and ThemeDark render the production selector and components with
 isolated in-memory storage. SystemPreview follows live OS changes and releases listeners on unmount. Stories
-do not write real browser preferences or perform production prepaint.
+do not write real browser preferences or perform production prepaint. The interactive Frame examples also
+use isolated preferences; their selected-mode host applies the catalog's background and inherited foreground,
+not only its tokens, so held Light/Dark and OS-following System remain coherent inside the outer decorator.
 
 ```sh
 ./bin/client setup              # Clean locked frontend install

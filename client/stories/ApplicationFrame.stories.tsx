@@ -125,7 +125,7 @@ function FrameExample({
     };
   }, [session, outcome]);
   return (
-    <div data-bs-theme={appearance.effective}>
+    <div className="catalog-preview catalog-frame-preview" data-bs-theme={appearance.effective}>
       <ApplicationView session={session} pathname={pathname} navigate={setPathname} theme={theme} />
     </div>
   );
