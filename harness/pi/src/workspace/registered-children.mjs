@@ -45,17 +45,27 @@ export class RegisteredChildren {
       this.now() - item.receivedAt <= Math.max(5000, item.heartbeatSeconds * 3000);
   }
   recompute() {
+    const previous = this.selected;
     if (this.pin && this.sources.has(this.pin)) this.selected = this.pin;
     else if (!this.active(this.sources.get(this.selected))) {
       this.selected = [...this.sources.values()].filter(item => this.active(item)).sort((a, b) =>
-        b.started - a.started || a.id.localeCompare(b.id)).map(sourceKey)[0] ?? null;
+        b.started - a.started || (a.generation === b.generation ? b.order - a.order : 0) || a.id.localeCompare(b.id)).map(sourceKey)[0] ?? null;
     }
+    if (previous !== this.selected) { this.paused = false; this.frozen = null; }
+  }
+  fileCurrent() {
+    if (!this.file) return true;
+    try { if (JSON.stringify(sessionFileIdentity(this.sessionFile)) === JSON.stringify(this.file)) return true; } catch {}
+    this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null;
+    this.session = null; this.file = null; this.sessionFile = null;
+    this.notice = 'Actual session file replaced/unavailable: admissions, pin and source authority cleared; reopen explicitly';
+    return false;
   }
   invalidateRefresh() {
     this.epoch++; this.refreshController?.abort(); this.refreshController = null; this.pending = null;
   }
   async refresh() {
-    if (this.closed || !this.open || !this.session || this.pending) return this.pending;
+    if (this.closed || !this.open || !this.session || !this.fileCurrent() || this.pending) return this.pending;
     const epoch = this.epoch, session = this.session, file = this.file;
     const controller = new AbortController(); this.refreshController = controller;
     const pending = (async () => {
@@ -65,7 +75,7 @@ export class RegisteredChildren {
           if (controller.signal.aborted) return;
           try {
             const witness = await this.verify(this.cwd, session, candidate.path, candidate.descriptor, { signal: controller.signal });
-            if (epoch !== this.epoch || this.closed || !this.open) return;
+            if (epoch !== this.epoch || this.closed || !this.open || !this.fileCurrent()) return;
             if (JSON.stringify(witness.parentFile) !== JSON.stringify(file)) throw new Error('Actual Pi session file does not match launch custody');
             if (!Array.isArray(witness.children) || witness.children.length > limits.children) throw new Error('Custody child capacity exceeded');
             const admittedItems = [];
@@ -93,12 +103,14 @@ export class RegisteredChildren {
     this.pending = pending; return pending;
   }
   tick() {
+    if (this.closed) return;
+    if (!this.fileCurrent()) { this.changed(); return; }
     if (!this.file && this.sessionFile) {
       try { this.file = sessionFileIdentity(this.sessionFile); this.invalidateRefresh(); } catch {}
     }
-    this.recompute(); void this.refresh();
+    this.recompute(); this.changed(); void this.refresh();
   }
-  get verifiedWorktree() { const item = this.sources.get(this.selected); return item?.verified ? item.identity.worktree : null; }
+  get verifiedWorktree() { if (!this.fileCurrent()) return null; const item = this.sources.get(this.selected); return item?.verified ? item.identity.worktree : null; }
   action(type) {
     if (this.closed || !this.session) return;
     if (type === 'toggle') {
@@ -114,7 +126,7 @@ export class RegisteredChildren {
         this.selected = eligible[(current + delta + eligible.length) % eligible.length];
         if (this.pin !== null) this.pin = this.selected;
       }
-    } else if (type === 'pause') { this.paused = !this.paused; this.frozen = this.paused ? [...(this.sources.get(this.selected)?.history ?? [])] : null; }
+    } else if (type === 'pause') { this.paused = !this.paused; this.pausedSequence = this.sources.get(this.selected)?.sequence ?? 0; this.frozen = this.paused ? [...(this.sources.get(this.selected)?.history ?? [])] : null; }
     // A frozen display belongs to one selection, never a subsequently selected child.
     if (type !== 'pause') { this.paused = false; this.frozen = null; }
     this.savePreference(); this.changed();
@@ -145,7 +157,7 @@ export class RegisteredChildren {
     const item = this.sources.get(this.selected);
     return ['AUTOMATIC current-session children · observation only', `${this.pin === null ? 'UNPINNED' : 'PINNED'} · ${item ? `${item.identity.role} ${item.identity.task}` : 'IDLE — no eligible active child'}${this.open ? '' : ' · READERS CLOSED'}`,
       '[ / ] choose · f pin/unpin · p pause · c readers · r rediscover', `Primary session: ${clean(this.session ?? '(waiting)')}`,
-      ...[...this.sources.entries()].map(([key, source]) => `${key === this.selected ? '>' : ' '} ${key === this.pin ? '[PIN] ' : ''}${source.identity.role} ${source.identity.task} · ${source.verified ? source.state : 'CUSTODY LOST'}/${source.lifecycle}\n  Worktree ${source.identity.worktree}\n  Attempt ${source.identity.attempt}\n  Generation ${source.generation} · child ${source.id}`),
+      ...[...this.sources.entries()].map(([key, source]) => `${key === this.selected ? '>' : ' '} ${key === this.pin ? '[PIN] ' : ''}${source.identity.role} ${source.identity.task} · ${source.verified ? (this.active(source) ? source.state : 'unknown/inactive — heartbeat expired or last known terminal') : 'CUSTODY LOST'}/${source.lifecycle}\n  Worktree ${source.identity.worktree}\n  Attempt ${source.identity.attempt}\n  Generation ${source.generation} · child ${source.id}`),
       this.notice, item ? `Last known ${item.lifecycle}${item.exitCode === null ? '' : ` (exit ${item.exitCode}; not acceptance)`} · sequence ${item.sequence} · omitted ${item.omitted} · pipe gaps ${item.gaps ?? 'unknown (earlier custodian)'}${this.paused ? ' · DISPLAY PAUSED' : ''}` : 'Legacy/unregistered children unavailable; never relaunched',
       ...(this.paused ? this.frozen ?? [] : item?.history ?? []), 'Conversation cwd/grants unchanged; no pane output enters Pi/model context.'].join('\n');
   }

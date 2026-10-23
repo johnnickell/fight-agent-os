@@ -2,11 +2,12 @@
 
 ## Native Pi in Herdr (TASK-00510 candidate)
 
-In native Pi inside Herdr, use `/fight-workspace` (or `/fight-workspace open`) to open two **placeholder**
-companions. `/fight-workspace close` closes only proven-owned companions. Repeated open reuses the same healthy
-panes. The existing Pi process, session/file, cwd, editor, Tab completion, themes, dialogs, tools and workflow
-binding are unchanged. Herdr owns focus, resize and zoom; Pi's Tab is not a pane-navigation shortcut here.
-No child observer or Docker reader is enabled by this TASK. TASK-00511/00512 own those producers.
+In native Pi inside Herdr, use `/fight-workspace` (or `/fight-workspace open`) to open a human-only child
+activity companion and a **placeholder** log companion. `/fight-workspace close` closes only proven-owned
+companions. Repeated open reuses the same healthy panes. The existing Pi process, session/file, cwd, editor,
+Tab completion, themes, dialogs, tools and workflow binding are unchanged. Herdr owns focus, resize and zoom;
+Pi's Tab is not a pane-navigation shortcut here. TASK-00511 supplies the child candidate below; Docker reading
+remains TASK-00512. Independent acceptance of TASK-00511 is pending.
 The legacy `fight-terminal` client below remains available; there is no automatic fallback to it.
 
 Load the updated trusted package once through your existing Pi installation. A **full process restart** is needed
@@ -25,7 +26,7 @@ qualified read-only and may coexist; this action neither installs it nor relies 
 Ownership is saved in the caller's ignored `var/herdr-workspace/`: actual primary/session/socket identity, returned
 opaque pane and terminal IDs, and non-secret companion tokens. Before reuse/cleanup, Herdr topology/process facts
 must match a live loopback companion handshake. A saved PID/label alone is insufficient. Loopback services are
-bounded identity responders, not observation or tool APIs. Same-user state/processes are trusted local inputs,
+bounded identity responders; the child companion additionally serves only validated selection metadata as described below, never progress or tool APIs. Same-user state/processes are trusted local inputs,
 not OS-isolated or independently attested. CLI requests have a 2.5-second deadline and 1 MiB response bound;
 startup probes and shutdown settling are finite. Closing a companion never sends input to or cancels Pi/children.
 
@@ -38,9 +39,67 @@ ownership file and the actual dedicated topology with Herdr. An operator must re
 clearing that file's uncertainty hold; never close a guessed ID or remove state merely to obtain a green retry.
 Changed/replaced companion processes are retained, not killed. Unknown cleanup remains a disclosed limitation.
 
-Real native checks and captures belong to TASK-00510's implementation evidence; independent Review/QA remain
-pending. No layout action changes tool permission, workflow role, provider/model, enrollment or global settings.
+TASK-00510's accepted layout evidence remains historical context. TASK-00511 records fresh child integration
+checks/captures separately; independent Review/QA remain pending for that change. No layout action changes tool
+permission, workflow role, provider/model, enrollment or global settings.
 Model-invoked commands do not become trusted operator workflow selections. Native shell is not OS isolation.
+
+### Current-session activity in Herdr (TASK-00511 candidate)
+
+The companion reuses the existing passive native-session custody reader; keep launching the ordinary authorized
+provider monitor, without per-child socket flags. It never launches, cancels or retries a child, changes the
+executor/tool/shell settings, reads transcripts, or sends progress to Pi, provider context or Herdr agent metadata.
+Missing association leaves execution unchanged and visibly unavailable. The trusted-local-process limitation
+and existing custody bounds under [automatic following](#automatic-session-following-and-worktree-test-bindings-task-00502-candidate)
+apply unchanged; a signature is not independent native-origin attestation or OS isolation.
+
+| Companion input | Display-only effect |
+|---|---|
+| `[` / `]` | Choose active siblings (or the pinned inactive child); no new output steals an active selection |
+| `f` | Pin/unpin; a pin retains completion/disconnection labels; unpin recomputes activity |
+| `p` | Freeze progress while draining bounded snapshots and counting subsequent records; lifecycle stays live |
+| `c` / `r` | Close/reopen readers / explicitly rediscover; no child relaunch |
+| `i`, PageUp/PageDown | Full identities/notices and bounded history; selection/lifecycle stay at the top |
+| `q`, Ctrl+C | Exit only this display; explicit workspace open recovers owned companions |
+
+No active child means idle. Initial/recomputed choice uses newest trusted start time, admission order within
+the same custodian for timestamp ties, then stable child ID. Automatic or explicit selection changes discard a
+frozen view. Completion means only the monitor's normal settled zero exit, never Review/QA acceptance. Expired
+heartbeats say unknown/inactive; missing custody retains a pinned label but removes verified worktree authority.
+Terminal-default text follows the companion terminal's foreground/background, independently of Pi's theme.
+Narrow views keep a compact attempt/ordinal and known lifecycle header; `i` and paging reveal clipped identities.
+
+Each open generation creates an owner-private canonical `var/herdr-workspace/*.context.json` binding to actual
+native session ID/file/cwd/PID and a read-only loopback responder. A pending native file can become persistent
+once; an inode/path/session replacement cannot rebind it. Supported shutdown invalidates the responder before
+layout cleanup, even if cleanup fails. The companion checks this lifetime around every child refresh, at most
+once per second with one refresh in flight. Lost/malformed/late lifetime data clears admissions and pins; reopen
+from the intended native session rather than guessing or reviving the old generation. A transient native-link
+failure also requires this explicit reopen. No provider turn is forced to persist a file.
+
+#### Selection contract for the future log companion
+
+`src/herdr/activity.mjs` exports `readSelection(binding, companionEndpoint)` and `validateSelection`.
+The caller must obtain the explicit owner-private binding and endpoint from a **live ownership-proven companion**
+(the existing workspace ownership checks), never from progress, arbitrary labels, a directory scan or a saved
+preference. `readBinding` refuses noncanonical/symlink/public/multilink bindings. `readSelection` freshly queries
+native lifetime, then requests `selection` from the child endpoint with the expected companion generation/token.
+Each local request has a **350 ms elapsed deadline**, **16 KiB** response cap; responders allow four connections,
+**512 units** input and **400 ms** total lifetime. These are event-loop deadlines, not real-time guarantees.
+
+The version-1 result contains generation, primary identity, actual session-file witness, timestamp, state,
+verified worktree and optional child `{generation, id, worktree, lifecycle, state, pinned}` only. It contains no
+progress, TASK/role label, attempt path, credentials or executable operation. Unknown fields are discarded.
+Validate against the expected parent/session/file and companion generation; responses expire after **1.5 seconds**.
+Idle permits the actual primary cwd; closed/unavailable has **no** source authority. A retained verified terminal
+pin may retain its worktree; custodian loss removes it. Metadata is a worktree/lifetime context, not Docker-source
+approval: TASK-00512 must still apply explicit source binding and exact container verification. Reopening issues
+a fresh generation and freshly admits existing work. No previous response becomes authority for a later open.
+
+Rendering drops obsolete frames under terminal backpressure; there is no frame queue or extra progress store.
+Child retention remains eight children, 100 entries / 32 Ki units each, plus one bounded selected frozen view.
+Owned binding cleanup checks the exact created inode; replacement files are retained. Abrupt crashes can leave
+non-authoritative runtime files; no crash survivor is blindly reused as authority.
 
 ## Legacy RPC workspace (retained)
 

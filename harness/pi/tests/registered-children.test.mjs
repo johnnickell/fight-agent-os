@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -145,6 +145,32 @@ test('an actual session file replacement with the same caller ID does not match 
   f.observe.verify = async () => ({ parent: f.parent, parentFile: original, generation: f.generation, at: 100000, children: f.values() });
   await f.observe.start(f.parent, f.file); assert.equal(f.observe.sources.size, 0); assert.equal(f.observe.verifiedWorktree, null);
 });
+test('same-path session file replacement clears a pin and rejects a late admitted response', async t => {
+  const f = fixture(t); await f.observe.start(f.parent, f.file); f.observe.action('pin');
+  const old = { parent: f.parent, parentFile: sessionFileIdentity(f.file), generation: f.generation, at: 100000, children: f.values() };
+  let complete;
+  f.observe.verify = () => new Promise(resolve => { complete = resolve; });
+  const pending = f.observe.refresh(); await Promise.resolve();
+  writeFileSync(f.file + '.new', 'new native file'); renameSync(f.file + '.new', f.file);
+  f.observe.tick(); complete(old); await pending;
+  assert.equal(f.observe.verifiedWorktree, null); assert.equal(f.observe.pin, null);
+  assert.equal(f.observe.sources.size, 0); assert.match(f.observe.view(), /replaced|unavailable/i);
+});
+test('an automatic selection change clears a frozen display and exposes stale heartbeat truthfully', async t => {
+  const f = fixture(t), first = f.values()[0]; await f.observe.start(f.parent, f.file);
+  f.observe.action('pause');
+  f.set([{ ...first, lifecycle: 'completed', exitCode: 0 }, f.child({ started: 2000, history: ['sibling'] })]);
+  await f.observe.refresh(); assert.equal(f.observe.paused, false); assert.equal(f.observe.frozen, null);
+  f.observe.action('pin'); f.advance(7000); f.observe.recompute();
+  assert.match(f.observe.view(), /unknown|expired/i);
+});
+test('same-custodian start ties use trusted admission order before the stable attempt ID', async t => {
+  const f = fixture(t), ids = [randomUUID(), randomUUID()].sort();
+  const first = f.child({ id: ids[0], started: 2000, order: 1 }), second = f.child({ id: ids[1], started: 2000, order: 2 });
+  f.set([first, second]); await f.observe.start(f.parent, f.file);
+  assert.equal(f.observe.sources.get(f.observe.selected).id, second.id);
+});
+
 test('discovery and retention are bounded to eight sources, with an explicit overflow notice', async t => {
   const f = fixture(t); const values = Array.from({ length: 8 }, (_, i) => f.child({ started: 1000 + i }));
   f.set(values); await f.observe.start(f.parent, f.file); assert.equal(f.observe.sources.size, 8);
