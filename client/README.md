@@ -43,16 +43,18 @@ is local provenance/staleness evidence, not a tamper-proof integrity check of ev
 Acceptance containers mount source and dependencies read-only, with only ignored Vite/Storybook cache mounts
 writable beneath `node_modules`. Fix/install/lock commands are the explicit exceptions.
 
-Selected from registry engine/peer contracts and qualified by clean installation and checks:
+Selected from registry engine/peer contracts. The October security candidate passes focused typing with
+the catalog-only declaration-check exception described below; see the
+[runtime security qualification](../docs/engineering/SECURITY_RUNTIME_UPDATES.md) for acceptance status:
 
-- Node **24.21.0**, npm **11.19.0**, official Bookworm-slim image pinned by digest in `bin/client`.
+- Node **24.22.1**, npm **11.19.1**, official Bookworm-slim image pinned by digest in `bin/client`.
   Node 24 is the [LTS line](https://github.com/nodejs/Release#release-schedule); npm is its bundled manager,
   avoiding a second bootstrap dependency. The manifest enforces exact engines and manager version.
 - React/React DOM **19.3.0**, TypeScript **6.0.3**, ESBuild **0.28.2**, Bootstrap **5.3.8**,
   React-Bootstrap **2.10.10** (see [control qualification](#standard-controls)) and Formik **2.4.9**.
   Formik declares React >=16.8; the exact locked combination was clean-installed and checked without peer overrides.
 - Vitest/coverage-v8 **4.1.11**, RTL **16.3.3**, jest-dom **6.9.1**, jsdom **30.1.1**.
-- Storybook/react-vite/a11y/Vitest addon **10.4.6**, browser-playwright **4.1.11**,
+- Storybook/react-vite/a11y/Vitest addon **10.6.3**, browser-playwright **4.1.11**,
   Playwright **1.61.0**, axe-core **4.13.0**. See [catalog qualification](#component-catalog).
 - ESLint **9.39.5**, typescript-eslint **8.71.0**, accessibility/hooks plugins, Prettier **3.9.9**.
 - eslint-plugin-simple-import-sort **14.0.0** (ESLint >=5 peer), Dart Sass **1.105.1** (Node >=20.19).
@@ -76,8 +78,8 @@ with artifact inspection, static Storybook build/inspection, Chromium story inte
 catalog captures/resource checks. Each stage fails fast. Only explicit setup/maintenance/dev commands have
 external networking; checks do not install, update or audit. `npm run check` is intentionally absent: the
 focused repository wrapper owns orchestration across the two pinned container environments; PHP owns the
-canonical gate. Both use Node 24.21.0
-and npm 11.19.0. There is no percentage-only frontend gate or seeded-failure/product test of these tools.
+canonical gate. Both use Node 24.22.1
+and npm 11.19.1. There is no percentage-only frontend gate or seeded-failure/product test of these tools.
 
 Production check output is `var/client/check/production/`, rebuilt clean without pruning live `var/client/build/`.
 `production-metafile.json` and `production-artifacts.json` record the actual ESBuild/Sass input graph and
@@ -167,7 +169,8 @@ pairs 2.x with Bootstrap 5.x. TypeScript and Storybook have no declared peer con
 compilation and production/catalog builds qualify our usage, not every library export. FormControl's optional
 props/value declarations are narrower than native input props: the adapter omits absent values, copies readonly
 array values and maps native numeric `size` to `htmlSize` without widening or casting the public contract.
-No forced peers, `skipLibCheck`, unrelated upgrades or new form/state libraries are used. Future control adoption
+That original qualification used no forced peers, `skipLibCheck`, unrelated upgrades or new form/state
+libraries. The current catalog-only exception is documented below. Future control adoption
 still needs its own interaction qualification, especially overlay focus and transition behavior on React 19.
 
 ### Styles and customization boundary
@@ -532,19 +535,30 @@ screen-reader announcements. Independent interactive QA remains separate.
 
 ### Catalog dependency qualification
 
-Storybook 10.6.1's published declarations failed strict TypeScript 6/exact-optional checks in its CSF types;
-10.4.6 is pinned instead, with declared Vite 8/React 19 support. The catalog has its own strict TypeScript scope
-because Storybook and Vitest expose separate assertion environments. No `skipLibCheck`, force install or ignored
-peer dependencies are used. jest-dom 6.9.1 aligns with Storybook's matcher implementation. The jsdom setup manually
+Storybook 10.4.6 was previously selected after 10.6.1 failed strict TypeScript 6/exact-optional checks.
+10.4.6 is affected by CVE-2026-114125 and is no longer selected. Patched 10.6.2 and 10.6.3 fail internal
+React CSF declaration validation; ordinary catalog typing also exhausted Node's default heap. TASK-00509's
+human amendment authorizes `skipLibCheck` in **`tsconfig.catalog.json` only**. Both TypeScript projects now
+pass focused typing at the unchanged default heap and 2 GiB container limit, retaining Storybook 10.6.3.
+This skips internal validation of **all `.d.ts` files in the catalog project**, not just Storybook's faulty
+file. Imported declarations still type-check application/story/configuration source usage; `strict`,
+`exactOptionalPropertyTypes` and `noUncheckedIndexedAccess` remain enabled. The application/test project
+(`tsconfig.json`) still validates declarations without `skipLibCheck`. No vendor patch, force install,
+ignored peer dependency or unsafe Storybook security flag is used. This is a disclosed verification
+tradeoff, not proof the upstream declarations are valid; browser/static success alone is not acceptance.
+The catalog has its own strict TypeScript scope because Storybook and Vitest expose separate assertion
+environments. jest-dom 6.9.1 aligns with Storybook's matcher implementation. The jsdom setup manually
 registers its matchers and augments only `Assertion`: its convenience Vitest adapter also augments asymmetric
 matchers, which conflicts with Vitest 4 browser declarations. Existing application assertions remain exercised.
 
 The browser base is Playwright **1.61.0 Noble**, pinned by digest in `bin/client`, with Chromium **149.0.7827.0**.
 `storybook-setup` builds `etc/docker/client-browser/Dockerfile`, copying `/usr/local/` from the same pinned Node
-image used for installation/build: **24.21.0** / npm **11.19.0**, replacing the base's older Node runtime.
+image used for installation/build: **24.22.1** / npm **11.19.1**, replacing the base's older Node runtime.
 The Dockerfile defaults retain the same digest pins for direct builds; update both locations deliberately.
 It runs only explicitly installed tooling. Browser binaries and system libraries come from the pinned
 Playwright base, never an install script or on-demand download.
+Explicit browser image setup also refreshes the base's Ubuntu CA package from its vendor repositories;
+acceptance remains offline and does not update trust stores. Rebuild the image to adopt that change.
 Builds disclose Storybook's >500 kB tool-chunk warnings (not production `/app` chunks), React-Bootstrap
 `use client` directive-preservation warnings in the browser-only catalog, and Rolldown plugin-timing warnings
 when emitted. None is suppressed. The inherited ESLint 9 installation deprecation remains. Caches, static output, coverage, browser failure screenshots and captures are

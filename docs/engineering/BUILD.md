@@ -29,12 +29,16 @@ Do not replace dependencies beneath a live gate. Missing/stale Compose configura
 fails with an explicit setup instruction.
 Export OpenAPI/validation metadata again after their source contracts change; checks only compare freshness.
 
-The CLI image includes Node 24.21.0/npm 11.19.0 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
+The CLI image includes Node 24.22.1/npm 11.19.1 from the same digest as `bin/client`, Chromium 149.0.7827.0 from
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
 at image setup, not downloaded at runtime. The PHP image is larger; the focused frontend wrapper retains its
 separate Node/browser environments and requires `./bin/client storybook-setup` before focused browser checks.
-No Docker CLI or daemon socket is added to PHP. `./bin/composer` explicitly runs the maintenance-profile
-`composer` service as the calling host UID/GID, reusing the project's explicitly built web image. It inherits
+No Docker CLI or daemon socket is added to PHP. The October security candidate uses a human-authorized
+catalog-only `skipLibCheck` exception; see [runtime security qualification](SECURITY_RUNTIME_UPDATES.md).
+Application declaration validation and source strictness remain enabled. Passing focused checks does not
+replace this gate or establish independent acceptance.
+
+`./bin/composer` explicitly runs the maintenance-profile `composer` service as the calling host UID/GID, reusing the project's explicitly built web image. It inherits
 web's root protection, dropped capabilities, resource limits and ignored cache mounts, but resolves `/app`
 as a writable bind mount and publishes no port.
 The profile excludes it from ordinary startup; only explicit maintenance may change source/dependencies.
@@ -60,7 +64,8 @@ The host wrapper checks the running `web` service and its Compose configuration 
 5. The [backend coverage phase](BACKEND_TESTS.md): guarded PostgreSQL identity/version check, test schema reset,
    migrations, **one unfiltered coverage-enabled PHPUnit execution**, coverage policy, guarded test-schema cleanup.
 6. Installed frontend lock/runtime validation and versions, and the Pi presentation tests.
-7. Both strict TypeScript projects, zero-warning lint, non-mutating formatting, one V8-instrumented Vitest execution.
+7. Both strict TypeScript projects (catalog-only `skipLibCheck`; application declarations still checked),
+   zero-warning lint, non-mutating formatting, one V8-instrumented Vitest execution.
 8. Scratch production build/artifact inspection, static Storybook build/artifact inspection, Chromium story/a11y
    checks, and static catalog captures/resource checks.
 9. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
