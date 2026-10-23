@@ -560,5 +560,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #146](https://github.com/johnnickell/fight-agent-os/pull/146) |
 | — | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | — (standalone chore) | done | — | [PR #142](https://github.com/johnnickell/fight-agent-os/pull/142) |
 | — | [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | — (standalone bug) | done | — | [PR #147](https://github.com/johnnickell/fight-agent-os/pull/147) |
-| — | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | — |
+| — | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #151](https://github.com/johnnickell/fight-agent-os/pull/151) |
 <!-- /planning:board -->
