@@ -165,7 +165,11 @@ export class HerdrWorkspace {
     // Persist uncertainty BEFORE mutation. Lost replies must never cause a blind split retry.
     this.state.uncertain = true;
     await this.save();
-    const { pane } = await this.client.call('pane', 'split', target, '--direction', index ? 'down' : 'right', '--ratio', '0.5', '--cwd', this.context.cwd, '--no-focus');
+    // Disposable companions do not need the operator's zsh prompt hooks. Those hooks can
+    // start foreground jobs during initialization; never weaken the process guard for them.
+    const shellDirectory = join(this.directory, 'shell');
+    await mkdir(shellDirectory, { recursive: true, mode: 0o700 });
+    const { pane } = await this.client.call('pane', 'split', target, '--direction', index ? 'down' : 'right', '--ratio', '0.5', '--cwd', this.context.cwd, '--env', `ZDOTDIR=${shellDirectory}`, '--no-focus');
     if (!pane?.pane_id || !pane.terminal_id || pane.pane_id === this.identity.paneId || pane.tab_id !== this.identity.tabId || pane.workspace_id !== this.identity.workspaceId || this.state.panes.some((p) => p.paneId === pane.pane_id)) throw new Error('Split returned ambiguous identity; inspect actual topology before recovery');
     const owned = { paneId: pane.pane_id, terminalId: pane.terminal_id, token, receipt: join(this.directory, `${token}.json`), phase: 'shell' };
     this.state.panes.push(owned);

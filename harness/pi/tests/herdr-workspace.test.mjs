@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import net from 'node:net';
@@ -34,7 +34,7 @@ async function fixture(t, options = {}) {
     if (action === 'split') {
       const pane = { ...primary, pane_id: `returned-${++sequence}`, terminal_id: `terminal-${sequence}` };
       panes.set(pane.pane_id, pane);
-      processes.set(pane.pane_id, { shell_pid: sequence, foreground_processes: [{ pid: sequence, name: 'zsh' }] });
+      processes.set(pane.pane_id, options.shellStartup?.(args, sequence) ?? { shell_pid: sequence, foreground_processes: [{ pid: sequence, name: 'zsh' }] });
       return { pane };
     }
     if (action === 'run') { processes.set(id, { foreground_processes: [{ pid: 100 + sequence, name: 'node' }] }); return {}; }
@@ -96,7 +96,7 @@ test('QA-01: newly split shells settle before initial admission and the final in
 });
 
 test('QA-01: readiness never submits to or cleans a changed terminal, shell or foreground job', async (t) => {
-  for (const change of ['terminal', 'shell', 'foreground', 'busy']) {
+  for (const change of ['terminal', 'shell', 'foreground', 'startup-job', 'busy']) {
     await t.test(change, async (t) => {
       let subject;
       const { workspace, calls, panes } = await fixture(t, {
@@ -106,7 +106,7 @@ test('QA-01: readiness never submits to or cleans a changed terminal, shell or f
           if (sample < (change === 'terminal' ? 1 : 2)) return info;
           if (change === 'terminal') { subject.panes.get(id).terminal_id = 'replacement'; return info; }
           if (change === 'shell') return { ...info, shell_pid: 777, foreground_processes: [{ pid: 777, name: 'zsh' }] };
-          if (change === 'foreground') return { ...info, foreground_process_group_id: 778, foreground_processes: [{ pid: 778, name: 'editor' }] };
+          if (change === 'foreground' || change === 'startup-job') return { ...info, foreground_process_group_id: 778, foreground_processes: [{ pid: 778, name: change === 'startup-job' ? 'printf' : 'editor' }] };
           return { ...info, foreground_process_group_id: info.shell_pid, foreground_processes: [...info.foreground_processes, { pid: 779, name: 'git' }] };
         },
       });
@@ -120,6 +120,38 @@ test('QA-01: readiness never submits to or cleans a changed terminal, shell or f
       assert.equal(calls.slice(start).filter((c) => ['split', 'run', 'rename', 'close'].includes(c[1])).length, 0);
     });
   }
+});
+
+test('QA-01: companion startup excludes personal zsh hooks across recovery and close/reopen', async (t) => {
+  const { workspace, calls, panes } = await fixture(t, {
+    shellStartup: (args, pid) => {
+      // Actual failure: an inherited prompt hook starts printf in a separate foreground group.
+      // Only a companion-local startup directory avoids that hook; never admit that foreground job.
+      const isolated = args.some((arg, index) => args[index - 1] === '--env' && arg.startsWith('ZDOTDIR='));
+      return isolated
+        ? { shell_pid: pid, foreground_process_group_id: pid, foreground_processes: [{ pid, name: 'zsh' }] }
+        : { shell_pid: pid, foreground_process_group_id: 900, foreground_processes: [{ pid: 900, name: 'printf' }] };
+    },
+  });
+  for (let cycle = 0; cycle < 2; cycle++) {
+    await workspace.act('open');
+    await workspace.act('open');
+    assert.equal(panes.size, 3);
+    panes.delete(workspace.state.panes.at(-1).paneId);
+    await workspace.act('open');
+    assert.equal(panes.size, 3);
+    await workspace.act('close');
+    assert.deepEqual([...panes.keys()], ['caller']);
+    await workspace.act('open');
+    assert.equal(panes.size, 3);
+    await workspace.act('close');
+  }
+  for (const split of calls.filter((c) => c[1] === 'split')) {
+    const startup = split.find((arg) => arg.startsWith('ZDOTDIR='))?.slice('ZDOTDIR='.length);
+    assert.equal(startup, join(workspace.directory, 'shell'));
+    assert.deepEqual(await readdir(startup), []);
+  }
+  assert.equal(calls.filter((c) => c[1] === 'run').length, 12);
 });
 
 test('Repeated open reuses healthy companions without more splits or commands', async (t) => {
