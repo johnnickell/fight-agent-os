@@ -94,8 +94,11 @@ height. A named user-outline User Menu dropdown contains the sole cache's safe e
 independently permitted Active Sessions, local appearance and current-session Sign Out. React-Bootstrap owns
 opening, destination arrows, dismissal and focus return; native radio arrows own the compact sun/moon/monitor
 Light/Dark/System choices. The selected preference stays explicit, including System when following the OS.
-Public login/activation retain their existing full selector. Native links recheck current authority at activation;
-paused dropdown destinations prevent native navigation as well as library selection. Menu Escape does not collapse
+The frame keeps the existing appearance store subscribed outside its pathname-keyed content, so media/storage
+updates remain active before the lazy menu opens and after navigation. That subscription is released with the
+frame; it adds no store or persistence policy. Public login/activation retain their existing full selector.
+Native links recheck current authority at activation; paused dropdown destinations prevent native navigation
+as well as library selection. Menu Escape does not collapse
 the wide rail. Every rail destination retains its full Title Case text alongside a decorative self-contained SVG.
 No account operation, endpoint, permission, logout scope, authority owner or theme-persistence policy is added.
 Bootstrap link RGB variables now map to the accepted action colors rather than its inherited blue fallback.

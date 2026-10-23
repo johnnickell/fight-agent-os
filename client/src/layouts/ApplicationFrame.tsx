@@ -63,6 +63,9 @@ type FrameProps = {
 };
 
 export function ApplicationFrame(props: FrameProps) {
+  // Keep the existing store's media/storage lifecycle active while the lazy menu
+  // is unopened, including across pathname-keyed content remounts.
+  useEffect(() => props.theme?.subscribe(() => {}), [props.theme]);
   return <FrameContent key={props.pathname} {...props} />;
 }
 

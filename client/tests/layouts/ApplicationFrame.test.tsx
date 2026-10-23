@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
+import { THEME_KEY, ThemePreferenceStore } from '@/features/theme/ThemePreference';
 import { ApplicationFrame } from '@/layouts/ApplicationFrame';
 
 import { deferred } from '../apiFixtures';
@@ -31,6 +31,12 @@ async function frame(narrow: boolean, permissions?: string[]) {
   await owner.coordinator.restore();
   const logout = vi.fn();
   const values = new Map<string, string>();
+  const schemeListeners = new Set<() => void>();
+  const scheme = {
+    matches: false,
+    addEventListener: (_: string, listener: () => void) => schemeListeners.add(listener),
+    removeEventListener: (_: string, listener: () => void) => schemeListeners.delete(listener)
+  };
   const theme = new ThemePreferenceStore({
     root: document.documentElement,
     storage: {
@@ -42,13 +48,16 @@ async function frame(narrow: boolean, permissions?: string[]) {
         values.delete(key);
       }
     },
-    media: () => ({ matches: false }),
-    subscribeStorage: () => () => {}
+    media: () => scheme,
+    subscribeStorage: (listener) => {
+      window.addEventListener('storage', listener);
+      return () => window.removeEventListener('storage', listener);
+    }
   });
-  render(
+  const content = (pathname: string) => (
     <ApplicationFrame
       cache={owner.authority}
-      pathname="/app/dashboard"
+      pathname={pathname}
       title="Dashboard"
       onLogout={logout}
       theme={theme}
@@ -56,11 +65,25 @@ async function frame(narrow: boolean, permissions?: string[]) {
       <h1>Owned content</h1>
     </ApplicationFrame>
   );
+  const view = render(content('/app/dashboard'));
   return {
     owner,
     logout,
     theme,
     values,
+    navigate: (pathname: string) => view.rerender(content(pathname)),
+    unmount: () => view.unmount(),
+    changeOs: (dark: boolean) => {
+      scheme.matches = dark;
+      act(() => schemeListeners.forEach((listener) => listener()));
+    },
+    receivePreference: (preference: 'light' | 'dark' | null) => {
+      if (preference === null) values.delete(THEME_KEY);
+      else values.set(THEME_KEY, preference);
+      act(() => {
+        window.dispatchEvent(new StorageEvent('storage', { key: THEME_KEY }));
+      });
+    },
     resize: (matches: boolean) => {
       media.matches = matches;
       act(() => listeners.forEach((listener) => listener()));
@@ -69,6 +92,58 @@ async function frame(narrow: boolean, permissions?: string[]) {
 }
 
 describe('compact account controls', () => {
+  it('follows System OS changes before User Menu is ever opened and releases listeners on unmount', async () => {
+    const { changeOs, receivePreference, unmount } = await frame(false);
+    expect(screen.getByRole('button', { name: 'User Menu' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    expect(screen.queryByRole('group', { name: 'Appearance' })).not.toBeInTheDocument();
+    changeOs(true);
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'dark');
+    changeOs(false);
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'light');
+    unmount();
+    changeOs(true);
+    receivePreference('dark');
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'light');
+  });
+
+  it('receives cross-tab manual and System preferences with User Menu unopened', async () => {
+    const { receivePreference, changeOs } = await frame(false);
+    receivePreference('dark');
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'dark');
+    changeOs(true);
+    receivePreference('light');
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'light');
+    receivePreference(null);
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'dark');
+    changeOs(false);
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'light');
+    const toggle = screen.getByRole('button', { name: 'User Menu' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(toggle);
+    expect(screen.getByRole('radio', { name: 'System' })).toBeChecked();
+  });
+
+  it('keeps OS and cross-tab appearance working after navigation resets the menu to unopened', async () => {
+    const { navigate, changeOs, receivePreference } = await frame(false);
+    await userEvent.click(screen.getByRole('button', { name: 'User Menu' }));
+    changeOs(true);
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'dark');
+    navigate('/app/account');
+    expect(screen.getByRole('button', { name: 'User Menu' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    changeOs(false);
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'light');
+    receivePreference('dark');
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'dark');
+    receivePreference(null);
+    expect(document.documentElement).toHaveAttribute('data-bs-theme', 'light');
+  });
+
   it('opens by keyboard, traverses destinations and returns Escape focus without collapsing the rail', async () => {
     await frame(false);
     const user = userEvent.setup();
