@@ -1,6 +1,6 @@
 # Local HTTPS
 
-Use this opt-in development path for **https://localhost:18443**. It serves the existing root and
+The ordinary `./bin/up` development stack includes HTTPS at **https://localhost:18443**. It serves the existing root and
 `GET /api/v1/auth/csrf`, plus the [non-product browser shell](../../client/README.md) at `/app` after
 `./bin/client setup` and `./bin/client build`; it does not implement login or complete the production security envelope.
 [TASK-00145](../../planning/tasks/00145-TASK.md) owns this transport slice;
@@ -17,6 +17,8 @@ Review/QA acceptance and operational adoption remain separate. See
 Run commands from the repository root.
 
 1. Install Composer dependencies using `./bin/composer install --no-interaction --prefer-dist --no-progress`.
+   Prepare the root/browser shell with `./bin/client setup` and `./bin/client build` before startup;
+   missing live assets fail the HTTPS readiness probe rather than returning startup success.
 2. Create an ignored `.env` with your existing database settings and a separately generated
    `APP_CSRF_MAC_KEY` (at least 32 random bytes as lowercase hex). `openssl rand -hex 32` generates a key;
    never commit or include it in diagnostics. If `.env` is not ignored, add `/.env` to your personal
@@ -25,7 +27,7 @@ Run commands from the repository root.
 
    ```sh
    ./bin/https setup
-   ./bin/https up
+   ./bin/up
    ./bin/https status
    ```
 
@@ -48,9 +50,14 @@ setup must not mistake text inside an unrelated value for an origin assignment. 
 unchanged and inspect it privately; only convert a value to a supported representation if its meaning is
 preserved. `up`/`status` still use Compose's parser and do not rewrite `.env`.
 
-Leave `FIGHT_AGENT_OS_PORT=18087`: it controls the inherited HTTP listener, not TLS. `./bin/https up` starts
-both the ordinary stack and optional TLS services, refreshing their environment. After future `.env` changes,
-use this wrapper again to update both PHP runtimes. Ordinary `./bin/up` does not enable the HTTPS profile.
+Leave `FIGHT_AGENT_OS_PORT=18087`: it controls the inherited HTTP listener, not TLS. After explicit setup,
+`./bin/up` is the sole ordinary startup/refresh command for HTTP, HTTPS PHP and the gateway. Use it again after
+`.env` or image/configuration changes to update both PHP runtimes. It validates effective Compose settings and
+existing certificate/key files before service mutation, waits for services, validates/reloads Nginx, then probes
+the root over verified HTTPS with curl's trust store. Missing prerequisites fail closed; startup never runs setup,
+enrolls trust, generates leaves, rewrites `.env` or installs dependencies. `./bin/https up` is rejected with a
+migration instruction and no startup effects. A later build/readiness/reload failure can leave partial services;
+inspect `docker compose --profile https ps`, correct the cause and rerun `./bin/up`.
 Dependencies and database data are shared with the existing local stack; no reset or migration is implicit.
 
 ## Transport and verification
@@ -93,7 +100,7 @@ browser trust enrollment. Never work around a failed trust check with `--insecur
 
 These commands preserve `.env`, the CSRF key, database containers/volumes, HTTP service and shared CA trust.
 The retained HTTPS origin is intentional; HTTP authentication must not become permitted after stopping TLS.
-Use setup/up again to re-enroll leaves and restart. `./bin/down` remains the full-stack stop; it does not remove
+Use `./bin/https setup` only when leaves/enrollment need repair, then `./bin/up` to restart. `./bin/down` remains the full-stack stop; it does not remove
 database volumes or leaf files. Do not use `down -v` for TLS cleanup.
 
 For **explicit global trust removal**, `mkcert -uninstall` removes the shared CA from supported trust stores
@@ -103,5 +110,5 @@ cleanup. After global trust removal, setup must enroll trust again before browse
 
 Missing keys, a wrong effective origin, missing/expiring certificates or invalid configuration should stop
 startup with a bounded error. Inspect your private `.env` locally if parsing fails; do not print full resolved
-`docker compose config`, which includes secrets. A certificate/key mismatch is rejected by Nginx. Setup/up
-renews leaves and reloads the gateway. Independent review and production qualification remain separate.
+`docker compose config`, which includes secrets. A certificate/key mismatch is rejected before startup and by Nginx. Only `./bin/https setup`
+renews leaves; `./bin/up` reloads the gateway and verifies live TLS/application readiness. Independent review and production qualification remain separate.

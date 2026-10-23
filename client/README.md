@@ -242,7 +242,7 @@ HTTP development routing and the HTTPS gateway allow only hashed JS/CSS/qualifie
 server-owned, including dotted paths.
 
 For production-like local HTTPS, follow [local HTTPS setup](../docs/engineering/LOCAL_HTTPS.md), then run
-`./bin/https up` after building assets to refresh the gateway configuration. Open **https://localhost:18443/app**.
+`./bin/up` after building assets to refresh the complete HTTP/HTTPS stack and gateway configuration. Open **https://localhost:18443/app**.
 The gateway mounts only `var/client/build/` for static delivery, with immutable caching of hashed assets. HTML is
 no-store with a restrictive self-only script/style/font CSP, no inline executable code/eval, no-referrer and nosniff.
 The inert config JSON is not executable. A blocking, self-hosted prepaint script runs before the stylesheet

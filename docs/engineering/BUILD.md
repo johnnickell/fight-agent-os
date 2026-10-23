@@ -13,16 +13,19 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 docker compose build web
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/client setup
+./bin/client build
+# After configuring independent application keys, explicitly enroll TLS once:
+./bin/https setup
 ./bin/up
 ./bin/openapi export
 ./bin/validations export
 ./bin/build
 ```
 
-`./bin/up` prepares ignored cache mounts and builds/starts services explicitly. After changing only web service
-configuration, run `docker compose up -d --no-deps --no-build --pull never web` to recreate just that service,
-preserving the other services and development database. For CLI image changes, first run
-`docker compose build web`, then that same web-only refresh. Never silently refresh a service inside acceptance.
+`./bin/up` prepares ignored cache mounts and builds/starts the complete HTTP/HTTPS stack explicitly, preserving
+database data. Use it again after environment or image/configuration changes so both PHP runtimes agree.
+It requires explicit TLS setup first and never installs dependencies or enrolls trust.
+Never silently refresh a service inside acceptance.
 Before reinstalling frontend dependencies in an already-running project, stop only `web`
 (`docker compose stop web`), then run setup and `./bin/up`; npm ci replaces nested cache-mount directories.
 Do not replace dependencies beneath a live gate. Missing/stale Compose configuration or missing tooling setup
@@ -90,7 +93,7 @@ The web service has a read-only root, dropped capabilities, no-new-privileges, 2
 256 MiB temporary storage and 256 MiB shared memory. Compose's `init: true` puts the engine-provided init at
 PID 1 to reap orphaned Node/build/browser children after normal checks, rather than accumulating zombies across
 repeated gate runs. The maintenance service inherits this boundary. Enabling init on an existing service requires
-the explicit web-only refresh above; restarting the old container alone does not apply changed configuration.
+the explicit `./bin/up` refresh above; restarting the old container alone does not apply changed configuration.
 No PID ceiling is raised, and acceptance never restarts the service to recover its budget.
 Only ignored `.runs/`, `var/` and two frontend dependency-cache mounts are writable. The dedicated guarded
 PostgreSQL test service is disposable; development data is not migrated

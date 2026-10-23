@@ -24,19 +24,13 @@ local diagnostic needs. No database, upload or frontend limit is increased witho
 
 ## Rebuild the selected checkout
 
-After an image configuration change, explicitly rebuild and recreate the affected service:
+After an image or environment configuration change, refresh both PHP runtimes and the gateway:
 
 ```sh
-docker compose build web
-docker compose up -d --no-deps --no-build --pull never web
-# Only if local HTTPS is already configured and running:
-docker compose --profile https build https_php
-docker compose --profile https up -d --no-deps --no-build --pull never https_php
-# Refresh the gateway's resolved FPM address after container replacement:
-docker compose --profile https restart https
+./bin/up
 ```
 
-Use `./bin/up` for initial stack setup and `./bin/https` for initial HTTPS setup. The shared main checkout is not
+Enroll TLS explicitly once with `./bin/https setup`; use `./bin/up` for every startup/refresh. The shared main checkout is not
 restarted by changes or validation in a worktree. Use a distinct `COMPOSE_PROJECT_NAME`, loopback port and private
 `.env` for isolated runtime qualification. Changing image settings alone does not repair missing application
 keys: configure independent auth-rate, activation-rate, CSRF and signing keys as documented in README.
