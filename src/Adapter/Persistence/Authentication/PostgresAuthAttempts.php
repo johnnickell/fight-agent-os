@@ -46,7 +46,7 @@ final readonly class PostgresAuthAttempts
      */
     public function consume(array $budgets, int $windowSeconds): void
     {
-        if ($windowSeconds < 1 || $windowSeconds > 900 || $budgets === [] || count($budgets) > 2) {
+        if ($windowSeconds < 1 || $windowSeconds > 900 || $budgets === [] || count($budgets) > 3) {
             throw new LogicException('Invalid authentication admission budget.');
         }
         if ($this->connection->isTransactionActive()) {

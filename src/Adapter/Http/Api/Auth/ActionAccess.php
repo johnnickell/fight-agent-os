@@ -9,6 +9,7 @@ use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
 use App\Adapter\Http\Action\Api\V1\Auth\LoginAction;
 use App\Adapter\Http\Action\Api\V1\Auth\LogoutAction;
 use App\Adapter\Http\Action\Api\V1\Auth\RefreshAction;
+use App\Adapter\Http\Action\Api\V1\Auth\RequestPasswordResetAction;
 use App\Adapter\Http\Action\Api\V1\Validations\ReadValidationAction;
 use App\Adapter\Http\Attribute\Authenticated;
 use App\Adapter\Http\Attribute\PublicAccess;
@@ -78,7 +79,7 @@ final readonly class ActionAccess
             if (
                 $public !== [] && !in_array($class->getName(), [
                 CsrfBootstrapAction::class, ReadValidationAction::class, ActivateInvitationAction::class,
-                LoginAction::class, RefreshAction::class, LogoutAction::class
+                LoginAction::class, RefreshAction::class, LogoutAction::class, RequestPasswordResetAction::class
                 ], true)
             ) {
                 throw new LogicException();

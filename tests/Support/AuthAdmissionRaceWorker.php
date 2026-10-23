@@ -37,8 +37,8 @@ final class AuthAdmissionRaceWorker
         $admission = new AuthAdmission(
             new PostgresAuthAttempts($connection, new AccessClock(new DateTimeImmutable($input['now']))),
             $input['key'],
-            1,
-            3
+            $input['operation'] === 'reset_email' || $input['operation'] === 'reset_endpoint' ? 20 : 1,
+            $input['operation'] === 'reset_endpoint' ? 1 : ($input['operation'] === 'reset_email' ? 300 : 3)
         );
         fwrite(STDOUT, $connection->fetchOne('SELECT pg_backend_pid()')."\n");
         fflush(STDOUT);
@@ -47,7 +47,11 @@ final class AuthAdmissionRaceWorker
             $allowed = $admission->allows(EmailAddress::fromString('race@example.test'));
         } else {
             try {
-                $admission->endpoint(AuthOperation::from($input['operation']), '192.0.2.1');
+                if (str_starts_with($input['operation'], 'reset_')) {
+                    $admission->passwordReset(EmailAddress::fromString('race@example.test'), '192.0.2.1');
+                } else {
+                    $admission->endpoint(AuthOperation::from($input['operation']), '192.0.2.1');
+                }
                 $allowed = true;
             } catch (RateLimited) {
                 // Return only the safe admission outcome.

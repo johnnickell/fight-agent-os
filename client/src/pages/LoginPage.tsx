@@ -172,24 +172,7 @@ function LoginForm({
       <Button type="submit" busy={form.busy} busyLabel="Signing in…">
         Sign in
       </Button>
-      <a href="/app/login/recovery">Forgot your password?</a>
+      <a href="/app/reset-password">Forgot your password?</a>
     </form>
-  );
-}
-
-/** A working bounded destination, not a pretend reset request or broken future route. */
-export function LoginRecoveryPage() {
-  useEffect(() => {
-    document.title = 'Sign-in help — Fight Agent OS';
-  }, []);
-  return (
-    <section className="activation-page" aria-labelledby="recovery-heading">
-      <h1 id="recovery-heading">Need help signing in?</h1>
-      <p>
-        Password recovery is not available here yet. Contact your installation administrator for
-        help. Never send anyone your password.
-      </p>
-      <a href="/app/login">Return to sign in</a>
-    </section>
   );
 }

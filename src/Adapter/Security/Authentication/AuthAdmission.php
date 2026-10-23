@@ -68,6 +68,21 @@ final readonly class AuthAdmission implements LoginThrottle
     }
 
     /**
+     * Records all reset dimensions atomically without identity lookup or partial admission
+     */
+    public function passwordReset(#[SensitiveParameter] EmailAddress $email, string $network): void
+    {
+        if (filter_var($network, FILTER_VALIDATE_IP) === false) {
+            throw new RateLimited(60);
+        }
+        $this->attempts->consume([
+            hash_hmac('sha256', 'reset:endpoint', $this->key)                     => $this->endpointLimit,
+            hash_hmac('sha256', 'reset:network:'.inet_pton($network), $this->key) => $this->networkLimit,
+            hash_hmac('sha256', 'reset:email:'.$email->canonical(), $this->key)   => 3
+        ], 900);
+    }
+
+    /**
      * Returns no key or connection details to diagnostic snapshots
      *
      * @return array<string, string>
