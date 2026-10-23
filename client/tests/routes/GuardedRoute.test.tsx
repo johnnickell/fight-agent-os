@@ -81,7 +81,7 @@ describe('complete route guard', () => {
       expect(action).not.toHaveBeenCalled();
     }
   );
-  it('removes a mounted protected outlet at foreground expiry without another navigation', async () => {
+  it('revalidates a mounted protected outlet at foreground expiry without replacing it', async () => {
     vi.useFakeTimers();
     let now = 0;
     const loader = vi.fn(() => Promise.resolve({ status: 'principal', principal } as const));
@@ -90,18 +90,21 @@ describe('complete route guard', () => {
     await cache.load();
     render(<GuardedRoute cache={cache} route={reportRoute} outlet={Outlet} />);
     expect(screen.getByText('Protected report')).toBeVisible();
+    const outlet = screen.getByText('Protected report');
+    const scope = cache.captureScope();
     now = 60_000;
     await act(() => vi.advanceTimersByTimeAsync(60_000));
-    expect(screen.queryByText('Protected report')).not.toBeInTheDocument();
-    expect(screen.getByText('Access needs checking')).toBeVisible();
-    expect(loader).toHaveBeenCalledOnce();
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeEnabled();
+    expect(screen.getByText('Protected report')).toBe(outlet);
+    expect(loader).toHaveBeenCalledTimes(2);
+    expect(scope.signal.aborted).toBe(true);
+    expect(scope.isCurrent()).toBe(false);
   });
   it('does not even import a denied outlet or run its protected loader, then retires data on invalidation', async () => {
     const protectedLoad = vi.fn();
     let scope: AuthorityScope | undefined;
     function LoadedOutlet({ scope: current }: { scope: AuthorityScope }) {
       useEffect(() => {
+        if (!current.isCurrent()) return;
         scope = current;
         protectedLoad();
       }, [current]);
@@ -122,11 +125,12 @@ describe('complete route guard', () => {
     expect(importOutlet).toHaveBeenCalledOnce();
     expect(protectedLoad).toHaveBeenCalledOnce();
     await act(() => cache.signal('refresh-started'));
-    expect(screen.queryByRole('heading', { name: 'Protected report' })).not.toBeInTheDocument();
-    expect(screen.getByText('Access needs checking')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Protected report' })).toBeVisible();
+    expect(protectedLoad).toHaveBeenCalledOnce();
     expect(scope?.signal.aborted).toBe(true);
     expect(scope?.isCurrent()).toBe(false);
+    await act(() => cache.signal('terminal'));
+    expect(screen.queryByRole('heading', { name: 'Protected report' })).not.toBeInTheDocument();
   });
 
   it('renders forbidden for valid denied authority, not sign-in or repeated loads', async () => {

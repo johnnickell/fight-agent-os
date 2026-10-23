@@ -2,7 +2,7 @@
 id: TICKET-00010
 epic: EPIC-00003
 title: Establish safe versioned HTTP API delivery
-status: done
+status: in-progress
 ---
 
 # Establish safe versioned HTTP API delivery
@@ -225,11 +225,16 @@ rather than bypassing auth or leaking credentials to make the viewer appear comp
 | [TASK-00021](../tasks/00021-TASK.md) | Publish and restrict the representative OpenAPI contract | done |
 | [TASK-00117](../tasks/00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | done |
 | [TASK-00153](../tasks/00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done |
-| [TASK-00154](../tasks/00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | done |
+| [TASK-00154](../tasks/00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | in-progress |
 | [TASK-00155](../tasks/00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+TASK-00154 is reopened for the explicitly authorized cycle-3 hosted-memory, semantic develop integration
+and expected-negative-test logging repair. Its earlier acceptance/delivery is historical for candidate A;
+fresh independent Review, affected QA and successful hosted verification remain pending. Requirements and
+production-mail/startup deferral are unchanged.
 
 On 2026-09-30, the maintainer approved argument-free JSON/query source markers, Validation-owned input fields,
 checked request-value consumption without input DTOs, and canonical Action/Responder attribute ordering.

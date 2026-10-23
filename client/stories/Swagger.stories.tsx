@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ApiClient } from '@/api/ApiClient';
+import { Button } from '@/components/Button';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 import SwaggerPage from '@/pages/SwaggerPage';
@@ -48,10 +49,12 @@ const document = {
 };
 function Example({
   available = true,
-  unavailable = false
+  unavailable = false,
+  recheck = false
 }: {
   available?: boolean;
   unavailable?: boolean;
+  recheck?: boolean;
 }) {
   const [state] = useState(() => {
     const userId = crypto.randomUUID();
@@ -129,7 +132,10 @@ function Example({
     };
   }, [state]);
   return ready ? (
-    <SwaggerPage service={state.service} cache={state.cache} />
+    <>
+      {recheck && <Button onClick={state.cache.resume}>Recheck access</Button>}
+      <SwaggerPage service={state.service} cache={state.cache} />
+    </>
   ) : (
     <p>Checking access</p>
   );
@@ -179,6 +185,31 @@ export const CreateRoleInput: Story = {
       canvas.getByRole('textbox', { name: 'Request JSON body' }),
       '{{"name":"ROLE_CATALOG_SAMPLE"}'
     );
+  }
+};
+export const RenewedAuthority: Story = {
+  args: { recheck: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvasElement.querySelector('.opblock-tag')).toBeVisible());
+    const previous = canvasElement.querySelector<HTMLElement>('.opblock-tag[data-tag="Authority"]');
+    if (!previous) throw new Error('Missing tag');
+    await userEvent.click(previous);
+    await userEvent.click(await canvas.findByRole('button', { name: /POST \/api\/v1\/roles/i }));
+    await userEvent.click(await canvas.findByRole('button', { name: 'Try it out' }));
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: 'Request JSON body' }),
+      'private-draft-marker'
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Recheck access' }));
+    await waitFor(async () => {
+      const current = canvasElement.querySelector('.opblock-tag');
+      await expect(current).toBeVisible();
+      await expect(previous.isConnected).toBe(false);
+    });
+    await expect(canvasElement.querySelector('.opblock')).toBeNull();
+    await expect(canvasElement.textContent).not.toContain('private-draft-marker');
+    await expect(canvasElement.textContent).not.toContain('synthetic.catalog.access');
   }
 };
 export const Disabled: Story = { args: { available: false } };

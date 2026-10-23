@@ -46,6 +46,9 @@ export class AuthorityCache {
   #barrier = false;
   #canLoad = true;
   #identity: string | null = null;
+  // A reference to the sole verified projection, never dispatch authority.
+  #presentation: AuthorityState | null = null;
+  #foreground = true;
   #pending: Promise<void> | null = null;
   #request: AbortController | null = null;
   #scope = new AbortController();
@@ -94,12 +97,28 @@ export class AuthorityCache {
     ) {
       // React may read during render. Retire authority immediately; notify other
       // subscribers outside that render rather than updating a sibling mid-render.
-      this.#retire();
-      queueMicrotask(() => this.#emit());
+      const routine =
+        Number.isFinite(now) && now >= this.#lastClock && this.#state.status === 'authenticated';
+      this.#retire(routine);
+      queueMicrotask(() => {
+        this.#emit();
+        if (routine && this.#foreground) void this.load();
+      });
     }
     this.#lastClock = now;
     return this.#state;
   };
+
+  /** Exposes last-verified display only; callers must use getSnapshot for dispatch */
+  getPresentationSnapshot = (): AuthorityState => {
+    const state = this.getSnapshot();
+    return this.#presentation ?? state;
+  };
+
+  setForeground(foreground: boolean): void {
+    this.#foreground = foreground;
+    if (!foreground) clearTimeout(this.#expiry);
+  }
 
   canRetry(): boolean {
     const state = this.getSnapshot();
@@ -131,7 +150,7 @@ export class AuthorityCache {
       return Promise.resolve();
     }
     if (this.#pending) return this.#pending;
-    if (!this.#retire()) return Promise.resolve();
+    if (!this.#retire(true)) return Promise.resolve();
     const context = this.#context;
     const generation = this.#generation;
     const request = new AbortController();
@@ -142,7 +161,7 @@ export class AuthorityCache {
     const pending = Promise.resolve().then(async () => {
       try {
         if (!this.#matches(context, generation)) return;
-        const result = await this.#loader(request.signal);
+        const result = await this.#read(request);
         if (!this.#matches(context, generation)) return;
         this.getSnapshot();
         if (!this.#matches(context, generation)) return;
@@ -185,7 +204,7 @@ export class AuthorityCache {
       return Promise.resolve();
     }
     if (this.#barrier) return Promise.resolve();
-    if (!this.#retire()) return Promise.resolve();
+    if (!this.#retire(signal !== 'authority-changed')) return Promise.resolve();
     if (signal === 'refresh-started' || signal === 'refresh-failed') this.#canLoad = false;
     if (signal === 'credentials-changed') this.#canLoad = true;
     this.#publish({ status: signal === 'refresh-failed' ? 'refresh-failed' : 'stale' });
@@ -225,14 +244,15 @@ export class AuthorityCache {
     });
   }
 
-  /**
-   * Removes presentation on foreground return without polling or starting restoration
-   */
+  /** Coalesces routine foreground verification without granting stale dispatch authority */
   resume = (): void => {
     const state = this.getSnapshot();
-    if (state.status === 'authenticated' || state.status === 'loading') {
-      if (this.#retire()) this.#publish({ status: 'stale' });
-    }
+    if (state.status === 'loading') return;
+    if (state.status === 'authenticated') {
+      if (!this.#retire(true)) return;
+      this.#publish({ status: 'stale' });
+      void this.load();
+    } else if (state.status === 'stale') void this.load();
   };
 
   dispose(): void {
@@ -267,15 +287,12 @@ export class AuthorityCache {
           this.getSnapshot();
           if (!this.#matches(context, generation)) return;
         }
+        if (this.#identity !== null && this.#identity !== principal.userId)
+          this.#presentation = null;
         this.#identity = principal.userId;
-        const remaining = 60_000 - (this.#now() - (this.#startedAt ?? 0));
-        this.#expiry = setTimeout(
-          () => {
-            this.getSnapshot();
-          },
-          Math.max(0, Math.ceil(remaining))
-        );
-        this.#publish({ status: 'authenticated', principal });
+        this.#scheduleExpiry();
+        this.#presentation = Object.freeze({ status: 'authenticated', principal });
+        this.#publish(this.#presentation);
         return;
       }
       case 'anonymous':
@@ -293,6 +310,47 @@ export class AuthorityCache {
       default:
         this.#publish({ status: 'error', reason: 'protocol' });
     }
+  }
+
+  #scheduleExpiry(): void {
+    clearTimeout(this.#expiry);
+    if (!this.#foreground) return;
+    const remaining = 60_000 - (this.#now() - (this.#startedAt ?? 0));
+    this.#expiry = setTimeout(
+      () => {
+        // Timers can run slightly early; reads never renew the request-start budget.
+        if (this.getSnapshot().status === 'authenticated') this.#scheduleExpiry();
+      },
+      Math.max(1, Math.ceil(remaining))
+    );
+  }
+
+  /** Bounds every read even when transport ignores cancellation; late results cannot win */
+  #read(request: AbortController): Promise<PrincipalLoadResult> {
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (result: PrincipalLoadResult) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        request.signal.removeEventListener('abort', abort);
+        resolve(result);
+      };
+      const abort = () => finish({ status: 'network' });
+      const timer = setTimeout(() => {
+        finish({ status: 'network' });
+        request.abort();
+      }, 8_000);
+      request.signal.addEventListener('abort', abort, { once: true });
+      if (request.signal.aborted) abort();
+      else {
+        try {
+          void this.#loader(request.signal).then(finish, abort);
+        } catch {
+          abort();
+        }
+      }
+    });
   }
 
   #matches(context: number, generation: number): boolean {
@@ -330,7 +388,8 @@ export class AuthorityCache {
   /**
    * Retires owned work and reports whether callbacks left this transition current
    */
-  #retire(): boolean {
+  #retire(preservePresentation = false): boolean {
+    if (!preservePresentation) this.#presentation = null;
     // Detach owned state before any external callback. Nested transitions own their
     // replacements; this continuation may only abort its captured old request.
     this.#state = Object.freeze({ status: 'stale' });
@@ -371,15 +430,19 @@ export function observeAuthorityResume(
   window: Window
 ): () => void {
   let hidden = document.visibilityState === 'hidden';
+  cache.setForeground(!hidden);
   const resume = () => {
     if (hidden && document.visibilityState === 'visible') {
       hidden = false;
+      cache.setForeground(true);
       cache.resume();
     }
   };
   const visibility = () => {
-    if (document.visibilityState === 'hidden') hidden = true;
-    else resume();
+    if (document.visibilityState === 'hidden') {
+      hidden = true;
+      cache.setForeground(false);
+    } else resume();
   };
   document.addEventListener('visibilitychange', visibility);
   window.addEventListener('focus', resume);

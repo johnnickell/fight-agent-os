@@ -156,7 +156,7 @@
 | [TASK-00151](00151-TASK.md) | Export and serve public-safe form validation schemas | done | [TICKET-00036](../tickets/00036-TICKET.md) |
 | [TASK-00152](00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | done | [TICKET-00036](../tickets/00036-TICKET.md) |
 | [TASK-00153](00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | done | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | in-progress | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00155](00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | done | — |
 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | done | — |
@@ -507,8 +507,9 @@
 | [TASK-00502](00502-TASK.md) | Follow current-session children and their worktree test logs automatically | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | done | — |
-| [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | ready-for-agent | — |
+| [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | done | — |
 | [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | ready-for-agent | — |
 | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00508](00508-TASK.md) | Preserve readable prose in agent handoffs | ready-for-human | — |
+| [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | done | — |
 <!-- /planning:records -->

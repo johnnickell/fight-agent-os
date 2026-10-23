@@ -109,7 +109,12 @@ Swagger authorization actions/stores, curl/request snippets, clipboard and downl
 Responses are reconstructed solely from existing safe codecs; raw headers, Response/error objects and credential
 responses never reach the renderer. User-entered Role names are volatile form state, not persisted drafts.
 
-Authority/credential/context invalidation aborts and fences loads/operations. Late success and failure cannot
+Authority/credential/context invalidation aborts and fences loads/operations. TASK-00505's background
+renewal retains the same-context application frame, route and focus, not Swagger dispatch authority or private
+library state. The Page observes the sole cache's current dispatch scope (never its presentation snapshot),
+retires the old library during verification, then reads bootstrap/spec again only after fresh authority returns.
+Each new library starts collapsed with no retained request/form/response state and no replay. A new denied
+permission, identity/session end or logout removes the protected outlet. Late success and failure cannot
 restore the view or affect a newer context. On teardown the host is hidden immediately, child subscribers are
 unmounted through a supported React wrapper, then the entire library store/config document is erased and late
 dispatches ignored. Erasing Redux before unmounting children caused upstream selector TypeErrors in earlier
@@ -155,10 +160,13 @@ collapsed/expanded/input/response/focus, denied/direct reads and authority expir
 disposable isolated data; never capture filled passwords, credential responses, mailbox bodies or token-bearing
 requests. The isolated catcher is not a production provider.
 
-TASK-00154's Engineer evidence is retained under `.runs/tasks/TASK-00154/runs/xdebug-swagger/` in the selected
-checkout. Its task-owned `run.sh` supplies the isolated project, ports and private environment file; runtime
-fixtures, leaves, browser profile/trust and generated assets stay under ignored `var/`. Reuse the retained private
-fixture file only locally; do not paste it into reports. The handoff records exact receipts, warnings, host-browser
+Historical TASK-00154 Engineer evidence was under `.runs/tasks/TASK-00154/runs/xdebug-swagger/` in the
+selected checkout; that worktree-local runtime/evidence was removed during earlier delivery cleanup and is
+not available for reuse. Cycle-3 fresh Engineer evidence uses `.runs/tasks/TASK-00154/runs/repair3/` with
+canonical preserved originals at the base checkout's
+`.runs/build/TASK-00154/run-dbISWuvr/repair3-orkQYdTG/evidence/`. The new task-owned `run.sh` supplies the
+isolated project, ports and private environment file; fresh runtime fixtures, leaves, browser profile and
+generated assets stay under ignored `var/`. Use private fixtures only locally; do not paste them into reports. The handoff records exact receipts, warnings, host-browser
 trust provenance, visual inspection limits and service cleanup. Native browser evidence and synthetic catalog
 checks are distinct. Independent Review/QA must assess the committed candidate; none of these checks certifies
 all browsers, physical assistive technology, production ingress or universal accessibility.

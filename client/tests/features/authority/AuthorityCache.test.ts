@@ -452,7 +452,7 @@ describe('bounded freshness and tab lifecycle', () => {
     await cache.load();
     expect(cache.getSnapshot().status).toBe('stale');
   });
-  it('expires mounted subscriptions 60 seconds from request start, not receipt, without polling', async () => {
+  it('revalidates 60 seconds from request start and stops automatic attempts after failure', async () => {
     vi.useFakeTimers();
     let now = 1000;
     const response = deferred<PrincipalLoadResult>();
@@ -467,14 +467,15 @@ describe('bounded freshness and tab lifecycle', () => {
     now += 9999;
     expect(cache.getSnapshot().status).toBe('authenticated');
     now++;
+    loader.mockResolvedValueOnce({ status: 'network' });
     await vi.advanceTimersByTimeAsync(10_000);
-    expect(cache.getSnapshot()).toEqual({ status: 'stale' });
-    expect(listener).toHaveBeenCalledTimes(3);
+    expect(cache.getSnapshot()).toEqual({ status: 'error', reason: 'network' });
+    expect(cache.getPresentationSnapshot()).toEqual({ status: 'authenticated', principal });
+    expect(loader).toHaveBeenCalledTimes(2);
     await vi.advanceTimersByTimeAsync(180_000);
-    expect(loader).toHaveBeenCalledOnce();
-    unsubscribe();
     cache.resume();
-    expect(listener).toHaveBeenCalledTimes(3);
+    expect(loader).toHaveBeenCalledTimes(2);
+    unsubscribe();
   });
 
   it.each([60_000, 60_001, -1, Number.NaN])(
@@ -519,7 +520,7 @@ describe('bounded freshness and tab lifecycle', () => {
     document.dispatchEvent(new Event('visibilitychange'));
     visibility.mockReturnValue('visible');
     window.dispatchEvent(new Event('focus'));
-    expect(cache.getSnapshot().status).toBe('stale');
+    expect(cache.getSnapshot().status).toBe('loading');
     await cache.load();
     document.dispatchEvent(new Event('visibilitychange'));
     expect(cache.getSnapshot().status).toBe('authenticated');
@@ -531,13 +532,35 @@ describe('bounded freshness and tab lifecycle', () => {
     expect(cache.getSnapshot().status).toBe('authenticated');
   });
 
-  it('fences a load interrupted by visibility return', async () => {
+  it('bounds a routine stalled read, stops retries and fences late success after timeout', async () => {
+    vi.useFakeTimers();
+    const response = deferred<PrincipalLoadResult>();
+    const loader = vi.fn().mockResolvedValueOnce(success).mockReturnValueOnce(response.promise);
+    const cache = cacheWith(loader);
+    await cache.load();
+    const display = cache.getPresentationSnapshot();
+    cache.resume();
+    await vi.advanceTimersByTimeAsync(8_000);
+    expect(cache.getSnapshot()).toEqual({ status: 'error', reason: 'network' });
+    expect(cache.getPresentationSnapshot()).toBe(display);
+    expect(cache.captureScope().isCurrent()).toBe(false);
+    response.resolve(success);
+    await response.promise;
+    await vi.advanceTimersByTimeAsync(180_000);
+    cache.resume();
+    expect(loader).toHaveBeenCalledTimes(2);
+    expect(cache.getSnapshot()).toEqual({ status: 'error', reason: 'network' });
+    await cache.signal('logout');
+    expect(cache.getPresentationSnapshot()).toEqual({ status: 'anonymous', reason: 'logout' });
+  });
+
+  it('coalesces visibility return with an already pending verification', async () => {
     const response = deferred<PrincipalLoadResult>();
     const cache = cacheWith(() => response.promise);
     const load = cache.load();
     cache.resume();
     response.resolve(success);
     await load;
-    expect(cache.getSnapshot().status).toBe('stale');
+    expect(cache.getSnapshot().status).toBe('authenticated');
   });
 });

@@ -31,6 +31,9 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Messaging\Command\SynchronousCommandBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
+use Monolog\Formatter\JsonFormatter;
+use Monolog\Handler\TestHandler;
+use Monolog\Level;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -211,6 +214,12 @@ final class SwaggerApiTest extends TestCase
     #[DataProvider('authorityCases')]
     public function testCurrentAuthority(string $case, int $status): void
     {
+        $logs = new TestHandler(Level::Error);
+        $logs->setFormatter(new JsonFormatter());
+        // Only the deliberate unavailable-repository case replaces stderr; unexpected failures stay visible.
+        if ($case === 'unavailable') {
+            $this->container->get('http.failure.logger')->setHandlers([$logs]);
+        }
         if ($case !== 'insufficient') {
             $this->grantSuperAdmin();
         }
@@ -238,6 +247,30 @@ final class SwaggerApiTest extends TestCase
             self::assertStringNotContainsString('viewer_version', (string) $response->getBody());
             self::assertStringNotContainsString('Private contract', (string) $response->getBody());
             self::assertStringNotContainsString('private-repository-detail', (string) $response->getBody());
+            if ($case === 'unavailable') {
+                self::assertCount(1, $logs->getRecords());
+                $record = $logs->getRecords()[0];
+                self::assertSame(Level::Error, $record->level);
+                self::assertSame('http-failure', $record->channel);
+                self::assertSame('Unhandled HTTP request failure.', $record->message);
+                self::assertMatchesRegularExpression(
+                    '/\A[a-f0-9]{32}\z/',
+                    $response->getHeaderLine('X-Correlation-ID')
+                );
+                self::assertSame([
+                    'correlation_id'     => $response->getHeaderLine('X-Correlation-ID'),
+                    'correlation_source' => 'generated',
+                    'request_method'     => 'GET',
+                    'exception_type'     => \RuntimeException::class
+                ], $record->context);
+                self::assertSame([], $record->extra);
+                self::assertIsString($record->formatted);
+                $secrets = ['private-repository-detail', $this->token, $this->session->getId()->toString()];
+                foreach ($secrets as $secret) {
+                    self::assertStringNotContainsString($secret, $record->formatted);
+                }
+                $logs->clear();
+            }
         }
     }
 

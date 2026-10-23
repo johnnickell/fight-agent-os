@@ -12,7 +12,7 @@
 | [TICKET-00007](00007-TICKET.md) | Stabilize application dependencies and smoke baseline | done | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00008](00008-TICKET.md) | Establish application ownership and orchestration boundaries | done | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00009](00009-TICKET.md) | Establish authoritative PostgreSQL persistence | done | [EPIC-00003](../epics/00003-EPIC.md) |
-| [TICKET-00010](00010-TICKET.md) | Establish safe versioned HTTP API delivery | done | [EPIC-00003](../epics/00003-EPIC.md) |
+| [TICKET-00010](00010-TICKET.md) | Establish safe versioned HTTP API delivery | in-progress | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00011](00011-TICKET.md) | Establish recoverable external-effect delivery | done | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00012](00012-TICKET.md) | Establish the React and component-catalog foundation | done | [EPIC-00003](../epics/00003-EPIC.md) |
 | [TICKET-00013](00013-TICKET.md) | Complete the owned-code quality gate | done | [EPIC-00003](../epics/00003-EPIC.md) |

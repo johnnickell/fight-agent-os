@@ -3,7 +3,7 @@ import Offcanvas from 'react-bootstrap/Offcanvas';
 
 import { Button } from '@/components/Button';
 import { evaluateAccess } from '@/features/authority/evaluateAccess';
-import { useAuthority } from '@/features/authority/useAuthority';
+import { useAuthority, useAuthorityPresentation } from '@/features/authority/useAuthority';
 import { ThemeSelector } from '@/features/theme/ThemeSelector';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 
@@ -65,7 +65,8 @@ export function ApplicationFrame(props: FrameProps) {
 }
 
 function FrameContent({ cache, pathname, title, theme, onLogout, children }: FrameProps) {
-  const state = useAuthority(cache);
+  const state = useAuthorityPresentation(cache);
+  const dispatch = useAuthority(cache);
   const opener = useRef<HTMLButtonElement>(null);
   const frame = useRef<HTMLDivElement>(null);
   const { narrow, expanded, setExpanded } = useFrameNavigation(frame);
@@ -123,6 +124,11 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
                     <li key={route.pathname}>
                       <a
                         href={route.pathname}
+                        aria-disabled={dispatch.status !== 'authenticated' || undefined}
+                        onClick={(event) => {
+                          if (cache.getSnapshot().status !== 'authenticated')
+                            event.preventDefault();
+                        }}
                         aria-current={pathname === route.pathname ? 'page' : undefined}
                       >
                         {route.title}

@@ -5,7 +5,7 @@
 |---|---|---|---|
 | [EPIC-00001](00001-EPIC.md) | Establish project-local planning skills | done | — |
 | [EPIC-00002](00002-EPIC.md) | Establish project-local execution and design skills | done | — |
-| [EPIC-00003](00003-EPIC.md) | Establish the web application architecture foundation | done | — |
+| [EPIC-00003](00003-EPIC.md) | Establish the web application architecture foundation | in-progress | — |
 | [EPIC-00004](00004-EPIC.md) | Deliver the invite-only authenticated application shell | ready-for-agent | — |
 | [EPIC-00005](00005-EPIC.md) | Deliver the registered Planning workspace | ready-for-agent | — |
 | [EPIC-00006](00006-EPIC.md) | Deliver browser Planning Agents and the trusted Harness | ready-for-agent | — |

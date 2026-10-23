@@ -21,41 +21,45 @@ function FrameExample({
   initial = '/app/dashboard',
   longEmail = false
 }: {
-  outcome?: 'ready' | 'denied' | 'pending' | 'protocol' | 'network' | 'terminal';
+  outcome?: 'ready' | 'denied' | 'pending' | 'protocol' | 'network' | 'terminal' | 'background';
   initial?: string;
   longEmail?: boolean;
 }) {
   const [pathname, setPathname] = useState(initial);
   const [session] = useState(() => {
     const tokens = new MemoryAccessToken();
+    const identity = crypto.randomUUID();
+    let reads = 0;
     const authority = new AuthorityCache(() =>
-      outcome === 'pending'
-        ? new Promise(() => {})
-        : Promise.resolve(
-            outcome === 'protocol'
-              ? { status: 'protocol' }
-              : {
-                  status: 'principal',
-                  principal: {
-                    userId: crypto.randomUUID(),
-                    email: longEmail
-                      ? `${'reader'.repeat(10)}@example.test`
-                      : 'reader@example.test',
-                    roles: ['ROLE_SUPER_ADMIN'],
-                    permissions:
-                      outcome === 'denied'
-                        ? []
-                        : [
-                            'VIEW_DASHBOARD',
-                            'READ_OWN_SESSIONS',
-                            'READ_USERS',
-                            'INVITE_USERS',
-                            'ASSIGN_SUPER_ADMIN',
-                            'MANAGE_USER_INVITATIONS'
-                          ]
+      outcome === 'background' && ++reads > 1
+        ? Promise.resolve({ status: 'network' })
+        : outcome === 'pending'
+          ? new Promise(() => {})
+          : Promise.resolve(
+              outcome === 'protocol'
+                ? { status: 'protocol' }
+                : {
+                    status: 'principal',
+                    principal: {
+                      userId: identity,
+                      email: longEmail
+                        ? `${'reader'.repeat(10)}@example.test`
+                        : 'reader@example.test',
+                      roles: ['ROLE_SUPER_ADMIN'],
+                      permissions:
+                        outcome === 'denied'
+                          ? []
+                          : [
+                              'VIEW_DASHBOARD',
+                              'READ_OWN_SESSIONS',
+                              'READ_USERS',
+                              'INVITE_USERS',
+                              'ASSIGN_SUPER_ADMIN',
+                              'MANAGE_USER_INVITATIONS'
+                            ]
+                    }
                   }
-                }
-          )
+            )
     );
     const intent = new IntendedRoute(authority, () => applicationRoutes, window.location.origin);
     const coordinator = new SessionCoordinator({
@@ -114,14 +118,17 @@ function FrameExample({
       })
   );
   useEffect(() => {
-    void session.coordinator.restore();
+    void session.coordinator.restore().then(async () => {
+      await session.authority.load();
+      if (outcome === 'background') session.authority.resume();
+    });
     return () => {
       session.intent.dispose();
       session.coordinator.dispose();
       session.authority.dispose();
       session.schemas.clear();
     };
-  }, [session]);
+  }, [session, outcome]);
   return (
     <ApplicationView session={session} pathname={pathname} navigate={setPathname} theme={theme} />
   );
@@ -145,6 +152,15 @@ export const RestoringAuthority: Story = { args: { outcome: 'pending' } };
 export const MalformedAuthority: Story = { args: { outcome: 'protocol' } };
 export const SessionNetworkFailure: Story = { args: { outcome: 'network' } };
 export const SessionExpired: Story = { args: { outcome: 'terminal' } };
+export const BackgroundCheckUnavailable: Story = {
+  args: { outcome: 'background' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
+    await expect(await canvas.findByRole('button', { name: 'Retry access check' })).toBeVisible();
+    await expect(canvas.getByText(/Current access could not be verified/)).toBeVisible();
+  }
+};
 export const AccountSeam: Story = { args: { initial: '/app/account' } };
 export const InvitationSeam: Story = { args: { initial: '/app/admin/invitations' } };
 export const DrawerKeyboard: Story = {

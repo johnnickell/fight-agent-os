@@ -134,7 +134,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 |---|---|---|---|
 | [EPIC-00001](epics/00001-EPIC.md) | Establish project-local planning skills | foundation | done |
 | [EPIC-00002](epics/00002-EPIC.md) | Establish project-local execution and design skills | foundation | done |
-| [EPIC-00003](epics/00003-EPIC.md) | Establish the web application architecture foundation | foundation | done |
+| [EPIC-00003](epics/00003-EPIC.md) | Establish the web application architecture foundation | foundation | in-progress |
 | [EPIC-00004](epics/00004-EPIC.md) | Deliver the invite-only authenticated application shell | foundation | ready-for-agent |
 | [EPIC-00005](epics/00005-EPIC.md) | Deliver the registered Planning workspace | registered-planning-workspace | ready-for-agent |
 | [EPIC-00006](epics/00006-EPIC.md) | Deliver browser Planning Agents and the trusted Harness | browser-planning-agents-harness | ready-for-agent |

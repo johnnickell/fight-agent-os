@@ -1,7 +1,7 @@
-FROM php:8.5.10-fpm-bookworm
+FROM php:8.5.12-fpm-bookworm@sha256:d3db5340c7ecfb1e3a26af5d3d9de8b4e160cdd75692a830b5cb74b0b85db2cf
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends --yes libpq-dev \
+    && apt-get install --no-install-recommends --yes ca-certificates libpq-dev \
     && docker-php-ext-install pdo_pgsql \
     && pecl install xdebug-3.5.0 \
     && docker-php-ext-enable xdebug \
