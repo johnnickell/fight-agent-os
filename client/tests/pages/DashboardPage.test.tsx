@@ -55,8 +55,8 @@ describe('honest Dashboard permission and destination contracts', () => {
     const admin = main.queryByRole('navigation', { name: 'Dashboard administration' });
     for (const [title, bit, path] of [
       ['Users', 2, '/app/admin/users'],
-      ['Invite user', 4, '/app/admin/invite'],
-      ['Invitation administration', 8, '/app/admin/invitations']
+      ['Invite User', 4, '/app/admin/invite'],
+      ['Invitation Administration', 8, '/app/admin/invitations']
     ] as const) {
       const link = main.queryByRole('link', { name: title });
       if (mask & bit) {
@@ -66,11 +66,11 @@ describe('honest Dashboard permission and destination contracts', () => {
     }
     expect(Boolean(admin)).toBe(Boolean(mask & 14));
     expect(main.queryByRole('link', { name: 'Invite Super Admin' })).not.toBeInTheDocument();
-    expect(main.getByRole('link', { name: 'Account / Security' })).toHaveAttribute(
+    expect(main.getByRole('link', { name: 'Account & Security' })).toHaveAttribute(
       'href',
       '/app/account'
     );
-    expect(Boolean(main.queryByRole('link', { name: 'Active sessions' }))).toBe(Boolean(mask & 32));
+    expect(Boolean(main.queryByRole('link', { name: 'Active Sessions' }))).toBe(Boolean(mask & 32));
     for (const link of main.getAllByRole('link')) {
       const route = applicationRoutes.find((route) => route.pathname === link.getAttribute('href'));
       expect(route).toBeDefined();
@@ -217,7 +217,7 @@ describe('honest Dashboard permission and destination contracts', () => {
       oldest.resolve({ status: 'network' });
       await Promise.all([older.promise, oldest.promise]);
     });
-    expect(screen.getAllByText('replacement@example.test')).toHaveLength(2);
+    expect(screen.getAllByText('replacement@example.test')).toHaveLength(1);
     expect(screen.queryByText(principal.email)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Users' })).not.toBeInTheDocument();
     expect(owner.refresh).toHaveBeenCalledOnce();

@@ -97,7 +97,8 @@ describe('authoritative frame transitions', () => {
         expect(screen.getByRole('heading', { name: 'Not installed yet' })).toBeVisible();
       else expect(screen.getByText(route.availability ?? '')).toBeVisible();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Sign out' })).toBeVisible();
+      fireEvent.click(screen.getByRole('button', { name: 'User Menu' }));
+      expect(screen.getByRole('button', { name: 'Sign Out' })).toBeVisible();
     }
   );
 
@@ -155,7 +156,7 @@ describe('authoritative frame transitions', () => {
     expect(screen.getByText('Your session has expired or ended')).toBeVisible();
     expect(screen.queryByText(principal.email)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Open navigation' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Sign out' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'User Menu' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Sign in again' }));
     expect(await screen.findByLabelText('Password (required)')).toBeVisible();
     expect(owner.intent.capture('/app/account')).toBe(true);
@@ -194,7 +195,7 @@ describe('authoritative frame transitions', () => {
     owner.intent.capture('/app/account/sessions');
     render(<Mounted owner={owner} initial="/app/login" />);
     await act(() => owner.coordinator.restore());
-    expect(await screen.findByRole('heading', { name: 'Active sessions' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Active Sessions' })).toBeVisible();
     expect(owner.intent.consume()).toBeNull();
   });
 
@@ -205,7 +206,7 @@ describe('authoritative frame transitions', () => {
     expect(window.location.search).toBe('');
     expect(window.location.hash).toBe('');
     await act(() => owner.coordinator.restore());
-    expect(await screen.findByRole('heading', { name: 'Account / Security' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Account & Security' })).toBeVisible();
     expect(owner.intent.consume()).toBeNull();
     expect(document.body.textContent).not.toMatch(/private-marker|cookie-marker/);
   });
@@ -216,7 +217,8 @@ describe('authoritative frame transitions', () => {
     render(<Mounted owner={owner} initial="/app/dashboard" />);
     await act(() => owner.coordinator.restore());
     await screen.findByRole('heading', { name: 'Dashboard' });
-    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
+    fireEvent.click(screen.getByRole('button', { name: 'User Menu' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
     expect(screen.queryByText(principal.email)).not.toBeInTheDocument();
     expect(await screen.findByText(/Server sign-out is unconfirmed/)).toBeVisible();
     expect(owner.refresh).toHaveBeenCalledOnce();
