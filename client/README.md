@@ -43,9 +43,9 @@ is local provenance/staleness evidence, not a tamper-proof integrity check of ev
 Acceptance containers mount source and dependencies read-only, with only ignored Vite/Storybook cache mounts
 writable beneath `node_modules`. Fix/install/lock commands are the explicit exceptions.
 
-Selected from registry engine/peer contracts. The October security candidate installs and passes the
-behavioral checks below, but strict catalog typing remains blocked; see the
-[runtime security qualification](../docs/engineering/SECURITY_RUNTIME_UPDATES.md) before adoption:
+Selected from registry engine/peer contracts. The October security candidate passes focused typing with
+the catalog-only declaration-check exception described below; see the
+[runtime security qualification](../docs/engineering/SECURITY_RUNTIME_UPDATES.md) for acceptance status:
 
 - Node **24.22.1**, npm **11.19.1**, official Bookworm-slim image pinned by digest in `bin/client`.
   Node 24 is the [LTS line](https://github.com/nodejs/Release#release-schedule); npm is its bundled manager,
@@ -169,7 +169,8 @@ pairs 2.x with Bootstrap 5.x. TypeScript and Storybook have no declared peer con
 compilation and production/catalog builds qualify our usage, not every library export. FormControl's optional
 props/value declarations are narrower than native input props: the adapter omits absent values, copies readonly
 array values and maps native numeric `size` to `htmlSize` without widening or casting the public contract.
-No forced peers, `skipLibCheck`, unrelated upgrades or new form/state libraries are used. Future control adoption
+That original qualification used no forced peers, `skipLibCheck`, unrelated upgrades or new form/state
+libraries. The current catalog-only exception is documented below. Future control adoption
 still needs its own interaction qualification, especially overlay focus and transition behavior on React 19.
 
 ### Styles and customization boundary
@@ -531,14 +532,18 @@ screen-reader announcements. Independent interactive QA remains separate.
 ### Catalog dependency qualification
 
 Storybook 10.4.6 was previously selected after 10.6.1 failed strict TypeScript 6/exact-optional checks.
-10.4.6 is affected by CVE-2026-114125 and is no longer selected. Patched 10.6.2 and the current 10.6.3
-candidate still fail strict checks in upstream React CSF declarations; the normal 2 GiB tooling container
-also exhausts Node's default heap during catalog typing. A diagnostic with a 1536 MiB heap exposes the
-upstream declaration errors, not a passing check. No `skipLibCheck`, strictness relaxation or unsafe
-Storybook security flag is enabled. The full gate remains blocked pending a compatible patched release
-or a separately qualified bounded correction. Browser/static catalog success alone is not acceptance.
+10.4.6 is affected by CVE-2026-114125 and is no longer selected. Patched 10.6.2 and 10.6.3 fail internal
+React CSF declaration validation; ordinary catalog typing also exhausted Node's default heap. TASK-00509's
+human amendment authorizes `skipLibCheck` in **`tsconfig.catalog.json` only**. Both TypeScript projects now
+pass focused typing at the unchanged default heap and 2 GiB container limit, retaining Storybook 10.6.3.
+This skips internal validation of **all `.d.ts` files in the catalog project**, not just Storybook's faulty
+file. Imported declarations still type-check application/story/configuration source usage; `strict`,
+`exactOptionalPropertyTypes` and `noUncheckedIndexedAccess` remain enabled. The application/test project
+(`tsconfig.json`) still validates declarations without `skipLibCheck`. No vendor patch, force install,
+ignored peer dependency or unsafe Storybook security flag is used. This is a disclosed verification
+tradeoff, not proof the upstream declarations are valid; browser/static success alone is not acceptance.
 The catalog has its own strict TypeScript scope because Storybook and Vitest expose separate assertion
-environments. No `skipLibCheck`, force install or ignored peer dependencies are used. jest-dom 6.9.1 aligns with Storybook's matcher implementation. The jsdom setup manually
+environments. jest-dom 6.9.1 aligns with Storybook's matcher implementation. The jsdom setup manually
 registers its matchers and augments only `Assertion`: its convenience Vitest adapter also augments asymmetric
 matchers, which conflicts with Vitest 4 browser declarations. Existing application assertions remain exercised.
 

@@ -1,9 +1,12 @@
 # October runtime security candidate (TASK-00509)
 
-This is an **incomplete implementation candidate**, not accepted security maintenance or production
-certification. The patched selections build and pass the focused runtime/browser probes, but Storybook's
-upstream React declarations fail strict catalog typing. Do not bypass that check or resume an affected
-Storybook dev server as a workaround. Independent Review/QA and operational adoption remain separate.
+This is an **implementation candidate**, not independently accepted security maintenance or production
+certification. The patched selections build and pass the initial focused runtime/browser probes. The
+maintainer's amendment authorizes catalog-only `skipLibCheck` for Storybook's upstream declaration defect;
+fresh focused typing and the full local gate pass with that exception. Evidence is recorded below and
+in the TASK.
+Do not resume an affected Storybook dev server as a workaround. Independent Review/QA and operational
+adoption remain separate.
 
 ## Selections and applicability
 
@@ -29,8 +32,9 @@ The digest pins are multi-platform registry identities; other architectures were
 - [Storybook GHSA-f2ph-cmg5-wxc8](https://github.com/storybookjs/storybook/security/advisories/GHSA-f2ph-cmg5-wxc8)
   affects interactive 10.x dev servers below 10.6.2 (CVE-2026-114125). Static catalogs and headless-only
   use are excluded upstream; loopback/read-only mounts reduce effects but are not a substitute for patching.
-  10.6.2 and 10.6.3 both fail the repository's strict React CSF declaration checks. No insecure iframe
-  embedding/messaging flags, peer overrides, declaration edits or strictness relaxations are introduced.
+  10.6.2 and 10.6.3 both fail internal React CSF declaration checks. The human-authorized catalog-only
+  `skipLibCheck` exception below retains 10.6.3 without insecure iframe embedding/messaging flags,
+  peer overrides, vendor declaration edits or reduced application/source strictness.
 - [NGINX advisories](https://nginx.org/en/security_advisories.html) place 1.28.3 in the ranges for
   alias/rewrite CVE-2026-15176, HTTP/3 CVE-2026-95101, session tickets CVE-2026-97629 and AIO
   CVE-2026-97205. The unchanged local config enables neither HTTP/3 nor AIO nor alias/rewrite;
@@ -67,7 +71,7 @@ in-image command-not-found is not counted as a negative-certificate pass. PHP an
 verified a normal public HTTPS registry connection. These bounded checks do not certify every chain,
 browser revocation policy, host trust store or external service.
 
-## Verification and remaining blocker
+## Verification and declaration-check tradeoff
 
 Direct pre-repair inventory failed all six version checks; the same post-repair check passes. Both PHP
 images execute 8.5.12 with pdo_pgsql, mbstring, sodium, OpenSSL and Xdebug 3.5.0. The PHP 512 MiB limit,
@@ -79,21 +83,36 @@ refusal to promote forwarded HTTP to trusted TLS. This is not a full authenticat
 The 10.6.3 candidate passes app typing, lint, formatting, 924 unit/component tests, production build,
 93 Chromium story interactions/a11y checks and 186 narrow/wide story captures without page errors or
 external requests. A live dev preview renders with upstream `frame-ancestors` localhost restrictions
-and no insecure flags. **Catalog typing fails:** the normal 2 GiB container exhausts Node's default heap;
-a 1536 MiB diagnostic exposes TS2578/TS2344 in upstream `@storybook/react` declarations with
-`exactOptionalPropertyTypes`. A compatible patched 10.x release or a qualified bounded correction is
-required; increasing memory alone does not fix those errors. Do not add `skipLibCheck` or disable
-exact-optional checks to manufacture acceptance. The mandatory `./bin/build` fails at frontend typing with exit 134; preceding backend/static phases and
-456 Pi tests pass, but later frontend phases are not reached. Its receipt records `result=fail` and
-`source_unchanged=true`; see the TASK for its exact path and backend counts.
+and no insecure flags. These are initial implementation receipts, not fresh repair evidence. Initial
+catalog typing exhausted Node's default heap; a 1536 MiB diagnostic exposed TS2578/TS2344 in upstream
+`@storybook/react` declarations with `exactOptionalPropertyTypes`. The initial mandatory gate failed
+with exit 134; its failed receipt remains preserved in the TASK.
+
+After that checkpoint, the maintainer instructed: "I think we should try that, and if that doesn't work,
+let's remove storybook", referring to `skipLibCheck`. This explicitly supersedes the initial prohibition.
+The repair sets `skipLibCheck: true` **only in `client/tsconfig.catalog.json`**; fresh focused typecheck,
+lint and formatting pass without a heap override. TypeScript skips internal validation of **all catalog
+`.d.ts` files**, not just the faulty Storybook declarations, so their internal consistency is no longer
+verified by that project. Source usage is still checked against imported declarations; application,
+story and configuration source retain strict, exact-optional and unchecked-index checks. The separate
+application/test project keeps declaration validation enabled. No vendor files, dependency pins, resource
+limits or upstream origin protections change. Storybook removal is conditional on this option failing
+to resolve the demonstrated blocker; focused typing succeeds, so no catalog capabilities or tests are
+removed. The full repair gate passes all 24 phases in 840.459 seconds, including 1690 backend tests,
+456 Pi tests, 924 client tests, 93 browser-story tests and 186 captures. Receipt:
+`.runs/build/20261023T002034Z-893/receipt.json` (`result=pass`, `source_unchanged=true`). The TASK records
+coverage, warnings and the final committed-head handoff; independent acceptance remains pending.
 
 Live npm audit additionally reports seven affected dependency entries (five moderate, two high) in
 Vitest/mocker, Vite/launch-editor and source-map-js. These are escalated for a separate scope decision,
-not silently upgraded here. The audit does not report the removed Storybook advisory. Existing Sass,
+not silently upgraded here. The fresh repair audit reproduces the same count and exits 1; the mandatory
+gate passes, but this is not a vulnerability-free claim. Neither audit reports the removed Storybook
+advisory. Existing Sass,
 catalog chunk/directive warnings and unsupported ESLint 9 installation warnings remain visible.
 
-Evidence is checkout-local under `.runs/tasks/TASK-00509/runs/20261022-work-initial/`; see the
-[TASK](../../planning/tasks/00509-TASK.md) for the gate disposition and continuation.
+Initial evidence is checkout-local under `.runs/tasks/TASK-00509/runs/20261022-work-initial/`;
+fresh repair evidence is under `.runs/tasks/TASK-00509/runs/20261023-work-repair1/`. See the
+[TASK](../../planning/tasks/00509-TASK.md) for the current gate disposition and continuation.
 
 ## Explicit adoption and safe rollback
 
