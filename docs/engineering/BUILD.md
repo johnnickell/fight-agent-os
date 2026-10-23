@@ -25,7 +25,7 @@ preserving the other services and development database. For CLI image changes, f
 `docker compose build web`, then that same web-only refresh. Never silently refresh a service inside acceptance.
 Before reinstalling frontend dependencies in an already-running project, stop only `web`
 (`docker compose stop web`), then run setup and `./bin/up`; npm ci replaces nested cache-mount directories.
-Do not replace dependencies beneath a live gate. Missing/stale Compose configuration or tooling-image identity
+Do not replace dependencies beneath a live gate. Missing/stale Compose configuration or missing tooling setup
 fails with an explicit setup instruction.
 Export OpenAPI/validation metadata again after their source contracts change; checks only compare freshness.
 
