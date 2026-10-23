@@ -105,7 +105,9 @@ Never pass `--continue`, `--resume`, `--session`, `--fork`, the parent transcrip
 session directory supplies fresh context; Review and QA must have no prior implementation contributions.
 Repairs receive current findings through exact prior-role handoffs, not the Engineer conversation.
 
-Write the stage request using the existing authorization and verified current Git identity. Include role, TASK, exact checkout/base/head,
+Write and read back the stage request under the shared [readability rules](../../../docs/engineering/HANDOFFS.md#readable-handoff-text)
+before dispatch, including when adapting an earlier handoff. Use the existing authorization and verified current
+Git identity. Include role, TASK, exact checkout/base/head,
 absolute owning provider skill path, absolute project-context path, target instruction/binding paths, permitted
 effects, relevant evidence paths, original authorization, remaining repair allowance and expected handoff.
 Tell the child to verify the target Git identity and read the context, target instructions and binding before

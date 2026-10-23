@@ -41,7 +41,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
@@ -425,6 +424,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 73 | [TASK-00076](00076-TASK.md) | Qualify supported local Planning operation | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-human | [TASK-00075](00075-TASK.md) | — |
 | 101 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-human | [TASK-00103](00103-TASK.md) | — |
 | 111 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-human | [TASK-00104](00104-TASK.md), [TASK-00113](00113-TASK.md) | — |
+| — | [TASK-00508](00508-TASK.md) | Preserve readable prose in agent handoffs | — (standalone chore) | ready-for-human | — | [PR #145](https://github.com/johnnickell/fight-agent-os/pull/145) |
 
 ## Needs Triage
 
@@ -554,5 +554,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00500](00500-TASK.md) | Restore native file tools and use Terra for Land | — (standalone chore) | done | — | [PR #122](https://github.com/johnnickell/fight-agent-os/pull/122) |
 | — | [TASK-00501](00501-TASK.md) | Restore local PHP diagnostics and bound development processes | — (standalone bug) | done | — | [PR #131](https://github.com/johnnickell/fight-agent-os/pull/131) |
 | — | [TASK-00502](00502-TASK.md) | Follow current-session children and their worktree test logs automatically | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #144](https://github.com/johnnickell/fight-agent-os/pull/144) |
+| — | [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #146](https://github.com/johnnickell/fight-agent-os/pull/146) |
 | — | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | — (standalone chore) | done | — | [PR #142](https://github.com/johnnickell/fight-agent-os/pull/142) |
 <!-- /planning:board -->
