@@ -7,6 +7,8 @@ import { applicationResolve } from './vite.resolve.ts';
 export default defineConfig({
   cacheDir: '../.runs/cache/client/storybook-test-vite',
   resolve: applicationResolve,
+  // Prebundle before browser tests, including when source advances over a warm cache.
+  optimizeDeps: { include: ['react-bootstrap/Dropdown'] },
   plugins: [storybookTest({ configDir: './.storybook' })],
   test: {
     name: 'storybook',
