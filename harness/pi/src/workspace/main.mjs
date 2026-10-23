@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs';
+import { accessSync, constants, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { Workspace, clean } from './presentation.mjs';
@@ -42,27 +42,36 @@ export function options(argv, cwd) {
       const value = argv[++index]; if (!value || value.startsWith('-')) throw new Error(`Missing value for ${option}`);
       args.push(option, value);
     } else if (['--continue', '--no-session'].includes(option)) args.push(option);
-    else throw new Error(`Unsupported workspace option: ${clean(option)} (see harness/pi/WORKSPACE.md)`);
+    else throw new Error(`Unsupported workspace option: ${clean(option)} (see fight-terminal --help)`);
   }
   if (!args.includes('--no-session') && !args.includes('--session-dir')) args.push('--session-dir', resolve(cwd, 'var/terminal/sessions'));
   return { args, theme, children: observationPaths(children), logs: runtimeSelection(Object.keys(logs).length ? logs : null), tests: testBindings(tests) };
 }
 export async function run(argv = process.argv.slice(2), {
-  input = process.stdin, output = process.stdout,
+  // Initialize stderr while the terminal is live. Node pipe teardown can lazily
+  // access it; opening a revoked macOS TTY then can block the entire event loop.
+  input = process.stdin, output = process.stdout, errorOutput = process.stderr,
   connect = options => new PiRpc(options), createTerminal = (input, output) => new Terminal(input, output),
   observe = (paths, changed, cwd) => paths.length ? new ConcurrentChildren(paths, changed) : new RegisteredChildren(cwd, changed),
   readLogs = (source, changed, tests, cwd) => tests.length || !source ? new WorktreeLogs(cwd, tests, source, changed) : new RuntimeLogs(source, changed),
 } = {}) {
   if (argv.includes('--help')) {
-    console.log('Fight workspace: ./bin/terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus (automatic current session by default; flags select explicit legacy): [ / ] select · f pin/unpin · p pause · c all readers · r reconnect\nLogs: --logs-main /main/checkout --logs-context NAME --logs-project NAME --logs-service NAME\nExisting worktree test logs: --logs-test WORKTREE CONTEXT PROJECT SERVICE (repeat up to 8); { / } select stack; m explicit shared/follow\nRuntime focus: [ / ] service · p pause · c close/open reader · r reconnect (human display only)\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See harness/pi/WORKSPACE.md.'); return;
+    console.log('Fight workspace: fight-terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus (automatic current session by default; flags select explicit legacy): [ / ] select · f pin/unpin · p pause · c all readers · r reconnect\nLogs: --logs-main /main/checkout --logs-context NAME --logs-project NAME --logs-service NAME\nExisting worktree test logs: --logs-test WORKTREE CONTEXT PROJECT SERVICE (repeat up to 8); { / } select stack; m explicit shared/follow\nRuntime focus: [ / ] service · p pause · c close/open reader · r reconnect (human display only)\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See the installed @fight/agent-os-pi package WORKSPACE.md.'); return;
   }
   const cwd = process.cwd(), config = options(argv, cwd);
   if (!input.isTTY || !output.isTTY) throw new Error('Workspace needs a real terminal');
-  if (!config.args.includes('--no-session')) mkdirSync(config.args[config.args.indexOf('--session-dir') + 1], { recursive: true, mode: 0o700 });
+  if (!config.args.includes('--no-session')) {
+    try {
+      const directory = config.args[config.args.indexOf('--session-dir') + 1];
+      mkdirSync(directory, { recursive: true, mode: 0o700 });
+      accessSync(directory, constants.W_OK | constants.X_OK);
+    }
+    catch { throw new Error('Cannot prepare session storage. Check write access to this project’s var/terminal/sessions (or explicit --session-dir); do not change project directories or bypass Harness policy.'); }
+  }
   const model = new Workspace(cwd); model.theme = config.theme;
   const terminal = createTerminal(input, output);
   const rpc = connect({ cwd, args: config.args });
-  let closing = false, fault = false, renderTimer, startupTimer, sessionFile, sessionId, checkingSession = false, policyReady = false, stateSeen = false, commandsSeen = false;
+  let closing = false, terminalLost = false, fault = false, renderTimer, startupTimer, sessionFile, sessionId, checkingSession = false, policyReady = false, stateSeen = false, commandsSeen = false;
   const dialogTimers = new Map();
   const render = () => {
     if (closing || renderTimer) return;
@@ -108,6 +117,8 @@ export async function run(argv = process.argv.slice(2), {
     const logsClosed = logs.close();
     for (const timer of dialogTimers.values()) clearTimeout(timer);
     output.removeListener('resize', render); output.removeListener('drain', render);
+    input.removeListener('end', onTerminalLoss); input.removeListener('close', onTerminalLoss);
+    output.removeListener('close', onTerminalLoss);
     for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.removeListener(signal, onSignal);
     try { terminal.stop(); } catch { code = 1; } finally { await Promise.all([rpc.close(), logsClosed]); process.exitCode = code; }
   };
@@ -159,7 +170,7 @@ export async function run(argv = process.argv.slice(2), {
           }
           if (command?.startsWith('skill:') || command === 'file-screening') {
             model.append('Workflow selector not submitted: RPC cannot select role, workflow, task, checkout or query/status mode. Current binding is unchanged.');
-            model.append(sessionFile ? `Use native Pi in the same session: exit (^Q), run pi --session ${JSON.stringify(sessionFile)} from ${cwd}, select the workflow and inspect /file-screening to verify its binding. Exit native Pi, then resume ./bin/terminal --session ${JSON.stringify(sessionFile)}. Resume alone never selects authority.` : 'Use native Pi for workflow selection and verify /file-screening. This in-memory session has no same session resume path; do not assume a new session inherits its binding.');
+            model.append(sessionFile ? `Use native Pi in the same session: exit (^Q), run pi --session ${JSON.stringify(sessionFile)} from ${cwd}, select the workflow and inspect /file-screening to verify its binding. Exit native Pi, then resume fight-terminal --session ${JSON.stringify(sessionFile)}. Resume alone never selects authority.` : 'Use native Pi for workflow selection and verify /file-screening. This in-memory session has no same session resume path; do not assume a new session inherits its binding.');
             render(); return;
           }
           if (command && !model.commands.has(command)) {
@@ -173,6 +184,7 @@ export async function run(argv = process.argv.slice(2), {
     render();
   };
   const onSignal = () => { void close(130); };
+  const onTerminalLoss = () => { terminalLost = true; void close(1); };
   rpc.on('failure', error => { fail(`Pi transport failure: ${clean(error.message)}`); void close(1); });
   rpc.on('exit', code => { if (!closing) { fail(`Pi exited (${code ?? 'signal'})`); void close(code || 1); } });
   rpc.on('policy', status => {
@@ -207,6 +219,11 @@ export async function run(argv = process.argv.slice(2), {
     render();
   });
   try {
+    // Window loss can report EOF/EIO before SIGHUP. Keep error listeners for the
+    // streams' remaining lifetime: restoration writes can fail asynchronously after close.
+    input.on('end', onTerminalLoss); input.on('close', onTerminalLoss); input.on('error', onTerminalLoss);
+    output.on('close', onTerminalLoss); output.on('error', onTerminalLoss);
+    errorOutput.on('error', onTerminalLoss);
     logs.start();
     terminal.start((text, key) => { void sendAction(model.key(text, key)); render(); }, (text, retention = {}) => {
       if (model.dialogs.length) { model.append('Paste ignored during Pi interaction; type an explicit response.'); }
@@ -215,22 +232,33 @@ export async function run(argv = process.argv.slice(2), {
     });
     output.on('resize', render); output.on('drain', render);
     for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, onSignal);
-    startupTimer = setTimeout(() => fail('Pi qualification incomplete: healthy Harness access, get_state and get_commands required. Exit with Ctrl+Q; diagnose in normal Pi.'), 30000);
+    startupTimer = setTimeout(() => fail('Pi qualification incomplete: healthy Harness access, get_state and get_commands required. Exit with Ctrl+Q; inspect pi list in normal Pi for missing, moved, filtered or duplicate Harness resources.'), 30000);
     render();
     const state = await rpc.request('get_state');
+    if (closing) return close;
     model.identity = `${state.model?.provider ?? '?'}/${state.model?.id ?? '?'} · ${state.thinkingLevel ?? '?'} · session ${state.sessionId}`;
     model.busy = state.isStreaming; sessionFile = state.sessionFile; sessionId = state.sessionId; stateSeen = true;
     // Side-pane discovery is independently bounded and must not delay conversation readiness.
     void observation.start(sessionId, sessionFile);
     model.append(`Conversation directory: ${cwd}\nSession: ${state.sessionId}\nStorage: ${state.sessionFile ?? 'in memory (not resumable)'}\nConfigured model: ${state.model?.provider}/${state.model?.id}; actual provider identity is available only after a response.`);
     const commands = await rpc.request('get_commands');
+    if (closing) return close;
     model.commands = new Set(commands.commands.map(command => command.name));
     commandsSeen = ['jev', 'file-screening'].every(command => model.commands.has(command));
-    if (!commandsSeen) fail('Required Harness commands unavailable; input held. Use normal Pi to qualify the installation.');
+    if (!commandsSeen) fail('Required Harness commands unavailable; input held. Inspect pi list and qualify the trusted package in normal Pi; do not disable extensions.');
     const messages = await rpc.request('get_messages');
+    if (closing) return close;
     for (const message of messages.messages) { const text = messageText(message); if (text) model.append(text); }
     updateReady();
-  } catch (error) { fail(`Startup failed: ${clean(error.message)}`); await close(1); }
+  } catch (error) {
+    // A terminal-loss shutdown can reject an in-flight startup request. Do not reopen
+    // a vanished TTY for diagnostics or restart presentation after cleanup.
+    if (terminalLost) return close;
+    const message = `Startup failed: ${clean(error.message)}. Inspect pi list and qualify one trusted Harness in normal Pi; check missing, moved, filtered or duplicate resources. No policy bypass was attempted.`;
+    fail(message);
+    await close(1);
+    errorOutput.write(`fight-terminal: ${message}\n`);
+  }
   return close;
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

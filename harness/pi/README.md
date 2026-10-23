@@ -60,12 +60,12 @@ native format and output handling.
 
 ## Responsive local workspace candidate
 
-`./bin/terminal` at the repository root starts a dedicated Pi RPC terminal client with a persistent half/quarter/
+The package-owned global `fight-terminal` command starts a dedicated Pi RPC terminal client with a persistent half/quarter/
 quarter split and narrow selectable views. TASK-00502 adds current-session native-child custody and automatic
 selected/pinned worktree following; explicit human bindings observe existing test services through the fixed
 Docker reader. Its owner-approved trusted-local-process assumption does not prevent malicious same-user bootstrap
 impersonation or independently attest native origin; see the [custody boundary](WORKSPACE.md#custody-and-admission).
-No managed integration, container lifecycle operation or global launcher/installation is added. Read the [workspace runbook](WORKSPACE.md) for input, policy,
+No managed integration or container lifecycle operation is added. The explicit user-level launcher installation below does not install Pi or select Harness policy. Read the [workspace runbook](WORKSPACE.md) for input, policy,
 session and cleanup boundaries. Coordinator RPC/PTY/provider/file-hook checks, real held-state images and a
 recovered passing pre-commit full gate are recorded there with limitations; the coordinator's post-commit gate
 and independent Review/QA remain pending.
@@ -90,8 +90,85 @@ For repository-only use, use `pi install --local ./harness/pi` instead. To remov
 pi remove /absolute/path/to/fight-agent-os/harness/pi
 ```
 
-An install changes only Pi's package declaration. It does not select models, alter credentials, install skills,
-authorize tools, or overwrite another theme. Pi's normal package/project trust rules still apply.
+A **Pi** install changes only Pi's package declaration; it does not put `fight-terminal` on PATH. It does not select
+models, alter credentials, install skills, authorize tools, or overwrite another theme. Pi's normal package/project
+trust rules still apply.
+
+### Install the global workspace command
+
+Prerequisites: a trusted local Harness source, Node 22 or later, npm and an independently installed `pi` on PATH.
+Qualify the supported installed Pi CLI/RPC and healthy Harness status in normal Pi, not by version equality.
+The commands below were qualified with Node 22.23.1, npm 10.9.8 and Pi 1.4.0; these are receipts, not pins.
+Use a user-owned prefix; never `sudo`, `--force`, or the user's Pi installation prefix. From the repository root:
+
+```sh
+source="$PWD/harness/pi"
+prefix="$HOME/.local"  # choose your own user-owned prefix
+command -v fight-terminal  # if present, inspect it BEFORE installing
+ls -ld "$prefix/bin/fight-terminal" "$prefix/lib/node_modules/@fight/agent-os-pi" 2>/dev/null
+```
+
+Stop if either destination or an earlier PATH command belongs to something else. Do not remove it or overwrite
+it; choose a different prefix/resolve PATH with its owner. For a fresh installation, both destinations must be
+absent. npm also refuses an unrelated executable at the destination with `EEXIST`; do not retry with `--force`.
+After inspecting the trusted source and destinations, install explicitly:
+
+```sh
+npm install --global --prefix "$prefix" --install-links --ignore-scripts --legacy-peer-deps --no-audit --no-fund "$source"
+export PATH="$prefix/bin:$PATH"  # current shell only; no profile is edited
+command -v fight-terminal
+fight-terminal --help
+cd "/path/to/your project"
+fight-terminal
+```
+
+`--install-links` is intentional: npm **copies** the local package into
+`$prefix/lib/node_modules/@fight/agent-os-pi` and symlinks `$prefix/bin/fight-terminal` to its package-owned
+executable. `--legacy-peer-deps` prevents npm from installing the host-provided peers (plain `--omit=peer`
+did not do so in the qualified global install). It does not link the source checkout or install Pi/host peers. Assets resolve relative to that
+executable, not the target project's files; the caller's directory is preserved, including spaces and registered
+worktrees. `private: true` remains set. No registry publication is needed. Help proves only command resolution;
+real startup must show the actual conversation directory/session and healthy Harness access before input works.
+Do not automatically enroll a project to make that check green: explicit not-enrolled access is supported.
+
+The separate `pi install "$source"` declaration still loads Harness extensions **from the source path**, not the
+npm copy. Preserve that trusted source and use `pi list` to inspect the actual installation. Do not add the copied
+package as another Pi resource alongside the existing source: different package paths can duplicate commands and
+protected resources. The launcher keeps normal Pi discovery; it never forces its own copy as an extension.
+
+### Update, remove and recover the launcher
+
+For an update, fully exit owned workspace/Pi processes, review the new trusted source and confirm both installed
+destinations still belong to this package. Rerun the exact npm install command above (including `--install-links`);
+then restart and requalify actual Harness startup/session identity. Source edits alone do **not** update the copied
+launcher. Pi's local-source extensions use the source's new contents on the next full process startup. Do not use
+`pi update` without a target as a launcher update: that updates Pi itself.
+
+Remove only this npm installation:
+
+```sh
+npm uninstall --global --prefix "$prefix" --ignore-scripts --no-audit --no-fund @fight/agent-os-pi
+hash -r
+```
+
+This removes its copied package and bin link, not Pi settings/credentials, enrollment/accounting or any saved
+project `var/terminal/` sessions. Unrelated prefix packages/commands remain. It does **not** remove the separate
+Pi source declaration. Only if you also intend to stop loading the Harness, explicitly use `pi remove` as above;
+that is a separate operator action, never a launcher-removal side effect.
+
+| Failure | Recovery |
+|---|---|
+| `fight-terminal` not found | Check the chosen prefix's `bin` on this shell's PATH and `command -v`; reinstall in that prefix if absent. No shell profile is changed automatically. |
+| Missing Node or Pi | Install the missing prerequisite separately, make it available on PATH and qualify normal Pi; never replace the user's `pi`. |
+| npm `EEXIST`, unexpected command or package destination | Stop and inspect ownership; choose another prefix or ask the command's owner. Never force replacement. |
+| Source moved/deleted | The copied launcher survives. The separate Pi declaration does not: in normal Pi remove the exact stale source declaration and install the reviewed new source path. Reinstall the launcher from that new source for future updates. Do not delete settings/enrollment/sessions. |
+| Older manual `npm link`/default linked install breaks after source move | Inspect the dangling command/package links; remove only that owned npm installation using the explicit prefix, then reinstall with `--install-links` from the current source. |
+| Missing/corrupt installed assets | Reinstall the trusted package in the same inspected prefix; never search the target project for an executable. |
+| Missing, filtered, duplicate or unavailable Harness | Input stays held or startup fails. Inspect `pi list`, resource filters and explicit `--extension` paths in normal Pi; retain one trusted package identity, fully restart and verify status. Never disable protections or reenroll automatically. |
+| Unwritable project runtime | Restore authorized write access to the caller's `var/terminal/` (or explicitly choose permitted `--session-dir`); do not silently run in the provider checkout. |
+
+Repository `bin/terminal` was retired by TASK-00503; replace current launch/resume invocations with
+`fight-terminal`, retaining their existing supported arguments. Historical receipts still name the old entry point.
 
 ## Module path migration
 
@@ -158,7 +235,7 @@ docker pull node@sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30d
 For direct development with Node 22 or later, `npm test` in this directory runs the same tests. Pi supplies the
 declared peer dependencies when loading extensions. There are no third-party runtime dependencies to install.
 Use `npm pack --ignore-scripts --pack-destination <output-directory>` to create a distributable tarball; package
-contents are limited to the manifest, source, README and license. Keep local build artifacts under `.runs/`.
+contents include the manifest, package-owned bin, source and declared runbooks/license. Keep local build artifacts under `.runs/`.
 
 Controlled behavior tests are separate from Pi integration qualification. For installed-SDK loading and
 public behavior checks, set `PI_SDK_MODULES` to the reviewed Pi installation's `node_modules` directory and run

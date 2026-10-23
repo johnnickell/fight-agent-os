@@ -1,4 +1,0 @@
-#!/usr/bin/env sh
-set -eu
-# Keep the caller's directory: it is the conversation target, not an observation selector.
-exec node "$(dirname "$0")/../harness/pi/src/workspace/main.mjs" "$@"

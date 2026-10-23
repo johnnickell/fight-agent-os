@@ -8,10 +8,11 @@ TASK-00449 adds the human-only shared-runtime reader below. Its frozen-candidate
 qualification is implementation evidence, not independent acceptance. See the TASK for visual limits and
 `.runs/tasks/TASK-00449/runs/initial-finalization/handoff.md` for the committed-head gate result.
 
-From a checkout with Node 22 or later and Pi already available on PATH:
+After the [explicit user-level launcher installation](README.md#install-the-global-workspace-command), run
+from the project/worktree where the conversation belongs, with Node 22 or later and Pi on PATH:
 
 ```sh
-./bin/terminal --provider openai-codex --model gpt-6.1-sol --thinking high
+fight-terminal --provider openai-codex --model gpt-6.1-sol --thinking high
 ```
 
 This is a dedicated, dependency-free RPC client, not a Pi extension screen or a new agent engine. It starts
@@ -133,7 +134,7 @@ provider work. An unknown installation or conflict remains a prerequisite, not p
 In the workspace, supply only sockets you own and are permitted to observe:
 
 ```sh
-./bin/terminal --provider openai-codex --model gpt-6.1-sol --thinking high \
+fight-terminal --provider openai-codex --model gpt-6.1-sol --thinking high \
   --observe-child /absolute/checkout/var/o/a.sock \
   --observe-child /absolute/checkout/var/o/b.sock
 ```
@@ -193,7 +194,7 @@ Review/QA remain required. See [TASK-00448](../../planning/tasks/00448-TASK.md) 
 Select an **existing main-checkout** Compose runtime explicitly at launch:
 
 ```sh
-./bin/terminal --provider openai-codex --model gpt-6.1-sol --thinking high \
+fight-terminal --provider openai-codex --model gpt-6.1-sol --thinking high \
   --logs-main /absolute/main/checkout --logs-context default \
   --logs-project fight-agent-os --logs-service web
 ```
@@ -350,7 +351,7 @@ Actual session/file replacement aborts in-flight challenges and invalidates old 
 rediscovery. Closing observation readers also aborts pending discovery immediately; reopening or a new session
 can start fresh discovery without waiting for old work. Late old finalizers cannot clear a new refresh lock.
 Conversation input remains held for explicit native-session recovery under the existing policy boundary; RPC
-never selects workflow/role authority. Native exit followed by `./bin/terminal --session PATH` from the same
+never selects workflow/role authority. Native exit followed by `fight-terminal --session PATH` from the same
 canonical parent checkout rediscovers valid still-live custodians without relaunching children. Editable saved
 pin/selection preferences are restored only after fresh membership admission; they cannot create authority.
 
@@ -382,7 +383,7 @@ non-authoritative session-local state. No transcript collector or lossless repla
 Bind already-existing, explicitly authorized **test** stacks once at workspace launch, not per child switch:
 
 ```sh
-./bin/terminal --session /absolute/native-session.jsonl \
+fight-terminal --session /absolute/native-session.jsonl \
   --logs-test /absolute/worktree-a desktop-linux existing-test-a postgres_test \
   --logs-test /absolute/worktree-b desktop-linux existing-test-b postgres_test
 ```
@@ -473,7 +474,7 @@ subject, checkout or query/status mode, which RPC cannot establish. Nothing is s
 is unchanged. This is a compatibility refusal/routing boundary, not acceptance of reduced normal-input scope.
 For a persistent session, exit with Ctrl+Q, open `pi --session PATH` in the same directory, select the intended
 workflow there and inspect `/file-screening` to verify its binding. Exit native Pi and resume
-`./bin/terminal --session PATH`. Use the displayed exact session path; do not fork/clone it or copy launcher
+`fight-terminal --session PATH`. Use the displayed exact session path; do not fork/clone it or copy launcher
 flags. Resume alone is not authority selection. An in-memory session cannot be resumed; its refusal says so.
 The bounded real native-selection/resume qualification above establishes this owned session's continuation,
 not universal native parity or independent acceptance; affected live QA remains required.

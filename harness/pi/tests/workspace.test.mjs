@@ -186,18 +186,19 @@ async function controller({ policy = 'active', status, commands = ['jev', 'file-
     return { disposition: 'handled' };
   };
   rpc.send = async record => rpc.sent.push(record); rpc.close = async () => { rpc.closed++; };
-  const input = { isTTY: true }, output = new EventEmitter(); output.isTTY = true; output.columns = columns; output.rows = rows;
+  const input = new EventEmitter(), output = new EventEmitter(); input.isTTY = true; output.isTTY = true; output.columns = columns; output.rows = rows;
   const terminal = { frames: [], stopped: 0,
     start(onKey, onPaste) { this.key = onKey; this.paste = onPaste; },
     draw(lines) { if (drawError) throw new Error('fixture render failure'); this.frames.push(lines.join('\n')); },
     stop() { this.stopped++; },
   };
+  const errorOutput = new EventEmitter(); errorOutput.write = () => {};
   const originalExitCode = process.exitCode;
-  const close = await run(['--no-session', ...children.flatMap(path => ['--observe-child', path])], { input, output, connect: () => rpc, createTerminal: () => terminal,
+  const close = await run(['--no-session', ...children.flatMap(path => ['--observe-child', path])], { input, output, errorOutput, connect: () => rpc, createTerminal: () => terminal,
     observe: observe ?? ((_paths, changed, cwd) => new RegisteredChildren(cwd, changed, { preferences: false, discover: () => [] })),
     ...(readLogs ? { readLogs } : {}) });
   const dispose = async () => { await close(); process.exitCode = originalExitCode; };
-  return { rpc, terminal, output, dispose };
+  return { rpc, terminal, input, output, errorOutput, dispose };
 }
 test('child pane reader actions never enter Pi RPC and conversation remains usable while observation is paused', async () => {
   const observer = { started: 0, closed: 0, actions: [], start() { this.started++; }, close() { this.closed++; },
@@ -379,6 +380,74 @@ test('entrypoint closes its transport and terminal once on rendering failure or 
     } finally { await app.dispose(); }
     assert.equal(app.terminal.stopped, 1); assert.equal(app.output.listenerCount('resize'), 0);
   }
+});
+test('TASK-00503 QA-01 terminal loss closes owned resources once, including late restoration errors', async () => {
+  for (const [stream, event] of [['input', 'end'], ['input', 'close'], ['input', 'error'], ['output', 'close'], ['output', 'error'], ['errorOutput', 'error']]) {
+    const app = await controller();
+    const stop = app.terminal.stop.bind(app.terminal);
+    app.terminal.stop = () => { stop(); app.output.emit('error', new Error('write EIO during restoration')); };
+    try {
+      assert.doesNotThrow(() => app[stream].emit(event, new Error('terminal lost')), `${stream} ${event}`);
+      await tick();
+      assert.equal(app.terminal.stopped, 1, `${stream} ${event}`);
+      assert.equal(app.rpc.closed, 1, `${stream} ${event}`);
+      assert.doesNotThrow(() => app.output.emit('error', new Error('late write EIO')));
+      assert.doesNotThrow(() => app.input.emit('error', new Error('late read EIO')));
+      assert.ok(!app.rpc.requests.some(request => ['prompt', 'bash', 'abort'].includes(request.type)));
+    } finally { await app.dispose(); }
+    assert.equal(app.terminal.stopped, 1); assert.equal(app.rpc.closed, 1);
+  }
+});
+test('TASK-00503 QA-01 terminal loss during startup cannot resume readers or write diagnostics to the lost TTY', async () => {
+  for (const pendingType of ['get_state', 'get_commands', 'get_messages']) for (const rejected of [false, true]) {
+    const input = new EventEmitter(), output = new EventEmitter(), errorOutput = new EventEmitter();
+    input.isTTY = output.isTTY = true; output.columns = 140; output.rows = 40;
+    errorOutput.write = () => assert.fail('no diagnostic after terminal loss');
+    let reached, settle, stopped = 0, closed = 0, starts = 0;
+    const pending = new Promise(resolve => { reached = resolve; });
+    const rpc = new EventEmitter(), requests = [];
+    const values = { get_state: { sessionId: 'owned' }, get_commands: { commands: [] }, get_messages: { messages: [] } };
+    rpc.request = type => {
+      requests.push(type);
+      if (type !== pendingType) return Promise.resolve(values[type]);
+      return new Promise((resolve, reject) => { settle = () => rejected ? reject(new Error('Pi exited')) : resolve(values[type]); reached(); });
+    };
+    rpc.close = async () => { closed++; };
+    const previousExitCode = process.exitCode;
+    const starting = run(['--no-session'], { input, output, errorOutput, connect: () => rpc,
+      createTerminal: () => ({ start() {}, stop() { stopped++; }, draw() {} }),
+      observe: () => ({ start() { starts++; }, close() {} }),
+      readLogs: () => ({ start() {}, close() {} }),
+    });
+    await pending;
+    const startsBeforeLoss = starts, requestsBeforeLoss = requests.length;
+    input.emit('end'); settle();
+    try {
+      const close = await starting; await close();
+      assert.equal(stopped, 1); assert.equal(closed, 1);
+      assert.equal(starts, startsBeforeLoss); assert.equal(requests.length, requestsBeforeLoss);
+      assert.equal(output.listenerCount('resize'), 0);
+    } finally { process.exitCode = previousExitCode; }
+  }
+});
+test('startup transport failure still reports recovery after cleanup when the terminal remains live', async () => {
+  const input = new EventEmitter(), output = new EventEmitter(), errorOutput = new EventEmitter();
+  input.isTTY = output.isTTY = true;
+  const diagnostics = [], rpc = new EventEmitter(); let closed = 0;
+  errorOutput.write = text => diagnostics.push(text);
+  rpc.request = async () => { const error = new Error('Pi extension failed to load'); rpc.emit('failure', error); throw error; };
+  rpc.close = async () => { closed++; };
+  const previousExitCode = process.exitCode;
+  try {
+    const close = await run(['--no-session'], { input, output, errorOutput, connect: () => rpc,
+      createTerminal: () => ({ start() {}, stop() {}, draw() {} }),
+      observe: () => ({ close() {} }), readLogs: () => ({ start() {}, close() {} }),
+    });
+    await close();
+    assert.equal(closed, 1);
+    assert.match(diagnostics.join(''), /Startup failed: Pi extension failed to load/);
+    assert.match(diagnostics.join(''), /Inspect pi list/);
+  } finally { process.exitCode = previousExitCode; }
 });
 test('native textual exit uses the same owned cleanup without submitting a provider prompt', async () => {
   const app = await controller(); app.terminal.paste('/quit'); app.terminal.key('', { name: 'return' }); await tick();
