@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import Dropdown from 'react-bootstrap/Dropdown';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 
 import { Button } from '@/components/Button';
+import { PresentationIcon } from '@/components/PresentationIcon';
 import { evaluateAccess } from '@/features/authority/evaluateAccess';
 import { useAuthority, useAuthorityPresentation } from '@/features/authority/useAuthority';
 import { ThemeSelector } from '@/features/theme/ThemeSelector';
@@ -61,6 +63,9 @@ type FrameProps = {
 };
 
 export function ApplicationFrame(props: FrameProps) {
+  // Keep the existing store's media/storage lifecycle active while the lazy menu
+  // is unopened, including across pathname-keyed content remounts.
+  useEffect(() => props.theme?.subscribe(() => {}), [props.theme]);
   return <FrameContent key={props.pathname} {...props} />;
 }
 
@@ -74,7 +79,15 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
   const enterFocus = useRef(false);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && expanded && !narrow) {
+      if (
+        event.key === 'Escape' &&
+        expanded &&
+        !narrow &&
+        !(
+          document.activeElement instanceof Element &&
+          document.activeElement.closest('.application-account')
+        )
+      ) {
         returnFocus.current = true;
         setExpanded(false);
       }
@@ -104,8 +117,8 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
           FIGHT <span>AGENT OS</span>
         </a>
         {expanded && (
-          <Button onClick={close} aria-label="Close navigation">
-            Close
+          <Button onClick={close} aria-label="Close navigation" aria-expanded={true}>
+            <PresentationIcon name="collapse" />
           </Button>
         )}
       </div>
@@ -131,7 +144,8 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
                         }}
                         aria-current={pathname === route.pathname ? 'page' : undefined}
                       >
-                        {route.title}
+                        {route.icon && <PresentationIcon name={route.icon} />}
+                        <span>{route.title}</span>
                       </a>
                     </li>
                   ))}
@@ -165,17 +179,53 @@ function FrameContent({ cache, pathname, title, theme, onLogout, children }: Fra
             aria-label="Open navigation"
             aria-expanded={false}
           >
-            Open
+            <PresentationIcon name="expand" />
           </button>
         )}
-        <header className="application-utility">
+        <header className="application-utility" aria-label="Application utilities">
           <a href="/app">Fight Agent OS</a>
-          <div className="application-user">
-            <span>{state.principal.email}</span>
-            <a href="/app/account">Account / Security</a>
-            <Button onClick={onLogout}>Sign out</Button>
-          </div>
-          {theme && <ThemeSelector theme={theme} />}
+          <Dropdown className="application-account" align="end" focusFirstItemOnShow="keyboard">
+            <Dropdown.Toggle variant="" className="application-user-toggle" aria-label="User Menu">
+              <PresentationIcon name="user" />
+            </Dropdown.Toggle>
+            <Dropdown.Menu className="application-account-menu">
+              <div className="application-account-identity">{state.principal.email}</div>
+              {applicationRoutes
+                .filter(
+                  (route) =>
+                    ['/app/account', '/app/account/sessions'].includes(route.pathname) &&
+                    evaluateAccess(state, route.requirements) === 'allowed'
+                )
+                .map((route) => (
+                  <Dropdown.Item
+                    key={route.pathname}
+                    href={route.pathname}
+                    disabled={dispatch.status !== 'authenticated'}
+                    onClickCapture={(event) => {
+                      // Library-disabled anchors suppress selection, not native navigation.
+                      // Recheck at activation as authority may expire after this render.
+                      if (cache.getSnapshot().status !== 'authenticated') {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }
+                    }}
+                  >
+                    {route.icon && <PresentationIcon name={route.icon} />}
+                    <span>{route.title}</span>
+                  </Dropdown.Item>
+                ))}
+              {theme && (
+                <div className="application-account-appearance">
+                  <ThemeSelector theme={theme} compact />
+                </div>
+              )}
+              <Dropdown.Divider />
+              <Dropdown.Item as="button" onClick={onLogout}>
+                <PresentationIcon name="logout" />
+                <span>Sign Out</span>
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
         </header>
         <main id="main-content" tabIndex={-1} className="application-content" aria-label={title}>
           {children}

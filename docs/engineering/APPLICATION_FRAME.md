@@ -20,7 +20,7 @@ Server authorization remains authoritative; an SPA route response is not an acce
 | `/app/login` | Public; fresh authenticated authority selects one permitted landing |
 | `/app/login/recovery`, `/app/activate` | Public/inert: no automatic cookie restoration; existing recovery/activation owners |
 | `/app/dashboard` | Authenticated + `VIEW_DASHBOARD`; honest Dashboard, no product data |
-| `/app/account`, `/app/account/password` | Authenticated; truthful Account/Security and Change password seams |
+| `/app/account`, `/app/account/password` | Authenticated; truthful Account & Security and Change Password seams |
 | `/app/account/sessions` | Authenticated + `READ_OWN_SESSIONS` |
 | `/app/admin/users` | Authenticated + `READ_USERS` |
 | `/app/admin/invite` | Authenticated + `INVITE_USERS` |
@@ -77,7 +77,8 @@ protected destination. Denied/expired intent falls back to Dashboard or Forbidde
 Activation's existing fragment intake remains separately owned and precedes React.
 
 The frame recreates the accepted C/round-4 264px grouped rail and existing Ubuntu-heading/Open-Sans-body theme.
-At ≤860px it starts closed; Open is a 44×52 edge control. Expanded navigation has only its internal Close.
+At ≤860px it starts closed; the double-right-chevron Open navigation control is a 44×52 edge control.
+Expanded navigation has only its internal double-left-chevron Close navigation control, with expanded state.
 The narrow React-Bootstrap Offcanvas inerts background, enforces modal focus, cycles native Tab boundaries,
 handles Escape/backdrop/Close and returns focus. Route changes reset the frame; breakpoint changes reset
 only navigation mechanics while preserving the mounted workspace. Routine background verification does neither.
@@ -86,7 +87,20 @@ retain accessible main focus behavior. Focus owned by disappearing navigation mo
 to the available Close (wide) or Open (narrow); workspace/outside focus is not claimed. Terminal changes unmount
 protected presentation immediately. Wide Open focuses Close. Group disclosures are independent native details;
 current navigation uses `aria-current`. A skip link, focusable named main, route-title/status announcements,
-wrapping email, 44px controls, reduced motion and the existing three-state appearance selector remain available.
+wrapping identity, 44px controls, reduced motion and the existing three-state appearance selector remain available.
+
+TASK-00506 compacts the desktop utility header to a normally single 61px row at default text size, without a fixed
+height. A named user-outline User Menu dropdown contains the sole cache's safe email, Account & Security,
+independently permitted Active Sessions, local appearance and current-session Sign Out. React-Bootstrap owns
+opening, destination arrows, dismissal and focus return; native radio arrows own the compact sun/moon/monitor
+Light/Dark/System choices. The selected preference stays explicit, including System when following the OS.
+The frame keeps the existing appearance store subscribed outside its pathname-keyed content, so media/storage
+updates remain active before the lazy menu opens and after navigation. That subscription is released with the
+frame; it adds no store or persistence policy. Public login/activation retain their existing full selector.
+Native links recheck current authority at activation; paused dropdown destinations prevent native navigation
+as well as library selection. Menu Escape does not collapse
+the wide rail. Every rail destination retains its full Title Case text alongside a decorative self-contained SVG.
+No account operation, endpoint, permission, logout scope, authority owner or theme-persistence policy is added.
 Bootstrap link RGB variables now map to the accepted action colors rather than its inherited blue fallback.
 
 ## Honest Dashboard (TASK-00052)
@@ -100,8 +114,8 @@ projection results remain fenced by the existing cache. A resolved principal
 without exact `VIEW_DASHBOARD` receives authenticated Forbidden, not Login.
 
 The accepted C composition uses the existing semantic tokens, Ubuntu headings/Open Sans body, named panels,
-wrapping link lists and responsive account/administration cards. Account / Security requires authentication;
-Active sessions independently needs `READ_OWN_SESSIONS`. Users, Invite user and Invitation administration independently
+wrapping link lists and responsive account/administration cards. Account & Security requires authentication;
+Active Sessions independently needs `READ_OWN_SESSIONS`. Users, Invite User and Invitation Administration independently
 need `READ_USERS`, `INVITE_USERS` and `MANAGE_USER_INVITATIONS`. The Dashboard does not advertise elevated assignment;
 the existing elevated route/rail still needs both `INVITE_USERS` and `ASSIGN_SUPER_ADMIN`. Role names grant nothing.
 Each Dashboard link includes the manifest's truthful pre-feature availability copy and reaches its registered
@@ -116,9 +130,10 @@ those journeys ship. No principal, role, permission or credential is persisted f
 ## Verification boundary
 
 Owned tests use controlled principal/session promises and real production evaluators, caches and coordinators;
-existing stale-response, permission, deadline and intended-route fuzz coverage remains applicable. Thirteen
+existing stale-response, permission, deadline and intended-route fuzz coverage remains applicable. Sixteen
 production-backed Frame stories cover narrow/wide, light/dark, long email, forbidden, pending/malformed authority,
-network/expired session, retained-display background failure, account/invitation seams and drawer keyboard interaction. Automated axe/browser results
+network/expired session, retained-display background failure, account/invitation seams, drawer keyboard interaction,
+account-menu keyboard/theme interaction and open long-identity menus at wide/narrow sizes. Automated axe/browser results
 are samples, not universal WCAG or physical AT/device certification.
 
 TASK evidence records exact initial-source Before captures, fresh After captures and real trusted-HTTPS

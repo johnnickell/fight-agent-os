@@ -49,3 +49,30 @@
   margin-top: 0.25rem;
   color: var(--ui-muted);
 }
+
+.theme-selector-compact .theme-selector-option {
+  position: relative;
+  flex: 1;
+  min-width: max-content;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  &:has(input:checked) {
+    // A visible double border supplements color and the native radio's checked state.
+    outline: 2px solid var(--ui-violet);
+    outline-offset: -4px;
+  }
+
+  &:has(input:focus-visible) {
+    outline: 3px solid var(--ui-focus);
+    outline-offset: 3px;
+  }
+}

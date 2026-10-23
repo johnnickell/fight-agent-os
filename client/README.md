@@ -477,8 +477,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **94** named examples across twelve story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 13 production-backed Frame examples, plus 11 production-backed Dashboard examples. The form composition demonstrates rejection,
+`stories/` holds **97** named examples across twelve story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 16 production-backed Frame examples, plus 11 production-backed Dashboard examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -497,7 +497,9 @@ TASK-00050 supplies the public local appearance selector; this does not authoriz
 
 Composition's SystemPreview, ThemeLight and ThemeDark render the production selector and components with
 isolated in-memory storage. SystemPreview follows live OS changes and releases listeners on unmount. Stories
-do not write real browser preferences or perform production prepaint.
+do not write real browser preferences or perform production prepaint. The interactive Frame examples also
+use isolated preferences; their selected-mode host applies the catalog's background and inherited foreground,
+not only its tokens, so held Light/Dark and OS-following System remain coherent inside the outer decorator.
 
 ```sh
 ./bin/client setup              # Clean locked frontend install
@@ -505,7 +507,7 @@ do not write real browser preferences or perform production prepaint.
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 94 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 97 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases
