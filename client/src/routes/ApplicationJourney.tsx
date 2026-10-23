@@ -70,6 +70,15 @@ export function ApplicationView({
   const route = matchApplicationRoute(pathname);
   const pendingTarget = useRef<string | null>(null);
   const capturedPath = useRef<string | null>(null);
+  const recoveryFocus = useRef<HTMLButtonElement | null>(null);
+  useLayoutEffect(() => {
+    const control = recoveryFocus.current;
+    if (!control || control.isConnected) return;
+    recoveryFocus.current = null;
+    // Only hand off a disappearing explicit control's focus; routine checks and other focus are untouched.
+    if (document.activeElement === document.body)
+      document.getElementById('main-content')?.focus({ preventScroll: true });
+  });
   // Capture before any URL sanitation, once per attempted location. Never retain raw URL/form state.
   useLayoutEffect(() => {
     const firstAttempt = capturedPath.current !== pathname;
@@ -297,8 +306,13 @@ export function ApplicationView({
               : 'Current access could not be verified. Protected actions are unavailable.'}
             {session.authority.canRetry() && (
               <Button
-                onClick={() => {
+                onClick={(event) => {
+                  if (document.activeElement === event.currentTarget)
+                    recoveryFocus.current = event.currentTarget;
                   void session.authority.load();
+                }}
+                onBlur={() => {
+                  recoveryFocus.current = null;
                 }}
               >
                 Retry access check
@@ -306,8 +320,13 @@ export function ApplicationView({
             )}
             {credential.status === 'network-degraded' && (
               <Button
-                onClick={() => {
+                onClick={(event) => {
+                  if (document.activeElement === event.currentTarget)
+                    recoveryFocus.current = event.currentTarget;
                   void session.coordinator.restore();
+                }}
+                onBlur={() => {
+                  recoveryFocus.current = null;
                 }}
               >
                 Retry session connection

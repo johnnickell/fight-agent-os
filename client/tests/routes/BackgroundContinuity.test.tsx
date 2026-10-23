@@ -155,6 +155,108 @@ describe('background continuity through the composed credential/cache/frame grap
     }
   );
 
+  it.each(['principal', 'network'] as const)(
+    'keeps meaningful keyboard focus through access retry pending and %s completion',
+    async (status) => {
+      const { owner } = await mount();
+      owner.load.mockResolvedValueOnce({ status: 'network' });
+      await act(async () => {
+        owner.authority.resume();
+        await owner.authority.load();
+      });
+      const retry = screen.getByRole('button', { name: 'Retry access check' });
+      retry.focus();
+      const pending = deferred<PrincipalLoadResult>();
+      owner.load.mockImplementationOnce(() => pending.promise);
+      fireEvent.click(retry);
+      expect(screen.getByRole('main')).toHaveFocus();
+      await act(async () => {
+        pending.resolve(
+          status === 'principal'
+            ? { status, principal: { ...principal, permissions: ['VIEW_DASHBOARD'] } }
+            : { status }
+        );
+        await pending.promise;
+      });
+      expect(screen.getByRole('main')).toHaveFocus();
+      expect(screen.queryByRole('button', { name: 'Retry access check' }) !== null).toBe(
+        status === 'network'
+      );
+    }
+  );
+
+  it.each([true, false])(
+    'keeps meaningful keyboard focus through session retry pending and success=%s',
+    async (success) => {
+      const { owner } = await mount();
+      const accept = owner.refresh.getMockImplementation();
+      if (!accept) throw new Error('Missing fixture credential acceptance');
+      owner.refresh.mockResolvedValueOnce(owner.apiFailure('network'));
+      await act(() => owner.coordinator.restore());
+      const retry = screen.getByRole('button', { name: 'Retry session connection' });
+      retry.focus();
+      const pending = deferred<void>();
+      owner.refresh.mockImplementationOnce(async () => {
+        await pending.promise;
+        return success ? accept() : owner.apiFailure('network');
+      });
+      fireEvent.click(retry);
+      expect(screen.getByRole('main')).toHaveFocus();
+      await act(async () => {
+        pending.resolve();
+        await owner.coordinator.restore();
+      });
+      expect(screen.getByRole('main')).toHaveFocus();
+      expect(screen.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
+    }
+  );
+
+  it('does not claim focus for an access retry activated without owning keyboard focus', async () => {
+    const { owner } = await mount();
+    owner.load.mockResolvedValueOnce({ status: 'network' });
+    await act(async () => {
+      owner.authority.resume();
+      await owner.authority.load();
+    });
+    const unrelated = screen.getByRole('button', { name: 'Sign out' });
+    unrelated.focus();
+    const pending = deferred<PrincipalLoadResult>();
+    owner.load.mockImplementationOnce(() => pending.promise);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry access check' }));
+    expect(unrelated).toHaveFocus();
+    await act(async () => {
+      pending.resolve({
+        status: 'principal',
+        principal: { ...principal, permissions: ['VIEW_DASHBOARD'] }
+      });
+      await pending.promise;
+    });
+    expect(unrelated).toHaveFocus();
+  });
+
+  it('does not reclaim focus moved away from a pending explicit connection retry', async () => {
+    const { owner } = await mount();
+    const accept = owner.refresh.getMockImplementation();
+    if (!accept) throw new Error('Missing fixture credential acceptance');
+    owner.refresh.mockResolvedValueOnce(owner.apiFailure('network'));
+    await act(() => owner.coordinator.restore());
+    const retry = screen.getByRole('button', { name: 'Retry session connection' });
+    retry.focus();
+    const pending = deferred<void>();
+    owner.refresh.mockImplementationOnce(async () => {
+      await pending.promise;
+      return accept();
+    });
+    fireEvent.click(retry);
+    const unrelated = screen.getByRole('button', { name: 'Sign out' });
+    unrelated.focus();
+    await act(async () => {
+      pending.resolve();
+      await owner.coordinator.restore();
+    });
+    expect(unrelated).toHaveFocus();
+  });
+
   it('keeps the page during scheduled renewal and removes it on logout before a late response', async () => {
     const { owner } = await mount('/app/account');
     const main = screen.getByRole('main');
