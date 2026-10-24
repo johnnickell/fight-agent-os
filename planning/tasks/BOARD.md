@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | — (standalone bug) | in-progress | — | [PR #152](https://github.com/johnnickell/fight-agent-os/pull/152) |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -561,4 +561,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | — (standalone chore) | done | — | [PR #142](https://github.com/johnnickell/fight-agent-os/pull/142) |
 | — | [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | — (standalone bug) | done | — | [PR #147](https://github.com/johnnickell/fight-agent-os/pull/147) |
 | — | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #151](https://github.com/johnnickell/fight-agent-os/pull/151) |
+| — | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | — (standalone bug) | done | — | [PR #152](https://github.com/johnnickell/fight-agent-os/pull/152) |
 <!-- /planning:board -->
