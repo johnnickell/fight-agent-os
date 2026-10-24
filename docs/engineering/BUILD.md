@@ -132,3 +132,13 @@ Warnings are preserved, not suppressed. PHP/tool/test warning failures remain ma
 Sass/Bootstrap deprecations and browser-only Storybook warnings are not silently reclassified as errors or hidden.
 Report them with counts, actual coverage gaps and unavailable verification. Hosted CI uses explicit setup followed
 by this same `./bin/build`; hosted evidence is optional unless an accepted requirement makes it mandatory.
+
+The [hosted workflow](../../.github/workflows/build.yml) is also an explicit `bin/up` caller: it builds live
+browser assets and supplies the canonical localhost origin plus a short-lived localhost leaf signed by a
+job-private ephemeral CA. Only the job's host curl selects that CA through `CURL_CA_BUNDLE`; it is not installed
+into host/browser trust stores. This verifies the real TLS chain and hostname without enrolling machine trust,
+and is not evidence of interactive browser enrollment or production readiness. CA signing material is deleted
+after leaf issuance. The always-run cleanup targets the run/attempt-specific Compose project, including HTTPS
+services and disposable database volumes, then deletes its private `.env` and `var/https` even after failure.
+These inputs are outside the gate artifact allowlist. Never reuse this teardown against a developer project or
+upload private setup/TLS files. A local replay qualifies caller behavior, not a successful hosted run.
