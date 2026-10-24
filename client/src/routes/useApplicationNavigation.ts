@@ -7,7 +7,8 @@ export function useApplicationNavigation(initialPathname: string) {
   const [pathname, setPathname] = useState(initialPathname);
   const previousPath = useRef(initialPathname);
   useLayoutEffect(() => {
-    if (previousPath.current !== pathname) document.getElementById('main-content')?.focus();
+    if (previousPath.current !== pathname)
+      document.getElementById('main-content')?.focus({ preventScroll: true });
     previousPath.current = pathname;
   }, [pathname]);
   const navigate = useCallback((target: string, replace = false) => {
