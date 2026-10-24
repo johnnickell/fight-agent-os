@@ -39,6 +39,7 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\App;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Tests\Support\AccessClock;
+use Tests\Support\ResetRequestRaceWorker;
 use Tooling\OpenApi\Document;
 
 /**
@@ -384,6 +385,7 @@ final class ResetRequestApiTest extends TestCase
         );
         try {
             $pids = [];
+            $readyDeadline = hrtime(true) + 15_000_000_000;
             for ($index = 0; $index < 2; ++$index) {
                 $pipes = [];
                 $process = proc_open(
@@ -395,15 +397,15 @@ final class ResetRequestApiTest extends TestCase
                 );
                 self::assertIsResource($process);
                 $children[] = [$process, $pipes];
-                stream_set_timeout($pipes[1], 15);
-                fwrite($pipes[0], json_encode(
+                self::assertTrue(stream_set_blocking($pipes[0], false));
+                $input = json_encode(
                     ['now' => $this->clock->now()->format('Y-m-d\\TH:i:s.uP')],
                     JSON_THROW_ON_ERROR
-                )."\n");
-                fflush($pipes[0]);
+                )."\n";
+                self::assertSame(strlen($input), fwrite($pipes[0], $input));
             }
             foreach ($children as [$process, $pipes]) {
-                $ready = (string) fgets($pipes[1]);
+                $ready = ResetRequestRaceWorker::readProtocolLine($pipes[1], $readyDeadline, 32);
                 self::assertTrue(preg_match('/\Aready ([1-9][0-9]*)\n\z/D', $ready, $match) === 1, 'Worker not ready.');
                 $pids[] = (int) $match[1];
             }
@@ -411,7 +413,6 @@ final class ResetRequestApiTest extends TestCase
             $deadline = hrtime(true) + 4_000_000_000; // Below the workers' existing five-second lock timeout.
             foreach ($children as [$process, $pipes]) {
                 self::assertSame(6, fwrite($pipes[0], "start\n"));
-                fflush($pipes[0]);
             }
             $blocked = 0;
             while ($blocked !== 2 && hrtime(true) < $deadline) {
