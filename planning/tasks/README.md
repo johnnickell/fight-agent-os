@@ -517,4 +517,9 @@
 | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | done | — |
 | [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | done | — |
+| [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | ready-for-agent | [TICKET-00118](../tickets/00118-TICKET.md) |
+| [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | ready-for-agent | [TICKET-00118](../tickets/00118-TICKET.md) |
+| [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
+| [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
+| [TASK-00519](00519-TASK.md) | Align and verify delivery handoffs across the ten projects | ready-for-agent | [TICKET-00120](../tickets/00120-TICKET.md) |
 <!-- /planning:records -->

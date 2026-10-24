@@ -69,12 +69,13 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-The merged planning records have no EPIC without TICKETs or TICKET without TASKs in the generated frontier below.
+The current planning records have no EPIC without TICKETs or TICKET without TASKs in the generated frontier below.
 That structural result is not proof of semantic coverage, implementation acceptance or runtime qualification.
 Use the accepted coverage/handoffs in the owning records:
 
 | Scope | Current planning handoff |
 |---|---|
+| Land-owned delivery handoffs, EPIC-00020 | [Completed decomposition and approved top priority](epics/00020-EPIC.md#completed-planning-and-approved-top-priority): all three TICKET splits are accepted as TASK-00515–00519. The maintainer selected this EPIC as top priority; TASK metadata assigns order 1 with dependencies preserved. Read the Board for current eligibility. Planning completion is not implementation or rollout evidence. |
 | Original vision, EPIC-00005–00010 | [Vision map frontier and coverage](wayfinder/complete-agent-os-vision-map.md#frontier): original planning phases complete; accepted requirements and unresolved supplier contracts remain with their records. |
 | Local Pi workspace, TICKET-00110 | [Approved native Pi + Herdr decomposition](tickets/00110-TICKET.md#approved-herdr-native-workspace-and-task-decomposition--2026-10-23): TASK-00510 opens owned companion panes around existing native Pi; TASK-00511 adds child observation; TASK-00512 adds verified worktree logs and final RPC-entry migration. Records are approved; [TASK-00510](tasks/00510-TASK.md#engineer-r1-repair--2026-10-23) is in progress in the operator-selected registered worktree on `feature/task-00510-herdr-workspace`, with R1 repair verification and renewed independent Review/QA pending. Existing Board priorities, non-blocking TASK-00507, explicit runtime bindings and separate provisioning/full observability remain unchanged. |
 | Operational observability, EPIC-00019 | [Completed map planning](epics/00019-EPIC.md#approved-installation-task-decomposition-and-completed-map-planning): seven TICKETs and thirty-seven TASKs, TASK-00451–00487; early suppliers are mapped, not runtime-qualified. |
@@ -151,6 +152,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00017](epics/00017-EPIC.md) | Author versioned Agent templates with human-approved AI assistance | browser-agent-template-authoring | ready-for-agent |
 | [EPIC-00018](epics/00018-EPIC.md) | Publish the qualified Agent OS AccessControl reference-consumer handoff | accesscontrol-reference-consumer-handoff | ready-for-agent |
 | [EPIC-00019](epics/00019-EPIC.md) | Diagnose Agent OS operations and managed runs with live and archived logs | operational-diagnosis | ready-for-agent |
+| [EPIC-00020](epics/00020-EPIC.md) | Keep delivery handoffs synchronized through Land | land-owned-delivery-handoff-synchronization | ready-for-agent |
 <!-- /planning:epics -->
 
 ## Planning Frontier
