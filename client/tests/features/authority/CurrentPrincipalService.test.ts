@@ -25,7 +25,7 @@ const caches: AuthorityCache[] = [];
 function setup(fetch = vi.fn(() => Promise.resolve(response()))) {
   let token: string | null = 'memory-only';
   const api = new ApiClient(
-    { schemaVersion: 1, apiBasePath: '/api/v1' },
+    { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
     { fetch, accessTokens: { getAccessToken: () => token } }
   );
   const service = new CurrentPrincipalService(api);

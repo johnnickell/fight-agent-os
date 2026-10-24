@@ -15,7 +15,9 @@ services:
         condition: service_healthy
     environment: &application-environment
       XDEBUG_MODE: ${XDEBUG_MODE:-off}
-      APP_ENV: ${APP_ENV:-development}
+      APP_ENV: ${APP_ENV-local}
+      APP_DEBUG: ${APP_DEBUG-false}
+      APP_SWAGGER_ALLOWED_ENVIRONMENTS: ${APP_SWAGGER_ALLOWED_ENVIRONMENTS:-}
       APP_ACCESS_TOKEN_CONFIG: ${APP_ACCESS_TOKEN_CONFIG:-}
       APP_BROWSER_ORIGIN: ${APP_BROWSER_ORIGIN:-}
       APP_CSRF_MAC_KEY: ${APP_CSRF_MAC_KEY:-}

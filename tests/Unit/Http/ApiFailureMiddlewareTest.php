@@ -94,13 +94,14 @@ final class ApiFailureMiddlewareTest extends TestCase
     /**
      * Never gives formatters an exception or untrusted request fields
      */
-    public function test_that_unknown_failure_logs_only_safe_context_and_returns_generic_error(): void
+    #[DataProvider('requestMethods')]
+    public function test_that_unknown_failure_logs_only_safe_context_and_returns_generic_error(string $method): void
     {
         $handler = new TestHandler(Level::Error);
         $handler->setFormatter(new JsonFormatter());
         $logger = new Logger('test', [$handler]);
         $id = str_repeat('b', 32);
-        $request = (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/grant/private-id?token=secret')
+        $request = (new ServerRequestFactory())->createServerRequest($method, '/api/v1/grant/private-id?token=secret')
             ->withHeader('X-Correlation-ID', $id)
             ->withHeader('Authorization', 'Bearer credential-secret')
             ->withHeader('Cookie', 'session=secret')
@@ -123,7 +124,7 @@ final class ApiFailureMiddlewareTest extends TestCase
         self::assertSame([
             'correlation_id'     => $id,
             'correlation_source' => 'client',
-            'request_method'     => 'GET',
+            'request_method'     => $method,
             'exception_type'     => RuntimeException::class
         ], $handler->getRecords()[0]->context);
         $formatted = $handler->getRecords()[0]->formatted;
@@ -131,6 +132,17 @@ final class ApiFailureMiddlewareTest extends TestCase
         foreach (['secret', 'SQL', '/srv/private', 'password=', 'Bearer', 'session=', 'grant='] as $forbidden) {
             self::assertStringNotContainsString($forbidden, $formatted);
         }
+    }
+
+    /**
+     * Covers read and mutation failures through the same secret-safe presentation boundary
+     *
+     * @return iterable<string, array{string}>
+     */
+    public static function requestMethods(): iterable
+    {
+        yield 'private read' => ['GET'];
+        yield 'mutation' => ['POST'];
     }
 
     /**

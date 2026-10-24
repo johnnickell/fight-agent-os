@@ -57,7 +57,7 @@ final class ClientShellResponderTest extends TestCase
         );
         self::assertArrayHasKey(1, $match);
         self::assertSame(
-            ['schema_version' => 1, 'api_base_path' => '/api/v1'],
+            ['schema_version' => 2, 'api_base_path' => '/api/v1', 'app_debug' => false, 'swagger_available' => false],
             json_decode($match[1] ?? '', true, 16, JSON_THROW_ON_ERROR)
         );
         self::assertStringContainsString('<html lang="en"', $html);

@@ -15,7 +15,9 @@ system or an Internet homepage. It starts with the Slim composition from `johnni
   adds an honest Dashboard using only that cache/manifest, with independent permission shortcuts and no product-data
   endpoint (independent Review/QA pending); the server `/api/v1/me` safe identity/current-authority query and JWT-by-default matched-Action gate are
   available; public invitation activation is now mounted at `/app/activate` using real schema/Formik, protected JSON
-  activation and memory/cookie session seams, pending independent acceptance; canonical login at `/app/login` reuses package authentication, browser guards,
+  activation and memory/cookie session seams, pending independent acceptance; generic reset requests at `/app/reset-password` reuse package `RequestPasswordReset`, atomic browser admission,
+  bounded response normalization and asynchronous package recovery (TASK-00054, independent Review/QA pending);
+  canonical login at `/app/login` reuses package authentication, browser guards,
   schema/Formik and memory/cookie seams, also pending independent acceptance; rotating cookie-only refresh and current-session logout now have HTTP/client services and login-success UI pending independent Review/QA; TASK-00048 adds bounded memory-only multi-tab continuity/restoration at `/app/login`, pending independent Review/QA; TASK-00049 connects one strict typed client `/me` service and the existing cache to login/restoration, pending independent Review/QA; the protected frame now uses that same sole graph, with truthful future landing seams and explicit unavailable-product copy
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)
 - `.pi/skills/`: local planning, engineering, Graphify and instruction-writing guidance; managed runtime execution remains planned

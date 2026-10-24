@@ -5,7 +5,7 @@ export type ApplicationRoute = RegisteredRoute &
   Readonly<{
     title: string;
     access: 'public' | 'protected';
-    destination: 'root' | 'login' | 'recovery' | 'activation' | 'dashboard' | 'landing';
+    destination: 'root' | 'login' | 'recovery' | 'activation' | 'dashboard' | 'landing' | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
     icon?: PresentationIconName;
     availability?: string;
@@ -32,13 +32,13 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     requirements: publicAccess,
     destination: 'login'
   },
-  {
-    pathname: '/app/login/recovery',
-    title: 'Sign-in help',
+  ...['/app/reset-password', '/app/login/recovery'].map((pathname): ApplicationRoute => ({
+    pathname,
+    title: 'Reset password',
     access: 'public',
     requirements: publicAccess,
     destination: 'recovery'
-  },
+  })),
   {
     pathname: '/app/activate',
     title: 'Activate invitation',
@@ -54,6 +54,15 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     requirements: permission('VIEW_DASHBOARD'),
     destination: 'dashboard',
     group: 'Workspace',
+    intendedRoute: {}
+  },
+  {
+    pathname: '/app/swagger',
+    title: 'API documentation',
+    access: 'protected',
+    requirements: permission('READ_SWAGGER'),
+    destination: 'swagger',
+    group: 'Administration',
     intendedRoute: {}
   },
   {

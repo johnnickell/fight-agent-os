@@ -25,7 +25,10 @@ describe('current-session logout presentation', () => {
             )
           : pending.promise;
       });
-      const api = new ApiClient({ schemaVersion: 1, apiBasePath: '/api/v1' }, { fetch });
+      const api = new ApiClient(
+        { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+        { fetch }
+      );
       const tokens = new MemoryAccessToken();
       tokens.accept('synthetic.access.token', performance.now());
       const service = new SessionService(api, new CsrfProofService(api), tokens);

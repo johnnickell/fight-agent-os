@@ -6,8 +6,10 @@ import { ShellApplication } from '@/ShellApplication';
 
 import { jsonResponse } from './activationFixtures';
 import { loginSchemaSource, loginSuccess } from './loginFixtures';
+import { resetSchemaSource } from './resetRequestFixtures';
 
-const configuration = '{"schema_version":1,"api_base_path":"/api/v1"}';
+const configuration =
+  '{"schema_version":2,"api_base_path":"/api/v1","app_debug":false,"swagger_available":false}';
 
 describe('foundation shell', () => {
   afterEach(() => {
@@ -45,20 +47,25 @@ describe('foundation shell', () => {
   );
 
   it('handles public direct navigation and back/forward without restoring on inert routes', async () => {
-    const fetch = vi.fn();
+    const fetch = vi.fn((url: string) =>
+      Promise.resolve(
+        jsonResponse(url.endsWith('/validations/password_reset_request') ? resetSchemaSource : null)
+      )
+    );
     vi.stubGlobal('fetch', fetch);
     render(<ShellApplication configuration={configuration} pathname="/app/missing" />);
     act(() => {
       window.history.pushState(null, '', '/app/login/recovery');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
-    expect(await screen.findByRole('heading', { name: 'Need help signing in?' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Reset your password' })).toBeVisible();
     act(() => {
       window.history.pushState(null, '', '/app/missing');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
     expect(screen.getByRole('heading', { name: 'Page not found' })).toBeVisible();
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(fetch.mock.calls[0]?.[0]).toBe('/api/v1/validations/password_reset_request');
     let intercepted = true;
     document.addEventListener(
       'click',
@@ -71,7 +78,7 @@ describe('foundation shell', () => {
     );
     fireEvent.click(screen.getByRole('link', { name: 'Fight Agent OS' }), { ctrlKey: true });
     expect(intercepted).toBe(false);
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledOnce();
   });
 
   it('preserves one classified direct destination through cold 401 and explicit Login, then keeps one owner across history', async () => {

@@ -34,7 +34,12 @@ it('ignores focus while still hidden and coalesces focus-before-visibility retur
   vi.stubGlobal('fetch', fetch);
   const view = render(
     <ApplicationJourney
-      runtime={{ schemaVersion: 1, apiBasePath: '/api/v1' }}
+      runtime={{
+        schemaVersion: 2,
+        apiBasePath: '/api/v1',
+        appDebug: false,
+        swaggerAvailable: false
+      }}
       pathname="/app/dashboard"
       navigate={vi.fn()}
     />

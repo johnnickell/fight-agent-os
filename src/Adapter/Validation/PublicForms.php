@@ -60,6 +60,15 @@ final class PublicForms
                     ['index' => 3, 'message' => 'Password must contain no more than 128 characters']
                 ]]
             ]
+        ], [
+            'name'   => 'password_reset_request',
+            'action' => \App\Adapter\Http\Action\Api\V1\Auth\RequestPasswordResetAction::class,
+            'fields' => ['email' => ['client_field' => 'email', 'rules' => [
+                ['index' => 0, 'message' => 'Email is required'],
+                ['index' => 1, 'message' => 'Email must be a value of type: string'],
+                ['index' => 2, 'message' => 'Email must contain no less than 1 characters'],
+                ['index' => 3, 'message' => 'Email must contain no more than 254 characters']
+            ]]]
         ]];
     }
 }

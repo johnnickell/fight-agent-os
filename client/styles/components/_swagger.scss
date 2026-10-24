@@ -1,0 +1,284 @@
+@use 'sass:meta';
+
+// Scope pinned distribution styling to the explorer, never normal application controls.
+.swagger-viewer {
+  @include meta.load-css('swagger-ui-dist/swagger-ui');
+
+  min-width: 0;
+  margin-top: 1.5rem;
+
+  .swagger-ui {
+    font-family: inherit;
+    color: var(--ui-text);
+
+    .wrapper {
+      padding: 0;
+    }
+    .information-container,
+    .scheme-container,
+    .opblock,
+    .opblock-section-header,
+    .models,
+    .model-container,
+    .model-box,
+    .responses-inner,
+    .response-col_description,
+    .opblock-description-wrapper,
+    .opblock-external-docs-wrapper,
+    .opblock-title_normal {
+      background: var(--ui-surface);
+      color: var(--ui-text);
+      box-shadow: none;
+    }
+    .info .title,
+    .info p,
+    .info li,
+    .info h1,
+    .info h2,
+    .info h3,
+    .info h4,
+    .opblock-tag,
+    .opblock-summary-description,
+    .opblock-summary-path,
+    .opblock-section-header h4,
+    .opblock-section-header label,
+    .parameter__name,
+    .parameter__type,
+    .parameter__in,
+    .response-col_status,
+    .response-col_links,
+    .model,
+    .model-title,
+    .models h4,
+    .tab li,
+    .responses-inner h4,
+    .responses-inner h5,
+    table thead tr th,
+    table tbody tr td,
+    label,
+    .prop-type,
+    .model-toggle {
+      color: var(--ui-text);
+      font-family: inherit;
+    }
+    .opblock,
+    .opblock-tag,
+    .models,
+    table thead tr th,
+    table thead tr td,
+    section.models,
+    section.models.is-open h4 {
+      border-color: var(--ui-border);
+    }
+    .opblock-summary {
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .opblock-summary-control {
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+    .opblock-summary-path {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+    .opblock-tag {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    button,
+    .btn,
+    input,
+    select,
+    textarea {
+      min-height: 44px;
+    }
+    input,
+    select,
+    textarea {
+      max-width: 100%;
+      background: var(--ui-background);
+      color: var(--ui-text);
+      border: 1px solid var(--ui-border);
+      font-family: inherit;
+    }
+    .filter-container .filter .operation-filter-input,
+    .filter-container input[type='text'] {
+      color: var(--ui-text);
+      background: var(--ui-background);
+      border-color: var(--ui-border);
+    }
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--ui-muted);
+    }
+    .btn,
+    .btn.execute,
+    .opblock-summary-method {
+      color: var(--ui-on-action);
+      background: var(--ui-action);
+      border-color: var(--ui-action);
+      box-shadow: none;
+    }
+    .btn.cancel,
+    .btn.btn-clear {
+      color: var(--ui-text);
+      background: var(--ui-surface);
+      border-color: var(--ui-border);
+    }
+    a {
+      color: var(--ui-action);
+    }
+    svg {
+      fill: currentColor;
+    }
+    pre,
+    code,
+    .microlight,
+    .highlight-code,
+    .highlight-code > .microlight {
+      color: var(--ui-text);
+      background: var(--ui-background);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      max-width: 100%;
+    }
+    .responses-table {
+      table-layout: fixed;
+      width: 100%;
+    }
+    .response-col_status,
+    .response-col_links {
+      width: 4rem;
+    }
+    .response-col_description,
+    td {
+      overflow-wrap: anywhere;
+    }
+    .opblock-body {
+      min-width: 0;
+    }
+    .opblock-summary-path a {
+      overflow-wrap: anywhere;
+    }
+    :focus-visible {
+      outline: 3px solid var(--ui-focus);
+      outline-offset: 3px;
+    }
+    .errors-wrapper {
+      color: var(--ui-danger);
+      background: var(--ui-surface);
+      border-color: var(--ui-danger);
+    }
+    .info .title small {
+      background: var(--ui-action);
+      color: var(--ui-on-action);
+    }
+    // Match the upstream operation-level selector depth; shallow overrides lose to its dark text.
+    .opblock .opblock-summary-path,
+    .opblock .opblock-summary-path a,
+    .opblock .opblock-summary-description,
+    .opblock .opblock-section-header h4,
+    .opblock .opblock-section-header label,
+    .opblock .parameter__name,
+    .opblock .parameter__type,
+    .opblock .parameter__in,
+    .model-box .model,
+    .model-box .model-title {
+      color: var(--ui-text);
+    }
+    .opblock .opblock-summary .opblock-summary-method {
+      color: var(--ui-on-action);
+      background: var(--ui-action);
+      text-shadow: none;
+    }
+    .models h4,
+    .models h4 span,
+    .models h4 button,
+    .model .prop-type,
+    .model .prop-format,
+    .model .property,
+    .opblock-tag .expand-operation {
+      color: var(--ui-text);
+    }
+    .arrow path {
+      fill: currentColor;
+    }
+    .opblock-description-wrapper p,
+    .responses-inner .headers td,
+    .responses-inner .headers td p {
+      color: var(--ui-text);
+    }
+    .responses-inner .response-control-media-type__accept-message {
+      color: var(--ui-success);
+    }
+    .opblock .parameter__name.required span,
+    .opblock .parameter__name.required::after,
+    .opblock .opblock-title .required {
+      color: var(--ui-danger);
+    }
+    // Use a real active-tab border rather than the upstream overlapping decorative pseudo element.
+    .opblock .tab-header .tab-item.active h4 span::after {
+      display: none;
+    }
+    .opblock .tab-header .tab-item.active {
+      border-bottom: 3px solid var(--ui-action);
+    }
+    .opblock .opblock-section-header {
+      color: var(--ui-text);
+      background: var(--ui-raised);
+    }
+    // Swagger's inline syntax preset must not override the installation's semantic code palette.
+    .highlight-code > pre.microlight {
+      color: var(--ui-text) !important;
+      background: var(--ui-background) !important;
+      max-height: none;
+      overflow: visible;
+    }
+    .authorization__btn,
+    .download-contents {
+      display: none;
+    }
+    @media (max-width: 640px) {
+      // Stack each response so code can use the whole narrow column, not the space left by status.
+      .responses-table,
+      .responses-table > tbody,
+      .responses-table > tbody > tr,
+      .responses-table > tbody > tr > td {
+        display: block;
+        width: 100%;
+      }
+      .responses-table > thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+      }
+      .responses-table .response-col_status {
+        margin-block: 0.75rem 0.25rem;
+      }
+      .responses-table .response-col_status::before {
+        content: 'Status: ';
+      }
+      .responses-table > tbody > tr > .response-col_links {
+        display: none;
+      }
+      .responses-inner {
+        padding-inline: 0.5rem;
+      }
+      .highlight-code > pre.microlight {
+        padding: 0.5rem;
+      }
+      .opblock .opblock-summary-path {
+        font-size: 0.875rem;
+      }
+      .opblock-summary-control {
+        flex-basis: 100%;
+        gap: 0.5rem;
+      }
+    }
+  }
+}

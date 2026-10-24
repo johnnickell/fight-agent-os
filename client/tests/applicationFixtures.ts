@@ -5,6 +5,7 @@ import { apiFailure } from '@/api/ApiResult';
 import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
 import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
+import { SwaggerService } from '@/features/swagger/SwaggerService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
@@ -44,7 +45,7 @@ export function applicationSession(
   });
   const schemas = new PublicSchemaService(
     new ApiClient(
-      { schemaVersion: 1, apiBasePath: '/api/v1' },
+      { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
       { fetch: () => Promise.resolve(jsonResponse(loginSchemaSource)) }
     )
   );
@@ -53,6 +54,18 @@ export function applicationSession(
     intent,
     coordinator,
     schemas,
+    swagger: new SwaggerService(
+      new ApiClient({
+        schemaVersion: 2,
+        apiBasePath: '/api/v1',
+        appDebug: false,
+        swaggerAvailable: false
+      }),
+      authority,
+      false,
+      { accessRejected: () => {}, authorityChanged: () => {} },
+      window.location.origin
+    ),
     load,
     refresh,
     logout,

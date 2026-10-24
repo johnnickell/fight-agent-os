@@ -56,7 +56,7 @@
 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | done | [TICKET-00019](../tickets/00019-TICKET.md) |
-| [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
+| [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | done | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00055](00055-TASK.md) | Deliver one-time password-reset completion | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | ready-for-agent | [TICKET-00020](../tickets/00020-TICKET.md) |
@@ -156,7 +156,7 @@
 | [TASK-00151](00151-TASK.md) | Export and serve public-safe form validation schemas | done | [TICKET-00036](../tickets/00036-TICKET.md) |
 | [TASK-00152](00152-TASK.md) | Integrate shared validation and field-error lifecycle with Formik | done | [TICKET-00036](../tickets/00036-TICKET.md) |
 | [TASK-00153](00153-TASK.md) | Export the attribute-owned OpenAPI contract as deterministic JSON | done | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | ready-for-agent | [TICKET-00010](../tickets/00010-TICKET.md) |
+| [TASK-00154](00154-TASK.md) | Serve configured permission-gated Swagger with shared credentials and themes | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00155](00155-TASK.md) | Validate explicit JSON and query input without transport DTOs | done | [TICKET-00010](../tickets/00010-TICKET.md) |
 | [TASK-00156](00156-TASK.md) | Standardize HTTP Actions on handle and Responders on respond | done | — |
 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | done | — |

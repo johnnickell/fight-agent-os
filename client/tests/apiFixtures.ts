@@ -1,8 +1,10 @@
 import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 
 export const configuration: RuntimeConfiguration = Object.freeze({
-  schemaVersion: 1,
-  apiBasePath: '/api/v1'
+  schemaVersion: 2,
+  apiBasePath: '/api/v1',
+  appDebug: false,
+  swaggerAvailable: false
 });
 export const correlationId = crypto.randomUUID().replaceAll('-', '');
 export const expiresAt = 2000000000;

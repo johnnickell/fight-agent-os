@@ -2,8 +2,8 @@ import { useLayoutEffect } from 'react';
 
 import { SystemErrorBoundary } from '@/components/SystemErrorBoundary';
 import { ActivationJourney } from '@/features/auth/ActivationJourney';
+import { ResetRequestJourney } from '@/features/auth/ResetRequestJourney';
 import { ShellLayout } from '@/layouts/ShellLayout';
-import { LoginRecoveryPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SystemErrorPage } from '@/pages/SystemErrorPage';
 import { ApplicationJourney } from '@/routes/ApplicationJourney';
@@ -61,7 +61,7 @@ export function ShellApplication({
           {route?.destination === 'activation' ? (
             <ActivationJourney runtime={runtime} credential={activation} />
           ) : route?.destination === 'recovery' ? (
-            <LoginRecoveryPage />
+            <ResetRequestJourney runtime={runtime} />
           ) : (
             <NotFoundPage />
           )}

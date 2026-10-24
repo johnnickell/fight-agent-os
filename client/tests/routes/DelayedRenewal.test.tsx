@@ -28,7 +28,12 @@ it('coordinates renewal before a delayed freshness callback can mistake absent m
     return Promise.resolve(loginSuccess());
   });
   vi.stubGlobal('fetch', fetch);
-  const owner = createApplicationSession({ schemaVersion: 1, apiBasePath: '/api/v1' });
+  const owner = createApplicationSession({
+    schemaVersion: 2,
+    apiBasePath: '/api/v1',
+    appDebug: false,
+    swaggerAvailable: false
+  });
   const navigate = vi.fn();
   const view = render(
     <ApplicationView session={owner} pathname="/app/dashboard" navigate={navigate} />

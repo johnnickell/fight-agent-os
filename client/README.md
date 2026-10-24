@@ -89,12 +89,15 @@ The current allowlist admits production `src` TypeScript, `styles` SCSS, checksu
 it rejects test/story/fixture/prototype/cache inputs, development modules, external module imports and
 unexpected output types. Only hashed JS/CSS/qualified WOFF2 and external license notices are emitted. Source maps and
 source-map/sourceURL references are forbidden. The stylesheet may reference that build's emitted, pinned fonts
-and embed self-contained Bootstrap SVG controls, not remote resources or unbundled imports. See
+and embed self-contained Bootstrap SVG controls plus the exactly qualified Swagger images, not remote resources or unbundled imports. See
 [font provenance and delivery](assets/fonts/README.md). New asset types or third-party resource contracts require a deliberate policy change.
 
 Artifact content inspection rejects known private environment names, process/import-meta environment access,
 private-key/JWT/AWS/GitHub credential signatures, literal credential properties, embedded UUID identities and
-unapproved remote JavaScript URL literals. XML namespace identifiers and React's diagnostic URL are narrowly
+unapproved remote JavaScript URL literals. The [qualified Swagger distribution](../docs/engineering/SWAGGER.md#presentation-and-dependency-qualification)
+requires exact vendor byte hashes before its fixed grammar/schema/diagnostic/default URLs and standard upstream
+UUID example are admitted. Authored source receives no vendor literal exception; secret/map/graph controls remain.
+Its four exact embedded raster resources and self-contained SVG are qualified, not arbitrary data or network URLs. XML namespace identifiers and React's diagnostic URL are narrowly
 allowed; they are not runtime resource loads. These are bounded graph/content checks, **not a general secret
 scanner or a proof against obfuscated/dynamically constructed values**. Human source review must still establish
 that credentials/private config/authority snapshots are not bundled. Production never receives host application
@@ -256,8 +259,9 @@ build. Local static output and PHP must belong to the same release.
 ## Runtime responsibilities
 
 - `src/main.tsx`: one production React root, CSS and inert boot-config intake, safe last-resort failure.
-- `src/runtimeConfiguration.ts`: strictly decode `{"schema_version":1,"api_base_path":"/api/v1"}` to immutable
-  camelCase properties. Reject absent/malformed/extra fields or any other API location, with no raw-value echo.
+- `src/runtimeConfiguration.ts`: strictly decode version 2 with fixed `api_base_path: "/api/v1"` and exactly
+  `app_debug`/`swagger_available` booleans to immutable camelCase properties. Version 1 is not accepted; deploy
+  the PHP producer and browser consumers atomically. Reject absent/malformed/extra fields or any other API location, with no raw-value echo.
 - `src/routes/`: one complete application manifest; bounded root/public/protected decisions, the existing guarded
   lazy outlets and volatile intended-route owner. Native same-origin links and null-state browser history keep
   the sole session graph alive; direct load/reload restores a fresh context, not a persisted authority snapshot.
@@ -308,6 +312,13 @@ foundation below remain shared; no browser authority persistence or synthetic pr
   Consumers must ignore cancelled outcomes rather than render them as errors; render only current feature-owned
   state. The authority owner's scope below fences future protected-data results; transport interceptors do not
   restore sessions, authorize operations or replay mutations.
+
+The [private Swagger viewer](../docs/engineering/SWAGGER.md) adds a fixed raw-document GET through that same
+ApiClient and memory-token owner, not a second transport/refresh/CSRF store. Its qualified distribution is
+`swagger-ui-dist` 5.34.0 (Apache-2.0), with a separate internal renderer and supported bounded embedding plugins.
+Both server reads require current READ_SWAGGER and configured environment eligibility. Supported live operations,
+credential-free state/snippets, teardown ordering and source/asset-byte qualification are documented in the runbook.
+Scoped default styles reuse the sole theme preference; no CSP exception or arbitrary remote explorer is added.
 
 The shared normalization matrix distinguishes validation (400/422 fail), authentication (401), authorization
 (403), conflict (409), not-found (404), bad-request (400 error), method-not-allowed (405), gone (410), rate-limited
@@ -362,7 +373,10 @@ feedback. Locally invalid resubmission preserves current server feedback on unch
 published safe messages on explicit `body.<wire_field>` paths are shown; mixed published/private failures show approved field messages and generic
 form-level feedback without rendering private text. No arbitrary server path
 is used as a Formik setter. The owning journey controls loading/retry, form-level status, completion/cleanup and
-server success; it must not persist or log credential values. The real `invitation_activation` registration and form now consume this boundary; the `login` form now consumes it too. Reset/change forms remain with their owning TASKs. The real PHP wire uses zero/one-element string-list rule arguments; the client
+server success; it must not persist or log credential values. The real `invitation_activation` registration and form now consume this boundary; the `login` form now consumes it too. TASK-00054 now supplies the real `password_reset_request` form at `/app/reset-password` (legacy
+`/app/login/recovery` alias), using the same shared adapter, generic success and explicit schema recovery;
+see [reset request contracts](../docs/engineering/PASSWORD_RESET_REQUEST.md). Change/completion forms remain
+with their owning TASKs. The real PHP wire uses zero/one-element string-list rule arguments; the client
 strictly checks that shape before mapping it into its internal rule representation. The catalog examples are synthetic local
 interactions, not endpoints or authentication E2E evidence.
 
@@ -477,8 +491,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **97** named examples across twelve story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 16 production-backed Frame examples, plus 11 production-backed Dashboard examples. The form composition demonstrates rejection,
+`stories/` holds **105** named examples across thirteen story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 16 production-backed Frame examples, plus 11 production-backed Dashboard examples and eight bounded Swagger states/interactions. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -507,7 +521,7 @@ not only its tokens, so held Light/Dark and OS-following System remain coherent 
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 97 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 105 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases

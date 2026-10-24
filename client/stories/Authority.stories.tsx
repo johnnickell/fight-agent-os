@@ -51,7 +51,7 @@ function AuthorityExample({ scenario }: { scenario: Scenario }) {
         // Exercise the production transport/codec with a local safe View, never real credentials.
         return new CurrentPrincipalService(
           new ApiClient(
-            { schemaVersion: 1, apiBasePath: '/api/v1' },
+            { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
             {
               accessTokens: { getAccessToken: () => 'catalog-only' },
               fetch: () =>
