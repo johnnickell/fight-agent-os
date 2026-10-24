@@ -13,6 +13,7 @@ import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { ApplicationView } from '@/routes/ApplicationJourney';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
+import { useApplicationNavigation } from '@/routes/useApplicationNavigation';
 
 import type { ThemePreference } from '@/features/theme/ThemePreference';
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -28,7 +29,7 @@ function FrameExample({
   longEmail?: boolean;
   preference?: ThemePreference;
 }) {
-  const [pathname, setPathname] = useState(initial);
+  const { pathname, navigate } = useApplicationNavigation(initial);
   const [session] = useState(() => {
     const tokens = new MemoryAccessToken();
     const identity = crypto.randomUUID();
@@ -139,7 +140,7 @@ function FrameExample({
   }, [session, outcome]);
   return (
     <div className="catalog-preview catalog-frame-preview" data-bs-theme={appearance.effective}>
-      <ApplicationView session={session} pathname={pathname} navigate={setPathname} theme={theme} />
+      <ApplicationView session={session} pathname={pathname} navigate={navigate} theme={theme} />
     </div>
   );
 }
@@ -170,6 +171,31 @@ export const BackgroundCheckUnavailable: Story = {
     await expect(await canvas.findByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
     await expect(await canvas.findByRole('button', { name: 'Retry access check' })).toBeVisible();
     await expect(canvas.getByText(/Current access could not be verified/)).toBeVisible();
+  }
+};
+export const DashboardRouteReturn: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = canvasElement.ownerDocument.defaultView;
+    if (!view) throw new Error('Missing browser window');
+    await canvas.findByRole('heading', { name: 'Dashboard', level: 1 });
+    await canvasElement.ownerDocument.fonts.ready;
+    view.scrollTo(0, 0);
+    const primary = async () => {
+      const open = canvas.queryByRole('button', { name: 'Open navigation' });
+      if (open) await userEvent.click(open);
+      return within(await canvas.findByRole('navigation', { name: 'Primary' }));
+    };
+    await userEvent.click((await primary()).getByRole('link', { name: 'Account & Security' }));
+    await canvas.findByRole('heading', { name: 'Account & Security', level: 1 });
+    await expect(view.scrollY).toBe(0);
+    await userEvent.click((await primary()).getByRole('link', { name: 'Dashboard' }));
+    await canvas.findByRole('heading', { name: 'Dashboard', level: 1 });
+    // Observe the browser's settled layout, not jsdom's geometry-free focus behavior.
+    await new Promise<void>((resolve) => view.requestAnimationFrame(() => resolve()));
+    await expect(canvas.getByRole('main', { name: 'Dashboard' })).toHaveFocus();
+    await expect(view.scrollY).toBe(0);
+    await expect(canvas.getByRole('banner', { name: 'Application utilities' })).toBeVisible();
   }
 };
 export const AccountSeam: Story = { args: { initial: '/app/account' } };

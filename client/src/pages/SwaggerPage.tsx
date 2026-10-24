@@ -60,7 +60,7 @@ export default function SwaggerPage({
   }, [service, authority, authorityScope, attempt]);
   return (
     <section aria-labelledby="swagger-heading">
-      <h1 id="swagger-heading">API documentation</h1>
+      <h1 id="swagger-heading">API Docs</h1>
       <p>
         Private documentation. Execute sends a real request with your current session’s authority.
         It is not a preview.

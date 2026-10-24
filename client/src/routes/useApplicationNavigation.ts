@@ -7,7 +7,8 @@ export function useApplicationNavigation(initialPathname: string) {
   const [pathname, setPathname] = useState(initialPathname);
   const previousPath = useRef(initialPathname);
   useLayoutEffect(() => {
-    if (previousPath.current !== pathname) document.getElementById('main-content')?.focus();
+    if (previousPath.current !== pathname)
+      document.getElementById('main-content')?.focus({ preventScroll: true });
     previousPath.current = pathname;
   }, [pathname]);
   const navigate = useCallback((target: string, replace = false) => {
@@ -29,9 +30,11 @@ export function useApplicationNavigation(initialPathname: string) {
         event.altKey
       )
         return;
-      const anchor = event.target instanceof Element ? event.target.closest('a') : null;
+      // Embedded controls (including Swagger operation summaries) may contain href-less anchors.
+      // Only real native links belong to application navigation.
+      const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
       if (
-        !anchor ||
+        !(anchor instanceof HTMLAnchorElement) ||
         anchor.hasAttribute('data-reload-application') ||
         anchor.hasAttribute('download') ||
         anchor.target ||

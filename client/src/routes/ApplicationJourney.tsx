@@ -160,7 +160,8 @@ export function ApplicationView({
                 : (route?.title ?? 'Application');
   useEffect(() => {
     document.title = `${title} — Fight Agent OS`;
-    document.getElementById('main-content')?.focus();
+    // Announce the destination without scrolling a tall main past the utility header.
+    document.getElementById('main-content')?.focus({ preventScroll: true });
   }, [pathname, title]);
   let content;
   if (busy)
