@@ -5,7 +5,15 @@ export type ApplicationRoute = RegisteredRoute &
   Readonly<{
     title: string;
     access: 'public' | 'protected';
-    destination: 'root' | 'login' | 'recovery' | 'activation' | 'dashboard' | 'landing' | 'swagger';
+    destination:
+      | 'root'
+      | 'login'
+      | 'recovery'
+      | 'reset-completion'
+      | 'activation'
+      | 'dashboard'
+      | 'landing'
+      | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
     icon?: PresentationIconName;
     availability?: string;
@@ -39,6 +47,13 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     requirements: publicAccess,
     destination: 'recovery'
   })),
+  {
+    pathname: '/app/reset-password/complete',
+    title: 'Complete password reset',
+    access: 'public',
+    requirements: publicAccess,
+    destination: 'reset-completion'
+  },
   {
     pathname: '/app/activate',
     title: 'Activate invitation',

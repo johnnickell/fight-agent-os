@@ -2,7 +2,7 @@
 
 TASK-00053 maps Access Control's existing direct reset handler to the shared Twig/`TemplateEngine` and
 `MailDelivery` capability. The sole durable work remains the package reset generation. There is no consumer
-queue, completion HTTP/UI, production mail vendor or scheduler enrollment. TASK-00054 now adds the
+queue, production mail vendor or scheduler enrollment. [TASK-00055 supplies completion HTTP/UI](PASSWORD_RESET_COMPLETION.md), pending independent Review/QA. TASK-00054 now adds the
 [generic request journey](PASSWORD_RESET_REQUEST.md); its reset delivery is asynchronous through the existing
 runner, not immediate SMTP in the public request.
 
@@ -14,11 +14,11 @@ checkout's private ignored `.env`, catcher mode now requires **both** activation
 
 ```dotenv
 APP_PASSWORD_RESET_ORIGIN=https://localhost:18443
-APP_PASSWORD_RESET_PATH=/reset-password
+APP_PASSWORD_RESET_PATH=/app/reset-password/complete
 ```
 
 Use the actual trusted HTTPS listener if one is separately configured; these values do not provision a listener
-or completion page. No request Host/forwarded header, destination or persisted value chooses origin/path.
+or completion page by themselves; TASK-00055 supplies the canonical completion journey. No request Host/forwarded header, destination or persisted value chooses origin/path.
 `CanonicalCredentialLink` shares the existing narrow HTTPS grammar with invitation links: no userinfo, query,
 fragment, IP/ambiguous host, encoded/dot path segments or insecure local exception. Invalid reset configuration
 fails catcher-enabled HTTP boot and delivery preflight before work mutation. Production-like startup additionally
@@ -59,7 +59,7 @@ No credential/digest/ciphertext/claim token is exposed by this query projection.
 The exact fragment has only `user_id` then `credential`, each once. UserId is the canonical 36-character package
 UUID; credential is 1–4096 decoded bytes, preserved untrimmed and RFC3986-encoded entirely inside the fragment.
 No query carries authority. [TASK-00055](../../planning/tasks/00055-TASK.md) owns bounded one-time capture,
-history removal, no-referrer behavior and completion; it is not implemented by sending this email. UserId alone
+history removal, no-referrer behavior and completion; see [its implementation contract](PASSWORD_RESET_COMPLETION.md). Sending email alone does not complete reset. UserId alone
 supplies no reset authority. There is no email, delivery ID, advisory status or claim token in the fragment.
 
 ## Presentation, lifecycle and limits
