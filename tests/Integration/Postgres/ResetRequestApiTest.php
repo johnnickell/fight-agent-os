@@ -55,6 +55,7 @@ final class ResetRequestApiTest extends TestCase
     private string $nonce;
     private string $proof;
     private string|false $oldUrl;
+    private string|false $oldDeliveryKey;
     private TestHandler $logs;
     /** @var list<int> */
     private array $waits = [];
@@ -73,7 +74,10 @@ final class ResetRequestApiTest extends TestCase
         $guard->assertConnected($this->connection, $expected);
         $this->connection->executeStatement('TRUNCATE users, audit_evidence, auth_rate_limits CASCADE');
         $this->oldUrl = getenv('DATABASE_URL');
+        $this->oldDeliveryKey = getenv('APP_CREDENTIAL_DELIVERY_KEY');
         putenv('DATABASE_URL='.$url);
+        // Own the fixture cipher key; separate race workers inherit this same ephemeral value.
+        putenv('APP_CREDENTIAL_DELIVERY_KEY='.bin2hex(random_bytes(32)));
         $container = require dirname(__DIR__, 3).'/config/services.php';
         $this->container = $container;
         $this->clock = new AccessClock(new DateTimeImmutable('2026-10-20T00:00:00.654321Z'));
@@ -109,6 +113,11 @@ final class ResetRequestApiTest extends TestCase
     {
         $this->connection->executeStatement('ALTER TABLE audit_evidence DROP CONSTRAINT IF EXISTS reset_abort');
         putenv($this->oldUrl === false ? 'DATABASE_URL' : 'DATABASE_URL='.$this->oldUrl);
+        if ($this->oldDeliveryKey === false) {
+            putenv('APP_CREDENTIAL_DELIVERY_KEY');
+        } else {
+            putenv('APP_CREDENTIAL_DELIVERY_KEY='.$this->oldDeliveryKey);
+        }
         $this->connection->close();
     }
 
