@@ -58,7 +58,8 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   },
   {
     pathname: '/app/swagger',
-    title: 'API documentation',
+    title: 'API Docs',
+    icon: 'apiDocs',
     access: 'protected',
     requirements: permission('READ_SWAGGER'),
     destination: 'swagger',
@@ -131,7 +132,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   },
   {
     pathname: '/app/admin/invitations',
-    title: 'Invitation Administration',
+    title: 'Invitation Admin',
     icon: 'invitations',
     access: 'protected',
     requirements: permission('MANAGE_USER_INVITATIONS'),

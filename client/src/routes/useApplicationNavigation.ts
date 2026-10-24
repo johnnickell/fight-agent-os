@@ -29,9 +29,11 @@ export function useApplicationNavigation(initialPathname: string) {
         event.altKey
       )
         return;
-      const anchor = event.target instanceof Element ? event.target.closest('a') : null;
+      // Embedded controls (including Swagger operation summaries) may contain href-less anchors.
+      // Only real native links belong to application navigation.
+      const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
       if (
-        !anchor ||
+        !(anchor instanceof HTMLAnchorElement) ||
         anchor.hasAttribute('data-reload-application') ||
         anchor.hasAttribute('download') ||
         anchor.target ||

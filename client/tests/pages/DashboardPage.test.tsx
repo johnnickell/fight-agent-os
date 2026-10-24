@@ -56,7 +56,7 @@ describe('honest Dashboard permission and destination contracts', () => {
     for (const [title, bit, path] of [
       ['Users', 2, '/app/admin/users'],
       ['Invite User', 4, '/app/admin/invite'],
-      ['Invitation Administration', 8, '/app/admin/invitations']
+      ['Invitation Admin', 8, '/app/admin/invitations']
     ] as const) {
       const link = main.queryByRole('link', { name: title });
       if (mask & bit) {

@@ -92,6 +92,26 @@ async function frame(narrow: boolean, permissions?: string[]) {
 }
 
 describe('compact account controls', () => {
+  it.each([false, true])(
+    'renders concise destinations and a decorative API Docs icon (narrow: %s)',
+    async (narrow) => {
+      await frame(narrow, ['READ_SWAGGER', 'MANAGE_USER_INVITATIONS']);
+      if (narrow) await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
+      const navigation = within(screen.getByRole('navigation', { name: 'Primary' }));
+      const docs = navigation.getByRole('link', { name: 'API Docs' });
+      expect(docs).toHaveAttribute('href', '/app/swagger');
+      expect(docs.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+      expect(docs.querySelector('svg')).toHaveAttribute('focusable', 'false');
+      expect(navigation.getByRole('link', { name: 'Invitation Admin' })).toHaveAttribute(
+        'href',
+        '/app/admin/invitations'
+      );
+      expect(navigation.queryByRole('link', { name: 'API documentation' })).not.toBeInTheDocument();
+      expect(
+        navigation.queryByRole('link', { name: 'Invitation Administration' })
+      ).not.toBeInTheDocument();
+    }
+  );
   it('follows System OS changes before User Menu is ever opened and releases listeners on unmount', async () => {
     const { changeOs, receivePreference, unmount } = await frame(false);
     expect(screen.getByRole('button', { name: 'User Menu' })).toHaveAttribute(
