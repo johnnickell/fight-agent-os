@@ -17,7 +17,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | in-progress | — | [PR #154](https://github.com/johnnickell/fight-agent-os/pull/154) |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -40,6 +40,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -302,7 +303,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00480](00480-TASK.md) | Export selected requester-owned restored diagnostics | [TICKET-00116 — Export and download authorized diagnostic material](../tickets/00116-TICKET.md) | ready-for-agent | [TASK-00478](00478-TASK.md), [TASK-00474](00474-TASK.md), [TASK-00475](00475-TASK.md), [TASK-00476](00476-TASK.md) | — |
 | — | [TASK-00486](00486-TASK.md) | Inspect and recover observability through the existing operator guide | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | ready-for-agent | [TASK-00074](00074-TASK.md), [TASK-00075](00075-TASK.md), [TASK-00456](00456-TASK.md), [TASK-00460](00460-TASK.md), [TASK-00469](00469-TASK.md), [TASK-00472](00472-TASK.md), [TASK-00473](00473-TASK.md), [TASK-00477](00477-TASK.md) | — |
 | — | [TASK-00487](00487-TASK.md) | Complete the supported live-and-archived operator journey | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | ready-for-agent | [TASK-00486](00486-TASK.md), [TASK-00466](00466-TASK.md), [TASK-00480](00480-TASK.md) | — |
-| — | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | [TASK-00511](00511-TASK.md) | — |
 
 ## Needs Info
 
@@ -560,5 +560,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | — (standalone chore) | done | — | [PR #142](https://github.com/johnnickell/fight-agent-os/pull/142) |
 | — | [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | — (standalone bug) | done | — | [PR #147](https://github.com/johnnickell/fight-agent-os/pull/147) |
 | — | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #151](https://github.com/johnnickell/fight-agent-os/pull/151) |
+| — | [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #154](https://github.com/johnnickell/fight-agent-os/pull/154) |
 | — | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | — (standalone bug) | done | — | [PR #152](https://github.com/johnnickell/fight-agent-os/pull/152) |
 <!-- /planning:board -->
