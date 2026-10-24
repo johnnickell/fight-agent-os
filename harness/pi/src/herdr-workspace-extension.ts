@@ -5,7 +5,7 @@ import { HerdrWorkspace } from './herdr/workspace.mjs';
 export default function installHerdrWorkspace(pi: ExtensionAPI) {
   let workspace: HerdrWorkspace | undefined;
   pi.registerCommand('fight-workspace', {
-    description: 'Open/reuse owned Herdr placeholders, or close companions: /fight-workspace [open|close]',
+    description: 'Open/reuse owned Herdr child observation and log placeholder, or close companions: /fight-workspace [open|close]',
     getArgumentCompletions: (prefix) => ['open', 'close'].filter((value) => value.startsWith(prefix)).map((value) => ({ value, label: value })),
     handler: async (args, ctx) => {
       if (ctx.mode !== 'tui') {
@@ -18,7 +18,8 @@ export default function installHerdrWorkspace(pi: ExtensionAPI) {
         return;
       }
       try {
-        workspace ||= new HerdrWorkspace({ cwd: ctx.cwd, sessionId: ctx.sessionManager.getSessionId(), sessionFile: ctx.sessionManager.getSessionFile() });
+        const currentContext = () => ({ cwd: ctx.cwd, sessionId: ctx.sessionManager.getSessionId(), sessionFile: ctx.sessionManager.getSessionFile() || null });
+        workspace ||= new HerdrWorkspace({ ...currentContext(), currentContext });
         ctx.ui.notify(await workspace.act(action), 'info');
       } catch (error) {
         ctx.ui.notify(error instanceof Error ? error.message : 'Workspace unavailable; ordinary Pi unchanged', 'warning');
@@ -27,6 +28,7 @@ export default function installHerdrWorkspace(pi: ExtensionAPI) {
   });
   pi.on('session_shutdown', async (_event, ctx) => {
     if (!workspace) return;
+    workspace.invalidate();
     try { await workspace.shutdown(); }
     catch { ctx.ui.notify('Workspace cleanup incomplete: unproven companions retained; inspect var/herdr-workspace before recovery', 'warning'); }
     workspace = undefined;
