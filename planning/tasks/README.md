@@ -515,4 +515,5 @@
 | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | done | — |
 <!-- /planning:records -->
