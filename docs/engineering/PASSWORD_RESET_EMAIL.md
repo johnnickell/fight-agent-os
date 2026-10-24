@@ -2,7 +2,9 @@
 
 TASK-00053 maps Access Control's existing direct reset handler to the shared Twig/`TemplateEngine` and
 `MailDelivery` capability. The sole durable work remains the package reset generation. There is no consumer
-queue, reset-request/completion HTTP/UI, production mail vendor or scheduler enrollment.
+queue, completion HTTP/UI, production mail vendor or scheduler enrollment. TASK-00054 now adds the
+[generic request journey](PASSWORD_RESET_REQUEST.md); its reset delivery is asynchronous through the existing
+runner, not immediate SMTP in the public request.
 
 ## Configure and operate
 
@@ -42,8 +44,9 @@ screenshots or SMTP debug output. Preserve the external delivery key while outst
 
 ## Qualified routing and completion contract
 
-The unchanged lock selects Access Control **v0.6.0**, source/lock reference
-`dc4621d13851dd08cdf85ed9715ead24b1051e80`, and Common **v1.3.0**,
+TASK-00053 originally qualified Access Control **v0.6.0**, source/lock reference
+`dc4621d13851dd08cdf85ed9715ead24b1051e80`. The current lock and TASK-00054 request integration use
+Access Control **v0.8.0**, `319738255e682d587642b67856039f882b9588d6`, and Common **v1.3.0**,
 `7de6cad6e8a9752973ad9f8e27e285b0c1510582`. The invocation exposes purpose, generation ID, destination and
 credential, but no UserId, expiry or claim token. Under the owner's [approved bounded contract](../../planning/tasks/00053-TASK.md#approved-invocation-routing-and-fragment-contract),
 `PasswordResetMailProvider` dispatches `FindCredentialDeliveryStatus` through the configured query bus using

@@ -160,6 +160,11 @@ final class AuthAdmissionTest extends TestCase
                 self::assertTrue($this->admission()->allows(EmailAddress::fromString('race@example.test')));
             }
         }
+        if ($operation === 'reset_email') {
+            for ($index = 0; $index < 2; ++$index) {
+                $this->admission()->passwordReset(EmailAddress::fromString('race@example.test'), '192.0.2.1');
+            }
+        }
         $children = [];
         $this->connection->beginTransaction();
         $this->connection->executeQuery('SELECT pg_advisory_xact_lock(24121, 45)');
@@ -224,6 +229,9 @@ SQL,
     public static function raceOperations(): iterable
     {
         yield ['email'];
+        yield ['reset_email'];
+        yield ['reset_peer'];
+        yield ['reset_endpoint'];
         foreach (AuthOperation::cases() as $operation) {
             yield [$operation->value];
         }

@@ -373,7 +373,10 @@ feedback. Locally invalid resubmission preserves current server feedback on unch
 published safe messages on explicit `body.<wire_field>` paths are shown; mixed published/private failures show approved field messages and generic
 form-level feedback without rendering private text. No arbitrary server path
 is used as a Formik setter. The owning journey controls loading/retry, form-level status, completion/cleanup and
-server success; it must not persist or log credential values. The real `invitation_activation` registration and form now consume this boundary; the `login` form now consumes it too. Reset/change forms remain with their owning TASKs. The real PHP wire uses zero/one-element string-list rule arguments; the client
+server success; it must not persist or log credential values. The real `invitation_activation` registration and form now consume this boundary; the `login` form now consumes it too. TASK-00054 now supplies the real `password_reset_request` form at `/app/reset-password` (legacy
+`/app/login/recovery` alias), using the same shared adapter, generic success and explicit schema recovery;
+see [reset request contracts](../docs/engineering/PASSWORD_RESET_REQUEST.md). Change/completion forms remain
+with their owning TASKs. The real PHP wire uses zero/one-element string-list rule arguments; the client
 strictly checks that shape before mapping it into its internal rule representation. The catalog examples are synthetic local
 interactions, not endpoints or authentication E2E evidence.
 

@@ -125,7 +125,9 @@ explicitly use the disposable loopback Mailpit catcher with `APP_CREDENTIAL_DELI
 `APP_ACTIVATION_ORIGIN`/`APP_ACTIVATION_PATH`, plus `APP_PASSWORD_RESET_ORIGIN`/`APP_PASSWORD_RESET_PATH`; see
 [local invitation email](docs/engineering/INVITATION_EMAIL.md) and
 [password-reset email](docs/engineering/PASSWORD_RESET_EMAIL.md) for exact `.env`, routing/fragment and
-start/send/recovery/cleanup contracts. No real inbox or reset UI is supplied. The public activation UI requires the
+start/send/recovery/cleanup contracts. No real inbox or reset-completion UI is supplied. TASK-00054 adds the [generic password-reset request](docs/engineering/PASSWORD_RESET_REQUEST.md)
+at `/app/reset-password` and `POST /api/v1/auth/password-reset`, pending independent Review/QA.
+Reset mail now requires the bounded internal runner rather than synchronous request-time SMTP. The public activation UI requires the
 configured canonical `/app/activate` path and the qualified fragment-only link shape described in the activation runbook.
 A bounded internal
 `./bin/credential-delivery run --internal` runner, key-free `expire --internal` cleanup and safe generation status

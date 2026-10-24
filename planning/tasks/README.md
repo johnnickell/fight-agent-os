@@ -56,7 +56,7 @@
 | [TASK-00051](00051-TASK.md) | Deliver the responsive authoritative application frame | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | done | [TICKET-00019](../tickets/00019-TICKET.md) |
-| [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
+| [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | done | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00055](00055-TASK.md) | Deliver one-time password-reset completion | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | ready-for-agent | [TICKET-00020](../tickets/00020-TICKET.md) |

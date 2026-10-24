@@ -34,8 +34,9 @@ return static function (Container $container): void {
         $container->set($id, $factory);
     }
     $subscribers = [
-        InvitationDeliverySubscriber::class    => InvitationDeliverySubscriber::class,
-        PasswordResetDeliverySubscriber::class => PasswordResetDeliverySubscriber::class
+        // Reset requests deliberately leave delivery to the bounded recovery runner so SMTP cannot
+        // create an eligible-only public timing path. Direct delivery commands remain available.
+        InvitationDeliverySubscriber::class => InvitationDeliverySubscriber::class
     ];
     foreach ($subscribers as $subscriber => $id) {
         $container->get('messaging.event.dispatcher')->registerService($subscriber, $id);

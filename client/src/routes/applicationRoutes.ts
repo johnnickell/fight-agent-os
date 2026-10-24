@@ -32,13 +32,13 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     requirements: publicAccess,
     destination: 'login'
   },
-  {
-    pathname: '/app/login/recovery',
-    title: 'Sign-in help',
+  ...['/app/reset-password', '/app/login/recovery'].map((pathname): ApplicationRoute => ({
+    pathname,
+    title: 'Reset password',
     access: 'public',
     requirements: publicAccess,
     destination: 'recovery'
-  },
+  })),
   {
     pathname: '/app/activate',
     title: 'Activate invitation',

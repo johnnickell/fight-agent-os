@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { LoginPage, LoginRecoveryPage } from '@/pages/LoginPage';
+import { LoginPage } from '@/pages/LoginPage';
 import { IntendedRoute } from '@/routes/IntendedRoute';
 
 import { jsonResponse } from '../activationFixtures';
@@ -70,7 +70,7 @@ describe('schema-backed production login', () => {
     });
     expect(screen.getByRole('link', { name: 'Forgot your password?' })).toHaveAttribute(
       'href',
-      '/app/login/recovery'
+      '/app/reset-password'
     );
     deps.service.dispose();
   });
@@ -244,14 +244,5 @@ describe('schema-backed production login', () => {
     intent.dispose();
     cache.dispose();
     deps.service.dispose();
-  });
-
-  it('provides honest recovery rather than pretending to send a reset', () => {
-    render(<LoginRecoveryPage />);
-    expect(screen.getByText(/Password recovery is not available/)).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Return to sign in' })).toHaveAttribute(
-      'href',
-      '/app/login'
-    );
   });
 });
