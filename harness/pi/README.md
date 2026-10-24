@@ -60,8 +60,9 @@ native format and output handling.
 
 ## Native Herdr workspace candidate
 
-TASK-00510 adds `/fight-workspace [open|close]` to native Pi inside Herdr. It preserves the live native frontend
-and opens/reuses two truthful placeholders; child/log producers remain TASK-00511/00512. Herdr owns layout,
+`/fight-workspace [open|close]` preserves native Pi inside Herdr. TASK-00511 connects the owned child companion
+to current-session observation with selection/pinning, pause/drain and validated lifetime metadata; the log
+companion remains a truthful TASK-00512 placeholder. Herdr owns layout,
 focus, resize and zoom; Pi retains Tab completion. Missing or ambiguous prerequisites leave ordinary Pi usable,
 with no automatic RPC fallback. See [native setup, ownership and recovery](WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
 The action performs no global installation or workflow selection. Independent acceptance remains pending.
@@ -192,7 +193,7 @@ The manifest loads `header-extension.ts`, `jev-extension.ts`, `tool-policy-exten
 | `jev-extension.ts` | Unchanged | Default registration and named `installJev` export retained |
 | `tool-policy-extension.ts` | Unchanged | Independent policy selection unchanged |
 | — | `native-observation-extension.ts` | New native fixed-monitor association; ordinary tools and selected executors retain their restrictions |
-| — | `herdr-workspace-extension.ts` | Explicit native Herdr placeholder layout; no observation producer or RPC fallback |
+| — | `herdr-workspace-extension.ts` | Native Herdr layout and human-only child companion; log placeholder, no RPC fallback |
 
 The consumer inventory found no supported caller requiring an old-path shim. Package-root installations
 (`pi install ./harness/pi` or `pi --extension ./harness/pi`) follow the manifest and need no path change.

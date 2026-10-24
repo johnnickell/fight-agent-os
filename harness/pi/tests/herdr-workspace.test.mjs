@@ -1,14 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, readFile, writeFile, readdir } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile, readdir, realpath, rename } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import net from 'node:net';
 import { HerdrWorkspace } from '../src/herdr/workspace.mjs';
+import { HerdrActivity, validateSelection } from '../src/herdr/activity.mjs';
+import { RegisteredChildren } from '../src/workspace/registered-children.mjs';
 
 // Owned orchestration contracts, not assertions about Herdr's implementation or UI.
 async function fixture(t, options = {}) {
-  const cwd = await mkdtemp(join(tmpdir(), 'fight-herdr-'));
+  const cwd = await realpath(await mkdtemp(join(tmpdir(), 'fight-herdr-')));
   const socket = net.createServer();
   const socketPath = join(cwd, 'herdr.sock');
   await new Promise((done) => socket.listen(socketPath, done));
@@ -16,7 +19,8 @@ async function fixture(t, options = {}) {
   const primary = { pane_id: 'caller', terminal_id: 'native-terminal', tab_id: 'tab', workspace_id: 'workspace' };
   const panes = new Map([['caller', primary]]);
   const processes = new Map([['caller', { foreground_processes: [{ pid: process.pid }] }]]);
-  const calls = [];
+  const calls = [], activities = new Map();
+  t.after(() => { for (const activity of activities.values()) activity.close(); });
   let sequence = 0;
   const client = { async call(...args) {
     calls.push(args);
@@ -37,8 +41,16 @@ async function fixture(t, options = {}) {
       processes.set(pane.pane_id, options.shellStartup?.(args, sequence) ?? { shell_pid: sequence, foreground_processes: [{ pid: sequence, name: 'zsh' }] });
       return { pane };
     }
-    if (action === 'run') { processes.set(id, { foreground_processes: [{ pid: 100 + sequence, name: 'node' }] }); return {}; }
-    if (action === 'close') { panes.delete(id); return {}; }
+    if (action === 'run') {
+      processes.set(id, { foreground_processes: [{ pid: 100 + sequence, name: 'node' }] });
+      const native = workspace.activityContext;
+      if (workspace.state.panes[0].paneId === id) activities.set(id, new HerdrActivity(
+        { port: native.server.port, token: native.token, ...native.snapshot() }, () => {},
+        { reader: options.reader || ((root, changed) => new RegisteredChildren(root, changed, { preferences: false, discover: () => [] })) },
+      ));
+      return {};
+    }
+    if (action === 'close') { activities.get(id)?.close(); panes.delete(id); return {}; }
     if (action === 'rename') return {};
     throw Error('Unsupported action');
   } };
@@ -46,10 +58,15 @@ async function fixture(t, options = {}) {
   const probe = async (file, token) => {
     const owned = workspace.state?.panes.find((p) => p.token === token);
     const info = owned && processes.get(owned.paneId);
-    return info?.foreground_processes[0]?.name === 'node' ? { pid: info.foreground_processes[0].pid, paneId: owned.paneId } : undefined;
+    const activity = activities.get(owned?.paneId);
+    return info?.foreground_processes[0]?.name === 'node' ? {
+      pid: info.foreground_processes[0].pid, paneId: owned.paneId,
+      ...(activity ? { generation: activity.binding.generation, invalidated: activity.invalidated === true } : {}),
+    } : undefined;
   };
   workspace = new HerdrWorkspace({ cwd, sessionId: 'actual-session', env: { HERDR_ENV: '1', HERDR_SOCKET_PATH: socketPath, HERDR_PANE_ID: 'caller', HERDR_TAB_ID: 'tab', HERDR_WORKSPACE_ID: 'workspace' }, client, probe, ...options.context });
-  return { workspace, calls, panes, processes, primary };
+  t.after(() => workspace.invalidate());
+  return { workspace, calls, panes, processes, primary, activities };
 }
 
 test('Open keeps the native process and uses returned IDs, no-focus, same cwd and two truthful labels', async (t) => {
@@ -60,7 +77,7 @@ test('Open keeps the native process and uses returned IDs, no-focus, same cwd an
   assert.equal(splits[0][2], 'caller');
   assert.equal(splits[1][2], 'returned-1');
   assert.ok(splits.every((c) => c.includes('--no-focus') && c.includes(workspace.context.cwd)));
-  assert.deepEqual(calls.filter((c) => c[1] === 'rename').map((c) => c[3]), ['Child activity — placeholder', 'Runtime logs — placeholder']);
+  assert.deepEqual(calls.filter((c) => c[1] === 'rename').map((c) => c[3]), ['Child activity — observation only', 'Runtime logs — placeholder']);
   assert.ok(calls.filter((c) => ['run', 'close', 'rename'].includes(c[1])).every((c) => c[2] !== 'caller'));
   assert.equal(JSON.parse(await readFile(workspace.file)).primary.pid, process.pid);
 });
@@ -154,12 +171,87 @@ test('QA-01: companion startup excludes personal zsh hooks across recovery and c
   assert.equal(calls.filter((c) => c[1] === 'run').length, 12);
 });
 
-test('Repeated open reuses healthy companions without more splits or commands', async (t) => {
-  const { workspace, calls } = await fixture(t);
+test('Repeated open reuses healthy companions even with unavailable custody or intentionally closed readers', async (t) => {
+  const { workspace, calls, activities } = await fixture(t);
   await workspace.act('open');
-  const mutations = calls.filter((c) => ['split', 'run', 'rename'].includes(c[1])).length;
-  await workspace.act('open');
-  assert.equal(calls.filter((c) => ['split', 'run', 'rename'].includes(c[1])).length, mutations);
+  const activity = activities.get(workspace.state.panes[0].paneId); await activity.tick();
+  const generation = workspace.activityContext.generation;
+  for (const readersOpen of [true, false]) {
+    if (!readersOpen) activity.action('toggle');
+    const before = calls.length; await workspace.act('open');
+    assert.equal(workspace.activityContext.generation, generation);
+    assert.equal(calls.slice(before).filter(c => ['split', 'run', 'rename', 'close'].includes(c[1])).length, 0);
+  }
+});
+
+for (const failure of ['transient-link', 'same-path-file-replacement', 'closed-native-context']) {
+  test(`Review R1: explicit open replaces ${failure} with a fresh observer, never old authority`, async t => {
+    const childId = randomUUID(), custodyGeneration = randomUUID(), started = Date.now() - 100;
+    const { workspace, calls, panes, activities } = await fixture(t, {
+      reader: (root, changed) => new RegisteredChildren(root, changed, {
+        preferences: false, discover: () => [{ path: '/controlled-custody', descriptor: {} }],
+        verify: async () => { const now = Date.now(); return { parent: workspace.context.sessionId, generation: custodyGeneration,
+          parentFile: workspace.activityContext.snapshot().file, at: now, children: [{
+            id: childId, parent: workspace.context.sessionId, generation: custodyGeneration,
+            started, order: 1, sequence: 1, receivedAt: now,
+            state: 'connected', lifecycle: 'running', exitCode: null, heartbeatSeconds: 2,
+            identity: { task: 'TASK-00511', role: 'work', provider: 'openai-codex', model: 'configured-only', thinking: 'high', worktree: root, attempt: '/existing-attempt' },
+            history: ['safe existing progress'], omitted: 0, gaps: 0,
+          }] }; },
+      }),
+    });
+    const file = join(workspace.context.cwd, 'native.jsonl');
+    await writeFile(file, 'controlled native identity'); workspace.context.sessionFile = file;
+    await workspace.act('open');
+    const oldNative = workspace.activityContext, old = activities.get(workspace.state.panes[0].paneId);
+    await old.tick(); old.action('pin');
+    const oldMetadata = await old.selection(), oldGeneration = oldNative.generation;
+    assert.equal(oldMetadata.child.id, childId);
+    if (failure === 'transient-link') {
+      const query = old.query; old.query = async () => { throw Error('One lost native query'); };
+      await old.tick(); old.query = query;
+      // The native transport is restored; only this observer remains permanently invalidated.
+      assert.equal(oldNative.closed, false);
+    } else {
+      if (failure === 'same-path-file-replacement') {
+        await writeFile(file + '.replacement', 'replacement'); await rename(file + '.replacement', file);
+      } else oldNative.close();
+      await old.tick(); assert.equal(oldNative.closed, true);
+    }
+    assert.equal(old.invalidated, true); assert.equal(old.children.sources.size, 0);
+    assert.equal(old.children.pin, null); await assert.rejects(old.selection());
+    const before = calls.length;
+    await workspace.act('open');
+    assert.notEqual(workspace.activityContext.generation, oldGeneration, 'Explicit recovery must issue a fresh generation');
+    const next = activities.get(workspace.state.panes[0].paneId); await next.tick();
+    const nextMetadata = await next.selection();
+    assert.equal(nextMetadata.child.id, childId, 'Freshly rediscover existing work, not a new execution');
+    assert.equal(nextMetadata.child.pinned, false);
+    assert.throws(() => validateSelection(next.binding, oldMetadata));
+    await assert.rejects(old.selection()); assert.equal(old.invalidated, true); assert.equal(oldNative.closed, true);
+    assert.equal(panes.size, 3); assert.ok(panes.has('caller'));
+    assert.ok(calls.slice(before).filter(c => ['close', 'run', 'rename'].includes(c[1])).every(c => c[2] !== 'caller'));
+    const stable = calls.length; await workspace.act('open');
+    assert.equal(calls.slice(stable).filter(c => ['split', 'run', 'rename', 'close'].includes(c[1])).length, 0);
+  });
+}
+
+test('Review R1: invalidation does not bypass uncertain outcomes or unrelated topology', async t => {
+  for (const hold of ['uncertain', 'unrelated', 'changed-process']) await t.test(hold, async t => {
+    const { workspace, calls, panes, processes, activities } = await fixture(t);
+    await workspace.act('open');
+    const old = activities.get(workspace.state.panes[0].paneId);
+    old.query = async () => { throw Error('Lost native query'); }; await old.tick();
+    if (hold === 'uncertain') workspace.state.uncertain = true;
+    if (hold === 'unrelated') panes.set('unrelated', { pane_id: 'unrelated' });
+    if (hold === 'changed-process') processes.set(workspace.state.panes.at(-1).paneId, { foreground_processes: [{ pid: 999, name: 'editor' }] });
+    const before = calls.length; await assert.rejects(workspace.act('open'));
+    assert.equal(calls.slice(before).filter(c => ['split', 'run', 'rename'].includes(c[1])).length, 0);
+    assert.ok(panes.has('caller'));
+    if (hold === 'unrelated') assert.ok(panes.has('unrelated'));
+    if (hold === 'uncertain') assert.equal(workspace.state.uncertain, true);
+    if (hold === 'changed-process') assert.equal(calls.slice(before).filter(c => c[1] === 'close').length, 0);
+  });
 });
 
 test('R1: rejected persisted ownership never mutates panes or becomes admitted on repeat', async (t) => {
