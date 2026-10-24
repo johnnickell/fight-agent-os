@@ -25,24 +25,11 @@ case "${1:-}" in
     mkcert -cert-file "$certs/localhost.pem" -key-file "$certs/localhost-key.pem" localhost
     chmod 600 "$certs/localhost.pem" "$certs/localhost-key.pem"
     python3 scripts/local_https.py configure
-    echo "Ready. Start with ./bin/https up"
+    echo "Ready. Start or refresh the complete stack with ./bin/up"
     ;;
   up)
-    python3 scripts/local_https.py check
-    [ -f vendor/autoload.php ] || {
-      echo "Install dependencies with ./bin/composer install first." >&2
-      exit 1
-    }
-    [ -s "$certs/localhost.pem" ] && [ -s "$certs/localhost-key.pem" ] || {
-      echo "Run ./bin/https setup before starting HTTPS." >&2
-      exit 1
-    }
-    openssl x509 -in "$certs/localhost.pem" -checkend 86400 -noout
-    docker compose --profile https up --detach --build --wait --wait-timeout 120 web https
-    # Reload leaf files after setup regenerates certificates on an existing service.
-    docker compose --profile https exec -T https nginx -t
-    docker compose --profile https exec -T https nginx -s reload
-    echo "$origin"
+    echo "./bin/https up has been removed. Use ./bin/up to start or refresh HTTP and HTTPS; use ./bin/https setup only for explicit TLS enrollment." >&2
+    exit 2
     ;;
   status)
     python3 scripts/local_https.py check
@@ -64,7 +51,7 @@ case "${1:-}" in
     fi
     ;;
   *)
-    echo "Usage: ./bin/https {setup|up|status|down|remove}" >&2
+    echo "Usage: ./bin/https {setup|status|down|remove}" >&2
     exit 2
     ;;
 esac
