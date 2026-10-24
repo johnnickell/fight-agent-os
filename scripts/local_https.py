@@ -88,20 +88,41 @@ def configure():
     print("Updated only APP_BROWSER_ORIGIN in .env; existing key preserved.")
 
 
+def startup_certificates():
+    """Check existing leaf expiry and matching key without revealing private material."""
+    certificate = STATE / "certs" / "localhost.pem"
+    key = STATE / "certs" / "localhost-key.pem"
+    for path in (certificate, key):
+        if not path.is_file() or path.is_symlink() or path.stat().st_size == 0:
+            raise ValueError("Missing regular TLS leaf/key files. Run ./bin/https setup, then ./bin/up.")
+    commands = [
+        ["openssl", "x509", "-in", str(certificate), "-checkend", "86400", "-noout"],
+        ["openssl", "x509", "-in", str(certificate), "-pubkey", "-noout"],
+        ["openssl", "pkey", "-in", str(key), "-passin", "pass:", "-pubout"],
+    ]
+    results = [subprocess.run(command, capture_output=True) for command in commands]
+    if any(result.returncode != 0 for result in results):
+        raise ValueError("Invalid or expiring TLS leaf/key. Run ./bin/https setup, then ./bin/up.")
+    if results[1].stdout != results[2].stdout:
+        raise ValueError("TLS certificate/key mismatch. Run ./bin/https setup, then ./bin/up.")
+
+
 def main():
     command = sys.argv[1] if len(sys.argv) == 2 else ""
     if command == "configure":
         configure()
-    elif command in {"preflight", "check"}:
+    elif command in {"preflight", "check", "startup"}:
         settings = environment()
-        if command == "check" and settings.get("APP_BROWSER_ORIGIN") != ORIGIN:
-            raise ValueError("Local HTTPS requires APP_BROWSER_ORIGIN=https://localhost:18443.")
+        if command in {"check", "startup"} and settings.get("APP_BROWSER_ORIGIN") != ORIGIN:
+            raise ValueError("Local HTTPS requires APP_BROWSER_ORIGIN=https://localhost:18443. Run ./bin/https setup or correct the effective Compose origin, then ./bin/up.")
+        if command == "startup":
+            startup_certificates()
         if command == "preflight":
             if os.environ.get("APP_BROWSER_ORIGIN", ORIGIN) != ORIGIN:
                 raise ValueError("Unset the shell APP_BROWSER_ORIGIN override before local HTTPS setup.")
             local_origin_content()
     else:
-        raise ValueError("Usage: local_https.py {preflight|configure|check}")
+        raise ValueError("Usage: local_https.py {preflight|configure|check|startup}")
 
 
 if __name__ == "__main__":

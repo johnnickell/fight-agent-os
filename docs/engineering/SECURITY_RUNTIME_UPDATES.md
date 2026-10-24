@@ -128,14 +128,11 @@ docker compose build --pull --no-cache web
 docker compose stop web
 ./bin/client setup
 ./bin/client storybook-setup
-# Recreate, rather than merely restart an old image/process.
-docker compose up -d --no-deps --no-build --pull never web
-# For an already enrolled local HTTPS stack only:
+# Explicit HTTPS image preparation; TLS enrollment must already exist:
 docker compose --profile https build --pull --no-cache https_php
 docker compose --profile https pull https
-docker compose --profile https up -d --no-deps --no-build --pull never https_php
-# Recreate the gateway after FPM replacement to refresh its resolved upstream address.
-docker compose --profile https up -d --no-deps --no-build --pull never --force-recreate https
+# Refresh both PHP runtimes and validate/reload the gateway after FPM replacement.
+./bin/up
 # Check the actual processes, not only the Dockerfile/tag.
 docker compose exec -T web php --version
 docker compose exec -T web node --version

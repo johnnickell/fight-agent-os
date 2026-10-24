@@ -20,7 +20,8 @@ APP_SWAGGER_ALLOWED_ENVIRONMENTS='["local"]'
 
 The operator edits their own ignored `.env`. No migration/updater rewrites it. Existing `development` is not an
 alias for `local`: deliberately change the environment and refresh both HTTP/TLS services after reviewing
-all existing environment-specific controls. Compose defaults APP_ENV to `local`, diagnostics to false and the
+all existing environment-specific controls. Enroll TLS once with `./bin/https setup`, then use `./bin/up`
+for startup and every configuration refresh; no separate HTTPS startup command is needed. Compose defaults APP_ENV to `local`, diagnostics to false and the
 allowlist to absent/disabled. Copying the example is not implicit permission or a deployed security assessment.
 `APP_ENV=test` retains its independent destructive-test database guards.
 
