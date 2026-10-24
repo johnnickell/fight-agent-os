@@ -56,6 +56,14 @@ not successful landing. Distinguish missing initial acceptance from land-owned d
 acceptance using the routes above; retain required evidence gates without a completion or repair loop.
 For an open-PR QA invocation, the observed PR URL can be the resume target; resolve its TASK for work/review/land.
 
+During authorized normal publication, Land applies [current subject handoff synchronization](LANDING.md#synchronize-current-subject-handoffs)
+to applicable authored current Board/Roadmap/README handoffs as well as source records, parent rollups and derived
+views. A historical acceptance/delivery-pending checkpoint is not today's instruction: preserve it and canonical
+reports, and distinguish the current stage/action with an evidenced current section or durable result locator.
+Missing proof or unresolved contradictory handoffs need a precise hold, not an inferred merge, unrelated repair
+or another metadata commit merely to certify final-head success. Recommendations and read-only routing do not
+perform this reconciliation or acquire Land authority.
+
 ## Release handoffs
 
 [Release acceptance](../../.pi/skills/release/references/acceptance.md) owns version subjects and canonical reports.
