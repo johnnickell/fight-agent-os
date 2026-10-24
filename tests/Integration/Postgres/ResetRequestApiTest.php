@@ -376,6 +376,7 @@ final class ResetRequestApiTest extends TestCase
             }
         }
         $children = [];
+        $failure = null;
         $this->connection->beginTransaction();
         $this->connection->executeQuery(
             'SELECT pg_advisory_xact_lock(hashtextextended(?, ?))',
@@ -400,10 +401,20 @@ final class ResetRequestApiTest extends TestCase
                     JSON_THROW_ON_ERROR
                 )."\n");
                 fflush($pipes[0]);
-                $pids[] = (int) fgets($pipes[1]);
+            }
+            foreach ($children as [$process, $pipes]) {
+                $ready = (string) fgets($pipes[1]);
+                self::assertTrue(preg_match('/\Aready ([1-9][0-9]*)\n\z/D', $ready, $match) === 1, 'Worker not ready.');
+                $pids[] = (int) $match[1];
+            }
+            // Both buses are resolved before either request enters the real package transaction.
+            $deadline = hrtime(true) + 4_000_000_000; // Below the workers' existing five-second lock timeout.
+            foreach ($children as [$process, $pipes]) {
+                self::assertSame(6, fwrite($pipes[0], "start\n"));
+                fflush($pipes[0]);
             }
             $blocked = 0;
-            for ($attempt = 0; $attempt < 3000 && $blocked !== 2; ++$attempt) {
+            while ($blocked !== 2 && hrtime(true) < $deadline) {
                 $blocked = (int) $this->connection->fetchOne(
                     'SELECT count(*) FROM pg_locks WHERE locktype = ? AND NOT granted AND pid IN (?, ?)',
                     ['advisory', ...$pids]
@@ -411,19 +422,35 @@ final class ResetRequestApiTest extends TestCase
             }
             self::assertSame(2, $blocked);
             $this->connection->commit();
-            foreach ($children as [$process, $pipes]) {
-                self::assertSame('committed', trim((string) fgets($pipes[1])));
-            }
+        } catch (\Throwable $caught) {
+            $failure = $caught;
         } finally {
-            if ($this->connection->isTransactionActive()) {
-                $this->connection->rollBack();
-            }
-            foreach ($children as [$process, $pipes]) {
-                foreach ($pipes as $pipe) {
-                    fclose($pipe);
+            try {
+                if ($this->connection->isTransactionActive()) {
+                    $this->connection->rollBack();
                 }
-                self::assertSame(0, proc_close($process));
+            } catch (\Throwable $caught) {
+                $failure ??= $caught;
             }
+            $results = $this->collectRaceWorkers($children);
+        }
+        if ($failure !== null) {
+            foreach ($results as [$exit, $output, $errorBytes, $terminated]) {
+                fwrite(STDERR, sprintf(
+                    "Race cleanup: exit=%d stdout_bytes=%d stderr_bytes=%d terminated=%d\n",
+                    $exit,
+                    strlen($output),
+                    $errorBytes,
+                    (int) $terminated
+                ));
+            }
+            throw $failure;
+        }
+        foreach ($results as [$exit, $output, $errorBytes, $terminated]) {
+            self::assertFalse($terminated, 'Race worker exceeded bounded cleanup.');
+            self::assertSame(0, $exit);
+            self::assertSame(0, $errorBytes, 'Race worker emitted diagnostics (content withheld).');
+            self::assertTrue($output === "committed\n", 'Race worker did not report a clean commit.');
         }
         $rows = $this->connection->fetchAllAssociative('SELECT * FROM password_reset_grants ORDER BY generation');
         self::assertCount($state === 'none' ? 2 : 3, $rows);
@@ -436,6 +463,58 @@ final class ResetRequestApiTest extends TestCase
             self::assertTrue($row['revoked_at'] !== null || $row['consumed_at'] !== null);
             self::assertNull($row['delivery_ciphertext']);
         }
+    }
+
+    /**
+     * Releases both children and drains bounded diagnostics before closing their output pipes
+     *
+     * @param list<array{resource, array<int, resource>}> $children
+     *
+     * @return list<array{int, string, int, bool}>
+     */
+    private function collectRaceWorkers(array $children): array
+    {
+        /** @var list<array{int, string, int, bool}> $results */
+        $results = [];
+        foreach ($children as [$process, $pipes]) {
+            fclose($pipes[0]);
+            stream_set_blocking($pipes[1], false);
+            stream_set_blocking($pipes[2], false);
+            $results[] = [-1, '', 0, false];
+        }
+        // Allow the existing ten-second statement bound after releasing the parent's lock.
+        $deadline = hrtime(true) + 10_000_000_000;
+        do {
+            $pending = false;
+            foreach ($results as $index => [$exit, $output, $errorBytes, $terminated]) {
+                [$process, $pipes] = $children[$index];
+                $output = substr($output.(string) fread($pipes[1], 8192), 0, 4096);
+                $errorBytes += strlen((string) fread($pipes[2], 8192));
+                $status = proc_get_status($process);
+                if (!$status['running'] && $status['exitcode'] >= 0) {
+                    $exit = $status['exitcode'];
+                }
+                if ($status['running'] && hrtime(true) >= $deadline) {
+                    $terminated = true;
+                    // One second for graceful exit, then kill only this owned child.
+                    proc_terminate($process, hrtime(true) < $deadline + 1_000_000_000 ? 15 : 9);
+                }
+                $results[$index] = [$exit, $output, $errorBytes, $terminated];
+                $pending = $pending || $status['running'] || !feof($pipes[1]) || !feof($pipes[2]);
+            }
+            if ($pending) {
+                usleep(1000);
+            }
+        } while ($pending && hrtime(true) < $deadline + 2_000_000_000);
+        foreach ($results as $index => [$exit, $output, $errorBytes, $terminated]) {
+            [$process, $pipes] = $children[$index];
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            $closed = proc_close($process);
+            $results[$index] = [$exit < 0 ? $closed : $exit, $output, $errorBytes, $terminated];
+        }
+
+        return $results;
     }
 
     /**

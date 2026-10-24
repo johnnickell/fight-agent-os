@@ -23,10 +23,11 @@ use Throwable;
 final class ResetRequestRaceWorker
 {
     /**
-     * Returns only connection readiness and safe commit disposition
+     * Reports command readiness and waits for the shared start before competing
      */
     public static function run(): void
     {
+        $exitCode = 0;
         try {
             $input = json_decode((string) fgets(STDIN), true, flags: JSON_THROW_ON_ERROR);
             $url = (string) getenv('TEST_DATABASE_URL');
@@ -42,16 +43,24 @@ final class ResetRequestRaceWorker
             $container->set(Connection::class, static fn(): Connection => $connection);
             $clock = new AccessClock(new DateTimeImmutable($input['now']));
             $container->set(Clock::class, static fn(): Clock => $clock);
-            echo $connection->fetchOne('SELECT pg_backend_pid()')."\n";
+            $bus = $container->get(CommandBus::class);
+            $command = new RequestPasswordReset(EmailAddress::fromString('reset@example.test'));
+            echo 'ready '.$connection->fetchOne('SELECT pg_backend_pid()')."\n";
             flush();
-            $container->get(CommandBus::class)->execute(new RequestPasswordReset(
-                EmailAddress::fromString('reset@example.test')
-            ));
+            stream_set_timeout(STDIN, 15);
+            if (fgets(STDIN) !== "start\n") {
+                throw new \RuntimeException('Missing race start.');
+            }
+            $bus->execute($command);
             echo "committed\n";
-            $connection->close();
         } catch (Throwable) {
             echo "failed\n";
-            exit(1);
+            $exitCode = 1;
+        } finally {
+            if (isset($connection)) {
+                $connection->close();
+            }
         }
+        exit($exitCode);
     }
 }
