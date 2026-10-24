@@ -516,5 +516,5 @@
 | [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | done | — |
-| [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | in-progress | — |
+| [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | done | — |
 <!-- /planning:records -->
