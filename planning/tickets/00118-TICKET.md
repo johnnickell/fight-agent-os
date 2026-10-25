@@ -94,7 +94,7 @@ Markdown or planning machinery. No application permission or schema change is ne
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00515](../tasks/00515-TASK.md) | Synchronize current handoffs during Land publication | in-progress |
+| [TASK-00515](../tasks/00515-TASK.md) | Synchronize current handoffs during Land publication | done |
 | [TASK-00516](../tasks/00516-TASK.md) | Resume Land to reconcile ended merge handoffs | ready-for-agent |
 <!-- /planning:children -->
 
