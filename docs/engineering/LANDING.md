@@ -1,6 +1,7 @@
 # Landing Standards
 
 Land publishes an independently accepted TASK as a PR against `develop` and returns merge control to a human.
+An explicit resume can also reconcile an ended original delivery handoff through the bounded recovery path below.
 The bounded draft-publication path below can obtain hosted evidence before final acceptance. Apply the shared [execution](EXECUTION.md) and [review](REVIEW.md) boundaries. Landing may reconcile a reviewed branch with an advancing base; a changed commit OID by itself is not a changed implementation.
 
 ## Intake and authority
@@ -118,7 +119,7 @@ target's paths and bindings; shared provider links do not authorize edits in a d
    source evidence and edit authority are established. Unresolved identity, conflicting authoritative sources,
    inaccessible required evidence or an unsafe checkout holds the affected mutation/publication: name the exact
    sections/claims, missing proof, blocked operation and recovery owner/action. Do not pick an arbitrary winner,
-   infer success or repair unrelated requirements. An ended PR needs the separately scoped recovery procedure;
+   infer success or repair unrelated requirements. An ended PR needs [ended-handoff recovery](#resume-an-ended-delivery-handoff);
    stop normal publication rather than inventing a replacement or treating closed-unmerged as delivered.
 3. **Reconcile current facts, preserve history.** Update authoritative TASK/PR metadata and applicable authored
    current handoffs to the evidenced stage, then roll up eligible parents and refresh derived views with the
@@ -150,7 +151,121 @@ The [draft-evidence path](#draft-publication-to-obtain-hosted-evidence) retains 
 TASK. Inventory applicable handoffs there, but record pending state/contradictions in the ignored receipt and PR
 body without tracked reconciliation commits that move the candidate awaiting proof. Never claim synchronized
 tracked handoffs or successful landing while a required correction remains deferred. No new hosted-CI requirement,
-validator, live-routing automation, cross-project rollout or post-merge recovery is introduced by this procedure.
+validator, live-routing automation or cross-project rollout is introduced by this procedure. Ended-handoff
+recovery below consumes this inventory and preservation contract rather than replacing it.
+
+## Resume an ended delivery handoff
+
+Use this path only on an **explicit Land resume for the exact TASK and ended original PR**. A routing
+recommendation or observed merge is not an invocation. This is factual current-handoff reconciliation, not
+implementation repair or a replacement delivery attempt. Read the TASK, parent, Board and original canonical
+Review/QA and accepted-candidate receipts; keep their identities and bytes intact. No new independent acceptance
+is needed merely to interpret historical delivery evidence. Missing proof needed to support a claim holds that
+claim's correction; it never permits fabricating acceptance or rewriting a report.
+
+1. **Prove subject and current state before edits.** Resolve the intended repository/remote, original PR URL and
+   number, TASK, original base/head branches and recorded accepted/published OIDs from authoritative sources.
+   Query that exact PR with existing hosting capabilities, for example `gh pr view "$original_pr" --repo "$repo"
+   --json url,number,state,mergedAt,mergeCommit,baseRefName,headRefName,headRefOid,headRepository,headRepositoryOwner`.
+   These are shell variables bound to the verified identities, not literal placeholders to paste unresolved.
+   Compare returned repository/URL, base/head and head OID with the recorded candidate and any established
+   reconciliation/closeout bridge. Deleted branches do not require recreating them: use PR evidence and retained
+   commit provenance. Record observation time, source and OIDs in ignored TASK scratch. A changed OID without a
+   bridge, wrong repository/PR/branch, contradictory evidence or missing candidate provenance is a hold, not a
+   best guess. `done`, old prose and a PR link are not live proof.
+
+   | Verified observation | Permitted current instruction |
+   |---|---|
+   | MERGED, with merge time/OID and matching subject provenance | Retire the original merge action; state the observed merge and point to current routing or the correction's remaining action. This proves merge, not deployment/release or unobserved checks. |
+   | CLOSED with no merge, matching subject provenance | Retire the false merge action; state **closed without merge / not delivered through this PR**. Preserve acceptance/status and name the maintainer decision about future delivery. Do not reopen implementation, reopen the PR or invent a replacement implementation PR. |
+   | OPEN | This ended-handoff path does not apply. Leave files unchanged and return the exact ordinary Land/delivery or human action justified by current evidence. |
+   | Unavailable CLI/authentication/hosting, inconsistent state or identity | Leave affected files unchanged; name the blocked correction/publication and the owner/action to restore exact PR evidence. Never assume merged, closed or still open. |
+
+2. **Select a safe correction location and effects.** Inspect `git worktree list --porcelain`, status, branch,
+   origin, local history and current remote base. Confirm the base OID with `git ls-remote --heads origin
+   refs/heads/develop` (using the bound base), fetching it within authority before using a stale local tracking
+   ref. Read-only inspection/no-op needs no new correction worktree or publication authority; select those only
+   for a necessary correction/effect. The original worktree may be absent; neither its absence nor an
+   ended original PR authorizes switching, resetting or repurposing a human checkout. Honor an already-selected
+   safe checkout; otherwise ask for the correction checkout/worktree choice. After inspecting existing corrections
+   in step 3, a user-authorized fresh isolated registered worktree can be created from the verified current
+   `origin/develop` (or target's bound base) using an unused owned `feature/task-NNNNN-ended-handoff-correction`
+   branch, with the actual TASK ID. Do not recreate/reuse the ended original feature branch to publish correction.
+   Resolve branch/path collisions by ownership evidence, not deletion or an automatically incremented suffix.
+   Unrelated dirty changes, ambiguous ownership or stale checkout state block mutation until its owner resolves
+   it. An existing proven owned correction diff may continue only after the interruption checks below.
+   Keep scratch under `.runs/tasks/<TASK-ID>/runs/` and retain the durable receipt at the canonical base before
+   any authorized worktree cleanup. Never mutate another checkout's tracked files through provider paths.
+
+   Explicit Land authority covers bounded factual correction/publication under the intake rules, but still
+   verify that it applies to the selected correction checkout, branch and new/existing correction PR. A narrower
+   instruction (read-only, local-only or no new PR) wins. If an effect or checkout choice is missing, return the
+   exact requested authority; do not repeat an approval already supplied. Observing closure alone grants none.
+
+3. **Inspect interruption and existing correction before retry.** Bind a correction identity to repository,
+   original TASK/PR, observed ended state/OID, target base and current-handoff-only scope. Inspect retained
+   receipts, local branches/log/diffs, the exact remote correction ref (`git ls-remote --heads origin
+   "$correction_ref"`) and hosting results. Query the recorded corrective PR directly; if absent, use a bounded
+   exact-head search including all states, for example `gh pr list --repo "$repo" --state all --head
+   "$correction_branch" --json url,state,baseRefName,headRefName,headRefOid,body`. Establish subject ownership from
+   its body/receipt and actual diff, not title or branch name alone. Check fork/repository identity on a match.
+   Do not scan every historical PR or create anything merely to discover whether an earlier create succeeded.
+
+   - Matching local uncommitted correction: inspect and continue only its proven owned diff, without resetting
+     it. A local committed/unpushed correction is reused after revalidation, not committed again.
+   - Push succeeded but PR creation did not: verify remote OID and, after proving no matching corrective PR
+     exists, create only the missing PR within authority. Never blindly repeat the push/create sequence.
+   - Matching open corrective PR: reuse its branch/PR and reconcile its actual remote/local head and diff before
+     any update. If it already contains the desired candidate, record that result without another commit/push.
+   - Corrective PR already merged: inspect the current base's sources/views. If consistent, finish read-only;
+     if not, identify the remaining discrepancy and request the needed new correction scope/authority rather
+     than assuming another PR is allowed. A closed-unmerged corrective PR needs a maintainer disposition, not
+     automatic reopening or replacement.
+   - Nonzero/timeout after push or create: inspect actual remote ref, exact-head PR results and PR body before
+     retrying. Confirm success, prove the missing effect, or **hold** with the unresolved publication operation
+     and recovery action. Conflicting matches, inaccessible hosting or unknown remote OID never justify another
+     PR/commit or declaring success. One bounded inspection pass suffices; do not poll/retry indefinitely.
+
+4. **Reconcile only necessary current facts.** Apply [current subject handoff synchronization](#synchronize-current-subject-handoffs)
+   to the correction's current-base sources: inventory authored Board/Roadmap/README actions and source records,
+   distinguish history, reconcile factual stage/pointers and refresh derived views with the target's owning tool.
+   Keep original PR metadata/provenance distinguishable from the corrective PR; do not replace the original
+   TASK PR locator with the corrective PR and thereby disguise non-delivery. Record the correction link and its
+   original-subject relationship in the current section/ignored receipt and PR body where appropriate. Preserve
+   canonical reports, historical acceptance/completion checkpoints, priorities, dependencies and unrelated work.
+   In the closed-unmerged case, implementation acceptance remains historical acceptance, not merge or automatic
+   `wontfix`/reopen. If correcting the handoff would alter requirements, workflow rules, implementation or
+   acceptance, stop for the authorized work/review route; this recovery exception cannot accept substantive edits.
+
+5. **Finish finitely, verify any actual candidate.** Compare the intended current facts and derived views with
+   the existing tree/correction. Unchanged, already-consistent sources need only a read-only receipt, even on
+   repeated resume: no empty commit, acceptance toggle, report rewrite, duplicate PR or publication retry.
+   For an actual factual correction, inspect its complete diff and run focused checks, planning refresh/read-only
+   validation, `git diff --check` and the canonical full gate under [Verify and publish](#verify-and-publish).
+   Preserve original accepted A and any closeout B/bridge; a factual correction C is not retroactively reviewed
+   A and supplies no new independent acceptance. Apply the administrative-only assessment and all applicable
+   candidate/publication checks; a substantive change needs its own independent review and applicable QA.
+   Before commit/publication, recheck the original PR's live identity/state and current base/source snapshot;
+   a reopened original or changed/contradictory source holds the stale correction for bounded reassessment.
+   Stage only owned files, reuse the proven correction branch, commit only necessary changes, and non-force
+   publish/create or update **the corrective PR**, never the ended original PR. Verify corrective PR repository,
+   open state, base/head, actual remote OID and any required final-head proof before successful delivery/cleanup.
+   Missing/failed required proof retains resources and a precise hold; do not waive gates for Markdown.
+
+   Freeze truthful tracked wording before the last necessary commit: observed original merge or non-delivery,
+   correction publication/checks pending at that checkpoint, and an actual durable result locator. Put subsequent
+   results in ignored evidence/PR body, not another metadata commit certifying C. Return original and correction
+   identities, inventory/dispositions, preserved report hashes/provenance, commands/results, publication outcome,
+   resources and exact remaining human action. Normal ownership-proven cleanup applies only with its existing
+   authority; no new approval/merge, original-PR reopening/replacement, deployment, release, archive or remote
+   branch deletion is authorized. A no-op does not trigger unrelated cleanup or start another TASK.
+
+For example, after a verified merge the current section can say “Original PR merged at the recorded merge OID;
+current correction result is in the durable TASK receipt; no original-PR merge action remains.” After verified
+closure it must instead say “Original PR closed without merge; implementation acceptance is preserved, delivery
+through that PR did not occur; maintainer must decide future delivery.” Use actual PR/receipt locators and observed
+OIDs in execution, not these example descriptions. Historical delivery-pending text stays untouched beneath a
+clearly separate current pointer. The correction's human review/merge action, if any, names only its own open PR.
 
 ## Verify and publish
 
