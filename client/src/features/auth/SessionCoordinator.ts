@@ -337,10 +337,17 @@ export class SessionCoordinator {
         message.kind !== 'invalidate' &&
         message.kind !== 'authority-changed' &&
         message.kind !== 'logout' &&
-        message.kind !== 'terminal'
+        message.kind !== 'terminal' &&
+        message.kind !== 'password-reset'
       )
         return;
     } else this.#peers.set(message.sender, message.sequence);
+    if (message.kind === 'password-reset') {
+      const principal = this.#authority?.getPresentationSnapshot();
+      if (principal?.status === 'authenticated' && principal.principal.userId === message.userId)
+        this.#end('terminal');
+      return;
+    }
     if (message.kind === 'logout' || message.kind === 'terminal') {
       this.#end(message.kind);
       if (message.kind === 'logout') {

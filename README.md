@@ -120,7 +120,7 @@ schemas and fixtures belong alongside `migrations/` under `database/`.
 The shared [password-setting boundary](docs/engineering/PASSWORDS.md) enforces Unicode code-point composition,
 checks a pinned local hashed common-password list and uses explicit Argon2id parameters. Application startup
 verifies the corpus and platform support before use. Include `resources/passwords/` and its CC BY-SA 4.0 notice
-in deployment artifacts. Activation consumes this boundary; reset/change consumers remain planned. It is not a standalone password endpoint.
+in deployment artifacts. Activation and [reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) consume this boundary; authenticated change remains planned. It is not a standalone password endpoint.
 
 Direct Fight Access Control invitation/reset delivery handlers now require an independent
 `APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
@@ -130,7 +130,7 @@ explicitly use the disposable loopback Mailpit catcher with `APP_CREDENTIAL_DELI
 `APP_ACTIVATION_ORIGIN`/`APP_ACTIVATION_PATH`, plus `APP_PASSWORD_RESET_ORIGIN`/`APP_PASSWORD_RESET_PATH`; see
 [local invitation email](docs/engineering/INVITATION_EMAIL.md) and
 [password-reset email](docs/engineering/PASSWORD_RESET_EMAIL.md) for exact `.env`, routing/fragment and
-start/send/recovery/cleanup contracts. No real inbox or reset-completion UI is supplied. TASK-00054 adds the [generic password-reset request](docs/engineering/PASSWORD_RESET_REQUEST.md)
+start/send/recovery/cleanup contracts. No real inbox is supplied. TASK-00055 adds [one-time reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) at `/app/reset-password/complete` and its versioned API, pending independent Review/QA; it revokes target sessions and requires fresh sign-in. TASK-00054 adds the [generic password-reset request](docs/engineering/PASSWORD_RESET_REQUEST.md)
 at `/app/reset-password` and `POST /api/v1/auth/password-reset`, pending independent Review/QA.
 Reset mail now requires the bounded internal runner rather than synchronous request-time SMTP. The public activation UI requires the
 configured canonical `/app/activate` path and the qualified fragment-only link shape described in the activation runbook.
