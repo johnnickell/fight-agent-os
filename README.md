@@ -53,8 +53,7 @@ logs. Herdr owns layout/focus/resize only. Outside Herdr or with unavailable pre
 there is no automatic RPC-editor fallback.
 
 TASK-00512's native replacement A and repository-only RPC retirement B have independent technical acceptance and
-current independent QA PASS. Its accepted-candidate closeout is recorded; PR publication and final delivery
-verification remain separate Land work. See the [current Land checkpoint](planning/tasks/00512-TASK.md#current-land-closeout--2026-10-25).
+current independent QA PASS. Its accepted-candidate closeout is published in [PR #162](https://github.com/johnnickell/fight-agent-os/pull/162); final delivery verification and human merge remain separate. See the [current Land checkpoint](planning/tasks/00512-TASK.md#current-land-closeout--2026-10-25).
 `fight-terminal` now prints only a retirement/session-migration notice, not a conversation frontend. Existing
 copied installations are not changed by this source delta. See [native ownership and log controls](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
 [actual-file session migration](harness/pi/WORKSPACE.md#native-entry-and-existing-rpc-sessions), and
