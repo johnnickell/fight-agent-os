@@ -120,7 +120,7 @@
 | [TICKET-00115](00115-TICKET.md) | Investigate older incidents through temporary archive search | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
 | [TICKET-00116](00116-TICKET.md) | Export and download authorized diagnostic material | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
 | [TICKET-00117](00117-TICKET.md) | Operate and recover the observability installation | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
-| [TICKET-00118](00118-TICKET.md) | Reconcile current delivery handoffs through Land | ready-for-agent | [EPIC-00020](../epics/00020-EPIC.md) |
+| [TICKET-00118](00118-TICKET.md) | Reconcile current delivery handoffs through Land | done | [EPIC-00020](../epics/00020-EPIC.md) |
 | [TICKET-00119](00119-TICKET.md) | Route delivery handoffs using verified current state | ready-for-agent | [EPIC-00020](../epics/00020-EPIC.md) |
 | [TICKET-00120](00120-TICKET.md) | Align the ten participating projects with current delivery handoffs | ready-for-agent | [EPIC-00020](../epics/00020-EPIC.md) |
 <!-- /planning:records -->
