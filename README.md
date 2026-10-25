@@ -122,7 +122,7 @@ checks a pinned local hashed common-password list and uses explicit Argon2id par
 verifies the corpus and platform support before use. Include `resources/passwords/` and its CC BY-SA 4.0 notice
 in deployment artifacts. Activation, [reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) and
 [authenticated change](docs/engineering/PASSWORD_CHANGE.md) consume this boundary. Password change at
-`/app/account/password` requires current proof and ends all sessions; independent Review/QA remain pending. It is not a standalone password endpoint.
+`/app/account/password` requires current proof and ends all sessions; independent Review/QA accepted the implementation, while Land publication and human merge remain pending. It is not a standalone password endpoint.
 
 Direct Fight Access Control invitation/reset delivery handlers now require an independent
 `APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)

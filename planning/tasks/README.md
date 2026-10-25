@@ -58,7 +58,7 @@
 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | done | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | done | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00055](00055-TASK.md) | Deliver one-time password-reset completion | done | [TICKET-00019](../tickets/00019-TICKET.md) |
-| [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | in-progress | [TICKET-00019](../tickets/00019-TICKET.md) |
+| [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | done | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | ready-for-agent | [TICKET-00020](../tickets/00020-TICKET.md) |
 | [TASK-00058](00058-TASK.md) | Deliver confirmed revocation of another owned session | ready-for-agent | [TICKET-00020](../tickets/00020-TICKET.md) |
 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | ready-for-agent | [TICKET-00021](../tickets/00021-TICKET.md) |
