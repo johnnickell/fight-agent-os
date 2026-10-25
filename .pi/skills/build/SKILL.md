@@ -50,8 +50,12 @@ deploy or continue to another TASK. A question about planning does not invoke th
    the phase describes workflow role, not a QA-worker assignment. Do not hold or request a relaunch
    solely because it says `qa`. If an older status omits `workflow`, that phase alone cannot establish a mismatch.
 4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, resolved role models, effective/consumed/remaining
-   cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Check installed
-   `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools
+   cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Carry the existing
+   Work/Land handoff's exact [resource inventory](../../../docs/engineering/LANDING.md#inventory-and-preserve)
+   through each stage: checkout/ref/candidate, task Compose/container/network identities, processes/sessions,
+   evidence/data and ownership/dependencies. Reconcile additions and dispositions in those handoffs/ledger,
+   not a new registry. Keep active coordinator/session resources explicitly held; never terminate them to tidy.
+   Check installed `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools
    is a prerequisite hold. Use existing provider authentication without printing credentials; do not change
    global settings, install extensions or auto-trust unfamiliar project resources.
 
@@ -233,7 +237,7 @@ this skill does not guarantee unattended survival after terminal/host exit.
 | Engineer | [work](../work/SKILL.md): owned committed implementation, full gate receipt, scope, head and limitations | Confirm identity; dispatch fresh Review |
 | Senior Engineer | [review](../review/SKILL.md): canonical independent report with separate Standards and Spec passes | `accept` to QA; confirmed blockers to repair; missing evidence to its owner |
 | QA Engineer | [qa](../qa/SKILL.md): current canonical PASS or justified criterion-specific N/A, scenarios and inspected applicable captures | Satisfied QA to land; FAIL defects to Engineer; INCOMPLETE to prerequisite recovery |
-| Release Manager | [land](../land/SKILL.md): eligibility, final checks, non-force publication, verified PR and capture access | Inspect original remote result; hand the open PR to the human |
+| Release Manager | [land](../land/SKILL.md): eligibility, final checks, non-force publication, verified PR/capture access, reconciled current handoffs and required bounded cleanup with postconditions/holds | Inspect original remote result and resource dispositions; hand the actual PR and any cleanup recovery to the human |
 
 Read canonical `<base>/.runs/reviews/<TASK-ID>/review.md` and `<base>/.runs/qa/<TASK-ID>/qa.md`, including subject,
 independence, current verdict/disposition, evidence and limitations. Never prefer an older PASS over a newer
@@ -262,8 +266,11 @@ screenshots. Missing required/requested proof holds delivery rather than weakeni
 ## Hand off
 
 Success requires a verified open, ready PR against the correct base, exact published remote head, current
-review/QA provenance, required checks and accessible applicable captures. Return its clickable URL, concise
-verification/limitations and revision usage. End with `Next: Review and merge <actual PR URL> on GitHub` under
+review/QA provenance, required checks and accessible applicable captures, plus Land's reconciled source/current
+handoffs and verified eligible Git/container/network cleanup under the [owning procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff).
+Inspect its durable inventory/postconditions; publication with cleanup held is not complete Land/Build.
+Return the actual PR URL and publication state even on a cleanup hold, retained resources/recovery action,
+concise verification/limitations and revision usage. End with `Next: Review and merge <actual PR URL> on GitHub` under
 [handoff rules](../../../docs/engineering/HANDOFFS.md), then stop after this TASK.
 
 If incomplete, retain useful resources and record phase, subject, remaining cycles and exact recovery action.

@@ -15,6 +15,8 @@ cleanup and project closeout. Remaining [EPIC-00020](../epics/00020-EPIC.md#comp
 TASKs TASK-00517–00519 are next (`order: 2`), with their dependencies and relative order preserved. This supersedes
 the EPIC's original top-priority selection; its planning phases remain complete. Dependencies and active-work
 ownership still govern eligibility. Priority does not start implementation or authorize publication.
+TASK-00534's [current implementation handoff](00534-TASK.md#current-implementation-handoff) records the scoped
+repair and verification checkpoint; independent Review/nonvisual QA and delivery remain separate and pending.
 
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 
@@ -23,13 +25,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | ready-for-agent | — | — |
 | 2 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | ready-for-agent | — | — |
 | 57 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | ready-for-agent | — | — |
 | 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
