@@ -95,6 +95,63 @@ A Markdown requirement, authority rule or behavioral contract change is substant
 
 Landing can resolve mechanical conflicts but not repair an implementation defect. If reconciliation cannot complete safely, stop with the exact conflict and hand off to `work` and then `review` as needed. Rebase/merge must never force-update a published branch.
 
+## Synchronize current subject handoffs
+
+During normal publication, Land owns the exact subject's applicable authored **current** Board, Roadmap and
+README handoffs, not just parent statuses and generated views. Apply this procedure in the authorized target
+checkout before closeout/publication commits, and recheck it before returning control to the human. Follow the
+target's paths and bindings; shared provider links do not authorize edits in a different checkout or project.
+
+1. **Inventory and classify.** Start with the TASK, its parent/eligible ancestors, Board, Roadmap and README;
+   follow their subject-specific current-section/source links only as needed. For each applicable authored
+   handoff record the path/section, exact TASK and PR identity (when known), claimed stage/action, authoritative
+   source and disposition. Include current subject-related capability/acceptance claims, even without a `Next:`
+   label. Distinguish generated blocks, authored current instructions and historical checkpoints. Record absent,
+   unrelated, history-only and already-consistent surfaces as such; do not create a README, scan every historical
+   PR or change unrelated routing merely to fill the inventory. Generated freshness alone cannot prove authored
+   handoffs are current.
+2. **Resolve evidence before mutation.** Compare current claims with source-record status, canonical independent
+   Review/QA, accepted-candidate/reconciliation provenance and the relevant hosting observation. For a PR handoff,
+   verify repository, PR URL, base/head branch, live state and remote head against the intended candidate; record
+   the observation and time in the ignored receipt. Neither `done`, a PR URL nor a historical pending note proves
+   publication, delivery success or merge. Correct an unambiguously stale factual stage/pointer only when its
+   source evidence and edit authority are established. Unresolved identity, conflicting authoritative sources,
+   inaccessible required evidence or an unsafe checkout holds the affected mutation/publication: name the exact
+   sections/claims, missing proof, blocked operation and recovery owner/action. Do not pick an arbitrary winner,
+   infer success or repair unrelated requirements. An ended PR needs the separately scoped recovery procedure;
+   stop normal publication rather than inventing a replacement or treating closed-unmerged as delivered.
+3. **Reconcile current facts, preserve history.** Update authoritative TASK/PR metadata and applicable authored
+   current handoffs to the evidenced stage, then roll up eligible parents and refresh derived views with the
+   target's owning planning command. Preserve requirements, priorities, dependencies, Won't Fix decisions and
+   unrelated work. Never edit canonical Review/QA reports, accepted-candidate provenance or historical completion/
+   delivery-pending checkpoint text to manufacture later evidence. If a checkpoint can be mistaken for today's
+   instruction, add a clearly separate current-section pointer or historical-context qualifier outside that
+   checkpoint, leaving its original evidence intact. Factual stage/PR-locator maintenance may accompany permitted
+   administrative closeout; changing executable workflow rules, requirements, implementation or acceptance is
+   not metadata. Apply the [closeout contract](#acceptance-candidate-and-administrative-closeout): substantive
+   edits require a new acceptance candidate and independent review, not a broadened Land repair exception.
+4. **Freeze truthful wording, verify delivery.** Before the final metadata commit, make current handoffs explicit
+   about what is established and what remains pending. For example: “A accepted; publication/final-head checks
+   pending at this checkpoint; current delivery result and next action: <durable receipt/actual PR>.” Use real
+   locators, not that placeholder. While proof is pending, the current action is evidence recovery through Land,
+   not an unconditional human-merge instruction. Put later delivery results in the ignored receipt and PR body;
+   do not change a historical pending checkpoint or create another tracked commit solely to certify B's success.
+   If current tracked wording already points to that live result and remains truthful, leave it unchanged.
+   A failed/pending required check retains the draft/resources and precise hold under Verify and publish.
+5. **Check and report consistency.** Inspect the effective diff and every inventoried current handoff after
+   refresh, checking authored sections separately from generated blocks. After the final push verify the actual
+   open PR and head, and reconcile the receipt/PR body to that observation before declaring success. Return the
+   inventory/dispositions, changed current sections, preserved history/report identities, verification and
+   unresolved holds in the durable ignored receipt. Successful publication hands the actual open PR to human
+   review/merge; it never anticipates merge, starts another TASK or overrides a hold. Already-consistent state
+   needs no correction or empty commit. Missing required delivery or cleanup proof still blocks successful Land.
+
+The [draft-evidence path](#draft-publication-to-obtain-hosted-evidence) retains its fixed candidate and incomplete
+TASK. Inventory applicable handoffs there, but record pending state/contradictions in the ignored receipt and PR
+body without tracked reconciliation commits that move the candidate awaiting proof. Never claim synchronized
+tracked handoffs or successful landing while a required correction remains deferred. No new hosted-CI requirement,
+validator, live-routing automation, cross-project rollout or post-merge recovery is introduced by this procedure.
+
 ## Verify and publish
 
 Use the TASK completion notes to record the accepted candidate/report and any finding dispositions, reconciliation
@@ -102,7 +159,9 @@ proof, fresh checks with counts/warnings, risks, and publication state. `done` m
 all required acceptance verification, including hosted proof when required, not successful delivery, PR approval
 or merge. For required hosted checks, first establish the [closeout contract](#acceptance-candidate-and-administrative-closeout).
 Record `done` in B only after A is independently accepted and required QA is complete; say explicitly that final
-publication/checks are pending. Close eligible TICKET and EPIC ancestors in this same administrative closeout
+publication/checks are pending. [Synchronize current subject handoffs](#synchronize-current-subject-handoffs)
+alongside these source records; a generated refresh does not reconcile authored Board/Roadmap/README actions.
+Close eligible TICKET and EPIC ancestors in this same administrative closeout
 under [automatic parent completion](../../planning/CONVENTIONS.md#automatic-parent-completion). Run
 `./bin/planning-check --write` and include the parent statuses and generated views in the same commit. No separate
 parent review, approval or closeout handoff is required.
@@ -138,7 +197,10 @@ After final push, query the hosting service: PR open, base `develop`, intended h
 
 Preview cleanup candidates before publication and recheck immediately before deletion. Remove only ownership-proven TASK-specific disposable resources: exact Compose project containers/volumes, inspected build output and a clean registered isolated worktree at the published commit. Preserve shared, durable, ambiguous and dirty resources, including review reports and unrelated worktrees. For isolated worktrees, remove without force from the base checkout as the final tool operation after all other work; retain the local feature branch for the human. If safe cleanup is unavailable, report landing incomplete rather than broadening deletion authority.
 
-Return the PR link, review provenance and any reconciliation bridge, final checks and warnings, cleanup result and remaining human actions. Publication, approval, merge, branch deletion, archive, release and deployment are distinct states.
+Return the PR link, review provenance and any reconciliation bridge, current-handoff inventory/consistency result,
+final checks and warnings, cleanup result and remaining human actions. Preserve the durable receipt and canonical
+evidence outside a disposable worktree before removal. Publication, approval, merge, branch deletion, archive,
+release and deployment are distinct states.
 
 ## QA report intake and publication
 
