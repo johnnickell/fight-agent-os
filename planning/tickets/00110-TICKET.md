@@ -101,9 +101,27 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | [TASK-00510](../tasks/00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done |
 | [TASK-00511](../tasks/00511-TASK.md) | Observe current-session children beside native Pi in Herdr | done |
 | [TASK-00512](../tasks/00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | done |
+| [TASK-00535](../tasks/00535-TASK.md) | Launch native Pi with workspace panes already open | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved one-command native workspace startup
+
+John requested an executable replacement for `fight-terminal` that starts Pi with the workspace panes already
+open, and approved [TASK-00535](../tasks/00535-TASK.md). The global `fight-workspace` command will start native Pi
+inside Herdr in the caller's project/worktree and automatically open the existing child-activity and verified-log
+companions, without a follow-up `/fight-workspace open`. Native Pi remains the conversation frontend; no RPC
+renderer is restored. Ordinary `pi` and manual companion controls remain unchanged. Explicit human log-source
+bindings, exact-file session continuity and existing ownership/authority boundaries still apply.
+
+The TASK includes explicit user-level installation/update/removal and migration guidance, real native startup,
+session-resume and cleanup evidence, the canonical gate and independent Review/QA. TASK-00510–00512 supply the
+completed dependencies; TASK-00507 remains nonblocking. This is an approved unranked follow-up, not a Board
+priority change. The TICKET's terminal status records historical delivery, not acceptance of the new launcher.
+Planning is authorized in an isolated worktree only; implementation, installed-package rollout, live pane
+changes and publication remain separate. Next: select implementation through the Board or explicitly invoke
+work for TASK-00535 with a checkout choice.
 
 ### Approved Herdr-native workspace and TASK decomposition — 2026-10-23
 
