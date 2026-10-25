@@ -14,4 +14,5 @@ enum AuthOperation: string
     case LOGIN = 'login';
     case REFRESH = 'refresh';
     case LOGOUT = 'logout';
+    case RESET_COMPLETION = 'reset-completion';
 }
