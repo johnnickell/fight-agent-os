@@ -8,6 +8,7 @@ import { activationSchemaSource, jsonResponse } from './activationFixtures';
 import { principal } from './authorityFixtures';
 
 import type { ApiTransport } from '@/api/ApiClient';
+import type { PrincipalLoader } from '@/features/authority/AuthorityCache';
 
 export const passwordChangeSchema = {
   ...activationSchemaSource,
@@ -44,11 +45,12 @@ export const passwordChangeSchema = {
 export function passwordChangeDependencies(
   post: ApiTransport,
   schema?: () => Response | Promise<Response>,
-  terminal?: () => void
+  terminal?: () => void,
+  loadPrincipal: PrincipalLoader = () => Promise.resolve({ status: 'principal', principal })
 ) {
   const tokens = new MemoryAccessToken();
   tokens.accept('synthetic.access.signature', performance.now());
-  const authority = new AuthorityCache(() => Promise.resolve({ status: 'principal', principal }));
+  const authority = new AuthorityCache(loadPrincipal);
   const api = new ApiClient(
     { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
     {

@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { jsonResponse } from '../../activationFixtures';
 import { deferred } from '../../apiFixtures';
+import { principal } from '../../authorityFixtures';
 import { passwordChangeDependencies } from '../../passwordChangeFixtures';
 
 import type { ApiTransport } from '@/api/ApiClient';
+import type { PrincipalLoadResult } from '@/features/authority/AuthorityCache';
 
 const values = {
   currentPassword: ' old value ',
@@ -84,6 +86,87 @@ describe('authenticated password-change service', () => {
     expect(d.authority.getSnapshot().status).toBe('terminal');
     d.authority.dispose();
   });
+  it.each(['pending', 'completed'])(
+    'handles 401 terminally after %s same-session principal renewal without replay',
+    async (renewal) => {
+      const pending = deferred<Response>();
+      const principalRenewal = deferred<PrincipalLoadResult>();
+      const post = vi.fn(() => pending.promise);
+      const terminal = vi.fn();
+      const loadPrincipal = vi.fn(() =>
+        Promise.resolve<PrincipalLoadResult>({ status: 'principal', principal })
+      );
+      const d = passwordChangeDependencies(post, undefined, terminal, loadPrincipal);
+      await d.authority.load();
+      const result = d.service.submit(values);
+      loadPrincipal.mockImplementation(() => principalRenewal.promise);
+      d.authority.resume();
+      if (renewal === 'completed') {
+        principalRenewal.resolve({ status: 'principal', principal });
+        await d.authority.load();
+      }
+      expect(d.authority.getSnapshot().status).toBe(
+        renewal === 'completed' ? 'authenticated' : 'loading'
+      );
+      pending.resolve(jsonResponse({ status: 'error', message: 'Unauthorized.' }, 401, false));
+      expect(await result).toMatchObject({ ok: false, error: { kind: 'authentication' } });
+      expect(terminal).toHaveBeenCalledOnce();
+      expect(d.tokens.getAccessToken()).toBeNull();
+      expect(d.authority.getSnapshot().status).toBe('terminal');
+      expect(post).toHaveBeenCalledOnce();
+      expect(d.service.completed()).toBe(false);
+      d.authority.dispose();
+    }
+  );
+  it.each(['login', 'credentials', 'identity', 'refresh-started', 'logout', 'dispose'])(
+    'ignores an old 401 after authentication context replacement or retirement: %s',
+    async (replacement) => {
+      const pending = deferred<Response>();
+      const post = vi.fn(() => pending.promise);
+      const terminal = vi.fn();
+      const loadPrincipal = vi.fn(() =>
+        Promise.resolve<PrincipalLoadResult>({ status: 'principal', principal })
+      );
+      const d = passwordChangeDependencies(post, undefined, terminal, loadPrincipal);
+      await d.authority.load();
+      const result = d.service.submit(values);
+      if (replacement === 'login') {
+        const attempt = d.authority.beginAuthentication();
+        d.tokens.clear();
+        d.tokens.accept('replacement.access.signature', performance.now());
+        await attempt.acceptCredentials();
+      } else if (replacement === 'credentials') {
+        await d.authority.signal('refresh-started');
+        d.tokens.clear();
+        d.tokens.accept('replacement.access.signature', performance.now());
+        await d.authority.signal('credentials-changed');
+      } else if (replacement === 'identity') {
+        loadPrincipal.mockResolvedValue({
+          status: 'principal',
+          principal: { ...principal, userId: crypto.randomUUID() }
+        });
+        await d.authority.signal('authority-changed');
+      } else if (replacement === 'refresh-started') {
+        d.tokens.clear();
+        await d.authority.signal('refresh-started');
+      } else if (replacement === 'logout') {
+        d.tokens.clear();
+        await d.authority.signal('logout');
+      } else {
+        d.tokens.clear();
+        d.authority.dispose();
+      }
+      const state = d.authority.getSnapshot();
+      const token = d.tokens.getAccessToken();
+      pending.resolve(jsonResponse({ status: 'error', message: 'Unauthorized.' }, 401, false));
+      expect(await result).toMatchObject({ ok: false, error: { kind: 'authentication' } });
+      expect(terminal).not.toHaveBeenCalled();
+      expect(d.authority.getSnapshot()).toBe(state);
+      expect(d.tokens.getAccessToken()).toBe(token);
+      expect(post).toHaveBeenCalledOnce();
+      d.authority.dispose();
+    }
+  );
   it('does not accept token-shaped or extra response authority', async () => {
     const d = passwordChangeDependencies(() =>
       Promise.resolve(jsonResponse({ changed: true, access_token: 'synthetic' }))

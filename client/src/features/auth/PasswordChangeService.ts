@@ -37,6 +37,7 @@ export class PasswordChangeService {
     if (this.#pending) return apiFailure('cancelled');
     const scope = this.#authority.captureScope();
     if (!scope.isCurrent()) return apiFailure('authentication');
+    const isCurrentAuthentication = this.#authority.captureAuthenticationContext();
     this.#pending = true;
     try {
       const result = await this.#api.mutate(
@@ -53,7 +54,7 @@ export class PasswordChangeService {
         // A committed mutation is terminal even after edits, reset, navigation or routine /me renewal.
         this.#completed = true;
         this.#changed();
-      } else if (result.error.kind === 'authentication' && scope.isCurrent()) {
+      } else if (result.error.kind === 'authentication' && isCurrentAuthentication()) {
         this.#terminal();
       }
       return result;

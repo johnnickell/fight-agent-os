@@ -136,6 +136,16 @@ export class AuthorityCache {
   }
 
   /**
+   * Fences terminal mutation responses by authentication, not routine principal freshness
+   *
+   * This check never grants dispatch authority or permits protected data adoption
+   */
+  captureAuthenticationContext(): () => boolean {
+    const context = this.#context;
+    return () => !this.#disposed && !this.#barrier && this.#canLoad && context === this.#context;
+  }
+
+  /**
    * Coalesces demand; failures require an explicit subsequent call, never a retry loop
    */
   load = (): Promise<void> => {
@@ -204,6 +214,7 @@ export class AuthorityCache {
       return Promise.resolve();
     }
     if (this.#barrier) return Promise.resolve();
+    if (signal === 'credentials-changed') ++this.#context;
     if (!this.#retire(signal !== 'authority-changed')) return Promise.resolve();
     if (signal === 'refresh-started' || signal === 'refresh-failed') this.#canLoad = false;
     if (signal === 'credentials-changed') this.#canLoad = true;

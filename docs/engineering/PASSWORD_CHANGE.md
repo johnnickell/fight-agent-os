@@ -53,6 +53,12 @@ supported. Nonvalidation rejection clears all password fields and focuses/announ
 policy feedback stays attached to fields for correction. No form values enter storage, history, intent,
 analytics or diagnostics. Reference clearing cannot guarantee physical JavaScript/browser memory erasure.
 
+A current-authentication `401` reaches the normal terminal coordinator even while or after routine
+same-session `/me` renewal, independently of stale form feedback after edits. The response fence tracks
+authentication context rather than principal-request freshness; new login, credential replacement, identity
+replacement and session retirement fence an old rejection. Fresh principal scope is still required before
+dispatch, and no rejected mutation is replayed.
+
 Committed success reaches the coordinator even after edits, reset or navigation. Its terminal barrier clears
 access/principal/intent and removes secret DOM, fences outstanding login/refresh results, and broadcasts one
 bounded `password-change` signal containing only version/sender/sequence/kind. Recipients do not relay it or
