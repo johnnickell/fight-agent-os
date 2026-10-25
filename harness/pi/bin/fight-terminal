@@ -22,10 +22,7 @@ while [ -L "$launcher" ]; do
 done
 directory=$(CDPATH='' cd -P "$(dirname "$launcher")" && pwd) || fail 'Installed package is unavailable. Reinstall from its current trusted source.'
 main="$directory/../src/workspace/main.mjs"
-[ -r "$main" ] || fail 'Installed workspace assets are missing. Reinstall @fight/agent-os-pi from the trusted source; see its README.md.'
-# Help is local documentation, not proof that Pi or the protected Harness can start.
-case " $* " in
-  *' --help '*) ;;
-  *) command -v pi >/dev/null 2>&1 || fail 'Pi is required on PATH. Install Pi separately, qualify the Harness in normal pi, then retry.' ;;
-esac
+[ -r "$main" ] || fail 'Installed retirement notice is missing. Use ordinary pi; inspect the trusted package README.md before explicit adoption.'
+# Compatibility notice only. Never resolve/launch Pi, Herdr, Docker or the retired RPC editor.
+# Keep this package-owned bin so an explicitly upgraded installation explains session migration.
 exec node "$main" "$@"

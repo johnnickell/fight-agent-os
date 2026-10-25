@@ -8,7 +8,6 @@ import { join } from 'node:path';
 import { RuntimeLogs } from '../src/workspace/runtime-logs.mjs';
 import { WorktreeLogs, testBindings } from '../src/workspace/worktree-logs.mjs';
 import { Workspace } from '../src/workspace/presentation.mjs';
-import { options } from '../src/workspace/main.mjs';
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
 async function fixture(t, multiple = false) {
@@ -45,16 +44,13 @@ async function fixture(t, multiple = false) {
   return { logs, primary, second, missing, rows, calls, streams };
 }
 
-test('explicit human test bindings are bounded, canonical and excluded from Pi arguments', () => {
+test('explicit human test bindings are bounded, canonical and narrow eligible services', () => {
   const main = realpathSync('.');
-  const config = options(['--no-session', '--logs-test', main, 'local', 'test-a', 'web'], main);
-  assert.deepEqual(config.args, ['--no-session']);
-  assert.deepEqual(config.tests, [{ main, context: 'local', project: 'test-a', service: 'web', purpose: 'test', allowedServices: ['web'] }]);
-  assert.equal(config.logs, null);
-  assert.throws(() => options(['--logs-test', main, 'local', 'test-a'], main));
-  assert.throws(() => testBindings(Array(9).fill(config.tests[0])));
-  assert.throws(() => testBindings([config.tests[0], config.tests[0]]));
-  assert.throws(() => testBindings([{ ...config.tests[0], context: '-H' }]));
+  const bindings = testBindings([{ main, context: 'local', project: 'test-a', service: 'web' }]);
+  assert.deepEqual(bindings, [{ main, context: 'local', project: 'test-a', service: 'web', purpose: 'test', allowedServices: ['web'] }]);
+  assert.throws(() => testBindings(Array(9).fill(bindings[0])));
+  assert.throws(() => testBindings([bindings[0], bindings[0]]));
+  assert.throws(() => testBindings([{ ...bindings[0], context: '-H' }]));
 });
 test('only the primary matching test source starts, without a container lifecycle operation', async t => {
   const { logs, primary, calls, streams } = await fixture(t);
