@@ -9,6 +9,7 @@ export type SessionMessage = Header &
     | Readonly<{ kind: 'request'; round: string }>
     | Readonly<{ kind: 'token'; round: string; token: string; remaining: number }>
     | Readonly<{ kind: 'invalidate' | 'authority-changed' | 'logout' | 'terminal' }>
+    | Readonly<{ kind: 'password-reset'; userId: string }>
   );
 
 const identifier = (value: unknown): value is string =>
@@ -43,6 +44,13 @@ export function decodeSessionMessage(value: unknown): SessionMessage | null {
   )
     return message as SessionMessage;
   if (
+    message.kind === 'password-reset' &&
+    hasExactKeys(message, [...common, 'userId']) &&
+    typeof message.userId === 'string' &&
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(message.userId)
+  )
+    return message as SessionMessage;
+  if (
     (message.kind === 'invalidate' ||
       message.kind === 'authority-changed' ||
       message.kind === 'logout' ||
@@ -51,6 +59,29 @@ export function decodeSessionMessage(value: unknown): SessionMessage | null {
   )
     return message as SessionMessage;
   return null;
+}
+
+/** Sends only a transient target routing identity, never a grant/password or persisted identity. */
+export function broadcastPasswordReset(userId: string): void {
+  let channel: SessionChannel | undefined;
+  try {
+    ({ channel } = browserSessionPlatform());
+    channel?.postMessage({
+      version: 1,
+      sender: crypto.randomUUID().replaceAll('-', ''),
+      sequence: 1,
+      kind: 'password-reset',
+      userId
+    } satisfies SessionMessage);
+  } catch {
+    // Missing/denied messaging cannot undo reset. Server versions remain authoritative.
+  } finally {
+    try {
+      channel?.close();
+    } catch {
+      // Cleanup failure also cannot replace an observed reset success.
+    }
+  }
 }
 
 export type SessionChannel = Pick<BroadcastChannel, 'postMessage' | 'close'> & {

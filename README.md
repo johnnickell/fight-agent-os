@@ -45,9 +45,10 @@ Restart Pi, then use `/fight-header` to choose a presentation or `off` to restor
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
-TASK-00510 adds a native `/fight-workspace [open|close]` Herdr candidate with honest placeholder companions,
-keeping Pi's existing editor/completion/session intact; see [native ownership and recovery](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
-Independent Review/QA remain pending; child/log producers are not included.
+Native `/fight-workspace [open|close]` keeps Pi's editor/completion/session intact in Herdr. TASK-00511 adds
+human-only current-session child selection/pinning and bounded progress; logs remain a TASK-00512 placeholder.
+See [native ownership and recovery](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
+Independent Review/QA of the child integration remain pending.
 An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through the package-owned
 `fight-terminal` command after [explicit user-level installation](harness/pi/README.md#install-the-global-workspace-command), with
 responsive conversation/observation panes, opt-in local child observation (TASK-00448 candidate), and an opt-in
@@ -119,7 +120,7 @@ schemas and fixtures belong alongside `migrations/` under `database/`.
 The shared [password-setting boundary](docs/engineering/PASSWORDS.md) enforces Unicode code-point composition,
 checks a pinned local hashed common-password list and uses explicit Argon2id parameters. Application startup
 verifies the corpus and platform support before use. Include `resources/passwords/` and its CC BY-SA 4.0 notice
-in deployment artifacts. Activation consumes this boundary; reset/change consumers remain planned. It is not a standalone password endpoint.
+in deployment artifacts. Activation and [reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) consume this boundary; authenticated change remains planned. It is not a standalone password endpoint.
 
 Direct Fight Access Control invitation/reset delivery handlers now require an independent
 `APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)
@@ -129,7 +130,7 @@ explicitly use the disposable loopback Mailpit catcher with `APP_CREDENTIAL_DELI
 `APP_ACTIVATION_ORIGIN`/`APP_ACTIVATION_PATH`, plus `APP_PASSWORD_RESET_ORIGIN`/`APP_PASSWORD_RESET_PATH`; see
 [local invitation email](docs/engineering/INVITATION_EMAIL.md) and
 [password-reset email](docs/engineering/PASSWORD_RESET_EMAIL.md) for exact `.env`, routing/fragment and
-start/send/recovery/cleanup contracts. No real inbox or reset-completion UI is supplied. TASK-00054 adds the [generic password-reset request](docs/engineering/PASSWORD_RESET_REQUEST.md)
+start/send/recovery/cleanup contracts. No real inbox is supplied. TASK-00055 adds [one-time reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) at `/app/reset-password/complete` and its versioned API, pending independent Review/QA; it revokes target sessions and requires fresh sign-in. TASK-00054 adds the [generic password-reset request](docs/engineering/PASSWORD_RESET_REQUEST.md)
 at `/app/reset-password` and `POST /api/v1/auth/password-reset`, pending independent Review/QA.
 Reset mail now requires the bounded internal runner rather than synchronous request-time SMTP. The public activation UI requires the
 configured canonical `/app/activate` path and the qualified fragment-only link shape described in the activation runbook.

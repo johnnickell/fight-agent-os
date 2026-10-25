@@ -48,6 +48,17 @@ function Mounted({
 }
 
 describe('authoritative frame transitions', () => {
+  it.each([
+    ['/app/swagger', 'API Docs', 'READ_SWAGGER'],
+    ['/app/admin/invitations', 'Invitation Admin', 'MANAGE_USER_INVITATIONS']
+  ])('uses the concise destination title throughout %s', async (pathname, title, permission) => {
+    const owner = session([permission]);
+    render(<Mounted owner={owner} initial={pathname} />);
+    await act(() => owner.coordinator.restore());
+    expect(await screen.findByRole('heading', { name: title, level: 1 })).toBeVisible();
+    expect(screen.getByRole('main', { name: title })).toBeVisible();
+    expect(document.title).toBe(`${title} — Fight Agent OS`);
+  });
   it('withholds all private DOM through restoration and /me, then replaces root once', async () => {
     const pending = deferred<PrincipalLoadResult>();
     const owner = session(undefined, () => pending.promise);

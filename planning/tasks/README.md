@@ -57,7 +57,7 @@
 | [TASK-00052](00052-TASK.md) | Deliver the honest permission-aware dashboard | done | [TICKET-00018](../tickets/00018-TICKET.md) |
 | [TASK-00053](00053-TASK.md) | Deliver recoverable secret-safe password-reset email | done | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00054](00054-TASK.md) | Deliver the generic password-reset request journey | done | [TICKET-00019](../tickets/00019-TICKET.md) |
-| [TASK-00055](00055-TASK.md) | Deliver one-time password-reset completion | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
+| [TASK-00055](00055-TASK.md) | Deliver one-time password-reset completion | done | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | ready-for-agent | [TICKET-00019](../tickets/00019-TICKET.md) |
 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | ready-for-agent | [TICKET-00020](../tickets/00020-TICKET.md) |
 | [TASK-00058](00058-TASK.md) | Deliver confirmed revocation of another owned session | ready-for-agent | [TICKET-00020](../tickets/00020-TICKET.md) |
@@ -513,10 +513,11 @@
 | [TASK-00508](00508-TASK.md) | Preserve readable prose in agent handoffs | ready-for-human | — |
 | [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | done | — |
 | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
-| [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | done | — |
-| [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | ready-for-agent | [TICKET-00118](../tickets/00118-TICKET.md) |
+| [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | done | — |
+| [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | done | [TICKET-00118](../tickets/00118-TICKET.md) |
 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | ready-for-agent | [TICKET-00118](../tickets/00118-TICKET.md) |
 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |

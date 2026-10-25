@@ -5,7 +5,15 @@ export type ApplicationRoute = RegisteredRoute &
   Readonly<{
     title: string;
     access: 'public' | 'protected';
-    destination: 'root' | 'login' | 'recovery' | 'activation' | 'dashboard' | 'landing' | 'swagger';
+    destination:
+      | 'root'
+      | 'login'
+      | 'recovery'
+      | 'reset-completion'
+      | 'activation'
+      | 'dashboard'
+      | 'landing'
+      | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
     icon?: PresentationIconName;
     availability?: string;
@@ -40,6 +48,13 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     destination: 'recovery'
   })),
   {
+    pathname: '/app/reset-password/complete',
+    title: 'Complete password reset',
+    access: 'public',
+    requirements: publicAccess,
+    destination: 'reset-completion'
+  },
+  {
     pathname: '/app/activate',
     title: 'Activate invitation',
     access: 'public',
@@ -58,7 +73,8 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   },
   {
     pathname: '/app/swagger',
-    title: 'API documentation',
+    title: 'API Docs',
+    icon: 'apiDocs',
     access: 'protected',
     requirements: permission('READ_SWAGGER'),
     destination: 'swagger',
@@ -131,7 +147,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
   },
   {
     pathname: '/app/admin/invitations',
-    title: 'Invitation Administration',
+    title: 'Invitation Admin',
     icon: 'invitations',
     access: 'protected',
     requirements: permission('MANAGE_USER_INVITATIONS'),

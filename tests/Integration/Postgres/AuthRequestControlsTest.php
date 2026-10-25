@@ -91,7 +91,8 @@ final class AuthRequestControlsTest extends TestCase
         );
         $responses = new JSendResponseFactory(new ResponseFactory(), new StreamFactory());
         $this->app = new App(new ResponseFactory());
-        foreach (AuthOperation::cases() as $operation) {
+        // Reset completion has its own checked possession shape and ResetCompletionGuard.
+        foreach ([AuthOperation::LOGIN, AuthOperation::REFRESH, AuthOperation::LOGOUT] as $operation) {
             $action = $operation === AuthOperation::LOGIN ? LoginJsonAction::class : EmptyAuthJsonAction::class;
             $this->app->post('/api/v1/auth/'.$operation->value, $action.':handle')
                 ->add(new AuthEndpointGuard($browser, $admission, $operation))
@@ -120,7 +121,7 @@ final class AuthRequestControlsTest extends TestCase
      */
     public function testAllowedProfilesAndBudgets(): void
     {
-        foreach (AuthOperation::cases() as $operation) {
+        foreach ([AuthOperation::LOGIN, AuthOperation::REFRESH, AuthOperation::LOGOUT] as $operation) {
             self::assertSame(204, $this->request($operation)->getStatusCode());
             self::assertSame(204, $this->request($operation, [
                 'Sec-Fetch-Site' => 'same-origin', 'Sec-Fetch-Mode' => 'cors', 'Sec-Fetch-Dest' => 'empty'

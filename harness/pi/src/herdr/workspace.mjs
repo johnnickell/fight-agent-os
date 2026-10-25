@@ -5,12 +5,14 @@ import { mkdir, readFile, writeFile, rename, stat } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
+import { NativeWorkspaceContext } from './context.mjs';
 
 const execute = promisify(execFile);
 const pause = (ms) => new Promise((done) => setTimeout(done, ms));
 const quote = (text) => `'${text.replaceAll("'", "'\\''")}'`;
-const labels = ['Child activity — placeholder', 'Runtime logs — placeholder'];
+const labels = ['Child activity — observation only', 'Runtime logs — placeholder'];
 const companion = fileURLToPath(new URL('./placeholder.mjs', import.meta.url));
+const activityCompanion = fileURLToPath(new URL('./activity-terminal.mjs', import.meta.url));
 
 /** Run bounded, explicit Herdr operations without inheriting a focused target */
 export class HerdrClient {
@@ -58,8 +60,9 @@ export async function probeCompanion(file, token) {
 
 /** Own only companions created around one actual native Pi process */
 export class HerdrWorkspace {
-  constructor({ cwd, sessionId, sessionFile, pid = process.pid, env = process.env, client, probe = probeCompanion }) {
+  constructor({ cwd, sessionId, sessionFile, pid = process.pid, env = process.env, client, probe = probeCompanion, currentContext }) {
     this.context = { cwd: resolve(cwd), sessionId, sessionFile: sessionFile || null, pid };
+    this.currentContext = currentContext || (() => this.context);
     this.env = { ...env };
     this.client = client || new HerdrClient(this.env);
     this.probe = probe;
@@ -144,7 +147,20 @@ export class HerdrWorkspace {
     throw new Error('New shell is not ready; no input submitted');
   }
 
+  invalidate() { this.activityContext?.close(); this.activityContext = undefined; }
+
+  async observationHealthy() {
+    try {
+      // Process ownership alone cannot prove a usable native/observer lifetime.
+      const context = this.activityContext.snapshot();
+      const owned = this.state.panes[0];
+      const live = await this.probe(owned.receipt, owned.token);
+      return live?.generation === context.generation && live.invalidated === false;
+    } catch { return false; }
+  }
+
   async closeOwned() {
+    this.invalidate();
     for (const owned of [...this.state.panes].reverse()) {
       await this.primary(true);
       const status = await this.inspect(owned);
@@ -189,7 +205,16 @@ export class HerdrWorkspace {
     await this.waitForShell(owned);
     owned.phase = 'starting';
     await this.save();
-    const command = ['exec', quote(process.execPath), quote(companion), quote(owned.receipt), quote(token), String(index)].join(' ');
+    let command;
+    if (index === 0) {
+      this.activityContext = new NativeWorkspaceContext(this.context, this.currentContext);
+      const binding = await this.activityContext.start();
+      const bindingFile = join(this.directory, `${binding.generation}.context.json`);
+      this.activityContext.publish(bindingFile, binding);
+      owned.bindingFile = bindingFile;
+      await this.save();
+      command = ['exec', quote(process.execPath), quote(activityCompanion), quote(owned.receipt), quote(token), quote(bindingFile)].join(' ');
+    } else command = ['exec', quote(process.execPath), quote(companion), quote(owned.receipt), quote(token), String(index)].join(' ');
     await this.client.call('pane', 'run', owned.paneId, command);
     for (let attempt = 0; attempt < 12; attempt++) {
       if (await this.inspect(owned) === 'healthy') {
@@ -203,6 +228,7 @@ export class HerdrWorkspace {
   }
 
   async shutdown() {
+    this.invalidate();
     this.stopping = true;
     for (let attempt = 0; this.busy && attempt < 80; attempt++) await pause(100);
     if (this.busy) throw new Error('Workspace operation still settling; cleanup incomplete');
@@ -221,14 +247,14 @@ export class HerdrWorkspace {
       }
       const states = await Promise.all(this.state.panes.map((p) => this.inspect(p)));
       if (states.some((status) => !['missing', 'healthy', 'shell'].includes(status))) throw new Error('Saved companion is no longer proven-owned; no layout changes');
-      if (states.length === 2 && states.every((s) => s === 'healthy')) return 'Owned companions already open; native Pi unchanged';
+      if (states.length === 2 && states.every((s) => s === 'healthy') && await this.observationHealthy()) return 'Owned companions already open; native Pi unchanged';
       const { layout } = await this.client.call('pane', 'layout', '--current');
       const allowed = new Set([this.identity.paneId, ...this.state.panes.map((p) => p.paneId)]);
       if (!layout?.panes?.length || layout.panes.some((p) => !allowed.has(p.pane_id)) || layout.zoomed) throw new Error('Requires an unzoomed tab containing only this Pi and its owned companions; unrelated layout unchanged');
       await this.closeOwned();
       const right = await this.create(0, this.identity.paneId);
       await this.create(1, right);
-      return 'Owned placeholder companions open; Herdr owns focus, resize and zoom';
+      return 'Owned child observer and log placeholder open; Herdr owns focus, resize and zoom';
     } catch (error) {
       // Partial failures clean only admitted, live-proven companions. Lost split replies retain the uncertainty hold.
       if (this.state) {

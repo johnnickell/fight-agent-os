@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Adapter\Http\Api\Auth;
 
 use App\Adapter\Http\Action\Api\V1\Auth\ActivateInvitationAction;
+use App\Adapter\Http\Action\Api\V1\Auth\CompletePasswordResetAction;
 use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
 use App\Adapter\Http\Action\Api\V1\Auth\LoginAction;
 use App\Adapter\Http\Action\Api\V1\Auth\LogoutAction;
@@ -79,7 +80,8 @@ final readonly class ActionAccess
             if (
                 $public !== [] && !in_array($class->getName(), [
                 CsrfBootstrapAction::class, ReadValidationAction::class, ActivateInvitationAction::class,
-                LoginAction::class, RefreshAction::class, LogoutAction::class, RequestPasswordResetAction::class
+                LoginAction::class, RefreshAction::class, LogoutAction::class, RequestPasswordResetAction::class,
+                CompletePasswordResetAction::class
                 ], true)
             ) {
                 throw new LogicException();

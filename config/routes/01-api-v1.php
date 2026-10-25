@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Adapter\Http\Action\Api\V1\Auth\ActivateInvitationAction;
+use App\Adapter\Http\Action\Api\V1\Auth\CompletePasswordResetAction;
 use App\Adapter\Http\Action\Api\V1\Auth\CsrfBootstrapAction;
 use App\Adapter\Http\Action\Api\V1\Auth\LoginAction;
 use App\Adapter\Http\Action\Api\V1\Auth\LogoutAction;
@@ -33,6 +34,7 @@ use App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission;
 use App\Adapter\Http\Middleware\Api\Auth\ApiActionSecurity;
 use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
 use App\Adapter\Http\Middleware\Api\Auth\CsrfBootstrapGuard;
+use App\Adapter\Http\Middleware\Api\Auth\ResetCompletionGuard;
 use App\Adapter\Http\Middleware\Api\Auth\ResetRequestGuard;
 use App\Adapter\Http\Middleware\Api\Validation\ApiInputValidation;
 use Fight\Common\Application\Service\Container;
@@ -54,6 +56,9 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     $api->post('/auth/password-reset', RequestPasswordResetAction::class.':handle')
         ->add($container->get(ResetRequestGuard::class))
         ->setName('api.v1.auth.password-reset');
+    $api->post('/auth/password-reset/complete', CompletePasswordResetAction::class.':handle')
+        ->add($container->get(ResetCompletionGuard::class))
+        ->setName('api.v1.auth.password-reset.complete');
     $api->post('/auth/refresh', RefreshAction::class.':handle')
         ->add($container->get('auth.guard.refresh'))
         ->setName('api.v1.auth.refresh');
