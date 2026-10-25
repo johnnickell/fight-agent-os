@@ -58,6 +58,31 @@ Exclude billing/payment management, account enrollment, additional generative pr
 qualified sources, cross-Repository private disclosure, automatic grant/budget extension, completion guarantees,
 review/publication execution, a general metrics platform and a proof-only workload.
 
+### Approved OpenRouter allowance mapping and independent Planning use
+
+For the initial hosted browser provider, the accepted source direction is OpenRouter's ordinary-key
+`GET /api/v1/key`, through TASK-00346's protected non-generative adapter for the selected user's exact environment
+connection/generation. TASK-00399 owns explicit bounded refresh admission, sanitized stored observations and
+current-authorized recorded queries/presentation. The source/adapter mapping is now accepted; live semantics,
+protected credential/storage/host composition and refresh acceptance remain unqualified. Keep `needs-info`.
+
+Label each reported key cap/usage/budget/expiry/free-model figure by its actual units, scope, source/report time,
+reset/window where supplied and freshness. A key cap is not wallet balance or guaranteed capacity; null is not
+unlimited service. Multiple keys may share an upstream account. Do not duplicate allowance per Agent, subtract
+local recorded usage to invent balance, collect management keys for `/api/v1/credits`, scrape account pages or
+borrow Pi credentials. Missing/unsupported values stay unavailable rather than guessed.
+
+Fight's `/api/v1/me/provider-connections/{connection_id}/allowance` direction exposes recorded safe facts only;
+explicit refresh is a separate bounded operation. Default page loads, reconnect and usage queries do not refresh
+allowance. Model-catalog on-load refresh under TICKET-00089 is a separate metadata operation, not implicit quota
+permission. Private connection/account access is independent of Repository, Workflow and conversation access.
+
+This TICKET's TASK-00396/00391 integration remains Workflow-oriented. Standalone conversation usage belongs to
+TICKET-00090/TASK-00352 and TICKET-00092/TASK-00365, reusing TASK-00345 original accounting. Do not fabricate a
+Workflow, duplicate a ledger or make optional allowance/forecast/history completion a browser Planning gate.
+TASK-00399 retains its existing Workflow presentation dependencies; its reusable account-scoped contract must not
+be confused with a completed standalone connection-settings UI. That lifecycle/UI allocation belongs to TICKET-00089.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
@@ -107,6 +132,16 @@ paid generation. Source failure leaves explicit stale/unavailable state without 
 
 ## Decisions and progress
 
+### Approved private-production reconciliation — 2026-10-24
+
+WF-044/049's source and ownership mapping is accepted: TASK-00346 supplies protected ordinary-key metadata,
+TASK-00399 admits refresh and owns sanitized observations; TASK-00343 remains nonsecret catalog policy. Add the
+real TASK-00346 supplier dependency to TASK-00399 without clearing its `needs-info` or changing priority. Actual
+source/host/connection lifecycle and current-authority qualification remain required. Historical statements below
+that the exact source/adapter is unallocated are superseded only for this mapping, not its operational holds.
+Conversation query/UI allocation is now with TASK-00352/00365; this TICKET's Workflow/forecast scope is unchanged.
+See the [reconciliation receipt](../wayfinder/research/private-production-owner-reconciliation.md).
+
 ### Approved TASK decomposition and current handoff
 
 The maintainer approved five bounded slices in `.runs/worktrees/ticket-00083-to-tasks` on
@@ -118,7 +153,7 @@ unfinished suppliers, while D retains its precise source/refresh mapping hold. P
 | A | [TASK-00396](../tasks/00396-TASK.md) | TASK-00345, TASK-00385, TASK-00386 | Actual Workflow-attributed usage, original correction/cumulative semantics, protected API/console and projections |
 | B | [TASK-00397](../tasks/00397-TASK.md) | TASK-00385, TASK-00386 | Known timing categories/intervals, honest gaps/overlaps, protected API/console and projections |
 | C | [TASK-00398](../tasks/00398-TASK.md) | TASK-00391 | Independent attribution/timing drill-down in the existing Dashboard, consuming A/B transitively |
-| D | [TASK-00399](../tasks/00399-TASK.md) | TASK-00391; exact source/refresh supplier remains unallocated | Separately authorized actual account/key allowance, bounded protected refresh and honest browser presentation |
+| D | [TASK-00399](../tasks/00399-TASK.md) | TASK-00391, TASK-00346; actual source/host/connection lifecycle qualification remains held | Separately authorized actual account/key allowance, bounded protected refresh and honest browser presentation |
 | E | [TASK-00400](../tasks/00400-TASK.md) | TASK-00391 | Explainable ranges through Awaiting review, original prediction/outcome comparisons and existing live/UI delivery |
 
 TASK-00396/00397 are the exact early measurement and projection-integration suppliers requested by TICKET-00096.

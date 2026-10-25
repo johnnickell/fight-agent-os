@@ -28,7 +28,11 @@ Repository context, original file digest/absence, conversation, initiating user 
 for every proposal. Avoid credentials and hidden model context in ordinary evidence.
 
 Reuse TICKET-00089/00090's protected provider and durable conversation execution, current Agent identity/delegation,
-finite model/budget choices and exact session snapshots. Assistance input, accepted questions/answers and resulting
+finite model/budget choices and exact session snapshots. Its initial OpenRouter path uses the initiating user's
+own protected environment connection/generation, never an installation/family key or another user's credential.
+Disconnect/replacement preserves original outcomes/liability and cannot silently rebind an attempt. Connection
+self-service remains with TICKET-00089; no duplicate credential UI or local Codex fallback is added.
+Assistance input, accepted questions/answers and resulting
 proposal identity must survive disconnect or supported interruption under the existing protected session owner.
 Store typed proposal content/diff and base/currentness binding within that owning protected conversation capability;
 this TICKET owns file-suggestion semantics, not another conversation/runtime engine. TICKET-00091's Planning Apply
@@ -102,6 +106,14 @@ owner, not ordinary Workflow history or a new transcript search surface.
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved private-production reconciliation — 2026-10-24
+
+The browser-provider amendment applies to TASK-00434's existing OpenRouter request binding and original accounting;
+TASK-00435's browser consumer inherits safe provenance without custody of provider credentials. Selected-file
+scope, explicit separate Save, original-result recovery and all actual host/read/Agent holds remain unchanged.
+Missing AI capability cannot block direct editing; this consumer is not a first browser Wayfinder prerequisite.
+See the [reconciliation receipt](../wayfinder/research/private-production-owner-reconciliation.md).
 
 Approved as area 3 of EPIC-00010's five-TICKET split. Applies
 [WF-022](../wayfinder/tickets/WF-022-define-browser-instruction-inspection-and-assisted-editing.md),

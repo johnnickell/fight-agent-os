@@ -56,6 +56,25 @@ Exclude Workflow claims/transitions, Runner provisioning, sandbox implementation
 coding execution, another credential or Team store, generic chat product and duplicate role outcomes. TASK-00250
 owns role-session integration; TASK-00247 and TASK-00266 retain Explorer and Project Manager integration.
 
+### Hosted Planning binding and recorded conversation usage
+
+For the approved first browser journey, bind each admitted turn to its initiating user, selected environment,
+nonsecret provider-connection identity and exact generation. Resolve credentials only through TICKET-00089's
+protected owner. Conversation sharing, administrator access, reconnect and account/key replacement cannot borrow
+another user's connection or reassign original attempts; current disclosure and budget authority still apply.
+
+TASK-00352 owns the safe conversation/turn-to-original-usage query extension, consuming TASK-00345's normalized
+facts and TASK-00344's authorized applicable budget view. Preserve attempt and linked-continuation attribution,
+known stopped/failed/superseded charges, supported token categories, reported cost/currency versus explicit
+estimates and missing/partial/stale/uncertain coverage. Do not double-count cumulative reports, parent/nested
+activity or linked history, or aggregate incompatible currencies/units. No dummy Workflow, second ledger,
+transcript writer or live channel is introduced. TASK-00396/00391 remain Workflow consumers, not these suppliers.
+
+Ordinary conversation/history/usage reads cause no provider calls. Provider allowance stays separately authorized
+under TICKET-00098; conversation visibility does not disclose another user's allowance or private environment totals.
+TICKET-00092 renders these shared query results. A secondary usage/allowance failure must not erase otherwise
+readable Planning; admission retains its authoritative limits independently of display availability.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
@@ -80,6 +99,9 @@ state and the selected transcript runtime explicitly; no dual writer or claim of
 
 ## Acceptance and evidence
 
+- Hosted per-user connection/generation binding survives reconnect, replacement, revocation and linked continuation
+  without cross-user key use, liability reset or private usage disclosure. Conversation usage queries show original
+  deduplicated facts without a Workflow, new ledger or provider call; unsupported values remain explicit.
 - Real bounded authorized work survives detach/reattach and process replacement with the same Agent/conversation,
   accepted input, pending questions and exact snapshots; concurrent inputs preserve one active turn.
 - Real supported runtime/host/storage/broker participants demonstrate stale-owner fencing, interrupted activation,
@@ -106,6 +128,15 @@ state and the selected transcript runtime explicitly; no dual writer or claim of
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved private-production reconciliation — 2026-10-24
+
+The rollout's per-user turn binding and conversation usage query are allocated to this existing conversation owner,
+with TASK-00352's bounded query extension consuming TASK-00344/00345 through the existing invocation/attempt path.
+TICKET-00089 retains connections; TICKET-00092 retains UI. TASK-00350's actual protected runtime/broker/storage
+mapping remains `needs-info`; a hosted application and persisted conversation do not supply that runtime.
+No new session/ledger/Workflow or TASK is created. Historical decomposition receipts remain historical.
+See the [reconciliation receipt](../wayfinder/research/private-production-owner-reconciliation.md).
 
 ### Approved TASK decomposition and current handoff
 

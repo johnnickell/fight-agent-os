@@ -45,6 +45,23 @@ Exclude another role resolver, template registry, credential lifecycle, session 
 repository context authority or migration of Markdown Planning. Session persistence/execution uses
 [TICKET-00090](00090-TICKET.md); provider support uses [TICKET-00089](00089-TICKET.md).
 
+### Approved per-user provider binding and model continuation — 2026-10-24
+
+Bind hosted browser requests to the initiating user's nonsecret provider-connection identity, environment and exact
+generation beside model/configuration provenance. Agent OS connection profiles and provider connections remain
+distinct; raw secrets or credential handles do not enter snapshots/views. Current connection/disclosure authority
+still controls dispatch. Replacement, disconnect or changed-away-and-back selection cannot rebind original work,
+revive stale authorization or erase consumed/reserved uncertainty.
+
+WF-049's explicit OpenRouter model switch uses TASK-00342 between turns: finish or Stop/reconcile original work,
+preview the old/new model and authorized context carried forward (including any truncation), then confirm one
+linked successor. Preserve original history/usage attribution, accepted answers and proposal references; revalidate
+proposals with no transferred approval, regeneration or automatic Apply. Default/catalog refresh alone does not
+change the active selection, while actual policy revocation still denies current use. Same-provider switching
+is not cross-provider qualification. TASK-00367 owns browser controls; TASK-00325 retains terminal behavior.
+No existing host/continuation hold is cleared. See the
+[reconciliation receipt](../wayfinder/research/private-production-owner-reconciliation.md).
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |

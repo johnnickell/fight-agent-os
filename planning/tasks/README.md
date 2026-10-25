@@ -522,4 +522,17 @@
 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
 | [TASK-00519](00519-TASK.md) | Align and verify delivery handoffs across the ten projects | ready-for-agent | [TICKET-00120](../tickets/00120-TICKET.md) |
+| [TASK-00520](00520-TASK.md) | Manage your protected OpenRouter connections | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
+| [TASK-00521](00521-TASK.md) | Inspect optional allowance in connection settings | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
+| [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | ready-for-agent | [TICKET-00121](../tickets/00121-TICKET.md) |
+| [TASK-00523](00523-TASK.md) | Build and deliver the exact production candidate through GitHub CI | ready-for-agent | [TICKET-00121](../tickets/00121-TICKET.md) |
+| [TASK-00524](00524-TASK.md) | Run the staging application behind real HTTPS | ready-for-agent | [TICKET-00122](../tickets/00122-TICKET.md) |
+| [TASK-00525](00525-TASK.md) | Operate staging's protected services and diagnosis | ready-for-agent | [TICKET-00122](../tickets/00122-TICKET.md) |
+| [TASK-00526](00526-TASK.md) | Operate the isolated production target with Managed PostgreSQL | ready-for-agent | [TICKET-00122](../tickets/00122-TICKET.md) |
+| [TASK-00527](00527-TASK.md) | Deliver real invitation and password-reset email in staging | ready-for-agent | [TICKET-00123](../tickets/00123-TICKET.md) |
+| [TASK-00528](00528-TASK.md) | Operate scheduled account-mail recovery across both environments | ready-for-agent | [TICKET-00123](../tickets/00123-TICKET.md) |
+| [TASK-00529](00529-TASK.md) | Back up and restore coherent staging state | ready-for-agent | [TICKET-00124](../tickets/00124-TICKET.md) |
+| [TASK-00530](00530-TASK.md) | Recover production state through Managed PostgreSQL and Spaces | ready-for-agent | [TICKET-00124](../tickets/00124-TICKET.md) |
+| [TASK-00532](00532-TASK.md) | Stage and recover an exact release candidate | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
+| [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
 <!-- /planning:records -->
