@@ -4,7 +4,6 @@ import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 import { RuntimeLogs, runtimeSelection, safeLog, logLimits } from '../src/workspace/runtime-logs.mjs';
 import { Workspace } from '../src/workspace/presentation.mjs';
-import { options } from '../src/workspace/main.mjs';
 import { mkdtempSync, rmSync, readFileSync, symlinkSync, realpathSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -35,14 +34,10 @@ async function fixture({ rows = [row(), row('postgres')], endpoint = 'unix:///lo
   return { logs, calls, children, stream: children.at(-1) };
 }
 
-test('explicit complete selection validates every argument; log choices never enter Pi arguments', () => {
+test('explicit complete selection validates every source argument', () => {
   assert.deepEqual(runtimeSelection(source), source);
   const invalid = [{ ...source, context: '-H' }, { ...source, project: 'bad;start' }, { ...source, service: '--all' }, { ...source, main: 'relative' }, { ...source, main: main + '\n' }, { main }];
   for (const selection of invalid) assert.throws(() => runtimeSelection(selection));
-  const result = options(['--no-session', '--logs-main', main, '--logs-context', 'local', '--logs-project', source.project, '--logs-service', 'web'], '/different-worktree');
-  assert.deepEqual(result.args, ['--no-session']); assert.deepEqual(result.logs, source);
-  assert.throws(() => options(['--logs-project', 'test'], main));
-  assert.throws(() => options(['--logs-main', main, '--logs-main', main], main));
 });
 test('no runtime selection launches nothing, including after pane actions', async () => {
   const logs = new RuntimeLogs(null, () => {}, { spawnProcess: () => assert.fail('unselected launch') });

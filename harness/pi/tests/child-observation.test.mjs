@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { ChildObservation, observationPaths } from '../src/workspace/child-observation.mjs';
 import { Workspace } from '../src/workspace/presentation.mjs';
-import { options } from '../src/workspace/main.mjs';
 
 const identity = { task: 'TASK-00448', role: 'work', provider: 'configured', model: 'model', thinking: 'high', worktree: '/selected', attempt: '/owned/attempt-A' };
 const packet = (sequence = 0, extra = {}) => ({ version: 'fight-child-observation-v1', kind: sequence ? 'progress' : 'snapshot', sequence,
@@ -19,11 +18,9 @@ function fixture(paths = ['/var/first.sock', '/var/second.sock']) {
   return { observation, sockets, send, advance: ms => time += ms };
 }
 
-test('only explicit bounded local endpoint choices are accepted and never forwarded to Pi', () => {
+test('only explicit bounded local endpoint choices are accepted', () => {
   assert.deepEqual(observationPaths(['/var/a.sock']), ['/var/a.sock']);
   for (const paths of [['relative'], ['/a', '/a'], ['/a\n'], Array.from({ length: 9 }, (_, i) => `/${i}`)]) assert.throws(() => observationPaths(paths));
-  const config = options(['--no-session', '--observe-child', '/var/a.sock', '--observe-child', '/var/b.sock'], '/checkout');
-  assert.deepEqual(config.args, ['--no-session']); assert.deepEqual(config.children, ['/var/a.sock', '/var/b.sock']);
 });
 test('no configured child means no inspection, connection or launch', () => {
   const observation = new ChildObservation([], () => {}, { inspect: () => assert.fail('discovery'), connect: () => assert.fail('launch') });

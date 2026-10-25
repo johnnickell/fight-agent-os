@@ -28,12 +28,12 @@ function environment() {
   return Object.fromEntries(['HOME', 'PATH', 'TMPDIR', 'LANG', 'LC_ALL'].filter(key => process.env[key]).map(key => [key, process.env[key]]));
 }
 export class RuntimeLogs {
-  constructor(selection, changed = () => {}, { spawnProcess = spawn, persist = true } = {}) {
+  constructor(selection, changed = () => {}, { spawnProcess = spawn, persist = true, pinGeneration = false } = {}) {
     this.source = runtimeSelection(selection); this.changed = changed; this.spawn = spawnProcess; this.persist = persist;
     this.generation = 0; this.processes = new Set(); this.pending = new Set(); this.open = false; this.paused = false;
     this.history = []; this.units = 0; this.omitted = 0; this.clipped = 0; this.gaps = 0; this.state = 'unselected';
     this.notice = 'No runtime selected'; this.services = []; this.endpoint = null; this.timer = null; this.frozen = null;
-    this.containers = null;
+    this.containers = null; this.pinGeneration = this.source?.purpose === 'test' || pinGeneration;
   }
   start() { if (this.source) { this.open = true; void this.subscribe(); } }
   launch(args) {
@@ -90,16 +90,17 @@ export class RuntimeLogs {
       if (verified.length !== rows.length) throw new Error('Compose checkout identity mismatch; source refused');
       const eligible = this.source.purpose === 'test' ? verified.filter(row => this.source.allowedServices.includes(row.service)) : verified;
       const containers = eligible.map(row => `${row.service}:${row.id}`).sort().join('\n');
-      if (this.source.purpose === 'test' && this.containers !== null && containers !== this.containers) {
-        throw new Error('Test-stack container generation changed; fresh human binding required');
+      if (this.pinGeneration && this.containers !== null && containers !== this.containers) {
+        throw new Error('Source container generation changed; fresh human binding required');
       }
       this.services = [...new Set(eligible.map(row => row.service))].sort();
       const selected = eligible.filter(row => row.service === this.source.service);
       if (selected.length !== 1) throw new Error('Selected service missing or replicated; select one existing single-container service');
       if (selected[0].state !== 'running') throw new Error('Selected source stopped; no container will be started');
       // Pin only a fully validated running source. A saved file never establishes this identity.
-      if (this.source.purpose === 'test') this.containers = containers;
+      if (this.pinGeneration) this.containers = containers;
       if (this.persist) this.savePreference();
+      this.container = selected[0].id;
       this.state = 'following'; this.notice = 'Finite tail; incomplete history. No task attribution inferred.';
       const child = this.launch(['container', 'logs', '--tail', String(logLimits.tail), '--timestamps', '--follow', selected[0].id]);
       const accept = stream => {
@@ -153,8 +154,9 @@ export class RuntimeLogs {
     if (type === 'info') { this.info = !this.info; }
     else if (type === 'pause') { this.paused = !this.paused; this.frozen = this.paused ? [...this.history] : null; }
     else if (['next', 'previous', 'toggle', 'reconnect'].includes(type)) {
+      const generation = this.generation + 1;
       await this.stop();
-      if (this.disposed) return;
+      if (this.disposed || this.generation !== generation) return;
       if (type === 'toggle') this.open = !this.open; else this.open = true;
       if (type === 'next' || type === 'previous') {
         const index = this.services.indexOf(this.source.service), delta = type === 'next' ? 1 : -1;
@@ -181,6 +183,7 @@ export class RuntimeLogs {
       '[ / ] service · p pause · c reader close/open · r reconnect',
       `${this.source.purpose === 'test' ? 'Worktree' : 'Main'}: ${this.source.main}`, `Endpoint: ${this.endpoint ?? 'not verified'}`,
       `Eligible services: ${this.source.allowedServices?.join(', ') ?? 'explicit shared project services'}`,
+      `Actual container: ${this.container ?? 'not verified'}`,
       `Container generation: ${this.containers ?? 'not pinned (shared mode or unverified)'}`,
       this.notice, `Omitted ${this.omitted} · clipped ${this.clipped} · reconnect/switch gaps ${this.gaps} (unknown loss; up to 100 duplicate tail lines)`,
       ...(this.paused ? this.frozen ?? [] : this.history).slice(-8),

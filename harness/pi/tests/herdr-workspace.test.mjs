@@ -60,8 +60,8 @@ async function fixture(t, options = {}) {
     const info = owned && processes.get(owned.paneId);
     const activity = activities.get(owned?.paneId);
     return info?.foreground_processes[0]?.name === 'node' ? {
-      pid: info.foreground_processes[0].pid, paneId: owned.paneId,
-      ...(activity ? { generation: activity.binding.generation, invalidated: activity.invalidated === true } : {}),
+      pid: info.foreground_processes[0].pid, paneId: owned.paneId, port: 12345,
+      generation: activity?.binding.generation ?? workspace.activityContext?.generation, invalidated: activity?.invalidated === true,
     } : undefined;
   };
   workspace = new HerdrWorkspace({ cwd, sessionId: 'actual-session', env: { HERDR_ENV: '1', HERDR_SOCKET_PATH: socketPath, HERDR_PANE_ID: 'caller', HERDR_TAB_ID: 'tab', HERDR_WORKSPACE_ID: 'workspace' }, client, probe, ...options.context });
@@ -77,7 +77,7 @@ test('Open keeps the native process and uses returned IDs, no-focus, same cwd an
   assert.equal(splits[0][2], 'caller');
   assert.equal(splits[1][2], 'returned-1');
   assert.ok(splits.every((c) => c.includes('--no-focus') && c.includes(workspace.context.cwd)));
-  assert.deepEqual(calls.filter((c) => c[1] === 'rename').map((c) => c[3]), ['Child activity — observation only', 'Runtime logs — placeholder']);
+  assert.deepEqual(calls.filter((c) => c[1] === 'rename').map((c) => c[3]), ['Child activity — observation only', 'Runtime logs — human only']);
   assert.ok(calls.filter((c) => ['run', 'close', 'rename'].includes(c[1])).every((c) => c[2] !== 'caller'));
   assert.equal(JSON.parse(await readFile(workspace.file)).primary.pid, process.pid);
 });
@@ -381,4 +381,37 @@ test('Shutdown closes proven companions and refuses subsequent open', async (t) 
   assert.deepEqual([...panes.keys()], ['caller']);
   await workspace.shutdown();
   await assert.rejects(workspace.act('open'), /shutting down/);
+});
+
+// Real Herdr includes the companion and its fixed Docker reader in one foreground group.
+function readerWorkspace({ child = {}, childOf = async () => true, group = 10, readerPids = [11] } = {}) {
+  const pane = { pane_id: 'logs', terminal_id: 'log-terminal', tab_id: 'tab', workspace_id: 'workspace' };
+  const docker = { pid: 11, name: 'docker', ...child };
+  const workspace = new HerdrWorkspace({ cwd: '/workspace', sessionId: 'native', childOf,
+    probe: async () => ({ pid: 10, paneId: 'logs', readerPids }),
+    client: { async call(_group, action) {
+      return action === 'get' ? { pane } : { process_info: { shell_pid: 10, foreground_process_group_id: group, foreground_processes: [{ pid: 10, name: 'node' }, docker] } };
+    } },
+  });
+  workspace.identity = { paneId: 'primary', tabId: 'tab', workspaceId: 'workspace' };
+  const owned = { paneId: 'logs', terminalId: 'log-terminal', token: 'owned', receipt: '/owned', phase: 'running' };
+  workspace.state = { panes: [{ paneId: 'activity' }, owned] };
+  return { workspace, owned };
+}
+
+test('A live log companion retains ownership while its tracked, proven direct Docker child runs', async () => {
+  const { workspace, owned } = readerWorkspace();
+  assert.equal(await workspace.inspect(owned), 'healthy');
+});
+
+test('A foreign/untracked Docker process or changed foreground group never grants log-pane ownership', async () => {
+  for (const options of [
+    { childOf: async () => false }, { group: 99 },
+    { child: { name: 'editor' } },
+    { readerPids: [] }, { readerPids: [12] }, { readerPids: [11, 12] },
+    { child: { pid: 10 } },
+  ]) {
+    const { workspace, owned } = readerWorkspace(options);
+    assert.equal(await workspace.inspect(owned), 'ambiguous');
+  }
 });

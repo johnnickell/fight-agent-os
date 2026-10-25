@@ -26,7 +26,7 @@ export class WorktreeLogs {
   start() { void this.rebind(this.primary); }
   // The host passes only its primary directory or a freshly custody-admitted selected child.
   // Legacy monitor reports never reach this boundary.
-  async rebind(worktree) {
+  async rebind(worktree, { force = false } = {}) {
     const canonical = realpathSync(worktree), generation = ++this.generation;
     this.transition = this.transition.then(async () => {
       if (this.disposed || generation !== this.generation) return;
@@ -34,10 +34,10 @@ export class WorktreeLogs {
       const selected = this.choices.get(canonical);
       const index = candidates.includes(selected) ? selected : candidates.length === 1 ? candidates[0] : undefined;
       const next = this.mode === 'shared' ? this.shared : this.readers[index] ?? null;
-      if (this.worktree === canonical && this.current && this.current === next) return;
+      if (!force && this.worktree === canonical && this.current && this.current === next) return;
       await this.release();
       if (this.disposed || generation !== this.generation) return;
-      this.worktree = canonical;
+      this.worktree = canonical; this.held = false;
       // A reader which did not reap within its deadline blocks every replacement, not just itself.
       this.blocked = [...this.readers, ...(this.shared ? [this.shared] : [])].some(reader => reader.processes.size);
       if (!this.blocked) this.current = next;
@@ -45,6 +45,18 @@ export class WorktreeLogs {
       this.changed();
     });
     return this.transition;
+  }
+  /** Revoke source authority immediately, even while old metadata/reaping is pending */
+  hold() {
+    this.held = true; this.generation++;
+    const previous = this.current; this.current = null;
+    if (previous) {
+      previous.open = false;
+      previous.history = []; previous.units = 0; previous.frozen = null; previous.paused = false;
+      const stopped = previous.stop();
+      this.transition = this.transition.then(() => stopped);
+    }
+    this.changed();
   }
   async release() {
     const previous = this.current; this.current = null;
@@ -56,7 +68,7 @@ export class WorktreeLogs {
   async action(type) {
     if (this.disposed) return;
     await this.transition;
-    if (this.disposed) return;
+    if (this.disposed || this.held) return;
     if (type === 'info') { this.info = !this.info; this.changed(); return; }
     if (type === 'mode') {
       if (!this.shared) return;
