@@ -66,8 +66,10 @@ log candidate follows that verified context using fresh interactive human test-s
 bounded Docker reader. Missing mappings/custody remain unavailable, never shared fallback. Herdr owns layout,
 focus, resize and zoom; Pi retains Tab completion. Missing or ambiguous prerequisites leave ordinary Pi usable,
 with no automatic RPC fallback. See [native setup, ownership and recovery](WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
-The action performs no global installation or workflow selection. Fresh composed-workspace qualification and
-independent acceptance remain pending; the public RPC executable is retained until replacement acceptance.
+The action performs no global installation or workflow selection. Fresh real two-source/session Work qualification
+is recorded in [TASK-00512 candidate A](../../planning/tasks/00512-TASK.md#native-replacement-candidate-a--2026-10-25-work-qualification-complete-independent-acceptance-pending).
+Independent replacement acceptance remains pending; the public RPC executable is retained until that acceptance,
+then the bounded repository retirement delta receives fresh independent review/affected QA before publication.
 See [log controls and native session migration](WORKSPACE.md#verified-logs-in-herdr-task-00512-candidate).
 
 ## Responsive local workspace candidate (retained RPC client)

@@ -7,8 +7,10 @@ activity companion and a human-only verified log companion (TASK-00512 implement
 companions. Repeated open reuses the same healthy panes. The existing Pi process, session/file, cwd, editor,
 Tab completion, themes, dialogs, tools and workflow binding are unchanged. Herdr owns focus, resize and zoom;
 Pi's Tab is not a pane-navigation shortcut here. The child companion supplies the validated context below;
-TASK-00512 composes it with the existing bounded Docker reader. Fresh two-worktree live qualification and
-independent acceptance of the complete replacement remain pending. The legacy `fight-terminal` client below
+TASK-00512 composes it with the existing bounded Docker reader. Fresh real two-worktree/child/source and same-file
+RPC-to-native session Work qualification is recorded in
+[TASK-00512 candidate A](../../planning/tasks/00512-TASK.md#native-replacement-candidate-a--2026-10-25-work-qualification-complete-independent-acceptance-pending);
+independent replacement acceptance remains pending. The legacy `fight-terminal` client below
 remains available until that acceptance; there is no automatic fallback to it.
 
 Load the updated trusted package once through your existing Pi installation. A **full process restart** is needed
@@ -176,10 +178,12 @@ a workflow only through the operator's explicit native action if needed. Then op
 `--no-session` conversations cannot be resumed. Session files and historical evidence are never deleted.
 
 **Publication transition still required:** this candidate does not retire or redirect the public `fight-terminal`
-RPC executable. Independent Review/QA must first accept the complete native replacement with fresh real
-Herdr/Pi/two-source evidence and the full gate. Its later authorized entry-point retirement/rollout must preserve
-sessions and make non-Herdr prerequisites explicit; do not mistake this staging hold for accepted delivery or a
-waived TASK criterion. Source-binding/host/gate prerequisites are recorded in TASK-00512.
+RPC executable. Independent Review/QA must first assess candidate A's native replacement, fresh real
+Herdr/Pi/two-source/session evidence and recorded gate bridge. After replacement acceptance, Work performs the
+already-authorized bounded repository-only public-entry retirement B, preserving sessions and explicit ordinary-Pi
+non-Herdr guidance; fresh affected gates and independent delta Review/QA precede publication. Installed-client
+rollout/removal remains separate. This ordered transition is neither a missing human prerequisite nor accepted
+delivery or a waived TASK criterion. TASK-00512 records current evidence, diagnostics and retained runtime ownership.
 
 ## Legacy RPC workspace (retained)
 

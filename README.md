@@ -48,8 +48,9 @@ browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.
 Native `/fight-workspace [open|close]` keeps Pi's editor/completion/session intact in Herdr. TASK-00511 adds
 human-only current-session child selection/pinning and bounded progress. TASK-00512's log companion candidate
 uses fresh interactive human bindings to existing test stacks and follows validated child/idle-primary context;
-missing mappings never fall back to shared logs. Fresh complete-workspace qualification and independent
-acceptance remain pending. See [native ownership, log controls and session migration](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
+missing mappings never fall back to shared logs. Fresh real two-source/session Work qualification is recorded in
+[TASK-00512 candidate A](planning/tasks/00512-TASK.md#native-replacement-candidate-a--2026-10-25-work-qualification-complete-independent-acceptance-pending);
+independent replacement acceptance and the subsequent reviewed repository RPC-retirement transition remain pending. See [native ownership, log controls and session migration](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
 Ordinary Pi remains available outside Herdr; the RPC executable is retained until replacement acceptance.
 An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through the package-owned
 `fight-terminal` command after [explicit user-level installation](harness/pi/README.md#install-the-global-workspace-command), with
