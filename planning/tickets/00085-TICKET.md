@@ -46,6 +46,17 @@ Exclude a second credential issuer/queue, new package release automation platfor
 qualification, new terminal branding and automatic changes to personal configuration. Installation documentation
 and owning-tool qualification belong with this outcome, not a separate documentation/testing product.
 
+### Approved browser Planning default reuse — 2026-10-24
+
+WF-049's Set as default action uses this existing user-profile/default writer (TASK-00323), consuming safe allowed
+model references from TASK-00343. TASK-00367 supplies the narrow browser model-selection control, not a second
+profile registry or general profile editor. Require current ownership/authorized scope and expected revision;
+ordinary users cannot change another user's or installation-wide default. Catalog refresh does not update a
+profile. Default changes affect future selection only; active conversations retain their chosen model until the
+existing explicit linked continuation. Connection secrets/lifecycle belong to TICKET-00089, not these profiles.
+No Pi version gate, host/runtime qualification or existing credential boundary is changed. See the
+[reconciliation receipt](../wayfinder/research/private-production-owner-reconciliation.md).
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |

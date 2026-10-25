@@ -61,6 +61,41 @@ Exclude a second hierarchy/queue/Dashboard authority, coding Workflow controls, 
 mentions, teammate notifications, simultaneous editing, persistent direct-edit drafts, automatic acceptance and
 repository instruction mutation. No standalone conversation demo or certification path substitutes for real use.
 
+### Approved first-production journey and model/usage presentation
+
+The first production milestone pairs verified database Planning cutover under TICKET-00028 with this real journey:
+sign in/select an authorized registered Repository; submit an idea and select matching or new work; review/edit/
+explicitly create a map when needed; work one HITL decision and explicitly Apply its result; leave and resume the
+same conversation with truthful progress and usage. Private discussion/drafts are not accepted state. This selects
+an initial acceptance scenario, not a reduction of the other accepted journeys or a new demo/readiness TASK.
+
+Use the initiating user's protected OpenRouter environment connection from TICKET-00089. No administrator/family
+key, local Codex credential reuse or simultaneous two-provider setup is required. Distinct named Planning roles
+may use the same suitable model. Keep actual role/runtime/authority suppliers and all their holds.
+
+TASK-00367 supplies initial and between-turn model selection, a current/light-cached compatible picker, Refresh
+models, authorized Set as default and the existing linked-continuation confirmation. It consumes TASK-00343's safe
+catalog, TASK-00346's protected metadata operation and TASK-00323's existing profile/default writer. Refreshing a
+catalog does not change a default, generate text or refresh allowance. No fixed model ID, mandatory 15-minute TTL,
+automatic fallback or benchmark project is selected. Defaults affect future conversations; an active turn must
+finish or follow Stop/original-effect reconciliation before a confirmed model change. Preview authorized carried
+context and any reduction; preserve history and revalidate proposals without transferring approval or applying them.
+First browser switching is between OpenRouter models, not proof of cross-provider support.
+
+TASK-00365 renders independently loaded conversation/turn usage from TASK-00352's query, keeping recorded tokens/
+cost, applicable environment budgets/reserved uncertainty and separately authorized provider allowance distinct.
+Show source/time, requested/reported models, reported versus estimated cost/currency and unsupported categories.
+Known failed/stopped/superseded costs remain; do not sum cumulative streams again, double-count continuations or
+nested activity, combine incompatible units/currencies or reveal other users' usage. Secondary display failures
+leave otherwise readable Planning usable and never reset admission limits. Allowance is optional, with its explicit
+refresh/recorded-read contract owned by TASK-00399; missing integration displays unavailable, not zero or unlimited.
+Connection self-service belongs to TICKET-00089, not a duplicate credential form/owner here.
+
+Database migration and product implementation can proceed locally/in staging without production already existing.
+EPIC-00021 supplies deployment integration and consumes these outcomes; it does not replace their owners. Retain
+ordinary checks, independent acceptance and approved migration/promotion/recovery, not a second certification gate.
+Optional creation/instruction assistance, domain UI, ChatGPT and legacy replacement are not first-journey gates.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
@@ -87,6 +122,12 @@ Human decisions remain required even during AFK work. Current revocation overrid
 
 ## Acceptance and evidence
 
+- The selected first journey uses the initiating user's OpenRouter connection, a visible compatible model and
+  explicit decisions/Apply, preserving private history on reconnect. Default/catalog changes never switch an
+  existing conversation; between-turn model change uses the real confirmed continuation and context preview.
+- Conversation/turn usage, applicable budgets and optional allowance load independently with honest unknowns,
+  no double counting or cross-user leakage. Catalog refresh and ordinary reads do not poll allowance or infer
+  spending authority; unavailable secondary displays do not destroy readable Planning.
 - Use real Fight Agent OS Planning from intake through managed conversation, human answers, editable proposal and
   explicit authoritative Apply, preserving separate operations and no automatic duplicate/new artifact creation.
 - Demonstrate authorized browser reconnect and process replacement, pending human questions, cancellation versus
@@ -114,6 +155,16 @@ Human decisions remain required even during AFK work. Current revocation overrid
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved private-production reconciliation — 2026-10-24
+
+John's WF-049 journey/model/usage decisions now amend this requirement. TASK-00365 gains the bounded usage UI;
+TASK-00367 gains initial picker/default controls and explicit same-provider switching. TICKET-00090/TASK-00352
+supply conversation usage; TICKET-00085/TASK-00323 own default persistence; TICKET-00089 owns protected connections/
+metadata. Workflow-only TASK-00396/00391 are not standalone Planning suppliers. No duplicate state/ledger or new
+TASK is created; the connection lifecycle's undecomposed delta remains under TICKET-00089. Existing host, prototype,
+Agent and cutover holds remain, with no priority change or implied delivery. See the
+[reconciliation receipt](../wayfinder/research/private-production-owner-reconciliation.md).
 
 ### Approved TASK decomposition and current handoff
 

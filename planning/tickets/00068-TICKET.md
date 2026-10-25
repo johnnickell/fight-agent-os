@@ -90,7 +90,7 @@ The maintainer approved five independently reviewable slices:
 | TASK | Outcome | Blockers and holds |
 |---|---|---|
 | [TASK-00283](../tasks/00283-TASK.md) | Protect email-change issuance material | TASK-00024; secure generation and purpose-separated cipher, no unfinished request exposure |
-| [TASK-00284](../tasks/00284-TASK.md) | Enroll one shared real mail transport | TASK-00040; `needs-info` for approved provider, sender/mailbox/environment scope and external-effect authority |
+| [TASK-00284](../tasks/00284-TASK.md) | Enroll one shared real mail transport | TASK-00040; Resend Free HTTPS now selected; `needs-info` for actual account/provider qualification, sender/mailbox/environment scope and external-effect authority |
 | [TASK-00285](../tasks/00285-TASK.md) | Deliver one exact new-mailbox confirmation link | TASK-00283 and TASK-00040; direct package claim/invoke/outcome and fixed safe content/link contract |
 | [TASK-00286](../tasks/00286-TASK.md) | Recover and inspect email-change credential work | TASK-00285 and TASK-00024; bounded existing-runner extension, narrow audit provenance and independent expiry/status |
 | [TASK-00287](../tasks/00287-TASK.md) | Operate scheduled new-mailbox delivery and recovery | TASK-00284, TASK-00286 and TASK-00274; `needs-info` for actual deployment/schedule/worker/key/target authority and qualification |
@@ -126,6 +126,23 @@ acceptance. TASK-00287 independently consumes it for credential operation, plus 
 TASK-00274. Neither completed recovery journey is a prerequisite of the other. Reuse qualified provider/scheduler
 facilities and attributable unchanged evidence; refresh affected integrations rather than adding a second platform
 or a duplicate send ceremony. Shared transport never merges notice and credential lifecycle authority.
+
+### Approved private-production transport reuse
+
+John accepted Resend Free HTTPS through EPIC-00021/TICKET-00123 and approved reuse of TASK-00284 as the sole shared
+real transport/enrollment primitive. Its vendor-selection uncertainty is resolved, not its account/plan, sender,
+recipient, protected runtime or external-effect qualification; retain `needs-info` and existing metadata. Actual
+provider limits/idempotency/retention need current evidence. No paid upgrade, Gmail/SMTP fallback, new queue or
+expanded sending authority follows.
+
+TASK-00524 gains TASK-00284 as an early prerequisite because required staging/production credential-provider startup
+cannot use a development fallback. TASK-00284 can qualify independently of that hosted target. TICKET-00123's
+[TASK-00527](../tasks/00527-TASK.md) then owns actual staging invitation/reset receipt, and
+[TASK-00528](../tasks/00528-TASK.md) scheduled account-mail recovery/production integration. Existing TASK-00277/00287
+retain notice/email-change operation; no final journey reverse-blocks shared transport, and no generic scheduler or
+lifecycle replacement is introduced. This is planning reconciliation, not fresh provider/runtime acceptance.
+
+### Retained email-change handoff
 
 TASK-00280 now consumes TASK-00287 alongside its notice prerequisites; TASK-00282 consumes that request path.
 The missing supplier mapping is resolved, not operational readiness or TASK-00273's contract hold. TASK-00278

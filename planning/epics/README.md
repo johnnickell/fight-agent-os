@@ -23,4 +23,5 @@
 | [EPIC-00018](00018-EPIC.md) | Publish the qualified Agent OS AccessControl reference-consumer handoff | ready-for-agent | — |
 | [EPIC-00019](00019-EPIC.md) | Diagnose Agent OS operations and managed runs with live and archived logs | ready-for-agent | — |
 | [EPIC-00020](00020-EPIC.md) | Keep delivery handoffs synchronized through Land | ready-for-agent | — |
+| [EPIC-00021](00021-EPIC.md) | Deploy and recover private Fight Agent OS in staging and production | ready-for-agent | — |
 <!-- /planning:records -->

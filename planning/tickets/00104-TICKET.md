@@ -33,8 +33,10 @@ side effects and may recommend precise revised input, a command, retry, cleanup 
 remain explicit unknowns with safe evidence rather than speculative autonomous repair. Generated recommendations
 are untrusted advisory content, not accepted commands or execution evidence.
 
-Use TICKET-00089/00090's protected provider and durable conversation boundaries, with OpenRouter through an
-installation-held server-side key and an explicit allowed model catalog plus bounded per-turn/conversation budgets.
+Use TICKET-00089/00090's protected provider and durable conversation boundaries, with OpenRouter through the
+initiating user's own server-protected environment connection and exact generation, an allowed compatible model
+catalog and bounded per-turn/conversation plus applicable user/connection/environment budgets. No shared
+administrator/family key, another user's connection or inherited local Codex credential is a fallback.
 Do not assume a personal Codex subscription authenticates a hosted installation. Reuse qualified provider identity,
 usage/cost provenance, request correlation, uncertain-outcome and cancellation semantics; no silent fallback,
 repeated paid generation or reset of consumed budgets. Browser/support Agent, Runner and generated project never
@@ -108,6 +110,16 @@ revocation, malformed output and uncertain billing cannot trigger fallback or au
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Approved private-production reconciliation — 2026-10-24
+
+The per-user browser-provider amendment supersedes installation-held shared-key wording. TASK-00428 binds the
+initiating user and selected environment connection/generation through TASK-00344/00345/00346 and the existing
+conversation owner. Replacement/disconnect cannot erase original usage or silently rebind a request. TICKET-00089
+owns connection self-service; no second setup/credential UI is introduced here. Pre-registration actual Agent/
+snapshot/assignment and host holds remain, and deterministic help/recovery stays independent. This optional
+consumer is not a first browser Wayfinder prerequisite. See the
+[reconciliation receipt](../wayfinder/research/private-production-owner-reconciliation.md).
 
 Approved as area 6 of EPIC-00009's six-TICKET split. Applies
 [WF-021](../wayfinder/tickets/WF-021-define-new-project-creation-and-registration.md),

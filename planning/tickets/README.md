@@ -123,4 +123,9 @@
 | [TICKET-00118](00118-TICKET.md) | Reconcile current delivery handoffs through Land | ready-for-agent | [EPIC-00020](../epics/00020-EPIC.md) |
 | [TICKET-00119](00119-TICKET.md) | Route delivery handoffs using verified current state | ready-for-agent | [EPIC-00020](../epics/00020-EPIC.md) |
 | [TICKET-00120](00120-TICKET.md) | Align the ten participating projects with current delivery handoffs | ready-for-agent | [EPIC-00020](../epics/00020-EPIC.md) |
+| [TICKET-00121](00121-TICKET.md) | Build an immutable production application artifact | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
+| [TICKET-00122](00122-TICKET.md) | Operate isolated staging and production environments | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
+| [TICKET-00123](00123-TICKET.md) | Deliver real account and recovery email | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
+| [TICKET-00124](00124-TICKET.md) | Back up and restore coherent application state | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
+| [TICKET-00125](00125-TICKET.md) | Promote and recover an explicitly approved release | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
 <!-- /planning:records -->
