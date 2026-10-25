@@ -536,4 +536,5 @@
 | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | ready-for-agent | — |
 | [TASK-00532](00532-TASK.md) | Stage and recover an exact release candidate | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
 | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
+| [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | ready-for-agent | — |
 <!-- /planning:records -->
