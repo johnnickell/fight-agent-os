@@ -52,9 +52,11 @@ Restart Pi, then use `/fight-header` to choose a presentation or `off` to restor
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
-Start ordinary `pi` in the intended checkout. Inside Herdr, `/fight-workspace [open|close]` adds owned human-only
-child activity and verified Docker logs while Pi retains its editor, completion, colors, Markdown, dialogs,
-session and workflow authority. Explicit human bindings select existing test sources once per open generation;
+After the separate [user-prefix executable installation](harness/pi/README.md#install-the-global-workspace-command),
+run `fight-workspace` in the intended checkout inside Herdr: native Pi starts and opens owned human-only child
+activity and verified Docker log companions after explicit source selection, without a follow-up slash command
+or model turn. Ordinary `pi` stays unchanged; `/fight-workspace [open|close]` remains manual open/recovery/close.
+Pi retains its editor, completion, colors, Markdown, dialogs, session and workflow authority. Explicit human bindings select existing test sources once per open generation;
 validated selected/pinned child or idle-primary context follows them. Missing mappings never fall back to shared
 logs. Herdr owns layout/focus/resize only. Outside Herdr or with unavailable prerequisites, keep ordinary Pi;
 there is no automatic RPC-editor fallback.

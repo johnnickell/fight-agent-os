@@ -1,8 +1,8 @@
-import type { ExtensionAPI, ExtensionCommandContext } from '@earendil-works/pi-coding-agent';
+import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { HerdrWorkspace } from './herdr/workspace.mjs';
 
 /** Collect fresh human declarations outside prompts, transcripts and saved preferences */
-async function selectLogs(ctx: ExtensionCommandContext) {
+async function selectLogs(ctx: ExtensionContext) {
   const tests: { main: string; context: string; project: string; service: string }[] = [];
   let shared: (typeof tests)[number] | null = null;
   while (true) {
@@ -28,6 +28,16 @@ async function selectLogs(ctx: ExtensionCommandContext) {
 /** Keep the native Pi frontend and add only explicit Herdr companion controls */
 export default function installHerdrWorkspace(pi: ExtensionAPI) {
   let workspace: HerdrWorkspace | undefined;
+  const act = async (ctx: ExtensionContext, action: 'open' | 'close') => {
+    const currentContext = () => ({ cwd: ctx.cwd, sessionId: ctx.sessionManager.getSessionId(), sessionFile: ctx.sessionManager.getSessionFile() || null });
+    workspace ||= new HerdrWorkspace({ ...currentContext(), currentContext, selectLogs: () => selectLogs(ctx) });
+    ctx.ui.notify(await workspace.act(action), 'info');
+  };
+  // The separately loaded trusted startup hook validates resource ownership first.
+  // This bus transfers only a local operation, never messages or log content.
+  pi.events.on('fight:workspace-startup', (accept: unknown) => {
+    if (typeof accept === 'function') accept((ctx: ExtensionContext) => act(ctx, 'open'));
+  });
   pi.registerCommand('fight-workspace', {
     description: 'Open/reuse owned Herdr child and human-only verified log companions, or close them: /fight-workspace [open|close]',
     getArgumentCompletions: (prefix) => ['open', 'close'].filter((value) => value.startsWith(prefix)).map((value) => ({ value, label: value })),
@@ -42,9 +52,7 @@ export default function installHerdrWorkspace(pi: ExtensionAPI) {
         return;
       }
       try {
-        const currentContext = () => ({ cwd: ctx.cwd, sessionId: ctx.sessionManager.getSessionId(), sessionFile: ctx.sessionManager.getSessionFile() || null });
-        workspace ||= new HerdrWorkspace({ ...currentContext(), currentContext, selectLogs: () => selectLogs(ctx) });
-        ctx.ui.notify(await workspace.act(action), 'info');
+        await act(ctx, action);
       } catch (error) {
         ctx.ui.notify(error instanceof Error ? error.message : 'Workspace unavailable; ordinary Pi unchanged', 'warning');
       }

@@ -7,7 +7,7 @@
   "type": "module",
   "keywords": ["pi-package"],
   "engines": {"node": ">=22"},
-  "bin": {"fight-terminal": "bin/fight-terminal"},
+  "bin": {"fight-terminal": "bin/fight-terminal", "fight-workspace": "bin/fight-workspace"},
   "files": ["bin/", "src/", "README.md", "WORKSPACE.md", "JUDGMENTS.md", "FILE_SCREENING.md", "FILE_SCREENING_PROFILE.md", "FILE_SCREENING_RULE.md", "TOOL_POLICY.md", "LICENSE"],
   "scripts": {"test": "node --test tests/*.test.mjs"},
   "peerDependencies": {

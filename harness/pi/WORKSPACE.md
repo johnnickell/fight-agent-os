@@ -4,8 +4,11 @@
 
 ## Native Pi in Herdr
 
-In native Pi inside Herdr, use `/fight-workspace` (or `/fight-workspace open`) to open a human-only child
-activity companion and a human-only verified log companion. `/fight-workspace close` closes only proven-owned
+With the [explicit user-prefix executable installation](README.md#install-the-global-workspace-command),
+`fight-workspace` starts native Pi inside Herdr and opens these companions automatically after human log-source
+selection. Ordinary `pi` remains unchanged. In either native Pi entry, `/fight-workspace` (or
+`/fight-workspace open`) manually opens or recovers a human-only child activity companion and a human-only
+verified log companion. `/fight-workspace close` closes only proven-owned
 companions. Repeated open reuses the same healthy panes. The existing Pi process, session/file, cwd, editor,
 Tab completion, themes, dialogs, tools and workflow binding are unchanged. Herdr owns focus, resize and zoom;
 Pi's Tab is not a pane-navigation shortcut here. The child companion supplies the validated context below;
@@ -173,8 +176,15 @@ evaluation, database mutation, full logging service or automatic global update i
 
 ### Native entry and existing RPC sessions
 
-The workspace entry is ordinary `pi` inside Herdr, followed by `/fight-workspace open`. Outside Herdr,
-keep using ordinary Pi; missing/incompatible Herdr APIs leave it usable and never silently launch the RPC editor.
+The one-command entry is the explicitly installed `fight-workspace` inside Herdr. It forwards the supported
+native options listed by `fight-workspace --help` and automatically invokes the existing owned lifecycle without
+conversation input or a model turn. The source-selection dialog remains explicit human authorization; choose
+zero bindings for honest unavailable logs. The launcher does not select a workflow or load target-project
+implementation assets. Missing/filtered installed Harness resources leave one native Pi running with an
+actionable warning; native Pi can reject duplicate tool/flag resources before session startup. No second session
+is launched in either case. Manual `pi` followed by `/fight-workspace open` remains valid.
+Outside Herdr, keep using ordinary Pi; missing/incompatible Herdr APIs leave it usable and never silently launch
+the RPC editor.
 A repository source change is not rollout: do not reinstall Herdr, mutate the live global package or load a second
 Harness package identity automatically. Adopt reviewed source explicitly and fully restart Pi.
 
@@ -182,7 +192,8 @@ For an existing RPC conversation, record its **actual displayed session file**, 
 normally, change to the same conversation checkout and run `pi --session /absolute/actual-session.jsonl`.
 Do not use `--continue` to guess, fork/clone history, copy launcher-role flags or select authority through injected
 input. In native Pi inspect `/session` and `/file-screening` for the actual session and workflow binding; select
-a workflow only through the operator's explicit native action if needed. Then open the companions. Ephemeral
+a workflow only through the operator's explicit native action if needed. Then open the companions, or use `fight-workspace --session /absolute/actual-session.jsonl` from that same
+checkout for automatic companion opening with the identical file. Ephemeral
 `--no-session` conversations cannot be resumed. Session files and historical evidence are never deleted.
 
 If the old client is already unavailable, locate the actual `.jsonl` file in that conversation checkout's

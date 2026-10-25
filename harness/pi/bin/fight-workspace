@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+fail() { printf '%s\n' "fight-workspace: $*" >&2; exit 1; }
+command -v node >/dev/null 2>&1 || fail 'Node.js 22 or later is required on PATH.'
+launcher=$0
+case "$launcher" in /*) ;; *) launcher="$PWD/$launcher" ;; esac
+links=0
+while [ -L "$launcher" ]; do
+  links=$((links + 1))
+  [ "$links" -le 40 ] || fail 'Launcher symlink loop; inspect command -v fight-workspace and the owned installation.'
+  directory=$(CDPATH='' cd -P "$(dirname "$launcher")" && pwd) || fail 'Installed package unavailable; reinstall from reviewed source.'
+  target=$(readlink "$launcher") || fail 'Cannot resolve installed launcher.'
+  case "$target" in /*) launcher=$target ;; *) launcher="$directory/$target" ;; esac
+done
+directory=$(CDPATH='' cd -P "$(dirname "$launcher")" && pwd) || fail 'Installed package unavailable.'
+main="$directory/../src/workspace-launch.mjs"
+[ -r "$main" ] || fail 'Installed launcher assets missing; use ordinary pi and explicitly repair the owned installation.'
+exec node "$main" "$@"

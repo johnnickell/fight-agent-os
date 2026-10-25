@@ -101,7 +101,7 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | [TASK-00510](../tasks/00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done |
 | [TASK-00511](../tasks/00511-TASK.md) | Observe current-session children beside native Pi in Herdr | done |
 | [TASK-00512](../tasks/00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | done |
-| [TASK-00535](../tasks/00535-TASK.md) | Launch native Pi with workspace panes already open | ready-for-agent |
+| [TASK-00535](../tasks/00535-TASK.md) | Launch native Pi with workspace panes already open | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
