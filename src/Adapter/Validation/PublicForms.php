@@ -61,6 +61,30 @@ final class PublicForms
                 ]]
             ]
         ], [
+            'name'   => 'password_change',
+            'action' => \App\Adapter\Http\Action\Api\V1\Auth\ChangePasswordAction::class,
+            'fields' => [
+                'current_password'      => ['client_field' => 'currentPassword', 'rules' => [
+                    ['index' => 0, 'message' => 'Current password is required'],
+                    ['index' => 1, 'message' => 'Current password must be a value of type: string'],
+                    ['index' => 2, 'message' => 'Current password must contain no less than 1 characters'],
+                    ['index' => 3, 'message' => 'Current password must contain no more than 128 characters']
+                ]],
+                'password'              => ['client_field' => 'password', 'rules' => [
+                    ['index' => 0, 'message' => 'Password is required'],
+                    ['index' => 1, 'message' => 'Password must be a value of type: string'],
+                    ['index' => 2, 'message' => \App\Domain\Security\Password\PasswordStructure::GUIDANCE],
+                    ['index' => 3, 'message' => 'Password must contain no more than 128 characters']
+                ]],
+                'password_confirmation' => ['client_field' => 'passwordConfirmation', 'rules' => [
+                    ['index' => 0, 'message' => 'Confirmation is required'],
+                    ['index' => 1, 'message' => 'Confirmation must be a value of type: string'],
+                    ['index' => 2, 'message' => 'Confirmation must contain no less than 8 characters'],
+                    ['index' => 3, 'message' => 'Confirmation must contain no more than 128 characters'],
+                    ['index' => 4, 'message' => 'Confirmation must be the same as the value in the password field']
+                ]]
+            ]
+        ], [
             'name'   => 'login',
             'action' => \App\Adapter\Http\Action\Api\V1\Auth\LoginAction::class,
             // Remember is a strict server boolean, not a string field or credential-policy hint.

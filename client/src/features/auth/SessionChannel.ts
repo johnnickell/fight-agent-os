@@ -8,7 +8,9 @@ export type SessionMessage = Header &
   (
     | Readonly<{ kind: 'request'; round: string }>
     | Readonly<{ kind: 'token'; round: string; token: string; remaining: number }>
-    | Readonly<{ kind: 'invalidate' | 'authority-changed' | 'logout' | 'terminal' }>
+    | Readonly<{
+        kind: 'invalidate' | 'authority-changed' | 'logout' | 'terminal' | 'password-change';
+      }>
     | Readonly<{ kind: 'password-reset'; userId: string }>
   );
 
@@ -54,7 +56,8 @@ export function decodeSessionMessage(value: unknown): SessionMessage | null {
     (message.kind === 'invalidate' ||
       message.kind === 'authority-changed' ||
       message.kind === 'logout' ||
-      message.kind === 'terminal') &&
+      message.kind === 'terminal' ||
+      message.kind === 'password-change') &&
     hasExactKeys(message, common)
   )
     return message as SessionMessage;

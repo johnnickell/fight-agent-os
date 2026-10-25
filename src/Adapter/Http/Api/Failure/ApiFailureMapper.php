@@ -14,6 +14,7 @@ use App\Application\Failure\RateLimited;
 use App\Application\Failure\ResourceNotFound;
 use App\Application\Failure\StateConflict;
 use App\Application\Security\Activation\ActivationPasswordRejected;
+use App\Application\Security\PasswordChange\PasswordChangePolicyRejected;
 use App\Application\Security\PasswordReset\ResetPasswordRejected;
 use App\Domain\Workspace\RegistrationConflict;
 use App\Domain\Workspace\RegistrationInputRejected;
@@ -50,7 +51,10 @@ final readonly class ApiFailureMapper
                 'input' => ['Invalid repository registration input.']
             ])));
         }
-        if ($exception instanceof ActivationPasswordRejected || $exception instanceof ResetPasswordRejected) {
+        if (
+            $exception instanceof ActivationPasswordRejected || $exception instanceof ResetPasswordRejected
+            || $exception instanceof PasswordChangePolicyRejected
+        ) {
             return new MappedApiFailure(422, JSendEnvelope::fail(new InputFailures([
                 'body.password' => [\App\Domain\Security\Password\PasswordStructure::GUIDANCE]
             ])));

@@ -120,7 +120,9 @@ schemas and fixtures belong alongside `migrations/` under `database/`.
 The shared [password-setting boundary](docs/engineering/PASSWORDS.md) enforces Unicode code-point composition,
 checks a pinned local hashed common-password list and uses explicit Argon2id parameters. Application startup
 verifies the corpus and platform support before use. Include `resources/passwords/` and its CC BY-SA 4.0 notice
-in deployment artifacts. Activation and [reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) consume this boundary; authenticated change remains planned. It is not a standalone password endpoint.
+in deployment artifacts. Activation, [reset completion](docs/engineering/PASSWORD_RESET_COMPLETION.md) and
+[authenticated change](docs/engineering/PASSWORD_CHANGE.md) consume this boundary. Password change at
+`/app/account/password` requires current proof and ends all sessions; independent Review/QA accepted the implementation, and [PR #159](https://github.com/johnnickell/fight-agent-os/pull/159) awaits human review and merge. It is not a standalone password endpoint.
 
 Direct Fight Access Control invitation/reset delivery handlers now require an independent
 `APP_CREDENTIAL_DELIVERY_KEY` (hex-encoded 32-byte random key, generated with `openssl rand -hex 32`)

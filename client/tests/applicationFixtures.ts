@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 import { ApiClient } from '@/api/ApiClient';
 import { apiFailure } from '@/api/ApiResult';
 import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
+import { PasswordChangeService } from '@/features/auth/PasswordChangeService';
 import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
@@ -13,6 +14,7 @@ import { IntendedRoute } from '@/routes/IntendedRoute';
 import { jsonResponse } from './activationFixtures';
 import { principal } from './authorityFixtures';
 import { loginSchemaSource } from './loginFixtures';
+import { passwordChangeSchema } from './passwordChangeFixtures';
 
 import type { ApiResult } from '@/api/ApiResult';
 import type { PrincipalLoader } from '@/features/authority/AuthorityCache';
@@ -46,7 +48,16 @@ export function applicationSession(
   const schemas = new PublicSchemaService(
     new ApiClient(
       { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
-      { fetch: () => Promise.resolve(jsonResponse(loginSchemaSource)) }
+      {
+        fetch: (url) =>
+          Promise.resolve(
+            jsonResponse(
+              url.endsWith('/validations/password_change')
+                ? passwordChangeSchema
+                : loginSchemaSource
+            )
+          )
+      }
     )
   );
   return {
@@ -54,6 +65,16 @@ export function applicationSession(
     intent,
     coordinator,
     schemas,
+    passwordChange: new PasswordChangeService(
+      new ApiClient({
+        schemaVersion: 2,
+        apiBasePath: '/api/v1',
+        appDebug: false,
+        swaggerAvailable: false
+      }),
+      authority,
+      coordinator.terminal
+    ),
     swagger: new SwaggerService(
       new ApiClient({
         schemaVersion: 2,

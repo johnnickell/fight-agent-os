@@ -12,6 +12,7 @@ export type ApplicationRoute = RegisteredRoute &
       | 'reset-completion'
       | 'activation'
       | 'dashboard'
+      | 'password-change'
       | 'landing'
       | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
@@ -90,7 +91,8 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     destination: 'landing',
     group: 'Security',
     intendedRoute: {},
-    availability: 'Account and security operations are not available yet.'
+    availability:
+      'Change your password below. Active-session listing and individual revocation are not available yet.'
   },
   {
     pathname: '/app/account/password',
@@ -98,9 +100,8 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     icon: 'key',
     access: 'protected',
     requirements: authenticated,
-    destination: 'landing',
-    group: 'Security',
-    availability: 'Password change is not available yet. Never send anyone your password.'
+    destination: 'password-change',
+    group: 'Security'
   },
   {
     pathname: '/app/account/sessions',

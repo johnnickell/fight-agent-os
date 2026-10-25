@@ -20,6 +20,7 @@ import type { RuntimeConfiguration } from '@/runtimeConfiguration';
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const SwaggerPage = lazy(() => import('@/pages/SwaggerPage'));
+const PasswordChangePage = lazy(() => import('@/pages/PasswordChangePage'));
 
 export function ApplicationJourney({
   runtime,
@@ -69,6 +70,14 @@ export function ApplicationView({
     session.coordinator.getSnapshot
   );
   const route = matchApplicationRoute(pathname);
+  const passwordChanged = credential.passwordChanged === true || session.passwordChange.completed();
+  useEffect(() => {
+    if (credential.status === 'authenticated') session.passwordChange.clearCompletion();
+  }, [credential.status, session]);
+  useEffect(() => {
+    if (passwordChanged && credential.status === 'terminal' && pathname !== '/app/login')
+      navigate('/app/login', true);
+  }, [passwordChanged, credential.status, pathname, navigate]);
   const pendingTarget = useRef<string | null>(null);
   const capturedPath = useRef<string | null>(null);
   const recoveryFocus = useRef<HTMLButtonElement | null>(null);
@@ -196,14 +205,18 @@ export function ApplicationView({
         <ContentState
           kind="empty"
           title={
-            credential.status === 'terminal'
-              ? 'Your session has expired or ended'
-              : 'Signed out of this page'
+            passwordChanged
+              ? 'Password changed — sign in again'
+              : credential.status === 'terminal'
+                ? 'Your session has expired or ended'
+                : 'Signed out of this page'
           }
           message={
-            credential.signOutUnconfirmed
-              ? 'Local access is cleared. Server sign-out is unconfirmed. Close this page on a shared device.'
-              : 'This page no longer has access. Sign in explicitly to begin a new session.'
+            passwordChanged
+              ? 'All sessions have ended. Password fields and local access are cleared. Sign in with your new password; no replacement session was created.'
+              : credential.signOutUnconfirmed
+                ? 'Local access is cleared. Server sign-out is unconfirmed. Close this page on a shared device.'
+                : 'This page no longer has access. Sign in explicitly to begin a new session.'
           }
         />
         {credential.status !== 'logout' && (
@@ -245,6 +258,8 @@ export function ApplicationView({
           <Suspense fallback={<LoadingPage />}>
             {route.destination === 'swagger' ? (
               <SwaggerPage service={session.swagger} cache={session.authority} />
+            ) : route.destination === 'password-change' ? (
+              <PasswordChangePage service={session.passwordChange} schemas={session.schemas} />
             ) : route.destination === 'dashboard' ? (
               <DashboardPage cache={session.authority} />
             ) : (
