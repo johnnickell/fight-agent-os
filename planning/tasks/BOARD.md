@@ -15,8 +15,9 @@ cleanup and project closeout. Remaining [EPIC-00020](../epics/00020-EPIC.md#comp
 TASKs TASK-00517–00519 are next (`order: 2`), with their dependencies and relative order preserved. This supersedes
 the EPIC's original top-priority selection; its planning phases remain complete. Dependencies and active-work
 ownership still govern eligibility. Priority does not start implementation or authorize publication.
-TASK-00534's [current implementation handoff](00534-TASK.md#current-implementation-handoff) records the scoped
-repair and verification checkpoint; independent Review/nonvisual QA and delivery remain separate and pending.
+TASK-00534's [current Land closeout](00534-TASK.md#current-land-closeout--2026-10-25) records accepted
+implementation candidate A, the mechanical advancing-base bridge and required local verification. Its delivery,
+human review/merge and deployment remain separate; current delivery/cleanup results are in the durable TASK receipt.
 
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 
@@ -25,7 +26,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -465,6 +466,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | — (standalone bug) | done | — | [PR #148](https://github.com/johnnickell/fight-agent-os/pull/148) |
 | 1 | [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #158](https://github.com/johnnickell/fight-agent-os/pull/158) |
 | 1 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
+| 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | done | — | — |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
