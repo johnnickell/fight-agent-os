@@ -48,6 +48,8 @@ planning and human-prerequisite handoffs remain specific to the actual state; `n
 | Initial independent acceptance lacks only explicitly required hosted evidence | Authorized `/skill:land TASK-NNNNN` draft-evidence path; then `/skill:review TASK-NNNNN` once that evidence is available |
 | Accepted candidate A has administrative closeout B, with final delivery proof pending or newly available | `/skill:land TASK-NNNNN` verifies closeout and required checks; no additional independent review or canonical review update solely for delivery |
 | TASK closes | Close eligible TICKET/EPIC ancestors and refresh views in the same operation under [automatic parent completion](../../planning/CONVENTIONS.md#automatic-parent-completion); no separate parent-closeout handoff |
+| Explicit Land resume observes an ended original merge handoff | Use [ended-handoff recovery](LANDING.md#resume-an-ended-delivery-handoff) for that exact TASK/PR within authority; no automatic invocation or replacement delivery |
+| Ended-handoff reconciliation finishes | Name the actual corrective PR's human action, the closed-unmerged maintainer decision, or no remaining subject action for a no-op; never repeat merge of the ended original PR |
 | Land publishes successfully | Human review/merge of the actual PR link; do not imply automatic merge or start another TASK |
 
 Failed required implementation checks keep work incomplete; recommend the same work skill only when continuing
@@ -62,7 +64,12 @@ views. A historical acceptance/delivery-pending checkpoint is not today's instru
 reports, and distinguish the current stage/action with an evidenced current section or durable result locator.
 Missing proof or unresolved contradictory handoffs need a precise hold, not an inferred merge, unrelated repair
 or another metadata commit merely to certify final-head success. Recommendations and read-only routing do not
-perform this reconciliation or acquire Land authority.
+perform this reconciliation or acquire Land authority. When explicitly resumed after an ended original PR,
+Land uses the [bounded recovery path](LANDING.md#resume-an-ended-delivery-handoff), including safe checkout
+selection after cleanup and inspection of existing correction/publication state before retry. A verified merge
+and a closed-unmerged outcome require distinct instructions; unavailable or mismatched proof holds correction.
+Already-consistent unchanged state needs no commit or publication retry. Historical acceptance and reports stay
+intact, and observing closure never authorizes reopening or replacing the original PR.
 
 ## Release handoffs
 

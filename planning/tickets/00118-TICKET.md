@@ -2,7 +2,7 @@
 id: TICKET-00118
 epic: EPIC-00020
 title: Reconcile current delivery handoffs through Land
-status: ready-for-agent
+status: done
 ---
 
 # Reconcile current delivery handoffs through Land
@@ -95,7 +95,7 @@ Markdown or planning machinery. No application permission or schema change is ne
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00515](../tasks/00515-TASK.md) | Synchronize current handoffs during Land publication | done |
-| [TASK-00516](../tasks/00516-TASK.md) | Resume Land to reconcile ended merge handoffs | ready-for-agent |
+| [TASK-00516](../tasks/00516-TASK.md) | Resume Land to reconcile ended merge handoffs | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

@@ -1,6 +1,6 @@
 ---
 name: land
-description: Publish an accepted TASK and clean owned resources, or publish a draft to obtain its only missing hosted verification within user authority.
+description: Publish an accepted TASK, obtain its only missing hosted verification in draft, or explicitly resume an ended delivery handoff for bounded reconciliation within user authority.
 ---
 
 # Land
@@ -11,6 +11,8 @@ operator-selected role, actual file-access denials and any independently selecte
 Native shell requires no Jev command assessment or confirmation. Targets need no copy of this rule.
 
 Read [landing standards](../../../docs/engineering/LANDING.md). The standards own reconciliation proof, publication and cleanup boundaries; this skill executes them for one TASK.
+
+For an explicit resume concerning a merged or closed-unmerged original PR, enter [ended-handoff recovery](../../../docs/engineering/LANDING.md#resume-an-ended-delivery-handoff) before the ordinary publication steps below. Verify the exact subject and live state, recover only an authorized owned correction checkout/branch, and inspect any existing correction before retry. Reuse the normal synchronization inventory; preserve historical acceptance and canonical reports. Unverified state, missing authority or ambiguous publication produces a precise hold. Already-consistent unchanged state produces a read-only receipt, not another commit. An ended original PR is never the correction's publication target. Return the correction's actual pending action or no-op result, then stop; do not fall through to normal publication of the ended branch.
 
 1. **Qualify.** Read the TASK, parent, Board and canonical `.runs/reviews/<TASK-ID>/review.md`. Check independence, verdict, criterion coverage, findings and limitations, reviewed base/head, branch and status. Inspect current `develop`, remote feature branch, PR, checkout and unrelated changes. Confirm credentials and cleanup ownership before mutation.
 Only an explicit hosted acceptance requirement activates initial [draft publication](../../../docs/engineering/LANDING.md#draft-publication-to-obtain-hosted-evidence); a workflow file or missing optional run does not. If that proof is the only unresolved requirement, use the draft path and stop with an evidence handoff, incomplete TASK, preserved review and retained worktree. For an already-pushed administrative closeout after acceptance, whether final-head delivery proof is pending or available, instead resume [final delivery verification](../../../docs/engineering/LANDING.md#verify-and-publish) under the canonical report's accepted-candidate provenance; do not repeat initial draft intake or toggle completion status. Ordinary steps below require independent `accept`.
@@ -42,7 +44,7 @@ already-open PR uses the same current-subject checks and does not imply merge ap
 
 A conflict that changes implementation, failed required check, inaccessible remote, or ambiguous cleanup blocks successful landing. Landing never approves, merges, force-pushes, deletes the remote branch, archives or deploys.
 
-Finish with an explicit `Next:` under the [handoff rules](../../../docs/engineering/HANDOFFS.md). Successful
+Finish with an explicit `Next:` under the [handoff rules](../../../docs/engineering/HANDOFFS.md). Ended-handoff recovery names the actual correction PR/human decision, missing authority/proof, or no remaining subject action; it never repeats merge of the ended original PR. Successful
 publication points to human review/merge of the actual PR. Missing initial acceptance evidence routes to `review`
 once available; final delivery verification after acceptance resumes through `land`. Name the required proof
 and actual repair, QA or prerequisite route for blockers.

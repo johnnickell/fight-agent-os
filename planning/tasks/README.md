@@ -518,7 +518,7 @@
 | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | done | — |
 | [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | done | — |
 | [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | done | [TICKET-00118](../tickets/00118-TICKET.md) |
-| [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | ready-for-agent | [TICKET-00118](../tickets/00118-TICKET.md) |
+| [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | done | [TICKET-00118](../tickets/00118-TICKET.md) |
 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
 | [TASK-00519](00519-TASK.md) | Align and verify delivery handoffs across the ten projects | ready-for-agent | [TICKET-00120](../tickets/00120-TICKET.md) |
@@ -533,6 +533,7 @@
 | [TASK-00528](00528-TASK.md) | Operate scheduled account-mail recovery across both environments | ready-for-agent | [TICKET-00123](../tickets/00123-TICKET.md) |
 | [TASK-00529](00529-TASK.md) | Back up and restore coherent staging state | ready-for-agent | [TICKET-00124](../tickets/00124-TICKET.md) |
 | [TASK-00530](00530-TASK.md) | Recover production state through Managed PostgreSQL and Spaces | ready-for-agent | [TICKET-00124](../tickets/00124-TICKET.md) |
+| [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | ready-for-agent | — |
 | [TASK-00532](00532-TASK.md) | Stage and recover an exact release candidate | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
 | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
 <!-- /planning:records -->
