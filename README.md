@@ -46,9 +46,11 @@ See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and r
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
 Native `/fight-workspace [open|close]` keeps Pi's editor/completion/session intact in Herdr. TASK-00511 adds
-human-only current-session child selection/pinning and bounded progress; logs remain a TASK-00512 placeholder.
-See [native ownership and recovery](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
-Independent Review/QA of the child integration remain pending.
+human-only current-session child selection/pinning and bounded progress. TASK-00512's log companion candidate
+uses fresh interactive human bindings to existing test stacks and follows validated child/idle-primary context;
+missing mappings never fall back to shared logs. Fresh complete-workspace qualification and independent
+acceptance remain pending. See [native ownership, log controls and session migration](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
+Ordinary Pi remains available outside Herdr; the RPC executable is retained until replacement acceptance.
 An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through the package-owned
 `fight-terminal` command after [explicit user-level installation](harness/pi/README.md#install-the-global-workspace-command), with
 responsive conversation/observation panes, opt-in local child observation (TASK-00448 candidate), and an opt-in
