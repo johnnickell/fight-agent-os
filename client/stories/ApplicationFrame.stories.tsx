@@ -5,6 +5,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ApiClient } from '@/api/ApiClient';
 import { apiFailure } from '@/api/ApiResult';
 import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
+import { PasswordChangeService } from '@/features/auth/PasswordChangeService';
 import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
@@ -92,6 +93,16 @@ function FrameExample({
       authority,
       intent,
       coordinator,
+      passwordChange: new PasswordChangeService(
+        new ApiClient({
+          schemaVersion: 2,
+          apiBasePath: '/api/v1',
+          appDebug: false,
+          swaggerAvailable: false
+        }),
+        authority,
+        coordinator.terminal
+      ),
       swagger: new SwaggerService(
         new ApiClient({
           schemaVersion: 2,

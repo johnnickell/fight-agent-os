@@ -108,6 +108,8 @@ describe('authoritative frame transitions', () => {
         expect(screen.getByRole('heading', { name: 'Not installed yet' })).toBeVisible();
       else if (route.destination === 'swagger')
         expect(screen.getByText('Documentation disabled')).toBeVisible();
+      else if (route.destination === 'password-change')
+        expect(await screen.findByLabelText('Current password (required)')).toBeVisible();
       else expect(screen.getByText(route.availability ?? '')).toBeVisible();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'User Menu' }));

@@ -5,6 +5,7 @@ import { ApiClient } from '@/api/ApiClient';
 import { CsrfProofService } from '@/features/auth/CsrfProofService';
 import { LoginService } from '@/features/auth/LoginService';
 import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
+import { PasswordChangeService } from '@/features/auth/PasswordChangeService';
 import { browserSessionPlatform } from '@/features/auth/SessionChannel';
 import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
@@ -47,6 +48,12 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
     authority,
     intent,
     coordinator,
+    passwordChange: new PasswordChangeService(
+      api,
+      authority,
+      coordinator.terminal,
+      coordinator.passwordChanged
+    ),
     swagger: new SwaggerService(
       api,
       authority,

@@ -22,6 +22,7 @@ export type SessionState = Readonly<{
     | 'terminal'
     | 'logout';
   signOutUnconfirmed?: boolean;
+  passwordChanged?: true;
 }>;
 export type SessionLocks = {
   request: (
@@ -33,7 +34,7 @@ export type SessionLocks = {
 type SignalBody =
   | { kind: 'request'; round: string }
   | { kind: 'token'; round: string; token: string; remaining: number }
-  | { kind: 'invalidate' | 'authority-changed' | 'logout' | 'terminal' };
+  | { kind: 'invalidate' | 'authority-changed' | 'logout' | 'terminal' | 'password-change' };
 type Round = { id: string; generation: number; started: number; abort: AbortController };
 const success = (): ApiResult<true> => ({ ok: true, value: true, correlationId: null });
 
@@ -296,6 +297,19 @@ export class SessionCoordinator {
     this.#send({ kind: 'terminal' });
   };
 
+  /** Ends every local authority owner and broadcasts only the non-secret fresh-login outcome. */
+  passwordChanged = (): void => {
+    if (!this.#active) return;
+    this.#passwordChanged();
+    this.#send({ kind: 'password-change' });
+  };
+
+  #passwordChanged(): void {
+    this.#end('terminal');
+    this.#state = Object.freeze({ status: 'terminal', passwordChanged: true });
+    this.#notify();
+  }
+
   /** Pauses routine renewal while hidden; conservative memory expiry still applies at dispatch */
   pause = (): void => {
     this.#foreground = false;
@@ -338,10 +352,15 @@ export class SessionCoordinator {
         message.kind !== 'authority-changed' &&
         message.kind !== 'logout' &&
         message.kind !== 'terminal' &&
-        message.kind !== 'password-reset'
+        message.kind !== 'password-reset' &&
+        message.kind !== 'password-change'
       )
         return;
     } else this.#peers.set(message.sender, message.sequence);
+    if (message.kind === 'password-change') {
+      this.#passwordChanged();
+      return;
+    }
     if (message.kind === 'password-reset') {
       const principal = this.#authority?.getPresentationSnapshot();
       if (principal?.status === 'authenticated' && principal.principal.userId === message.userId)

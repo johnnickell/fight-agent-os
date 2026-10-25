@@ -375,7 +375,7 @@ form-level feedback without rendering private text. No arbitrary server path
 is used as a Formik setter. The owning journey controls loading/retry, form-level status, completion/cleanup and
 server success; it must not persist or log credential values. The real `invitation_activation` registration and form now consume this boundary; the `login` form now consumes it too. TASK-00054 now supplies the real `password_reset_request` form at `/app/reset-password` (legacy
 `/app/login/recovery` alias), using the same shared adapter, generic success and explicit schema recovery;
-see [reset request contracts](../docs/engineering/PASSWORD_RESET_REQUEST.md). TASK-00055 adds the real `password_reset_completion` form at `/app/reset-password/complete`, with transient fragment intake and target-scoped session retirement; see [completion contracts](../docs/engineering/PASSWORD_RESET_COMPLETION.md). Authenticated change remains with its owning TASK. The real PHP wire uses zero/one-element string-list rule arguments; the client
+see [reset request contracts](../docs/engineering/PASSWORD_RESET_REQUEST.md). TASK-00055 adds the real `password_reset_completion` form at `/app/reset-password/complete`, with transient fragment intake and target-scoped session retirement; see [completion contracts](../docs/engineering/PASSWORD_RESET_COMPLETION.md). TASK-00056 adds the authenticated `password_change` form at `/app/account/password`, using the sole session graph and terminal all-tab fresh-login transition; see [password change](../docs/engineering/PASSWORD_CHANGE.md). Independent Review/QA remain pending. The real PHP wire uses zero/one-element string-list rule arguments; the client
 strictly checks that shape before mapping it into its internal rule representation. The catalog examples are synthetic local
 interactions, not endpoints or authentication E2E evidence.
 
@@ -490,8 +490,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **115** named examples across fourteen story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples. The form composition demonstrates rejection,
+`stories/` holds **137** named examples across sixteen story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples, eleven reset-completion examples and eleven authenticated password-change examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,
@@ -520,7 +520,7 @@ not only its tokens, so held Light/Dark and OS-following System remain coherent 
 ./bin/client storybook-dev      # Interactive catalog at http://localhost:16006; Ctrl-C stops it
 ./bin/client storybook-build    # Offline static output: .runs/build/reports/client/storybook/
 ./bin/client storybook-test     # Chromium story interactions + Storybook a11y addon; violations fail
-./bin/client storybook-capture  # Built artifact: all 115 stories at 320x900 and 1280x900, axe + PNG evidence
+./bin/client storybook-capture  # Built artifact: all 137 stories at 320x900 and 1280x900, axe + PNG evidence
 ./bin/client check
 ./bin/client coverage
 ./bin/build                    # Sole canonical gate; includes frontend and backend phases

@@ -313,6 +313,33 @@ describe('bounded volatile session continuity', () => {
     expect((await a.coordinator.restore()).ok).toBe(false);
   });
 
+  it('propagates credential-free password change, clears peers and fences delayed refresh without issuing logout', async () => {
+    const channels = new Channels();
+    const delayed = deferred<ApiResult<true>>();
+    const a = setup({ channels, outcome: () => delayed.promise });
+    const b = setup({ channels });
+    const pending = a.coordinator.restore();
+    await tick(50);
+    b.coordinator.passwordChanged();
+    await tick();
+    delayed.resolve(ok());
+    await tick();
+    await pending;
+    for (const d of [a, b]) {
+      expect(d.coordinator.getSnapshot()).toEqual({ status: 'terminal', passwordChanged: true });
+      expect(d.tokens.getAccessToken()).toBeNull();
+      expect(d.clearIntent).toHaveBeenCalledOnce();
+      expect(d.session.logout).not.toHaveBeenCalled();
+      expect((await d.coordinator.restore()).ok).toBe(false);
+    }
+    const message = channels.messages
+      .map(decodeSessionMessage)
+      .find((value) => value?.kind === 'password-change');
+    expect(message).toMatchObject({ version: 1, kind: 'password-change' });
+    expect(Object.keys(message ?? {}).sort()).toEqual(['kind', 'sender', 'sequence', 'version']);
+    expect(decodeSessionMessage({ ...message, password: 'synthetic' })).toBeNull();
+  });
+
   it('propagates terminal 401 and requires explicit reauthentication across the barrier', async () => {
     const channels = new Channels();
     const a = setup({ channels, outcome: () => Promise.resolve(apiFailure('authentication')) });
