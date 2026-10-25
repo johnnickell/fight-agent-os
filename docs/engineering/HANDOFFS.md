@@ -58,6 +58,11 @@ not successful landing. Distinguish missing initial acceptance from land-owned d
 acceptance using the routes above; retain required evidence gates without a completion or repair loop.
 For an open-PR QA invocation, the observed PR URL can be the resume target; resolve its TASK for work/review/land.
 
+In Agent OS, point current delivery claims to the subject's [explicit TASK marker and generated view](../../planning/CONVENTIONS.md#current-delivery-handoffs).
+A fresh offline view establishes local identity consistency only, not live PR state, acceptance or a merge action.
+Preserve distinct planning/decomposition handoffs and historical PR evidence; never infer a marker from them.
+Other targets use their qualified local representation rather than inheriting Agent OS's script interface.
+
 During authorized normal publication, Land applies [current subject handoff synchronization](LANDING.md#synchronize-current-subject-handoffs)
 to applicable authored current Board/Roadmap/README handoffs as well as source records, parent rollups and derived
 views. A historical acceptance/delivery-pending checkpoint is not today's instruction: preserve it and canonical

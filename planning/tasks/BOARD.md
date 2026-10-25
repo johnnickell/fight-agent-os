@@ -18,19 +18,30 @@ ownership still govern eligibility. Priority does not start implementation or au
 
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 
+## Current delivery handoffs
+
+[Explicit TASK markers](../CONVENTIONS.md#current-delivery-handoffs) are the local authority for this view.
+Recorded identity is not live PR evidence or a merge instruction. Land owns subject corrections; historical PR
+links do not create current claims. Work selection and priority remain in the separate Board sections below.
+
+<!-- planning:delivery -->
+| Subject | Recorded delivery | Exact PR |
+|---|---|---|
+| None | — | — |
+<!-- /planning:delivery -->
+
 <!-- planning:board -->
 ## Active Work
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 2 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | ready-for-agent | — | — |
-| 2 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | ready-for-agent | — | — |
 | 57 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | ready-for-agent | — | — |
 | 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |

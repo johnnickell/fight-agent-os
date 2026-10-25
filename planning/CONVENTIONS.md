@@ -135,6 +135,59 @@ when the accepted policy permits that split. A literal-final-head acceptance pre
 owner amendment, not a silent exemption. Record independent review, delivery, merge, release, and deployment
 separately; done does not grant approval for those actions.
 
+## Current delivery handoffs
+
+A live (non-archived) TASK may carry this optional frontmatter:
+
+```yaml
+delivery: awaiting-merge
+pr: https://github.com/johnnickell/fight-agent-os/pull/162
+```
+
+This is a representation example, not a declaration about PR #162. The subject is the record's `id`, bound
+by its canonical filename and unique identifier. The exact canonical GitHub `pr` URL binds repository and
+positive decimal PR number (no leading zero, query, fragment or trailing slash). For marked records only,
+its repository must match local `origin`, supported as `git@github.com:owner/repository.git` or
+`https://github.com/owner/repository.git` (optional `.git`). Comparison is exact/case-sensitive; aliases,
+credential-bearing URLs and other hosts/transports need local identity resolution, not a guessed repository.
+Two marked subjects cannot claim the same PR. Empty/absent `delivery` means no current delivery claim;
+other values, marked parents/archives and missing/mismatched PR identity are errors.
+
+Land owns setting/correcting/retiring a marker under the [subject synchronization contract](../docs/engineering/LANDING.md#synchronize-current-subject-handoffs).
+Set it only from exact publication evidence at the authorized human review/merge handoff. It records a
+publication snapshot, **not** an assertion that the PR remains open, readiness/CI success, independent acceptance,
+merge or deployment. Status remains independent: `done`, ordinary `pr` links and historical prose never create
+markers. Do not backfill markers by scanning old completion notes or promote an example into current authority.
+Keep applicable authored current delivery handoffs pointed at the subject and generated delivery section;
+resolve contradictions through Land rather than maintaining a competing live instruction.
+
+The Board and Roadmap `planning:delivery` tables derive only from these markers, sorted by subject ID. An empty
+table means no **recorded** current delivery handoffs, not proof that no PRs exist. These tables do not select
+work, reorder the Board or replace the distinct planning/decomposition handoff and frontier. README points to
+the Board's delivery section; historical PR/acceptance/checkpoint bytes remain evidence, not live authority.
+
+| Supported command | Effect and failure/recovery |
+|---|---|
+| `./bin/planning-check` | Offline, read-only identity and view validation. Malformed/conflicting identity fails; stale views fail with the explicit refresh command. Success and failure write nothing. |
+| `./bin/planning-check --write` | Offline, explicit parent rollup and generated-view refresh after validation. Identity or structural errors prevent planned writes. Reports actual updated paths; it never sets/retires markers or repairs history. Inspect disk state after an I/O failure before retry; this is not a filesystem transaction. |
+
+Neither path invokes hosting tools, fetches, needs hosting credentials or claims live PR freshness. Local origin
+inspection is a bounded five-second Git configuration read only and is skipped when no markers exist. A missing
+origin holds marked identity validation; restore the intended repository configuration through its owner.
+Land resolves malformed identity before an authorized refresh; read-only routing never performs that refresh.
+Live checking/routing integration is deferred to [TASK-00518](tasks/00518-TASK.md); `--check-delivery` and
+`--reconcile-delivery` are **not** supported commands in this reference implementation.
+
+### Qualified reference
+
+Read-only inspection of Fight Common at source commit `2c4d1d529f6057f0a4ef2d7483b92d0327a58403`
+qualified `scripts/planning_portfolio.py` and its current-delivery conventions: explicit live-TASK marker plus
+PR, generated Board delivery block, ordinary offline check/write, and local origin matching. Common also has
+live verification and reconciliation modes, routing summaries and local ancestry rules. Those are not imported
+here, and its historical TASK receipts or source inspection are not independent acceptance or fleet compatibility.
+Agent OS adds canonical marked-PR and conflicting-subject validation and separate Board/Roadmap delivery tables;
+its existing Board selection, parent closure and planning frontier retain their own implementation and authority.
+
 ## Automatic parent completion
 
 Closing a TASK includes closing its eligible ancestors in the same operation. When a TICKET has at least one

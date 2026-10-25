@@ -23,6 +23,13 @@ Dashboard using the sole principal cache, safe identity, independent administrat
 unavailable-capability copy (independent Review/QA pending). Other product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
+## Current delivery handoffs
+
+Use the [generated current-delivery view](planning/tasks/BOARD.md#current-delivery-handoffs), sourced only from
+[explicit TASK identity](planning/CONVENTIONS.md#current-delivery-handoffs). Ordinary PR links and historical
+acceptance/publication checkpoints in this README are not live delivery authority. The offline view does not
+establish current PR state or readiness to merge; Land owns subject-specific reconciliation.
+
 ## Start planning
 
 Read the [foundation brief](planning/FOUNDATION.md), [planning conventions](planning/CONVENTIONS.md), and

@@ -103,6 +103,12 @@ README handoffs, not just parent statuses and generated views. Apply this proced
 checkout before closeout/publication commits, and recheck it before returning control to the human. Follow the
 target's paths and bindings; shared provider links do not authorize edits in a different checkout or project.
 
+For Agent OS's offline representation, use [current delivery handoffs](../../planning/CONVENTIONS.md#current-delivery-handoffs):
+the TASK's explicit marker and canonical PR identify the subject; Board/Roadmap delivery blocks are derived.
+Set/correct/retire markers only from established subject evidence within Land authority, then explicitly refresh.
+Unmarked historical PRs are not current claims; local validation does not replace the live evidence below.
+Other targets retain their qualified local representation; this does not grant cross-project mutation authority.
+
 1. **Inventory and classify.** Start with the TASK, its parent/eligible ancestors, Board, Roadmap and README;
    follow their subject-specific current-section/source links only as needed. For each applicable authored
    handoff record the path/section, exact TASK and PR identity (when known), claimed stage/action, authoritative

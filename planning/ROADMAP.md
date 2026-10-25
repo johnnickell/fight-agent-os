@@ -67,6 +67,19 @@ human action; missing runtime evidence needs qualification of the accepted contr
 visible instead of treating every `needs-info` record as ordinary implementation work. Do not reopen closed
 Wayfinder decisions merely because their downstream delivery remains unimplemented.
 
+## Current delivery handoffs
+
+This view derives from [explicit TASK markers](CONVENTIONS.md#current-delivery-handoffs), not historical PR
+references or planning publication checkpoints. Live PR state is unverified; Land owns current delivery
+correction. Planning/decomposition handoffs below retain their distinct meaning and do not establish live
+publication/merge authority. Read the Board for work selection and priority.
+
+<!-- planning:delivery -->
+| Subject | Recorded delivery | Exact PR |
+|---|---|---|
+| None | — | — |
+<!-- /planning:delivery -->
+
 ## Current planning handoff
 
 [EPIC-00021](epics/00021-EPIC.md#approved-epic-and-remaining-planning-handoff) is approved/written and its

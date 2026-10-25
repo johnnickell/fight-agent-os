@@ -98,7 +98,7 @@ application permission, database record or Domain event is introduced.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00517](../tasks/00517-TASK.md) | Represent and validate current delivery handoffs offline | ready-for-agent |
+| [TASK-00517](../tasks/00517-TASK.md) | Represent and validate current delivery handoffs offline | in-progress |
 | [TASK-00518](../tasks/00518-TASK.md) | Verify live handoffs and route corrections to Land | ready-for-agent |
 <!-- /planning:children -->
 
