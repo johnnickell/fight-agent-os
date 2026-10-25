@@ -62,12 +62,15 @@ native format and output handling.
 
 After the [explicit executable installation](#install-the-global-workspace-command), run `fight-workspace` in
 the intended project/worktree inside Herdr. It starts native Pi and automatically opens owned child/log
-companions after the human source-selection dialog (choose zero bindings for unavailable logs); no follow-up
-slash command or model turn is needed. Ordinary `pi` does not auto-open anything. Inside either native entry,
-`/fight-workspace [open|close]` remains available for manual open, recovery and companion-only close. Pi owns its editor, Tab completion, colors, Markdown, dialogs,
-session and workflow authority; Herdr owns layout, focus, resize and zoom. Explicit human declarations bind
-existing test sources once per open generation. Missing mappings/custody remain unavailable, never shared
-fallback. Missing/incompatible Herdr prerequisites leave ordinary Pi usable; outside Herdr, use ordinary Pi
+companions without a log setup form; no follow-up slash command or model turn is needed. Logs discover only
+verified matching existing local sources; readable choices appear in the log pane only when needed. Missing logs
+or cancelling selection never blocks the workspace. Ordinary `pi` does not auto-open anything. Inside either
+native entry, `/fight-workspace [open|close]` remains available for manual open, recovery and companion-only close.
+Pi owns its editor, Tab completion, colors, Markdown, dialogs,
+session and workflow authority; Herdr owns layout, focus, resize and zoom. Source association requires canonical
+checkout/worktree metadata, local Unix endpoint and exact container/service/lifecycle plus mount evidence.
+Missing mappings/custody remain unavailable, never shared fallback. Missing/incompatible Herdr prerequisites
+leave ordinary Pi usable; outside Herdr, use ordinary Pi
 without companions. No automatic RPC fallback, installation or workflow selection occurs.
 
 Native replacement A has independent technical acceptance and scoped QA PASS. The repository RPC retirement B
@@ -149,13 +152,15 @@ It never guesses an ID or forks a cross-project file. `--session-dir`, `--name`,
 `--use-theme`, `--tui-mode`, `--offline`, `--verbose` and `--fight-header` are supported. No prompts/@files, mode/print,
 export, forks, API-key, trust/resource overrides or unknown extension flags are accepted. Unsupported combinations
 fail before Pi starts. Native Pi validates remaining option values. There is no launcher-selected model/workflow,
-prompt injection, model turn, alternate editor, container provisioning or inferred source binding.
+prompt injection, model turn, alternate editor, container provisioning or unverified source inference.
 
 A supported Herdr caller context and interactive TTY are required. Outside Herdr use ordinary `pi`; the launcher
 never installs Herdr/integrations. Startup preserves the primary PID/terminal/cwd with native process replacement.
 A new/resumed/reloaded session does not inherit another automatic open; manual commands remain available. Source
-selection is human-only on every new open generation. Cancelling starts no companions; zero bindings opens
-unavailable logs without Docker. Partial failures use the existing ownership checks, disclose retained IDs/state
+discovery/selection is human-facing and never enters conversation context. Panes open before discovery; no
+source, denied/missing Docker or cancelling optional selection leaves Pi and companions usable. Use `s` in the
+log pane for readable source choices and `r` to retry; no checkout/context/project/service text is requested.
+Partial failures use the existing ownership checks, disclose retained IDs/state
 and uncertain splits, and never blindly retry or kill an existing conversation/child/container.
 
 `fight-terminal` remains a retirement/session-migration notice only. Historical `bin/terminal` and RPC launcher

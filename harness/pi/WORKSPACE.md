@@ -5,8 +5,9 @@
 ## Native Pi in Herdr
 
 With the [explicit user-prefix executable installation](README.md#install-the-global-workspace-command),
-`fight-workspace` starts native Pi inside Herdr and opens these companions automatically after human log-source
-selection. Ordinary `pi` remains unchanged. In either native Pi entry, `/fight-workspace` (or
+`fight-workspace` starts native Pi inside Herdr and opens these companions automatically without a blocking
+log-configuration form. Manual open has the same no-form behavior; missing logs never block pane creation.
+Ordinary `pi` remains unchanged. In either native Pi entry, `/fight-workspace` (or
 `/fight-workspace open`) manually opens or recovers a human-only child activity companion and a human-only
 verified log companion. `/fight-workspace close` closes only proven-owned
 companions. Repeated open reuses the same healthy panes. The existing Pi process, session/file, cwd, editor,
@@ -35,9 +36,9 @@ Ownership is saved in the caller's ignored `var/herdr-workspace/`: actual primar
 opaque pane and terminal IDs, and non-secret companion tokens. Before reuse/cleanup, Herdr topology/process facts
 must match a live loopback companion handshake. A saved PID/label alone is insufficient. Loopback services are
 bounded identity responders; the child handshake also reports its generation and permanent observation-invalidation
-state. The log handshake also reports its tracked Docker subprocess PIDs, never output or source declarations.
-A running reader is admitted only alongside its live companion in that companion's foreground process group,
-with fresh direct-parent proof; unknown, untracked or additional foreground processes retain the ownership hold.
+state. The log handshake also reports bounded tracked Docker-reader and Git/Docker-metadata subprocess PIDs, never
+output or source declarations. At most two tracked direct children are admitted alongside the live companion
+in its foreground process group, with fresh direct-parent proof; unknown/untracked jobs retain the ownership hold.
 These health facts alone do not grant pane ownership. The child companion additionally serves only validated
 selection metadata as described below, never progress or tool APIs. Same-user state/processes are trusted local inputs,
 not OS-isolated or independently attested. CLI requests have a 2.5-second deadline and 1 MiB response bound;
@@ -113,8 +114,9 @@ verified worktree and optional child `{generation, id, worktree, lifecycle, stat
 progress, TASK/role label, attempt path, credentials or executable operation. Unknown fields are discarded.
 Validate against the expected parent/session/file and companion generation; responses expire after **1.5 seconds**.
 Idle permits the actual primary cwd; closed/unavailable has **no** source authority. A retained verified terminal
-pin may retain its worktree; custodian loss removes it. Metadata is a worktree/lifetime context, not Docker-source
-approval: the log companion still applies explicit source binding and exact container verification. Reopening issues
+pin may retain its worktree; custodian loss removes it. Metadata is a worktree/lifetime context, not arbitrary
+Docker-source approval: the log companion still applies bounded local matching discovery and exact container/mount
+verification under the explicit workspace invocation. Reopening issues
 a fresh generation and freshly admits existing work. No previous response becomes authority for a later open.
 
 Rendering drops obsolete frames under terminal backpressure; there is no frame queue or extra progress store.
@@ -126,21 +128,28 @@ non-authoritative runtime files; no crash survivor is blindly reused as authorit
 
 ### Verified logs in Herdr
 
-On a new `/fight-workspace open` generation, native Pi dialogs ask for **explicit human declarations**, never
-source arguments embedded in a prompt, cwd-derived guesses, scans or saved preferences. Choose `Add worktree TEST
-source` and enter each existing authorized source's absolute checkout/worktree, Docker context, Compose project
-and eligible single-container service. Add up to eight distinct worktree/context/project bindings, then choose
-`Open with …`. Supply all intended worktrees once, not on each child switch. Choosing zero bindings opens an
-honest unavailable log display without starting Docker. Cancelling does not approve a source.
+Both executable startup and `/fight-workspace open` create the owned companions **before** log discovery.
+There is no checkout/context/project/service form or authorization interrogation. The explicit invocation permits
+an unambiguous verified matching existing local source; it does not permit arbitrary-container or shared-stack
+fallback. Nothing provisions, starts or restarts containers.
 
-A separate `Add explicitly SHARED main source` choice makes shared mode available; the log pane's `m` key must
-still select it deliberately. Shared output stays visibly **EXPLICIT SHARED**, not worktree-isolated. No missing
-mapping or lost child custody silently selects shared or primary logs. Multiple test bindings for one worktree
-remain unavailable until `{` / `}` chooses a labelled stack; `[` / `]` chooses only eligible verified services.
-One-service declarations never widen to other project services.
+The human-only log companion derives checkout identity from validated native/child context and canonical Git
+root/registered-worktree metadata. Fixed metadata commands have a 1.8-second deadline and 64 KiB output cap;
+Git discovery uses three commands, Docker discovery four, with at most 16 exact-checkout candidate containers.
+No Compose file is evaluated. Only the current local Unix context and existing Compose containers are inspected.
+Exact canonical checkout association, actual source mount evidence,
+service, full container ID, creation/start/restart witness, actual Unix socket and checkout/common-directory
+filesystem identities must agree. Names and cwd alone are insufficient. Remote
+contexts, unprovable/stale associations, replicated services and out-of-bound inventories are unavailable.
 
-Declarations remain in the native open generation's memory. A token-bound local query transfers them only to the
-owned log process, after fresh child ownership/foreground proof. No log content is returned to native Pi, the
+One eligible source opens directly. Multiple eligible sources show readable checkout/project/service choices in
+the log companion; `s` opens selection, arrows and Enter choose, Esc cancels without closing panes. `r` retries
+unavailable discovery or reconnects the exact pinned source. Docker missing/denied or no matching source explains
+what to check without requiring technical identifiers. A stale/replaced source never silently becomes a new
+reader: use `s` to deliberately inspect/select a fresh generation. No selection changes execution authority.
+
+Source metadata remains in the human-only companion's memory, not prompts, transcripts or saved preferences.
+No log content is returned to native Pi, the
 child companion, Herdr agent metadata, tools or provider context. The log process's identity responder exposes
 only ownership/lifetime health, never log output or reader commands. This is a trusted-local display boundary,
 not independently attested native origin, Docker-enforced read-only credentials or OS isolation.
@@ -157,10 +166,9 @@ with `/fight-workspace open` in the intended native session, not by trusting an 
 
 | Log companion input | Display-only effect |
 |---|---|
-| `{` / `}`, `[` / `]` | Explicit labelled stack / eligible service selection |
-| `m` | Toggle follow / separately declared shared source |
+| `s`, arrows, Enter, Esc | Show readable source choices, choose or cancel without closing panes |
 | `p` | Freeze display while draining bounded recent output; resume shows the recent window |
-| `c`, `r` | Close/reopen reader / explicitly reconnect, with unknown gaps and possible duplicate tails |
+| `c`, `r` | Close/reopen reader / retry discovery or reconnect the pinned source, with possible gaps/duplicate tails |
 | `i`, PageUp/PageDown | Full conversation/child/source identities, endpoint, container generation, notices and bounded history |
 | `q`, Ctrl+C | Reap only this display's reader; Pi, children and containers remain unchanged |
 
@@ -168,18 +176,18 @@ The [fixed Docker reader's limits](#human-only-shared-docker-logs-task-00449-can
 tail, 300 records / 32 Ki units plus at most one equal paused snapshot, bounded escaped records, metadata and
 process deadlines, 15-minute lifetime, zero automatic retries, TERM/KILL and finite reaping. Exact canonical
 checkout labels, local Unix endpoint, service and full running-container identity are checked before reading.
-In this companion, test **and shared** container/endpoint replacement require a fresh inspected human
-declaration on a new open generation; the retained legacy shared reader's behavior is unchanged.
-Use close then open to deliberately replace declarations; a healthy repeated open is idempotent and does not
-re-prompt. A closed reader/companion never stops a container or child. No stack provisioning, restart, Compose
+In this companion, container/endpoint/lifecycle replacement requires fresh inspected human selection; retry
+never silently authorizes a replacement. The retained legacy shared reader's behavior is unchanged. Healthy
+repeated open is idempotent and does not re-prompt. A closed reader/companion never stops a container or child.
+No stack provisioning, restart, Compose
 evaluation, database mutation, full logging service or automatic global update is included.
 
 ### Native entry and existing RPC sessions
 
 The one-command entry is the explicitly installed `fight-workspace` inside Herdr. It forwards the supported
 native options listed by `fight-workspace --help` and automatically invokes the existing owned lifecycle without
-conversation input or a model turn. The source-selection dialog remains explicit human authorization; choose
-zero bindings for honest unavailable logs. The launcher does not select a workflow or load target-project
+conversation input or a model turn. Panes open with no log form; unavailable logs remain a usable companion
+with readable selection/retry. The launcher does not select a workflow or load target-project
 implementation assets. Missing/filtered installed Harness resources leave one native Pi running with an
 actionable warning; native Pi can reject duplicate tool/flag resources before session startup. No second session
 is launched in either case. Manual `pi` followed by `/fight-workspace open` remains valid.

@@ -8,8 +8,10 @@ Usage: fight-workspace [supported native Pi options]
 Requires an unzoomed Herdr tab containing only the caller and one complete trusted
 Harness package discovered from this executable's installed package directory.
 Pi stays the editor/session engine. No prompt, model turn, workflow selection,
-Docker binding, installation or RPC fallback is performed by this launcher.
-Startup asks for explicit human log bindings; choose zero for unavailable logs.
+installation or RPC fallback is performed by this launcher.
+Panes open without a log form. The human-only companion finds verified matching
+existing local sources; s chooses named sources and r retries unavailable logs.
+Missing logs or cancelling selection never blocks the workspace.
 
 Forwarded values: --provider --model --thinking --models --session --session-dir
   --name (-n) --use-theme --tui-mode --fight-header
