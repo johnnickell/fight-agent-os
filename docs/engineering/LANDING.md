@@ -109,9 +109,11 @@ Set/correct/retire markers only from established subject evidence within Land au
 Unmarked historical PRs are not current claims; local validation does not replace the live evidence below.
 Other targets retain their qualified local representation; this does not grant cross-project mutation authority.
 
-1. **Inventory and classify.** Start with the TASK, its parent/eligible ancestors, Board, Roadmap and README;
-   follow their subject-specific current-section/source links only as needed. For each applicable authored
-   handoff record the path/section, exact TASK and PR identity (when known), claimed stage/action, authoritative
+1. **Inventory and classify.** Resolve the authoritative TASK/parent records, Board, Roadmap and README from
+   the target's instructions, planning tools and existing bindings, not provider path defaults. Inventory the
+   source TASK/review/PR facts and eligible ancestor rollups alongside those surfaces, including standalone/no
+   parent and absent/unrelated surfaces. Follow subject-specific current-section/source links only as needed.
+   For each applicable authored handoff record the path/section, exact TASK and PR identity (when known), claimed stage/action, authoritative
    source and disposition. Include current subject-related capability/acceptance claims, even without a `Next:`
    label. Distinguish generated blocks, authored current instructions and historical checkpoints. Record absent,
    unrelated, history-only and already-consistent surfaces as such; do not create a README, scan every historical
@@ -316,12 +318,107 @@ After final push, query the hosting service: PR open, base `develop`, intended h
 
 ## Cleanup and handoff
 
-Preview cleanup candidates before publication and recheck immediately before deletion. Remove only ownership-proven TASK-specific disposable resources: exact Compose project containers/volumes, inspected build output and a clean registered isolated worktree at the published commit. Preserve shared, durable, ambiguous and dirty resources, including review reports and unrelated worktrees. For isolated worktrees, remove without force from the base checkout as the final tool operation after all other work; retain the local feature branch for the human. If safe cleanup is unavailable, report landing incomplete rather than broadening deletion authority.
+Safe cleanup is a required effect of authorized Land, not an optional follow-up after publication. Remove the
+eligible isolated worktree, local feature branch, disposable test containers and unused task-owned networks.
+Publication does not require merge first. A resource that fails qualification stays in place with an explicit
+hold; successful publication with cleanup held is **not complete Land**. Do not request another cleanup prompt
+for effects already within Land authority. Never delete the main checkout or a current/active branch, terminate
+an unrequested session, delete a remote branch, prune globally, stop a shared stack/VM or erase durable data.
 
-Return the PR link, review provenance and any reconciliation bridge, current-handoff inventory/consistency result,
-final checks and warnings, cleanup result and remaining human actions. Preserve the durable receipt and canonical
-evidence outside a disposable worktree before removal. Publication, approval, merge, branch deletion, archive,
-release and deployment are distinct states.
+### Inventory and preserve
+
+Preview candidates before publication; carry the inventory in the existing Work → Build → Land handoff and
+durable TASK receipt, not a new registry. Re-observe it immediately before each destructive effect. Bind each
+entry to the target repository/TASK and record exact identity, ownership evidence, dependencies, intended
+remove/retain/hold disposition and reason, command/result and postcondition:
+
+- Selected and canonical safe checkouts, Git common directory, registered worktree paths, local full branch ref,
+  local OID, accepted/published candidate and bridge, remote URL/ref/OID, exact PR identity/state/merge evidence.
+- Compose project, absolute configuration/override/env-file **locators** and working directory, wrapper invocation,
+  container IDs/labels, mounts and dependencies; network IDs/labels and every attached endpoint's ownership.
+  Names or Compose labels alone are not sufficient: compare them with the handoff, resolved configuration,
+  actual checkout/mount paths and current consumers. Never print environment values or credentials.
+- Task processes/sessions (identity, liveness and cwd), shared consumers, volumes/bind data, ignored/untracked
+  artifacts, canonical reports, captures, drafts and private runtime/credential paths. Explicitly record none,
+  unknown or unavailable; missing inventory is not proof of absence. Active coordinators and child sessions
+  retain their checkout/branch/mount dependencies; ask their owner for an authorized later retirement, not kill.
+
+Before retiring a checkout, inspect tracked status plus untracked **and ignored** files; clean Git status alone
+misses evidence and keys. Preserve required artifacts outside that checkout at the canonical base's ignored
+TASK run/report locations or the target's bound equivalents. Follow [scratch retention](SCRATCH.md): record
+old/new recoverable locators, ownership, exclusions and digests, verify the copy and consumers, preserve report
+bytes and private file permissions. A locator inside the deleted checkout is not retention. Unknown ownership,
+unrecoverable evidence, private state without an authorized destination, or a live mount holds the checkout.
+Durable volumes/databases/credentials remain retained by default; volume deletion needs separate explicit
+proven-disposable authorization. Never use `down -v` to make the inventory empty.
+
+### Qualify local Git cleanup
+
+Require completed applicable QA, publication and final delivery verification under [Verify and publish](#verify-and-publish),
+and reconciled current handoffs under [subject synchronization](#synchronize-current-subject-handoffs). Preserve
+accepted-candidate/report provenance. For an explicitly resumed ended handoff, also apply its live-state and
+correction-publication requirements; closure alone does not authorize disposal. Then establish one proof path:
+
+| State | Required proof for the local feature ref |
+|---|---|
+| Published, still open/unmerged | Exact repository/PR/base/head identity and verified delivery; fresh `git ls-remote --heads` for the exact full remote ref equals the recorded published candidate **and** local tip. The PR remains open for human review; leave its remote branch intact. |
+| Merged, including a deleted remote branch | Fresh exact PR evidence establishes MERGED, merge time/OID and verified final published PR head; the local tip equals that proven head through its recorded acceptance/closeout bridge. Verify the merge in the intended current base (including hosting evidence for squash/rebase merges). An absent remote ref is not itself merge proof. No remote recreation is needed. |
+| Missing/mismatched/inaccessible proof, closed without merge, or local-only commits | Hold the local branch and affected checkout. Name the missing observation, unpublished OIDs or maintainer delivery decision; never infer safety from `done`, a gone tracking ref or a similar name. |
+
+Resolve commits locally and inspect `git log`/`git rev-list` between the proven published head and local ref:
+there must be zero local-only commits and the tips must match, not merely share an ancestor. A later local
+metadata commit is still unpublished work. If the remote advanced, reconcile provenance/delivery first; do not
+quietly delete the older branch. Keep publication proof separate from merge proof and timestamp both observations.
+
+From a separate verified safe checkout, recheck registered worktrees, status, branch/OID, sessions and mounts.
+Use `git worktree remove` without force only for a clean, inactive, isolated owned checkout at the qualified
+candidate, after preservation and container retirement. Re-query worktree registration and filesystem absence;
+removal is not the final tool operation because postconditions and branch cleanup still follow. Never switch or
+remove the selected main checkout merely to make its branch eligible. Before branch deletion, prove the exact
+ref is not checked out in **any** worktree and no active session/consumer needs it. Prefer `git branch -d` when
+Git's ancestry/upstream check permits it. If Git refuses only because a proven published-unmerged or squash-merged
+tip is not an ancestor of the safe checkout, the above proof permits exact compare-and-delete with
+`git update-ref -d "$local_ref" "$proven_oid"` (bound full `refs/heads/...` and verified old OID), not blanket
+`branch -D`. Recheck the ref/worktree/ownership immediately beforehand; an OID change or competing activity
+holds deletion. Remove only that owned branch's obsolete configuration if present, never other refs/config.
+Record which proof/tool was used and verify ref absence. Do not delete any remote ref.
+
+### Retire task Docker resources
+
+Use the target's owning Docker wrappers with the inventoried exact Compose context where they safely support
+bounded retirement. Inspect resolved configuration, labels, mounts and consumers first; do not dump secrets or
+run a generic wrapper that selects the shared default stack. If no scoped wrapper exists, use explicit Compose
+project/config arguments or exact Docker IDs with the same ownership proof. Use `docker inspect` for exact
+container IDs and `docker network inspect` for network IDs/labels/endpoints. Stop/remove only the enumerated
+disposable task containers, without force or volume deletion. A shared container/mount or active task session
+holds the affected container and dependent worktree. Inspect network endpoints again **after** container removal;
+remove an inventoried network by exact ID only when it is task-owned, non-external/non-shared and has zero
+endpoints. A foreign/shared endpoint, unknown dependency, label/config mismatch or inspection failure holds the
+network; never disconnect others to free it. Do not infer network retirement from a container or Compose exit.
+Retain shared runtime and durable data explicitly, with their recovery locators and reasons.
+
+### Verify results and resume
+
+Keep the durable receipt outside every removal candidate and update it after each effect. Record removed,
+retained-by-policy, held and failed entries separately, including exact exits/errors and remaining dependencies.
+Permission failures are holds, not permission to use force, sudo, broad pruning or an alternate owner. Re-query
+`git worktree list --porcelain`, the exact ref with `git for-each-ref`, `docker ps -a --no-trunc` and
+`docker network ls --no-trunc`/`docker network inspect` to prove absence or retained state. Distinguish a
+successful empty inventory query from a daemon/auth/permission failure. Verify retained data/evidence digests,
+canonical reports and shared runtime, and recheck the published remote ref/PR remains intact (or the already
+verified merged/deleted-remote state is unchanged). Failed postconditions leave cleanup incomplete.
+
+On interruption/resume, inspect the existing receipt and current Git/Docker/PR state once, reconcile uncertain
+operations, and attempt only remaining authorized effects whose prerequisites now pass. Already-absent owned
+resources are recorded as such, not deleted again. Never repeat publication, create a duplicate PR, recreate a
+removed worktree, rewrite independent reports or make another metadata commit solely to record cleanup success.
+If a hold is unchanged, return its exact resource, reason, recovery owner/action and receipt locator; do not
+poll or retry indefinitely. Later disposition belongs in ignored evidence/PR body, not a final-head commit loop.
+
+Return the actual PR/delivery state, review/QA provenance and bridge, target-specific current-handoff inventory,
+checks/warnings, before/after cleanup results and precise holds. The next human action must distinguish PR
+review/merge from remaining cleanup recovery. Publication, local cleanup, human approval/merge, remote-branch
+deletion, archive, release and deployment remain separate facts.
 
 ## QA report intake and publication
 

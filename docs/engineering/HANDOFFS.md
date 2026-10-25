@@ -63,6 +63,14 @@ A fresh offline view establishes local identity consistency only, not live PR st
 Preserve distinct planning/decomposition handoffs and historical PR evidence; never infer a marker from them.
 Other targets use their qualified local representation rather than inheriting Agent OS's script interface.
 
+Work and Build carry the exact [resource inventory](LANDING.md#inventory-and-preserve) in their existing
+handoffs to Land: Git checkout/ref/published OIDs, Compose context/container/network identities, live sessions,
+evidence and data ownership/dependencies, including unknowns and explicit main/current/active holds. Land owns
+[required safe cleanup and postcondition verification](LANDING.md#cleanup-and-handoff), not another registry or
+an unconditional branch-retention handoff. Return published/delivery state separately from cleanup: a verified
+PR with a held resource is publication with incomplete cleanup, naming the resource, reason, recovery owner/action
+and durable receipt. Resume only missing effects; never recommend repeating publication to resolve a cleanup hold.
+
 During authorized normal publication, Land applies [current subject handoff synchronization](LANDING.md#synchronize-current-subject-handoffs)
 to applicable authored current Board/Roadmap/README handoffs as well as source records, parent rollups and derived
 views. A historical acceptance/delivery-pending checkpoint is not today's instruction: preserve it and canonical

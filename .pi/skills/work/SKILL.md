@@ -42,7 +42,7 @@ report gaps honestly, and validate tooling with its owning tools rather than pro
    reconciliation for review. Never force-update a published branch.
 
 4. **Verify and record.** The local gate is mandatory; hosted CI is optional unless explicitly required by the target's accepted policy or TASK. Disclose unavailable optional checks without blocking completion on them. Run focused checks, `./bin/planning-check` when planning changed, `git diff --check`, and `./bin/build`. Inspect the final diff/status. Record actual results, counts, warnings, omissions, files changed and remaining risks in the TASK; keep review and PR status truthful.
-5. **Commit and hand off.** Stage only owned files, inspect staged changes, and commit. Return branch/head, scope, evidence, risks and unrelated work preserved; request independent review. Stop before push, PR, approval or merge without separate authority.
+5. **Commit and hand off.** Stage only owned files, inspect staged changes, and commit. Return branch/head, scope, evidence, risks and unrelated work preserved; request independent review. Carry the exact [Land resource inventory](../../../docs/engineering/LANDING.md#inventory-and-preserve) in this existing handoff: checkouts/ref/OIDs, task Compose configuration/project and container/network IDs, sessions/processes, evidence and data with ownership/dependencies and retain/hold reasons (including none/unknown). This supplies later cleanup, not Work deletion authority. Stop before push, PR, approval or merge without separate authority.
 
 A failing required check or unsupported criterion is incomplete work, not a green handoff.
 Any authorized TASK closure includes [automatic parent completion](../../../planning/CONVENTIONS.md#automatic-parent-completion)
