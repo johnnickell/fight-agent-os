@@ -514,7 +514,7 @@
 | [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | done | — |
 | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | done | [TICKET-00110](../tickets/00110-TICKET.md) |
-| [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | in-progress | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | done | — |
 | [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | done | — |
 | [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | done | [TICKET-00118](../tickets/00118-TICKET.md) |

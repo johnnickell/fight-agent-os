@@ -100,7 +100,7 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | [TASK-00507](../tasks/00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent |
 | [TASK-00510](../tasks/00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done |
 | [TASK-00511](../tasks/00511-TASK.md) | Observe current-session children beside native Pi in Herdr | done |
-| [TASK-00512](../tasks/00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | in-progress |
+| [TASK-00512](../tasks/00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

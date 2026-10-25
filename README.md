@@ -52,8 +52,9 @@ validated selected/pinned child or idle-primary context follows them. Missing ma
 logs. Herdr owns layout/focus/resize only. Outside Herdr or with unavailable prerequisites, keep ordinary Pi;
 there is no automatic RPC-editor fallback.
 
-Native replacement A has independent technical acceptance and scoped QA PASS. TASK-00512's repository-only RPC
-retirement B is implemented pending independent delta Review/affected QA; see the [current checkpoint](planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint).
+TASK-00512's native replacement A and repository-only RPC retirement B have independent technical acceptance and
+current independent QA PASS. Its accepted-candidate closeout is recorded; PR publication and final delivery
+verification remain separate Land work. See the [current Land checkpoint](planning/tasks/00512-TASK.md#current-land-closeout--2026-10-25).
 `fight-terminal` now prints only a retirement/session-migration notice, not a conversation frontend. Existing
 copied installations are not changed by this source delta. See [native ownership and log controls](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
 [actual-file session migration](harness/pi/WORKSPACE.md#native-entry-and-existing-rpc-sessions), and

@@ -21,7 +21,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -569,6 +569,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | — (standalone bug) | done | — | [PR #147](https://github.com/johnnickell/fight-agent-os/pull/147) |
 | — | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #151](https://github.com/johnnickell/fight-agent-os/pull/151) |
 | — | [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #154](https://github.com/johnnickell/fight-agent-os/pull/154) |
+| — | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | — |
 | — | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | — (standalone bug) | done | — | [PR #152](https://github.com/johnnickell/fight-agent-os/pull/152) |
 | — | [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | — (standalone bug) | done | — | [PR #156](https://github.com/johnnickell/fight-agent-os/pull/156) |
 <!-- /planning:board -->
