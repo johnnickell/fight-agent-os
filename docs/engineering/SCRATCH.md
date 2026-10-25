@@ -45,6 +45,13 @@ inactive runs, including failures, rather than treating a passing receipt or ter
 proof that a process/resource is retired. Preserve registered worktrees, running mounts, credentials and
 independent report bytes. A local archive is neither a portable backup nor publication.
 
+For an authorized Land cleanup, apply the [owning inventory/preservation and cleanup procedure](LANDING.md#cleanup-and-handoff).
+Retain its receipt and verified required evidence outside the disposable checkout before removing it. Record
+resource IDs, old/new locators/digests, results and exact holds in existing TASK handoffs, not a new registry.
+Ignored evidence, private runtime/data and active session mounts require inspection even when Git is clean;
+terminal TASK status alone never permits disposal. Later cleanup results stay in ignored evidence, not another
+tracked commit merely to certify successful deletion.
+
 ## Relocation and verification
 
 Keep the manifest outside the retired source with checkout identity, old/new paths, SHA-256 digests and
