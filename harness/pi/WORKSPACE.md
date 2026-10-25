@@ -1,17 +1,19 @@
 # Local terminal workspaces
 
-## Native Pi in Herdr (TASK-00510 candidate)
+<a id="native-pi-in-herdr-task-00510-candidate"></a>
+
+## Native Pi in Herdr
 
 In native Pi inside Herdr, use `/fight-workspace` (or `/fight-workspace open`) to open a human-only child
-activity companion and a human-only verified log companion (TASK-00512 implementation candidate). `/fight-workspace close` closes only proven-owned
+activity companion and a human-only verified log companion. `/fight-workspace close` closes only proven-owned
 companions. Repeated open reuses the same healthy panes. The existing Pi process, session/file, cwd, editor,
 Tab completion, themes, dialogs, tools and workflow binding are unchanged. Herdr owns focus, resize and zoom;
 Pi's Tab is not a pane-navigation shortcut here. The child companion supplies the validated context below;
-TASK-00512 composes it with the existing bounded Docker reader. Fresh real two-worktree/child/source and same-file
-RPC-to-native session Work qualification is recorded in
-[TASK-00512 candidate A](../../planning/tasks/00512-TASK.md#native-replacement-candidate-a--2026-10-25-work-qualification-complete-independent-acceptance-pending);
-independent replacement acceptance remains pending. The legacy `fight-terminal` client below
-remains available until that acceptance; there is no automatic fallback to it.
+TASK-00512 composes it with the existing bounded Docker reader. Native replacement A has independent technical
+acceptance and scoped QA PASS; the repository retirement B delta still requires independent Review/affected QA.
+See [the current TASK checkpoint](../../planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint).
+`fight-terminal` now prints a retirement/session-migration notice only: it never opens a conversation or acts as
+fallback. Repository source changes do not update an already-installed copied launcher.
 
 Load the updated trusted package once through your existing Pi installation. A **full process restart** is needed
 when adopting changed extension/module source; `/reload` did not replace cached imported `.mjs` code in the tested
@@ -47,12 +49,14 @@ ownership file and the actual dedicated topology with Herdr. An operator must re
 clearing that file's uncertainty hold; never close a guessed ID or remove state merely to obtain a green retry.
 Changed/replaced companion processes are retained, not killed. Unknown cleanup remains a disclosed limitation.
 
-TASK-00510's accepted layout evidence remains historical context. TASK-00511 records fresh child integration
-checks/captures separately; independent Review/QA remain pending for that change. No layout action changes tool
+TASK-00510/00511's accepted layout/child evidence remains historical context. TASK-00512 records the composed
+native replacement acceptance and the separately pending retirement delta. No layout action changes tool
 permission, workflow role, provider/model, enrollment or global settings.
 Model-invoked commands do not become trusted operator workflow selections. Native shell is not OS isolation.
 
-### Current-session activity in Herdr (TASK-00511 candidate)
+<a id="current-session-activity-in-herdr-task-00511-candidate"></a>
+
+### Current-session activity in Herdr
 
 The companion reuses the existing passive native-session custody reader; keep launching the ordinary authorized
 provider monitor, without per-child socket flags. It never launches, cancels or retries a child, changes the
@@ -89,6 +93,8 @@ work. It never clears the old invalidation or revives old metadata. Healthy repe
 closed readers or unavailable child custody) remains idempotent. Ownership, unrelated-layout and uncertain-split
 holds still apply. No provider turn is forced to persist a file.
 
+<a id="selection-contract-for-the-future-log-companion"></a>
+
 #### Selection contract for the log companion
 
 `src/herdr/activity.mjs` exports `readSelection(binding, companionEndpoint)` and `validateSelection`.
@@ -113,7 +119,9 @@ Child retention remains eight children, 100 entries / 32 Ki units each, plus one
 Owned binding cleanup checks the exact created inode; replacement files are retained. Abrupt crashes can leave
 non-authoritative runtime files; no crash survivor is blindly reused as authority.
 
-### Verified logs in Herdr (TASK-00512 candidate)
+<a id="verified-logs-in-herdr-task-00512-candidate"></a>
+
+### Verified logs in Herdr
 
 On a new `/fight-workspace open` generation, native Pi dialogs ask for **explicit human declarations**, never
 source arguments embedded in a prompt, cwd-derived guesses, scans or saved preferences. Choose `Add worktree TEST
@@ -165,7 +173,7 @@ evaluation, database mutation, full logging service or automatic global update i
 
 ### Native entry and existing RPC sessions
 
-The candidate workspace entry is ordinary `pi` inside Herdr, followed by `/fight-workspace open`. Outside Herdr,
+The workspace entry is ordinary `pi` inside Herdr, followed by `/fight-workspace open`. Outside Herdr,
 keep using ordinary Pi; missing/incompatible Herdr APIs leave it usable and never silently launch the RPC editor.
 A repository source change is not rollout: do not reinstall Herdr, mutate the live global package or load a second
 Harness package identity automatically. Adopt reviewed source explicitly and fully restart Pi.
@@ -177,15 +185,31 @@ input. In native Pi inspect `/session` and `/file-screening` for the actual sess
 a workflow only through the operator's explicit native action if needed. Then open the companions. Ephemeral
 `--no-session` conversations cannot be resumed. Session files and historical evidence are never deleted.
 
-**Publication transition still required:** this candidate does not retire or redirect the public `fight-terminal`
-RPC executable. Independent Review/QA must first assess candidate A's native replacement, fresh real
-Herdr/Pi/two-source/session evidence and recorded gate bridge. After replacement acceptance, Work performs the
-already-authorized bounded repository-only public-entry retirement B, preserving sessions and explicit ordinary-Pi
-non-Herdr guidance; fresh affected gates and independent delta Review/QA precede publication. Installed-client
-rollout/removal remains separate. This ordered transition is neither a missing human prerequisite nor accepted
-delivery or a waived TASK criterion. TASK-00512 records current evidence, diagnostics and retained runtime ownership.
+If the old client is already unavailable, locate the actual `.jsonl` file in that conversation checkout's
+`var/terminal/sessions/` or the explicitly selected prior store. Do not assume native Pi's default store is the
+same: ordinary Pi normally uses its own per-project store. Identify the intended file privately; if uncertain,
+stop rather than resume the newest unrelated file. Pass its absolute path to `--session`; keep it in place.
+Existing JSONL/session IDs, history, enrollment, accounting and workflow records are not launcher assets and
+must not be deleted when removing the npm command. No session is read or changed by the retirement notice.
 
-## Legacy RPC workspace (retained)
+**Delivery boundary:** the former package bin and direct `src/workspace/main.mjs` entry now provide only the
+same local migration notice (`--help`/`-h` alone exits 0; all launch arguments exit 1 without interpreting or
+printing them). They do not start Pi/Herdr/Docker, read stdin, create storage or select authority. Reusable
+bounded observers/readers remain; there is no supported replacement RPC conversation command. See
+[explicit installation adoption/removal](README.md#update-remove-and-recover-the-launcher). Independent delta
+Review/affected QA of B remain required before whole-TASK completion/publication. Live installation rollout
+is a separate operator effect, not performed by this repository change.
+
+<a id="legacy-rpc-workspace-retained"></a>
+
+## Historical RPC reference — not current instructions
+
+**Everything below this heading preserves historical RPC behavior, limits and qualification receipts. Its
+`fight-terminal` launch/resume examples and native-to-RPC return steps are obsolete and no longer supported.**
+Do not install or invoke another frontend from these examples. Use the native entry/session migration above.
+The package retains reusable observer/reader contracts referenced by the native companions; their bounds and
+trusted-local limitations still apply where linked above. Historical pending verdicts are not today's status.
+Original TASK receipts and session files remain intact.
 
 TASK-00502 adds default current-session following and verified child worktree test-log context; see
 [automatic following](#automatic-session-following-and-worktree-test-bindings-task-00502-candidate) for its native

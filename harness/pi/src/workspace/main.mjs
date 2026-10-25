@@ -1,266 +1,31 @@
-import { accessSync, constants, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { Workspace, clean } from './presentation.mjs';
-import { PiRpc, messageText } from './rpc.mjs';
-import { Terminal } from './terminal.mjs';
-import { observationPaths } from './child-observation.mjs';
-import { ConcurrentChildren } from './concurrent-children.mjs';
-import { RegisteredChildren } from './registered-children.mjs';
-import { RuntimeLogs, runtimeSelection } from './runtime-logs.mjs';
-import { WorktreeLogs, testBindings } from './worktree-logs.mjs';
 
-// Optional evaluator readiness does not own input authority. Older providers can prove only
-// the two unambiguous healthy states; degraded providers must report independent access health.
-function permitsInput(status) {
-  if (!status || typeof status !== 'object') return false;
-  if (status.access !== undefined && (status.access?.state !== 'available' || status.access.reason !== null)) return false;
-  if (status.state === 'disabled') return status.enforcement === 'not-enrolled' && status.reason === 'not-enrolled';
-  if (status.state === 'active') return status.enforcement === 'project-access-with-optional-screening' && status.reason === null;
-  return status.state === 'degraded' && status.enforcement === 'project-access-with-screening-degraded' &&
-    status.access?.state === 'available' && typeof status.reason === 'string' && status.reason.length > 0;
+const migration = `fight-terminal: the repository RPC conversation frontend is retired.
+Start ordinary pi in the conversation checkout. Inside Herdr, use /fight-workspace open
+for child activity and human-only verified logs; /fight-workspace close closes companions only.
+Outside Herdr, keep using ordinary pi. Missing Herdr prerequisites never launch an RPC editor.
+
+Existing RPC conversation: stop its owned client normally, then from the same checkout run
+  pi --session /absolute/actual-session.jsonl
+Use the actual session file previously displayed by that client (normally under
+var/terminal/sessions/, or its explicitly chosen --session-dir). Do not guess with --continue,
+fork/clone history, copy launcher-role flags or select a workflow through injected input.
+In native Pi inspect /session and /file-screening; only the operator selects workflow authority.
+Ephemeral --no-session conversations cannot be resumed.
+
+No Pi, Herdr, Docker reader or provider is started by this command. No sessions, settings,
+credentials, packages or integrations are changed. See the package README.md and WORKSPACE.md
+for explicit installation adoption/removal; repository source changes are not live rollout.
+`;
+
+/** Retire every former launch option without interpreting or echoing private arguments */
+export function run(argv = process.argv.slice(2), { output = process.stdout, errorOutput = process.stderr } = {}) {
+  const help = argv.length === 1 && (argv[0] === '--help' || argv[0] === '-h');
+  (help ? output : errorOutput).write(migration);
+  return help ? 0 : 1;
 }
 
-export function options(argv, cwd) {
-  const args = [], values = new Set(['--provider', '--model', '--thinking', '--session', '--session-dir', '--name', '--extension']);
-  let theme = 'system'; const children = [], logs = {}, tests = [];
-  for (let index = 0; index < argv.length; index++) {
-    const option = argv[index];
-    if (option === '--logs-test') {
-      const [main, context, project, service] = argv.slice(index + 1, index + 5);
-      if ([main, context, project, service].some(value => !value || value.startsWith('-'))) throw new Error('--logs-test needs WORKTREE CONTEXT PROJECT SERVICE');
-      tests.push({ main, context, project, service }); index += 4;
-    } else if (['--logs-main', '--logs-context', '--logs-project', '--logs-service'].includes(option)) {
-      const key = option.slice(7), value = argv[++index];
-      if (logs[key] || !value || value.startsWith('-')) throw new Error('Each logs selection option requires one explicit value');
-      logs[key] = value;
-    } else if (option === '--observe-child') {
-      const path = argv[++index]; if (!path) throw new Error('Missing --observe-child socket path'); children.push(path);
-    } else if (option === '--theme') {
-      theme = argv[++index]; if (!['system', 'dark', 'light'].includes(theme)) throw new Error('Use --theme system|dark|light');
-    } else if (values.has(option)) {
-      const value = argv[++index]; if (!value || value.startsWith('-')) throw new Error(`Missing value for ${option}`);
-      args.push(option, value);
-    } else if (['--continue', '--no-session'].includes(option)) args.push(option);
-    else throw new Error(`Unsupported workspace option: ${clean(option)} (see fight-terminal --help)`);
-  }
-  if (!args.includes('--no-session') && !args.includes('--session-dir')) args.push('--session-dir', resolve(cwd, 'var/terminal/sessions'));
-  return { args, theme, children: observationPaths(children), logs: runtimeSelection(Object.keys(logs).length ? logs : null), tests: testBindings(tests) };
-}
-export async function run(argv = process.argv.slice(2), {
-  // Initialize stderr while the terminal is live. Node pipe teardown can lazily
-  // access it; opening a revoked macOS TTY then can block the entire event loop.
-  input = process.stdin, output = process.stdout, errorOutput = process.stderr,
-  connect = options => new PiRpc(options), createTerminal = (input, output) => new Terminal(input, output),
-  observe = (paths, changed, cwd) => paths.length ? new ConcurrentChildren(paths, changed) : new RegisteredChildren(cwd, changed),
-  readLogs = (source, changed, tests, cwd) => tests.length || !source ? new WorktreeLogs(cwd, tests, source, changed) : new RuntimeLogs(source, changed),
-} = {}) {
-  if (argv.includes('--help')) {
-    console.log('Legacy RPC workspace (retained pending independent native replacement acceptance).\nNative candidate: run pi inside Herdr, then /fight-workspace open; ordinary pi stays available outside Herdr. No automatic RPC fallback.\nLegacy usage: fight-terminal [--theme system|dark|light] [--provider NAME --model ID --thinking LEVEL] [--session PATH|--continue|--no-session] [--session-dir PATH] [--extension PATH] [--observe-child /checkout/var/child.sock] (repeat up to 8)\nChild focus (automatic current session by default; flags select explicit legacy): [ / ] select · f pin/unpin · p pause · c all readers · r reconnect\nLogs: --logs-main /main/checkout --logs-context NAME --logs-project NAME --logs-service NAME\nExisting worktree test logs: --logs-test WORKTREE CONTEXT PROJECT SERVICE (repeat up to 8); { / } select stack; m explicit shared/follow\nRuntime focus: [ / ] service · p pause · c close/open reader · r reconnect (human display only)\nTab focus/select views · PgUp/PgDn scroll · Ctrl+W split · Ctrl+T theme · Ctrl+J newline · Esc abort · Ctrl+Q exit\nPolicy enrollment/role changes and native-only Pi commands require the normal Pi TUI. See the installed @fight/agent-os-pi package WORKSPACE.md.'); return;
-  }
-  const cwd = process.cwd(), config = options(argv, cwd);
-  if (!input.isTTY || !output.isTTY) throw new Error('Workspace needs a real terminal');
-  if (!config.args.includes('--no-session')) {
-    try {
-      const directory = config.args[config.args.indexOf('--session-dir') + 1];
-      mkdirSync(directory, { recursive: true, mode: 0o700 });
-      accessSync(directory, constants.W_OK | constants.X_OK);
-    }
-    catch { throw new Error('Cannot prepare session storage. Check write access to this project’s var/terminal/sessions (or explicit --session-dir); do not change project directories or bypass Harness policy.'); }
-  }
-  const model = new Workspace(cwd); model.theme = config.theme;
-  const terminal = createTerminal(input, output);
-  const rpc = connect({ cwd, args: config.args });
-  let closing = false, terminalLost = false, fault = false, renderTimer, startupTimer, sessionFile, sessionId, checkingSession = false, policyReady = false, stateSeen = false, commandsSeen = false;
-  const dialogTimers = new Map();
-  const render = () => {
-    if (closing || renderTimer) return;
-    renderTimer = setTimeout(() => {
-      renderTimer = undefined;
-      try { terminal.draw(model.render(output.columns, output.rows, Math.max(1, output.columns - 1)), process.env.NO_COLOR ? 'system' : model.theme); }
-      catch { void close(1); }
-    }, 25);
-  };
-  let logs, logContext = cwd;
-  const observationChanged = () => {
-    if (closing) return;
-    const next = observation.verifiedWorktree ?? cwd;
-    if (logs?.rebind && logContext !== next) {
-      logContext = next;
-      void logs.rebind(next).catch(() => { model.append('Verified log worktree unavailable; reader held'); });
-    }
-    render();
-  };
-  const observation = observe(config.children, observationChanged, cwd); model.childObservation = observation;
-  logs = readLogs(config.logs, render, config.tests, cwd); model.runtimeLogs = logs;
-  const freshnessTimer = setInterval(() => {
-    observation.tick?.(); observationChanged();
-    // One bounded read-only identity query at a time; never submit native workflow commands.
-    if (closing || !stateSeen || checkingSession) return;
-    checkingSession = true;
-    void rpc.request('get_state').then(state => {
-      if (closing) return;
-      if (state.sessionId !== sessionId || state.sessionFile !== sessionFile) {
-        if (config.children.length) clearInterval(freshnessTimer);
-        sessionId = state.sessionId; sessionFile = state.sessionFile;
-        observation.sessionChanged?.(state.sessionId, state.sessionFile);
-        fail('Pi session changed: observation admission/pin cleared. Exit and resume explicitly in native Pi.');
-      }
-    }).catch(() => {
-      if (!closing) { clearInterval(freshnessTimer); observation.sessionChanged?.(null); fail('Pi session identity unavailable; observation readers closed.'); }
-    }).finally(() => { checkingSession = false; });
-  }, 1000);
-  const close = async (code = 0) => {
-    if (closing) return; closing = true; model.ready = false;
-    clearTimeout(renderTimer); clearTimeout(startupTimer); clearInterval(freshnessTimer);
-    observation.close();
-    const logsClosed = logs.close();
-    for (const timer of dialogTimers.values()) clearTimeout(timer);
-    output.removeListener('resize', render); output.removeListener('drain', render);
-    input.removeListener('end', onTerminalLoss); input.removeListener('close', onTerminalLoss);
-    output.removeListener('close', onTerminalLoss);
-    for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.removeListener(signal, onSignal);
-    try { terminal.stop(); } catch { code = 1; } finally { await Promise.all([rpc.close(), logsClosed]); process.exitCode = code; }
-  };
-  const fail = message => {
-    fault = true; model.ready = false; model.status = message;
-    model.append(message); render();
-  };
-  const updateReady = () => {
-    model.ready = !fault && policyReady && stateSeen && commandsSeen;
-    if (model.ready) { clearTimeout(startupTimer); model.status = `Conversation: ${cwd} · children: ${config.children.length ? `${config.children.length} explicit legacy` : 'automatic session follow'} (f pin); runtime: ${config.tests.length ? 'verified selected worktree test bindings' : config.logs ? 'explicit shared source (human-only)' : 'worktree test association unavailable'}`; }
-    render();
-  };
-  const sendAction = async action => {
-    if (!action || closing) return;
-    try {
-      if (action.type === 'quit') { await close(); return; }
-      if (action.type === 'observation') { observation.action(action.action); model.offsets[1] = 0; render(); return; }
-      if (action.type === 'runtime') {
-        // Bound human action queue: ignore additional keys until this reader transition completes.
-        if (model.logsChanging) return;
-        model.logsChanging = true;
-        try { await logs.action(action.action); model.offsets[2] = 0; }
-        finally { model.logsChanging = false; render(); }
-        return;
-      }
-      if (action.type === 'dialog') {
-        clearTimeout(dialogTimers.get(action.id)); dialogTimers.delete(action.id);
-        await rpc.send({ ...action, type: 'extension_ui_response' });
-      } else if (action.type === 'abort') {
-        // Preserve the native clear-queue then abort semantics; don't silently continue queued work.
-        const queue = await rpc.request('clear_queue');
-        await rpc.request('abort');
-        await rpc.request('abort_bash');
-        const restored = [...(queue?.steering ?? []), ...(queue?.followUp ?? [])].join('\n');
-        if (restored) model.insert(restored);
-      } else if (action.type === 'submit') {
-        const message = action.message;
-        if (message === '/quit' || message === '/exit') { await close(); return; }
-        if (message.startsWith('!')) {
-          const excluded = message.startsWith('!!');
-          model.append(`Shell input (${excluded ? 'excluded from' : 'included in'} model context)\n${message}`);
-          const result = await rpc.request('bash', { command: message.slice(excluded ? 2 : 1).trim(), excludeFromContext: excluded }, 0x7fffffff);
-          model.append(`Shell exit: ${result.exitCode ?? 'unknown'}${result.cancelled ? ' (cancelled)' : ''}\n${result.output ?? ''}`);
-        } else {
-          const command = message.match(/^\/(\S+)/)?.[1];
-          if (command === 'fight-stage') {
-            model.append('The unshipped /fight-stage execution bridge was removed. Use the existing authorized provider-monitor launch in native Pi; observation never launches children. Nothing submitted.');
-            render(); return;
-          }
-          if (command?.startsWith('skill:') || command === 'file-screening') {
-            model.append('Workflow selector not submitted: RPC cannot select role, workflow, task, checkout or query/status mode. Current binding is unchanged.');
-            model.append(sessionFile ? `Use native Pi in the same session: exit (^Q), run pi --session ${JSON.stringify(sessionFile)} from ${cwd}, select the workflow and inspect /file-screening to verify its binding. Exit native Pi, then resume fight-terminal --session ${JSON.stringify(sessionFile)}. Resume alone never selects authority.` : 'Use native Pi for workflow selection and verify /file-screening. This in-memory session has no same session resume path; do not assume a new session inherits its binding.');
-            render(); return;
-          }
-          if (command && !model.commands.has(command)) {
-            model.append('Unsupported/native-only Pi command. Use the normal Pi TUI; nothing was submitted.'); return;
-          }
-          // RPC input cannot become interactive operator authority. The Harness retains its own role boundaries.
-          await rpc.request('prompt', { message, ...(model.busy ? { streamingBehavior: 'steer' } : {}) });
-        }
-      }
-    } catch (error) { model.append(`Pi request failed: ${clean(error.message)}`); }
-    render();
-  };
-  const onSignal = () => { void close(130); };
-  const onTerminalLoss = () => { terminalLost = true; void close(1); };
-  rpc.on('failure', error => { fail(`Pi transport failure: ${clean(error.message)}`); void close(1); });
-  rpc.on('exit', code => { if (!closing) { fail(`Pi exited (${code ?? 'signal'})`); void close(code || 1); } });
-  rpc.on('policy', status => {
-    policyReady = permitsInput(status); model.policy = String(status?.state ?? 'unknown');
-    model.append(`Harness: ${model.policy} · role: ${status?.phase ?? 'unknown'} · ${status?.reason ?? status?.enforcement ?? 'invalid status'}`);
-    if (!policyReady) model.status = 'Input held: Harness access is unavailable. Inspect the status in native Pi.';
-    updateReady();
-  });
-  rpc.on('record', event => {
-    if (event.type === 'extension_ui_request') {
-      if (['select', 'confirm', 'input', 'editor'].includes(event.method)) {
-        if (model.dialogs.length >= 8) { void rpc.send({ type: 'extension_ui_response', id: event.id, cancelled: true }).catch(() => {}); return; }
-        model.dialogs.push({ ...event, scroll: 0 });
-        if (event.timeout) dialogTimers.set(event.id, setTimeout(() => {
-          model.dialogs = model.dialogs.filter(dialog => dialog.id !== event.id); dialogTimers.delete(event.id); render();
-        }, event.timeout));
-      } else if (event.method === 'notify') model.append(`Pi ${event.notifyType ?? 'info'}: ${event.message}`);
-      else if (event.method === 'set_editor_text') { model.draft = ''; model.cursor = 0; model.insert(event.text ?? ''); }
-      else if (event.method === 'setStatus') model.append(`Pi status ${event.statusKey}: ${event.statusText ?? '(cleared)'}`);
-      else if (event.method === 'setWidget' && event.widgetLines) model.append(event.widgetLines.join('\n'));
-    } else if (event.type === 'agent_start') model.busy = true;
-    else if (event.type === 'agent_settled') { model.busy = false; model.live = ''; model.liveOmitted = false; }
-    else if (event.type === 'message_update') {
-      const delta = event.assistantMessageEvent;
-      if (delta.type === 'text_delta') model.stream(delta.delta);
-    } else if (event.type === 'message_end') {
-      const text = messageText(event.message); if (text) model.append(text); model.live = ''; model.liveOmitted = false;
-    } else if (event.type === 'tool_execution_start') model.append(`Tool running: ${event.toolName}`);
-    else if (event.type === 'bash_execution_update') model.append(`Shell output (${event.id ?? 'Pi'}):\n${event.delta}`);
-    else if (event.type === 'extension_error') fail('Pi extension handler failed; input held. Restart after diagnosis in native Pi.');
-    else if (['auto_retry_start', 'auto_retry_end', 'compaction_start', 'compaction_end'].includes(event.type)) model.append(`Pi lifecycle: ${event.type}`);
-    render();
-  });
-  try {
-    // Window loss can report EOF/EIO before SIGHUP. Keep error listeners for the
-    // streams' remaining lifetime: restoration writes can fail asynchronously after close.
-    input.on('end', onTerminalLoss); input.on('close', onTerminalLoss); input.on('error', onTerminalLoss);
-    output.on('close', onTerminalLoss); output.on('error', onTerminalLoss);
-    errorOutput.on('error', onTerminalLoss);
-    logs.start();
-    terminal.start((text, key) => { void sendAction(model.key(text, key)); render(); }, (text, retention = {}) => {
-      if (model.dialogs.length) { model.append('Paste ignored during Pi interaction; type an explicit response.'); }
-      else if (model.focus === 0 && model.ready) { model.insert(text); if (retention.discarded) model.inputLoss(); }
-      render();
-    });
-    output.on('resize', render); output.on('drain', render);
-    for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, onSignal);
-    startupTimer = setTimeout(() => fail('Pi qualification incomplete: healthy Harness access, get_state and get_commands required. Exit with Ctrl+Q; inspect pi list in normal Pi for missing, moved, filtered or duplicate Harness resources.'), 30000);
-    render();
-    const state = await rpc.request('get_state');
-    if (closing) return close;
-    model.identity = `${state.model?.provider ?? '?'}/${state.model?.id ?? '?'} · ${state.thinkingLevel ?? '?'} · session ${state.sessionId}`;
-    model.busy = state.isStreaming; sessionFile = state.sessionFile; sessionId = state.sessionId; stateSeen = true;
-    // Side-pane discovery is independently bounded and must not delay conversation readiness.
-    void observation.start(sessionId, sessionFile);
-    model.append(`Conversation directory: ${cwd}\nSession: ${state.sessionId}\nStorage: ${state.sessionFile ?? 'in memory (not resumable)'}\nConfigured model: ${state.model?.provider}/${state.model?.id}; actual provider identity is available only after a response.`);
-    const commands = await rpc.request('get_commands');
-    if (closing) return close;
-    model.commands = new Set(commands.commands.map(command => command.name));
-    commandsSeen = ['jev', 'file-screening'].every(command => model.commands.has(command));
-    if (!commandsSeen) fail('Required Harness commands unavailable; input held. Inspect pi list and qualify the trusted package in normal Pi; do not disable extensions.');
-    const messages = await rpc.request('get_messages');
-    if (closing) return close;
-    for (const message of messages.messages) { const text = messageText(message); if (text) model.append(text); }
-    updateReady();
-  } catch (error) {
-    // A terminal-loss shutdown can reject an in-flight startup request. Do not reopen
-    // a vanished TTY for diagnostics or restart presentation after cleanup.
-    if (terminalLost) return close;
-    const message = `Startup failed: ${clean(error.message)}. Inspect pi list and qualify one trusted Harness in normal Pi; check missing, moved, filtered or duplicate resources. No policy bypass was attempted.`;
-    fail(message);
-    await close(1);
-    errorOutput.write(`fight-terminal: ${message}\n`);
-  }
-  return close;
-}
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  run().catch(error => { console.error(clean(error.message)); process.exitCode = 1; });
+  process.exitCode = run();
 }

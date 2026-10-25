@@ -45,22 +45,19 @@ Restart Pi, then use `/fight-header` to choose a presentation or `off` to restor
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
-Native `/fight-workspace [open|close]` keeps Pi's editor/completion/session intact in Herdr. TASK-00511 adds
-human-only current-session child selection/pinning and bounded progress. TASK-00512's log companion candidate
-uses fresh interactive human bindings to existing test stacks and follows validated child/idle-primary context;
-missing mappings never fall back to shared logs. Fresh real two-source/session Work qualification is recorded in
-[TASK-00512 candidate A](planning/tasks/00512-TASK.md#native-replacement-candidate-a--2026-10-25-work-qualification-complete-independent-acceptance-pending);
-independent replacement acceptance and the subsequent reviewed repository RPC-retirement transition remain pending. See [native ownership, log controls and session migration](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
-Ordinary Pi remains available outside Herdr; the RPC executable is retained until replacement acceptance.
-An unaccepted [local workspace candidate](harness/pi/WORKSPACE.md) is available through the package-owned
-`fight-terminal` command after [explicit user-level installation](harness/pi/README.md#install-the-global-workspace-command), with
-responsive conversation/observation panes, opt-in local child observation (TASK-00448 candidate), and an opt-in
-human-only shared main-runtime log reader (TASK-00449 candidate). Earlier real PTY/provider/file-hook
-checks, held-state terminal images and a passing exact-head baseline gate are recorded. Review's long-dialog
-visibility repair passes focused checks and the coordinator's frozen-candidate full gate. Coordinator-owned real
-native-selection/same-session resume qualification now passes, preserving conversation and actual workflow binding;
-earlier helper failures remain recorded. The literal post-commit gate and fresh independent Review/QA remain
-pending at this tracked checkpoint; the workspace runbook names the final ignored handoff for gate results and limits. Keep normal Pi for setup and native-only controls.
+Start ordinary `pi` in the intended checkout. Inside Herdr, `/fight-workspace [open|close]` adds owned human-only
+child activity and verified Docker logs while Pi retains its editor, completion, colors, Markdown, dialogs,
+session and workflow authority. Explicit human bindings select existing test sources once per open generation;
+validated selected/pinned child or idle-primary context follows them. Missing mappings never fall back to shared
+logs. Herdr owns layout/focus/resize only. Outside Herdr or with unavailable prerequisites, keep ordinary Pi;
+there is no automatic RPC-editor fallback.
+
+Native replacement A has independent technical acceptance and scoped QA PASS. TASK-00512's repository-only RPC
+retirement B is implemented pending independent delta Review/affected QA; see the [current checkpoint](planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint).
+`fight-terminal` now prints only a retirement/session-migration notice, not a conversation frontend. Existing
+copied installations are not changed by this source delta. See [native ownership and log controls](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
+[actual-file session migration](harness/pi/WORKSPACE.md#native-entry-and-existing-rpc-sessions), and
+[explicit installed-launcher adoption/removal](harness/pi/README.md#update-remove-and-recover-the-launcher).
 Branding does not enable managed TASK execution or sandbox access. The optional [deterministic tool policy](harness/pi/TOOL_POLICY.md)
 requires separate operator selection on the qualified runtime; it is not Jev screening or sandbox isolation.
 

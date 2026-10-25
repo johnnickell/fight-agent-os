@@ -58,32 +58,23 @@ to the main model, not Jev; optional text relevance screening remains available.
 See [images and screenshots](FILE_SCREENING_PROFILE.md#images-and-screenshots) for supported forms and retained
 native format and output handling.
 
-## Native Herdr workspace candidate
+## Native Herdr workspace
 
-`/fight-workspace [open|close]` preserves native Pi inside Herdr. TASK-00511 connects the owned child companion
-to current-session observation with selection/pinning, pause/drain and validated lifetime metadata. TASK-00512's
-log candidate follows that verified context using fresh interactive human test-stack bindings and the existing
-bounded Docker reader. Missing mappings/custody remain unavailable, never shared fallback. Herdr owns layout,
-focus, resize and zoom; Pi retains Tab completion. Missing or ambiguous prerequisites leave ordinary Pi usable,
-with no automatic RPC fallback. See [native setup, ownership and recovery](WORKSPACE.md#native-pi-in-herdr-task-00510-candidate).
-The action performs no global installation or workflow selection. Fresh real two-source/session Work qualification
-is recorded in [TASK-00512 candidate A](../../planning/tasks/00512-TASK.md#native-replacement-candidate-a--2026-10-25-work-qualification-complete-independent-acceptance-pending).
-Independent replacement acceptance remains pending; the public RPC executable is retained until that acceptance,
-then the bounded repository retirement delta receives fresh independent review/affected QA before publication.
-See [log controls and native session migration](WORKSPACE.md#verified-logs-in-herdr-task-00512-candidate).
+Start ordinary `pi` in the intended project/worktree. Inside Herdr use `/fight-workspace [open|close]` for owned
+child activity and human-only verified logs. Pi owns its editor, Tab completion, colors, Markdown, dialogs,
+session and workflow authority; Herdr owns layout, focus, resize and zoom. Explicit human declarations bind
+existing test sources once per open generation. Missing mappings/custody remain unavailable, never shared
+fallback. Missing/incompatible Herdr prerequisites leave ordinary Pi usable; outside Herdr, use ordinary Pi
+without companions. No automatic RPC fallback, installation or workflow selection occurs.
 
-## Responsive local workspace candidate (retained RPC client)
-
-The package-owned global `fight-terminal` command starts a dedicated Pi RPC terminal client with a persistent half/quarter/
-quarter split and narrow selectable views. TASK-00502 adds current-session native-child custody and automatic
-selected/pinned worktree following; explicit human bindings observe existing test services through the fixed
-Docker reader. Its owner-approved trusted-local-process assumption does not prevent malicious same-user bootstrap
-impersonation or independently attest native origin; see the [custody boundary](WORKSPACE.md#custody-and-admission).
-No managed integration or container lifecycle operation is added. The explicit user-level launcher installation below does not install Pi or select Harness policy. Read the [workspace runbook](WORKSPACE.md) for input, policy,
-session and cleanup boundaries. Coordinator RPC/PTY/provider/file-hook checks, real held-state images and a
-recovered passing pre-commit full gate are recorded there with limitations; the coordinator's post-commit gate
-and independent Review/QA remain pending.
-Normal Pi remains the operator path.
+Native replacement A has independent technical acceptance and scoped QA PASS. The repository RPC retirement B
+still needs independent delta Review/affected QA; see [the current TASK checkpoint](../../planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint).
+The package-owned `fight-terminal` bin is now **only a local retirement/session-migration notice**, not a second
+conversation frontend. `fight-terminal --help` (or `-h`) exits 0; every former launch invocation exits 1 without
+starting Pi/Herdr/Docker or modifying stored sessions. The direct old module entry is retired too.
+See [native setup and recovery](WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
+[log controls](WORKSPACE.md#verified-logs-in-herdr-task-00512-candidate) and
+[actual-file session migration](WORKSPACE.md#native-entry-and-existing-rpc-sessions).
 
 ## Install
 
@@ -104,85 +95,70 @@ For repository-only use, use `pi install --local ./harness/pi` instead. To remov
 pi remove /absolute/path/to/fight-agent-os/harness/pi
 ```
 
-A **Pi** install changes only Pi's package declaration; it does not put `fight-terminal` on PATH. It does not select
+A **Pi** install changes only Pi's package declaration; no separate workspace command is needed on PATH. It does not select
 models, alter credentials, install skills, authorize tools, or overwrite another theme. Pi's normal package/project
 trust rules still apply.
 
-### Install the global workspace command
+<a id="install-the-global-workspace-command"></a>
 
-Prerequisites: a trusted local Harness source, Node 22 or later, npm and an independently installed `pi` on PATH.
-Qualify the supported installed Pi CLI/RPC and healthy Harness status in normal Pi, not by version equality.
-The commands below were qualified with Node 22.23.1, npm 10.9.8 and Pi 1.4.0; these are receipts, not pins.
-Use a user-owned prefix; never `sudo`, `--force`, or the user's Pi installation prefix. From the repository root:
+### Retired global workspace command
 
-```sh
-source="$PWD/harness/pi"
-prefix="$HOME/.local"  # choose your own user-owned prefix
-command -v fight-terminal  # if present, inspect it BEFORE installing
-ls -ld "$prefix/bin/fight-terminal" "$prefix/lib/node_modules/@fight/agent-os-pi" 2>/dev/null
-```
-
-Stop if either destination or an earlier PATH command belongs to something else. Do not remove it or overwrite
-it; choose a different prefix/resolve PATH with its owner. For a fresh installation, both destinations must be
-absent. npm also refuses an unrelated executable at the destination with `EEXIST`; do not retry with `--force`.
-After inspecting the trusted source and destinations, install explicitly:
-
-```sh
-npm install --global --prefix "$prefix" --install-links --ignore-scripts --legacy-peer-deps --no-audit --no-fund "$source"
-export PATH="$prefix/bin:$PATH"  # current shell only; no profile is edited
-command -v fight-terminal
-fight-terminal --help
-cd "/path/to/your project"
-fight-terminal
-```
-
-`--install-links` is intentional: npm **copies** the local package into
-`$prefix/lib/node_modules/@fight/agent-os-pi` and symlinks `$prefix/bin/fight-terminal` to its package-owned
-executable. `--legacy-peer-deps` prevents npm from installing the host-provided peers (plain `--omit=peer`
-did not do so in the qualified global install). It does not link the source checkout or install Pi/host peers. Assets resolve relative to that
-executable, not the target project's files; the caller's directory is preserved, including spaces and registered
-worktrees. `private: true` remains set. No registry publication is needed. Help proves only command resolution;
-real startup must show the actual conversation directory/session and healthy Harness access before input works.
-Do not automatically enroll a project to make that check green: explicit not-enrolled access is supported.
-
-The separate `pi install "$source"` declaration still loads Harness extensions **from the source path**, not the
-npm copy. Preserve that trusted source and use `pi list` to inspect the actual installation. Do not add the copied
-package as another Pi resource alongside the existing source: different package paths can duplicate commands and
-protected resources. The launcher keeps normal Pi discovery; it never forces its own copy as an extension.
+Do not freshly install the old npm launcher for conversation use. Native Pi plus the package declaration above
+is the current entry. The existing `bin` declaration deliberately retains `fight-terminal` as a compatibility
+notice so an explicitly upgraded npm copy explains migration rather than silently switching session stores or
+workflow authority. It accepts no conversation options. Historical receipts still name `bin/terminal` and the
+old RPC launcher; they are not current launch instructions.
 
 ### Update, remove and recover the launcher
 
-For an update, fully exit owned workspace/Pi processes, review the new trusted source and confirm both installed
-destinations still belong to this package. Rerun the exact npm install command above (including `--install-links`);
-then restart and requalify actual Harness startup/session identity. Source edits alone do **not** update the copied
-launcher. Pi's local-source extensions use the source's new contents on the next full process startup. Do not use
-`pi update` without a target as a launcher update: that updates Pi itself.
+Repository implementation is not installation delivery. A previously copied npm launcher still runs its old
+code until the operator explicitly adopts or removes it. This change performs neither action. Before either,
+record the actual session file of any owned RPC conversation and stop that client normally. Open the same file
+with native `pi --session /absolute/actual-session.jsonl` from the same checkout; inspect `/session` and
+`/file-screening`. Do not clone/fork it, guess with `--continue`, copy launcher-role flags or inject a workflow.
+Prior default RPC files remain under the conversation checkout's `var/terminal/sessions/`; an explicitly selected
+store stays where it was. Ephemeral `--no-session` history cannot be resumed.
 
-Remove only this npm installation:
+For an **explicitly authorized** update of an existing npm copy, fully exit owned clients, review the trusted
+source and inspect ownership of both destinations in the actual user-owned prefix (never `sudo`, `--force` or
+Pi's own installation prefix). Do not overwrite an unrelated package/command:
+
+```sh
+source="/absolute/reviewed/fight-agent-os/harness/pi"
+prefix="$HOME/.local"  # use the actual inspected prior prefix
+command -v fight-terminal
+ls -ld "$prefix/bin/fight-terminal" "$prefix/lib/node_modules/@fight/agent-os-pi"
+# Only after both destinations are confirmed to belong to this installation:
+npm install --global --prefix "$prefix" --install-links --ignore-scripts --legacy-peer-deps --no-audit --no-fund "$source"
+hash -r
+fight-terminal --help  # retirement notice only, not a native startup qualification
+```
+
+`--install-links` copies the local package and creates its owned bin link; source edits alone do not update that
+copy. `--legacy-peer-deps` avoids installing host-provided Pi peers. Node 22.23.1/npm 10.9.8/Pi 1.4.0 were observed
+during earlier installation qualification, not version gates. No registry publication is needed; the package
+remains private. Updating Pi without a target (`pi update`) updates Pi itself, not this copied launcher.
+
+Alternatively, explicitly remove only that inspected npm installation:
 
 ```sh
 npm uninstall --global --prefix "$prefix" --ignore-scripts --no-audit --no-fund @fight/agent-os-pi
 hash -r
 ```
 
-This removes its copied package and bin link, not Pi settings/credentials, enrollment/accounting or any saved
-project `var/terminal/` sessions. Unrelated prefix packages/commands remain. It does **not** remove the separate
-Pi source declaration. Only if you also intend to stop loading the Harness, explicitly use `pi remove` as above;
-that is a separate operator action, never a launcher-removal side effect.
+Removal preserves saved sessions/history, Pi settings/credentials, enrollment/accounting, unrelated prefix
+commands and the separate Pi source declaration. Do not remove the latter merely to retire RPC: native Pi still
+needs the Harness. Inspect `pi list`, keep one trusted package identity, and fully restart Pi when adopting source
+changes. Do not load the npm copy beside the source package or reinstall Herdr/integrations automatically.
 
 | Failure | Recovery |
 |---|---|
-| `fight-terminal` not found | Check the chosen prefix's `bin` on this shell's PATH and `command -v`; reinstall in that prefix if absent. No shell profile is changed automatically. |
-| Missing Node or Pi | Install the missing prerequisite separately, make it available on PATH and qualify normal Pi; never replace the user's `pi`. |
-| npm `EEXIST`, unexpected command or package destination | Stop and inspect ownership; choose another prefix or ask the command's owner. Never force replacement. |
-| Source moved/deleted | The copied launcher survives. The separate Pi declaration does not: in normal Pi remove the exact stale source declaration and install the reviewed new source path. Reinstall the launcher from that new source for future updates. Do not delete settings/enrollment/sessions. |
-| Older manual `npm link`/default linked install breaks after source move | Inspect the dangling command/package links; remove only that owned npm installation using the explicit prefix, then reinstall with `--install-links` from the current source. |
-| Missing/corrupt installed assets | Reinstall the trusted package in the same inspected prefix; never search the target project for an executable. |
-| Missing, filtered, duplicate or unavailable Harness | Input stays held or startup fails. Inspect `pi list`, resource filters and explicit `--extension` paths in normal Pi; retain one trusted package identity, fully restart and verify status. Never disable protections or reenroll automatically. |
-| Unwritable project runtime | Restore authorized write access to the caller's `var/terminal/` (or explicitly choose permitted `--session-dir`); do not silently run in the provider checkout. |
-
-Repository `bin/terminal` was retired by TASK-00503; replace current launch/resume invocations with
-`fight-terminal`, retaining their existing supported arguments. Historical receipts still name the old entry point.
+| `fight-terminal` absent or prints retirement notice | Use ordinary `pi`; no launcher reinstall is needed for conversations. |
+| Old RPC still starts | Inspect `command -v fight-terminal` and its owned npm prefix. Stop the owned client normally and use the actual-file migration above; do not delete history. Explicit adoption/removal is separate. |
+| Missing/incompatible Herdr | Keep ordinary native Pi usable; companions remain unavailable, never RPC fallback. |
+| Unexpected package/bin ownership, npm `EEXIST` or dangling manual link | Stop; reconcile only the owned prior installation with its owner. Never force replacement or remove a guessed path. |
+| Source moved, filtered, duplicate or unavailable Harness | Inspect `pi list` and exact resource paths in normal Pi. Explicitly replace a stale source declaration with the reviewed location, keep one package identity, and fully restart. Do not reset enrollment/accounting or copy credentials. |
+| Unknown actual session file | Inspect the prior selected store privately. Stop if identity is uncertain; do not guess the newest session or manufacture a replacement file. |
 
 ## Module path migration
 

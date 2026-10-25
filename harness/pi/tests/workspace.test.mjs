@@ -1,13 +1,61 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, statSync, rmSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { run } from '../src/workspace/main.mjs';
 import { Workspace, width, fit, wrap, clean, layout } from '../src/workspace/presentation.mjs';
 import { JsonLines, PiRpc, childEnvironment, messageText } from '../src/workspace/rpc.mjs';
 import { Keyboard, Terminal } from '../src/workspace/terminal.mjs';
-import { options, run } from '../src/workspace/main.mjs';
-import { RegisteredChildren } from '../src/workspace/registered-children.mjs';
 
+// AC-06 retirement: all old launch options refuse before terminal/storage/process effects.
+// Public migration guidance and forbidden effects come from TASK-00512, not old renderer output.
+test('retirement help describes native ownership, non-Herdr use and same-actual-file migration', () => {
+  for (const flag of ['--help', '-h']) {
+    let output = '';
+    assert.equal(run([flag], { output: { write: text => { output += text; } }, errorOutput: { write: () => assert.fail('help on stderr') } }), 0);
+    for (const text of ['retired', 'ordinary pi', '/fight-workspace open', '/fight-workspace close', 'Outside Herdr', 'pi --session /absolute/actual-session.jsonl', 'Do not guess with --continue', 'Ephemeral --no-session', 'No sessions, settings']) assert.ok(output.includes(text), text);
+  }
+});
+test('every former conversation route fails without echoing arguments or touching a terminal/adapter', () => {
+  const privateValue = 'PRIVATE-ARGUMENT-DO-NOT-ECHO';
+  for (const args of [[], ['--session', privateValue], ['--continue'], ['--no-session'], ['--logs-test', privateValue], ['--observe-child', privateValue], ['--help', '--session', privateValue], [privateValue]]) {
+    let diagnostic = '';
+    const dependencies = { output: { write: () => assert.fail('no success output') }, errorOutput: { write: text => { diagnostic += text; } } };
+    for (const field of ['input', 'connect', 'createTerminal', 'observe', 'readLogs']) Object.defineProperty(dependencies, field, { get: () => assert.fail(`retirement touched ${field}`) });
+    assert.equal(run(args, dependencies), 1);
+    assert.match(diagnostic, /RPC conversation frontend is retired/);
+    assert.ok(!diagnostic.includes(privateValue));
+    assert.ok(!diagnostic.includes('\x1b'));
+  }
+});
+test('direct former RPC entry leaves existing history, cwd, settings and executables untouched', t => {
+  const root = mkdtempSync(join(tmpdir(), 'fight-retirement-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const project = join(root, 'project with spaces'), home = join(root, 'home'), bin = join(root, 'bin');
+  for (const directory of [project, home, bin]) mkdirSync(directory);
+  // An existing file is deliberately opaque: retirement must not parse, migrate or create a session.
+  const session = join(project, 'actual prior session.jsonl'), settings = join(home, 'settings.json'), marker = join(root, 'unexpected-process');
+  writeFileSync(session, 'existing opaque history\n'); writeFileSync(settings, '{"theme":"preserve"}\n');
+  for (const command of ['pi', 'herdr', 'docker']) writeFileSync(join(bin, command), `#!/bin/sh\nprintf unexpected > '${marker}'\nexit 91\n`, { mode: 0o700 });
+  const before = statSync(session), history = readFileSync(session), configuration = readFileSync(settings);
+  for (const args of [[], ['--session', session], ['--continue'], ['--no-session'], ['--help']]) {
+    const result = spawnSync(process.execPath, [fileURLToPath(new URL('../src/workspace/main.mjs', import.meta.url)), ...args], {
+      cwd: project, env: { HOME: home, PATH: bin, HERDR_ENV: '1' }, input: 'must never become a prompt\n', encoding: 'utf8', timeout: 3000,
+    });
+    assert.equal(result.error, undefined); assert.equal(result.status, args[0] === '--help' ? 0 : 1);
+    assert.match(result.stdout + result.stderr, /frontend is retired/);
+    assert.deepEqual(readFileSync(session), history); assert.deepEqual(readFileSync(settings), configuration);
+    assert.equal(statSync(session).ino, before.ino);
+    assert.deepEqual(readdirSync(project), ['actual prior session.jsonl']);
+    assert.deepEqual(readdirSync(root).sort(), ['bin', 'home', 'project with spaces']);
+  }
+});
+
+// Retained presentation/transport contracts. The retired conversation controller is not runnable.
 const key = (model, name, extras = {}) => model.key('', { name, ...extras });
 const workspace = () => { const model = new Workspace('/checkout'); model.ready = true; return model; };
 
@@ -166,321 +214,6 @@ test('slow terminal output drops obsolete frames instead of growing a display wr
 test('nonterminal launch is rejected without changing raw mode', () => {
   assert.throws(() => new Terminal({ isTTY: false }, { isTTY: false }).start(), /terminal/);
 });
-test('workspace uses Pi-owned var session storage and rejects startup prompts or API keys', () => {
-  assert.deepEqual(options(['--no-session', '--model', 'selected'], '/work').args, ['--no-session', '--model', 'selected']);
-  assert.deepEqual(options([], '/work').args, ['--session-dir', '/work/var/terminal/sessions']);
-  for (const args of [['hello'], ['--api-key', 'fixture'], ['--mode', 'text'], ['--theme', 'other']]) assert.throws(() => options(args, '/work'));
-});
-
-// Controller checks drive the owned entrypoint with controlled Pi records; not real PTY qualification.
-const tick = () => new Promise(resolve => setTimeout(resolve, 45));
-async function controller({ policy = 'active', status, commands = ['jev', 'file-screening', 'safe'], drawError = false, sessionFile, columns = 140, rows = 40, observe, readLogs, children = [] } = {}) {
-  const rpc = new EventEmitter(); rpc.requests = []; rpc.sent = []; rpc.closed = 0;
-  rpc.request = async (type, data) => {
-    rpc.requests.push({ type, ...data });
-    if (type === 'get_state') { if (status !== null) rpc.emit('policy', status ?? { state: policy, phase: 'reviewer', reason: null, enforcement: 'project-access-with-optional-screening' }); return { model: { provider: 'fixture', id: 'model' }, sessionId: 'fixture-session', sessionFile, thinkingLevel: 'high' }; }
-    if (type === 'get_commands') return { commands: commands.map(name => ({ name })) };
-    if (type === 'get_messages') return { messages: [{ role: 'user', content: 'prior' }] };
-    if (type === 'clear_queue') return { steering: ['queued correction'], followUp: [] };
-    if (type === 'bash') return { exitCode: 0, output: 'shell-result' };
-    return { disposition: 'handled' };
-  };
-  rpc.send = async record => rpc.sent.push(record); rpc.close = async () => { rpc.closed++; };
-  const input = new EventEmitter(), output = new EventEmitter(); input.isTTY = true; output.isTTY = true; output.columns = columns; output.rows = rows;
-  const terminal = { frames: [], stopped: 0,
-    start(onKey, onPaste) { this.key = onKey; this.paste = onPaste; },
-    draw(lines) { if (drawError) throw new Error('fixture render failure'); this.frames.push(lines.join('\n')); },
-    stop() { this.stopped++; },
-  };
-  const errorOutput = new EventEmitter(); errorOutput.write = () => {};
-  const originalExitCode = process.exitCode;
-  const close = await run(['--no-session', ...children.flatMap(path => ['--observe-child', path])], { input, output, errorOutput, connect: () => rpc, createTerminal: () => terminal,
-    observe: observe ?? ((_paths, changed, cwd) => new RegisteredChildren(cwd, changed, { preferences: false, discover: () => [] })),
-    ...(readLogs ? { readLogs } : {}) });
-  const dispose = async () => { await close(); process.exitCode = originalExitCode; };
-  return { rpc, terminal, input, output, errorOutput, dispose };
-}
-test('child pane reader actions never enter Pi RPC and conversation remains usable while observation is paused', async () => {
-  const observer = { started: 0, closed: 0, actions: [], start() { this.started++; }, close() { this.closed++; },
-    action(action) { this.actions.push(action); }, view() { return 'TASK-00448 · owned child status'; } };
-  const app = await controller({ observe: () => observer, children: ['/var/explicit-child.sock'] });
-  try {
-    app.terminal.paste('primary draft'); app.terminal.key('', { name: 'tab' });
-    for (const text of ['p', ']', '[', 'c', 'r']) app.terminal.key(text, { name: text });
-    await tick(); assert.match(app.terminal.frames.at(-1), /owned child status/);
-    assert.match(app.terminal.frames.at(-1), /children: 1 explicit/);
-    assert.deepEqual(observer.actions, ['pause', 'next', 'previous', 'toggle', 'reconnect']);
-    assert.ok(!app.rpc.requests.some(item => ['prompt', 'abort', 'bash'].includes(item.type)));
-    app.terminal.key('', { name: 'tab', shift: true }); app.terminal.key('', { name: 'return' }); await tick();
-    assert.deepEqual(app.rpc.requests.find(item => item.type === 'prompt'), { type: 'prompt', message: 'primary draft' });
-    assert.equal(observer.started, 1);
-  } finally { await app.dispose(); }
-  assert.equal(observer.closed, 1);
-});
-test('pending side-pane discovery does not delay qualified conversation startup or input', async () => {
-  let complete;
-  const pending = new Promise(resolve => { complete = resolve; });
-  const observer = { start: () => pending, close() { complete(); }, action() {}, view: () => 'Discovery pending; no child admitted' };
-  const starting = controller({ observe: () => observer });
-  let watchdog;
-  const ready = await Promise.race([starting, new Promise(resolve => { watchdog = setTimeout(() => resolve(null), 250); })]);
-  clearTimeout(watchdog);
-  if (!ready) { complete(); const delayed = await starting; await delayed.dispose(); }
-  assert.ok(ready, 'conversation must not await the discovery promise');
-  try {
-    ready.terminal.paste('usable while discovering'); ready.terminal.key('', { name: 'return' }); await tick();
-    assert.deepEqual(ready.rpc.requests.find(item => item.type === 'prompt'), { type: 'prompt', message: 'usable while discovering' });
-    assert.match(ready.terminal.frames.at(-1), /Discovery pending/);
-  } finally { await ready.dispose(); }
-});
-
-test('entrypoint binds explicit observation to actual session and clears it on identity replacement without submitting authority', async () => {
-  const observer = { session: null, invalidated: [], start(id) { this.session = id; }, tick() {},
-    sessionChanged(id) { this.invalidated.push(id); }, close() {}, action() {}, view() { return 'session-scoped fixture'; } };
-  const app = await controller({ observe: () => observer, children: ['/explicit/source.sock'] });
-  try {
-    assert.equal(observer.session, 'fixture-session');
-    const previous = app.rpc.request;
-    app.rpc.request = async (type, ...args) => type === 'get_state' ? { sessionId: 'replacement-session' } : previous(type, ...args);
-    await new Promise(resolve => setTimeout(resolve, 1100));
-    assert.deepEqual(observer.invalidated, ['replacement-session']);
-    app.terminal.paste('must not submit'); app.terminal.key('', { name: 'return' }); await tick();
-    assert.match(app.terminal.frames.at(-1), /observation admission\/pin cleared/);
-    assert.ok(!app.rpc.requests.some(item => ['prompt', 'bash', 'abort'].includes(item.type)));
-  } finally { await app.dispose(); }
-});
-// WORKSPACE.md promises wide panes at physical 100×20, while the final column must
-// remain unused to prevent terminal autowrap. Exercise both contracts at the controller.
-for (const rows of [20, 30]) test(`QA-01 entrypoint shows all panes at physical 100×${rows} without filling the final column`, async () => {
-  const app = await controller({ columns: 100, rows });
-  try {
-    await tick();
-    const lines = app.terminal.frames.at(-1).split('\n');
-    assert.match(lines[1], /^> Conversation\s+Child observation/);
-    assert.match(lines.join('\n'), /Runtime observation/);
-    assert.equal(lines.length, rows);
-    for (const line of lines) assert.equal(width(line), 99);
-  } finally { await app.dispose(); }
-});
-test('QA-01 entrypoint preserves boundary, resize, collapse, draft and modal response contracts', async () => {
-  const app = await controller({ columns: 99, rows: 20 });
-  const frame = () => app.terminal.frames.at(-1);
-  const resize = async (columns, rows) => {
-    app.output.columns = columns; app.output.rows = rows; app.output.emit('resize'); await tick();
-    const lines = frame().split('\n'); assert.equal(lines.length, rows);
-    for (const line of lines) assert.equal(width(line), Math.max(1, columns - 1));
-  };
-  try {
-    app.terminal.paste('retained界'); await tick();
-    assert.doesNotMatch(frame(), /Child observation|Runtime observation/);
-    await resize(100, 19); assert.doesNotMatch(frame(), /Child observation|Runtime observation/);
-    await resize(100, 20); assert.match(frame(), /Child observation/); assert.match(frame(), /Runtime observation/);
-    app.terminal.key('', { name: 'w', ctrl: true }); await tick();
-    assert.doesNotMatch(frame(), /Child observation|Runtime observation/); assert.match(frame(), /retained界/);
-    app.terminal.key('', { name: 'tab' }); await tick(); assert.match(frame(), /> Child observation/);
-    app.terminal.key('', { name: 'w', ctrl: true }); await tick(); assert.match(frame(), /Runtime observation/);
-    app.rpc.emit('record', { type: 'extension_ui_request', id: 'boundary-confirm', method: 'confirm', title: 'Boundary confirmation' });
-    await tick(); assert.match(frame(), /Boundary confirmation/); assert.match(frame(), /Runtime observation/);
-    app.terminal.paste('y'); assert.deepEqual(app.rpc.sent, []);
-    await resize(99, 20); assert.match(frame(), /Boundary confirmation/); assert.doesNotMatch(frame(), /Runtime observation/);
-    app.terminal.key('', { name: 'return' }); await tick();
-    assert.deepEqual(app.rpc.sent, [{ type: 'extension_ui_response', id: 'boundary-confirm', confirmed: false }]);
-    assert.match(frame(), /> Child observation/);
-    app.terminal.key('', { name: 'tab', shift: true }); await tick(); assert.match(frame(), /retained界/);
-    for (const dimensions of [[78, 24], [101, 20], [120, 40], [12, 6], [1, 1], [100, 20]]) await resize(...dimensions);
-    assert.match(frame(), /Child observation/); assert.match(frame(), /retained界/);
-    assert.ok(!app.rpc.requests.some(request => request.type === 'prompt'));
-  } finally { await app.dispose(); }
-});
-test('entrypoint submits text only after active policy qualification and preserves normal RPC steering', async () => {
-  const app = await controller();
-  try {
-    app.terminal.paste('hello\n界'); app.terminal.key('', { name: 'return' }); await tick();
-    assert.deepEqual(app.rpc.requests.find(request => request.type === 'prompt'), { type: 'prompt', message: 'hello\n界' });
-    app.rpc.emit('record', { type: 'agent_start' }); app.rpc.emit('record', { type: 'agent_end' });
-    app.terminal.paste('correction'); app.terminal.key('', { name: 'return' }); await tick();
-    assert.equal(app.rpc.requests.filter(request => request.type === 'prompt').at(-1).streamingBehavior, 'steer');
-    app.rpc.emit('record', { type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: 'streamed text' } }); await tick();
-    assert.match(app.terminal.frames.at(-1), /streamed text/);
-    app.rpc.emit('record', { type: 'message_end', message: { role: 'assistant', content: 'final answer' } });
-    app.rpc.emit('record', { type: 'agent_settled' }); await tick();
-    assert.match(app.terminal.frames.at(-1), /final answer/); assert.match(app.terminal.frames.at(-1), /idle/);
-  } finally { await app.dispose(); }
-});
-test('entrypoint permits genuine optional Jev states without enrollment or evaluator setup', async () => {
-  for (const status of [
-    { state: 'disabled', enforcement: 'not-enrolled', reason: 'not-enrolled' },
-    { state: 'degraded', enforcement: 'project-access-with-screening-degraded', reason: 'credential-unavailable', access: { state: 'available', reason: null } },
-    { state: 'degraded', enforcement: 'project-access-with-screening-degraded', reason: 'monthly-budget', access: { state: 'available', reason: null } },
-  ]) {
-    const app = await controller({ status });
-    try {
-      app.terminal.paste('!printf optional'); app.terminal.key('', { name: 'return' }); await tick();
-      assert.equal(app.rpc.requests.find(request => request.type === 'bash')?.command, 'printf optional');
-      app.rpc.emit('policy', { state: 'degraded', reason: 'enrollment-revoked', access: { state: 'held', reason: 'enrollment-revoked' } });
-      app.terminal.paste('!printf forbidden'); app.terminal.key('', { name: 'return' }); await tick();
-      assert.equal(app.rpc.requests.filter(request => request.type === 'bash').length, 1);
-    } finally { await app.dispose(); }
-  }
-});
-test('entrypoint holds input on degraded or missing policy capabilities without alternative submission', async () => {
-  for (const settings of [{ policy: 'degraded' }, { commands: ['jev'] }, { status: null },
-    { status: {} }, { status: { state: 'disabled', reason: 'required-enrollment-missing-or-changed' } },
-    { status: { state: 'active', access: { state: 'held', reason: 'required-tool-hidden' } } }]) {
-    const app = await controller(settings);
-    try { app.terminal.paste('blocked'); app.terminal.key('', { name: 'return' }); await tick(); assert.ok(!app.rpc.requests.some(request => request.type === 'prompt')); }
-    finally { await app.dispose(); }
-  }
-});
-test('entrypoint rejects native-only slash commands and forwards known extension commands and both shell contexts', async () => {
-  const app = await controller();
-  try {
-    for (const text of ['/settings', '/safe', '!printf included', '!!printf excluded']) { app.terminal.paste(text); app.terminal.key('', { name: 'return' }); await tick(); }
-    assert.deepEqual(app.rpc.requests.filter(request => request.type === 'prompt'), [{ type: 'prompt', message: '/safe' }]);
-    assert.deepEqual(app.rpc.requests.filter(request => request.type === 'bash'), [
-      { type: 'bash', command: 'printf included', excludeFromContext: false }, { type: 'bash', command: 'printf excluded', excludeFromContext: true },
-    ]);
-    app.terminal.key('', { name: 'escape' }); await tick();
-    assert.deepEqual(app.rpc.requests.slice(-3).map(request => request.type), ['clear_queue', 'abort', 'abort_bash']);
-    assert.match(app.terminal.frames.at(-1), /queued correction/);
-  } finally { await app.dispose(); }
-});
-test('entrypoint keeps Pi confirmations request-bound, denies paste and expires stale dialogs', async () => {
-  const app = await controller();
-  try {
-    app.rpc.emit('record', { type: 'extension_ui_request', id: 'one', method: 'confirm', title: 'Exact command' });
-    app.terminal.paste('y\n'); assert.deepEqual(app.rpc.sent, []);
-    app.terminal.key('n', { name: 'n' }); await tick();
-    assert.deepEqual(app.rpc.sent[0], { type: 'extension_ui_response', id: 'one', confirmed: false });
-    app.rpc.emit('record', { type: 'extension_ui_request', id: 'expired', method: 'confirm', timeout: 10 }); await tick();
-    app.terminal.key('y', { name: 'y' }); assert.equal(app.rpc.sent.length, 1);
-    for (let index = 0; index < 9; index++) app.rpc.emit('record', { type: 'extension_ui_request', id: `pending-${index}`, method: 'confirm' });
-    await tick(); assert.deepEqual(app.rpc.sent.at(-1), { type: 'extension_ui_response', id: 'pending-8', cancelled: true });
-  } finally { await app.dispose(); }
-});
-test('entrypoint handles extension UI notifications, resize and immutable error holds', async () => {
-  const app = await controller();
-  try {
-    for (const event of [
-      { method: 'notify', message: 'notice' }, { method: 'setStatus', statusKey: 'fixture', statusText: 'working' },
-      { method: 'setWidget', widgetLines: ['widget'] }, { method: 'set_editor_text', text: 'restored draft' },
-    ]) app.rpc.emit('record', { type: 'extension_ui_request', ...event });
-    app.output.columns = 78; app.output.rows = 24; app.output.emit('resize'); await tick();
-    assert.equal(app.terminal.frames.at(-1).split('\n').length, 24); assert.match(app.terminal.frames.at(-1), /restored draft/);
-    app.rpc.emit('record', { type: 'extension_error' }); app.rpc.emit('policy', { state: 'active' });
-    app.terminal.key('', { name: 'return' }); await tick(); assert.ok(!app.rpc.requests.some(request => request.type === 'prompt'));
-  } finally { await app.dispose(); }
-});
-test('entrypoint closes its transport and terminal once on rendering failure or transport exit', async () => {
-  for (const settings of [{ drawError: true }, {}]) {
-    const app = await controller(settings);
-    try {
-      if (!settings.drawError) app.rpc.emit('exit', 1);
-      await tick(); assert.equal(app.terminal.stopped, 1); assert.equal(app.rpc.closed, 1);
-    } finally { await app.dispose(); }
-    assert.equal(app.terminal.stopped, 1); assert.equal(app.output.listenerCount('resize'), 0);
-  }
-});
-test('TASK-00503 QA-01 terminal loss closes owned resources once, including late restoration errors', async () => {
-  for (const [stream, event] of [['input', 'end'], ['input', 'close'], ['input', 'error'], ['output', 'close'], ['output', 'error'], ['errorOutput', 'error']]) {
-    const app = await controller();
-    const stop = app.terminal.stop.bind(app.terminal);
-    app.terminal.stop = () => { stop(); app.output.emit('error', new Error('write EIO during restoration')); };
-    try {
-      assert.doesNotThrow(() => app[stream].emit(event, new Error('terminal lost')), `${stream} ${event}`);
-      await tick();
-      assert.equal(app.terminal.stopped, 1, `${stream} ${event}`);
-      assert.equal(app.rpc.closed, 1, `${stream} ${event}`);
-      assert.doesNotThrow(() => app.output.emit('error', new Error('late write EIO')));
-      assert.doesNotThrow(() => app.input.emit('error', new Error('late read EIO')));
-      assert.ok(!app.rpc.requests.some(request => ['prompt', 'bash', 'abort'].includes(request.type)));
-    } finally { await app.dispose(); }
-    assert.equal(app.terminal.stopped, 1); assert.equal(app.rpc.closed, 1);
-  }
-});
-test('TASK-00503 QA-01 terminal loss during startup cannot resume readers or write diagnostics to the lost TTY', async () => {
-  for (const pendingType of ['get_state', 'get_commands', 'get_messages']) for (const rejected of [false, true]) {
-    const input = new EventEmitter(), output = new EventEmitter(), errorOutput = new EventEmitter();
-    input.isTTY = output.isTTY = true; output.columns = 140; output.rows = 40;
-    errorOutput.write = () => assert.fail('no diagnostic after terminal loss');
-    let reached, settle, stopped = 0, closed = 0, starts = 0;
-    const pending = new Promise(resolve => { reached = resolve; });
-    const rpc = new EventEmitter(), requests = [];
-    const values = { get_state: { sessionId: 'owned' }, get_commands: { commands: [] }, get_messages: { messages: [] } };
-    rpc.request = type => {
-      requests.push(type);
-      if (type !== pendingType) return Promise.resolve(values[type]);
-      return new Promise((resolve, reject) => { settle = () => rejected ? reject(new Error('Pi exited')) : resolve(values[type]); reached(); });
-    };
-    rpc.close = async () => { closed++; };
-    const previousExitCode = process.exitCode;
-    const starting = run(['--no-session'], { input, output, errorOutput, connect: () => rpc,
-      createTerminal: () => ({ start() {}, stop() { stopped++; }, draw() {} }),
-      observe: () => ({ start() { starts++; }, close() {} }),
-      readLogs: () => ({ start() {}, close() {} }),
-    });
-    await pending;
-    const startsBeforeLoss = starts, requestsBeforeLoss = requests.length;
-    input.emit('end'); settle();
-    try {
-      const close = await starting; await close();
-      assert.equal(stopped, 1); assert.equal(closed, 1);
-      assert.equal(starts, startsBeforeLoss); assert.equal(requests.length, requestsBeforeLoss);
-      assert.equal(output.listenerCount('resize'), 0);
-    } finally { process.exitCode = previousExitCode; }
-  }
-});
-test('startup transport failure still reports recovery after cleanup when the terminal remains live', async () => {
-  const input = new EventEmitter(), output = new EventEmitter(), errorOutput = new EventEmitter();
-  input.isTTY = output.isTTY = true;
-  const diagnostics = [], rpc = new EventEmitter(); let closed = 0;
-  errorOutput.write = text => diagnostics.push(text);
-  rpc.request = async () => { const error = new Error('Pi extension failed to load'); rpc.emit('failure', error); throw error; };
-  rpc.close = async () => { closed++; };
-  const previousExitCode = process.exitCode;
-  try {
-    const close = await run(['--no-session'], { input, output, errorOutput, connect: () => rpc,
-      createTerminal: () => ({ start() {}, stop() {}, draw() {} }),
-      observe: () => ({ close() {} }), readLogs: () => ({ start() {}, close() {} }),
-    });
-    await close();
-    assert.equal(closed, 1);
-    assert.match(diagnostics.join(''), /Startup failed: Pi extension failed to load/);
-    assert.match(diagnostics.join(''), /Inspect pi list/);
-  } finally { process.exitCode = previousExitCode; }
-});
-test('native textual exit uses the same owned cleanup without submitting a provider prompt', async () => {
-  const app = await controller(); app.terminal.paste('/quit'); app.terminal.key('', { name: 'return' }); await tick();
-  assert.equal(app.rpc.closed, 1); assert.ok(!app.rpc.requests.some(request => request.type === 'prompt')); await app.dispose();
-});
-
-// Regression cases derived from independent Review R1–R4; no provider or policy mutation.
-test('R1 workflow selectors are explicitly refused even when discovered as commands', async () => {
-  const selectors = [
-    '/skill:review TASK-00447', '/skill:work TASK-00447 --checkout /other',
-    '/skill:graphify query symbol', '/skill:build TASK-00447 status',
-    '/skill:release 0.5.0 preview', '/skill:research TASK-00447 trace',
-    '/file-screening role land', '/file-screening',
-  ];
-  const app = await controller({ sessionFile: '/fixture/session.jsonl', commands: ['jev', 'file-screening', 'skill:review', 'skill:work', 'skill:graphify', 'skill:build', 'skill:release', 'skill:research'] });
-  try {
-    for (const selector of selectors) {
-      app.terminal.paste(selector); app.terminal.key('', { name: 'return' }); await tick();
-      assert.match(app.terminal.frames.at(-1), /not submitted/i, selector);
-    }
-    assert.deepEqual(app.rpc.requests.filter(request => request.type === 'prompt'), []);
-    assert.match(app.terminal.frames.at(-1), /native Pi/i);
-    assert.match(app.terminal.frames.at(-1), /same session/i);
-  } finally { await app.dispose(); }
-});
-test('R1 ephemeral rejection does not promise an unavailable same-session resume', async () => {
-  const app = await controller();
-  try {
-    app.terminal.paste('/skill:review TASK-00447'); app.terminal.key('', { name: 'return' }); await tick();
-    assert.match(app.terminal.frames.at(-1), /no same session resume path/);
-    assert.ok(!app.rpc.requests.some(request => request.type === 'prompt'));
-  } finally { await app.dispose(); }
-});
 test('R2 long and wrapped selects keep the exact selected value visible after navigation and resize', () => {
   const model = workspace();
   const options = Array.from({ length: 50 }, (_, i) => `choice-${i} ${'wrapped label '.repeat(8)} END-${i}`);
@@ -515,16 +248,12 @@ test('R3 typed and dialog input limits reject whole emoji and combining grapheme
     assert.equal(key(model, 'return').value.length, 32767);
   }
 });
-test('R3 paste bounds preserve split graphemes and disclose discarded input through the controller', async () => {
-  const app = await controller();
-  const keyboard = new Keyboard(app.terminal.key, app.terminal.paste);
-  try {
-    keyboard.push('\x1b[200~' + 'x'.repeat(32767) + '👩');
-    keyboard.push('‍💻'); keyboard.push('\x1b[201~'); await tick();
-    assert.match(app.terminal.frames.at(-1), /input.*(discard|reject)/i);
-    app.terminal.key('', { name: 'return' }); await tick();
-    assert.equal(app.rpc.requests.find(request => request.type === 'prompt').message, 'x'.repeat(32767));
-  } finally { keyboard.close(); await app.dispose(); }
+test('R3 paste bounds preserve split graphemes and disclose discarded input', () => {
+  const model = workspace();
+  const keyboard = new Keyboard((text, key) => model.key(text, key), (text, retention) => { model.insert(text); if (retention.discarded) model.inputLoss(); });
+  keyboard.push('\x1b[200~' + 'x'.repeat(32767) + '👩'); keyboard.push('‍💻'); keyboard.push('\x1b[201~'); keyboard.close();
+  assert.match(model.status, /input.*(discard|reject)/i);
+  assert.equal(key(model, 'return').message, 'x'.repeat(32767));
 });
 test('R3 complete graphemes that fit remain accepted; rejected middle insertion preserves existing suffix', () => {
   for (const cluster of ['👩‍💻', 'é', '界']) {
@@ -557,15 +286,11 @@ test('R4 a single large entry discloses clipping while retaining source identity
   const frame = model.render(78, 24).join('\n');
   assert.match(frame, /toolResult: read/); assert.match(frame, /truncated/i);
 });
-test('R4 streaming loss is visible with assistant identity before the final message', async () => {
-  const app = await controller();
-  try {
-    app.rpc.emit('record', { type: 'message_update', assistantMessageEvent: { type: 'text_delta', delta: '👩‍💻'.repeat(15000) + '\nTAIL' } });
-    await tick();
-    const frame = app.terminal.frames.at(-1);
-    assert.match(frame, /assistant/i); assert.match(frame, /omitted|truncat/i); assert.match(frame, /TAIL/);
-    assert.ok(frame.isWellFormed());
-  } finally { await app.dispose(); }
+test('R4 streaming loss is visible with assistant identity before the final message', () => {
+  const model = workspace(); model.stream('👩‍💻'.repeat(15000) + '\nTAIL');
+  const frame = model.render(140, 40).join('\n');
+  assert.match(frame, /assistant/i); assert.match(frame, /omitted|truncat/i); assert.match(frame, /TAIL/);
+  assert.ok(frame.isWellFormed());
 });
 
 // R6: standard input/editor dialogs must show the point being edited, not just retain its value.
@@ -609,25 +334,6 @@ test('R6 manual dialog scrolling survives redraw/resize until the next edit and 
   assert.match(model.render(78, 24).join('\n'), /▏/);
   assert.deepEqual(key(model, 'escape'), { type: 'dialog', id: 'manual-editor', cancelled: true });
   assert.equal(model.draft, 'separate draft'); assert.equal(model.focus, 2);
-});
-
-test('automatic custody selection rebinds only human-facing log context; idle returns primary and late closed events do nothing', async () => {
-  let changed;
-  const observer = { verifiedWorktree: null, start(id) { this.session = id; this.verifiedWorktree = '/verified/one'; changed(); },
-    action(type) { this.verifiedWorktree = type === 'next' ? '/verified/two' : null; changed(); },
-    tick() {}, close() {}, view() { return 'custody-only-pane-marker'; } };
-  const bindings = [], logs = { start() {}, close() {}, rebind(path) { bindings.push(path); return Promise.resolve(); },
-    action() {}, view() { return 'human-only-log-marker'; }, summary() { return 'verified log source'; }, body() { return 'human-only-log-marker'; } };
-  const app = await controller({ observe: (_paths, update) => { changed = update; return observer; }, readLogs: () => logs, commands: ['jev', 'file-screening', 'fight-stage'] });
-  try {
-    assert.equal(observer.session, 'fixture-session'); assert.deepEqual(bindings, ['/verified/one']);
-    app.terminal.key('', { name: 'tab' }); app.terminal.key(']', {}); await tick(); assert.equal(bindings.at(-1), '/verified/two');
-    app.terminal.key('f', {}); await tick(); assert.equal(bindings.at(-1), process.cwd());
-    app.terminal.key('', { name: 'tab', shift: true }); app.terminal.paste('/fight-stage {}'); app.terminal.key('', { name: 'return' }); await tick();
-    assert.ok(!app.rpc.requests.some(request => ['prompt', 'bash', 'abort'].includes(request.type)));
-    assert.ok(!JSON.stringify(app.rpc.sent).includes('pane-marker'));
-  } finally { await app.dispose(); }
-  const before = bindings.length; observer.verifiedWorktree = '/late/stale'; changed(); assert.equal(bindings.length, before);
 });
 
 // Transport integration uses a separate harmless protocol peer, not a substitute for real Pi qualification.
