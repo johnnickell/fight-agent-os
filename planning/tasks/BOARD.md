@@ -45,7 +45,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | ready-for-agent | — | — |
+| — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | ready-for-agent | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 
 ## Waiting
 
@@ -448,7 +448,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00157](00157-TASK.md) | Organize and archive execution scratch and repair planning references | — (standalone chore) | done | — | [PR #117](https://github.com/johnnickell/fight-agent-os/pull/117) |
 | 1 | [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | — (standalone bug) | done | — | [PR #148](https://github.com/johnnickell/fight-agent-os/pull/148) |
 | 1 | [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #158](https://github.com/johnnickell/fight-agent-os/pull/158) |
-| 1 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | — |
+| 1 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
