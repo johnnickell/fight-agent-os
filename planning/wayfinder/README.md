@@ -123,7 +123,11 @@ lifecycle edge. Existing statuses/orders/holds and EPIC-00020 priority remain un
 the earlier TASK-00399 supplier mapping is runtime qualification. Optional expansion/legacy replacement remain excluded, with no operational or
 spending authority.
 
-Next: `/skill:next` from the selected planning checkout for read-only Board-based selection.
+The planning branch is published as [PR #161](https://github.com/johnnickell/fight-agent-os/pull/161), pending human
+review/merge. See the [current publication handoff](private-production-rollout-map.md#current-planning-publication)
+for base reconciliation, planning checks, unavailable full-build runtime and preserved cleanup evidence.
+
+Next: Human review/merge decision for PR #161. `/skill:next` remains read-only Board-based execution selection.
 No decomposition or implementation starts automatically.
 
 ## Observability planning handoff

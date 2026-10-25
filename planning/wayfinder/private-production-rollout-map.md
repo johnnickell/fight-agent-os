@@ -463,6 +463,28 @@ Next: `/skill:next` from the selected planning checkout for read-only Board-base
 No execution starts automatically. Historical closeouts below retain their observation-time authority and
 evidence limits; this handoff does not authorize implementation, spending, deployment or retirement.
 
+### Current planning publication
+
+John separately authorized committing all selected planning changes, pushing the branch, opening a PR to `develop`
+and removing this planning worktree/its owned disposable containers. Planning is published in
+[PR #161](https://github.com/johnnickell/fight-agent-os/pull/161), pending human review/merge. This is not an
+implementation acceptance, merge, release or deployment. Existing source-record statuses/holds remain unchanged.
+
+Current `develop` was integrated without rewriting history; the generated Board conflict was resolved through the
+owning planning generator while preserving approved authored content and upstream completion records. Fresh planning
+validation passes with 678 records/518 active; scope, relative links and whitespace pass. `./bin/build` stopped before
+checks because no dedicated Compose web service was running; no full-build or independent implementation Review/QA
+pass is claimed. Assess hosted results against their actual head separately.
+
+Earlier uncommitted/unpublished statements, verification counts and no-commit/no-push observations are historical
+planning checkpoints, not current publication status. Current publication/cleanup evidence and preserved private
+scratch live under ignored `.runs/handoffs/private-production-rollout-publication/` at the canonical base checkout,
+not in the PR or application runtime. Only the named planning worktree and ownership-proven disposable resources
+are cleanup candidates; unrelated worktrees/containers and the feature branch remain preserved.
+
+Next: Human review/merge decision for [PR #161](https://github.com/johnnickell/fight-agent-os/pull/161), with verification
+limits above. `/skill:next` remains the read-only execution-selection route after planning; no work starts automatically.
+
 ### Charting verification
 
 Initial baseline: read-only planning validation passed with 645 records, 496 active and current views. New WF IDs

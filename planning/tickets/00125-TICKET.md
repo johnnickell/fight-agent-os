@@ -181,7 +181,8 @@ ChatGPT and legacy retirement remain excluded, not silently completed or turned 
 
 Planning completion does not change EPIC/TICKET/TASK delivery statuses, EPIC-00020 priority, TASK-00510–00512 or any
 actual qualification hold. No implementation, target/spending authority, live evidence or publication is inferred.
-Work remains uncommitted/unpublished. The Board, not this map or new IDs, owns executable work selection.
+At the planning checkpoint this work remained uncommitted/unpublished; subsequent publication is recorded below.
+The Board, not this map or new IDs, owns executable work selection.
 
 #### Planning verification
 
@@ -203,4 +204,14 @@ Planning cutover, provider/mail call, credential/vault access, backup/restore/ro
 No commit or push occurred. Earlier lifecycle/artifact/environment/mail/recovery counts remain historical to their
 own steps; no inherited receipt is presented as fresh application or production evidence.
 
-Next: `/skill:next` from the selected planning checkout for read-only Board-based selection. No automatic execution.
+#### Subsequent authorized planning publication
+
+John separately authorized the planning commit, non-force push, PR to `develop` and owned worktree/container cleanup.
+[PR #161](https://github.com/johnnickell/fight-agent-os/pull/161) is open for human review; no merge or implementation
+acceptance is inferred. The [current map publication handoff](../wayfinder/private-production-rollout-map.md#current-planning-publication)
+records integrated-base verification and the full-build limitation: no dedicated Compose web service was running.
+Earlier counts/no-commit/no-push checkpoints remain historical. Private receipts are preserved outside the disposable
+worktree at the canonical base under ignored `.runs/handoffs/private-production-rollout-publication/`.
+
+Next: Human review/merge decision for PR #161. `/skill:next` remains read-only Board-based execution selection;
+no implementation starts automatically.
