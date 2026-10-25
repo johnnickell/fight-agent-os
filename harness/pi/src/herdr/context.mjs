@@ -107,8 +107,12 @@ export class NativeWorkspaceContext {
   }
   async start() {
     const server = await serveLocal(query => {
-      if (query?.token !== this.token || query.operation !== 'context') throw Error('Invalid context query');
-      return this.snapshot();
+      if (query?.token !== this.token) throw Error('Invalid context query');
+      const context = this.snapshot();
+      if (query.operation === 'context') return context;
+      // Explicit interactive declarations live only in this native open generation's memory.
+      if (query.operation === 'logs' && this.logs) return { ...context, ...this.logs };
+      throw Error('Invalid context query');
     });
     this.server = server;
     if (this.closed) { server.close(); throw Error('Native context closed during startup'); }

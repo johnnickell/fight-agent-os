@@ -1,14 +1,19 @@
 # Local terminal workspaces
 
-## Native Pi in Herdr (TASK-00510 candidate)
+<a id="native-pi-in-herdr-task-00510-candidate"></a>
+
+## Native Pi in Herdr
 
 In native Pi inside Herdr, use `/fight-workspace` (or `/fight-workspace open`) to open a human-only child
-activity companion and a **placeholder** log companion. `/fight-workspace close` closes only proven-owned
+activity companion and a human-only verified log companion. `/fight-workspace close` closes only proven-owned
 companions. Repeated open reuses the same healthy panes. The existing Pi process, session/file, cwd, editor,
 Tab completion, themes, dialogs, tools and workflow binding are unchanged. Herdr owns focus, resize and zoom;
-Pi's Tab is not a pane-navigation shortcut here. TASK-00511 supplies the child candidate below; Docker reading
-remains TASK-00512. Independent acceptance of TASK-00511 is pending.
-The legacy `fight-terminal` client below remains available; there is no automatic fallback to it.
+Pi's Tab is not a pane-navigation shortcut here. The child companion supplies the validated context below;
+TASK-00512 composes it with the existing bounded Docker reader. Native replacement A has independent technical
+acceptance and scoped QA PASS; the repository retirement B delta still requires independent Review/affected QA.
+See [the current TASK checkpoint](../../planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint).
+`fight-terminal` now prints a retirement/session-migration notice only: it never opens a conversation or acts as
+fallback. Repository source changes do not update an already-installed copied launcher.
 
 Load the updated trusted package once through your existing Pi installation. A **full process restart** is needed
 when adopting changed extension/module source; `/reload` did not replace cached imported `.mjs` code in the tested
@@ -27,7 +32,10 @@ Ownership is saved in the caller's ignored `var/herdr-workspace/`: actual primar
 opaque pane and terminal IDs, and non-secret companion tokens. Before reuse/cleanup, Herdr topology/process facts
 must match a live loopback companion handshake. A saved PID/label alone is insufficient. Loopback services are
 bounded identity responders; the child handshake also reports its generation and permanent observation-invalidation
-state. These health facts do not grant pane ownership. The child companion additionally serves only validated
+state. The log handshake also reports its tracked Docker subprocess PIDs, never output or source declarations.
+A running reader is admitted only alongside its live companion in that companion's foreground process group,
+with fresh direct-parent proof; unknown, untracked or additional foreground processes retain the ownership hold.
+These health facts alone do not grant pane ownership. The child companion additionally serves only validated
 selection metadata as described below, never progress or tool APIs. Same-user state/processes are trusted local inputs,
 not OS-isolated or independently attested. CLI requests have a 2.5-second deadline and 1 MiB response bound;
 startup probes and shutdown settling are finite. Closing a companion never sends input to or cancels Pi/children.
@@ -41,12 +49,14 @@ ownership file and the actual dedicated topology with Herdr. An operator must re
 clearing that file's uncertainty hold; never close a guessed ID or remove state merely to obtain a green retry.
 Changed/replaced companion processes are retained, not killed. Unknown cleanup remains a disclosed limitation.
 
-TASK-00510's accepted layout evidence remains historical context. TASK-00511 records fresh child integration
-checks/captures separately; independent Review/QA remain pending for that change. No layout action changes tool
+TASK-00510/00511's accepted layout/child evidence remains historical context. TASK-00512 records the composed
+native replacement acceptance and the separately pending retirement delta. No layout action changes tool
 permission, workflow role, provider/model, enrollment or global settings.
 Model-invoked commands do not become trusted operator workflow selections. Native shell is not OS isolation.
 
-### Current-session activity in Herdr (TASK-00511 candidate)
+<a id="current-session-activity-in-herdr-task-00511-candidate"></a>
+
+### Current-session activity in Herdr
 
 The companion reuses the existing passive native-session custody reader; keep launching the ordinary authorized
 provider monitor, without per-child socket flags. It never launches, cancels or retries a child, changes the
@@ -83,7 +93,9 @@ work. It never clears the old invalidation or revives old metadata. Healthy repe
 closed readers or unavailable child custody) remains idempotent. Ownership, unrelated-layout and uncertain-split
 holds still apply. No provider turn is forced to persist a file.
 
-#### Selection contract for the future log companion
+<a id="selection-contract-for-the-future-log-companion"></a>
+
+#### Selection contract for the log companion
 
 `src/herdr/activity.mjs` exports `readSelection(binding, companionEndpoint)` and `validateSelection`.
 The caller must obtain the explicit owner-private binding and endpoint from a **live ownership-proven companion**
@@ -99,7 +111,7 @@ progress, TASK/role label, attempt path, credentials or executable operation. Un
 Validate against the expected parent/session/file and companion generation; responses expire after **1.5 seconds**.
 Idle permits the actual primary cwd; closed/unavailable has **no** source authority. A retained verified terminal
 pin may retain its worktree; custodian loss removes it. Metadata is a worktree/lifetime context, not Docker-source
-approval: TASK-00512 must still apply explicit source binding and exact container verification. Reopening issues
+approval: the log companion still applies explicit source binding and exact container verification. Reopening issues
 a fresh generation and freshly admits existing work. No previous response becomes authority for a later open.
 
 Rendering drops obsolete frames under terminal backpressure; there is no frame queue or extra progress store.
@@ -107,7 +119,97 @@ Child retention remains eight children, 100 entries / 32 Ki units each, plus one
 Owned binding cleanup checks the exact created inode; replacement files are retained. Abrupt crashes can leave
 non-authoritative runtime files; no crash survivor is blindly reused as authority.
 
-## Legacy RPC workspace (retained)
+<a id="verified-logs-in-herdr-task-00512-candidate"></a>
+
+### Verified logs in Herdr
+
+On a new `/fight-workspace open` generation, native Pi dialogs ask for **explicit human declarations**, never
+source arguments embedded in a prompt, cwd-derived guesses, scans or saved preferences. Choose `Add worktree TEST
+source` and enter each existing authorized source's absolute checkout/worktree, Docker context, Compose project
+and eligible single-container service. Add up to eight distinct worktree/context/project bindings, then choose
+`Open with …`. Supply all intended worktrees once, not on each child switch. Choosing zero bindings opens an
+honest unavailable log display without starting Docker. Cancelling does not approve a source.
+
+A separate `Add explicitly SHARED main source` choice makes shared mode available; the log pane's `m` key must
+still select it deliberately. Shared output stays visibly **EXPLICIT SHARED**, not worktree-isolated. No missing
+mapping or lost child custody silently selects shared or primary logs. Multiple test bindings for one worktree
+remain unavailable until `{` / `}` chooses a labelled stack; `[` / `]` chooses only eligible verified services.
+One-service declarations never widen to other project services.
+
+Declarations remain in the native open generation's memory. A token-bound local query transfers them only to the
+owned log process, after fresh child ownership/foreground proof. No log content is returned to native Pi, the
+child companion, Herdr agent metadata, tools or provider context. The log process's identity responder exposes
+only ownership/lifetime health, never log output or reader commands. This is a trusted-local display boundary,
+not independently attested native origin, Docker-enforced read-only credentials or OS isolation.
+
+The log companion polls validated selection at most twice a second, with one query in flight. Native/child
+queries retain their 350 ms elapsed deadline and 16 KiB cap; selection authority expires after 1.5 seconds.
+Initial child discovery may settle for at most ten seconds, without starting Docker or granting source authority.
+Idle follows the actual primary checkout; selected/pinned context follows the verified child worktree. New child
+identity/generation, source switch, closed/unavailable custody or expired/malformed lifetime immediately revoke
+the old reader callbacks and clear live/paused output before reaping and any new verification. Even two children
+in the same worktree get a fresh reader when their verified generation/identity changes. An unreaped process
+blocks every replacement. Lost native/child transport permanently invalidates this display generation: recover
+with `/fight-workspace open` in the intended native session, not by trusting an old response.
+
+| Log companion input | Display-only effect |
+|---|---|
+| `{` / `}`, `[` / `]` | Explicit labelled stack / eligible service selection |
+| `m` | Toggle follow / separately declared shared source |
+| `p` | Freeze display while draining bounded recent output; resume shows the recent window |
+| `c`, `r` | Close/reopen reader / explicitly reconnect, with unknown gaps and possible duplicate tails |
+| `i`, PageUp/PageDown | Full conversation/child/source identities, endpoint, container generation, notices and bounded history |
+| `q`, Ctrl+C | Reap only this display's reader; Pi, children and containers remain unchanged |
+
+The [fixed Docker reader's limits](#human-only-shared-docker-logs-task-00449-candidate) remain unchanged: 100-line
+tail, 300 records / 32 Ki units plus at most one equal paused snapshot, bounded escaped records, metadata and
+process deadlines, 15-minute lifetime, zero automatic retries, TERM/KILL and finite reaping. Exact canonical
+checkout labels, local Unix endpoint, service and full running-container identity are checked before reading.
+In this companion, test **and shared** container/endpoint replacement require a fresh inspected human
+declaration on a new open generation; the retained legacy shared reader's behavior is unchanged.
+Use close then open to deliberately replace declarations; a healthy repeated open is idempotent and does not
+re-prompt. A closed reader/companion never stops a container or child. No stack provisioning, restart, Compose
+evaluation, database mutation, full logging service or automatic global update is included.
+
+### Native entry and existing RPC sessions
+
+The workspace entry is ordinary `pi` inside Herdr, followed by `/fight-workspace open`. Outside Herdr,
+keep using ordinary Pi; missing/incompatible Herdr APIs leave it usable and never silently launch the RPC editor.
+A repository source change is not rollout: do not reinstall Herdr, mutate the live global package or load a second
+Harness package identity automatically. Adopt reviewed source explicitly and fully restart Pi.
+
+For an existing RPC conversation, record its **actual displayed session file**, stop that owned RPC client
+normally, change to the same conversation checkout and run `pi --session /absolute/actual-session.jsonl`.
+Do not use `--continue` to guess, fork/clone history, copy launcher-role flags or select authority through injected
+input. In native Pi inspect `/session` and `/file-screening` for the actual session and workflow binding; select
+a workflow only through the operator's explicit native action if needed. Then open the companions. Ephemeral
+`--no-session` conversations cannot be resumed. Session files and historical evidence are never deleted.
+
+If the old client is already unavailable, locate the actual `.jsonl` file in that conversation checkout's
+`var/terminal/sessions/` or the explicitly selected prior store. Do not assume native Pi's default store is the
+same: ordinary Pi normally uses its own per-project store. Identify the intended file privately; if uncertain,
+stop rather than resume the newest unrelated file. Pass its absolute path to `--session`; keep it in place.
+Existing JSONL/session IDs, history, enrollment, accounting and workflow records are not launcher assets and
+must not be deleted when removing the npm command. No session is read or changed by the retirement notice.
+
+**Delivery boundary:** the former package bin and direct `src/workspace/main.mjs` entry now provide only the
+same local migration notice (`--help`/`-h` alone exits 0; all launch arguments exit 1 without interpreting or
+printing them). They do not start Pi/Herdr/Docker, read stdin, create storage or select authority. Reusable
+bounded observers/readers remain; there is no supported replacement RPC conversation command. See
+[explicit installation adoption/removal](README.md#update-remove-and-recover-the-launcher). Independent delta
+Review/affected QA of B remain required before whole-TASK completion/publication. Live installation rollout
+is a separate operator effect, not performed by this repository change.
+
+<a id="legacy-rpc-workspace-retained"></a>
+
+## Historical RPC reference — not current instructions
+
+**Everything below this heading preserves historical RPC behavior, limits and qualification receipts. Its
+`fight-terminal` launch/resume examples and native-to-RPC return steps are obsolete and no longer supported.**
+Do not install or invoke another frontend from these examples. Use the native entry/session migration above.
+The package retains reusable observer/reader contracts referenced by the native companions; their bounds and
+trusted-local limitations still apply where linked above. Historical pending verdicts are not today's status.
+Original TASK receipts and session files remain intact.
 
 TASK-00502 adds default current-session following and verified child worktree test-log context; see
 [automatic following](#automatic-session-following-and-worktree-test-bindings-task-00502-candidate) for its native
