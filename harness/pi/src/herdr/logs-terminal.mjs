@@ -1,4 +1,4 @@
-import { emitKeypressEvents } from 'node:readline';
+import { installLogInput } from './logs-input.mjs';
 import { writeFile, rename, unlink } from 'node:fs/promises';
 import { readBinding, serveLocal } from './context.mjs';
 import { HerdrLogs, readLogConfiguration } from './logs.mjs';
@@ -68,24 +68,8 @@ try {
   await rename(`${receipt}.tmp`, receipt);
   process.stdout.write('\x1b[?1049h\x1b[?25l');
   process.stdin.setRawMode(true); process.stdin.resume();
-  // Decode terminal sequences across chunks, including coalesced arrow + Enter.
-  // Serialize at most 16 display actions so a quick choice is not lost during refresh.
-  let actions = Promise.resolve(), queued = 0;
-  emitKeypressEvents(process.stdin);
-  process.stdin.on('keypress', (text, key) => {
-    if (key.name === 'q' || key.ctrl && key.name === 'c') { void close(); return; }
-    if (key.name === 'pageup' || key.name === 'pagedown') {
-      const delta = key.name === 'pageup' ? 5 : -5;
-      scroll += logs.logs.menu ? -delta : delta; changed(); return;
-    }
-    const action = { up: 'up', down: 'down', return: 'choose', enter: 'choose', escape: 'cancel' }[key.name] ??
-      { s: 'select', '[': 'previous', ']': 'next', '{': 'stack-previous', '}': 'stack-next', m: 'mode', p: 'pause', c: 'toggle', r: 'reconnect', i: 'info' }[text];
-    if (!action || queued >= 16 || closing) return;
-    queued++; scroll = 0;
-    actions = actions.then(() => closing || action === 'choose' && logs.logs.menu && !canChoose() ? undefined : logs.action(action)).catch(() => {
-      if (!closing) logs.hold('UNAVAILABLE — reader action failed; reopen from native Pi');
-    }).finally(() => { queued--; });
-  });
+  installLogInput(process.stdin, logs, { closing: () => closing, close, canChoose,
+    scroll: (delta, reset = false) => { scroll = reset ? 0 : scroll + delta; }, changed });
   process.stdout.on('resize', changed);
   process.stdout.on('drain', () => { blocked = false; if (dirty) changed(); });
   process.on('SIGINT', close); process.on('SIGTERM', close); process.on('SIGHUP', close);

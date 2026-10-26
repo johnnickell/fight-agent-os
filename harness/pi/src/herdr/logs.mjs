@@ -75,13 +75,13 @@ export class HerdrLogs {
     })().finally(() => { this.pending = null; });
     return this.pending;
   }
-  async action(type) {
+  async action(type, options) {
     if (this.closed) return;
     if (type === 'info') { this.details = !this.details; this.changed(); return; }
-    if (!this.metadata || this.invalidated || this.actionPending) return;
-    this.actionPending = true;
-    try { await this.logs.action(type); }
-    finally { this.actionPending = false; this.changed(); }
+    if (!this.metadata || this.invalidated || !this.discovery && this.actionPending) return;
+    if (!this.discovery) this.actionPending = true;
+    try { await this.logs.action(type, options); }
+    finally { if (!this.discovery) this.actionPending = false; this.changed(); }
   }
   view() {
     const value = this.metadata;

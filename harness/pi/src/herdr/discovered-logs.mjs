@@ -15,7 +15,7 @@ export class DiscoveredLogs {
       label: 'VERIFIED LOCAL', endpoint: source.endpoint, verifySource: (container, endpoint) => sources.verify(source, container, endpoint) }));
     this.entries = new Map(); this.readers = []; this.current = null; this.mode = 'follow';
     this.generation = 0; this.transition = Promise.resolve(); this.notice = 'Looking for your local runtime…';
-    this.refreshAt = 0;
+    this.refreshAt = 0; this.menuRevision = 0;
   }
   clear(reader) {
     reader.open = false; reader.history = []; reader.units = 0; reader.frozen = null; reader.paused = false;
@@ -109,10 +109,16 @@ export class DiscoveredLogs {
     this.current.paused = entry.paused; this.current.frozen = entry.paused ? [] : null;
     this.current.open = true; await this.current.subscribe();
   }
-  action(type) {
-    const generation = this.generation, entry = this.entries.get(this.worktree), menu = this.menu;
+  action(type, { canChoose = () => true } = {}) {
+    const generation = this.generation, entry = this.entries.get(this.worktree);
+    const acceptedMenu = this.menu || this.selecting === generation, menuRevision = this.menuRevision;
     if (!this.valid(generation) || !entry) return this.transition;
     this.transition = this.transition.then(async () => {
+      // Earlier explicit selection/choice input may change the mode for coalesced keys.
+      // Automatic ambiguity cannot reinterpret accepted controls; obsolete generations
+      // retain their original mode and may record intent only, never perform I/O.
+      const menu = this.valid(generation) && menuRevision !== this.menuRevision ? this.menu : acceptedMenu;
+      if (type === 'choose' && menu && !canChoose()) return;
       // Accepted controls belong to this entry, in queue order, even if its I/O authority is revoked.
       if (type === 'select' || !menu && (type === 'reconnect' || type === 'toggle')) {
         entry.closed = type === 'toggle' ? !entry.closed : false; entry.cancelled = false;
@@ -120,14 +126,18 @@ export class DiscoveredLogs {
       else if (type === 'pause' && !menu) entry.paused = !entry.paused;
       if (!this.valid(generation)) return;
       if (type === 'select') {
-        if (this.current) entry.paused = this.current.paused;
-        await this.stopCurrent();
-        if (this.valid(generation)) await this.discover(entry, generation, true);
+        this.menuRevision++; this.selecting = generation;
+        try {
+          if (this.current) entry.paused = this.current.paused;
+          await this.stopCurrent();
+          if (this.valid(generation)) await this.discover(entry, generation, true);
+        } finally { if (this.selecting === generation) this.selecting = null; }
       } else if (menu) {
-        if (type === 'cancel') { this.menu = false; this.notice = 'Selection cancelled; workspace stays open. Press s to choose logs.'; }
+        if (type === 'cancel') { this.menuRevision++; this.menu = false; this.notice = 'Selection cancelled; workspace stays open. Press s to choose logs.'; }
         if (type === 'up') this.index = (this.index + entry.choices.length - 1) % entry.choices.length;
         if (type === 'down') this.index = (this.index + 1) % entry.choices.length;
         if (type === 'choose') {
+          this.menuRevision++;
           entry.selected = entry.choices[this.index]; entry.cancelled = false; entry.closed = false; this.menu = false;
           await this.open(entry, generation);
         }
