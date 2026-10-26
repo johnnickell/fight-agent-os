@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  nearExpirySessionWire,
   sessionDependencies,
   sessionPage,
   sessionsResponse,
@@ -8,6 +9,30 @@ import {
 } from '../../sessionFixtures';
 
 describe('OwnedSessionsService', () => {
+  it('R57-01 accepts a usable non-current session whose activity and deadlines project to the same second', async () => {
+    const nearExpiry = nearExpirySessionWire();
+    const { service, cache } = sessionDependencies(() =>
+      Promise.resolve(sessionsResponse(sessionPage([nearExpiry, sessionWire()])))
+    );
+    expect(await service.load()).toMatchObject({
+      ok: true,
+      value: {
+        totalRecords: 2,
+        records: [
+          {
+            sessionId: nearExpiry.session_id,
+            lastActivityAt: '2026-10-25T12:00:00+00:00',
+            idleExpiresAt: '2026-10-25T12:00:00+00:00',
+            absoluteExpiresAt: '2026-10-25T12:00:00+00:00',
+            current: false
+          },
+          { current: true }
+        ]
+      }
+    });
+    cache.dispose();
+  });
+
   it.each([401, 403])(
     'retires the sole owner on %s once and blocks remount replay until explicit retry',
     async (status) => {
@@ -94,6 +119,7 @@ describe('OwnedSessionsService', () => {
     { created_at: '2026-02-30T10:00:00+00:00' },
     { created_at: '2026-10-25T10:00:00Z' },
     { last_activity_at: '2026-10-25T09:00:00+00:00' },
+    { last_activity_at: '2026-10-26T11:00:01+00:00' },
     { idle_expires_at: '2026-10-28T10:00:00+00:00' },
     { current: 1 },
     { remembered: 'true' },

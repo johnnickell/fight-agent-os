@@ -16,6 +16,18 @@ export const sessionWire = (overrides: Record<string, unknown> = {}) => ({
   current: true,
   ...overrides
 });
+// R57-01: Genuine package/View projection protected by OwnedSessionsDataTest::testUsableNearExpiryProjection.
+// Precise activity .100000 and expiry .900000 share a public second while the session is still usable.
+export const nearExpirySessionWire = () =>
+  sessionWire({
+    browser_family: 'Unknown',
+    device_class: 'unknown',
+    created_at: '2026-10-23T12:00:00+00:00',
+    last_activity_at: '2026-10-25T12:00:00+00:00',
+    idle_expires_at: '2026-10-25T12:00:00+00:00',
+    absolute_expires_at: '2026-10-25T12:00:00+00:00',
+    current: false
+  });
 export const sessionPage = (
   records: unknown[] = [sessionWire()],
   overrides: Record<string, unknown> = {}

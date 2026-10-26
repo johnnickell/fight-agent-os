@@ -18,12 +18,16 @@ arrays, unknown selectors and GET bodies are rejected before dispatch. Actor/use
 administrative options and internal fields cannot be selected. The repository fixes `created_at ASC, id ASC`
 at persisted precision. Offset pages describe committed reads, not a cross-request snapshot; concurrent changes
 can move rows or make a page empty. The current marker occurs only on the page containing that session, not
-once per page. Both idle and absolute equality are expired; revoked sessions are absent.
+once per page. Both idle and absolute equality with the package clock are expired at persisted precision;
+revoked sessions are absent.
 
 JSend success data contains `page`, `per_page`, `total_pages`, `total_records`, `records`. Each explicit record
 contains only `session_id`, `browser_family`, `device_class`, `created_at`, `last_activity_at`, `idle_expires_at`,
 `absolute_expires_at`, `remembered`, `current`. All timestamps are UTC seconds with `+00:00`; ordering still uses
 persisted subsecond precision, so clients must not reconstruct a UUID tie-break from displayed timestamps.
+A usable session refreshed within the final fractional second before its absolute ceiling can have equal public
+activity, idle and absolute timestamps. The decoder permits that projected equality but rejects reversed
+instants; only the server's precise clock/filter establishes usability, never the browser clock.
 Activity is creation or successful refresh rotation, never page views or online presence. `Cache-Control: no-store`
 is mandatory. OpenAPI is attribute-owned; re-export explicitly after source contract changes.
 

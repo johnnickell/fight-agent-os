@@ -58,7 +58,8 @@ const decodeSession: ResponseDecoder<OwnedSession> = (value) => {
     !timestamp(value.idle_expires_at) ||
     !timestamp(value.absolute_expires_at) ||
     value.created_at > value.last_activity_at ||
-    value.last_activity_at >= value.idle_expires_at ||
+    // Public seconds can collapse distinct precise instants; only reversed lifetimes are invalid here.
+    value.last_activity_at > value.idle_expires_at ||
     value.idle_expires_at > value.absolute_expires_at ||
     typeof value.remembered !== 'boolean' ||
     typeof value.current !== 'boolean'

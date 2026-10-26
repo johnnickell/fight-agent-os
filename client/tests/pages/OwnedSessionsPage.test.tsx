@@ -6,6 +6,7 @@ import { apiFailure } from '@/api/ApiResult';
 import OwnedSessionsPage from '@/pages/OwnedSessionsPage';
 
 import {
+  nearExpirySessionWire,
   sessionDependencies,
   sessionPage,
   sessionsResponse,
@@ -30,6 +31,19 @@ async function mount(
 }
 
 describe('OwnedSessionsPage', () => {
+  it('R57-01 renders the complete list when a usable row has equal projected activity and deadlines', async () => {
+    await mount(() =>
+      Promise.resolve(sessionsResponse(sessionPage([nearExpirySessionWire(), sessionWire()])))
+    );
+    expect(await screen.findByRole('list', { name: 'Owned active sessions' })).toBeVisible();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getByRole('heading', { name: 'Unknown device · Unknown browser' })).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('2 active sessions');
+    expect(screen.getAllByText('Current session — this request')).toHaveLength(1);
+    expect(document.querySelectorAll('time[datetime="2026-10-25T12:00:00+00:00"]')).toHaveLength(3);
+    expect(screen.queryByText('Sessions unavailable')).not.toBeInTheDocument();
+  });
+
   it('keeps a denied read as an explicit failure without an authority-triggered remount/replay', async () => {
     const d = sessionDependencies(() => Promise.resolve(new Response('', { status: 403 })));
     caches.push(d.cache);
