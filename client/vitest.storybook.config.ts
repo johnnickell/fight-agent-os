@@ -8,7 +8,8 @@ export default defineConfig({
   cacheDir: '../.runs/cache/client/storybook-test-vite',
   resolve: applicationResolve,
   // Prebundle before browser tests, including when source advances over a warm cache.
-  optimizeDeps: { include: ['react-bootstrap/Dropdown'] },
+  // Modal joins the page graph through session revocation; late discovery reloads React mid-test.
+  optimizeDeps: { include: ['react-bootstrap/Dropdown', 'react-bootstrap/Modal'] },
   plugins: [storybookTest({ configDir: './.storybook' })],
   test: {
     name: 'storybook',
