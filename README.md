@@ -28,7 +28,9 @@ managed Pi execution and database-authoritative Planning remain planned. See the
 Use the [generated current-delivery view](planning/tasks/BOARD.md#current-delivery-handoffs), sourced only from
 [explicit TASK identity](planning/CONVENTIONS.md#current-delivery-handoffs). Ordinary PR links and historical
 acceptance/publication checkpoints in this README are not live delivery authority. The offline view does not
-establish current PR state or readiness to merge; Land owns subject-specific reconciliation.
+establish current PR state or readiness to merge. Before evaluating a relevant handoff, use the
+[targeted read-only live check](planning/CONVENTIONS.md#live-delivery-verification); verified ended PRs route
+to explicit Land reconciliation, and unavailable evidence remains unverified. Ordinary planning/build stays offline.
 
 ## Start planning
 
