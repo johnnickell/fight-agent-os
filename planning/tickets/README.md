@@ -22,7 +22,7 @@
 | [TICKET-00017](00017-TICKET.md) | Deliver secure browser authentication and session continuity | done | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00018](00018-TICKET.md) | Deliver the authoritative application shell and dashboard | done | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00019](00019-TICKET.md) | Deliver password recovery and authenticated password change | done | [EPIC-00004](../epics/00004-EPIC.md) |
-| [TICKET-00020](00020-TICKET.md) | Deliver self-service active-session management | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
+| [TICKET-00020](00020-TICKET.md) | Deliver self-service active-session management | done | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00021](00021-TICKET.md) | Deliver Super Admin user and invitation operations | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00022](00022-TICKET.md) | Verify the integrated security and accessibility baseline | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00023](00023-TICKET.md) | Operate the local Planning installation | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |

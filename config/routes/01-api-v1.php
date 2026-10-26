@@ -107,6 +107,10 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     $api->get('/roles/{roleId}', GetRoleAction::class.':handle')->setName('api.v1.roles.get');
     $api->get('/permissions', ListPermissionsAction::class.':handle')->setName('api.v1.permissions.list');
     $api->get('/permissions/{permissionId}', GetPermissionAction::class.':handle')->setName('api.v1.permissions.get');
+    $api->delete(
+        '/me/sessions/{sessionId}',
+        \App\Adapter\Http\Action\Api\V1\Sessions\RevokeOwnedSessionAction::class.':handle'
+    )->setName('api.v1.me.sessions.revoke');
     $api->get('/me/sessions', \App\Adapter\Http\Action\Api\V1\Sessions\ListOwnedSessionsAction::class.':handle')
         ->setName('api.v1.me.sessions');
     $api->get('/users', ListUsersAction::class.':handle')->setName('api.v1.users.list');

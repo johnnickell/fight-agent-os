@@ -1,10 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/Button';
 import { ContentState } from '@/components/ContentState';
+import { Notice } from '@/components/Notice';
 import { evaluateAccess } from '@/features/authority/evaluateAccess';
 import { useAuthority } from '@/features/authority/useAuthority';
+import {
+  revokeRequirements,
+  RevokeSessionConfirmation
+} from '@/features/sessions/RevokeSessionConfirmation';
 
+import type { ApiResult } from '@/api/ApiResult';
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 import type {
   OwnedSession,
@@ -24,13 +30,20 @@ type State =
 
 export default function OwnedSessionsPage({
   service,
-  cache
+  cache,
+  logout
 }: {
-  service: Pick<OwnedSessionsService, 'load'> & Partial<Pick<OwnedSessionsService, 'retry'>>;
+  service: Pick<OwnedSessionsService, 'load'> &
+    Partial<Pick<OwnedSessionsService, 'retry' | 'revoke' | 'subscribe'>>;
   cache: AuthorityCache;
+  logout?: () => void;
 }) {
   const authority = useAuthority(cache);
   const allowed = evaluateAccess(authority, requirements) === 'allowed';
+  const canRevoke = allowed && evaluateAccess(authority, revokeRequirements) === 'allowed';
+  const [target, setTarget] = useState<OwnedSession | null>(null);
+  const [outcome, setOutcome] = useState<string | null>(null);
+  const close = useCallback(() => setTarget(null), []);
   const [page, setPage] = useState(1);
   const [attempt, setAttempt] = useState(0);
   const [retainedState, setState] = useState<State>({ kind: 'loading' });
@@ -42,6 +55,8 @@ export default function OwnedSessionsPage({
     const controller = new AbortController();
     let active = true;
     const retire = () => {
+      setTarget(null);
+      setOutcome(null);
       controller.abort();
       if (active) setState({ kind: 'retired' });
     };
@@ -66,6 +81,29 @@ export default function OwnedSessionsPage({
       controller.abort();
     };
   }, [service, cache, page, attempt]);
+  useEffect(
+    () =>
+      service.subscribe?.(() => {
+        if (evaluateAccess(cache.getSnapshot(), requirements) !== 'allowed') return;
+        setState({ kind: 'loading' });
+        setAttempt((value) => value + 1);
+      }),
+    [cache, service]
+  );
+  const completed = (result: ApiResult<true>) => {
+    setTarget(null);
+    if (!result.ok && result.error.kind === 'cancelled') return;
+    setOutcome(
+      result.ok
+        ? 'Session revoked. The session list is being checked again.'
+        : result.error.kind === 'current-session'
+          ? 'Use Sign out (Logout) for the current session.'
+          : result.error.kind === 'conflict'
+            ? 'That session is no longer available for this action. The session list is being checked again.'
+            : 'Revocation was not confirmed. Reload the list before selecting and confirming another attempt.'
+    );
+    heading.current?.focus({ preventScroll: true });
+  };
   const reload = () => {
     if (evaluateAccess(cache.getSnapshot(), requirements) !== 'allowed') return;
     service.retry?.();
@@ -94,8 +132,24 @@ export default function OwnedSessionsPage({
         remembered session may. Both end at their server deadlines.
       </p>
       <p>
-        Sign out ends only your current session. Individual session revocation is not available yet.
+        Sign out (Logout) ends only your current session. Confirm revocation to end another sign-in.
+        Same-origin tabs receive best-effort updates; other browsers and devices are rejected by the
+        server on their next request, not by guaranteed immediate UI push.
       </p>
+      {allowed && outcome && (
+        <Notice tone="info" title="Session action result">
+          {outcome}
+        </Notice>
+      )}
+      {canRevoke && target && service.revoke && (
+        <RevokeSessionConfirmation
+          target={target}
+          cache={cache}
+          revoke={(id) => service.revoke!(id)}
+          onClose={close}
+          onResult={completed}
+        />
+      )}
       {state.kind === 'loading' ? (
         <ContentState
           kind="loading"
@@ -129,7 +183,25 @@ export default function OwnedSessionsPage({
           ) : (
             <ul className="owned-sessions-list" aria-label="Owned active sessions">
               {state.data.records.map((session) => (
-                <SessionCard key={session.sessionId} session={session} />
+                <SessionCard key={session.sessionId} session={session}>
+                  {session.current
+                    ? logout && <Button onClick={logout}>Sign out (Logout)</Button>
+                    : canRevoke &&
+                      service.revoke && (
+                        <Button
+                          onClick={() => {
+                            if (
+                              evaluateAccess(cache.getSnapshot(), revokeRequirements) === 'allowed'
+                            ) {
+                              setOutcome(null);
+                              setTarget(session);
+                            }
+                          }}
+                        >
+                          Revoke session
+                        </Button>
+                      )}
+                </SessionCard>
               ))}
             </ul>
           )}
@@ -166,7 +238,7 @@ export default function OwnedSessionsPage({
   );
 }
 
-function SessionCard({ session }: { session: OwnedSession }) {
+function SessionCard({ session, children }: { session: OwnedSession; children: React.ReactNode }) {
   const device =
     session.deviceClass === 'unknown'
       ? 'Unknown device'
@@ -201,6 +273,7 @@ function SessionCard({ session }: { session: OwnedSession }) {
           </div>
         ))}
       </dl>
+      {children}
     </li>
   );
 }

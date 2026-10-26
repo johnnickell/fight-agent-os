@@ -46,6 +46,22 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
     login: new LoginService(api, csrf, tokens),
     ...browserSessionPlatform()
   });
+  const sessions = new OwnedSessionsService(
+    api,
+    {
+      accessRejected: () => {
+        void coordinator.restore();
+      },
+      authorityRejected: () => {
+        coordinator.authorityChanged();
+      },
+      currentSession: coordinator.identifyCurrentSession,
+      revoked: coordinator.sessionRevoked,
+      invalidated: coordinator.sessionsInvalidated
+    },
+    authority
+  );
+  coordinator.subscribeSessions(sessions.invalidate);
   return {
     authority,
     intent,
@@ -79,14 +95,7 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
         void coordinator.authorityChanged();
       }
     }),
-    sessions: new OwnedSessionsService(api, {
-      accessRejected: () => {
-        void coordinator.restore();
-      },
-      authorityRejected: () => {
-        void coordinator.authorityChanged();
-      }
-    }),
+    sessions,
     schemas: new PublicSchemaService(api)
   };
 }

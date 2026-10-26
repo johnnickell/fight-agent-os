@@ -265,7 +265,13 @@ export function ApplicationView({
             ) : route.destination === 'users' ? (
               <UsersPage service={session.users} cache={session.authority} />
             ) : route.destination === 'sessions' ? (
-              <OwnedSessionsPage service={session.sessions} cache={session.authority} />
+              <OwnedSessionsPage
+                service={session.sessions}
+                cache={session.authority}
+                logout={() => {
+                  void session.coordinator.logout();
+                }}
+              />
             ) : route.destination === 'dashboard' ? (
               <DashboardPage cache={session.authority} />
             ) : (

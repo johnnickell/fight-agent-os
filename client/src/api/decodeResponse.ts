@@ -87,6 +87,14 @@ export function decodeResponse<T>(
       if (fields) return apiFailure('validation', correlationId, fields);
     }
   }
+  if (
+    status === 409 &&
+    hasExactKeys(envelope, ['status', 'message', 'code']) &&
+    envelope.status === 'error' &&
+    envelope.code === 5801 &&
+    envelope.message === 'Use Logout for the current session.'
+  )
+    return apiFailure('current-session', correlationId);
   if (hasExactKeys(envelope, ['status', 'message']) && envelope.status === 'error') {
     const expected =
       status >= 500 && status <= 599
