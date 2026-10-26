@@ -7,6 +7,7 @@ use App\Adapter\Http\Action\Api\V1\Auth\LogoutAction;
 use App\Adapter\Http\Action\Api\V1\Auth\RefreshAction;
 use App\Adapter\Http\Api\V1\Auth\AuthOperation;
 use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
+use App\Adapter\Http\Api\V1\Auth\CaptureSessionPresentation;
 use App\Adapter\Http\Api\V1\Auth\RefreshCookie;
 use App\Adapter\Http\Middleware\Api\Auth\AuthEndpointGuard;
 use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
@@ -25,7 +26,11 @@ use Fight\Common\Application\Service\Container;
 
 return static function (Container $container): void {
     $container->set(LoginAction::class, static fn(Container $c): LoginAction =>
-        new LoginAction($c->get(AuthenticationService::class), $c->get(SessionResponder::class)));
+        new LoginAction(
+            $c->get(AuthenticationService::class),
+            $c->get(SessionResponder::class),
+            $c->get(CaptureSessionPresentation::class)
+        ));
     $container->set(RefreshCookie::class, static fn(): RefreshCookie => new RefreshCookie());
     $container->set(SessionLifecycleResponder::class, static fn(Container $c): SessionLifecycleResponder =>
         new SessionLifecycleResponder($c->get(SessionResponder::class), $c->get(JSendResponseFactory::class)));

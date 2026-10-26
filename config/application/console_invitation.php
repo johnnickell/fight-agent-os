@@ -72,6 +72,7 @@ return static function (Container $container): void {
         $application->addCommand($c->get(AddUserRoleCommand::class));
         $application->addCommand($c->get(BootstrapSuperAdminCommand::class));
         $application->addCommand($c->get(BootstrapWorkspaceCommand::class));
+        $application->addCommand($c->get(\App\Adapter\Console\PruneSessionPresentationCommand::class));
         $application->setAutoExit(false);
 
         return $application;

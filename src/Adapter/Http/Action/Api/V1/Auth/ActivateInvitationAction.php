@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Auth;
 
+use App\Adapter\Http\Api\V1\Auth\CaptureSessionPresentation;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\PublicAccess;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
@@ -26,8 +27,11 @@ final readonly class ActivateInvitationAction
     /**
      * Constructs ActivateInvitationAction
      */
-    public function __construct(private ActivateInvitation $activation, private SessionResponder $responder)
-    {
+    public function __construct(
+        private ActivateInvitation $activation,
+        private SessionResponder $responder,
+        private CaptureSessionPresentation $presentation
+    ) {
     }
 
     /**
@@ -138,10 +142,13 @@ final readonly class ActivateInvitationAction
         /** @var array{user_id: string, credential: string, password: string, password_confirmation: string} $input */
         $input = $request->getAttribute(JsonBody::class);
 
-        return $this->responder->respond($this->activation->activate(
+        $tokens = $this->activation->activate(
             UserId::fromString($input['user_id']),
             $input['credential'],
             $input['password']
-        ));
+        );
+        $this->presentation->capture($tokens, $request);
+
+        return $this->responder->respond($tokens);
     }
 }

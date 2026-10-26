@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ApiClient } from '@/api/ApiClient';
 import { apiFailure } from '@/api/ApiResult';
+import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { ApplicationView } from '@/routes/ApplicationJourney';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 
@@ -48,6 +50,34 @@ function Mounted({
 }
 
 describe('authoritative frame transitions', () => {
+  it('does not replay a forbidden session read when sole-cache revalidation remounts its guard', async () => {
+    const owner = session(['READ_OWN_SESSIONS']);
+    const fetch = vi.fn(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ status: 'error', message: 'Forbidden.' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        })
+      )
+    );
+    owner.sessions = new OwnedSessionsService(
+      new ApiClient(
+        { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+        { fetch, accessTokens: { getAccessToken: () => 'synthetic.memory.only' } }
+      ),
+      {
+        authorityRejected: () => {
+          void owner.coordinator.authorityChanged();
+        }
+      }
+    );
+    render(<Mounted owner={owner} initial="/app/account/sessions" />);
+    await act(() => owner.coordinator.restore());
+    expect(await screen.findByText('Access forbidden')).toBeVisible();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(owner.load).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('list', { name: 'Owned active sessions' })).not.toBeInTheDocument();
+  });
   it.each([
     ['/app/swagger', 'API Docs', 'READ_SWAGGER'],
     ['/app/admin/invitations', 'Invitation Admin', 'MANAGE_USER_INVITATIONS']
@@ -110,6 +140,8 @@ describe('authoritative frame transitions', () => {
         expect(screen.getByText('Documentation disabled')).toBeVisible();
       else if (route.destination === 'password-change')
         expect(await screen.findByLabelText('Current password (required)')).toBeVisible();
+      else if (route.destination === 'sessions')
+        expect(screen.getByText(/Device descriptions are approximate/)).toBeVisible();
       else expect(screen.getByText(route.availability ?? '')).toBeVisible();
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'User Menu' }));

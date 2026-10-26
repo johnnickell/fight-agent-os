@@ -46,7 +46,7 @@ Every read/mutation requires both authoritative `READ_OWN_SESSIONS`/`DELETE_OWN_
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00057](../tasks/00057-TASK.md) | Deliver authoritative owned-session visibility | ready-for-agent |
+| [TASK-00057](../tasks/00057-TASK.md) | Deliver authoritative owned-session visibility | in-progress |
 | [TASK-00058](../tasks/00058-TASK.md) | Deliver confirmed revocation of another owned session | ready-for-agent |
 <!-- /planning:children -->
 

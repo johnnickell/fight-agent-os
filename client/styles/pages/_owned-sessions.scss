@@ -1,0 +1,51 @@
+.owned-sessions-page {
+  max-width: 76rem;
+}
+
+.owned-sessions-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+}
+
+.session-card {
+  padding: 1rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  overflow-wrap: anywhere;
+
+  h2 {
+    font-size: 1.2rem;
+  }
+
+  dl {
+    margin-bottom: 0;
+  }
+
+  dl > div {
+    margin-block: 0.75rem;
+  }
+
+  dt {
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.session-current {
+  border-inline-start: 3px solid var(--ui-action);
+  padding-inline-start: 0.75rem;
+}
+
+.session-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
