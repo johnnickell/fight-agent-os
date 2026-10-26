@@ -82,7 +82,9 @@ async function inputFixture(t, { menu = false } = {}) {
   return { logs, queue, admissions, select, settle, calls: () => calls,
     key: value => input.write(value), narrow: value => { narrow = value; }, ambiguous: value => { ambiguous = value; },
     async block(value = 'r') {
-      release = null; block = true; input.write(value);
+      release = null; block = true;
+      if (value === null) { logs.logs.refreshAt = 0; await logs.tick(); }
+      else input.write(value);
       while (!release) await turn();
       return () => release();
     },
@@ -126,7 +128,7 @@ test('terminal buffered controls survive A to B to A and same-checkout child rep
 });
 
 test('terminal cancellation and recovery remain original-entry menu intent after revocation', async t => {
-  for (const route of ['other-checkout', 'return-before-settlement', 'new-child']) {
+  for (const route of ['unchanged', 'other-checkout', 'return-before-settlement', 'new-child']) {
     for (const keys of ['\x1b', 'p\x1b', '\x1bp', '\x1br', 's\x1b']) await t.test(`${route}: ${JSON.stringify(keys)}`, async t => {
       const f = await inputFixture(t, { menu: true }), release = await f.block('s');
       for (const key of keys) {
@@ -135,23 +137,69 @@ test('terminal cancellation and recovery remain original-entry menu intent after
         if (key === '\x1b') await new Promise(done => setTimeout(done, 550));
       }
       if (route === 'new-child') await f.select('/A', 'new-child');
-      else {
+      else if (route !== 'unchanged') {
         await f.select('/B');
         if (route === 'return-before-settlement') await f.select('/A');
       }
       release(); await f.settle();
-      assert.equal(f.logs.logs.entries.get('/A').cancelled, true);
-      assert.equal(f.logs.logs.entries.get('/A').paused, false, 'menu keys cannot pause a reader');
+      const recovered = keys === '\x1br', paused = keys === '\x1bp';
+      assert.equal(f.logs.logs.entries.get('/A').cancelled, !recovered, 'only explicit recovery after Escape clears cancellation');
+      assert.equal(f.logs.logs.entries.get('/A').paused, paused, 'pause after Escape is reader intent, before Escape is menu input');
       if (route === 'other-checkout') {
         assert.equal(f.logs.logs.entries.get('/B').cancelled, false);
         assert.equal(f.logs.logs.current.source.main, '/B');
       }
-      assert.equal(f.calls(), route === 'other-checkout' ? 3 : 2, 'obsolete menu input cannot discover');
+      const extraScan = route === 'unchanged' ? recovered || keys === 's\x1b' : route === 'other-checkout' || recovered;
+      assert.equal(f.calls(), extraScan ? 3 : 2, 'obsolete menu input cannot discover');
       assert.deepEqual(f.admissions, route === 'other-checkout' ? ['/B'] : []);
       await f.select('/A'); await f.settle(); assert.equal(f.logs.logs.current, null);
       f.key('s\x1b[B\r'); await f.settle();
       assert.equal(f.logs.logs.current.source.service, 'worker', 'coalesced explicit selection recovers cancellation');
     });
+  }
+});
+
+test('terminal queued selection preserves logical menu order independently of revoked discovery', async t => {
+  for (const blocker of ['reconnect', 'background']) {
+    for (const route of ['unchanged', 'new-child', 'return-before-settlement', 'other-checkout']) {
+      for (const [keys, cancelled, closed, paused] of [
+        ['s\x1b', true, false, false], ['scpr', false, false, false],
+        ['s\x1bpc', false, true, true], ['s\x1brp', false, false, true],
+        ['s\rp', false, false, true], ['s\rs\x1b', true, false, false],
+      ]) await t.test(`${blocker}/${route}: ${JSON.stringify(keys)}`, async t => {
+        const f = await inputFixture(t), release = await f.block(blocker === 'background' ? null : 'r');
+        for (const key of keys) {
+          f.key(key);
+          if (key === '\x1b') await new Promise(done => setTimeout(done, 550));
+        }
+        if (route === 'new-child') await f.select('/A', 'new-child');
+        else if (route !== 'unchanged') {
+          await f.select('/B');
+          if (route === 'return-before-settlement') await f.select('/A');
+        }
+        release(); await f.settle();
+        const entry = f.logs.logs.entries.get('/A');
+        assert.equal(entry.cancelled, cancelled, 'Escape after queued select retains cancellation');
+        assert.equal(entry.closed, closed, 'menu-only keys cannot acquire reader semantics');
+        assert.equal(entry.paused, paused, 'pause follows the accepted explicit menu/reader order');
+        if (route !== 'unchanged') {
+          assert.equal(f.calls(), route === 'other-checkout' || !closed && !cancelled ? 3 : 2,
+            'obsolete selection/choice/recovery cannot scan');
+          assert.deepEqual(f.admissions, route === 'other-checkout' ? ['/A', '/B'] :
+            closed || cancelled ? ['/A'] : ['/A', '/A'], 'obsolete I/O cannot admit readers');
+        }
+        if (route === 'other-checkout') {
+          const other = f.logs.logs.entries.get('/B');
+          assert.equal(other.closed || other.cancelled || other.paused, false);
+        }
+        if (cancelled || closed) {
+          await f.select('/A', 'return-child'); await f.settle();
+          assert.equal(f.logs.logs.current, null, 'new child/return is not explicit recovery');
+          f.key('r'); await f.settle();
+          assert.equal(f.logs.logs.current.paused, paused, 'explicit recovery retains pause');
+        }
+      });
+    }
   }
 });
 
@@ -167,6 +215,36 @@ test('terminal keys accepted during explicit selection keep menu semantics befor
     assert.equal(entry.cancelled, true, 'Escape cancels the original explicit selection');
     await f.select('/A', 'return-child'); await f.settle();
     assert.equal(f.logs.logs.current, null, 'cancelled selection cannot automatically recover');
+  });
+});
+
+test('terminal queued split choice preserves mode but cannot select obsolete discovery results', async t => {
+  for (const revoke of [false, true]) await t.test(`revoked: ${revoke}`, async t => {
+    const f = await inputFixture(t), release = await f.block(null);
+    f.ambiguous(true); f.key('s\x1b['); f.key('B\rp');
+    if (revoke) await f.select('/A', 'new-child');
+    release(); await f.settle();
+    assert.equal(f.logs.logs.current.source.service, revoke ? 'web' : 'worker',
+      'only a live explicit menu may change the pinned source');
+    assert.equal(f.logs.logs.current.paused, true, 'Enter exits logical menu before pause');
+    assert.equal(f.calls(), 3, 'stale selection does no extra discovery');
+  });
+});
+
+test('terminal queued Enter checks narrow eligibility at execution even when selection is revoked', async t => {
+  for (const revoke of [false, true]) await t.test(`revoked: ${revoke}`, async t => {
+    const f = await inputFixture(t), release = await f.block(null);
+    f.key('s\r'); f.narrow(true); f.key('pc');
+    if (revoke) await f.select('/A', 'new-child');
+    release(); await f.settle();
+    const entry = f.logs.logs.entries.get('/A');
+    assert.equal(entry.closed || entry.paused, false, 'rejected Enter leaves subsequent controls in menu mode');
+    if (revoke) assert.equal(f.calls(), 3, 'no obsolete choice/discovery runs');
+    else {
+      assert.equal(f.logs.logs.current, null); assert.ok(f.logs.logs.menu);
+      f.narrow(false); f.key('\r'); await f.settle();
+      assert.equal(f.logs.logs.current.source.service, 'web');
+    }
   });
 });
 

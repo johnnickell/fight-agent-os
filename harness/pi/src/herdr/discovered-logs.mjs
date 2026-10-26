@@ -15,13 +15,15 @@ export class DiscoveredLogs {
       label: 'VERIFIED LOCAL', endpoint: source.endpoint, verifySource: (container, endpoint) => sources.verify(source, container, endpoint) }));
     this.entries = new Map(); this.readers = []; this.current = null; this.mode = 'follow';
     this.generation = 0; this.transition = Promise.resolve(); this.notice = 'Looking for your local runtime…';
-    this.refreshAt = 0; this.menuRevision = 0;
+    this.refreshAt = 0; this.inputMode = { revision: 0, menu: false, selecting: false };
   }
   clear(reader) {
     reader.open = false; reader.history = []; reader.units = 0; reader.frozen = null; reader.paused = false;
   }
   hold() {
     this.held = true; this.generation++; this.menu = false;
+    // New input needs fresh authority; already accepted actions keep their own ordered mode.
+    this.inputMode = { revision: 0, menu: false, selecting: false };
     const previous = this.current; this.current = null;
     if (previous) {
       const entry = this.entries.get(this.worktree); if (entry) entry.paused = previous.paused;
@@ -111,34 +113,37 @@ export class DiscoveredLogs {
   }
   action(type, { canChoose = () => true } = {}) {
     const generation = this.generation, entry = this.entries.get(this.worktree);
-    const acceptedMenu = this.menu || this.selecting === generation, menuRevision = this.menuRevision;
+    const inputMode = this.inputMode, revision = inputMode.revision;
+    const acceptedMenu = this.menu || inputMode.selecting;
     if (!this.valid(generation) || !entry) return this.transition;
     this.transition = this.transition.then(async () => {
-      // Earlier explicit selection/choice input may change the mode for coalesced keys.
-      // Automatic ambiguity cannot reinterpret accepted controls; obsolete generations
-      // retain their original mode and may record intent only, never perform I/O.
-      const menu = this.valid(generation) && menuRevision !== this.menuRevision ? this.menu : acceptedMenu;
-      if (type === 'choose' && menu && !canChoose()) return;
+      // Explicit transitions order accepted controls even after hold() revokes I/O.
+      // Background ambiguity is not an explicit transition and cannot reinterpret input.
+      const menu = revision !== inputMode.revision ? inputMode.menu : acceptedMenu;
+      if (type === 'choose' && menu && (!canChoose() || this.valid(generation) && !this.menu)) return;
+      if (type === 'select' || menu && (type === 'cancel' || type === 'choose')) {
+        inputMode.revision++; inputMode.menu = type === 'select';
+      }
       // Accepted controls belong to this entry, in queue order, even if its I/O authority is revoked.
       if (type === 'select' || !menu && (type === 'reconnect' || type === 'toggle')) {
         entry.closed = type === 'toggle' ? !entry.closed : false; entry.cancelled = false;
       } else if (type === 'cancel' && menu) entry.cancelled = true;
+      else if (type === 'choose' && menu) { entry.closed = false; entry.cancelled = false; }
       else if (type === 'pause' && !menu) entry.paused = !entry.paused;
       if (!this.valid(generation)) return;
       if (type === 'select') {
-        this.menuRevision++; this.selecting = generation;
+        inputMode.selecting = true;
         try {
           if (this.current) entry.paused = this.current.paused;
           await this.stopCurrent();
           if (this.valid(generation)) await this.discover(entry, generation, true);
-        } finally { if (this.selecting === generation) this.selecting = null; }
+        } finally { inputMode.selecting = false; }
       } else if (menu) {
-        if (type === 'cancel') { this.menuRevision++; this.menu = false; this.notice = 'Selection cancelled; workspace stays open. Press s to choose logs.'; }
+        if (type === 'cancel') { this.menu = false; this.notice = 'Selection cancelled; workspace stays open. Press s to choose logs.'; }
         if (type === 'up') this.index = (this.index + entry.choices.length - 1) % entry.choices.length;
         if (type === 'down') this.index = (this.index + 1) % entry.choices.length;
         if (type === 'choose') {
-          this.menuRevision++;
-          entry.selected = entry.choices[this.index]; entry.cancelled = false; entry.closed = false; this.menu = false;
+          entry.selected = entry.choices[this.index]; this.menu = false;
           await this.open(entry, generation);
         }
       } else if (type === 'toggle' || type === 'reconnect') {

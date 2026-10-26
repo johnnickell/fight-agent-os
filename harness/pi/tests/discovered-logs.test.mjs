@@ -174,7 +174,7 @@ test('queued close, pause and explicit recovery keep their order and original ch
     [['pause', 'toggle'], true, true], [['toggle', 'pause'], true, true],
     [['pause', 'pause', 'toggle'], true, false], [['toggle', 'reconnect', 'pause'], false, true],
     [['toggle', 'toggle'], false, false], [['reconnect', 'toggle'], true, false],
-    [['select', 'toggle'], true, false],
+    [['select', 'toggle'], false, false],
   ]) await t.test(actions.join(' → '), async t => {
     const f = await fixture(t); f.set([source()]); await f.logs.rebind('/checkout');
     const old = f.logs.current; old.history.push('obsolete');
@@ -212,12 +212,14 @@ test('queued cancellation survives menu revocation without cancelling a differen
       f.set([source('other', 'web', '/other')]); const other = f.logs.rebind('/other');
       release(); await Promise.all([scan, ...controls, other]);
       assert.equal(f.calls(), 3, 'stale controls cannot perform discovery');
-      assert.equal(f.logs.entries.get('/checkout').cancelled, true);
-      assert.equal(f.logs.entries.get('/checkout').paused, false, 'menu input cannot toggle reader pause');
+      const recovered = actions.join() === 'cancel,reconnect';
+      assert.equal(f.logs.entries.get('/checkout').cancelled, !recovered, 'explicit recovery after cancellation keeps its order');
+      assert.equal(f.logs.entries.get('/checkout').paused, actions.join() === 'cancel,pause', 'Escape exits the menu before later reader input');
       assert.equal(f.logs.entries.get('/other').cancelled, false);
       assert.equal(f.logs.current.source.main, '/other');
       f.set([source()]); await f.logs.rebind('/checkout'); await f.refresh();
-      assert.equal(f.logs.current, null, 'return and automatic discovery cannot undo cancellation');
+      if (!recovered) assert.equal(f.logs.current, null, 'return and automatic discovery cannot undo cancellation');
+      else assert.equal(f.logs.current.source.main, '/checkout', 'accepted explicit recovery survives revocation');
       await f.logs.action('select'); await f.logs.action('choose');
       assert.equal(f.logs.current.source.main, '/checkout', 'explicit selection recovers cancellation');
     });
