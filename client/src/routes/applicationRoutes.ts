@@ -14,6 +14,7 @@ export type ApplicationRoute = RegisteredRoute &
       | 'dashboard'
       | 'password-change'
       | 'sessions'
+      | 'users'
       | 'landing'
       | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
@@ -122,10 +123,10 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     icon: 'users',
     access: 'protected',
     requirements: permission('READ_USERS'),
-    destination: 'landing',
+    destination: 'users',
     group: 'Administration',
     intendedRoute: {},
-    availability: 'The user directory is not available yet.'
+    availability: 'Read the installation-wide user directory and current role assignments.'
   },
   {
     pathname: '/app/admin/invite',

@@ -2,7 +2,8 @@
 
 TASK-00051 mounts the responsive application frame and route decisions. Implementation verification is not
 independent acceptance. TASK-00052 adds the honest Dashboard described below (independent Review/QA pending);
-later account/administration operations remain unavailable.
+TASK-00059 adds the [permission-controlled Users directory](USER_DIRECTORY.md); later invitation and lifecycle
+operations remain unavailable.
 
 ## Ownership and routing
 
@@ -27,7 +28,8 @@ Server authorization remains authoritative; an SPA route response is not an acce
 | `/app/admin/invite-super-admin` | Authenticated + both `INVITE_USERS` and `ASSIGN_SUPER_ADMIN` |
 | `/app/admin/invitations` | Authenticated + `MANAGE_USER_INVITATIONS`, independent of Users directory access |
 
-The operational landing destinations supply no data, forms or unavailable enabled actions. Parameterized
+The Users route now loads its guarded directory; remaining operational landing destinations supply no data,
+forms or unavailable enabled actions. Directory invitation links reach these truthful static seams. Parameterized
 invitation status is not registered until its owning journey supplies a safe target contract. No fake records,
 role-name bypass, workspace switcher, planning/agent/observability content or Feature gate is introduced.
 
@@ -118,8 +120,9 @@ wrapping link lists and responsive account/administration cards. Account & Secur
 Active Sessions independently needs `READ_OWN_SESSIONS`. Users, Invite User and Invitation Administration independently
 need `READ_USERS`, `INVITE_USERS` and `MANAGE_USER_INVITATIONS`. The Dashboard does not advertise elevated assignment;
 the existing elevated route/rail still needs both `INVITE_USERS` and `ASSIGN_SUPER_ADMIN`. Role names grant nothing.
-Each Dashboard link includes the manifest's truthful pre-feature availability copy and reaches its registered
-landing. There are no enabled mutation controls, fake forms, records or session rows.
+Each Dashboard link includes the manifest's truthful availability copy and reaches its registered
+destination. Users opens its read-only directory; invitation destinations remain unavailable seams.
+There are no enabled mutation controls or fake forms, records or session rows.
 
 “Available today” describes installed sign-in/restoration/current-access/appearance/current-session sign-out.
 “Not installed yet” explicitly names planning, observability, agent sessions, charts, metrics and workspace

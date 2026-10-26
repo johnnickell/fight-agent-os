@@ -28,6 +28,7 @@ use App\Adapter\Http\Action\Api\V1\Repositories\GetRepositoryRegistrationAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\ListRepositoryRegistrationsAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\PreviewRepositoryConflictsAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\RegisterRepositoryAction;
+use App\Adapter\Http\Action\Api\V1\Users\ListUsersAction;
 use App\Adapter\Http\Action\Api\V1\Validations\ReadValidationAction;
 use App\Adapter\Http\Action\Documentation\ReadPrivateOpenApiAction;
 use App\Adapter\Http\Action\Documentation\ReadSwaggerBootstrapAction;
@@ -112,6 +113,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     )->setName('api.v1.me.sessions.revoke');
     $api->get('/me/sessions', \App\Adapter\Http\Action\Api\V1\Sessions\ListOwnedSessionsAction::class.':handle')
         ->setName('api.v1.me.sessions');
+    $api->get('/users', ListUsersAction::class.':handle')->setName('api.v1.users.list');
     $api->get('/me', ReadCurrentPrincipalAction::class.':handle')
         ->setName('api.v1.me');
     $api->get('/validations/{form_name}', ReadValidationAction::class.':handle')

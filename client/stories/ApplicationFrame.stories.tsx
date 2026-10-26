@@ -11,6 +11,7 @@ import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
+import { UserDirectoryService } from '@/features/users/UserDirectoryService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { ApplicationView } from '@/routes/ApplicationJourney';
 import { applicationRoutes } from '@/routes/applicationRoutes';
@@ -103,6 +104,14 @@ function FrameExample({
         }),
         authority,
         coordinator.terminal
+      ),
+      users: new UserDirectoryService(
+        new ApiClient({
+          schemaVersion: 2,
+          apiBasePath: '/api/v1',
+          appDebug: false,
+          swaggerAvailable: false
+        })
       ),
       sessions: new OwnedSessionsService(
         new ApiClient({

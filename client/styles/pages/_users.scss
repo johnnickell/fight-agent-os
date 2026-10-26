@@ -1,0 +1,149 @@
+.users-page {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.users-header,
+.users-actions,
+.users-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.users-header {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.users-actions a,
+.users-table a {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 44px;
+  padding: 0.5rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+}
+
+.users-table {
+  width: 100%;
+  table-layout: fixed;
+  margin-block: 1rem;
+  border-collapse: collapse;
+  color: var(--ui-text);
+
+  caption {
+    caption-side: top;
+    color: var(--ui-muted);
+    padding-block: 0.75rem;
+  }
+
+  th,
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--ui-border);
+  }
+
+  thead {
+    background: var(--ui-surface);
+
+    th:first-child {
+      width: 25%;
+    }
+
+    th:nth-child(2) {
+      width: 15%;
+    }
+
+    th:nth-child(3),
+    th:nth-child(4) {
+      width: 22%;
+    }
+  }
+}
+
+.user-roles {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li + li {
+    margin-top: 0.5rem;
+  }
+}
+
+.user-state {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.25rem;
+  font-weight: 600;
+}
+
+.user-dates {
+  margin: 0;
+  font-size: 0.875rem;
+
+  dd {
+    margin: 0 0 0.5rem;
+  }
+}
+
+.users-pagination {
+  margin-block: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .users-table {
+    display: block;
+
+    caption {
+      display: block;
+      width: 100%;
+      text-align: left;
+    }
+
+    // Retain column headers for assistive technology while reflowing the same rows as cards.
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    tbody {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+      gap: 1rem;
+    }
+
+    tr {
+      display: block;
+      min-width: 0;
+      border: 1px solid var(--ui-border);
+      border-radius: 0.5rem;
+      background: var(--ui-surface);
+    }
+
+    th,
+    td {
+      display: block;
+      padding: 0.75rem;
+      border: 0;
+    }
+
+    td::before {
+      content: attr(data-label);
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+  }
+}
