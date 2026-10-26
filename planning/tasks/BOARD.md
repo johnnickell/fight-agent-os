@@ -44,6 +44,7 @@ links do not create current claims. Work selection and priority remain in the se
 | Subject | Recorded delivery | Exact PR |
 |---|---|---|
 | [TASK-00057](00057-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/167](https://github.com/johnnickell/fight-agent-os/pull/167) |
+| [TASK-00059](00059-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/172](https://github.com/johnnickell/fight-agent-os/pull/172) |
 | [TASK-00517](00517-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/165](https://github.com/johnnickell/fight-agent-os/pull/165) |
 | [TASK-00518](00518-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/169](https://github.com/johnnickell/fight-agent-os/pull/169) |
 | [TASK-00535](00535-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/168](https://github.com/johnnickell/fight-agent-os/pull/168) |
@@ -570,7 +571,7 @@ links do not create current claims. Work selection and priority remain in the se
 | 55 | [TASK-00055](00055-TASK.md) | Deliver one-time password-reset completion | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | done | — | [PR #157](https://github.com/johnnickell/fight-agent-os/pull/157) |
 | 56 | [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | done | — | [PR #159](https://github.com/johnnickell/fight-agent-os/pull/159) |
 | 57 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | done | — | [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) |
-| 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | done | — | — |
+| 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | done | — | [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172) |
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #126](https://github.com/johnnickell/fight-agent-os/pull/126) |
