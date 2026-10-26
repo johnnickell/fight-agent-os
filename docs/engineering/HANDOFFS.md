@@ -58,6 +58,11 @@ not successful landing. Distinguish missing initial acceptance from land-owned d
 acceptance using the routes above; retain required evidence gates without a completion or repair loop.
 For an open-PR QA invocation, the observed PR URL can be the resume target; resolve its TASK for work/review/land.
 
+In Agent OS, point current delivery claims to the subject's [explicit TASK marker and generated view](../../planning/CONVENTIONS.md#current-delivery-handoffs).
+A fresh offline view establishes local identity consistency only, not live PR state, acceptance or a merge action.
+Preserve distinct planning/decomposition handoffs and historical PR evidence; never infer a marker from them.
+Other targets use their qualified local representation rather than inheriting Agent OS's script interface.
+
 Work and Build carry the exact [resource inventory](LANDING.md#inventory-and-preserve) in their existing
 handoffs to Land: Git checkout/ref/published OIDs, Compose context/container/network identities, live sessions,
 evidence and data ownership/dependencies, including unknowns and explicit main/current/active holds. Land owns

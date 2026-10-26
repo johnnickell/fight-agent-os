@@ -519,7 +519,7 @@
 | [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | done | — |
 | [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | done | [TICKET-00118](../tickets/00118-TICKET.md) |
 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | done | [TICKET-00118](../tickets/00118-TICKET.md) |
-| [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
+| [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | done | [TICKET-00119](../tickets/00119-TICKET.md) |
 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
 | [TASK-00519](00519-TASK.md) | Align and verify delivery handoffs across the ten projects | ready-for-agent | [TICKET-00120](../tickets/00120-TICKET.md) |
 | [TASK-00520](00520-TASK.md) | Manage your protected OpenRouter connections | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
