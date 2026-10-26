@@ -126,7 +126,14 @@ final class ActivationApiTest extends TestCase
             }
         );
         $started = new DateTimeImmutable();
-        $response = $this->request();
+        $response = $this->request([], [
+            'User-Agent' => 'Mozilla/5.0 (iPad) Version/18.0 Safari/600.0 private-ua-marker'
+        ]);
+        $metadata = $this->connection->fetchAssociative('SELECT * FROM session_presentation');
+        self::assertIsArray($metadata);
+        self::assertSame('Safari', $metadata['browser_family']);
+        self::assertSame('tablet', $metadata['device_class']);
+        self::assertStringNotContainsString('private-ua-marker', serialize($metadata));
         $data = $this->assertResponse($response, 200)['data'];
         self::assertSame([[false, 'active', 1]], $observed);
         self::assertSame(['access_token', 'issued_at', 'expires_at'], array_keys($data));
