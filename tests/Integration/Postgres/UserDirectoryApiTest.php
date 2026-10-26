@@ -271,6 +271,26 @@ final class UserDirectoryApiTest extends TestCase
     }
 
     /**
+     * Preserves package-accepted quoted canonical identity for another directory user (R59-01)
+     */
+    public function testQuotedCanonicalEmail(): void
+    {
+        $user = User::invite(
+            UserId::generate(),
+            EmailAddress::fromString('"a@b"@EXAMPLE.TEST'),
+            new DateTimeImmutable('2026-01-01T00:00:00Z')
+        );
+        $this->container->get(Connection::class)->transactional(
+            fn() => $this->container->get(UserRepository::class)->add($user)
+        );
+        $records = $this->check($this->request(), 200)['data']['records'];
+        self::assertCount(2, $records);
+        self::assertSame($user->getId()->toString(), $records[0]['user_id']);
+        self::assertSame('"a@b"@example.test', $records[0]['email']);
+        self::assertSame($this->actor->getId()->toString(), $records[1]['user_id']);
+    }
+
+    /**
      * Rejects all undeclared, ambiguous and malformed input before package dispatch
      */
     #[DataProvider('badInput')]

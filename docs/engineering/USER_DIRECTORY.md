@@ -47,8 +47,11 @@ are sorted by exact role name. An empty assignment remains empty; it does not im
 ## Browser behavior and invitation handoffs
 
 `UserDirectoryService` uses the existing same-origin, current-memory Bearer API transport and strict exact-key
-codecs. Its only retained state is a safe refusal category to prevent a guard remount from replaying a denied
-read. `UsersPage` owns one volatile page and an AuthorityCache scope: authority retirement, context replacement,
+codecs. Email syntax/admission belongs to the server/package: the client preserves bounded, nonempty,
+lowercase, control-free canonical display text verbatim, including quoted local parts containing `@`, rather
+than applying a second email grammar. Lifecycle must be one of the four documented strings; arrays and other
+coercible values are protocol failures. Its only retained state is a safe refusal category to prevent a guard
+remount from replaying a denied read. `UsersPage` owns one volatile page and an AuthorityCache scope: authority retirement, context replacement,
 unmount and page changes abort/fence pending work and remove private rows. `401` uses the sole bounded session
 restoration owner; `403` revalidates current authority. Neither automatically replays the refused operation;
 recovery needs explicit Retry. Nothing is stored in browser persistence or history.

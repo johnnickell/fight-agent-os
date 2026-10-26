@@ -89,6 +89,24 @@ describe('UsersPage', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
+  it('R59-01 lets an ordinary reader view another identity with quoted canonical email', async () => {
+    const emails = ['ordinary@example.test', '"a@b"@example.test'];
+    const fetch = vi.fn(() =>
+      Promise.resolve(
+        directoryResponse(directoryPage(emails.map((email) => directoryUser({ email }))))
+      )
+    );
+    await mount(fetch, ['READ_USERS']);
+    const table = await screen.findByRole('table', { name: 'Installation users — current page' });
+    expect(within(table).getAllByRole('row')).toHaveLength(3);
+    for (const email of emails)
+      expect(within(table).getByRole('rowheader', { name: email })).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('2 users');
+    expect(screen.queryByText('Users unavailable')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it('escapes all presentation values without creating markup or private diagnostics', async () => {
     await mount(() =>
       Promise.resolve(

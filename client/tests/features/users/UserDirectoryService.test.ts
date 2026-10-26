@@ -58,6 +58,31 @@ describe('UserDirectoryService', () => {
     );
   });
 
+  it('R59-01 preserves package-accepted quoted canonical email without dropping any row', async () => {
+    // Installed EmailAddress and the production PHP View emit this exact canonical value.
+    const emails = ['ordinary@example.test', '"a@b"@example.test'];
+    const { service } = serviceFor(directoryPage(emails.map((email) => directoryUser({ email }))));
+    const result = await service.load();
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value.records.map((user) => user.email)).toEqual(emails);
+  });
+
+  it.each([
+    { state: ['active'] },
+    { state: ['pending_activation'] },
+    { state: ['disabled'] },
+    { state: ['deleted'] },
+    { state: [] },
+    { state: ['active', 'deleted'] },
+    { state: null },
+    { state: 1 },
+    { state: true },
+    { state: {} }
+  ])('R59-02 rejects a non-string lifecycle value %j', async (override) => {
+    const { service } = serviceFor(directoryPage([directoryUser(override)]));
+    expect(await service.load()).toEqual(apiFailure('protocol'));
+  });
+
   it.each([
     { password_hash: 'private-hash-marker' },
     { authentication_version: 8 },
@@ -81,6 +106,10 @@ describe('UserDirectoryService', () => {
     },
     { roles: [{ name: '<script>private-marker</script>', managed: false }] },
     { state: 'unknown' },
+    { email: '' },
+    { email: null },
+    { email: ['ordinary@example.test'] },
+    { email: 'a'.repeat(255) },
     { email: 'MIXED@example.test' },
     { email: 'private\n@example.test' },
     { user_id: 'private-invalid-marker' },

@@ -28,6 +28,9 @@ const timestamp = (value: unknown): value is string =>
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00$/.test(value) &&
   Number.isFinite(Date.parse(value)) &&
   new Date(value).toISOString().replace('.000Z', '+00:00') === value;
+const lifecycle = (value: unknown): value is DirectoryUser['state'] =>
+  typeof value === 'string' &&
+  ['pending_activation', 'active', 'disabled', 'deleted'].includes(value);
 const decodeUser: ResponseDecoder<DirectoryUser> = (value) => {
   if (
     !hasExactKeys(value, ['user_id', 'email', 'state', 'roles', 'created_at', 'updated_at']) ||
@@ -35,12 +38,13 @@ const decodeUser: ResponseDecoder<DirectoryUser> = (value) => {
     !/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(
       value.user_id
     ) ||
+    // The server/package owns email syntax; decode bounded canonical display text, not another RFC policy.
     typeof value.email !== 'string' ||
+    value.email.length === 0 ||
     value.email.length > 254 ||
     value.email !== value.email.toLowerCase() ||
     [...value.email].some((character) => character.charCodeAt(0) < 32 || character === '\u007f') ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value.email) ||
-    !['pending_activation', 'active', 'disabled', 'deleted'].includes(String(value.state)) ||
+    !lifecycle(value.state) ||
     !timestamp(value.created_at) ||
     !timestamp(value.updated_at) ||
     value.updated_at < value.created_at ||
@@ -63,7 +67,7 @@ const decodeUser: ResponseDecoder<DirectoryUser> = (value) => {
   return Object.freeze({
     userId: value.user_id,
     email: value.email,
-    state: value.state as DirectoryUser['state'],
+    state: value.state,
     roles: Object.freeze(roles),
     createdAt: value.created_at,
     updatedAt: value.updated_at
