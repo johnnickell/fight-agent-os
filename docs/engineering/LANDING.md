@@ -107,6 +107,11 @@ For Agent OS's offline representation, use [current delivery handoffs](../../pla
 the TASK's explicit marker and canonical PR identify the subject; Board/Roadmap delivery blocks are derived.
 Set/correct/retire markers only from established subject evidence within Land authority, then explicitly refresh.
 Unmarked historical PRs are not current claims; local validation does not replace the live evidence below.
+Require [live handoff evaluation](HANDOFFS.md#live-delivery-handoff-evaluation) before evaluating a relevant
+current delivery/merge action. Agent OS's targeted `--check-delivery` observes only selected marked subjects;
+its ended exit is a Land reconciliation handback, not a checker failure to bypass or automatic correction.
+Before a marker exists, or for an explicitly resumed original PR whose marker was already retired, use the
+supported exact-PR read below within the same finite bounds; do not create a marker to perform discovery.
 Other targets retain their qualified local representation; this does not grant cross-project mutation authority.
 
 1. **Inventory and classify.** Resolve the authoritative TASK/parent records, Board, Roadmap and README from
@@ -158,8 +163,8 @@ Other targets retain their qualified local representation; this does not grant c
 The [draft-evidence path](#draft-publication-to-obtain-hosted-evidence) retains its fixed candidate and incomplete
 TASK. Inventory applicable handoffs there, but record pending state/contradictions in the ignored receipt and PR
 body without tracked reconciliation commits that move the candidate awaiting proof. Never claim synchronized
-tracked handoffs or successful landing while a required correction remains deferred. No new hosted-CI requirement,
-validator, live-routing automation or cross-project rollout is introduced by this procedure. Ended-handoff
+tracked handoffs or successful landing while a required correction remains deferred. The separate read-only
+live check introduces no hosted-CI requirement, automatic repair/dispatch or cross-project rollout. Ended-handoff
 recovery below consumes this inventory and preservation contract rather than replacing it.
 
 ## Resume an ended delivery handoff

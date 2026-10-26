@@ -24,6 +24,12 @@ still apply when the selected workflow is invoked.
 5. Read canonical review/QA identity and disposition only when they change the selected route. Unresolved
    identity is an evidence handoff, never acceptance. Confirm a suggested skill from supplied capability
    metadata/bindings; load its full instructions and references when invoked, not merely to recommend it.
+6. Before evaluating or repeating a relevant current delivery/merge handoff, require the
+   [bounded live check](#live-delivery-verification). Select only subjects relevant to that recommendation;
+   do not audit the delivery table or historical PRs. Report verified ended state and the exact Land handback,
+   or unverified evidence and recovery, separately from unrelated TASK/Wayfinder/planning routes. Do not edit,
+   refresh, invoke Land or let a delivery observation reorder the Board. Historical references alone trigger no
+   query; after Land retires an ended current claim, preserved evidence does not keep blocking selection.
 
 Prefer heading searches and bounded section reads. Aim to retrieve no more than about 24,000 characters
 of routing evidence; stop with a precise unresolved input before exceeding that scope unless the user requests
@@ -175,18 +181,74 @@ Neither path invokes hosting tools, fetches, needs hosting credentials or claims
 inspection is a bounded five-second Git configuration read only and is skipped when no markers exist. A missing
 origin holds marked identity validation; restore the intended repository configuration through its owner.
 Land resolves malformed identity before an authorized refresh; read-only routing never performs that refresh.
-Live checking/routing integration is deferred to [TASK-00518](tasks/00518-TASK.md); `--check-delivery` and
-`--reconcile-delivery` are **not** supported commands in this reference implementation.
+The explicit live mode below is separate from offline checks and writes. `--reconcile-delivery` is **not**
+supported: only an explicitly invoked Land can correct current markers and handoffs.
+
+### Live delivery verification
+
+Before Land or read-only routing evaluates a relevant delivery/merge handoff, run:
+
+```sh
+./bin/planning-check --check-delivery TASK-00517
+```
+
+This is a real subject example; use the actual relevant marked TASK IDs. `--check-delivery` with no IDs checks
+all explicit current markers, not historical PR links. Prefer explicit IDs for routing. The tool first requires
+successful offline validation and fresh generated views; on failure, no hosting lookup occurs. Routing never
+runs `--write` to recover freshness. Unknown, duplicate or unmarked requested IDs fail without hosting calls;
+resolve the current subject with Land, rather than promoting historical evidence into a marker.
+
+Bounds: maximum **16 selected subjects**, one sequential `gh pr view` invocation per exact PR, **15 seconds**
+per invocation (at most 240 seconds of hosting-command waits), no checker retries/polling or auth preflight.
+The CLI may make multiple underlying HTTP requests; 16 is a CLI lookup bound, not a wire-request guarantee.
+Local origin lookup has its existing five-second timeout. Responses above **16,384 UTF-8 bytes** are rejected
+(after capture). Existing operator `gh` access is used noninteractively, with explicit `github.com` host/repository;
+no credentials are printed or grants changed. No marker means zero hosting commands, including without `gh`.
+
+The canonical URL/repository/number, exact TASK ID and title, `develop` base, subject-owned
+`feature/task-NNNNN-<slug>` head and full 40-hex head OID must match. All requested state/merge fields must be
+present. MERGED additionally requires a valid UTC merge time and full merge OID; OPEN/CLOSED require null
+merge time/commit. Mismatched or contradictory evidence is never an observation of a trusted PR state.
+This verifies the recorded subject and advertised branch, **not** an accepted-candidate/remote-head provenance
+bridge: Land still compares exact recorded base/head/OIDs, fork identity, independent reports and delivery holds
+under [landing standards](../docs/engineering/LANDING.md#synchronize-current-subject-handoffs).
+
+| Result | Meaning and next action |
+|---|---|
+| OPEN | Verified observation only. Evaluate actual acceptance, QA, provenance and delivery holds before recommending the supported human/Land action; open alone proves no readiness or CI success. |
+| MERGED | Report exact merge time/OID, retire the merge recommendation, and recommend `/skill:land TASK-NNNNN` explicitly resuming the exact original PR under ended-handoff recovery. Local integration/deployment are not inferred. |
+| CLOSED WITHOUT MERGE | Report non-delivery through that PR and the same explicit Land correction handback. Preserve acceptance; maintainer owns any future-delivery decision. |
+| UNVERIFIED | Hold only the affected delivery recommendation. Restore missing CLI, existing authentication/access/network or complete exact PR metadata; Land resolves identity contradictions. Rerun the same subject after recovery, never assume open/merged or silently use offline success as freshness. |
+
+Exit **0** means all selected observations are OPEN, or no current markers exist (not proof that no PRs exist).
+Exit **1** means local validation failed or at least one verified ended handoff needs Land correction. Exit **2**
+means invalid mode/selection or incomplete live evidence; it takes precedence over ended results in mixed live
+observations. Inspect per-subject output: no aggregate success overrides an unverified subject. Raw hosting
+stdout/stderr is never replayed on failure. The command writes no records/views, invokes no Land, scans no
+history, fetches/publishes/merges nothing, and checks no CI. `--write` and `--check-delivery` are mutually exclusive.
+Ordinary check/write and `./bin/build` planning remain network-independent. A correctly reconciled unmarked
+historical PR is not queried again merely because its evidence remains recorded.
 
 ### Qualified reference
 
 Read-only inspection of Fight Common at source commit `2c4d1d529f6057f0a4ef2d7483b92d0327a58403`
 qualified `scripts/planning_portfolio.py` and its current-delivery conventions: explicit live-TASK marker plus
-PR, generated Board delivery block, ordinary offline check/write, and local origin matching. Common also has
-live verification and reconciliation modes, routing summaries and local ancestry rules. Those are not imported
-here, and its historical TASK receipts or source inspection are not independent acceptance or fleet compatibility.
-Agent OS adds canonical marked-PR and conflicting-subject validation and separate Board/Roadmap delivery tables;
-its existing Board selection, parent closure and planning frontier retain their own implementation and authority.
+PR, generated Board delivery block, ordinary offline check/write, and local origin matching.
+
+TASK-00518 separately inspected Common at `59ba43b40cfa6fee681f6dde2bfe075aeb1f2aa3`: its
+`--check-delivery` validates at most 16 markers, uses one 15-second `gh pr view` per PR, checks URL/number,
+exact title, develop base, subject branch, full head OID and complete consistent merge metadata, and rejects
+responses over 16,384 characters. Common additionally checks local ancestry with five-second local Git calls,
+disabled replacement objects/lazy fetching and no fetch; merged/integrated `done` subjects can resolve read-only.
+Its `--reconcile-delivery` writes marker retirement and views; its closed-unmerged/incomplete output names a
+planning owner. These are qualified **source observations**, not fresh Common execution or fleet acceptance.
+
+Agent OS reuses the bounded exact-PR observation pattern but adds targeted selection, byte-counted response
+validation and distinct ended/incomplete exits. It deliberately does not import automatic reconciliation,
+local-ancestry resolution or Common's correction owner: every ended current claim routes to explicit Land.
+It retains canonical marked-PR/conflicting-subject validation, separate Board/Roadmap delivery tables and its
+existing Board selection, parent closure and planning frontier. Matching command names do not imply compatible
+mutation authority or result semantics; TASK-00519 owns remaining ten-project alignment.
 
 ## Automatic parent completion
 

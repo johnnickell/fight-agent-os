@@ -11,6 +11,12 @@ operator-selected role, actual file-access denials and any independently selecte
 Native shell requires no Jev command assessment or confirmation. Targets need no copy of this rule.
 
 Read [landing standards](../../../docs/engineering/LANDING.md). The standards own reconciliation proof, publication and cleanup boundaries; this skill executes them for one TASK.
+Before evaluating a current delivery/merge handoff, require
+[live handoff evaluation](../../../docs/engineering/HANDOFFS.md#live-delivery-handoff-evaluation) using the target's
+qualified bounded exact-subject read (Agent OS: `./bin/planning-check --check-delivery` with relevant marked TASK
+IDs). This is separate from offline planning/build and never proves acceptance or candidate provenance.
+Unverified evidence holds affected mutation/publication; ended evidence enters recovery only on explicit Land
+resume for that exact TASK/PR. Do not silently import another target's checker or mutation mode.
 
 For `/skill:land TASK-NNNNN cleanup-only` or an explicit request to clean this repository's merged TASK resources,
 enter [cleanup-only intake](../../../docs/engineering/LANDING.md#cleanup-only-intake) first, respecting named

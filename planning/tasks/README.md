@@ -520,7 +520,7 @@
 | [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | done | [TICKET-00118](../tickets/00118-TICKET.md) |
 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | done | [TICKET-00118](../tickets/00118-TICKET.md) |
 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | done | [TICKET-00119](../tickets/00119-TICKET.md) |
-| [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | ready-for-agent | [TICKET-00119](../tickets/00119-TICKET.md) |
+| [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | done | [TICKET-00119](../tickets/00119-TICKET.md) |
 | [TASK-00519](00519-TASK.md) | Align and verify delivery handoffs across the ten projects | ready-for-agent | [TICKET-00120](../tickets/00120-TICKET.md) |
 | [TASK-00520](00520-TASK.md) | Manage your protected OpenRouter connections | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
 | [TASK-00521](00521-TASK.md) | Inspect optional allowance in connection settings | ready-for-agent | [TICKET-00089](../tickets/00089-TICKET.md) |
@@ -538,5 +538,6 @@
 | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | done | — |
 | [TASK-00535](00535-TASK.md) | Launch native Pi with workspace panes already open | done | [TICKET-00110](../tickets/00110-TICKET.md) |
-| [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | in-progress | — |
+| [TASK-00536](00536-TASK.md) | Remove the legacy fight-terminal command | done | — |
+| [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | done | — |
 <!-- /planning:records -->

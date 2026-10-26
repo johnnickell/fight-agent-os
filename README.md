@@ -28,7 +28,9 @@ managed Pi execution and database-authoritative Planning remain planned. See the
 Use the [generated current-delivery view](planning/tasks/BOARD.md#current-delivery-handoffs), sourced only from
 [explicit TASK identity](planning/CONVENTIONS.md#current-delivery-handoffs). Ordinary PR links and historical
 acceptance/publication checkpoints in this README are not live delivery authority. The offline view does not
-establish current PR state or readiness to merge; Land owns subject-specific reconciliation.
+establish current PR state or readiness to merge. Before evaluating a relevant handoff, use the
+[targeted read-only live check](planning/CONVENTIONS.md#live-delivery-verification); verified ended PRs route
+to explicit Land reconciliation, and unavailable evidence remains unverified. Ordinary planning/build stays offline.
 
 ## Start planning
 
@@ -65,8 +67,8 @@ there is no automatic RPC-editor fallback.
 
 TASK-00512's native replacement A and repository-only RPC retirement B have independent technical acceptance and
 current independent QA PASS. Its accepted-candidate closeout is published in [PR #162](https://github.com/johnnickell/fight-agent-os/pull/162); final delivery verification and human merge remain separate. See the [current Land checkpoint](planning/tasks/00512-TASK.md#current-land-closeout--2026-10-25).
-`fight-terminal` now prints only a retirement/session-migration notice, not a conversation frontend. Existing
-copied installations are not changed by this source delta. See [native ownership and log controls](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
+The package no longer ships `fight-terminal` or its direct retirement stub; `fight-workspace` is the sole
+executable. Existing copied installations change only through an explicit owned update/removal. See [native ownership and log controls](harness/pi/WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
 [actual-file session migration](harness/pi/WORKSPACE.md#native-entry-and-existing-rpc-sessions), and
 [explicit installed-launcher adoption/removal](harness/pi/README.md#update-remove-and-recover-the-launcher).
 Branding does not enable managed TASK execution or sandbox access. The optional [deterministic tool policy](harness/pi/TOOL_POLICY.md)
