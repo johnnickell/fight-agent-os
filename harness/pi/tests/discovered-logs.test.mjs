@@ -31,6 +31,18 @@ async function fixture(t) {
     calls: () => calls, maximum: () => maximum, refresh: () => logs.refresh({ force: true }) };
 }
 
+async function pendingDiscovery(logs, start = () => logs.refresh()) {
+  const discover = logs.sources.discover.bind(logs.sources); let release;
+  logs.sources.discover = async (...args) => {
+    logs.sources.discover = discover;
+    await new Promise(done => { release = done; }); return discover(...args);
+  };
+  logs.refreshAt = 0;
+  const scan = start();
+  while (!release) await new Promise(done => setImmediate(done));
+  return { scan, release };
+}
+
 test('late runtime and delayed Docker recover without an explicit retry', async t => {
   const f = await fixture(t); f.fail('Docker unavailable'); await f.logs.rebind('/checkout');
   assert.equal(f.logs.current, null);
@@ -143,6 +155,92 @@ test('context revocation during explicit close cannot throw or lose closed/pause
   assert.equal(f.logs.current, null);
   await f.logs.rebind('/checkout'); assert.equal(f.logs.current, null, 'explicit close survives context rebind');
   await f.logs.action('toggle'); assert.equal(f.logs.current.paused, true, 'pause survives revocation during close');
+});
+
+test('close queued behind automatic discovery survives revocation and rebind without recovery', async t => {
+  const f = await fixture(t); f.set([source()]); await f.logs.rebind('/checkout');
+  const { scan, release } = await pendingDiscovery(f.logs);
+  const closing = f.logs.action('toggle'); f.logs.hold(); release();
+  await Promise.all([scan, closing]);
+  assert.equal(f.logs.entries.get('/checkout').closed, true, 'accepted close belongs to its original checkout');
+  const count = f.readers.length;
+  await f.logs.rebind('/checkout');
+  assert.equal(f.logs.current, null, 'rebind is not explicit recovery');
+  assert.equal(f.readers.length, count, 'no new reader is admitted');
+});
+
+test('queued close, pause and explicit recovery keep their order and original checkout only', async t => {
+  for (const [actions, closed, paused] of [
+    [['pause', 'toggle'], true, true], [['toggle', 'pause'], true, true],
+    [['pause', 'pause', 'toggle'], true, false], [['toggle', 'reconnect', 'pause'], false, true],
+    [['toggle', 'toggle'], false, false], [['reconnect', 'toggle'], true, false],
+    [['select', 'toggle'], true, false],
+  ]) await t.test(actions.join(' → '), async t => {
+    const f = await fixture(t); f.set([source()]); await f.logs.rebind('/checkout');
+    const old = f.logs.current; old.history.push('obsolete');
+    const { scan, release } = await pendingDiscovery(f.logs);
+    const controls = actions.map(action => f.logs.action(action));
+    f.logs.hold();
+    f.set([source('other', 'web', '/other')]); const other = f.logs.rebind('/other');
+    release(); await Promise.all([scan, ...controls, other]);
+    assert.equal(f.calls(), 3, 'stale recovery actions must not perform discovery');
+    assert.equal(f.readers.length, 2, 'only the newly bound context admits a reader');
+    assert.equal(f.logs.current.source.main, '/other');
+    assert.equal(f.logs.current.paused, false, 'old pause intent cannot affect another checkout');
+    assert.equal(f.logs.entries.get('/other').closed, false);
+    assert.equal(f.logs.entries.get('/other').cancelled, false);
+    assert.deepEqual(old.history, []); assert.equal(old.processes.size, 0);
+    assert.equal(f.logs.entries.get('/checkout').closed, closed);
+    assert.equal(f.logs.entries.get('/checkout').paused, paused);
+    f.set([source('replacement')]); await f.logs.rebind('/checkout');
+    if (closed) {
+      assert.equal(f.logs.current, null, 'closed checkout requires explicit recovery');
+      await f.logs.action('reconnect');
+    }
+    assert.equal(f.logs.current.source.container, 'replacement');
+    assert.equal(f.logs.current.paused, paused, 'pause intent survives rebind/recovery');
+    assert.doesNotMatch(f.logs.view(), /obsolete/);
+  });
+});
+
+test('queued cancellation survives menu revocation without cancelling a different checkout', async t => {
+  for (const actions of [['cancel'], ['pause', 'cancel'], ['cancel', 'pause'], ['cancel', 'reconnect'], ['select', 'cancel']]) {
+    await t.test(actions.join(' → '), async t => {
+      const f = await fixture(t); f.set([source(), source('b', 'worker')]); await f.logs.rebind('/checkout');
+      const { scan, release } = await pendingDiscovery(f.logs, () => f.logs.action('select'));
+      const controls = actions.map(action => f.logs.action(action)); f.logs.hold();
+      f.set([source('other', 'web', '/other')]); const other = f.logs.rebind('/other');
+      release(); await Promise.all([scan, ...controls, other]);
+      assert.equal(f.calls(), 3, 'stale controls cannot perform discovery');
+      assert.equal(f.logs.entries.get('/checkout').cancelled, true);
+      assert.equal(f.logs.entries.get('/checkout').paused, false, 'menu input cannot toggle reader pause');
+      assert.equal(f.logs.entries.get('/other').cancelled, false);
+      assert.equal(f.logs.current.source.main, '/other');
+      f.set([source()]); await f.logs.rebind('/checkout'); await f.refresh();
+      assert.equal(f.logs.current, null, 'return and automatic discovery cannot undo cancellation');
+      await f.logs.action('select'); await f.logs.action('choose');
+      assert.equal(f.logs.current.source.main, '/checkout', 'explicit selection recovers cancellation');
+    });
+  }
+});
+
+test('a queued close is not reinterpreted as menu input when automatic discovery becomes ambiguous', async t => {
+  const f = await fixture(t); await f.logs.rebind('/checkout');
+  const { scan, release } = await pendingDiscovery(f.logs);
+  const close = f.logs.action('toggle'); f.set([source('b', 'worker'), source('c', 'worker')]);
+  release(); await Promise.all([scan, close]);
+  assert.equal(f.logs.entries.get('/checkout').closed, true);
+  assert.equal(f.logs.choice(), null, 'background ambiguity must not replace accepted close intent');
+  assert.equal(f.logs.current, null);
+});
+
+test('controls received without current authority cannot mutate retained checkout intent', async t => {
+  const f = await fixture(t); f.set([source()]); await f.logs.rebind('/checkout');
+  await f.logs.action('toggle'); f.logs.hold();
+  await Promise.all(['toggle', 'reconnect', 'select', 'pause', 'cancel'].map(action => f.logs.action(action)));
+  assert.equal(f.logs.entries.get('/checkout').closed, true);
+  assert.equal(f.logs.entries.get('/checkout').paused, false);
+  await f.logs.rebind('/checkout'); assert.equal(f.logs.current, null);
 });
 
 test('an unreaped reader blocks every automatic replacement', async t => {

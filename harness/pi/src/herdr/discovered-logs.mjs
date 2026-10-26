@@ -110,17 +110,21 @@ export class DiscoveredLogs {
     this.current.open = true; await this.current.subscribe();
   }
   action(type) {
-    const generation = this.generation;
+    const generation = this.generation, entry = this.entries.get(this.worktree), menu = this.menu;
+    if (!this.valid(generation) || !entry) return this.transition;
     this.transition = this.transition.then(async () => {
+      // Accepted controls belong to this entry, in queue order, even if its I/O authority is revoked.
+      if (type === 'select' || !menu && (type === 'reconnect' || type === 'toggle')) {
+        entry.closed = type === 'toggle' ? !entry.closed : false; entry.cancelled = false;
+      } else if (type === 'cancel' && menu) entry.cancelled = true;
+      else if (type === 'pause' && !menu) entry.paused = !entry.paused;
       if (!this.valid(generation)) return;
-      const entry = this.entries.get(this.worktree); if (!entry) return;
       if (type === 'select') {
-        entry.cancelled = false; entry.closed = false;
         if (this.current) entry.paused = this.current.paused;
         await this.stopCurrent();
         if (this.valid(generation)) await this.discover(entry, generation, true);
-      } else if (this.menu) {
-        if (type === 'cancel') { this.menu = false; entry.cancelled = true; this.notice = 'Selection cancelled; workspace stays open. Press s to choose logs.'; }
+      } else if (menu) {
+        if (type === 'cancel') { this.menu = false; this.notice = 'Selection cancelled; workspace stays open. Press s to choose logs.'; }
         if (type === 'up') this.index = (this.index + entry.choices.length - 1) % entry.choices.length;
         if (type === 'down') this.index = (this.index + 1) % entry.choices.length;
         if (type === 'choose') {
@@ -128,7 +132,7 @@ export class DiscoveredLogs {
           await this.open(entry, generation);
         }
       } else if (type === 'toggle' || type === 'reconnect') {
-        entry.closed = type === 'toggle' ? !entry.closed : false; entry.cancelled = false;
+        this.menu = false;
         if (this.current) entry.paused = this.current.paused;
         if (entry.closed) {
           // Set display intent before awaiting reaping: hold() can revoke this reader meanwhile.
