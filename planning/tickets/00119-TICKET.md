@@ -2,7 +2,7 @@
 id: TICKET-00119
 epic: EPIC-00020
 title: Route delivery handoffs using verified current state
-status: ready-for-agent
+status: done
 ---
 
 # Route delivery handoffs using verified current state
@@ -99,7 +99,7 @@ application permission, database record or Domain event is introduced.
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00517](../tasks/00517-TASK.md) | Represent and validate current delivery handoffs offline | done |
-| [TASK-00518](../tasks/00518-TASK.md) | Verify live handoffs and route corrections to Land | in-progress |
+| [TASK-00518](../tasks/00518-TASK.md) | Verify live handoffs and route corrections to Land | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

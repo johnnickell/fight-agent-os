@@ -38,12 +38,13 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 2 | [TASK-00519](00519-TASK.md) | Align and verify delivery handoffs across the ten projects | [TICKET-00120 — Align the ten participating projects with current delivery handoffs](../tickets/00120-TICKET.md) | ready-for-agent | — | — |
 | 57 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | ready-for-agent | — | — |
 | 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -67,7 +68,6 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00519](00519-TASK.md) | Align and verify delivery handoffs across the ten projects | [TICKET-00120 — Align the ten participating projects with current delivery handoffs](../tickets/00120-TICKET.md) | ready-for-agent | [TASK-00518](00518-TASK.md) | — |
 | 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md), [TASK-00498](00498-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00377](00377-TASK.md) | — |
@@ -485,6 +485,7 @@ links do not create current claims. Work selection and priority remain in the se
 | 2 | [TASK-00446](00446-TASK.md) | Restore one glob-loaded service container and trusted console commands | — (standalone chore) | done | — | [PR #100](https://github.com/johnnickell/fight-agent-os/pull/100) |
 | 2 | [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | — (standalone chore) | done | — | [PR #150](https://github.com/johnnickell/fight-agent-os/pull/150) |
 | 2 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | done | — | [PR #165](https://github.com/johnnickell/fight-agent-os/pull/165) |
+| 2 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | done | — | — |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |
