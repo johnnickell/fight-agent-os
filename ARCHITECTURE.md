@@ -23,7 +23,7 @@ system or an Internet homepage. It starts with the Slim composition from `johnni
   `ListActiveSessions`, maps an explicit API View and joins an optional coarse presentation sidecar captured
   once after activation/login (TASK-00057, independent Review/QA accepted; [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) merged into `develop` at `0629697bd1a51b88720b1881aa5024928981f5ce`; read-only baseline);
   TASK-00058 adds principal-only other-owned `RevokeSession` dispatch with a deny-all administrative callback,
-  explicit accessible confirmation and bounded volatile list/target invalidation (independent Review/QA pending);
+  explicit accessible confirmation and bounded volatile list/target invalidation (independent Review/QA accepted; [PR #173](https://github.com/johnnickell/fight-agent-os/pull/173) merged into `develop` at `0ec84eb67043e40bb84890d45ed1d2887a4a5573`);
   the installation-wide [user directory](docs/engineering/USER_DIRECTORY.md) at `/app/admin/users` and
   `GET /api/v1/users` dispatches package `ListUsers` only after exact authoritative `READ_USERS`, projects
   complete safe role presentation and fences volatile browser pages with the sole cache (TASK-00059,
