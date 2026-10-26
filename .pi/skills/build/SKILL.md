@@ -237,7 +237,7 @@ this skill does not guarantee unattended survival after terminal/host exit.
 | Engineer | [work](../work/SKILL.md): owned committed implementation, full gate receipt, scope, head and limitations | Confirm identity; dispatch fresh Review |
 | Senior Engineer | [review](../review/SKILL.md): canonical independent report with separate Standards and Spec passes | `accept` to QA; confirmed blockers to repair; missing evidence to its owner |
 | QA Engineer | [qa](../qa/SKILL.md): current canonical PASS or justified criterion-specific N/A, scenarios and inspected applicable captures | Satisfied QA to land; FAIL defects to Engineer; INCOMPLETE to prerequisite recovery |
-| Release Manager | [land](../land/SKILL.md): eligibility, final checks, non-force publication, verified PR/capture access, reconciled current handoffs and required bounded cleanup with postconditions/holds | Inspect original remote result and resource dispositions; hand the actual PR and any cleanup recovery to the human |
+| Release Manager | [land](../land/SKILL.md): eligibility, final checks, non-force publication, verified PR/capture access, reconciled current handoffs and required bounded cleanup with postconditions/holds | Inspect delivery and resources; after worker exit finish eligible cleanup from the safe checkout before human handoff |
 
 Read canonical `<base>/.runs/reviews/<TASK-ID>/review.md` and `<base>/.runs/qa/<TASK-ID>/qa.md`, including subject,
 independence, current verdict/disposition, evidence and limitations. Never prefer an older PASS over a newer
@@ -269,6 +269,18 @@ Success requires a verified open, ready PR against the correct base, exact publi
 review/QA provenance, required checks and accessible applicable captures, plus Land's reconciled source/current
 handoffs and verified eligible Git/container/network cleanup under the [owning procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff).
 Inspect its durable inventory/postconditions; publication with cleanup held is not complete Land/Build.
+If the remaining hold is the Land worker's own cwd/session, observe that worker's actual exit, then dispatch a
+fresh **cleanup-only** Land continuation from the verified canonical safe checkout, not the disposable TASK
+checkout. Use the same monitor, pinned Land model and ledger; this is the cleanup-only exception to the normal
+TASK-checkout dispatch location. The request must bind the original target checkout/ref/head, exact receipt,
+existing cleanup authority and excluded resources, and forbid publication, tracked edits and corrective PRs.
+Preserve the active coordinator and other sessions; never switch/remove their checkout. Apply the owning
+[cleanup-only intake and consumer qualification](../../../docs/engineering/LANDING.md#cleanup-only-intake),
+including current observation of read-only VM file-sharing handles rather than requiring shared VM shutdown.
+Inspect the continuation's exits and Git/Docker postconditions; reconcile receipt claims with actual state,
+including recreated resources. Do not hand the human an already-resolved worker-cwd hold or request another
+cleanup grant already delegated. Real remaining dependencies/failures retain precise finite recovery actions;
+unchanged holds are not an unlimited retry loop. Cleanup creates no repair cycle or publication retry.
 Return the actual PR URL and publication state even on a cleanup hold, retained resources/recovery action,
 concise verification/limitations and revision usage. End with `Next: Review and merge <actual PR URL> on GitHub` under
 [handoff rules](../../../docs/engineering/HANDOFFS.md), then stop after this TASK.

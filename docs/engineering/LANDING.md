@@ -318,6 +318,33 @@ After final push, query the hosting service: PR open, base `develop`, intended h
 
 ## Cleanup and handoff
 
+### Cleanup-only intake
+
+An explicit `/skill:land TASK-NNNNN cleanup-only`, or a request to clean this repository's merged TASK
+resources, enters here **before** publication or ended-handoff correction. Ordinary one-TASK Land does not
+silently sweep unrelated tasks. Bind a repository-scoped request to its canonical checkout and explicit exclusions;
+preview a bounded candidate inventory from registered worktrees **and** Docker project/configuration/mount
+metadata beneath that repository. Resolve each candidate to its exact TASK and PR using authoritative records
+or retained handoffs, then query that PR directly. Do not scan every historical PR or other repositories.
+
+For merged candidates, prove repository/base/head identity, final PR head, merge OID/time and inclusion in current
+`develop` (use hosting provenance for squash/rebase). Requalify any remaining local tip against that head and
+preserve unpublished work. An absent worktree/ref does not prevent independently qualified Docker cleanup.
+For a published-open subject, retain the ordinary delivery/QA/provenance gates below. Closed-unmerged, unknown
+identity or inaccessible proof holds the affected candidate; a merged status alone does not prove resource ownership.
+Preserve existing Review/QA and acceptance receipts; do not rerun implementation acceptance merely to remove
+an already-merged test stack. Missing historical reports limit acceptance claims, not independently proven
+ownership/merge cleanup under the explicit request.
+
+Reconcile the existing receipt with **current** Git/Docker/process state, including resources recreated since a
+recorded removal. Apply the inventory, preservation, consumer and postcondition rules below to remaining effects
+only. A stale current-handoff marker is recorded as a separate factual-reconciliation action; it does not require
+a corrective PR or tracked changes before ownership-proven cleanup. Do not publish, create a correction checkout,
+repeat gates, rewrite reports or commit metadata just to retire resources. Ended-handoff correction remains a
+separate explicitly requested operation. Return per-subject removed/retained/held results and actual next actions.
+
+### Completion ownership
+
 Safe cleanup is a required effect of authorized Land, not an optional follow-up after publication. Remove the
 eligible isolated worktree, local feature branch, disposable test containers and unused task-owned networks.
 Publication does not require merge first. A resource that fails qualification stays in place with an explicit
@@ -337,7 +364,11 @@ remove/retain/hold disposition and reason, command/result and postcondition:
 - Compose project, absolute configuration/override/env-file **locators** and working directory, wrapper invocation,
   container IDs/labels, mounts and dependencies; network IDs/labels and every attached endpoint's ownership.
   Names or Compose labels alone are not sufficient: compare them with the handoff, resolved configuration,
-  actual checkout/mount paths and current consumers. Never print environment values or credentials.
+  actual checkout/mount paths and current consumers. Include task stacks whose working/configuration directory
+  is no longer a registered worktree. If original configuration is gone, corroborate exact project/config paths
+  and mounts against retained handoffs or the verified PR's source configuration, service/process topology and
+  data disposition; record what was reconstructed. Uncorroborated ownership still holds. Never recreate a
+  missing checkout merely to run its old teardown wrapper. Never print environment values or credentials.
 - Task processes/sessions (identity, liveness and cwd), shared consumers, volumes/bind data, ignored/untracked
   artifacts, canonical reports, captures, drafts and private runtime/credential paths. Explicitly record none,
   unknown or unavailable; missing inventory is not proof of absence. Active coordinators and child sessions
@@ -352,12 +383,40 @@ unrecoverable evidence, private state without an authorized destination, or a li
 Durable volumes/databases/credentials remain retained by default; volume deletion needs separate explicit
 proven-disposable authorization. Never use `down -v` to make the inventory empty.
 
+### Qualify live consumers
+
+A task session/coordinator cwd, writer, active Docker bind mount or other actual dependency holds its checkout.
+Recheck exited worker PIDs by identity/liveness, not a historical receipt. Do not kill an unrequested session or
+stop a shared VM. A generic virtualization process's read-only descriptors are **not alone** an active-task proof,
+nor is their read-only mode alone permission to delete. Qualify them from a separate safe checkout:
+
+1. Identify the live process, owner, executable and descriptor access modes. Establish it is the local Docker
+   file-sharing/virtualization service using local runtime/process evidence, not a similar name or old PID.
+2. Successfully inspect **all** containers, including stopped ones, for source mounts into the candidate and
+   parent mounts exposing it, plus host sessions/process cwd, write-capable descriptors and known non-Docker
+   consumers. Retire qualified task containers first. An explicit candidate mount/session/writer, incomplete
+   visibility or unknown consumer holds the affected checkout. A parent-only shared repository mount is not by
+   itself a task dependency: inspect that container's configured source, processes/cwd and actual candidate use;
+   positively establish unrelated use or hold it. Never stop a shared stack to clear general path exposure,
+   infer absence from an inspection error, or kill an unknown consumer to proceed.
+3. Preserve required ignored/private state outside the checkout with modes and manifests. Compare source
+   digests/status before and after copying and immediately before removal; changes or unverifiable files hold.
+4. When only positively qualified read-only file-sharing handles remain, record that evidence and proceed with
+   normal non-force Git cleanup. Handles need not reach zero; do not demand VM shutdown to clear file-sharing
+   cache descriptors. Any new actual dependency or removal failure stops the affected effect without force.
+
+This exception is bounded to qualified read-only runtime file sharing, not arbitrary readers or an exclusion for
+all VM processes. Preserve the observation and postconditions in the existing receipt.
+
 ### Qualify local Git cleanup
 
-Require completed applicable QA, publication and final delivery verification under [Verify and publish](#verify-and-publish),
-and reconciled current handoffs under [subject synchronization](#synchronize-current-subject-handoffs). Preserve
-accepted-candidate/report provenance. For an explicitly resumed ended handoff, also apply its live-state and
-correction-publication requirements; closure alone does not authorize disposal. Then establish one proof path:
+Ordinary publication cleanup requires completed applicable QA, publication and final delivery verification under
+[Verify and publish](#verify-and-publish), and reconciled current handoffs under
+[subject synchronization](#synchronize-current-subject-handoffs). Preserve accepted-candidate/report provenance.
+An explicitly resumed ended-handoff **correction** also requires its live-state and correction-publication proof;
+closure alone does not authorize disposal. An explicit cleanup-only request instead uses
+[its intake](#cleanup-only-intake): merged-resource retirement needs no new acceptance, handoff correction or
+corrective publication. Then establish one proof path:
 
 | State | Required proof for the local feature ref |
 |---|---|
@@ -370,7 +429,12 @@ there must be zero local-only commits and the tips must match, not merely share 
 metadata commit is still unpublished work. If the remote advanced, reconcile provenance/delivery first; do not
 quietly delete the older branch. Keep publication proof separate from merge proof and timestamp both observations.
 
-From a separate verified safe checkout, recheck registered worktrees, status, branch/OID, sessions and mounts.
+From a separate verified safe checkout, recheck registered worktrees, status, branch/OID, sessions and mounts
+under [consumer qualification](#qualify-live-consumers). If the Land worker itself uses the candidate, return its
+exact remaining effects to the owning coordinator. After observing worker exit, that coordinator must continue
+cleanup from the canonical safe checkout within existing authority, using a cleanup-only Land worker there when
+its role requires delegation. Do not dispatch that continuation from the removal candidate, terminate the active
+coordinator, or return an already-ended worker-cwd hold as a human prerequisite.
 Use `git worktree remove` without force only for a clean, inactive, isolated owned checkout at the qualified
 candidate, after preservation and container retirement. Re-query worktree registration and filesystem absence;
 removal is not the final tool operation because postconditions and branch cleanup still follow. Never switch or

@@ -69,7 +69,14 @@ evidence and data ownership/dependencies, including unknowns and explicit main/c
 [required safe cleanup and postcondition verification](LANDING.md#cleanup-and-handoff), not another registry or
 an unconditional branch-retention handoff. Return published/delivery state separately from cleanup: a verified
 PR with a held resource is publication with incomplete cleanup, naming the resource, reason, recovery owner/action
-and durable receipt. Resume only missing effects; never recommend repeating publication to resolve a cleanup hold.
+and durable receipt. Resume only missing effects; never recommend repeating publication to resolve a cleanup hold. Use
+`/skill:land TASK-NNNNN cleanup-only` with the actual TASK ID for local resource retirement, including after
+merge; this enters [cleanup-only intake](LANDING.md#cleanup-only-intake), not ended-handoff corrective publication.
+When the hold is the Land worker's own cwd, its owning coordinator observes worker exit and continues from the
+safe canonical checkout under existing authority before human handoff. Read-only virtualization handles require
+[consumer qualification](LANDING.md#qualify-live-consumers), not automatic shared-VM shutdown. Explicit
+repository merged-resource cleanup also inventories orphan Docker stacks independently of registered worktrees;
+ordinary one-TASK Land still does not sweep unrelated subjects.
 
 During authorized normal publication, Land applies [current subject handoff synchronization](LANDING.md#synchronize-current-subject-handoffs)
 to applicable authored current Board/Roadmap/README handoffs as well as source records, parent rollups and derived

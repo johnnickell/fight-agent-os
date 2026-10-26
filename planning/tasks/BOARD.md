@@ -40,7 +40,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
