@@ -73,11 +73,11 @@ Missing mappings/custody remain unavailable, never shared fallback. Missing/inco
 leave ordinary Pi usable; outside Herdr, use ordinary Pi
 without companions. No automatic RPC fallback, installation or workflow selection occurs.
 
-Native replacement A has independent technical acceptance and scoped QA PASS. The repository RPC retirement B
-still needs independent delta Review/affected QA; see [the current TASK checkpoint](../../planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint).
-The package-owned `fight-terminal` bin is now **only a local retirement/session-migration notice**, not a second
-conversation frontend. `fight-terminal --help` (or `-h`) exits 0; every former launch invocation exits 1 without
-starting Pi/Herdr/Docker or modifying stored sessions. The direct old module entry is retired too.
+The package ships only the native `fight-workspace` executable. The legacy `fight-terminal` executable and
+direct `src/workspace/main.mjs` retirement entry are removed, without a compatibility alias. Existing copied
+installations change only through an explicit owned update/removal; saved sessions are not launcher assets.
+TASK-00512's [RPC retirement checkpoint](../../planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint)
+is historical evidence, not a promise that this package still ships its migration notice.
 See [native setup and recovery](WORKSPACE.md#native-pi-in-herdr-task-00510-candidate),
 [log controls](WORKSPACE.md#verified-logs-in-herdr-task-00512-candidate) and
 [actual-file session migration](WORKSPACE.md#native-entry-and-existing-rpc-sessions).
@@ -163,7 +163,7 @@ log pane for readable source choices and `r` to retry; no checkout/context/proje
 Partial failures use the existing ownership checks, disclose retained IDs/state
 and uncertain splits, and never blindly retry or kill an existing conversation/child/container.
 
-`fight-terminal` remains a retirement/session-migration notice only. Historical `bin/terminal` and RPC launcher
+`fight-terminal` is no longer shipped, even as a retirement notice. Historical `bin/terminal` and RPC launcher
 receipts are not current launch instructions.
 
 ### Update, remove and recover the launcher
@@ -189,11 +189,14 @@ ls -ld "$prefix/bin/fight-workspace" "$prefix/bin/fight-terminal" "$prefix/lib/n
 npm install --global --prefix "$prefix" --install-links --ignore-scripts --legacy-peer-deps --no-audit --no-fund "$source"
 hash -r
 fight-workspace --help
-fight-terminal --help  # retirement notice only, not a native startup qualification
+# Verify the obsolete npm-owned fight-terminal link is absent from this prefix:
+ls -ld "$prefix/bin/fight-terminal"  # expected: no such file
 ```
 
 `--install-links` copies the local package and creates its owned bin link; source edits alone do not update that
-copy. `--legacy-peer-deps` avoids installing host-provided Pi peers. Node 22.23.1/npm 10.9.8/Pi 1.4.0 were observed
+copy. Updating an owned prior package removes its old npm-owned `fight-terminal` link and retirement module.
+Do not delete an unrelated same-named command elsewhere on PATH or a manually installed link; inspect and stop
+on uncertain ownership. `command -v fight-terminal` may still find another installation outside this prefix. `--legacy-peer-deps` avoids installing host-provided Pi peers. Node 22.23.1/npm 10.9.8/Pi 1.4.0 were observed
 during earlier installation qualification, not version gates. No registry publication is needed; the package
 remains private. Updating Pi without a target (`pi update`) updates Pi itself, not this copied launcher.
 
@@ -211,7 +214,8 @@ changes. Do not load the npm copy beside the source package or reinstall Herdr/i
 
 | Failure | Recovery |
 |---|---|
-| `fight-terminal` absent or prints retirement notice | Use ordinary `pi` or the explicitly installed `fight-workspace`; do not restore RPC. |
+| `fight-terminal` absent | Expected after fresh installation or owned update. Use ordinary `pi` or the explicitly installed `fight-workspace`; no replacement alias is installed. |
+| `fight-terminal` still resolves or prints a retirement notice | Inspect its exact prefix/ownership; this is an older or separate installation. Update/remove only the inspected owned package, never a guessed path. |
 | `fight-workspace` missing or resolves to another prefix | Inspect PATH and destination ownership; select the actual isolated user prefix, never force-overwrite another command. |
 | Old RPC still starts | Inspect `command -v fight-terminal` and its owned npm prefix. Stop the owned client normally and use the actual-file migration above; do not delete history. Explicit adoption/removal is separate. |
 | Missing/incompatible Herdr | Keep ordinary native Pi usable; companions remain unavailable, never RPC fallback. |

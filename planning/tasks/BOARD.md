@@ -40,7 +40,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00536](00536-TASK.md) | Remove the legacy fight-terminal command | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 
