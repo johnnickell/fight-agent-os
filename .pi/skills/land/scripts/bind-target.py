@@ -30,8 +30,11 @@ def bind(root: Path, policy: str, pr_url: str | None, head: str | None) -> dict:
     if not match:
         raise BindingError("resolve exact target GitHub origin")
     repository = match[1]
-    metadata = json.loads(run(root, ["gh", "repo", "view", repository, "--json", "nameWithOwner,defaultBranchRef"]))
-    if not isinstance(metadata, dict) or metadata.get("nameWithOwner") != repository:
+    target = "github.com/" + repository
+    repository_url = "https://" + target
+    metadata = json.loads(run(root, ["gh", "repo", "view", target, "--json", "nameWithOwner,url,defaultBranchRef"]))
+    if (not isinstance(metadata, dict) or metadata.get("nameWithOwner") != repository
+            or metadata.get("url") != repository_url):
         raise BindingError("live repository identity mismatch; recover the exact target repository")
     ref = metadata.get("defaultBranchRef")
     base = ref.get("name") if isinstance(ref, dict) else None
@@ -40,12 +43,13 @@ def bind(root: Path, policy: str, pr_url: str | None, head: str | None) -> dict:
     run(root, ["git", "check-ref-format", "refs/heads/" + base], 5)
     if base != policy:
         raise BindingError("live default conflicts with target policy; requirement owner must explicitly dispose conflict before publication")
-    result = {"repository": repository, "base": base, "policy": policy,
+    result = {"host": "github.com", "repository": repository, "repository_url": repository_url,
+              "base": base, "policy": policy,
               "observed_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
     if pr_url:
         if not re.fullmatch(rf"https://github\.com/{re.escape(repository)}/pull/[1-9][0-9]*", pr_url):
             raise BindingError("existing PR does not identify target repository; recover the exact subject PR")
-        pr = json.loads(run(root, ["gh", "pr", "view", pr_url, "--repo", repository, "--json",
+        pr = json.loads(run(root, ["gh", "pr", "view", pr_url, "--repo", target, "--json",
                                    "url,state,baseRefName,headRefName,headRefOid"]))
         if (not isinstance(pr, dict) or pr.get("url") != pr_url or pr.get("state") != "OPEN"
                 or pr.get("baseRefName") != base or not head or pr.get("headRefName") != head
