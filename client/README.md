@@ -344,7 +344,18 @@ fences volatile rows with AuthorityCache scopes and clears them on retirement. S
 restoration; 403 revalidates current authority. Only a safe refusal category is retained until explicit retry,
 so guard remount cannot replay a denied read. The responsive semantic cards explain coarse device hints,
 refresh activity, UTC deadlines, current and remembered state. There is no row persistence, second authority
-store or revocation operation. See [owned-session contracts and retention](../docs/engineering/OWNED_SESSIONS.md).
+store. TASK-00058 adds explicit other-owned confirmation, bounded single-dispatch revocation, safe outcome
+announcements and authoritative list refetch. The existing coordinator receives versioned list invalidation and
+observed target-revocation messages, retains a safely learned current ID only in memory, and terminally clears
+only matching target tabs. Current-session cards use the existing Logout operation. Six production-backed
+revocation catalog examples cover confirmation/dark/pending/success/conflict/failure; independent Review/QA
+remain pending. See [owned-session contracts and retention](../docs/engineering/OWNED_SESSIONS.md).
+
+`features/users/UserDirectoryService` and `pages/UsersPage` replace the Users landing with the
+[permission-controlled directory](../docs/engineering/USER_DIRECTORY.md), using the same sole session/principal
+owners. Exact-key safe codecs, volatile authority-scoped rows, server pagination, reflowing table/cards and
+explicit denial recovery introduce no persistence, filtering or mutation. Independently permitted invitation
+links still reach truthful registered unavailable seams; TASK-00060/00061/00062 own working invitation UI.
 
 `features/authority/CatalogService` supplies protected role/permission page and get reads with exact safe
 snake_case-to-camelCase codecs, bounded pagination, current Bearer transport and no retained catalog cache.
@@ -498,8 +509,8 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **145** named examples across seventeen story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
-7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples, eleven reset-completion examples and eleven authenticated password-change examples, plus eight owned-session list/state/retirement examples. The form composition demonstrates rejection,
+`stories/` holds **163** named examples across eighteen story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples, eleven reset-completion examples and eleven authenticated password-change examples, plus eight owned-session list/state/retirement examples, six confirmed-revocation examples and twelve production-backed Users directory/state/permission/pagination examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;
 it never sends or saves data. Fields and callbacks use invented local text only, with no assets, credentials,

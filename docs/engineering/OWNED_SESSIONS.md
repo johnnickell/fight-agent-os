@@ -1,7 +1,7 @@
 # Owned active sessions
 
-TASK-00057 implements read-only `GET /api/v1/me/sessions` and `/app/account/sessions`.
-Independent Review and behavioral QA remain separate. Individual revocation belongs to TASK-00058.
+TASK-00057 implements `GET /api/v1/me/sessions` and `/app/account/sessions`.
+TASK-00058 adds confirmed other-owned revocation; its independent Review and behavioral QA remain pending.
 
 ## Authority and wire contract
 
@@ -85,7 +85,7 @@ One semantic card list reflows from narrow stacked cards to a wide grid, without
 Current state has text plus a border, timestamps have labels and UTC, session types are explained, and loading,
 empty, failures and pagination have status feedback and explicit controls. Native controls retain shared 44px
 targets, focus and reduced-motion/theme rules; keyboard pagination/retry hands focus to the page heading. The
-frame still owns navigation, appearance and current-session Sign Out; this page offers no revocation mutation.
+frame still owns navigation, appearance and current-session Sign Out; the current card also routes to that same Logout operation.
 
 Behavior tests cover parser/capture failure, safe View/UTC, non-HTTP permission/ownership/bounds, real package
 and PostgreSQL selection, HTTP query rejection and redaction, activation/login capture and refresh preservation,
@@ -94,3 +94,70 @@ The production-backed catalog adds eight owned-session examples. Owning tools va
 architecture, dependencies, static analysis and the complete `./bin/build`; product tests do not test those tools.
 See TASK-00057's completion evidence and ignored Work handoff for exact receipts and limitations. Automated axe,
 Chromium and inspected captures are not screen-reader, other-engine, physical-device or universal WCAG certification.
+
+## Confirmed other-owned revocation (TASK-00058)
+
+`DELETE /api/v1/me/sessions/{sessionId}` accepts a lowercase canonical UUID and exactly an empty JSON object
+(`{}`), with no query parameters. Bearer authentication and exact current `DELETE_OWN_SESSIONS` are required
+both at the early route gate and in `RevokeOwnedSession`. The sole request-scoped principal supplies actor and
+current session; no body identity, reason, Role or administrative permission is accepted. The configured command
+bus dispatches package `RevokeSession(actor, current, target, null)`. A dedicated `DenySessionAdministration`
+callback is composed into that handler, including trusted raw dispatch: all cross-user management is denied,
+regardless of `DELETE_SESSIONS`, Super Admin or a supplied reason. The pre-existing read callback is unchanged.
+
+The qualified latest tag is Fight Access Control v0.8.0, source/Composer lock reference
+`319738255e682d587642b67856039f882b9588d6`; no dependency update was needed. The package owns usability,
+current-session exclusion, ownership, optimistic target replacement and post-commit `RefreshSessionRevoked`.
+Agent OS does not update session flags in this use case. Only target revision/revoked state changes; credentials,
+digests and other sessions are unchanged. Events are synchronous post-commit notifications, not durable delivery.
+Unexpected notification/storage failure is an uncertain sanitized failure, not permission to replay a mutation.
+
+| Outcome | HTTP and body |
+|---|---|
+| Target committed revoked | 200 `{"status":"success","data":null}` |
+| Current session | 409 `{"status":"error","message":"Use Logout for the current session.","code":5801}` |
+| Unknown, cross-user, idle/absolute-expired, already revoked or competing non-current target | Identical 409 `{"status":"error","message":"Conflict."}` |
+| Malformed target/body/query | Safe 400 validation, without lookup or value echo |
+| Missing/invalid authority; missing exact permission | Sanitized 401; 403 |
+
+Every response is no-store. Target access tokens fail the existing authoritative session lookup immediately,
+even while the signature and JWT lifetime remain valid; target refresh credentials likewise fail. Current refresh
+and access authority remain usable. Other devices have no push guarantee; their next server request is authoritative.
+Package conflicts may close their transactional ORM unit: an HTTP request ends after its one dispatched command;
+callers must not reuse a failed unit for later mutations. Ordinary PHP requests construct a fresh container.
+
+### Confirmation, convergence and volatile coordination
+
+Only other-session cards with fresh exact delete permission expose Revoke. React-Bootstrap's controlled modal
+names the closed coarse descriptor and UTC creation/activity instants, focuses Cancel, traps focus and restores
+it on cancellation. Escape/backdrop cancellation is unavailable during dispatch; a synchronous busy fence and
+shared busy button prevent duplicate activation. The wait is bounded to eight seconds. Success, conflict and
+uncertain failure announce fixed safe copy and refetch, never fabricate removed rows or replay automatically.
+After completion focus moves to the page heading. Current cards expose established Sign out (Logout) instead.
+The modal and rows retire with the existing AuthorityCache scope, including late success/failure/unmount fences.
+
+The existing channel `fight-agent-os.session.v1` gains two strictly decoded version-1 variants, with its existing
+32-hex sender and positive safe-integer sequence:
+
+- `session-revoked` adds only `sessionId`, emitted after an observed server commit.
+- `sessions-invalidated` has no payload, emitted after a safe target/current conflict without asserting revocation.
+
+Every participating mounted list invalidates/refetches. Sequence checks reject duplicates/out-of-order tracked
+senders; replay bookkeeping remains bounded to 64 peers. No queue or browser persistence is added. Missing/denied
+BroadcastChannel retains local refetch and server enforcement. Unknown fields, malformed IDs and incompatible
+versions do not change state. Only a server-marked current row from a live scoped list can teach the existing
+credential coordinator its own stable ID; the coordinator never trusts JWT decoding. Credential replacement,
+restoration or terminal teardown forgets it. A matching revoked target retires only that tab's memory, principal,
+intent and pending work into terminal Login, without broadcasting a blanket terminal event to unrelated sessions.
+A tab that has not safely learned its ID cannot promise immediate terminal UI; the next server rejection still
+fails closed. This feature adds neither a second principal cache nor cross-device/exactly-immediate UI guarantees.
+
+No session ID, credential, authority or coordination state is written to browser storage, history, HTML or query
+parameters. Target ID appears only in necessary API path/channel transport and volatile state; no custom diagnostic
+includes it. Coarse descriptor input remains closed/escaped through the original list decoder. Required integration
+coverage includes real ownership, exact permission, no-override HTTP/OpenAPI, post-commit event, target-only state,
+access/refresh rejection and barrier-synchronized independent PostgreSQL contenders for revoke/refresh/logout/expiry.
+Client/component/channel and six production-backed catalog scenarios cover confirmation, focus, pending, success,
+conflict, error, scope retirement and storage policy. Fresh commands and accessibility limits belong to TASK-00058's
+Work receipt; builder evidence is not independent acceptance. Broad automation, cross-user administration,
+logout-everywhere and guaranteed cross-device push remain excluded.

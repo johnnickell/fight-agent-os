@@ -118,6 +118,119 @@ afterEach(() => {
 });
 
 describe('bounded volatile session continuity', () => {
+  it('invalidates every list but terminally clears only an identifiable revoked target without broadcasting terminal to other sessions', async () => {
+    const channels = new Channels();
+    const actor = setup({ channels });
+    const target = setup({ channels });
+    const other = setup({ channels });
+    for (const tab of [actor, target, other])
+      await tab.coordinator.submit({ email: 'fixture@example.test', password: 'fixture' }, false);
+    await tick();
+    // Establish independent authenticated contexts after login invalidation, as separate sessions can have separate credentials.
+    for (const tab of [actor, target, other]) {
+      const pending = tab.coordinator.restore();
+      await tick(60);
+      await pending;
+    }
+    const targetId = crypto.randomUUID();
+    const otherId = crypto.randomUUID();
+    target.coordinator.identifyCurrentSession(targetId);
+    actor.coordinator.identifyCurrentSession(otherId);
+    other.coordinator.identifyCurrentSession(otherId);
+    const listeners = [vi.fn(), vi.fn(), vi.fn()];
+    [actor, target, other].forEach((tab, i) => tab.coordinator.subscribeSessions(listeners[i]!));
+    const before = channels.messages.length;
+    actor.coordinator.sessionRevoked(targetId);
+    await tick();
+    for (const listener of listeners) expect(listener).toHaveBeenCalledOnce();
+    expect(target.coordinator.getSnapshot().status).toBe('terminal');
+    expect(target.tokens.getAccessToken()).toBeNull();
+    expect(other.coordinator.getSnapshot().status).toBe('authenticated');
+    expect(actor.coordinator.getSnapshot().status).toBe('authenticated');
+    expect(channels.messages.slice(before)).toEqual([
+      expect.objectContaining({ version: 1, kind: 'session-revoked', sessionId: targetId })
+    ]);
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
+  });
+
+  it('propagates safe conflict list invalidation without retiring any session or sending target identity', async () => {
+    const channels = new Channels();
+    const sender = setup({ channels });
+    const peer = setup({ channels });
+    const a = sender.coordinator.restore();
+    const b = peer.coordinator.restore();
+    await tick(200);
+    await Promise.all([a, b]);
+    const local = vi.fn();
+    const remote = vi.fn();
+    sender.coordinator.subscribeSessions(local);
+    peer.coordinator.subscribeSessions(remote);
+    const before = channels.messages.length;
+    sender.coordinator.sessionsInvalidated();
+    await tick();
+    expect(local).toHaveBeenCalledOnce();
+    expect(remote).toHaveBeenCalledOnce();
+    expect(peer.coordinator.getSnapshot().status).toBe('authenticated');
+    expect(channels.messages.slice(before)).toEqual([
+      expect.objectContaining({ kind: 'sessions-invalidated' })
+    ]);
+    expect(Object.keys(channels.messages.at(-1) as object).sort()).toEqual([
+      'kind',
+      'sender',
+      'sequence',
+      'version'
+    ]);
+  });
+
+  it('rejects malformed, extra, duplicate and out-of-order revocation signals and cleans up subscriptions', async () => {
+    const channels = new Channels();
+    const d = setup({ channels });
+    const restoring = d.coordinator.restore();
+    await tick(60);
+    await restoring;
+    const listener = vi.fn();
+    const unsubscribe = d.coordinator.subscribeSessions(listener);
+    const message = {
+      version: 1,
+      sender: id(),
+      sequence: 5,
+      kind: 'session-revoked',
+      sessionId: crypto.randomUUID()
+    };
+    for (const malformed of [
+      { ...message, token: 'private-marker' },
+      { ...message, sessionId: 'private-marker' },
+      { ...message, version: 2 },
+      { ...message, sequence: -1 }
+    ]) {
+      expect(decodeSessionMessage(malformed)).toBeNull();
+      d.channel?.onmessage?.({ data: malformed } as MessageEvent<unknown>);
+    }
+    expect(listener).not.toHaveBeenCalled();
+    for (const sequence of [5, 5, 4])
+      d.channel?.onmessage?.({ data: { ...message, sequence } } as MessageEvent<unknown>);
+    expect(listener).toHaveBeenCalledOnce();
+    expect(d.coordinator.getSnapshot().status).toBe('authenticated');
+    unsubscribe();
+    d.channel?.onmessage?.({ data: { ...message, sequence: 6 } } as MessageEvent<unknown>);
+    expect(listener).toHaveBeenCalledOnce();
+    d.coordinator.dispose();
+    expect(d.channel?.onmessage).toBeNull();
+  });
+
+  it('invalidates locally without BroadcastChannel and forgets stable identity when credentials are replaced', async () => {
+    const d = setup();
+    await d.coordinator.restore();
+    const sessionId = crypto.randomUUID();
+    d.coordinator.identifyCurrentSession(sessionId);
+    await d.coordinator.restore();
+    const listener = vi.fn();
+    d.coordinator.subscribeSessions(listener);
+    d.coordinator.sessionRevoked(sessionId);
+    expect(listener).toHaveBeenCalledOnce();
+    expect(d.coordinator.getSnapshot().status).toBe('authenticated');
+  });
   it('starts unknown, coalesces a cold restore and schedules early by monotonic request start, not wall time', async () => {
     const d = setup();
     expect(d.coordinator.getSnapshot().status).toBe('unknown');

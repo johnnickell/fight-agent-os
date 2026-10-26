@@ -73,7 +73,8 @@ export default function DashboardPage({ cache }: { cache: AuthorityCache }) {
         <p>
           Sign in, session restoration, current-access checks, appearance preferences and
           current-session sign out are available. Account destinations provide password change and
-          owned-session visibility. Administration shortcuts explain operations still unavailable.
+          owned-session visibility. The Users directory is available with current read access;
+          invitation shortcuts explain workflows still unavailable.
         </p>
       </ContentPanel>
       <div className="dashboard-grid">
@@ -88,8 +89,8 @@ export default function DashboardPage({ cache }: { cache: AuthorityCache }) {
         {administration.length > 0 && (
           <ContentPanel title="Administration">
             <p>
-              Each shortcut is shown only for its own permission. These are destinations, not live
-              tools.
+              Each shortcut is shown only for its own permission. Users opens the read-only
+              directory; invitation destinations explain workflows that are not available yet.
             </p>
             <DestinationLinks
               cache={cache}

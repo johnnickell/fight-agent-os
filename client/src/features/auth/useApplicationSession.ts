@@ -13,6 +13,7 @@ import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
 import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
+import { UserDirectoryService } from '@/features/users/UserDirectoryService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
@@ -45,6 +46,22 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
     login: new LoginService(api, csrf, tokens),
     ...browserSessionPlatform()
   });
+  const sessions = new OwnedSessionsService(
+    api,
+    {
+      accessRejected: () => {
+        void coordinator.restore();
+      },
+      authorityRejected: () => {
+        coordinator.authorityChanged();
+      },
+      currentSession: coordinator.identifyCurrentSession,
+      revoked: coordinator.sessionRevoked,
+      invalidated: coordinator.sessionsInvalidated
+    },
+    authority
+  );
+  coordinator.subscribeSessions(sessions.invalidate);
   return {
     authority,
     intent,
@@ -70,7 +87,7 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
       window.location.origin,
       safeDiagnostics(runtime)
     ),
-    sessions: new OwnedSessionsService(api, {
+    users: new UserDirectoryService(api, {
       accessRejected: () => {
         void coordinator.restore();
       },
@@ -78,6 +95,7 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
         void coordinator.authorityChanged();
       }
     }),
+    sessions,
     schemas: new PublicSchemaService(api)
   };
 }
