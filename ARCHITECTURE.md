@@ -21,7 +21,7 @@ system or an Internet homepage. It starts with the Slim composition from `johnni
   authenticated change at `/app/account/password` derives principal-only ownership and delegates current proof/atomic all-session invalidation to the package, then terminally clears the sole browser graph across tabs (TASK-00056, independent Review/QA accepted; [PR #159](https://github.com/johnnickell/fight-agent-os/pull/159) awaits human review and merge);
   owned-session visibility at `/app/account/sessions` delegates principal-owned selection to package
   `ListActiveSessions`, maps an explicit API View and joins an optional coarse presentation sidecar captured
-  once after activation/login (TASK-00057, independent Review/QA accepted; [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) awaits human review and merge; read-only baseline);
+  once after activation/login (TASK-00057, independent Review/QA accepted; [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) merged into `develop` at `0629697bd1a51b88720b1881aa5024928981f5ce`; read-only baseline);
   TASK-00058 adds principal-only other-owned `RevokeSession` dispatch with a deny-all administrative callback,
   explicit accessible confirmation and bounded volatile list/target invalidation (independent Review/QA pending);
   canonical login at `/app/login` reuses package authentication, browser guards,
