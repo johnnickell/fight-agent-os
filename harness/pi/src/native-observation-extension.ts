@@ -1,8 +1,12 @@
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
+import { fileURLToPath } from 'node:url';
 import { NativeObservation } from './observation/native-observation.mjs';
 
 /** Observe actual native session lifetime without participating in execution */
 export default function installNativeObservation(pi: ExtensionAPI) {
+  pi.events.on('fight:workspace-observer-resource', (accept: unknown) => {
+    if (typeof accept === 'function') accept(fileURLToPath(import.meta.url));
+  });
   let observation: NativeObservation | undefined;
   let epoch = 0;
   const close = () => { epoch++; observation?.close(); observation = undefined; };

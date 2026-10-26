@@ -101,10 +101,27 @@ belongs under ignored `var/`; `.runs/` remains execution scratch/evidence, never
 | [TASK-00510](../tasks/00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done |
 | [TASK-00511](../tasks/00511-TASK.md) | Observe current-session children beside native Pi in Herdr | done |
 | [TASK-00512](../tasks/00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | done |
-| [TASK-00535](../tasks/00535-TASK.md) | Launch native Pi with workspace panes already open | ready-for-agent |
+| [TASK-00535](../tasks/00535-TASK.md) | Launch native Pi with workspace panes already open | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Owner-approved no-form workspace amendment — 2026-10-25
+
+For [TASK-00535](../tasks/00535-TASK.md#owner-approved-usability-amendment--2026-10-25), John rejected manual
+checkout/context/project/service entry and cancellation preventing panes, and explicitly approved immediate
+companions with Pi-derived checkout and bounded safe matching local Docker discovery. Both the executable and
+manual open must leave panes usable without logs or after cancellation. An unambiguous verified existing local
+source may open under this invocation; real ambiguity uses readable project/worktree/service choices, never
+technical free-text fields. Missing/denied/stale sources show an approachable retry/selection path.
+
+This supersedes typed human bindings for this feature, including the corresponding earlier follow-up wording
+below. Local Unix endpoint, canonical checkout/registered worktree, exact service/container/lifecycle and mount
+association remain mandatory; names/cwd alone, remote contexts, arbitrary containers and silent shared fallback
+remain excluded. Human log custody, finite readers, child following, native authority/ownership and no
+provisioning remain. Candidate `0bc9afb8…` and its original evidence are a historical rejected-UX checkpoint,
+not amended acceptance. No new TASK, priority change or installed rollout is authorized. Independent Review/QA
+remain pending; this TICKET's terminal status is historical.
 
 ### Approved one-command native workspace startup
 
@@ -112,8 +129,8 @@ John requested an executable replacement for `fight-terminal` that starts Pi wit
 open, and approved [TASK-00535](../tasks/00535-TASK.md). The global `fight-workspace` command will start native Pi
 inside Herdr in the caller's project/worktree and automatically open the existing child-activity and verified-log
 companions, without a follow-up `/fight-workspace open`. Native Pi remains the conversation frontend; no RPC
-renderer is restored. Ordinary `pi` and manual companion controls remain unchanged. Explicit human log-source
-bindings, exact-file session continuity and existing ownership/authority boundaries still apply.
+renderer is restored. Ordinary `pi` remains unchanged. The no-form amendment above governs companion opening
+and source discovery; exact-file session continuity and existing ownership/authority boundaries still apply.
 
 The TASK includes explicit user-level installation/update/removal and migration guidance, real native startup,
 session-resume and cleanup evidence, the canonical gate and independent Review/QA. TASK-00510–00512 supply the

@@ -537,5 +537,5 @@
 | [TASK-00532](00532-TASK.md) | Stage and recover an exact release candidate | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
 | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | done | — |
-| [TASK-00535](00535-TASK.md) | Launch native Pi with workspace panes already open | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
+| [TASK-00535](00535-TASK.md) | Launch native Pi with workspace panes already open | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 <!-- /planning:records -->

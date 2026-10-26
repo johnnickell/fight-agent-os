@@ -6,8 +6,6 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
 import { NativeWorkspaceContext } from './context.mjs';
-import { testBindings } from '../workspace/worktree-logs.mjs';
-import { runtimeSelection } from '../workspace/runtime-logs.mjs';
 
 const execute = promisify(execFile);
 const pause = (ms) => new Promise((done) => setTimeout(done, ms));
@@ -70,10 +68,9 @@ export async function probeCompanion(file, token) {
 
 /** Own only companions created around one actual native Pi process */
 export class HerdrWorkspace {
-  constructor({ cwd, sessionId, sessionFile, pid = process.pid, env = process.env, client, probe = probeCompanion, childOf = directChild, currentContext, selectLogs = async () => ({ tests: [], shared: null }) }) {
+  constructor({ cwd, sessionId, sessionFile, pid = process.pid, env = process.env, client, probe = probeCompanion, childOf = directChild, currentContext }) {
     this.context = { cwd: resolve(cwd), sessionId, sessionFile: sessionFile || null, pid };
     this.currentContext = currentContext || (() => this.context);
-    this.selectLogs = selectLogs;
     this.env = { ...env };
     this.client = client || new HerdrClient(this.env);
     this.probe = probe;
@@ -137,16 +134,19 @@ export class HerdrWorkspace {
       const processes = info?.foreground_processes ?? [];
       const owner = processes.filter(process => process.pid === live.pid);
       if (owner.length === 1 && processes.length === 1) return 'healthy';
-      // Herdr includes the fixed Docker reader in the companion's foreground group.
-      // Admit only the PID tracked by that live log companion AND proven to be its direct child.
-      const reader = processes.find(process => process.pid !== live.pid);
-      if (this.state.panes[1] === owned && owner.length === 1 && processes.length === 2 &&
+      // Admit only bounded, live-tracked Docker readers or fixed Git/Docker metadata
+      // subprocesses AND fresh direct-parent proof. Extra/foreign jobs retain the hold.
+      const children = processes.filter(process => process.pid !== live.pid);
+      const tracked = [...(live.readerPids ?? []), ...(live.metadataPids ?? [])];
+      if (this.state.panes[1] === owned && owner.length === 1 && children.length > 0 && children.length <= 2 &&
           info.shell_pid === live.pid && info.foreground_process_group_id === live.pid &&
-          Array.isArray(live.readerPids) && live.readerPids.length === 1 &&
-          Number.isSafeInteger(reader?.pid) && reader.pid > 0 && reader.name === 'docker' &&
-          live.readerPids[0] === reader.pid && await this.childOf(reader.pid, live.pid)) {
+          tracked.length === children.length && new Set(tracked).size === tracked.length &&
+          children.every(child => Number.isSafeInteger(child.pid) && child.pid > 0 &&
+            (child.name === 'docker' && tracked.includes(child.pid) || child.name === 'git' && live.metadataPids?.includes(child.pid))) &&
+          (await Promise.all(children.map(child => this.childOf(child.pid, live.pid)))).every(Boolean)) {
         const current = await this.probe(owned.receipt, owned.token);
-        if (current?.pid === live.pid && current.paneId === owned.paneId && current.readerPids?.length === 1 && current.readerPids[0] === reader.pid) return 'healthy';
+        if (current?.pid === live.pid && current.paneId === owned.paneId &&
+            JSON.stringify([current.readerPids, current.metadataPids]) === JSON.stringify([live.readerPids, live.metadataPids])) return 'healthy';
       }
     }
     if (owned.phase === 'shell' && owned.shellPid && info?.shell_pid === owned.shellPid) {
@@ -245,7 +245,7 @@ export class HerdrWorkspace {
       if (await this.inspect(child) !== 'healthy') throw Error('Child companion ownership lost before log startup');
       const endpoint = await this.probe(child.receipt, child.token);
       if (!Number.isInteger(endpoint?.port) || endpoint.generation !== this.activityContext.generation) throw Error('Child selection endpoint unavailable');
-      this.activityContext.logs = { ...this.logConfiguration, companion: { port: endpoint.port, token: child.token } };
+      this.activityContext.logs = { discovery: true, companion: { port: endpoint.port, token: child.token } };
       command = ['exec', quote(process.execPath), quote(logCompanion), quote(owned.receipt), quote(token), quote(child.bindingFile)].join(' ');
     }
     await this.client.call('pane', 'run', owned.paneId, command);
@@ -284,11 +284,8 @@ export class HerdrWorkspace {
       const { layout } = await this.client.call('pane', 'layout', '--current');
       const allowed = new Set([this.identity.paneId, ...this.state.panes.map((p) => p.paneId)]);
       if (!layout?.panes?.length || layout.panes.some((p) => !allowed.has(p.pane_id)) || layout.zoomed) throw new Error('Requires an unzoomed tab containing only this Pi and its owned companions; unrelated layout unchanged');
-      // Never reload saved source preferences. Every new open generation requires fresh
-      // interactive declarations (or an explicit no-logs choice), not model command text.
-      const configuration = await this.selectLogs();
-      if (!configuration) throw Error('Workspace open cancelled; no new panes');
-      this.logConfiguration = { tests: testBindings(configuration.tests), shared: runtimeSelection(configuration.shared) };
+      // Pane creation never waits for Docker or a source decision. Only the human-only
+      // log companion discovers metadata after validated native/child context arrives.
       await this.primary();
       await this.closeOwned();
       const right = await this.create(0, this.identity.paneId);
