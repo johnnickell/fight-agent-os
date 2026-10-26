@@ -36,6 +36,10 @@ planning/build stays offline. PR #159/#162/#167 publication statements elsewhere
 checkpoints: all three are verified merged into `develop` and locally integrated as of 2026-10-26, with no merge
 action remaining. This observes merge, not new acceptance, deployment or release.
 
+[TASK-00059's current reconciliation](planning/tasks/00059-TASK.md) also records original PR #172 as merged
+into `develop` and locally integrated. Its acceptance/report provenance remains with that TASK. The user-directory
+pending-review wording below is a retained implementation checkpoint, not today's acceptance or merge handoff.
+
 ## Start planning
 
 Read the [foundation brief](planning/FOUNDATION.md), [planning conventions](planning/CONVENTIONS.md), and

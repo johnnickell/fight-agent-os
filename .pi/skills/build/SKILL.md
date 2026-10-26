@@ -283,8 +283,14 @@ existing cleanup authority and excluded resources, and forbid publication, track
 Preserve the active coordinator and other sessions; never switch/remove their checkout. Apply the owning
 [cleanup-only intake and consumer qualification](../../../docs/engineering/LANDING.md#cleanup-only-intake),
 including current observation of read-only VM file-sharing handles rather than requiring shared VM shutdown.
-Inspect the continuation's exits and Git/Docker postconditions; reconcile receipt claims with actual state,
-including recreated resources. Do not hand the human an already-resolved worker-cwd hold or request another
+Read the owning Land [executable cleanup contract](../land/references/cleanup.md). The original worker binds
+its monitor attempt and both PIDs in the existing exact-subject JSON receipt before its first cleanup attempt.
+The continuation must use `scripts/cleanup-continuation.py` beside this Build skill with that original `--attempt`,
+exact `--receipt` and `--apply`; it observes both original exits/PID absence and calls Land's bounded operation.
+There is no alternative ad hoc destructive cleanup path. Missing runtime binding, inspection, ownership or
+preservation holds resources and protections; never use generic setup, force or protection-changing recovery.
+Inspect the continuation's exits and independently reobserve Git/Docker and external preservation postconditions;
+reconcile receipt claims with actual state, including recreated resources. Do not hand the human an already-resolved worker-cwd hold or request another
 cleanup grant already delegated. Real remaining dependencies/failures retain precise finite recovery actions;
 unchanged holds are not an unlimited retry loop. Cleanup creates no repair cycle or publication retry.
 Return the actual PR URL and publication state even on a cleanup hold, retained resources/recovery action,
