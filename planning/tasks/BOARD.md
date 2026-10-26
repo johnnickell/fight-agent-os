@@ -10,6 +10,17 @@ Read the referenced current section, not the full historical record. Missing han
 The [blended delivery strategy](../ROADMAP.md#approved-blended-delivery-strategy) permits terminal, browser and
 shared-foundation interleaving; it does not override active work, TASK orders, dependencies or readiness holds below.
 
+### Current human priority — 2026-10-26
+
+The maintainer selected [TASK-00539](00539-TASK.md) as the highest ready priority (`order: 1`) to make invitation
+API throttle verification deterministic. Its accepted planning record is included in TASK-00537's PR #171;
+TASK-00539 implementation has not started. TASK-00537's accepted implementation is `done`; delivery and cleanup
+remain separately evidenced in its [current Land checkpoint](00537-TASK.md#current-land-closeout--2026-10-26).
+Existing active-work ownership, other TASK orders and dependencies remain unchanged. The generated ready order
+below owns execution selection; priority does not authorize implementation, publication, merge or deployment.
+
+### Previous priority checkpoint — historical
+
 The maintainer selected [TASK-00534](00534-TASK.md) as the highest priority (`order: 1`) to complete Land
 cleanup and project closeout. Remaining [EPIC-00020](../epics/00020-EPIC.md#completed-planning-and-approved-top-priority)
 TASKs TASK-00517–00519 are next (`order: 2`), with their dependencies and relative order preserved. This supersedes
@@ -18,6 +29,8 @@ ownership still govern eligibility. Priority does not start implementation or au
 TASK-00534's [current Land closeout](00534-TASK.md#current-land-closeout--2026-10-25) records accepted
 implementation candidate A, the mechanical advancing-base bridge and required local verification. Its delivery,
 human review/merge and deployment remain separate; current delivery/cleanup results are in the durable TASK receipt.
+
+### Work selection
 
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 
@@ -30,7 +43,8 @@ links do not create current claims. Work selection and priority remain in the se
 <!-- planning:delivery -->
 | Subject | Recorded delivery | Exact PR |
 |---|---|---|
-| None | — | — |
+| [TASK-00536](00536-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/170](https://github.com/johnnickell/fight-agent-os/pull/170) |
+| [TASK-00537](00537-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/171](https://github.com/johnnickell/fight-agent-os/pull/171) |
 <!-- /planning:delivery -->
 
 <!-- planning:board -->
@@ -44,6 +58,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 1 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
 | 58 | [TASK-00058](00058-TASK.md) | Deliver confirmed revocation of another owned session | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | ready-for-agent | — | — |
 | 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -604,4 +619,6 @@ links do not create current claims. Work selection and priority remain in the se
 | — | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | — (standalone bug) | done | — | [PR #152](https://github.com/johnnickell/fight-agent-os/pull/152) |
 | — | [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | — (standalone bug) | done | — | [PR #156](https://github.com/johnnickell/fight-agent-os/pull/156) |
 | — | [TASK-00535](00535-TASK.md) | Launch native Pi with workspace panes already open | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #168](https://github.com/johnnickell/fight-agent-os/pull/168) |
+| — | [TASK-00536](00536-TASK.md) | Remove the legacy fight-terminal command | — (standalone chore) | done | — | [PR #170](https://github.com/johnnickell/fight-agent-os/pull/170) |
+| — | [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | — (standalone bug) | done | — | [PR #171](https://github.com/johnnickell/fight-agent-os/pull/171) |
 <!-- /planning:board -->

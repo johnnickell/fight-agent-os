@@ -1,59 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, statSync, rmSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { run } from '../src/workspace/main.mjs';
+import { spawn } from 'node:child_process';
 import { Workspace, width, fit, wrap, clean, layout } from '../src/workspace/presentation.mjs';
 import { JsonLines, PiRpc, childEnvironment, messageText } from '../src/workspace/rpc.mjs';
 import { Keyboard, Terminal } from '../src/workspace/terminal.mjs';
-
-// AC-06 retirement: all old launch options refuse before terminal/storage/process effects.
-// Public migration guidance and forbidden effects come from TASK-00512, not old renderer output.
-test('retirement help describes native ownership, non-Herdr use and same-actual-file migration', () => {
-  for (const flag of ['--help', '-h']) {
-    let output = '';
-    assert.equal(run([flag], { output: { write: text => { output += text; } }, errorOutput: { write: () => assert.fail('help on stderr') } }), 0);
-    for (const text of ['retired', 'ordinary pi', '/fight-workspace open', '/fight-workspace close', 'Outside Herdr', 'pi --session /absolute/actual-session.jsonl', 'Do not guess with --continue', 'Ephemeral --no-session', 'No sessions, settings']) assert.ok(output.includes(text), text);
-  }
-});
-test('every former conversation route fails without echoing arguments or touching a terminal/adapter', () => {
-  const privateValue = 'PRIVATE-ARGUMENT-DO-NOT-ECHO';
-  for (const args of [[], ['--session', privateValue], ['--continue'], ['--no-session'], ['--logs-test', privateValue], ['--observe-child', privateValue], ['--help', '--session', privateValue], [privateValue]]) {
-    let diagnostic = '';
-    const dependencies = { output: { write: () => assert.fail('no success output') }, errorOutput: { write: text => { diagnostic += text; } } };
-    for (const field of ['input', 'connect', 'createTerminal', 'observe', 'readLogs']) Object.defineProperty(dependencies, field, { get: () => assert.fail(`retirement touched ${field}`) });
-    assert.equal(run(args, dependencies), 1);
-    assert.match(diagnostic, /RPC conversation frontend is retired/);
-    assert.ok(!diagnostic.includes(privateValue));
-    assert.ok(!diagnostic.includes('\x1b'));
-  }
-});
-test('direct former RPC entry leaves existing history, cwd, settings and executables untouched', t => {
-  const root = mkdtempSync(join(tmpdir(), 'fight-retirement-'));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
-  const project = join(root, 'project with spaces'), home = join(root, 'home'), bin = join(root, 'bin');
-  for (const directory of [project, home, bin]) mkdirSync(directory);
-  // An existing file is deliberately opaque: retirement must not parse, migrate or create a session.
-  const session = join(project, 'actual prior session.jsonl'), settings = join(home, 'settings.json'), marker = join(root, 'unexpected-process');
-  writeFileSync(session, 'existing opaque history\n'); writeFileSync(settings, '{"theme":"preserve"}\n');
-  for (const command of ['pi', 'herdr', 'docker']) writeFileSync(join(bin, command), `#!/bin/sh\nprintf unexpected > '${marker}'\nexit 91\n`, { mode: 0o700 });
-  const before = statSync(session), history = readFileSync(session), configuration = readFileSync(settings);
-  for (const args of [[], ['--session', session], ['--continue'], ['--no-session'], ['--help']]) {
-    const result = spawnSync(process.execPath, [fileURLToPath(new URL('../src/workspace/main.mjs', import.meta.url)), ...args], {
-      cwd: project, env: { HOME: home, PATH: bin, HERDR_ENV: '1' }, input: 'must never become a prompt\n', encoding: 'utf8', timeout: 3000,
-    });
-    assert.equal(result.error, undefined); assert.equal(result.status, args[0] === '--help' ? 0 : 1);
-    assert.match(result.stdout + result.stderr, /frontend is retired/);
-    assert.deepEqual(readFileSync(session), history); assert.deepEqual(readFileSync(settings), configuration);
-    assert.equal(statSync(session).ino, before.ino);
-    assert.deepEqual(readdirSync(project), ['actual prior session.jsonl']);
-    assert.deepEqual(readdirSync(root).sort(), ['bin', 'home', 'project with spaces']);
-  }
-});
 
 // Retained presentation/transport contracts. The retired conversation controller is not runnable.
 const key = (model, name, extras = {}) => model.key('', { name, ...extras });

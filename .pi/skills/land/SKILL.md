@@ -26,6 +26,12 @@ exclusions. Inventory registered checkouts and orphan task Docker stacks indepen
 live merge/publication identity and ownership, and execute only qualified remaining cleanup from a safe checkout.
 Do not fall through to publication or corrective-PR creation; return actual per-subject results and holds.
 
+For `/skill:land TASK-NNNNN cleanup-only` or an explicit request to clean this repository's merged TASK resources,
+enter [cleanup-only intake](../../../docs/engineering/LANDING.md#cleanup-only-intake) first, respecting named
+exclusions. Inventory registered checkouts and orphan task Docker stacks independently, prove each subject's
+live merge/publication identity and ownership, and execute only qualified remaining cleanup from a safe checkout.
+Do not fall through to publication or corrective-PR creation; return actual per-subject results and holds.
+
 For an explicit resume concerning a merged or closed-unmerged original PR, enter [ended-handoff recovery](../../../docs/engineering/LANDING.md#resume-an-ended-delivery-handoff) before the ordinary publication steps below. Verify the exact subject and live state, recover only an authorized owned correction checkout/branch, and inspect any existing correction before retry. Reuse the normal synchronization inventory; preserve historical acceptance and canonical reports. Unverified state, missing authority or ambiguous publication produces a precise hold. Already-consistent unchanged state produces a read-only receipt, not another commit. An ended original PR is never the correction's publication target. Return the correction's actual pending action or no-op result, then stop; do not fall through to normal publication of the ended branch.
 
 1. **Qualify.** Read the TASK, parent, Board and canonical `.runs/reviews/<TASK-ID>/review.md`. Check independence, verdict, criterion coverage, findings and limitations, reviewed base/head, branch and status. [Bind the live target default](../../../docs/engineering/LANDING.md#bind-the-publication-target) against local policy and the existing subject PR before using any base. Inspect that bound base, remote feature branch, PR, checkout and unrelated changes. Confirm credentials and cleanup ownership before mutation.
