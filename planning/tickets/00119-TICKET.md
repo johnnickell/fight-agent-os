@@ -99,7 +99,7 @@ application permission, database record or Domain event is introduced.
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00517](../tasks/00517-TASK.md) | Represent and validate current delivery handoffs offline | done |
-| [TASK-00518](../tasks/00518-TASK.md) | Verify live handoffs and route corrections to Land | ready-for-agent |
+| [TASK-00518](../tasks/00518-TASK.md) | Verify live handoffs and route corrections to Land | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress

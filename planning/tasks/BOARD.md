@@ -38,13 +38,12 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 2 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | ready-for-agent | — | — |
 | 57 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | ready-for-agent | — | — |
 | 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |

@@ -11,6 +11,12 @@ operator-selected role, actual file-access denials and any independently selecte
 Native shell requires no Jev command assessment or confirmation. Targets need no copy of this rule.
 
 Read [landing standards](../../../docs/engineering/LANDING.md). The standards own reconciliation proof, publication and cleanup boundaries; this skill executes them for one TASK.
+Before evaluating a current delivery/merge handoff, require
+[live handoff evaluation](../../../docs/engineering/HANDOFFS.md#live-delivery-handoff-evaluation) using the target's
+qualified bounded exact-subject read (Agent OS: `./bin/planning-check --check-delivery` with relevant marked TASK
+IDs). This is separate from offline planning/build and never proves acceptance or candidate provenance.
+Unverified evidence holds affected mutation/publication; ended evidence enters recovery only on explicit Land
+resume for that exact TASK/PR. Do not silently import another target's checker or mutation mode.
 
 For an explicit resume concerning a merged or closed-unmerged original PR, enter [ended-handoff recovery](../../../docs/engineering/LANDING.md#resume-an-ended-delivery-handoff) before the ordinary publication steps below. Verify the exact subject and live state, recover only an authorized owned correction checkout/branch, and inspect any existing correction before retry. Reuse the normal synchronization inventory; preserve historical acceptance and canonical reports. Unverified state, missing authority or ambiguous publication produces a precise hold. Already-consistent unchanged state produces a read-only receipt, not another commit. An ended original PR is never the correction's publication target. Return the correction's actual pending action or no-op result, then stop; do not fall through to normal publication of the ended branch.
 
