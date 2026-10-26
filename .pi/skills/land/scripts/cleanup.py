@@ -335,13 +335,15 @@ class Cleanup:
                     "configuration_sha256": container_identity(item), "process_paths_sha256": digest(observed.stdout)})
 
     def container(self, item, result):
-        binding, args, model = self.runtime()
+        # Reconcile absence before reading runtime inputs that checkout retirement
+        # may have deleted. A present resource still needs every runtime check.
         inventory = docker_inventory(self.safe)
         current = next((value for value in inventory if value["Id"] == item["identity"]), None)
         if current is None:
             require(not any(value["Name"] == item["name"] for value in inventory), "container recreated under recorded name; new identity held")
             result.update(status="absent", reason="exact ID and recorded name absent on successful full inventory")
             return
+        binding, args, model = self.runtime()
         require(container_identity(current) == item["inspection_sha256"], "container identity/configuration/mounts changed")
         labels = current["Config"]["Labels"]
         service = item["service"]
@@ -385,13 +387,13 @@ class Cleanup:
         result.update(status="removed", reason="exact container ID/name absence verified; no volumes removed")
 
     def network(self, item, result):
-        binding, _, model = self.runtime()
         ids = text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.safe).splitlines()
         matches = [line.split() for line in ids]
         if not any(value[0] == item["identity"] for value in matches):
             require(not any(value[1] == item["name"] for value in matches), "network recreated under recorded name; held")
             result.update(status="absent", reason="exact network ID/name absent on successful inventory")
             return
+        binding, _, model = self.runtime()
         network = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
         configuration = model["networks"][item["key"]]
         require(not configuration.get("external", False) and configuration["name"] == item["name"] == network["Name"], "external/shared/network identity mismatch")

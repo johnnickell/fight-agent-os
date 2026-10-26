@@ -101,8 +101,11 @@ mounts require successful live process cwd/descriptor inspection establishing no
 candidate mounts always hold. The receipt records these observations; no shared VM/container is stopped.
 
 If interrupted, resume the **same receipt** once after reconciling original worker exit and current resources.
-An absent ID with a recreated name holds; an absent checkout must still have a verifiable prior external
-preservation manifest. Already-absent effects are observed, not replayed. Changed inventory needs a new explicit
+A successful full Docker inventory reconciles an absent ID/name before reading runtime inputs: the candidate's
+Compose files, env files and cwd may already have been retired. An absent ID with a recreated name still holds,
+even when those inputs are gone. Present resources require all original runtime, ownership, consumer and data
+checks; missing configuration never qualifies a removal. An absent checkout must still have a verifiable prior
+external preservation manifest. Already-absent effects are observed, not replayed. Changed inventory needs a new explicit
 plan in a linked companion receipt preserving prior attempts/manifests; never erase uncertainty or change an
 old plan hash. Do not repeat push/PR, recreate a removed checkout or commit cleanup results.
 
