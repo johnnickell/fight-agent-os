@@ -2,7 +2,7 @@
 id: TICKET-00120
 epic: EPIC-00020
 title: Align the nine active projects with current delivery handoffs
-status: ready-for-agent
+status: done
 ---
 
 # Align the nine active projects with current delivery handoffs
@@ -108,7 +108,7 @@ receipts may explain provenance but cannot replace fresh evidence for the change
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00519](../tasks/00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | in-progress |
+| [TASK-00519](../tasks/00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
