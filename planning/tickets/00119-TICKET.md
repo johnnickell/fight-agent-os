@@ -7,6 +7,16 @@ status: ready-for-agent
 
 # Route delivery handoffs using verified current state
 
+
+## Prospective extension — 2026-10-26
+
+The maintainer approved [TASK-00519's active-project amendment](../tasks/00519-TASK.md#approved-amendment--2026-10-26).
+For future alignment, an exact verified merged/integrated `done` handoff resolves read-only; the next authorized
+Work/Land/substantive-planning intake retires its marker and reconciles current documents without a separate
+routine correction request. Exceptional closed-unmerged, unintegrated or uncertain states retain their bounded
+recovery path. This prospective extension is owned by TASK-00519; it does not rewrite this requirement's
+original acceptance evidence or assert that TASK-00515–00518 implemented the extension.
+
 ## Problem statement
 
 Read-only routing can repeat an obsolete human-merge instruction when it treats authored handoff prose,
@@ -24,8 +34,8 @@ Retain distinct planning/decomposition handoffs rather than replacing them with 
 Use Fight Common's existing `delivery: awaiting-merge`, generated delivery block and explicit
 `./bin/planning-check --check-delivery` convention as reference inputs. Qualify their actual implementation
 before reuse, document the supported representation and exact commands, and avoid demanding identical internal
-scripts where a project already meets the contract. Shared guidance must bind correction ownership to Land,
-not leave it with an unnamed planning owner.
+scripts where a project already meets the contract. Shared guidance binds exceptional correction ownership to Land. The approved TASK-00519 extension resolves
+verified merged/integrated `done` handoffs read-only and retires them at authorized mutation intake.
 
 Keep ordinary planning validation and generated-view refreshes offline and deterministic. Offline validation
 checks current-handoff metadata, local identity consistency and derived-view freshness; it neither queries

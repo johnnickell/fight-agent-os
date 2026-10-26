@@ -69,7 +69,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00519](00519-TASK.md) | Align and verify delivery handoffs across the ten projects | [TICKET-00120 — Align the ten participating projects with current delivery handoffs](../tickets/00120-TICKET.md) | ready-for-agent | [TASK-00518](00518-TASK.md) | — |
+| 2 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | [TICKET-00120 — Align the nine active projects with current delivery handoffs](../tickets/00120-TICKET.md) | ready-for-agent | [TASK-00518](00518-TASK.md) | — |
 | 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md), [TASK-00498](00498-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00377](00377-TASK.md) | — |
