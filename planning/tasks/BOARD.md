@@ -55,7 +55,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 58 | [TASK-00058](00058-TASK.md) | Deliver confirmed revocation of another owned session | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -91,7 +91,7 @@ links do not create current claims. Work selection and priority remain in the se
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | [TASK-00059](00059-TASK.md) | — |
 | 61 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | [TASK-00060](00060-TASK.md) | — |
 | 62 | [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | [TASK-00061](00061-TASK.md) | — |
-| 63 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00058](00058-TASK.md), [TASK-00062](00062-TASK.md) | — |
+| 63 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00062](00062-TASK.md) | — |
 | 64 | [TASK-00064](00064-TASK.md) | Prove integrated authorization throttling and secret safety | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00063](00063-TASK.md) | — |
 | 65 | [TASK-00065](00065-TASK.md) | Prove the integrated accessibility and responsive baseline | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00063](00063-TASK.md) | — |
 | 66 | [TASK-00066](00066-TASK.md) | Prove critical browser continuity and close the foundation gate | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00064](00064-TASK.md), [TASK-00065](00065-TASK.md) | — |
@@ -137,7 +137,7 @@ links do not create current claims. Work selection and priority remain in the se
 | 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00118](00118-TASK.md) | — |
 | 114 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00119](00119-TASK.md) | — |
 | 115 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md) | — |
-| 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00058](00058-TASK.md), [TASK-00118](00118-TASK.md) | — |
+| 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00118](00118-TASK.md) | — |
 | 117 | [TASK-00123](00123-TASK.md) | Operate full user administration in the browser | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | [TASK-00120](00120-TASK.md), [TASK-00121](00121-TASK.md), [TASK-00122](00122-TASK.md), [TASK-00062](00062-TASK.md) | — |
 | 122 | [TASK-00128](00128-TASK.md) | Operate custom roles and the read-only permission catalog | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | [TASK-00127](00127-TASK.md), [TASK-00123](00123-TASK.md) | — |
 | — | [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | [TASK-00164](00164-TASK.md) | — |
@@ -569,6 +569,7 @@ links do not create current claims. Work selection and priority remain in the se
 | 55 | [TASK-00055](00055-TASK.md) | Deliver one-time password-reset completion | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | done | — | [PR #157](https://github.com/johnnickell/fight-agent-os/pull/157) |
 | 56 | [TASK-00056](00056-TASK.md) | Deliver authenticated password change and terminal logout | [TICKET-00019 — Deliver password recovery and authenticated password change](../tickets/00019-TICKET.md) | done | — | [PR #159](https://github.com/johnnickell/fight-agent-os/pull/159) |
 | 57 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | done | — | [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) |
+| 58 | [TASK-00058](00058-TASK.md) | Deliver confirmed revocation of another owned session | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | done | — | — |
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
 | 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #126](https://github.com/johnnickell/fight-agent-os/pull/126) |
