@@ -121,7 +121,7 @@
 | [TICKET-00116](00116-TICKET.md) | Export and download authorized diagnostic material | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
 | [TICKET-00117](00117-TICKET.md) | Operate and recover the observability installation | ready-for-agent | [EPIC-00019](../epics/00019-EPIC.md) |
 | [TICKET-00118](00118-TICKET.md) | Reconcile current delivery handoffs through Land | done | [EPIC-00020](../epics/00020-EPIC.md) |
-| [TICKET-00119](00119-TICKET.md) | Route delivery handoffs using verified current state | ready-for-agent | [EPIC-00020](../epics/00020-EPIC.md) |
+| [TICKET-00119](00119-TICKET.md) | Route delivery handoffs using verified current state | done | [EPIC-00020](../epics/00020-EPIC.md) |
 | [TICKET-00120](00120-TICKET.md) | Align the nine active projects with current delivery handoffs | ready-for-agent | [EPIC-00020](../epics/00020-EPIC.md) |
 | [TICKET-00121](00121-TICKET.md) | Build an immutable production application artifact | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
 | [TICKET-00122](00122-TICKET.md) | Operate isolated staging and production environments | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |

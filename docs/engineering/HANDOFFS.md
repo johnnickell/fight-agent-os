@@ -84,6 +84,34 @@ and a closed-unmerged outcome require distinct instructions; unavailable or mism
 Already-consistent unchanged state needs no commit or publication retry. Historical acceptance and reports stay
 intact, and observing closure never authorizes reopening or replacing the original PR.
 
+## Live delivery handoff evaluation
+
+This applies when Land or read-only routing evaluates a **relevant current delivery/merge action**, not whenever
+a historical PR URL or `done` record is read. Resolve exact subject/repository/PR from the target's authoritative
+current representation. In Agent OS, run the [targeted live mode](../../planning/CONVENTIONS.md#live-delivery-verification)
+with those marked TASK IDs after offline validation. For other targets qualify their actual interface, finite
+lookup count/timeouts and result semantics; do not infer compatibility from a flag name or use a writing mode.
+If no qualified checker covers an explicit current action, make at most one supported exact-PR hosting lookup
+per relevant subject, at most 16 subjects and 15 seconds per command, with no retries/history search, or report
+the missing capability. Bind URL/repository/number/TASK/base/head and complete consistent state/merge evidence;
+Land additionally checks recorded candidate OIDs/provenance. A missing marker is not permission to create one.
+
+| Live observation | Required recommendation |
+|---|---|
+| Verified OPEN | Return the actual evidence-supported human/Land action, retaining acceptance, QA and delivery holds. Open is not readiness, acceptance, CI success or permission to merge. |
+| Verified MERGED | Report merge time/OID and the exact original PR. Do not repeat its merge action. `Next: /skill:land TASK-NNNNN` with the actual TASK, explicitly resuming ended-handoff reconciliation in the selected authorized checkout. |
+| Verified CLOSED without merge | Report **not delivered through this PR**, exact PR and the same Land reconciliation route. Future delivery is a maintainer decision; do not infer merge, reopen implementation or propose an automatic replacement PR. |
+| Missing CLI/access/authentication, timeout/API failure, malformed/incomplete or mismatched/contradictory identity/state | State **unverified** and hold the affected recommendation. Name the operator's exact access/metadata recovery or Land identity-resolution action, then rerun only that subject. Never fall back to an offline freshness claim or assumed state. |
+
+Report observation separately from correction: this checker does not dispatch Land or authorize edits. Use
+[ended-handoff recovery](LANDING.md#resume-an-ended-delivery-handoff) only when explicitly invoked; carry the
+exact original PR, observed state/time/OIDs, selected checkout and authority/holds. Read-only routing changes no
+tracked files, refreshes no views and fetches/publishes/merges nothing. Keep available unrelated TASK work,
+Board ordering and separate planning/Wayfinder routes visible. Do not audit every marker on ordinary navigation.
+Once Land retires the current marker/action, preserved historical references trigger no more live requests or
+selection holds solely for that history. Local validation/build remains offline; live proof is a separate,
+subject-specific observation and must never be relabelled independent acceptance.
+
 ## Release handoffs
 
 [Release acceptance](../../.pi/skills/release/references/acceptance.md) owns version subjects and canonical reports.
