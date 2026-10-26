@@ -32,9 +32,18 @@ export type SessionLocks = {
   ) => Promise<void>;
 };
 type SignalBody =
+  | { kind: 'session-revoked'; sessionId: string }
   | { kind: 'request'; round: string }
   | { kind: 'token'; round: string; token: string; remaining: number }
-  | { kind: 'invalidate' | 'authority-changed' | 'logout' | 'terminal' | 'password-change' };
+  | {
+      kind:
+        | 'invalidate'
+        | 'authority-changed'
+        | 'logout'
+        | 'terminal'
+        | 'password-change'
+        | 'sessions-invalidated';
+    };
 type Round = { id: string; generation: number; started: number; abort: AbortController };
 const success = (): ApiResult<true> => ({ ok: true, value: true, correlationId: null });
 
@@ -66,6 +75,8 @@ export class SessionCoordinator {
   #expiry: ReturnType<typeof setTimeout> | undefined;
   #lastClock: number;
   #foreground = true;
+  #currentSessionId: string | null = null;
+  readonly #sessionListeners = new Set<() => void>();
 
   constructor(dependencies: {
     session: Pick<SessionService, 'refresh' | 'logout' | 'dispose' | 'invalidate'>;
@@ -115,6 +126,7 @@ export class SessionCoordinator {
       abort: new AbortController()
     };
     this.#round = round;
+    this.#currentSessionId = null;
     this.#tokens.clear();
     clearTimeout(this.#expiry);
     this.#signal('refresh-started');
@@ -291,6 +303,36 @@ export class SessionCoordinator {
     this.#send({ kind: 'authority-changed' });
   };
 
+  /** Learns only a server-marked current row inside the caller's live authority scope, never JWT claims. */
+  identifyCurrentSession = (sessionId: string): void => {
+    if (this.#active && !this.#barrier && this.#state.status === 'authenticated')
+      this.#currentSessionId = sessionId;
+  };
+
+  subscribeSessions = (listener: () => void): (() => void) => {
+    this.#sessionListeners.add(listener);
+    return () => this.#sessionListeners.delete(listener);
+  };
+
+  /** Asks every same-origin list to refetch without asserting a target commit or changing authority. */
+  sessionsInvalidated = (): void => {
+    if (!this.#active || this.#barrier) return;
+    this.#send({ kind: 'sessions-invalidated' });
+    for (const listener of this.#sessionListeners) listener();
+  };
+
+  /** Broadcasts only after an observed commit; other target failures only invalidate lists. */
+  sessionRevoked = (sessionId: string): void => {
+    if (!this.#active || this.#barrier) return;
+    this.#send({ kind: 'session-revoked', sessionId });
+    this.#sessionRevoked(sessionId);
+  };
+
+  #sessionRevoked(sessionId: string): void {
+    if (sessionId === this.#currentSessionId) this.#end('terminal');
+    for (const listener of this.#sessionListeners) listener();
+  }
+
   terminal = (): void => {
     if (!this.#active) return;
     this.#end('terminal');
@@ -353,10 +395,20 @@ export class SessionCoordinator {
         message.kind !== 'logout' &&
         message.kind !== 'terminal' &&
         message.kind !== 'password-reset' &&
-        message.kind !== 'password-change'
+        message.kind !== 'password-change' &&
+        message.kind !== 'session-revoked' &&
+        message.kind !== 'sessions-invalidated'
       )
         return;
     } else this.#peers.set(message.sender, message.sequence);
+    if (message.kind === 'sessions-invalidated') {
+      for (const listener of this.#sessionListeners) listener();
+      return;
+    }
+    if (message.kind === 'session-revoked') {
+      this.#sessionRevoked(message.sessionId);
+      return;
+    }
     if (message.kind === 'password-change') {
       this.#passwordChanged();
       return;
@@ -380,6 +432,7 @@ export class SessionCoordinator {
       return;
     }
     if (message.kind === 'invalidate') {
+      this.#currentSessionId = null;
       this.#tokens.clear();
       // Peer context changes must fence deferred cookie mutations, not only token adoption.
       this.#session.invalidate();
@@ -466,6 +519,7 @@ export class SessionCoordinator {
     );
   }
   #retire(): void {
+    this.#currentSessionId = null;
     ++this.#generation;
     this.#round?.abort.abort();
     this.#round = null;
@@ -528,5 +582,6 @@ export class SessionCoordinator {
     this.#session.dispose();
     this.#login.dispose();
     this.#listeners.clear();
+    this.#sessionListeners.clear();
   };
 }

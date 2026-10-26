@@ -1,9 +1,11 @@
 import { apiFailure } from '@/api/ApiResult';
 import { hasExactKeys } from '@/api/decodeResponse';
+import { evaluateAccess } from '@/features/authority/evaluateAccess';
 
 import type { ApiClient } from '@/api/ApiClient';
 import type { ApiResult } from '@/api/ApiResult';
 import type { ResponseDecoder } from '@/api/decodeResponse';
+import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 
 export type OwnedSession = Readonly<{
   sessionId: string;
@@ -23,6 +25,14 @@ export type OwnedSessionsPage = Readonly<{
   totalRecords: number;
   records: readonly OwnedSession[];
 }>;
+
+type SessionLifecycle = {
+  accessRejected?: () => void;
+  authorityRejected?: () => void;
+  currentSession?: (id: string) => void;
+  revoked?: (id: string) => void;
+  invalidated?: () => void;
+};
 
 const integer = (value: unknown, min: number, max = Number.MAX_SAFE_INTEGER): value is number =>
   typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max;
@@ -81,15 +91,15 @@ const decodeSession: ResponseDecoder<OwnedSession> = (value) => {
 /** Reads a fixed protected endpoint; retains no rows, credentials or authority. */
 export class OwnedSessionsService {
   readonly #api: ApiClient;
-  readonly #lifecycle: { accessRejected?: () => void; authorityRejected?: () => void };
+  readonly #lifecycle: SessionLifecycle;
+  readonly #authority: AuthorityCache | undefined;
+  readonly #listeners = new Set<() => void>();
   #blocked: 'authentication' | 'authorization' | null = null;
 
-  constructor(
-    api: ApiClient,
-    lifecycle: { accessRejected?: () => void; authorityRejected?: () => void } = {}
-  ) {
+  constructor(api: ApiClient, lifecycle: SessionLifecycle = {}, authority?: AuthorityCache) {
     this.#api = api;
     this.#lifecycle = lifecycle;
+    this.#authority = authority;
   }
 
   /** Permits a new read only after an explicit user retry, never a guard remount. */
@@ -97,7 +107,53 @@ export class OwnedSessionsService {
     this.#blocked = null;
   }
 
+  subscribe = (listener: () => void): (() => void) => {
+    this.#listeners.add(listener);
+    return () => this.#listeners.delete(listener);
+  };
+
+  invalidate = (): void => {
+    for (const listener of this.#listeners) listener();
+  };
+
+  /** One explicit mutation; scope fences late outcomes and no denied/uncertain mutation is replayed. */
+  async revoke(sessionId: string): Promise<ApiResult<true>> {
+    const scope = this.#authority?.captureScope();
+    if (
+      !this.#authority ||
+      !scope?.isCurrent() ||
+      evaluateAccess(this.#authority.getSnapshot(), [
+        { kind: 'permissions', all: ['DELETE_OWN_SESSIONS'] }
+      ]) !== 'allowed'
+    )
+      return apiFailure('authorization');
+    if (
+      !/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(sessionId)
+    )
+      return apiFailure('protocol');
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const result = await Promise.race([
+      this.#api.mutate('DELETE', `/me/sessions/${sessionId}`, {}, (value) =>
+        value === null ? (true as const) : null
+      ),
+      new Promise<ApiResult<true>>((resolve) => {
+        timer = setTimeout(() => resolve(apiFailure('network')), 8_000);
+      })
+    ]);
+    clearTimeout(timer);
+    if (!scope.isCurrent()) return apiFailure('cancelled');
+    if (result.ok) this.#lifecycle.revoked?.(sessionId);
+    else if (result.error.kind === 'conflict' || result.error.kind === 'current-session')
+      this.#lifecycle.invalidated?.();
+    // Conflicts and uncertainty also converge locally; only observed commits broadcast target identity.
+    this.invalidate();
+    if (!result.ok && result.error.kind === 'authentication') this.#lifecycle.accessRejected?.();
+    if (!result.ok && result.error.kind === 'authorization') this.#lifecycle.authorityRejected?.();
+    return result;
+  }
+
   async load(page = 1, perPage = 25, signal?: AbortSignal): Promise<ApiResult<OwnedSessionsPage>> {
+    const scope = this.#authority?.captureScope();
     if (this.#blocked) return apiFailure(this.#blocked);
     const result = await this.#api.get<OwnedSessionsPage>(
       '/me/sessions',
@@ -139,7 +195,11 @@ export class OwnedSessionsService {
       },
       { access: 'required', pagination: { page, perPage }, ...(signal ? { signal } : {}) }
     );
-    if (signal?.aborted) return apiFailure('cancelled');
+    if (signal?.aborted || (scope && !scope.isCurrent())) return apiFailure('cancelled');
+    if (result.ok) {
+      const current = result.value.records.find((record) => record.current);
+      if (current) this.#lifecycle.currentSession?.(current.sessionId);
+    }
     if (
       !result.ok &&
       (result.error.kind === 'authentication' || result.error.kind === 'authorization')

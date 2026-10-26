@@ -9,9 +9,16 @@ export type SessionMessage = Header &
     | Readonly<{ kind: 'request'; round: string }>
     | Readonly<{ kind: 'token'; round: string; token: string; remaining: number }>
     | Readonly<{
-        kind: 'invalidate' | 'authority-changed' | 'logout' | 'terminal' | 'password-change';
+        kind:
+          | 'invalidate'
+          | 'authority-changed'
+          | 'logout'
+          | 'terminal'
+          | 'password-change'
+          | 'sessions-invalidated';
       }>
     | Readonly<{ kind: 'password-reset'; userId: string }>
+    | Readonly<{ kind: 'session-revoked'; sessionId: string }>
   );
 
 const identifier = (value: unknown): value is string =>
@@ -46,6 +53,15 @@ export function decodeSessionMessage(value: unknown): SessionMessage | null {
   )
     return message as SessionMessage;
   if (
+    message.kind === 'session-revoked' &&
+    hasExactKeys(message, [...common, 'sessionId']) &&
+    typeof message.sessionId === 'string' &&
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(
+      message.sessionId
+    )
+  )
+    return message as SessionMessage;
+  if (
     message.kind === 'password-reset' &&
     hasExactKeys(message, [...common, 'userId']) &&
     typeof message.userId === 'string' &&
@@ -57,7 +73,8 @@ export function decodeSessionMessage(value: unknown): SessionMessage | null {
       message.kind === 'authority-changed' ||
       message.kind === 'logout' ||
       message.kind === 'terminal' ||
-      message.kind === 'password-change') &&
+      message.kind === 'password-change' ||
+      message.kind === 'sessions-invalidated') &&
     hasExactKeys(message, common)
   )
     return message as SessionMessage;

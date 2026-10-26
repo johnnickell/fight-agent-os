@@ -2,7 +2,7 @@
 id: TICKET-00020
 epic: EPIC-00004
 title: Deliver self-service active-session management
-status: ready-for-agent
+status: done
 ---
 
 # Deliver self-service active-session management
@@ -47,7 +47,7 @@ Every read/mutation requires both authoritative `READ_OWN_SESSIONS`/`DELETE_OWN_
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00057](../tasks/00057-TASK.md) | Deliver authoritative owned-session visibility | done |
-| [TASK-00058](../tasks/00058-TASK.md) | Deliver confirmed revocation of another owned session | ready-for-agent |
+| [TASK-00058](../tasks/00058-TASK.md) | Deliver confirmed revocation of another owned session | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
