@@ -52,8 +52,11 @@ Before evaluating or repeating a relevant current delivery/merge handoff, follow
 Require the target's qualified bounded live check for only the relevant explicit current subjects (in Agent OS,
 `./bin/planning-check --check-delivery` with their TASK IDs). If the target has no qualified checker, use its
 supported exact-PR hosting read within the same bounds or report the missing capability; do not assume command
-compatibility. A verified MERGED or CLOSED-without-merge original PR returns its distinct observation and
-`/skill:land TASK-NNNNN` for explicit ended-handoff reconciliation of that exact PR, never another merge action.
+compatibility. Exact MERGED evidence for an already-`done` subject resolves read-only only with published-head
+→ merge → local-HEAD ancestry (replacement objects/lazy fetching disabled); report it and continue routing,
+without a routine cleanup request. The next authorized mutation retires its marker. CLOSED-without-merge,
+nonterminal or unintegrated MERGED evidence retains its precise decision/integration or explicit exceptional
+Land reconciliation route; never repeat the ended merge action.
 Unavailable/mismatched/partial evidence holds that delivery recommendation with the exact recovery action.
 Do not invoke Land, refresh views or inspect unmarked historical PRs. Preserve unrelated available work,
 Board ordering and planning routes; reconciled history alone creates neither requests nor selection holds.

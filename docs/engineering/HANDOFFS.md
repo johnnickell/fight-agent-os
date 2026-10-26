@@ -84,7 +84,11 @@ views. A historical acceptance/delivery-pending checkpoint is not today's instru
 reports, and distinguish the current stage/action with an evidenced current section or durable result locator.
 Missing proof or unresolved contradictory handoffs need a precise hold, not an inferred merge, unrelated repair
 or another metadata commit merely to certify final-head success. Recommendations and read-only routing do not
-perform this reconciliation or acquire Land authority. When explicitly resumed after an ended original PR,
+perform this reconciliation or acquire Land authority. Routine verified merged/integrated `done` retirement is
+also included at authorized Work/substantive planning intake through the target's qualified explicit mode,
+without a separate correction-only PR. Inspect authored claims as well as generated views; preserve exact merge/
+head/base/time/integration evidence. A later human merge after intake resolves read-only until the next authorized
+mutation. There is no background watcher or promise of updates after an agent stops. When explicitly resumed after an ended original PR,
 Land uses the [bounded recovery path](LANDING.md#resume-an-ended-delivery-handoff), including safe checkout
 selection after cleanup and inspection of existing correction/publication state before retry. A verified merge
 and a closed-unmerged outcome require distinct instructions; unavailable or mismatched proof holds correction.
@@ -106,7 +110,8 @@ Land additionally checks recorded candidate OIDs/provenance. A missing marker is
 | Live observation | Required recommendation |
 |---|---|
 | Verified OPEN | Return the actual evidence-supported human/Land action, retaining acceptance, QA and delivery holds. Open is not readiness, acceptance, CI success or permission to merge. |
-| Verified MERGED | Report merge time/OID and the exact original PR. Do not repeat its merge action. `Next: /skill:land TASK-NNNNN` with the actual TASK, explicitly resuming ended-handoff reconciliation in the selected authorized checkout. |
+| Verified MERGED, already `done`, published-head → merge → local-HEAD ancestry proven | Report exact PR, base/head, merge time/OID and local integration, then continue read-only routing. No routine cleanup request. The next authorized Work/Land/substantive planning intake retires the marker and reconciles authored/generated claims with evidence. |
+| MERGED but nonterminal or local integration unverified | Hold the affected route for its requirement/Git owner; merge is not acceptance. Recover scope/integration without a read-only fetch or guessed retirement. |
 | Verified CLOSED without merge | Report **not delivered through this PR**, exact PR and the same Land reconciliation route. Future delivery is a maintainer decision; do not infer merge, reopen implementation or propose an automatic replacement PR. |
 | Missing CLI/access/authentication, timeout/API failure, malformed/incomplete or mismatched/contradictory identity/state | State **unverified** and hold the affected recommendation. Name the operator's exact access/metadata recovery or Land identity-resolution action, then rerun only that subject. Never fall back to an offline freshness claim or assumed state. |
 
@@ -115,7 +120,7 @@ Report observation separately from correction: this checker does not dispatch La
 exact original PR, observed state/time/OIDs, selected checkout and authority/holds. Read-only routing changes no
 tracked files, refreshes no views and fetches/publishes/merges nothing. Keep available unrelated TASK work,
 Board ordering and separate planning/Wayfinder routes visible. Do not audit every marker on ordinary navigation.
-Once Land retires the current marker/action, preserved historical references trigger no more live requests or
+Once authorized intake retires the current marker/action, preserved historical references trigger no more live requests or
 selection holds solely for that history. Local validation/build remains offline; live proof is a separate,
 subject-specific observation and must never be relabelled independent acceptance.
 

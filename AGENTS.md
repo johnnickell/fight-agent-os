@@ -41,6 +41,7 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Validate tooling and infrastructure directly with their owning tools; never test that tests or quality tools detect deliberately seeded failures
 - Use repository `./bin/*` Docker wrappers. `./bin/build` is the full gate; focused checks do not replace it
 - Surface warnings and incomplete verification. Do not label inherited receipts as fresh application evidence
+- At authorized Work/Land/substantive planning intake run `./bin/planning-check --reconcile-delivery` before record edits; inspect affected authored handoffs as well as generated views. Only exact verified merged/integrated `done` snapshots retire with evidence. Routing/Review/QA remain read-only; ordinary checks/refresh stay offline
 - Before task publication, record completed implementation and verification; keep formal review and merge status separate
 - Ask for checkout/worktree choice before implementation unless already provided. Use `feature/*` from `develop`
 - Preserve source projects and unrelated local work. Commit and publish only within the authorized scope

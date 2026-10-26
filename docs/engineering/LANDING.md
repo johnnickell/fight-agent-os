@@ -1,6 +1,6 @@
 # Landing Standards
 
-Land publishes an independently accepted TASK as a PR against `develop` and returns merge control to a human.
+Land publishes an independently accepted TASK against its verified target default branch and returns merge control to a human.
 An explicit resume can also reconcile an ended original delivery handoff through the bounded recovery path below.
 The bounded draft-publication path below can obtain hosted evidence before final acceptance. Apply the shared [execution](EXECUTION.md) and [review](REVIEW.md) boundaries. Landing may reconcile a reviewed branch with an advancing base; a changed commit OID by itself is not a changed implementation.
 
@@ -23,6 +23,23 @@ no delivery-only canonical update is needed. Missing or ambiguous acceptance sti
 Do not reopen A, repeat initial draft intake or make another metadata commit solely to resume delivery.
 An explicit `land TASK-NNNNN` or request to publish for CI authorizes these bounded evidence paths; a review
 report or `work` invocation alone does not.
+
+## Bind the publication target
+
+Before reconciliation or publication, resolve the target's exact origin and **live** GitHub default branch.
+Use `python3` with the owning provider's `.pi/skills/land/scripts/bind-target.py`, supplying `--root` as the
+selected target checkout and `--policy` as that target's actual accepted integration branch. When a subject PR
+exists also supply its exact `--pr` URL and intended `--head` branch. The helper performs one repository read
+and at most one PR read, each bounded to 15 seconds and 16 KiB; it writes nothing and never fetches. Record its
+JSON observation in the ignored delivery receipt. Missing tooling/authentication, malformed identity, a policy/
+default conflict or an existing PR targeting another base holds publication for an explicit owner disposition;
+never retarget an existing PR silently. Stale local `origin/HEAD` is not authority.
+
+Bind all following base/ref/fetch, ancestry, push/PR creation and final verification operations to that observed
+branch. References to `develop` below are Agent OS's current policy/examples, not a provider-wide literal.
+Recheck the binding immediately before publication and at final handoff; a changed live default holds the old
+binding until its policy/PR conflict is resolved. The helper does not establish subject acceptance or remote
+head equality; retain the exact PR/title/candidate/remote checks below. Ordinary planning/builds stay offline.
 
 ## Acceptance candidate and administrative closeout
 
@@ -105,7 +122,15 @@ target's paths and bindings; shared provider links do not authorize edits in a d
 
 For Agent OS's offline representation, use [current delivery handoffs](../../planning/CONVENTIONS.md#current-delivery-handoffs):
 the TASK's explicit marker and canonical PR identify the subject; Board/Roadmap delivery blocks are derived.
-Set/correct/retire markers only from established subject evidence within Land authority, then explicitly refresh.
+Set/correct markers only from established publication evidence within Land authority, then explicitly refresh.
+Routine retirement is also included at authorized Work/Land/substantive planning intake through the target's
+qualified `--reconcile-delivery` mode: only exact verified MERGED, already-`done`, locally integrated handoffs
+retire with exact head/base/merge/time/integration evidence. Inspect affected authored Board/Roadmap/README
+claims separately, roll up eligible parents and refresh views. Repeat intake is a no-op; it does not require a
+correction-only PR or another routine cleanup prompt. Read-only routing resolves that same case and continues;
+Review/QA/routing never write or dispatch Land. A later merge after intake resolves read-only until the next
+authorized mutation. Closed-unmerged, nonterminal, unintegrated or uncertain evidence retains the exceptional
+recovery below; do not infer acceptance from merge or `done`.
 Unmarked historical PRs are not current claims; local validation does not replace the live evidence below.
 Require [live handoff evaluation](HANDOFFS.md#live-delivery-handoff-evaluation) before evaluating a relevant
 current delivery/merge action. Agent OS's targeted `--check-delivery` observes only selected marked subjects;
@@ -169,7 +194,8 @@ recovery below consumes this inventory and preservation contract rather than rep
 
 ## Resume an ended delivery handoff
 
-Use this path only on an **explicit Land resume for the exact TASK and ended original PR**. A routing
+Use this path only on an **explicit Land resume for the exact TASK and ended original PR**, when qualified
+routine integrated-`done` intake cannot resolve it or an exceptional factual correction is actually necessary. A routing
 recommendation or observed merge is not an invocation. This is factual current-handoff reconciliation, not
 implementation repair or a replacement delivery attempt. Read the TASK, parent, Board and original canonical
 Review/QA and accepted-candidate receipts; keep their identities and bytes intact. No new independent acceptance

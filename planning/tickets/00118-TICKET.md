@@ -7,6 +7,16 @@ status: done
 
 # Reconcile current delivery handoffs through Land
 
+
+## Prospective extension — 2026-10-26
+
+The maintainer approved [TASK-00519's active-project amendment](../tasks/00519-TASK.md#approved-amendment--2026-10-26).
+For future alignment, an exact verified merged/integrated `done` handoff resolves read-only; the next authorized
+Work/Land/substantive-planning intake retires its marker and reconciles current documents without a separate
+routine correction request. Exceptional closed-unmerged, unintegrated or uncertain states retain their bounded
+recovery path. This prospective extension is owned by TASK-00519; it does not rewrite this requirement's
+original acceptance evidence or assert that TASK-00515–00518 implemented the extension.
+
 ## Problem statement
 
 Land currently refreshes parent statuses and generated views, but does not explicitly reconcile every authored

@@ -79,11 +79,7 @@ publication/merge authority. Read the Board for work selection and priority.
 |---|---|---|
 | [TASK-00058](tasks/00058-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/173](https://github.com/johnnickell/fight-agent-os/pull/173) |
 | [TASK-00059](tasks/00059-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/172](https://github.com/johnnickell/fight-agent-os/pull/172) |
-| [TASK-00517](tasks/00517-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/165](https://github.com/johnnickell/fight-agent-os/pull/165) |
-| [TASK-00518](tasks/00518-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/169](https://github.com/johnnickell/fight-agent-os/pull/169) |
-| [TASK-00535](tasks/00535-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/168](https://github.com/johnnickell/fight-agent-os/pull/168) |
-| [TASK-00536](tasks/00536-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/170](https://github.com/johnnickell/fight-agent-os/pull/170) |
-| [TASK-00537](tasks/00537-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/171](https://github.com/johnnickell/fight-agent-os/pull/171) |
+| [TASK-00519](tasks/00519-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/175](https://github.com/johnnickell/fight-agent-os/pull/175) |
 <!-- /planning:delivery -->
 
 ## Current planning handoff
@@ -187,7 +183,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00017](epics/00017-EPIC.md) | Author versioned Agent templates with human-approved AI assistance | browser-agent-template-authoring | ready-for-agent |
 | [EPIC-00018](epics/00018-EPIC.md) | Publish the qualified Agent OS AccessControl reference-consumer handoff | accesscontrol-reference-consumer-handoff | ready-for-agent |
 | [EPIC-00019](epics/00019-EPIC.md) | Diagnose Agent OS operations and managed runs with live and archived logs | operational-diagnosis | ready-for-agent |
-| [EPIC-00020](epics/00020-EPIC.md) | Keep delivery handoffs synchronized through Land | land-owned-delivery-handoff-synchronization | ready-for-agent |
+| [EPIC-00020](epics/00020-EPIC.md) | Keep delivery handoffs synchronized through Land | land-owned-delivery-handoff-synchronization | done |
 | [EPIC-00021](epics/00021-EPIC.md) | Deploy and recover private Fight Agent OS in staging and production | first-private-production | ready-for-agent |
 <!-- /planning:epics -->
 

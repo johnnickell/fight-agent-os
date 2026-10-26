@@ -21,7 +21,10 @@ still apply when the selected workflow is invoked.
    Verify the named phase in the owning record's current progress/approval section. Map closure, parent status
    and child counts do not prove complete decomposition. If the handoff is missing or contradictory, report
    the missing phase/owner; do not reconstruct it by reading every closed map and descendant.
-5. Read canonical review/QA identity and disposition only when they change the selected route. Unresolved
+5. Before repeating a relevant delivery action run `./bin/planning-check --check-delivery` with its marked
+   TASK IDs. Verified MERGED/integrated `done` handoffs resolve read-only; continue routing without a routine
+   cleanup request. Exceptional/uncertain states hold their affected route; never write or dispatch Land.
+6. Read canonical review/QA identity and disposition only when they change the selected route. Unresolved
    identity is an evidence handoff, never acceptance. Confirm a suggested skill from supplied capability
    metadata/bindings; load its full instructions and references when invoked, not merely to recommend it.
 6. Before evaluating or repeating a relevant current delivery/merge handoff, require the
@@ -159,7 +162,8 @@ credential-bearing URLs and other hosts/transports need local identity resolutio
 Two marked subjects cannot claim the same PR. Empty/absent `delivery` means no current delivery claim;
 other values, marked parents/archives and missing/mismatched PR identity are errors.
 
-Land owns setting/correcting/retiring a marker under the [subject synchronization contract](../docs/engineering/LANDING.md#synchronize-current-subject-handoffs).
+Land owns setting/correcting markers; authorized Work/Land/substantive planning intake owns routine retirement
+under the [subject synchronization contract](../docs/engineering/LANDING.md#synchronize-current-subject-handoffs).
 Set it only from exact publication evidence at the authorized human review/merge handoff. It records a
 publication snapshot, **not** an assertion that the PR remains open, readiness/CI success, independent acceptance,
 merge or deployment. Status remains independent: `done`, ordinary `pr` links and historical prose never create
@@ -181,8 +185,14 @@ Neither path invokes hosting tools, fetches, needs hosting credentials or claims
 inspection is a bounded five-second Git configuration read only and is skipped when no markers exist. A missing
 origin holds marked identity validation; restore the intended repository configuration through its owner.
 Land resolves malformed identity before an authorized refresh; read-only routing never performs that refresh.
-The explicit live mode below is separate from offline checks and writes. `--reconcile-delivery` is **not**
-supported: only an explicitly invoked Land can correct current markers and handoffs.
+The explicit live modes below are separate from offline checks and writes. At authorized Work/Land/substantive
+planning intake run `./bin/planning-check --reconcile-delivery [TASK-ID …]` before record edits. It verifies exact
+merged/integrated `done` snapshots, retires only resolved markers with exact PR/base/head/merge/time/local-HEAD
+evidence, rolls up eligible parents and refreshes views. Inspect affected authored Board/Roadmap/README claims
+separately; preserve historical checkpoints and canonical reports. No separate routine correction prompt/PR is
+required. Repeat intake is a no-op and retired history triggers no queries. A later merge resolves read-only until
+the next authorized mutation; no watcher or post-exit update is implied. Validation/live errors prevent planned
+writes; inspect disk after I/O failure before retry. Review/QA/routing never use the writing mode.
 
 ### Live delivery verification
 
@@ -216,16 +226,15 @@ under [landing standards](../docs/engineering/LANDING.md#synchronize-current-sub
 | Result | Meaning and next action |
 |---|---|
 | OPEN | Verified observation only. Evaluate actual acceptance, QA, provenance and delivery holds before recommending the supported human/Land action; open alone proves no readiness or CI success. |
-| MERGED | Report exact merge time/OID, retire the merge recommendation, and recommend `/skill:land TASK-NNNNN` explicitly resuming the exact original PR under ended-handoff recovery. Local integration/deployment are not inferred. |
+| MERGED | Resolve read-only only for an already-`done` subject with exact published-head → merge → local-HEAD ancestry, using five-second local Git calls without replacement objects/lazy fetching. Report exact merge/time/integration and continue; no routine cleanup request. Missing integration/nonterminal scope holds for the Git/requirement owner. Merge is not acceptance, QA or deployment. |
 | CLOSED WITHOUT MERGE | Report non-delivery through that PR and the same explicit Land correction handback. Preserve acceptance; maintainer owns any future-delivery decision. |
 | UNVERIFIED | Hold only the affected delivery recommendation. Restore missing CLI, existing authentication/access/network or complete exact PR metadata; Land resolves identity contradictions. Rerun the same subject after recovery, never assume open/merged or silently use offline success as freshness. |
 
-Exit **0** means all selected observations are OPEN, or no current markers exist (not proof that no PRs exist).
-Exit **1** means local validation failed or at least one verified ended handoff needs Land correction. Exit **2**
-means invalid mode/selection or incomplete live evidence; it takes precedence over ended results in mixed live
-observations. Inspect per-subject output: no aggregate success overrides an unverified subject. Raw hosting
+Exit **0** means selected observations are OPEN or verified merged/integrated `done`, or no markers exist
+(not proof that no PRs exist). Exit **1** means a local/live evidence, scope, integration or ended-state hold.
+Exit **2** means invalid command-line arguments or selection/bounds rejected before hosting requests. Inspect per-subject output: no aggregate success overrides an unverified subject. Raw hosting
 stdout/stderr is never replayed on failure. The command writes no records/views, invokes no Land, scans no
-history, fetches/publishes/merges nothing, and checks no CI. `--write` and `--check-delivery` are mutually exclusive.
+history, fetches/publishes/merges nothing, and checks no CI. `--write`, `--check-delivery` and `--reconcile-delivery` are mutually exclusive.
 Ordinary check/write and `./bin/build` planning remain network-independent. A correctly reconciled unmarked
 historical PR is not queried again merely because its evidence remains recorded.
 
@@ -243,12 +252,11 @@ disabled replacement objects/lazy fetching and no fetch; merged/integrated `done
 Its `--reconcile-delivery` writes marker retirement and views; its closed-unmerged/incomplete output names a
 planning owner. These are qualified **source observations**, not fresh Common execution or fleet acceptance.
 
-Agent OS reuses the bounded exact-PR observation pattern but adds targeted selection, byte-counted response
-validation and distinct ended/incomplete exits. It deliberately does not import automatic reconciliation,
-local-ancestry resolution or Common's correction owner: every ended current claim routes to explicit Land.
-It retains canonical marked-PR/conflicting-subject validation, separate Board/Roadmap delivery tables and its
-existing Board selection, parent closure and planning frontier. Matching command names do not imply compatible
-mutation authority or result semantics; TASK-00519 owns remaining ten-project alignment.
+TASK-00519 adapts Common's integrated-merge resolution and explicit retirement while retaining Agent OS's
+canonical marked-PR/conflicting-subject validation, targeted selection, byte-counted response bounds, separate
+Board/Roadmap delivery tables and existing selection/parent/frontier authority. The earlier TASK-00518 receipts
+remain historical evidence of their original scope, not acceptance of this prospective extension. Common's
+source observations alone are not fleet acceptance; TASK-00519 owns all nine active project outcomes.
 
 ## Automatic parent completion
 

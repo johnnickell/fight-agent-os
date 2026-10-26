@@ -1,17 +1,26 @@
 ---
 id: TICKET-00120
 epic: EPIC-00020
-title: Align the ten participating projects with current delivery handoffs
-status: ready-for-agent
+title: Align the nine active projects with current delivery handoffs
+status: done
 ---
 
-# Align the ten participating projects with current delivery handoffs
+# Align the nine active projects with current delivery handoffs
 
 ## Problem statement
 
 A shared Land/routing contract cannot prevent stale handoffs where project-local planning scripts and
 conventions still implement different ownership or validation behavior. Maintainers need a verified alignment
-disposition for each approved project, without ten duplicate planning queues or unrelated adoption work.
+disposition for each approved project, without nine duplicate planning queues or unrelated adoption work.
+
+## Approved amendment — 2026-10-26
+
+John approved the [TASK-00519 amendment](../tasks/00519-TASK.md#approved-amendment--2026-10-26): adopt Common's
+read-only resolution of exact merged/integrated `done` handoffs and idempotent retirement during authorized
+Work/Land/planning intake, without routine correction prompts. Bind publication to each live default branch,
+reconcile authored and generated documentation, and qualify TASK-00534/00537's resource cleanup contract through
+each local workflow binding. Nine active projects remain; deprecated CMS is excluded. Existing accepted receipts
+remain history, and new behavior requires its own per-project evidence. Isolated worktrees are selected.
 
 ## Solution and boundaries
 
@@ -23,7 +32,6 @@ Apply the approved contracts from [TICKET-00118](00118-TICKET.md) and [TICKET-00
 | `fight-common` | Verified alignment, evidenced no-change conclusion, or explicit unresolved blocker |
 | `fight-access-control` | Verified alignment, evidenced no-change conclusion, or explicit unresolved blocker |
 | `epic` | Verified alignment, evidenced no-change conclusion, or explicit unresolved blocker |
-| `fight-cms` | Verified alignment, evidenced no-change conclusion, or explicit unresolved blocker |
 | `project-slim` | Verified alignment, evidenced no-change conclusion, or explicit unresolved blocker |
 | `project-symfony` | Verified alignment, evidenced no-change conclusion, or explicit unresolved blocker |
 | `project-laravel` | Verified alignment, evidenced no-change conclusion, or explicit unresolved blocker |
@@ -37,8 +45,8 @@ current Board/Roadmap/README handoffs. Record absent capabilities as gaps, not p
 
 Change necessary scripts and documentation only. Reuse adequate existing safeguards and preserve project-specific
 structures and independent planning/execution order. A project whose existing behavior satisfies the contract
-needs an evidenced no-change conclusion, not a cosmetic rewrite. Fight Common is a reference to qualify, not an
-automatic baseline or exemption from ownership alignment.
+needs an evidenced no-change conclusion, not a cosmetic rewrite. Fight Common's integrated-delivery behavior is the approved reference to qualify; it is not an exemption
+from direct evidence or target-specific ownership alignment.
 
 Use an isolated registered worktree for every affected project, following its local branch, verification and
 delivery conventions. Preserve human checkouts, unrelated changes and other worktrees. Resolve checkout paths,
@@ -80,7 +88,7 @@ receipts may explain provenance but cannot replace fresh evidence for the change
 
 ## Acceptance and evidence
 
-- All ten projects have a traceable assessment against both shared contracts, with exact checkout/revision,
+- All nine active projects have a traceable assessment against both shared contracts, with exact checkout/revision,
   inspected ownership/binding, identified gaps and an explicit outcome. Unassessed projects are visible.
 - Necessary script/convention/current-handoff changes are minimal and consistent with Land ownership and
   read-only routing. Already-compliant projects have direct evidence supporting a no-change conclusion.
@@ -100,7 +108,7 @@ receipts may explain provenance but cannot replace fresh evidence for the change
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00519](../tasks/00519-TASK.md) | Align and verify delivery handoffs across the ten projects | ready-for-agent |
+| [TASK-00519](../tasks/00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -110,16 +118,16 @@ Approved as the third requirement area in the maintainer-accepted three-TICKET s
 TICKET-00119's identity, validation and routing contract. This is one cross-project alignment requirement,
 not one TICKET or TASK per project. The approved central implementation slice is recorded below.
 
-No project is claimed aligned by this planning record, and no implementation worktree or cross-project change
-has been made.
+No project is claimed aligned by this planning record. The 2026-10-26 amendment has a selected isolated
+Agent OS checkout; fleet implementation and verification are still separate from that planning change.
 The existing application ADRs do not need amendment for this tooling/documentation-only requirement; a discovered
 need for application behavior would exceed scope and require a separate decision.
 
 ### Approved TASK decomposition and current handoff
 
-The maintainer approved one central [TASK-00519 — Align and verify delivery handoffs across the ten projects](../tasks/00519-TASK.md),
+The maintainer approved one central [TASK-00519 — Adopt integrated delivery reconciliation across the nine active projects](../tasks/00519-TASK.md),
 blocked by TASK-00518, which transitively consumes the preceding shared-contract work. It owns assessment,
-minimal alignment, verification and resumable coverage for all ten projects. Do not create project-local,
+minimal alignment, verification and resumable coverage for all nine active projects. Do not create project-local,
 assessment-only or verification-only TASKs.
 
 The approved multi-repository exception permits separate independently reviewable project-owned PRs under this
