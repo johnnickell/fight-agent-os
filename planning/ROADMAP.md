@@ -82,9 +82,16 @@ publication/merge authority. Read the Board for work selection and priority.
 | [TASK-00518](tasks/00518-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/169](https://github.com/johnnickell/fight-agent-os/pull/169) |
 | [TASK-00535](tasks/00535-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/168](https://github.com/johnnickell/fight-agent-os/pull/168) |
 | [TASK-00536](tasks/00536-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/170](https://github.com/johnnickell/fight-agent-os/pull/170) |
+| [TASK-00537](tasks/00537-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/171](https://github.com/johnnickell/fight-agent-os/pull/171) |
 <!-- /planning:delivery -->
 
 ## Current planning handoff
+
+**Current highest ready priority:** [TASK-00539](tasks/00539-TASK.md), `order: 1`, is the maintainer-approved
+bounded invitation API throttle-clock repair. Its plan is included in TASK-00537's PR #171; implementation has
+not started. TASK-00537 records accepted implementation as done, not merge or deployment; its current delivery
+and cleanup result remains in the [Land checkpoint](tasks/00537-TASK.md#current-land-closeout--2026-10-26) and
+durable receipt. Preserve other TASK priorities/dependencies and use the Board for actual active/ready routing.
 
 [EPIC-00021](epics/00021-EPIC.md#approved-epic-and-remaining-planning-handoff) is approved/written and its
 [existing-owner requirements are reconciled](wayfinder/research/private-production-owner-reconciliation.md).
