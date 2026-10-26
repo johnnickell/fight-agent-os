@@ -72,8 +72,8 @@ export default function DashboardPage({ cache }: { cache: AuthorityCache }) {
       <ContentPanel title="Available today">
         <p>
           Sign in, session restoration, current-access checks, appearance preferences and
-          current-session sign out are available. Account and administration destinations below
-          explain what is still unavailable; they do not provide those operations yet.
+          current-session sign out are available. Account destinations provide password change and
+          owned-session visibility. Administration shortcuts explain operations still unavailable.
         </p>
       </ContentPanel>
       <div className="dashboard-grid">

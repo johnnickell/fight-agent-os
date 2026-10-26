@@ -54,11 +54,15 @@ Restart Pi, then use `/fight-header` to choose a presentation or `off` to restor
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).
-Start ordinary `pi` in the intended checkout. Inside Herdr, `/fight-workspace [open|close]` adds owned human-only
-child activity and verified Docker logs while Pi retains its editor, completion, colors, Markdown, dialogs,
-session and workflow authority. Explicit human bindings select existing test sources once per open generation;
-validated selected/pinned child or idle-primary context follows them. Missing mappings never fall back to shared
-logs. Herdr owns layout/focus/resize only. Outside Herdr or with unavailable prerequisites, keep ordinary Pi;
+After the separate [user-prefix executable installation](harness/pi/README.md#install-the-global-workspace-command),
+run `fight-workspace` in the intended checkout inside Herdr: native Pi starts and opens owned human-only child
+activity and verified Docker log companions without a blocking log form, follow-up slash command or model turn.
+Ordinary `pi` stays unchanged; `/fight-workspace [open|close]` remains manual open/recovery/close.
+Pi retains its editor, completion, colors, Markdown, dialogs, session and workflow authority. Actual native context
+and verified worktree metadata select only matching existing local Docker sources. An unambiguous verified source
+may open directly; ambiguity uses readable choices in the log pane. Missing logs or cancelling selection never
+blocks panes. Validated selected/pinned child or idle-primary context follows exact sources, never shared fallback.
+Herdr owns layout/focus/resize only. Outside Herdr or with unavailable prerequisites, keep ordinary Pi;
 there is no automatic RPC-editor fallback.
 
 TASK-00512's native replacement A and repository-only RPC retirement B have independent technical acceptance and
@@ -115,7 +119,7 @@ Configure independent external `APP_ACTIVATION_RATE_KEY` and `APP_AUTH_RATE_KEY`
 The reusable [browser authentication request controls](docs/engineering/BROWSER_AUTH_REQUESTS.md) provide
 fixed session/persistent refresh cookies, nonce lifecycle, strict browser guards and independently committed
 rolling email/network/endpoint admission. Production-like HTTP boot requires explicit direct TLS authority,
-no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/app/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Bounded multi-tab coordination at `/app/login` is implemented pending independent Review/QA; TASK-00051 now mounts the responsive authenticated frame, pending independent Review/QA. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For required local TLS at
+no trusted forwarding proxies, and available migrated limiter storage. Canonical `POST /api/v1/auth/login` and `/app/login` are implemented; see [login contracts](docs/engineering/LOGIN.md). Cookie-only `POST /api/v1/auth/refresh` and `/api/v1/auth/logout`, plus current-session logout on the login success screen, are implemented pending independent Review/QA; see [session continuity](docs/engineering/SESSION_CONTINUITY.md). Bounded multi-tab coordination at `/app/login` is implemented pending independent Review/QA; TASK-00051 now mounts the responsive authenticated frame, pending independent Review/QA. TASK-00057 adds read-only [owned active sessions](docs/engineering/OWNED_SESSIONS.md) at `/app/account/sessions` and `GET /api/v1/me/sessions`, with exact `READ_OWN_SESSIONS`, principal-only ownership and coarse original device hints (independent Review/QA accepted; [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) awaits human review and merge). Individual revocation remains unimplemented. The public `GET /api/v1/auth/csrf` bootstrap only works over that HTTPS origin. For required local TLS at
 **https://localhost:18443**, follow [local HTTPS setup](docs/engineering/LOCAL_HTTPS.md):
 `./bin/https setup` once, then `./bin/up` for every startup or configuration refresh, and `./bin/https status` to inspect it. Setup preserves your CSRF key and changes only
 the browser origin in an ignored `.env`; host CA trust enrollment is explicit. Keep `FIGHT_AGENT_OS_PORT=18087`

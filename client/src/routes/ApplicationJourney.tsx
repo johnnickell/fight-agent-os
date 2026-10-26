@@ -21,6 +21,7 @@ const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const SwaggerPage = lazy(() => import('@/pages/SwaggerPage'));
 const PasswordChangePage = lazy(() => import('@/pages/PasswordChangePage'));
+const OwnedSessionsPage = lazy(() => import('@/pages/OwnedSessionsPage'));
 
 export function ApplicationJourney({
   runtime,
@@ -260,6 +261,8 @@ export function ApplicationView({
               <SwaggerPage service={session.swagger} cache={session.authority} />
             ) : route.destination === 'password-change' ? (
               <PasswordChangePage service={session.passwordChange} schemas={session.schemas} />
+            ) : route.destination === 'sessions' ? (
+              <OwnedSessionsPage service={session.sessions} cache={session.authority} />
             ) : route.destination === 'dashboard' ? (
               <DashboardPage cache={session.authority} />
             ) : (

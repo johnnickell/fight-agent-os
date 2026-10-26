@@ -28,8 +28,10 @@ function environment() {
   return Object.fromEntries(['HOME', 'PATH', 'TMPDIR', 'LANG', 'LC_ALL'].filter(key => process.env[key]).map(key => [key, process.env[key]]));
 }
 export class RuntimeLogs {
-  constructor(selection, changed = () => {}, { spawnProcess = spawn, persist = true, pinGeneration = false } = {}) {
+  constructor(selection, changed = () => {}, { spawnProcess = spawn, persist = true, pinGeneration = false, endpoint, verifySource, label } = {}) {
     this.source = runtimeSelection(selection); this.changed = changed; this.spawn = spawnProcess; this.persist = persist;
+    this.fixedEndpoint = endpoint; this.verifySource = verifySource;
+    this.label = label ?? (this.source?.purpose === 'test' ? 'WORKTREE TEST' : 'SHARED');
     this.generation = 0; this.processes = new Set(); this.pending = new Set(); this.open = false; this.paused = false;
     this.history = []; this.units = 0; this.omitted = 0; this.clipped = 0; this.gaps = 0; this.state = 'unselected';
     this.notice = 'No runtime selected'; this.services = []; this.endpoint = null; this.timer = null; this.frozen = null;
@@ -37,7 +39,7 @@ export class RuntimeLogs {
   }
   start() { if (this.source) { this.open = true; void this.subscribe(); } }
   launch(args) {
-    const child = this.spawn('docker', ['--context', this.source.context, ...args], {
+    const child = this.spawn('docker', [...(this.fixedEndpoint ? ['--host', this.fixedEndpoint] : ['--context', this.source.context]), ...args], {
       cwd: '/', env: environment(), stdio: ['ignore', 'pipe', 'pipe'], shell: false,
     });
     this.processes.add(child);
@@ -75,11 +77,11 @@ export class RuntimeLogs {
   async subscribe() {
     if (this.disposed || !this.source || !this.open || this.processes.size) return;
     const generation = ++this.generation, current = () => generation === this.generation && this.open;
-    this.state = 'checking'; this.notice = `Verifying explicitly selected ${this.source.purpose === 'test' ? 'worktree test' : 'shared'} source`; this.changed();
+    this.state = 'checking'; this.notice = `Verifying ${this.label.toLowerCase()} source`; this.changed();
     try {
       const endpoint = JSON.parse(await this.query(['context', 'inspect', this.source.context, '--format', '{{json .Endpoints.docker.Host}}']));
       if (!current()) return;
-      if (typeof endpoint !== 'string' || !endpoint.startsWith('unix:///') || endpoint.length > 1000 || this.endpoint && endpoint !== this.endpoint) throw new Error('Local Docker context identity changed or is not a Unix endpoint; relaunch with explicit selection');
+      if (typeof endpoint !== 'string' || !endpoint.startsWith('unix:///') || endpoint.length > 1000 || this.endpoint && endpoint !== this.endpoint || this.fixedEndpoint && endpoint !== this.fixedEndpoint) throw new Error('Local Docker context identity changed or is not a Unix endpoint; relaunch with explicit selection');
       this.endpoint = endpoint;
       const filters = this.source.purpose === 'test' && this.source.allowedServices.length === 1 ? ['--filter', `label=com.docker.compose.service=${this.source.allowedServices[0]}`] : [];
       const raw = await this.query(['container', 'ls', '--all', '--no-trunc', '--filter', `label=com.docker.compose.project=${this.source.project}`, ...filters, '--format', listing]);
@@ -91,12 +93,16 @@ export class RuntimeLogs {
       const eligible = this.source.purpose === 'test' ? verified.filter(row => this.source.allowedServices.includes(row.service)) : verified;
       const containers = eligible.map(row => `${row.service}:${row.id}`).sort().join('\n');
       if (this.pinGeneration && this.containers !== null && containers !== this.containers) {
-        throw new Error('Source container generation changed; fresh human binding required');
+        throw new Error(this.verifySource ? 'Source container replaced; press s to inspect and choose a fresh source' : 'Source container generation changed; fresh human binding required');
       }
       this.services = [...new Set(eligible.map(row => row.service))].sort();
       const selected = eligible.filter(row => row.service === this.source.service);
       if (selected.length !== 1) throw new Error('Selected service missing or replicated; select one existing single-container service');
       if (selected[0].state !== 'running') throw new Error('Selected source stopped; no container will be started');
+      // Discovered native sources additionally prove exact mounts and lifecycle. This
+      // witness is memory-only and pinned before the first log byte, including reconnects.
+      if (this.verifySource) await this.verifySource(selected[0].id, endpoint);
+      if (!current()) return;
       // Pin only a fully validated running source. A saved file never establishes this identity.
       if (this.pinGeneration) this.containers = containers;
       if (this.persist) this.savePreference();
@@ -124,7 +130,10 @@ export class RuntimeLogs {
       this.timer = setTimeout(() => { if (current()) { void this.stop(); this.state = 'disconnected'; this.notice = '15-minute reader lifetime reached; r reconnects explicitly, with possible gaps/duplicates'; this.changed(); } }, logLimits.lifetime);
       this.changed();
     } catch (error) {
-      if (current()) { this.state = 'unavailable'; this.notice = error.message; this.changed(); }
+      if (current()) {
+        if (this.verifySource) { this.history = []; this.units = 0; this.frozen = null; this.paused = false; }
+        this.state = 'unavailable'; this.notice = error.message; this.changed();
+      }
     }
   }
   savePreference() {
@@ -170,7 +179,7 @@ export class RuntimeLogs {
   }
   summary() {
     if (!this.source) return 'SHARED runtime · unselected';
-    return `${this.source.purpose === 'test' ? 'WORKTREE TEST' : 'SHARED'} ${this.source.context}/${this.source.project}/${this.source.service}\n${this.state}${this.paused ? ' · PAUSED' : ''} · omitted ${this.omitted} · clipped ${this.clipped} · gaps ${this.gaps}`;
+    return `${this.label} ${this.source.context}/${this.source.project}/${this.source.service}\n${this.state}${this.paused ? ' · PAUSED' : ''} · omitted ${this.omitted} · clipped ${this.clipped} · gaps ${this.gaps}`;
   }
   body() {
     const display = (this.paused ? this.frozen : this.history) ?? [];
@@ -178,7 +187,7 @@ export class RuntimeLogs {
   }
   view() {
     if (!this.source) return 'Human-only shared runtime logs\nNo runtime selected; use explicit --logs-main/context/project/service options.\nNo log content enters Pi/model context.';
-    return [`${this.source.purpose === 'test' ? 'WORKTREE TEST logs' : 'SHARED main-checkout logs'} · ${this.source.context}/${this.source.project}/${this.source.service}`,
+    return [`${this.label} logs · ${this.source.context}/${this.source.project}/${this.source.service}`,
       `Reader ${this.state}${this.paused ? ' · PAUSED (draining; bounded recent window on resume)' : ''}`,
       '[ / ] service · p pause · c reader close/open · r reconnect',
       `${this.source.purpose === 'test' ? 'Worktree' : 'Main'}: ${this.source.main}`, `Endpoint: ${this.endpoint ?? 'not verified'}`,

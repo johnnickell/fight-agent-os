@@ -8,6 +8,7 @@ import { MemoryAccessToken } from '@/features/auth/MemoryAccessToken';
 import { PasswordChangeService } from '@/features/auth/PasswordChangeService';
 import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
+import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 import { ThemePreferenceStore } from '@/features/theme/ThemePreference';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
@@ -102,6 +103,14 @@ function FrameExample({
         }),
         authority,
         coordinator.terminal
+      ),
+      sessions: new OwnedSessionsService(
+        new ApiClient({
+          schemaVersion: 2,
+          apiBasePath: '/api/v1',
+          appDebug: false,
+          swaggerAvailable: false
+        })
       ),
       swagger: new SwaggerService(
         new ApiClient({

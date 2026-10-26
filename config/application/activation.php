@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Adapter\Http\Action\Api\V1\Auth\ActivateInvitationAction;
 use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
+use App\Adapter\Http\Api\V1\Auth\CaptureSessionPresentation;
 use App\Adapter\Http\Middleware\Api\Auth\ActivationAdmission;
 use App\Adapter\Http\Middleware\Api\Auth\BrowserMutationGuard;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
@@ -76,7 +77,11 @@ return static function (Container $container): void {
     $container->set(SessionResponder::class, static fn(Container $c): SessionResponder =>
         new SessionResponder($c->get(JSendResponseFactory::class), $c->get(BrowserSessionCookies::class)));
     $container->set(ActivateInvitationAction::class, static fn(Container $c): ActivateInvitationAction =>
-        new ActivateInvitationAction($c->get(ActivateInvitation::class), $c->get(SessionResponder::class)));
+        new ActivateInvitationAction(
+            $c->get(ActivateInvitation::class),
+            $c->get(SessionResponder::class),
+            $c->get(CaptureSessionPresentation::class)
+        ));
     $container->set(BrowserMutationGuard::class, static fn(Container $c): BrowserMutationGuard =>
         new BrowserMutationGuard($c->get(HmacCsrfProofs::class), $c->get(CsrfClock::class)));
     $container->set(ActivationAdmission::class, static fn(Container $c): ActivationAdmission =>

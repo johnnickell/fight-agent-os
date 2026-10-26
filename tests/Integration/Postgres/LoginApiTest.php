@@ -121,7 +121,14 @@ final class LoginApiTest extends TestCase
                     (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_sessions')];
             }
         );
-        $response = $this->request(['remember' => $remember]);
+        $header = 'Mozilla/5.0 (Windows NT 10.0) Chrome/130.0 Safari/537.36 private-ua-marker';
+        $response = $this->request(['remember' => $remember], ['User-Agent' => $header]);
+        $metadata = $this->connection->fetchAssociative('SELECT * FROM session_presentation');
+        self::assertIsArray($metadata);
+        self::assertSame('Chrome', $metadata['browser_family']);
+        self::assertSame('desktop', $metadata['device_class']);
+        self::assertSame(['session_id', 'browser_family', 'device_class', 'expires_at'], array_keys($metadata));
+        self::assertStringNotContainsString($header, serialize($metadata).serialize($this->logs->getRecords()));
         $data = $this->assertResponse($response, 200)['data'];
         self::assertSame([[false, 1]], $events);
         self::assertSame(['access_token', 'issued_at', 'expires_at'], array_keys($data));
@@ -585,6 +592,26 @@ SQL
     {
         yield 'competing logins' => [false];
         yield 'disable before login commit' => [true];
+    }
+
+    /**
+     * Preserves a committed usable login when optional presentation persistence fails
+     */
+    public function testMetadataCaptureFailure(): void
+    {
+        $this->connection->executeStatement(
+            'ALTER TABLE session_presentation ADD CONSTRAINT metadata_abort CHECK (FALSE) NOT VALID'
+        );
+        try {
+            $this->assertResponse($this->request([], ['User-Agent' => 'private-ua-marker']), 200);
+            self::assertSame(1, (int) $this->connection->fetchOne(
+                'SELECT count(*) FROM refresh_sessions WHERE NOT revoked'
+            ));
+            self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM session_presentation'));
+            self::assertStringNotContainsString('private-ua-marker', serialize($this->logs->getRecords()));
+        } finally {
+            $this->connection->executeStatement('ALTER TABLE session_presentation DROP CONSTRAINT metadata_abort');
+        }
     }
 
     /**

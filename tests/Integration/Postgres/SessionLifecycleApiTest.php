@@ -8,6 +8,8 @@ use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
 use App\Adapter\Http\Api\V1\Auth\CsrfCookie;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Security\HmacCsrfProofs;
+use App\Application\Sessions\DeviceDescriptor;
+use App\Application\Sessions\SessionPresentation;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -15,6 +17,7 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\Event\CurrentSessionLoggedOut;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\User\Event\RedactedCommandFailed;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
@@ -123,6 +126,13 @@ final class SessionLifecycleApiTest extends TestCase
         $before = $this->connection->fetchAssociative('SELECT * FROM refresh_sessions');
         self::assertIsArray($before);
         $absolute = new DateTimeImmutable($before['absolute_expires_at']);
+        $this->container->get(SessionPresentation::class)->capture(
+            RefreshSessionId::fromString($before['id']),
+            new DeviceDescriptor(),
+            $absolute
+        );
+        $metadata = $this->connection->fetchAllAssociative('SELECT * FROM session_presentation');
+        self::assertCount(1, $metadata);
         $steps = $remember ? 13 : 2;
         for ($i = 0; $i < $steps; ++$i) {
             $next = $this->clock->now()->modify($remember ? '+29 days' : '+23 hours 30 minutes');
@@ -174,6 +184,11 @@ final class SessionLifecycleApiTest extends TestCase
             (int) $this->connection->fetchOne('SELECT count(*) FROM refresh_session_used_credentials')
         );
         self::assertNotSame($before['credential_digest'], $after['credential_digest']);
+        self::assertSame($metadata, $this->connection->fetchAllAssociative('SELECT * FROM session_presentation'));
+        self::assertSame(
+            $this->clock->now()->format('U.u'),
+            (new DateTimeImmutable($after['last_activity_at']))->format('U.u')
+        );
     }
 
     /**

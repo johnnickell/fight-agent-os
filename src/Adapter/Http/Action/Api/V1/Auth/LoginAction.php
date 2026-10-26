@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Auth;
 
+use App\Adapter\Http\Api\V1\Auth\CaptureSessionPresentation;
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\PublicAccess;
 use App\Adapter\Http\Responder\Api\V1\Auth\SessionResponder;
@@ -24,8 +25,11 @@ final readonly class LoginAction
     /**
      * Constructs LoginAction
      */
-    public function __construct(private AuthenticationService $authentication, private SessionResponder $responder)
-    {
+    public function __construct(
+        private AuthenticationService $authentication,
+        private SessionResponder $responder,
+        private CaptureSessionPresentation $presentation
+    ) {
     }
 
     /**
@@ -96,10 +100,9 @@ final readonly class LoginAction
         /** @var array{email: string, password: string, remember: bool} $input */
         $input = $request->getAttribute(JsonBody::class);
 
-        return $this->responder->respond($this->authentication->login(
-            $input['email'],
-            $input['password'],
-            $input['remember']
-        ));
+        $tokens = $this->authentication->login($input['email'], $input['password'], $input['remember']);
+        $this->presentation->capture($tokens, $request);
+
+        return $this->responder->respond($tokens);
     }
 }

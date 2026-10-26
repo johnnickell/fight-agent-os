@@ -13,6 +13,7 @@ export type ApplicationRoute = RegisteredRoute &
       | 'activation'
       | 'dashboard'
       | 'password-change'
+      | 'sessions'
       | 'landing'
       | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
@@ -92,7 +93,7 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     group: 'Security',
     intendedRoute: {},
     availability:
-      'Change your password below. Active-session listing and individual revocation are not available yet.'
+      'Change your password or review your active sessions below. Individual revocation is not available yet.'
   },
   {
     pathname: '/app/account/password',
@@ -109,11 +110,11 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     icon: 'sessions',
     access: 'protected',
     requirements: permission('READ_OWN_SESSIONS'),
-    destination: 'landing',
+    destination: 'sessions',
     group: 'Security',
     intendedRoute: {},
     availability:
-      'Session listing and revocation are not available yet. Sign out ends only your current session.'
+      'Review your usable sign-ins and current session. Individual revocation is not available yet.'
   },
   {
     pathname: '/app/admin/users',

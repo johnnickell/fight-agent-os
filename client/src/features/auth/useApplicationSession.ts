@@ -11,6 +11,7 @@ import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
+import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { applicationRoutes } from '@/routes/applicationRoutes';
@@ -69,6 +70,14 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
       window.location.origin,
       safeDiagnostics(runtime)
     ),
+    sessions: new OwnedSessionsService(api, {
+      accessRejected: () => {
+        void coordinator.restore();
+      },
+      authorityRejected: () => {
+        void coordinator.authorityChanged();
+      }
+    }),
     schemas: new PublicSchemaService(api)
   };
 }
