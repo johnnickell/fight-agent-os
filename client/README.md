@@ -79,7 +79,10 @@ catalog captures/resource checks. Each stage fails fast. Only explicit setup/mai
 external networking; checks do not install, update or audit. `npm run check` is intentionally absent: the
 focused repository wrapper owns orchestration across the two pinned container environments; PHP owns the
 canonical gate. Both use Node 24.22.1
-and npm 11.19.1. There is no percentage-only frontend gate or seeded-failure/product test of these tools.
+and npm 11.19.1. Static captures run at most two isolated browser contexts at a time (the two widths
+of one story), retaining every story/width, axe scan, screenshot and resource check. Each context closes
+before another story starts; failure stops scheduling and signals close the owned browser before exit.
+There is no percentage-only frontend gate or seeded-failure/product test of these tools.
 
 Production check output is `var/client/check/production/`, rebuilt clean without pruning live `var/client/build/`.
 `production-metafile.json` and `production-artifacts.json` record the actual ESBuild/Sass input graph and
@@ -113,7 +116,9 @@ executable denominator. Tests, stories, configuration, scripts, SCSS and depende
 TypeScript behavior measure, not secretly counted as covered. Reports (`text`, JSON summary, HTML) are under
 `.runs/build/reports/client/coverage/`; read uncovered branches alongside their contracts. Unit/component coverage is not
 browser-story, backend or end-to-end coverage. Narrow checks remain available for iteration; the full repository
-`./bin/build` remains mandatory and already includes this sequence. Screenshot evidence is not visual approval or universal accessibility certification.
+`./bin/build` remains mandatory for final implementation acceptance and already includes this sequence;
+[qualify receipt reuse](../docs/engineering/EXECUTION.md#gate-evidence-reuse) rather than repeating it for later
+roles or administrative metadata. Screenshot evidence is not visual approval or universal accessibility certification.
 
 ## Frontend conventions
 
@@ -138,7 +143,8 @@ browser-story, backend or end-to-end coverage. Narrow checks remain available fo
   checks and zero-warning lint remain enabled. JavaScript tooling retains ordinary semantic/import lint.
 - Prettier owns formatting: 100 columns, single quotes, semicolons, two spaces, no tabs or trailing commas.
   `./bin/client lint` and `format-check` do not fix or install anything; use `lint-fix` and `format` explicitly,
-  review their diff, then run `check`. Dependency changes use explicit `lock`/`setup`, never acceptance checks.
+  review their diff and run affected focused checks before the final complete gate. Dependency changes use
+  explicit `lock`/`setup`, never acceptance checks.
 
 ### Standard controls
 

@@ -51,7 +51,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 

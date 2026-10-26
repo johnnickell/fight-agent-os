@@ -201,7 +201,10 @@ Remove it or explain visual N/A for non-visual work, while retaining the behavio
 request, output or state evidence in the PR verification summary. Publish only sanitized artifacts within the approved audience; an
 existing PR or QA invocation alone does not authorize posting comments or uploading private captures.
 
-Mechanical documentation/Board reconciliation can reuse evidence when effective behavior/runtime and dependencies
+Apply [gate evidence reuse](EXECUTION.md#gate-evidence-reuse) to the complete suite; QA adds independent
+adversarial probes, not an automatic full build. Record fresh scenario execution separately from reused gate
+results and preserve the actual tested subject. Mechanical documentation/Board reconciliation can reuse evidence
+when effective behavior/runtime and dependencies
 are unchanged and the provenance bridge proves this. Material changes rerun affected scenarios; explain why
 unaffected evidence remains applicable. Broad reruns need interaction risk or uncertainty, not just a changed OID.
 Retain reports/captures outside disposable worktrees. Stop only owned temporary processes and remove only proven

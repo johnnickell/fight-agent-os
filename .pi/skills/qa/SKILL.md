@@ -46,7 +46,9 @@ release QA ends with the actual version's release resume command.
 3. **Exercise and capture.** Use the real implementation through the selected interface, including actual API
    requests, browser interaction or a PTY for interactive terminals. If needed, use bounded [disposable probes](../../../docs/engineering/QA.md#disposable-probes)
    in the ignored run directory; retain reproducible scripts and results, without patching source/tests.
-   Record steps, inputs, expected/observed results and evidence per scenario. For instruction scenarios, label
+   [Qualify gate evidence reuse](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse) rather than rerunning
+   the complete suite; independent adversarial scenarios remain required. Record fresh versus reused checks,
+   steps, inputs, expected/observed results and evidence per scenario. For instruction scenarios, label
    walkthroughs and their limits rather than claiming live execution. Follow [visual evidence guidance](../../../docs/engineering/QA.md#visual-evidence)
    for readable, comparable baseline/result captures of affected states; inspect every final image before citing it.
    Recheck the owned terminal session before each capture and inspect the saved PNG. Diagnose a missing bridge,

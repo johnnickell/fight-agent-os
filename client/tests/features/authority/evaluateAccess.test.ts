@@ -53,6 +53,43 @@ describe('shared exact permission evaluation', () => {
   );
 
   it.each([
+    { roles: [] },
+    { roles: ['ROLE_USER'] },
+    { roles: ['ROLE_SUPER_ADMIN'] },
+    { roles: ['ROLE_VIEW_DASHBOARD', 'ROLE_ADMIN'] }
+  ])('keeps independent Dashboard destination permissions with role labels $roles', ({ roles }) => {
+    const names = [
+      'VIEW_DASHBOARD',
+      'READ_USERS',
+      'INVITE_USERS',
+      'MANAGE_USER_INVITATIONS',
+      'ASSIGN_SUPER_ADMIN',
+      'READ_OWN_SESSIONS'
+    ];
+    for (let mask = 0; mask < 64; mask++) {
+      const state: AuthorityState = {
+        status: 'authenticated',
+        principal: {
+          ...principal,
+          roles,
+          permissions: names.filter((_, bit) => mask & (1 << bit))
+        }
+      };
+      for (const [bit, name] of names.entries()) {
+        expect(evaluateAccess(state, [{ kind: 'permissions', all: [name] }])).toBe(
+          mask & (1 << bit) ? 'allowed' : 'forbidden'
+        );
+      }
+      expect(
+        evaluateAccess(state, [
+          { kind: 'permissions', all: ['INVITE_USERS', 'ASSIGN_SUPER_ADMIN'] }
+        ])
+      ).toBe((mask & 20) === 20 ? 'allowed' : 'forbidden');
+      expect(evaluateAccess(state, [{ kind: 'authenticated' }])).toBe('allowed');
+    }
+  });
+
+  it.each([
     undefined,
     null,
     [],

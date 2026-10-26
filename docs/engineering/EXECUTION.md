@@ -51,11 +51,46 @@ own repaired behavior independently passed. Mechanical changes may reuse evidenc
 
 ## Verification and evidence
 
-Use focused checks while iterating and run `./bin/build` as the complete local gate. Hosted CI is optional unless
-explicitly required by the target's accepted repository/TASK policy; follow the [verification policy](REVIEW.md#local-gate-and-optional-hosted-checks).
+Use focused owning checks while iterating. Run the target's complete local gate (`./bin/build` here) once on
+the finished, frozen implementation, then apply [gate evidence reuse](#gate-evidence-reuse) across later roles
+and administrative updates. Hosted CI is optional unless explicitly required by the target's accepted
+repository/TASK policy; follow the [verification policy](REVIEW.md#local-gate-and-optional-hosted-checks).
 Do not create a publication prerequisite from a workflow file or repository visibility alone. Also inspect the final diff and status and run `git diff --check`. Refresh generated planning views before their read-only checks when the TASK authorizes planning edits.
 
 Evidence names the approved scope, changed files, commands, fresh exit results, and test counts. Report all warnings, notices, deprecations, skips, unavailable checks, failures, and uncertainty. Historical or inherited receipts remain labeled as context. Keep secrets and credentials out of commands, logs, fixtures, evidence, and commits.
+
+### Gate evidence reuse
+
+Before running a complete gate, inspect the existing receipt and the actual intervening changes. Work, Review,
+QA, Build and Land reuse a qualifying pass rather than rerunning the suite for a new role, changed commit OID,
+commit operation, PR locator or completion metadata. Reuse is evidence assessment, not a cache or acceptance verdict.
+
+- Bind the receipt to its repository, exact tested head/tree or before/after source snapshots, index, unignored
+  file contents and executable modes. Verify command, complete phase exits, source stability, owning reports and
+  retained artifact digests. Missing, failed, interrupted or contradictory evidence is not a pass; never fall
+  back to an older green report after a relevant failure.
+- Compare actual source and inputs, not Git status alone: implementation, tests, executable instructions,
+  requirements, tool/runtime configuration, manifests/locks, installed dependency receipts, image/tool versions,
+  environment identity (without disclosing secrets), database isolation and required modes. Check for live
+  writers, replaced installs, runtime drift and interacting base changes. Unknown identity holds reuse until
+  resolved. Keep a concise provenance bridge and evidence locators in the existing ignored handoff/report.
+- Substantive changes invalidate affected evidence. Run focused owning checks during repair, then one complete
+  final gate for the changed implementation. An advancing base needs its actual interaction assessment; an
+  unchanged patch is not proof of unchanged inputs. Independent review and affected behavioral QA remain
+  required for substantive changes; unaffected scenario evidence may remain applicable with provenance.
+- Administrative-only changes are truthful completion/review/PR/status metadata and their generated planning
+  views, not requirements, executable instructions, code, dependencies or tool configuration. Inspect the exact
+  diff and provenance, run planning validation and `git diff --check`, and perform applicable targeted live
+  delivery checks. These changes alone do not trigger a full gate or new independent acceptance. Keep the
+  original gate subject accurate, including when that subject was a dirty precommit snapshot.
+- Required hosted or literal-final-head acceptance/delivery contracts still bind. Reuse does not waive them or
+  turn an implementation-candidate run into final-head proof; obtain an authorized requirement amendment when
+  needed under the [closeout contract](LANDING.md#acceptance-candidate-and-administrative-closeout).
+
+Each role records what it checked freshly, what it reused, why it remains applicable and what is unverified.
+Review owns its independent verdict; QA must still exercise the changed behavior with appropriate adversarial
+probes. Neither role repeats the complete suite merely to establish independence. A receipt with unknown inputs
+requires input recovery or a fresh gate after setup, not an inferred pass or speculative implementation edits.
 
 ## Handoff
 

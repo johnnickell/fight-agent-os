@@ -104,7 +104,7 @@ The accepted report anchors **review provenance**, not a requirement that `devel
 
 1. Record reviewed base/head and current base/head. Require a clean target and a usable canonical `accept` report for the original snapshot. Check remote publication first: a local unpublished branch may be rebased; a published branch must be updated without rewriting published history (for example, merge `develop`) or left for the hosting platform. Explain the choice if the user asked specifically for a rebase that would need a force push.
 2. Reconcile conflicts in generated planning views by regenerating them from authoritative records. For overlapping configuration or other files, inspect both sides and the final effective result; do not silently choose one side. Preserve both TASKs' behavior. Use `git range-diff` where applicable, compare the old reviewed change with the new-base effective diff, and inspect changes on the new base that interact with the TASK. An identical patch alone is not proof against changed dependencies.
-3. Record a concise provenance bridge: old and new base/head OIDs, conflict resolutions, effective implementation differences, dependency interactions, and fresh focused and full-gate results. If only mechanical integration (including generated views and independent registrations) changed and the reviewed behavior remains intact, the independent `accept` remains applicable. A semantic implementation change, unproven interaction, unexpected scope change, or failing check requires a new independent review of the new target; preserve the branch and stop publication. Never rewrite the original review to pretend it reviewed the new OIDs.
+3. Record a concise provenance bridge: old and new base/head OIDs, conflict resolutions, effective implementation differences, dependency interactions, and fresh focused results and the full-gate receipt assessment under [gate evidence reuse](EXECUTION.md#gate-evidence-reuse). If only mechanical integration (including generated views and independent registrations) changed and the reviewed behavior remains intact, the independent `accept` remains applicable. A semantic implementation change, unproven interaction, unexpected scope change, or failing check requires a new independent review of the new target; preserve the branch and stop publication. Never rewrite the original review to pretend it reviewed the new OIDs.
 
 Example: two independent TASKs update the Board, an index or completion notes. Preserve both source records,
 regenerate derived views, inspect the effective diff and run required checks. Existing acceptance remains usable;
@@ -280,7 +280,7 @@ claim's correction; it never permits fabricating acceptance or rewriting a repor
    the existing tree/correction. Unchanged, already-consistent sources need only a read-only receipt, even on
    repeated resume: no empty commit, acceptance toggle, report rewrite, duplicate PR or publication retry.
    For an actual factual correction, inspect its complete diff and run focused checks, planning refresh/read-only
-   validation, `git diff --check` and the canonical full gate under [Verify and publish](#verify-and-publish).
+   validation, `git diff --check` and qualified gate-receipt reuse under [Verify and publish](#verify-and-publish).
    Preserve original accepted A and any closeout B/bridge; a factual correction C is not retroactively reviewed
    A and supplies no new independent acceptance. Apply the administrative-only assessment and all applicable
    candidate/publication checks; a substantive change needs its own independent review and applicable QA.
@@ -289,7 +289,8 @@ claim's correction; it never permits fabricating acceptance or rewriting a repor
    Stage only owned files, reuse the proven correction branch, commit only necessary changes, and non-force
    publish/create or update **the corrective PR**, never the ended original PR. Verify corrective PR repository,
    open state, base/head, actual remote OID and any required final-head proof before successful delivery/cleanup.
-   Missing/failed required proof retains resources and a precise hold; do not waive gates for Markdown.
+   Missing/failed required proof retains resources and a precise hold. Administrative factual metadata can reuse
+   qualified evidence; executable instructions and requirements remain substantive even in Markdown.
 
    Freeze truthful tracked wording before the last necessary commit: observed original merge or non-delivery,
    correction publication/checks pending at that checkpoint, and an actual durable result locator. Put subsequent
@@ -320,7 +321,10 @@ under [automatic parent completion](../../planning/CONVENTIONS.md#automatic-pare
 `./bin/planning-check --write` and include the parent statuses and generated views in the same commit. No separate
 parent review, approval or closeout handoff is required.
 
-Run focused checks, `./bin/planning-check`, `git diff --check`, and `./bin/build` on the reconciled implementation before initial publication. Stage only owned planning or reconciliation files; inspect the staged diff and commit them if needed. Push the feature branch without force; create or update its PR against `develop`. For a TASK PR, set and verify the title `TASK-NNNNN — <TASK title>` (the body template cannot set a title), and use the editable [PR body template](../../.github/pull_request_template.md) for scope, behavior, verification, warnings, evidence, and outstanding review/merge status. Remove placeholder text and avoid implying a check passed if it was not run. Preserve an existing PR's identity when updating it; do not rename an unrelated or historical branch merely to match the new convention. Record the actual PR URL in the TASK and refresh generated views. Run focused checks, planning validation, diff check and the full gate on that final tree before committing/pushing the PR metadata. If a result changes, correct the evidence and rerun the affected checks. Avoid repeating gates for an unchanged tree merely to accumulate receipts.
+Apply [gate evidence reuse](EXECUTION.md#gate-evidence-reuse) before initial publication: inspect actual source,
+runtime inputs and provenance, reuse the qualifying complete receipt and run focused checks for affected contracts.
+A substantive implementation/input change needs one complete final gate, not another run for each publication step.
+Run `./bin/planning-check` and `git diff --check` for owned metadata changes. Stage only owned planning or reconciliation files; inspect the staged diff and commit them if needed. Push the feature branch without force; create or update its PR against `develop`. For a TASK PR, set and verify the title `TASK-NNNNN — <TASK title>` (the body template cannot set a title), and use the editable [PR body template](../../.github/pull_request_template.md) for scope, behavior, verification, warnings, evidence, and outstanding review/merge status. Remove placeholder text and avoid implying a check passed if it was not run. Preserve an existing PR's identity when updating it; do not rename an unrelated or historical branch merely to match the new convention. Record the actual PR URL in the TASK and refresh generated views. Inspect the exact administrative diff, validate planning, whitespace and applicable live delivery provenance before committing/pushing PR metadata; reuse the qualified implementation receipt without relabeling it final-head execution. If a result changes, correct the evidence and rerun the affected checks. Avoid repeating gates for an unchanged tree merely to accumulate receipts.
 
 Land owns final delivery verification after independent acceptance. Verify the A → B diff contains only
 permitted administrative closeout and preserve any mechanical-reconciliation bridge. For required final-head

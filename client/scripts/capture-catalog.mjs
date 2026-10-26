@@ -50,23 +50,39 @@ const receipt = {
   locale: 'en-US',
   timezone: 'UTC',
   motion: 'reduce (captures)',
+  concurrency: 2,
+  expectedCaptures: 0,
   stories: [],
   externalRequests: [],
   pageErrors: [],
   systemModes: []
 };
+// Closing Playwright's owned browser interrupts in-flight operations and reaps its children.
+// Keep the normal finally path so an interrupted run retains evidence, never a partial pass.
+const interrupt = (signal) => {
+  receipt.interrupted = signal;
+  process.exitCode = signal === 'SIGINT' ? 130 : 143;
+  void browser.close().catch(() => {});
+};
+const onInterrupt = () => interrupt('SIGINT');
+const onTerminate = () => interrupt('SIGTERM');
+process.once('SIGINT', onInterrupt);
+process.once('SIGTERM', onTerminate);
+
 try {
   const index = JSON.parse(await readFile(`${root}/index.json`, 'utf8'));
-  for (const story of Object.values(index.entries).filter((entry) => entry.type === 'story')) {
-    for (const width of [320, 1280]) {
-      const context = await browser.newContext({
-        viewport: { width, height: 900 },
-        deviceScaleFactor: 1,
-        locale: 'en-US',
-        timezoneId: 'UTC',
-        reducedMotion: 'reduce',
-        colorScheme: 'light'
-      });
+  const stories = Object.values(index.entries).filter((entry) => entry.type === 'story');
+  receipt.expectedCaptures = stories.length * 2;
+  const capture = async (story, width) => {
+    const context = await browser.newContext({
+      viewport: { width, height: 900 },
+      deviceScaleFactor: 1,
+      locale: 'en-US',
+      timezoneId: 'UTC',
+      reducedMotion: 'reduce',
+      colorScheme: 'light'
+    });
+    try {
       await context.route('**/*', (route) => {
         if (new URL(route.request().url()).origin !== origin) {
           receipt.externalRequests.push(route.request().url());
@@ -88,7 +104,7 @@ try {
       if (story.id.endsWith('--keyboard-focus'))
         await page.waitForFunction(() => document.activeElement?.tagName === 'BUTTON');
       await page.evaluate(() => document.fonts.ready);
-      if (!receipt.fonts) {
+      if (width === 320 && !receipt.fonts) {
         const session = await context.newCDPSession(page);
         await session.send('DOM.enable');
         await session.send('CSS.enable');
@@ -141,14 +157,31 @@ try {
         fullPage: true,
         animations: 'disabled'
       });
-      receipt.stories.push({
-        id: story.id,
-        width,
-        screenshot,
-        layout,
-        accessibility
-      });
+      return { id: story.id, width, screenshot, layout, accessibility };
+    } finally {
       await context.close();
+    }
+  };
+  for (const story of stories) {
+    if (receipt.interrupted) throw new Error(`Catalog interrupted: ${receipt.interrupted}`);
+    // Bound overlap to one story's two widths; never share page/storage or queue the entire catalog.
+    // Wait for both cleanups even on failure, preserving successful partial evidence in stable order.
+    const results = await Promise.allSettled([capture(story, 320), capture(story, 1280)]);
+    for (const result of results) {
+      if (result.status === 'fulfilled') receipt.stories.push(result.value);
+    }
+    const failure = results.find((result) => result.status === 'rejected');
+    if (failure) throw failure.reason;
+    if (
+      results.some(
+        (result) =>
+          result.value.accessibility.violations.length ||
+          result.value.layout.scrollWidth > result.value.layout.viewportWidth
+      ) ||
+      receipt.externalRequests.length ||
+      receipt.pageErrors.length
+    ) {
+      throw new Error(`Catalog checks failed for ${story.id}; see retained receipt`);
     }
   }
   // Observe the catalog-only system preview across live OS changes; never write preference storage.
@@ -243,6 +276,8 @@ try {
   await browser.close();
   await new Promise((done) => server.close(done));
   await writeFile(`${output}/receipt.json`, `${JSON.stringify(receipt, null, 2)}\n`);
+  process.removeListener('SIGINT', onInterrupt);
+  process.removeListener('SIGTERM', onTerminate);
 }
 const violations = receipt.stories.reduce(
   (total, story) => total + story.accessibility.violations.length,
@@ -265,5 +300,12 @@ console.log(
     2
   )
 );
-if (violations || overflow.length || receipt.externalRequests.length || receipt.pageErrors.length)
-  process.exitCode = 1;
+if (
+  receipt.interrupted ||
+  receipt.stories.length !== receipt.expectedCaptures ||
+  violations ||
+  overflow.length ||
+  receipt.externalRequests.length ||
+  receipt.pageErrors.length
+)
+  process.exitCode = process.exitCode || 1;

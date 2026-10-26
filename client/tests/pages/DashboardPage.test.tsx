@@ -23,13 +23,20 @@ const permissionNames = [
   'ASSIGN_SUPER_ADMIN',
   'READ_OWN_SESSIONS'
 ];
-const matrix = Array.from({ length: 64 }, (_, mask) =>
-  [[], ['ROLE_USER'], ['ROLE_SUPER_ADMIN'], ['ROLE_VIEW_DASHBOARD', 'ROLE_ADMIN']].map((roles) => ({
+// Render every permission combination once. The shared evaluator owns the full
+// role/permission cross-product; these extra denied renders catch page-level elevation.
+const matrix = [
+  ...Array.from({ length: 64 }, (_, mask) => ({
     mask,
-    roles,
+    roles: [] as string[],
     permissions: permissionNames.filter((_, bit) => mask & (1 << bit))
+  })),
+  ...[['ROLE_USER'], ['ROLE_SUPER_ADMIN'], ['ROLE_VIEW_DASHBOARD', 'ROLE_ADMIN']].map((roles) => ({
+    mask: 0,
+    roles,
+    permissions: [] as string[]
   }))
-).flat();
+];
 
 describe('honest Dashboard permission and destination contracts', () => {
   it.each(matrix)('mask $mask with roles $roles', async ({ mask, roles, permissions }) => {

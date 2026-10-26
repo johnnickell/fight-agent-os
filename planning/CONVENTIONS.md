@@ -383,6 +383,9 @@ or rewriting them to comply retroactively. TASK PR titles use `TASK-NNNNN — <T
 isolated worktree with the user. Ignored `.runs/worktrees/`, `.runs/notes/`, `.runs/handoffs/`, and
 `.runs/archive/` hold local execution material; use the [ignored scratch layout](../docs/engineering/SCRATCH.md) for new runs and retention exceptions. Durable requirements and outcomes belong in planning records.
 
-Before a commit or PR, record verified acceptance and outstanding review honestly, update the PR link if known,
-refresh views, and run the full canonical `./bin/build`. Use focused checks during iteration. Surface warnings,
-notices, and deprecations. Release certification, deployment, and runtime enrollment remain separate operations.
+Before a commit or PR, record verified acceptance and outstanding review honestly, update the PR link if known
+and refresh views. Use focused owning checks during iteration and one complete final `./bin/build` for changed
+implementation. Apply [gate evidence reuse](../docs/engineering/EXECUTION.md#gate-evidence-reuse) across roles,
+commits and administrative-only planning/PR updates; validate their exact diff, planning and applicable live
+provenance rather than repeating the full suite. Required hosted/literal-final-head contracts still bind.
+Surface warnings, notices and deprecations. Release certification, deployment, and runtime enrollment remain separate operations.

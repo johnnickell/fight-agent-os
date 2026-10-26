@@ -247,7 +247,10 @@ this skill does not guarantee unattended survival after terminal/host exit.
 
 Read canonical `<base>/.runs/reviews/<TASK-ID>/review.md` and `<base>/.runs/qa/<TASK-ID>/qa.md`, including subject,
 independence, current verdict/disposition, evidence and limitations. Never prefer an older PASS over a newer
-failure. Retain per-attempt copies/digests. Compare actual Git/source/runtime identity before advancement;
+failure. Retain per-attempt copies/digests. Compare actual Git/source/runtime identity before advancement and apply
+[gate evidence reuse](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse): one complete final gate for
+the finished implementation, focused iteration and independent role probes, no suite repeat merely for a new
+role or administrative metadata. Preserve the exact receipt subject and fresh-versus-reused distinction;
 material repairs, changed requirements or stale subjects require fresh applicable evidence. Use the existing
 [landing provenance bridge](../../../docs/engineering/LANDING.md) for proven mechanical changes. Only explicitly
 required hosted proof can use land's authorized draft path; a draft awaiting proof is not final delivery.
