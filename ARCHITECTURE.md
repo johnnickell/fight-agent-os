@@ -23,7 +23,7 @@ system or an Internet homepage. It starts with the Slim composition from `johnni
   `ListActiveSessions`, maps an explicit API View and joins an optional coarse presentation sidecar captured
   once after activation/login (TASK-00057, independent Review/QA accepted; [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) merged into `develop` at `0629697bd1a51b88720b1881aa5024928981f5ce`; read-only baseline);
   TASK-00058 adds principal-only other-owned `RevokeSession` dispatch with a deny-all administrative callback,
-  explicit accessible confirmation and bounded volatile list/target invalidation (independent Review/QA pending);
+  explicit accessible confirmation and bounded volatile list/target invalidation (independent Review/QA accepted; [PR #173](https://github.com/johnnickell/fight-agent-os/pull/173) merged into `develop` at `0ec84eb67043e40bb84890d45ed1d2887a4a5573`);
   canonical login at `/app/login` reuses package authentication, browser guards,
   schema/Formik and memory/cookie seams, also pending independent acceptance; rotating cookie-only refresh and current-session logout now have HTTP/client services and login-success UI pending independent Review/QA; TASK-00048 adds bounded memory-only multi-tab continuity/restoration at `/app/login`, pending independent Review/QA; TASK-00049 connects one strict typed client `/me` service and the existing cache to login/restoration, pending independent Review/QA; the protected frame now uses that same sole graph, with truthful future landing seams and explicit unavailable-product copy
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)
