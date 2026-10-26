@@ -64,7 +64,16 @@ Model-invoked commands do not become trusted operator workflow selections. Nativ
 The companion reuses the existing passive native-session custody reader; keep launching the ordinary authorized
 provider monitor, without per-child socket flags. It never launches, cancels or retries a child, changes the
 executor/tool/shell settings, reads transcripts, or sends progress to Pi, provider context or Herdr agent metadata.
-Missing association leaves execution unchanged and visibly unavailable. The trusted-local-process limitation
+Missing association leaves execution unchanged and visibly unavailable. The provider's ordinary monitor entry
+now delegates to `src/observation/run-stage.py` inside the selected trusted Harness package. Its observer and the
+custodian qualify each other's fixed package-owned paths, not source-provider or target-checkout siblings.
+When native Pi uses an installed copy, pass that same resolved package to the existing provider command with
+`--harness-package /absolute/trusted/package`; the selection also owns screening preflight. No target skill copy,
+manual socket or per-child registration is needed. The package must include the monitor; an older copy requires
+an explicit owned update, never an automatic global mutation. Different package identities remain unavailable.
+The three-second best-effort association attempt emits at most one safe reason-only diagnostic on failure;
+no raw process command, host path or daemon error is disclosed. Never relaunch a child for observation.
+The trusted-local-process limitation
 and existing custody bounds under [automatic following](#automatic-session-following-and-worktree-test-bindings-task-00502-candidate)
 apply unchanged; a signature is not independent native-origin attestation or OS isolation.
 
@@ -146,9 +155,20 @@ the log companion; `s` opens selection, arrows and Enter choose, Esc cancels wit
 shows one active source with a fixed ordinal and choose/cancel controls; PageUp/PageDown inspect its wrapped
 label and full checkout path. Arrows wrap through every source and reset the detail viewport. Resize keeps the
 active source; below 40 columns × 10 rows, a resize prompt disables Enter until the choice is inspectable.
-`r` retries unavailable discovery or reconnects the exact pinned source. Docker missing/denied or no matching source explains
-what to check without requiring technical identifiers. A stale/replaced source never silently becomes a new
-reader: use `s` to deliberately inspect/select a fresh generation. No selection changes execution authority.
+With no eligible source, discovery continues automatically while native/child context remains verified. It runs
+at most once every **three seconds after the previous discovery settles**, one pass in flight. A healthy late
+source normally appears on the next pass; allow **60 seconds** including a stale in-flight pass, bounded fresh
+discovery, verification and reader admission (event-loop scheduling is not a real-time guarantee). Delayed Docker access recovers the
+same way. `r` requests an immediate fresh check. Docker missing/denied or no matching source explains what to
+check without requiring technical identifiers.
+
+For an already selected source, each pass revalidates its checkout, daemon socket, project/service, mount and
+container lifecycle. Stop or lost verification clears live/paused output and reaps the reader. Restart/replacement
+may automatically follow **only that same verified checkout/daemon/project/service**, with a fresh container
+witness and pre-read verification; a changed checkout/daemon or different service requires `s` and inspected
+selection. Other eligible sources never replace a missing selected service. Replicas remain unavailable.
+Explicit close or selection cancellation suspends automatic admission for that checkout until `c`, `r` or `s`;
+pause remains paused across runtime replacement, with stale frozen records cleared. No selection changes execution authority.
 
 Source metadata remains in the human-only companion's memory, not prompts, transcripts or saved preferences.
 No log content is returned to native Pi, the
@@ -176,10 +196,12 @@ with `/fight-workspace open` in the intended native session, not by trusting an 
 
 The [fixed Docker reader's limits](#human-only-shared-docker-logs-task-00449-candidate) remain unchanged: 100-line
 tail, 300 records / 32 Ki units plus at most one equal paused snapshot, bounded escaped records, metadata and
-process deadlines, 15-minute lifetime, zero automatic retries, TERM/KILL and finite reaping. Exact canonical
-checkout labels, local Unix endpoint, service and full running-container identity are checked before reading.
-In this companion, container/endpoint/lifecycle replacement requires fresh inspected human selection; retry
-never silently authorizes a replacement. The retained legacy shared reader's behavior is unchanged. Healthy
+process deadlines, 15-minute lifetime, TERM/KILL and finite reaping. The fixed reader itself never retries;
+this companion alone performs the bounded fresh discovery/admission above. The 15-minute lifetime still needs
+explicit human recovery. Exact canonical checkout labels, local Unix endpoint, service and full running-container
+identity are checked before reading. Endpoint/checkout authority replacement requires fresh inspected human
+selection; container lifecycle replacement is freshly verified only within the pinned source authority.
+The retained legacy shared reader's behavior is unchanged. Healthy
 repeated open is idempotent and does not re-prompt. A closed reader/companion never stops a container or child.
 No stack provisioning, restart, Compose
 evaluation, database mutation, full logging service or automatic global update is included.
@@ -356,7 +378,7 @@ the option cannot be retrofitted; do not relaunch its child or fall back to tran
 If the monitor lives in a candidate worktree while a different checkout's Harness is already installed,
 inspect `pi list` first. Select that trusted installed package explicitly on the monitor with
 `--harness-package /absolute/installed/harness/pi`. Pi deduplicates the same resolved package path; different
-checkout paths are distinct resources and can conflict. This selects the bootstrap and complete protected
+checkout paths are distinct resources and can conflict. This selects the package-owned monitor, its passive association, bootstrap and complete protected
 package, retaining normal resource discovery and `--fight-screening-required`; it does not disable extensions,
 change settings/trust/enrollment, copy credentials or fall back after failure. Qualify startup/status before
 provider work. An unknown installation or conflict remains a prerequisite, not permission to bypass protections.

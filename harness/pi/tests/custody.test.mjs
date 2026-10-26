@@ -179,7 +179,7 @@ test('monitor admission combines private bootstrap, exact live ancestry, fixed p
   const cwd = realpathSync(mkdtempSync('/tmp/fc-monitor-')); t.after(() => rmSync(cwd, { recursive: true, force: true }));
   const runtime = join(cwd, 'var/terminal/monitors'); privateDirectory(runtime);
   const token = 'a'.repeat(64), pid = 9876, native = { pid: 8765, process: 'actual-native-lifetime', started: Number(process.hrtime.bigint() / 1000000n) - 1000, wallUs: Date.now() * 1000 - 1000000 };
-  const monitor = fileURLToPath(new URL('../../../.pi/skills/build/scripts/run-stage.py', import.meta.url));
+  const monitor = fileURLToPath(new URL('../src/observation/run-stage.py', import.meta.url));
   const identity = { task: 'TASK-00502', role: 'work', provider: 'openai-codex', model: 'gpt-6.1-sol', thinking: 'high', worktree: cwd, attempt: '/display-only/not-read' };
   const witness = { pid, nativePid: native.pid, nativeProcess: native.process, token, worktree: cwd, identity, heartbeat: 1, started: Number(process.hrtime.bigint() / 1000000n), created: Date.now(), process: `monitor-start python3 -u ${monitor} --ordinary-args` };
   const path = join(runtime, `${pid}-${token}.json`), message = { type: 'monitor', pid, token, worktree: cwd };
@@ -199,6 +199,21 @@ test('monitor admission combines private bootstrap, exact live ancestry, fixed p
   assert.throws(() => monitorWitness(message, native, options), /refused/);
   writeFileSync(path, JSON.stringify({ ...witness, created: 1 }));
   assert.throws(() => monitorWitness(message, native, options), /refused/);
+});
+
+test('installed package admits its own fixed monitor without a provider checkout sibling', t => {
+  const cwd = realpathSync(mkdtempSync('/tmp/fc-installed-')); t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const runtime = join(cwd, 'var/terminal/monitors'); privateDirectory(runtime);
+  const token = 'c'.repeat(64), pid = 9876;
+  const native = { pid: 8765, process: 'actual-native-lifetime', started: Number(process.hrtime.bigint() / 1000000n) - 1000, wallUs: Date.now() * 1000 - 1000000 };
+  const monitor = fileURLToPath(new URL('../src/observation/run-stage.py', import.meta.url));
+  const witness = { pid, nativePid: native.pid, nativeProcess: native.process, token, worktree: cwd,
+    identity: { task: 'TASK-00538', role: 'work', provider: 'configured', model: 'configured', thinking: 'high', worktree: cwd, attempt: '/display-only' },
+    heartbeat: 1, started: Number(process.hrtime.bigint() / 1000000n), created: Date.now(), process: `monitor-start python3 -u ${monitor} --ordinary-args` };
+  writeFileSync(join(runtime, `${pid}-${token}.json`), JSON.stringify(witness), { mode: 0o600 });
+  const options = { inspect: value => value === pid ? witness.process : native.process,
+    births: [{ pid, parent: 9000, bornUs: native.wallUs + 50000 }, { pid: 9000, parent: native.pid, bornUs: native.wallUs + 30000 }, { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000 }], registrations: () => `worktree ${cwd}\0` };
+  assert.deepEqual(monitorWitness({ type: 'monitor', pid, token, worktree: cwd }, native, options).identity, witness.identity);
 });
 
 test('session file identity includes native file lifetime, not just its caller-selectable ID', t => {

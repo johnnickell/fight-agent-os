@@ -7,6 +7,7 @@ import secrets
 import socket
 import stat
 import subprocess
+import sys
 import threading
 import time
 
@@ -37,6 +38,7 @@ class AutomaticObservation:
         self.stopped = threading.Event()
         self.lock = threading.Lock()
         self.witness = None
+        self.status = "no-current-native-route"
         threading.Thread(target=self.discover, daemon=True, name="passive-observation").start()
 
     def discover(self):
@@ -86,8 +88,9 @@ class AutomaticObservation:
                                 continue
                             if process_identity(native["pid"], remaining()) != native["process"] or route["primary"] != str(root.resolve()):
                                 continue
-                            expected = str(Path(__file__).resolve().parents[4] / "harness/pi/src/observation/custodian.mjs")
+                            expected = str(Path(__file__).resolve().with_name("custodian.mjs"))
                             if process_identity(route["pid"], remaining()) != route["process"] or not route["process"].endswith(f" {expected} {route['generation']}"):
+                                self.status = "native-package-or-lifetime-mismatch"
                                 continue
                             routes.append((ancestors.index(native["pid"]), route))
                     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
@@ -95,12 +98,14 @@ class AutomaticObservation:
                 if routes:
                     routes.sort(key=lambda item: item[0])
                     if len(routes) > 1 and routes[0][0] == routes[1][0]:
+                        self.status = "ambiguous-native-route"
                         return  # Ambiguous current native context: never guess.
                     route = routes[0][1]
                     break
                 self.stopped.wait(0.1)
             else:
                 return
+            self.status = "monitor-admission-unavailable"
             token = secrets.token_hex(32)
             runtime = worktree / "var/terminal/monitors"
             runtime.mkdir(parents=True, mode=0o700, exist_ok=True)
@@ -138,6 +143,7 @@ class AutomaticObservation:
                 if self.stopped.is_set():
                     return
                 self.channel, channel = channel, None
+                self.status = "connected"
         except Exception:
             pass  # Failure is strictly observation unavailability, never a stage result.
         finally:
@@ -145,6 +151,11 @@ class AutomaticObservation:
                 channel.close()
             if self.channel is None:
                 self.remove_witness()
+                if not self.stopped.is_set():
+                    try:
+                        print(f"Child observation unavailable ({self.status}); stage execution unchanged", file=sys.stderr, flush=True)
+                    except OSError:
+                        pass
 
     def publish(self, text, lifecycle, code=None):
         try:

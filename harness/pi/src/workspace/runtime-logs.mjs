@@ -127,11 +127,11 @@ export class RuntimeLogs {
       accept(child.stdout); accept(child.stderr);
       child.once('error', () => { if (current()) { this.state = 'unavailable'; this.notice = 'Docker reader unavailable; no automatic retry'; this.changed(); } });
       child.once('close', code => { if (current()) { clearTimeout(this.timer); this.state = 'disconnected'; this.notice = `Stream ended (${code ?? 'signal'}); source may be stopped or inaccessible. History/liveness unknown; r explicitly reconnects.`; this.changed(); } });
-      this.timer = setTimeout(() => { if (current()) { void this.stop(); this.state = 'disconnected'; this.notice = '15-minute reader lifetime reached; r reconnects explicitly, with possible gaps/duplicates'; this.changed(); } }, logLimits.lifetime);
+      this.timer = setTimeout(() => { if (current()) { this.expired = true; void this.stop(); this.state = 'disconnected'; this.notice = '15-minute reader lifetime reached; r reconnects explicitly, with possible gaps/duplicates'; this.changed(); } }, logLimits.lifetime);
       this.changed();
     } catch (error) {
       if (current()) {
-        if (this.verifySource) { this.history = []; this.units = 0; this.frozen = null; this.paused = false; }
+        if (this.verifySource) { this.history = []; this.units = 0; this.frozen = this.paused ? [] : null; }
         this.state = 'unavailable'; this.notice = error.message; this.changed();
       }
     }

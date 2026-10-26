@@ -52,7 +52,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00538](00538-TASK.md) | Keep installed workspace child activity and runtime logs portable across repositories | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 

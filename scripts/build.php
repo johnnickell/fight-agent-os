@@ -209,6 +209,8 @@ try {
             '../harness/pi/tests/herdr-workspace.test.mjs',
             '../harness/pi/tests/herdr-activity.test.mjs',
             '../harness/pi/tests/herdr-logs.test.mjs',
+            '../harness/pi/tests/discovered-logs.test.mjs',
+            '../harness/pi/tests/local-log-sources.test.mjs',
             '../harness/pi/tests/jev.test.mjs',
             '../harness/pi/tests/judgments.test.mjs',
             '../harness/pi/tests/file-screening.test.mjs',

@@ -54,6 +54,11 @@ export class HerdrLogs {
           void this.logs.rebind(value.worktree, { force: true }).catch(() => {
             if (!this.closed) this.hold('UNAVAILABLE — source rebind failed; no fallback');
           });
+        } else if (this.discovery) {
+          // Discovery is serialized separately; it must never delay selection expiry/revocation.
+          void this.logs.refresh().catch(() => {
+            if (!this.closed) this.hold('UNAVAILABLE — runtime discovery failed; no fallback');
+          });
         }
         this.changed();
       } catch {
