@@ -13,11 +13,10 @@ verified log companion. `/fight-workspace close` closes only proven-owned
 companions. Repeated open reuses the same healthy panes. The existing Pi process, session/file, cwd, editor,
 Tab completion, themes, dialogs, tools and workflow binding are unchanged. Herdr owns focus, resize and zoom;
 Pi's Tab is not a pane-navigation shortcut here. The child companion supplies the validated context below;
-TASK-00512 composes it with the existing bounded Docker reader. Native replacement A has independent technical
-acceptance and scoped QA PASS; the repository retirement B delta still requires independent Review/affected QA.
-See [the current TASK checkpoint](../../planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint).
-`fight-terminal` now prints a retirement/session-migration notice only: it never opens a conversation or acts as
-fallback. Repository source changes do not update an already-installed copied launcher.
+TASK-00512 composes it with the existing bounded Docker reader. Its native replacement and retirement
+[checkpoint](../../planning/tasks/00512-TASK.md#repository-rpc-retirement-b--2026-10-25-work-checkpoint)
+is historical evidence. This package no longer ships `fight-terminal` or its direct retirement module; there
+is no compatibility alias or RPC fallback. Repository source changes do not update an already-installed copy.
 
 Load the updated trusted package once through your existing Pi installation. A **full process restart** is needed
 when adopting changed extension/module source; `/reload` did not replace cached imported `.mjs` code in the tested
@@ -53,8 +52,8 @@ ownership file and the actual dedicated topology with Herdr. An operator must re
 clearing that file's uncertainty hold; never close a guessed ID or remove state merely to obtain a green retry.
 Changed/replaced companion processes are retained, not killed. Unknown cleanup remains a disclosed limitation.
 
-TASK-00510/00511's accepted layout/child evidence remains historical context. TASK-00512 records the composed
-native replacement acceptance and the separately pending retirement delta. No layout action changes tool
+TASK-00510/00511's accepted layout/child evidence remains historical context. TASK-00512 records the historical
+composed native replacement and retirement checkpoints. No layout action changes tool
 permission, workflow role, provider/model, enrollment or global settings.
 Model-invoked commands do not become trusted operator workflow selections. Native shell is not OS isolation.
 
@@ -212,15 +211,13 @@ If the old client is already unavailable, locate the actual `.jsonl` file in tha
 same: ordinary Pi normally uses its own per-project store. Identify the intended file privately; if uncertain,
 stop rather than resume the newest unrelated file. Pass its absolute path to `--session`; keep it in place.
 Existing JSONL/session IDs, history, enrollment, accounting and workflow records are not launcher assets and
-must not be deleted when removing the npm command. No session is read or changed by the retirement notice.
+must not be deleted when removing the npm command.
 
-**Delivery boundary:** the former package bin and direct `src/workspace/main.mjs` entry now provide only the
-same local migration notice (`--help`/`-h` alone exits 0; all launch arguments exit 1 without interpreting or
-printing them). They do not start Pi/Herdr/Docker, read stdin, create storage or select authority. Reusable
-bounded observers/readers remain; there is no supported replacement RPC conversation command. See
-[explicit installation adoption/removal](README.md#update-remove-and-recover-the-launcher). Independent delta
-Review/affected QA of B remain required before whole-TASK completion/publication. Live installation rollout
-is a separate operator effect, not performed by this repository change.
+**Delivery boundary:** the former `fight-terminal` bin and direct `src/workspace/main.mjs` retirement entry are
+removed entirely. There is no runnable migration stub or replacement RPC conversation command. Reusable bounded
+observers/readers remain for their existing callers. See
+[explicit installation adoption/removal](README.md#update-remove-and-recover-the-launcher). Live installation
+rollout is a separate operator effect, not performed by this repository change.
 
 <a id="legacy-rpc-workspace-retained"></a>
 
