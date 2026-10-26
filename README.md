@@ -29,8 +29,12 @@ Use the [generated current-delivery view](planning/tasks/BOARD.md#current-delive
 [explicit TASK identity](planning/CONVENTIONS.md#current-delivery-handoffs). Ordinary PR links and historical
 acceptance/publication checkpoints in this README are not live delivery authority. The offline view does not
 establish current PR state or readiness to merge. Before evaluating a relevant handoff, use the
-[targeted read-only live check](planning/CONVENTIONS.md#live-delivery-verification); verified ended PRs route
-to explicit Land reconciliation, and unavailable evidence remains unverified. Ordinary planning/build stays offline.
+[targeted read-only live check](planning/CONVENTIONS.md#live-delivery-verification). Exact merged/integrated `done`
+handoffs resolve read-only without routine cleanup requests; authorized Work/Land/substantive planning intake
+retires their markers with evidence. Exceptional/unavailable evidence retains its precise hold; ordinary
+planning/build stays offline. PR #159/#162/#167 publication statements elsewhere below are preserved historical
+checkpoints: all three are verified merged into `develop` and locally integrated as of 2026-10-26, with no merge
+action remaining. This observes merge, not new acceptance, deployment or release.
 
 ## Start planning
 

@@ -30,10 +30,7 @@ links do not create current claims. Work selection and priority remain in the se
 <!-- planning:delivery -->
 | Subject | Recorded delivery | Exact PR |
 |---|---|---|
-| [TASK-00057](00057-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/167](https://github.com/johnnickell/fight-agent-os/pull/167) |
-| [TASK-00517](00517-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/165](https://github.com/johnnickell/fight-agent-os/pull/165) |
-| [TASK-00518](00518-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/169](https://github.com/johnnickell/fight-agent-os/pull/169) |
-| [TASK-00535](00535-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/168](https://github.com/johnnickell/fight-agent-os/pull/168) |
+| None | — | — |
 <!-- /planning:delivery -->
 
 <!-- planning:board -->
@@ -41,13 +38,12 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 2 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | [TICKET-00120 — Align the nine active projects with current delivery handoffs](../tickets/00120-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | [TICKET-00120 — Align the nine active projects with current delivery handoffs](../tickets/00120-TICKET.md) | ready-for-agent | — | — |
 | 58 | [TASK-00058](00058-TASK.md) | Deliver confirmed revocation of another owned session | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | ready-for-agent | — | — |
 | 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |

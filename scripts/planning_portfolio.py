@@ -4,13 +4,13 @@
 from __future__ import annotations
 
 import argparse
-import datetime
-import json
 import os
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+from planning_delivery import verify_delivery as observe_delivery, reconcile_delivery
 
 ROOT = Path(__file__).resolve().parents[1]
 PLANNING = ROOT / "planning"
@@ -205,7 +205,7 @@ def validate_delivery_identity(records: dict) -> list[str]:
 
 
 def verify_delivery(records: dict, subjects: list[str]) -> int:
-    """Observe exact marked PRs, without acceptance inference or reconciliation effects."""
+    """Observe exact marked PRs and resolve only already-done integrated merges."""
     handoffs = current_delivery(records)
     if subjects:
         marked = {identifier for identifier, _, _ in handoffs}
@@ -219,77 +219,10 @@ def verify_delivery(records: dict, subjects: list[str]) -> int:
     if not handoffs:
         print("No recorded current delivery handoffs; no hosting requests made. Historical PRs were not queried.")
         return 0
-    ended, incomplete = 0, 0
-    for identifier, path, data in handoffs:
-        number = data["pr"].rsplit("/", 1)[1]
-        repository = data["pr"].removeprefix("https://github.com/").rsplit("/pull/", 1)[0]
-        label = f"{identifier} {data['pr']}"
-        observed = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        try:
-            result = subprocess.run(
-                ["gh", "pr", "view", number, "--repo", f"github.com/{repository}", "--json",
-                 "number,url,title,state,mergedAt,mergeCommit,baseRefName,headRefName,headRefOid"],
-                cwd=ROOT, capture_output=True, text=True, timeout=15, check=True,
-                env={**os.environ, "GH_PROMPT_DISABLED": "1"},
-            )
-        except FileNotFoundError:
-            reason = "missing gh CLI; restore the operator's hosting CLI"
-        except subprocess.TimeoutExpired:
-            reason = "hosting lookup exceeded 15 seconds; restore access/network and rerun this exact subject"
-        except (OSError, subprocess.SubprocessError, UnicodeError):
-            # Raw hosting diagnostics can contain credentials; never echo stdout/stderr.
-            reason = "hosting/authentication unavailable; check gh auth status --hostname github.com and exact PR access, then rerun"
-        else:
-            try:
-                if len(result.stdout.encode("utf-8")) > 16384:
-                    raise ValueError("metadata exceeds 16384 bytes; recover a complete bounded PR response")
-                pr = json.loads(result.stdout)
-                required = {"number", "url", "title", "state", "mergedAt", "mergeCommit",
-                            "baseRefName", "headRefName", "headRefOid"}
-                if not isinstance(pr, dict) or not required.issubset(pr):
-                    raise ValueError("malformed/incomplete metadata; recover all required exact PR fields")
-                if (type(pr["number"]) is not int or str(pr["number"]) != number
-                        or pr["url"] != data["pr"] or pr["title"] != identifier + " — " + data["title"]
-                        or pr["baseRefName"] != "develop"
-                        or not isinstance(pr["headRefName"], str)
-                        or not re.fullmatch(rf"feature/task-{identifier[5:]}-[a-z0-9][a-z0-9-]*", pr["headRefName"])
-                        or not isinstance(pr["headRefOid"], str)
-                        or not re.fullmatch(r"[0-9a-f]{40}", pr["headRefOid"])):
-                    raise ValueError("identity mismatch; Land must resolve exact repository/PR/TASK title/base/head evidence")
-                state = pr["state"]
-                if state == "MERGED":
-                    if (not isinstance(pr["mergedAt"], str)
-                            or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", pr["mergedAt"])
-                            or not isinstance(pr["mergeCommit"], dict)
-                            or not isinstance(pr["mergeCommit"].get("oid"), str)
-                            or not re.fullmatch(r"[0-9a-f]{40}", pr["mergeCommit"]["oid"])):
-                        raise ValueError("incomplete merge evidence; recover exact merge time and OID")
-                    try:
-                        datetime.datetime.fromisoformat(pr["mergedAt"].replace("Z", "+00:00"))
-                    except ValueError:
-                        raise ValueError("invalid merge time; recover authoritative merge evidence") from None
-                elif state not in ("OPEN", "CLOSED") or pr["mergedAt"] is not None or pr["mergeCommit"] is not None:
-                    raise ValueError("unknown/contradictory state; recover authoritative PR state and merge evidence")
-            except json.JSONDecodeError:
-                reason = "malformed JSON metadata; recover a complete exact PR response"
-            except (ValueError, RecursionError) as exception:
-                reason = str(exception) if isinstance(exception, ValueError) else "malformed nested metadata; recover a complete exact PR response"
-            else:
-                print(f"Observed {observed}: {label} {state}; base={pr['baseRefName']} head={pr['headRefName']} oid={pr['headRefOid']}")
-                if state == "OPEN":
-                    print("Current action: evaluate existing acceptance/QA/delivery holds before human review/merge; OPEN alone proves no readiness, acceptance or CI success.")
-                else:
-                    ended += 1
-                    if state == "MERGED":
-                        print(f"Merge evidence: {pr['mergedAt']} oid={pr['mergeCommit']['oid']}; not deployment, acceptance or local integration proof.")
-                    else:
-                        print("CLOSED WITHOUT MERGE: not delivered through this PR; maintainer owns the future-delivery decision.")
-                    print(f"Next: /skill:land {identifier} — explicitly resume ended-handoff reconciliation for {data['pr']} in the selected authorized checkout; do not merge the ended PR. No Land dispatch or correction performed.")
-                continue
-        incomplete += 1
-        print(f"Observed {observed}: {label} UNVERIFIED: {reason}. Hold this delivery recommendation; infer neither open nor merged.")
-    print(f"Delivery observations: {len(handoffs) - ended - incomplete} OPEN, {ended} ended (Land correction required), {incomplete} UNVERIFIED; read-only, no historical PR queries.")
-    return 2 if incomplete else 1 if ended else 0
+    resolved, errors = observe_delivery(ROOT, records, subjects)
+    for error in errors:
+        print(error)
+    return 1 if errors else 0
 
 
 def projections(records: dict) -> dict[tuple[Path, str], str]:
@@ -416,8 +349,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--write", action="store_true", help="offline: close eligible parents and refresh generated views after validation")
-    mode.add_argument("--check-delivery", nargs="*", metavar="TASK-ID", help="read-only live check of explicit marked subjects (default: all, maximum 16); never combine with --write")
+    mode.add_argument("--check-delivery", nargs="*", metavar="TASK-ID", help="read-only live check of explicit marked subjects (default: all, maximum 16)")
+    mode.add_argument("--reconcile-delivery", nargs="*", metavar="TASK-ID", help="authorized retirement of verified merged/integrated done markers, preserving evidence and refreshing views")
     args = parser.parse_args()
+    writing = args.write or args.reconcile_delivery is not None
     records, errors = load_records()
     errors.extend(validate_delivery_identity(records))
     for path in PLANNING.rglob("*.md"):
@@ -433,8 +368,13 @@ def main() -> int:
         errors.append(".runs/ must be gitignored")
     if not errors:
         closures = complete_parents(records)
-        pending = dict(closures) if args.write else {}
-        if not args.write:
+        pending = dict(closures) if writing else {}
+        if args.reconcile_delivery is not None:
+            resolved, delivery_errors = observe_delivery(ROOT, records, args.reconcile_delivery)
+            errors.extend(delivery_errors)
+            if not errors:
+                pending.update(reconcile_delivery(records, resolved))
+        if not writing:
             for path in closures:
                 errors.append(f"{path.relative_to(ROOT)}: parent completion out of sync; run ./bin/planning-check --write")
         for (path, name), content in projections(records).items():
@@ -448,7 +388,7 @@ def main() -> int:
                 continue
             expected = f"<!-- planning:{name} -->\n{content}\n<!-- /planning:{name} -->"
             if matches[0][0] != expected:
-                if args.write:
+                if writing:
                     pending[path] = text[:matches[0].start()] + expected + text[matches[0].end():]
                 else:
                     errors.append(f"{path.relative_to(ROOT)}: stale {name} view; run ./bin/planning-check --write")
@@ -465,7 +405,7 @@ def main() -> int:
             print(f"- {error}")
         return 1
     active = sum(data["status"] not in TERMINAL for _, data in records.values())
-    print(f"Planning validation passed: {len(records)} records, {active} active; generated views {'refreshed' if args.write else 'current'}")
+    print(f"Planning validation passed: {len(records)} records, {active} active; generated views {'refreshed' if writing else 'current'}")
     print(f"Delivery identity checked offline: {len(current_delivery(records))} marked handoff(s); live PR state NOT CHECKED by local validation")
     if args.check_delivery is not None:
         return verify_delivery(records, args.check_delivery)

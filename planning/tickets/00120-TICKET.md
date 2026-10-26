@@ -108,7 +108,7 @@ receipts may explain provenance but cannot replace fresh evidence for the change
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00519](../tasks/00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | ready-for-agent |
+| [TASK-00519](../tasks/00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
