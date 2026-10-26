@@ -1,6 +1,6 @@
 ---
 name: land
-description: Publish an accepted TASK, obtain its only missing hosted verification in draft, or explicitly resume an ended delivery handoff for bounded reconciliation within user authority.
+description: Publish an accepted TASK, obtain required hosted evidence, resume an ended handoff, or finish explicitly requested ownership-proven local cleanup without republishing.
 ---
 
 # Land
@@ -17,6 +17,12 @@ qualified bounded exact-subject read (Agent OS: `./bin/planning-check --check-de
 IDs). This is separate from offline planning/build and never proves acceptance or candidate provenance.
 Unverified evidence holds affected mutation/publication; ended evidence enters recovery only on explicit Land
 resume for that exact TASK/PR. Do not silently import another target's checker or mutation mode.
+
+For `/skill:land TASK-NNNNN cleanup-only` or an explicit request to clean this repository's merged TASK resources,
+enter [cleanup-only intake](../../../docs/engineering/LANDING.md#cleanup-only-intake) first, respecting named
+exclusions. Inventory registered checkouts and orphan task Docker stacks independently, prove each subject's
+live merge/publication identity and ownership, and execute only qualified remaining cleanup from a safe checkout.
+Do not fall through to publication or corrective-PR creation; return actual per-subject results and holds.
 
 For an explicit resume concerning a merged or closed-unmerged original PR, enter [ended-handoff recovery](../../../docs/engineering/LANDING.md#resume-an-ended-delivery-handoff) before the ordinary publication steps below. Verify the exact subject and live state, recover only an authorized owned correction checkout/branch, and inspect any existing correction before retry. Reuse the normal synchronization inventory; preserve historical acceptance and canonical reports. Unverified state, missing authority or ambiguous publication produces a precise hold. Already-consistent unchanged state produces a read-only receipt, not another commit. An ended original PR is never the correction's publication target. Return the correction's actual pending action or no-op result, then stop; do not fall through to normal publication of the ended branch.
 
@@ -46,7 +52,7 @@ If attachment support, upload or access is unavailable, report publication pendi
 resources; do not claim complete landing. Keep canonical reports/captures outside disposable worktrees. QA of an
 already-open PR uses the same current-subject checks and does not imply merge approval.
 
-4. **Clean and hand off.** Recheck the inventoried source records and authored current handoffs separately from generated views; record consistency or precise holds before cleanup. Apply the required [cleanup procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff) to the existing handoff's exact Git, Compose/container/network, process/session, evidence and data inventory. Preserve required artifacts outside disposable checkouts first. After delivery verification, remove eligible task containers, unused owned networks, clean inactive isolated worktrees from a separate safe checkout, and eligible local feature refs qualified against the exact published head or verified merge. Re-query each postcondition; do not retain every local branch unconditionally or stop at a successful removal command. Preserve main/current/active resources, shared runtime, durable data and canonical evidence with explicit dispositions. Partial failure or unsafe ownership leaves cleanup incomplete with an exact hold and finite resume action; never broaden deletion or repeat publication. Return the actual PR/delivery state, review/QA provenance, checks, warnings, inventory/results/receipt and remaining human actions without a final-head metadata loop.
+4. **Clean and hand off.** Recheck the inventoried source records and authored current handoffs separately from generated views; record consistency or precise holds before cleanup. Apply the required [cleanup procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff) to the existing handoff's exact Git, Compose/container/network, process/session, evidence and data inventory. Preserve required artifacts outside disposable checkouts first. After delivery verification, remove eligible task containers, unused owned networks, clean inactive isolated worktrees from a separate safe checkout, and eligible local feature refs qualified against the exact published head or verified merge. Re-query each postcondition; do not retain every local branch unconditionally or stop at a successful removal command. Preserve main/current/active resources, shared runtime, durable data and canonical evidence with explicit dispositions. Qualify read-only virtualization handles under [live-consumer rules](../../../docs/engineering/LANDING.md#qualify-live-consumers), not a blanket VM-stop requirement. If this worker's cwd is the only hold, give the coordinator exact cleanup-only continuation from its safe checkout after worker exit. Partial failure or unsafe ownership leaves cleanup incomplete with an exact hold and finite resume action; never broaden deletion or repeat publication. Return the actual PR/delivery state, review/QA provenance, checks, warnings, inventory/results/receipt and remaining human actions without a final-head metadata loop.
 
 A conflict that changes implementation, failed required check, inaccessible remote, or ambiguous cleanup blocks successful landing. Landing never approves, merges, force-pushes, deletes the remote branch, archives or deploys.
 
