@@ -143,8 +143,11 @@ filesystem identities must agree. Names and cwd alone are insufficient. Remote
 contexts, unprovable/stale associations, replicated services and out-of-bound inventories are unavailable.
 
 One eligible source opens directly. Multiple eligible sources show readable checkout/project/service choices in
-the log companion; `s` opens selection, arrows and Enter choose, Esc cancels without closing panes. `r` retries
-unavailable discovery or reconnects the exact pinned source. Docker missing/denied or no matching source explains
+the log companion; `s` opens selection, arrows and Enter choose, Esc cancels without closing panes. Selection
+shows one active source with a fixed ordinal and choose/cancel controls; PageUp/PageDown inspect its wrapped
+label and full checkout path. Arrows wrap through every source and reset the detail viewport. Resize keeps the
+active source; below 40 columns × 10 rows, a resize prompt disables Enter until the choice is inspectable.
+`r` retries unavailable discovery or reconnects the exact pinned source. Docker missing/denied or no matching source explains
 what to check without requiring technical identifiers. A stale/replaced source never silently becomes a new
 reader: use `s` to deliberately inspect/select a fresh generation. No selection changes execution authority.
 

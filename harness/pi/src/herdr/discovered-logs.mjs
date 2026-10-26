@@ -81,13 +81,17 @@ export class DiscoveredLogs {
     await this.current?.action(type); this.changed();
   }
   unavailable() { return `${this.notice}\nFocus this log pane: s choose source · r retry · Esc cancels selection. Pi stays usable.`; }
+  choice() {
+    if (!this.menu) return null;
+    const entry = this.entries.get(this.worktree);
+    return { index: this.index, count: entry.choices.length, label: entry.choices[this.index].label, worktree: this.worktree };
+  }
   body() {
-    if (this.menu) {
-      const entry = this.entries.get(this.worktree);
-      const start = Math.max(0, this.index - 2);
-      return ['Choose logs for this checkout (existing local sources only)', this.worktree,
-        ...entry.choices.slice(start, start + 5).map((source, offset) => `${start + offset === this.index ? '>' : ' '} ${source.label}`),
-        `${this.index + 1}/${entry.choices.length} · ↑/↓ move · Enter choose · Esc cancel (panes stay open)`].join('\n');
+    const choice = this.choice();
+    if (choice) {
+      return [`Choose logs ${choice.index + 1}/${choice.count} (existing local sources only)`,
+        `> ${choice.label}`, `Checkout: ${choice.worktree}`,
+        '↑/↓ source · Enter choose · Esc cancel (panes stay open)'].join('\n');
     }
     return this.current?.body() ?? this.unavailable();
   }
