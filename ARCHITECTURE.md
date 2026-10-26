@@ -22,6 +22,10 @@ system or an Internet homepage. It starts with the Slim composition from `johnni
   owned-session visibility at `/app/account/sessions` delegates principal-owned selection to package
   `ListActiveSessions`, maps an explicit API View and joins an optional coarse presentation sidecar captured
   once after activation/login (TASK-00057, independent Review/QA accepted; [PR #167](https://github.com/johnnickell/fight-agent-os/pull/167) awaits human review and merge; no revocation);
+  the installation-wide [user directory](docs/engineering/USER_DIRECTORY.md) at `/app/admin/users` and
+  `GET /api/v1/users` dispatches package `ListUsers` only after exact authoritative `READ_USERS`, projects
+  complete safe role presentation and fences volatile browser pages with the sole cache (TASK-00059,
+  independent Review/QA pending; invitation links remain truthful registered seams, not mutation UI);
   canonical login at `/app/login` reuses package authentication, browser guards,
   schema/Formik and memory/cookie seams, also pending independent acceptance; rotating cookie-only refresh and current-session logout now have HTTP/client services and login-success UI pending independent Review/QA; TASK-00048 adds bounded memory-only multi-tab continuity/restoration at `/app/login`, pending independent Review/QA; TASK-00049 connects one strict typed client `/me` service and the existing cache to login/restoration, pending independent Review/QA; the protected frame now uses that same sole graph, with truthful future landing seams and explicit unavailable-product copy
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)

@@ -56,7 +56,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -65,7 +65,6 @@ links do not create current claims. Work selection and priority remain in the se
 | 1 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
 | 2 | [TASK-00519](00519-TASK.md) | Align and verify delivery handoffs across the ten projects | [TICKET-00120 — Align the ten participating projects with current delivery handoffs](../tickets/00120-TICKET.md) | ready-for-agent | — | — |
 | 58 | [TASK-00058](00058-TASK.md) | Deliver confirmed revocation of another owned session | [TICKET-00020 — Deliver self-service active-session management](../tickets/00020-TICKET.md) | ready-for-agent | — | — |
-| 59 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00227](00227-TASK.md) | Accept the Agent persistence and restoration design | [TICKET-00059 — Persist and fence current Agent credential operations](../tickets/00059-TICKET.md) | ready-for-agent | — | — |

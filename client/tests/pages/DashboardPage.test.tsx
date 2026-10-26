@@ -74,7 +74,11 @@ describe('honest Dashboard permission and destination contracts', () => {
     for (const link of main.getAllByRole('link')) {
       const route = applicationRoutes.find((route) => route.pathname === link.getAttribute('href'));
       expect(route).toBeDefined();
-      expect(route?.availability).toMatch(/not available/);
+      if (route?.destination === 'users')
+        expect(route.availability).toBe(
+          'Read the installation-wide user directory and current role assignments.'
+        );
+      else expect(route?.availability).toMatch(/not available/);
       expect(main.getByText(route?.availability ?? '')).toBeVisible();
     }
   });
