@@ -262,7 +262,13 @@ export function ApplicationView({
             ) : route.destination === 'password-change' ? (
               <PasswordChangePage service={session.passwordChange} schemas={session.schemas} />
             ) : route.destination === 'sessions' ? (
-              <OwnedSessionsPage service={session.sessions} cache={session.authority} />
+              <OwnedSessionsPage
+                service={session.sessions}
+                cache={session.authority}
+                logout={() => {
+                  void session.coordinator.logout();
+                }}
+              />
             ) : route.destination === 'dashboard' ? (
               <DashboardPage cache={session.authority} />
             ) : (

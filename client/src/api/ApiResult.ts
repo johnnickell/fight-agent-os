@@ -3,6 +3,7 @@ export type ApiFailureKind =
   | 'authentication'
   | 'authorization'
   | 'conflict'
+  | 'current-session'
   | 'not-found'
   | 'bad-request'
   | 'method-not-allowed'
