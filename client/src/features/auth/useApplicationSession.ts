@@ -13,6 +13,7 @@ import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
 import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
+import { UserDirectoryService } from '@/features/users/UserDirectoryService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
@@ -86,6 +87,14 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
       window.location.origin,
       safeDiagnostics(runtime)
     ),
+    users: new UserDirectoryService(api, {
+      accessRejected: () => {
+        void coordinator.restore();
+      },
+      authorityRejected: () => {
+        void coordinator.authorityChanged();
+      }
+    }),
     sessions,
     schemas: new PublicSchemaService(api)
   };

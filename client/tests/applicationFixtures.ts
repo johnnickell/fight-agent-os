@@ -8,6 +8,7 @@ import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
+import { UserDirectoryService } from '@/features/users/UserDirectoryService';
 import { PublicSchemaService } from '@/features/validation/PublicSchemaService';
 import { applicationRoutes } from '@/routes/applicationRoutes';
 import { IntendedRoute } from '@/routes/IntendedRoute';
@@ -75,6 +76,14 @@ export function applicationSession(
       }),
       authority,
       coordinator.terminal
+    ),
+    users: new UserDirectoryService(
+      new ApiClient({
+        schemaVersion: 2,
+        apiBasePath: '/api/v1',
+        appDebug: false,
+        swaggerAvailable: false
+      })
     ),
     sessions: new OwnedSessionsService(
       new ApiClient({

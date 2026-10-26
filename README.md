@@ -106,6 +106,10 @@ API-v1 gate are available. The protected `GET /api/v1/me` returns safe identity 
 names without a dashboard permission prerequisite. Protected read-only role and permission catalogs are implemented at `GET /api/v1/roles`, `/roles/{roleId}`,
 `/permissions` and `/permissions/{permissionId}`, pending independent Review/QA; see
 [guarded authority catalogs](docs/engineering/AUTHORITY_CATALOGS.md) for exact permissions, pagination and redaction.
+The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) at `GET /api/v1/users` and
+`/app/admin/users` uses exact current `READ_USERS`, fixed bounded pagination and explicit safe role presentation
+(TASK-00059 implementation; independent Review/QA pending). Invitation controls link only to registered,
+truthfully unavailable journeys; no invitation or lifecycle mutation UI is added.
 Guarded custom Role create/rename/remove APIs now carry exact displayed revisions and atomic safe audit, pending
 independent Review/QA; no Role UI or Permission delegation is enabled. Read [custom Roles and v0.8.0 adoption](docs/engineering/CUSTOM_ROLES.md)
 before upgrading an existing database: historical reset authority is never guessed or discarded.
