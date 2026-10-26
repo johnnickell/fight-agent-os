@@ -10,7 +10,7 @@ import { directory, limits, privateDirectory, privateFile, processIdentity, endp
 import { clean } from '../workspace/presentation.mjs';
 
 const script = fileURLToPath(import.meta.url);
-const monitor = fileURLToPath(new URL('../../../../.pi/skills/build/scripts/run-stage.py', import.meta.url));
+const monitor = fileURLToPath(new URL('./run-stage.py', import.meta.url));
 const identityKeys = ['task', 'role', 'provider', 'model', 'thinking', 'worktree', 'attempt'];
 const terminalStates = new Set(['completed', 'failed']);
 

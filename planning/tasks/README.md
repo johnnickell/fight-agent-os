@@ -540,5 +540,6 @@
 | [TASK-00535](00535-TASK.md) | Launch native Pi with workspace panes already open | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00536](00536-TASK.md) | Remove the legacy fight-terminal command | done | — |
 | [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | done | — |
+| [TASK-00538](00538-TASK.md) | Keep installed workspace child activity and runtime logs portable across repositories | done | — |
 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | ready-for-agent | — |
 <!-- /planning:records -->

@@ -77,8 +77,7 @@ publication/merge authority. Read the Board for work selection and priority.
 <!-- planning:delivery -->
 | Subject | Recorded delivery | Exact PR |
 |---|---|---|
-| [TASK-00059](tasks/00059-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/172](https://github.com/johnnickell/fight-agent-os/pull/172) |
-| [TASK-00519](tasks/00519-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/175](https://github.com/johnnickell/fight-agent-os/pull/175) |
+| [TASK-00538](tasks/00538-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/176](https://github.com/johnnickell/fight-agent-os/pull/176) |
 <!-- /planning:delivery -->
 
 ## Current planning handoff

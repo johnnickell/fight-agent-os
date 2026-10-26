@@ -19,7 +19,7 @@ export async function metadata(command, args, processes) {
     const { stdout } = await pending;
     return stdout;
   } catch {
-    throw Error(command === 'git' ? 'Checkout metadata unavailable; open Pi in a registered Git checkout, then press r to retry.' : 'Docker unavailable or access denied. Start Docker or check local access, then press r to retry. Panes stay open.');
+    throw Error(command === 'git' ? 'Checkout metadata unavailable; restore this registered Git checkout. Discovery will recheck.' : 'Docker unavailable or access denied. Start Docker or check local access; discovery will retry while context stays verified. Panes stay open.');
   }
 }
 
@@ -99,7 +99,7 @@ export class LocalLogSources {
         allowedServices: [row.service], endpoint, socket, checkout, witness: JSON.stringify(row), container: row.id,
         label: `${row.service} / ${row.project} · ${basename(checkout.root)} · ${row.id.slice(0, 12)}` }));
     }
-    return { checkout, choices: choices.sort((a, b) => a.label.localeCompare(b.label)), notice: choices.length ? 'Only verified existing local sources are listed.' : 'No matching running runtime with verified checkout mounts. Start your intended runtime separately, then press r. No shared fallback.' };
+    return { checkout, choices: choices.sort((a, b) => a.label.localeCompare(b.label)), notice: choices.length ? 'Only verified existing local sources are listed.' : 'No matching running runtime with verified checkout mounts. Start your intended runtime separately; discovery will check again automatically. No shared fallback.' };
   }
   async verify(source, container, endpoint) {
     if (container !== source.container || endpoint !== source.endpoint) throw Error('Source replaced or endpoint changed; press s to inspect and choose a fresh source.');
@@ -108,6 +108,6 @@ export class LocalLogSources {
     const socket = await this.endpointIdentity(host);
     if (JSON.stringify(checkout) !== JSON.stringify(source.checkout) || JSON.stringify(socket) !== JSON.stringify(source.socket) || host !== source.endpoint) throw Error('Checkout or local endpoint association changed; press s to inspect sources.');
     const [row] = await this.inspect(source.endpoint, [source.container]);
-    if (!await this.associated(row, source.main) || JSON.stringify(row) !== source.witness) throw Error('Source stopped, restarted, replaced or mounts changed; press s to inspect and choose a fresh source.');
+    if (!await this.associated(row, source.main) || JSON.stringify(row) !== source.witness) throw Error('Source stopped, restarted, replaced or mounts changed; fresh verification required. Press s to inspect sources.');
   }
 }

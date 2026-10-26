@@ -1,6 +1,12 @@
 import { RuntimeLogs } from '../workspace/runtime-logs.mjs';
 import { LocalLogSources } from './local-log-sources.mjs';
 
+export const discoveryInterval = 3000;
+// Replacement may change the container lifecycle, never checkout/daemon/service authority.
+const sameSource = (a, b) => ['main', 'context', 'project', 'service', 'endpoint'].every(key => a[key] === b[key]) &&
+  JSON.stringify(a.socket) === JSON.stringify(b.socket) && JSON.stringify(a.checkout) === JSON.stringify(b.checkout);
+const sameGeneration = (a, b) => sameSource(a, b) && a.container === b.container && a.witness === b.witness;
+
 /** Keep discovery and optional selection entirely in the human-only companion */
 export class DiscoveredLogs {
   constructor(changed = () => {}, { sources = new LocalLogSources(), reader } = {}) {
@@ -9,78 +15,163 @@ export class DiscoveredLogs {
       label: 'VERIFIED LOCAL', endpoint: source.endpoint, verifySource: (container, endpoint) => sources.verify(source, container, endpoint) }));
     this.entries = new Map(); this.readers = []; this.current = null; this.mode = 'follow';
     this.generation = 0; this.transition = Promise.resolve(); this.notice = 'Looking for your local runtime…';
+    this.refreshAt = 0; this.inputMode = { revision: 0, menu: false, selecting: false };
+  }
+  clear(reader) {
+    reader.open = false; reader.history = []; reader.units = 0; reader.frozen = null; reader.paused = false;
   }
   hold() {
     this.held = true; this.generation++; this.menu = false;
+    // New input needs fresh authority; already accepted actions keep their own ordered mode.
+    this.inputMode = { revision: 0, menu: false, selecting: false };
     const previous = this.current; this.current = null;
     if (previous) {
-      previous.open = false; previous.history = []; previous.units = 0; previous.frozen = null; previous.paused = false;
+      const entry = this.entries.get(this.worktree); if (entry) entry.paused = previous.paused;
+      this.clear(previous);
       const stopped = previous.stop(); this.transition = this.transition.then(() => stopped);
     }
     this.changed();
   }
   rebind(worktree) {
-    const generation = ++this.generation;
+    this.hold();
+    const generation = this.generation;
     this.transition = this.transition.then(async () => {
       if (this.disposed || generation !== this.generation) return;
-      this.worktree = worktree; this.held = false; this.menu = false;
+      this.worktree = worktree; this.held = false;
       if (!this.entries.has(worktree)) {
         if (this.entries.size >= 9) throw Error('Worktree observation limit reached; reopen workspace for a fresh generation.');
-        const entry = { choices: [], selected: null, notice: '' }; this.entries.set(worktree, entry);
-        await this.discover(entry, generation, false);
-      } else await this.open(this.entries.get(worktree), generation);
-    }).catch(error => { if (!this.disposed && generation === this.generation) { this.notice = error.message; this.changed(); } });
+        this.entries.set(worktree, { choices: [], selected: null, notice: '', paused: false, closed: false, cancelled: false });
+      }
+      const entry = this.entries.get(worktree);
+      if (entry.closed || entry.cancelled) { this.notice = 'Reader closed or selection cancelled; c reopens · s chooses logs.'; return; }
+      await this.discover(entry, generation, false);
+    }).catch(error => { if (this.valid(generation)) { this.notice = error.message; this.changed(); } });
     return this.transition;
   }
+  valid(generation) { return !this.disposed && !this.held && generation === this.generation; }
+  /** Called only while HerdrLogs has freshly validated the current native/child selection */
+  refresh({ force = false } = {}) {
+    if (this.refreshPending) return this.refreshPending;
+    const entry = this.entries.get(this.worktree), generation = this.generation;
+    if (entry && this.current?.expired) entry.closed = true;
+    if (!this.valid(generation) || this.menu || !entry || entry.closed || entry.cancelled || !force && Date.now() < this.refreshAt) return this.transition;
+    this.transition = this.transition.then(async () => {
+      // A rebind or explicit action may still be scanning when this refresh is queued.
+      if (this.valid(generation) && !this.menu && !entry.closed && !entry.cancelled && (force || Date.now() >= this.refreshAt)) await this.discover(entry, generation, false);
+    });
+    const pending = this.transition.finally(() => { if (this.refreshPending === pending) this.refreshPending = null; });
+    this.refreshPending = pending;
+    return pending;
+  }
+  async stopCurrent() {
+    const previous = this.current; this.current = null;
+    if (!previous) return;
+    this.clear(previous); await previous.stop();
+  }
   async discover(entry, generation, explicit) {
-    this.notice = 'Looking for matching existing local runtime…'; this.changed();
     try {
       const result = await this.sources.discover(this.worktree);
-      if (this.disposed || this.held || generation !== this.generation) return;
-      entry.choices = result.choices; entry.notice = result.notice;
-      // A retry never replaces an earlier pinned identity. Only inspected selection does.
-      if (!explicit && !entry.selected && entry.choices.length === 1) entry.selected = entry.choices[0];
-      this.menu = entry.choices.length > 0 && (explicit || !entry.selected); this.index = 0;
-      this.notice = entry.notice;
-      if (!this.menu) await this.open(entry, generation);
+      if (!this.valid(generation)) return;
+      entry.choices = result.choices; entry.notice = result.notice; this.notice = entry.notice;
+      if (explicit) {
+        this.menu = entry.choices.length > 0; this.index = 0;
+        return;
+      }
+      let selected;
+      if (entry.selected) {
+        selected = entry.choices.find(choice => sameSource(choice, entry.selected));
+        if (!selected) this.notice = 'Selected source unavailable or its checkout/daemon authority changed; waiting for that source. Press s to choose another.';
+      } else if (entry.choices.length === 1) selected = entry.choices[0];
+      else if (entry.choices.length > 1) { this.menu = true; this.index = 0; }
+      if (!selected) { await this.stopCurrent(); return; }
+      const unchanged = entry.selected && sameGeneration(entry.selected, selected);
+      entry.selected = selected;
+      if (this.current?.expired) return; // Absolute reader lifetime still requires explicit human recovery.
+      if (unchanged && this.current?.open && this.current.state === 'following') return;
+      if (this.current) entry.paused = this.current.paused;
+      await this.stopCurrent();
+      if (this.valid(generation)) await this.open(entry, generation);
     } catch (error) {
-      if (this.disposed || generation !== this.generation) return;
+      if (!this.valid(generation)) return;
+      if (this.current) entry.paused = this.current.paused;
+      await this.stopCurrent();
+      if (!this.valid(generation)) return;
       entry.notice = error.message; this.notice = error.message; this.menu = false;
+    } finally {
+      this.refreshAt = Date.now() + discoveryInterval;
+      if (this.valid(generation)) this.changed();
     }
-    this.changed();
   }
   async open(entry, generation) {
-    if (this.disposed || this.held || generation !== this.generation) return;
-    this.notice = entry.notice;
-    // Every old process, including metadata, must settle before replacement log admission.
-    if (this.readers.some(reader => reader.processes.size)) { this.notice = 'Previous reader has not exited; no replacement started. Press r after it settles.'; return; }
+    if (!this.valid(generation) || entry.closed || entry.cancelled) return;
+    // Every old process, including metadata, must settle before replacement admission.
+    if (this.readers.some(reader => reader.processes.size)) { this.notice = 'Previous reader has not exited; no replacement started. Waiting for it to settle.'; return; }
     if (!entry.selected) return;
     this.current = this.reader(entry.selected); this.readers = [this.current];
+    this.current.paused = entry.paused; this.current.frozen = entry.paused ? [] : null;
     this.current.open = true; await this.current.subscribe();
   }
-  async action(type) {
-    if (this.disposed || this.held) return;
-    await this.transition;
-    if (this.disposed || this.held) return;
-    const entry = this.entries.get(this.worktree), generation = this.generation;
-    if (!entry) return;
-    if (type === 'select' || type === 'reconnect' && !entry.selected) { await this.discover(entry, generation, type === 'select'); return; }
-    if (type === 'reconnect' && !this.current) { await this.open(entry, generation); this.changed(); return; }
-    if (this.menu) {
-      if (type === 'cancel') { this.menu = false; this.notice = 'Selection cancelled; workspace stays open. Press s to choose logs.'; }
-      if (type === 'up') this.index = (this.index + entry.choices.length - 1) % entry.choices.length;
-      if (type === 'down') this.index = (this.index + 1) % entry.choices.length;
-      if (type === 'choose') {
-        const selected = entry.choices[this.index];
-        if (this.current) { this.current.open = false; await this.current.close(); this.current = null; }
-        if (this.disposed || generation !== this.generation) return;
-        entry.selected = selected; this.menu = false; await this.open(entry, generation);
+  action(type, { canChoose = () => true } = {}) {
+    const generation = this.generation, entry = this.entries.get(this.worktree);
+    const inputMode = this.inputMode, revision = inputMode.revision;
+    const acceptedMenu = this.menu || inputMode.selecting;
+    if (!this.valid(generation) || !entry) return this.transition;
+    this.transition = this.transition.then(async () => {
+      // Explicit transitions order accepted controls even after hold() revokes I/O.
+      // Background ambiguity is not an explicit transition and cannot reinterpret input.
+      const menu = revision !== inputMode.revision ? inputMode.menu : acceptedMenu;
+      if (type === 'choose' && menu && (!canChoose() || this.valid(generation) && !this.menu)) return;
+      if (type === 'select' || menu && (type === 'cancel' || type === 'choose')) {
+        inputMode.revision++; inputMode.menu = type === 'select';
       }
-      this.changed(); return;
-    }
-    await this.current?.action(type); this.changed();
+      // Accepted controls belong to this entry, in queue order, even if its I/O authority is revoked.
+      if (type === 'select' || !menu && (type === 'reconnect' || type === 'toggle')) {
+        entry.closed = type === 'toggle' ? !entry.closed : false; entry.cancelled = false;
+      } else if (type === 'cancel' && menu) entry.cancelled = true;
+      else if (type === 'choose' && menu) { entry.closed = false; entry.cancelled = false; }
+      else if (type === 'pause' && !menu) entry.paused = !entry.paused;
+      if (!this.valid(generation)) return;
+      if (type === 'select') {
+        inputMode.selecting = true;
+        try {
+          if (this.current) entry.paused = this.current.paused;
+          await this.stopCurrent();
+          if (this.valid(generation)) await this.discover(entry, generation, true);
+        } finally { inputMode.selecting = false; }
+      } else if (menu) {
+        if (type === 'cancel') { this.menu = false; this.notice = 'Selection cancelled; workspace stays open. Press s to choose logs.'; }
+        if (type === 'up') this.index = (this.index + entry.choices.length - 1) % entry.choices.length;
+        if (type === 'down') this.index = (this.index + 1) % entry.choices.length;
+        if (type === 'choose') {
+          entry.selected = entry.choices[this.index]; this.menu = false;
+          await this.open(entry, generation);
+        }
+      } else if (type === 'toggle' || type === 'reconnect') {
+        this.menu = false;
+        if (this.current) entry.paused = this.current.paused;
+        if (entry.closed) {
+          // Set display intent before awaiting reaping: hold() can revoke this reader meanwhile.
+          const reader = this.current, notice = 'Reader closed; c reopens. Containers and agents unchanged.';
+          if (reader) {
+            this.clear(reader); reader.state = 'closed'; reader.notice = notice;
+            reader.paused = entry.paused; reader.frozen = entry.paused ? [] : null;
+            await reader.stop();
+          }
+          if (!this.valid(generation)) return;
+          this.notice = notice;
+        } else {
+          await this.stopCurrent();
+          if (this.valid(generation)) await this.discover(entry, generation, false);
+        }
+      } else {
+        await this.current?.action(type);
+        if (this.current) entry.paused = this.current.paused;
+      }
+      this.changed();
+    });
+    return this.transition;
   }
-  unavailable() { return `${this.notice}\nFocus this log pane: s choose source · r retry · Esc cancels selection. Pi stays usable.`; }
+  unavailable() { return `${this.notice}\nAutomatic discovery waits for verified local sources · s choose · c close/open · r retry · Esc cancel`; }
   choice() {
     if (!this.menu) return null;
     const entry = this.entries.get(this.worktree);

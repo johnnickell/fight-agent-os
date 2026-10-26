@@ -130,6 +130,12 @@ path beside the **owning provider skill**, even when the TASK checkout belongs t
 the target contains this script. Qualify the installed Pi's JSON events, `agent_settled`, native extension context and notification-only lifecycle
 APIs; tested versions are evidence, never equality gates.
 Missing support holds the affected path, not permission to hide progress or bypass existing protections.
+This provider entry delegates to the package-owned monitor. By default it selects the provider's `harness/pi`;
+when native Pi uses a separately installed trusted package, pass `--harness-package /absolute/trusted/package`
+to select that same package for the monitor, screening preflight and passive association. Inspect the installed
+resource identity first; do not load a second package, copy a target skill, or update a global installation as a
+side effect. A package without the monitor needs an explicit owned update before dispatch. A bounded
+`Child observation unavailable (reason)` diagnostic changes visibility only; never relaunch a child to repair it.
 For an explicitly enrolled [file-screening profile](../../../harness/pi/FILE_SCREENING_PROFILE.md), the monitor
 preflights the target through its owning provider package, explicitly loads that package in the child and binds
 its actual identity under the shared monthly cap. It relays safe screening diagnostics promptly, not raw stderr.

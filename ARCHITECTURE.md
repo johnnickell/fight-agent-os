@@ -27,7 +27,7 @@ system or an Internet homepage. It starts with the Slim composition from `johnni
   the installation-wide [user directory](docs/engineering/USER_DIRECTORY.md) at `/app/admin/users` and
   `GET /api/v1/users` dispatches package `ListUsers` only after exact authoritative `READ_USERS`, projects
   complete safe role presentation and fences volatile browser pages with the sole cache (TASK-00059,
-  independently reviewed and QA passed; [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172) awaits human review and merge; invitation links remain truthful registered seams, not mutation UI);
+  independently reviewed and QA passed; [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172) merged into `develop` at `d6b9db3c8c46f1c2853bd1469fd003cb6445c3d5`; invitation links remain truthful registered seams, not mutation UI);
   canonical login at `/app/login` reuses package authentication, browser guards,
   schema/Formik and memory/cookie seams, also pending independent acceptance; rotating cookie-only refresh and current-session logout now have HTTP/client services and login-success UI pending independent Review/QA; TASK-00048 adds bounded memory-only multi-tab continuity/restoration at `/app/login`, pending independent Review/QA; TASK-00049 connects one strict typed client `/me` service and the existing cache to login/restoration, pending independent Review/QA; the protected frame now uses that same sole graph, with truthful future landing seams and explicit unavailable-product copy
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)

@@ -54,6 +54,11 @@ export class HerdrLogs {
           void this.logs.rebind(value.worktree, { force: true }).catch(() => {
             if (!this.closed) this.hold('UNAVAILABLE — source rebind failed; no fallback');
           });
+        } else if (this.discovery) {
+          // Discovery is serialized separately; it must never delay selection expiry/revocation.
+          void this.logs.refresh().catch(() => {
+            if (!this.closed) this.hold('UNAVAILABLE — runtime discovery failed; no fallback');
+          });
         }
         this.changed();
       } catch {
@@ -70,13 +75,13 @@ export class HerdrLogs {
     })().finally(() => { this.pending = null; });
     return this.pending;
   }
-  async action(type) {
+  async action(type, options) {
     if (this.closed) return;
     if (type === 'info') { this.details = !this.details; this.changed(); return; }
-    if (!this.metadata || this.invalidated || this.actionPending) return;
-    this.actionPending = true;
-    try { await this.logs.action(type); }
-    finally { this.actionPending = false; this.changed(); }
+    if (!this.metadata || this.invalidated || !this.discovery && this.actionPending) return;
+    if (!this.discovery) this.actionPending = true;
+    try { await this.logs.action(type, options); }
+    finally { if (!this.discovery) this.actionPending = false; this.changed(); }
   }
   view() {
     const value = this.metadata;
