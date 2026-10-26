@@ -33,6 +33,7 @@ links do not create current claims. Work selection and priority remain in the se
 | [TASK-00057](00057-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/167](https://github.com/johnnickell/fight-agent-os/pull/167) |
 | [TASK-00517](00517-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/165](https://github.com/johnnickell/fight-agent-os/pull/165) |
 | [TASK-00535](00535-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/168](https://github.com/johnnickell/fight-agent-os/pull/168) |
+| [TASK-00536](00536-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/170](https://github.com/johnnickell/fight-agent-os/pull/170) |
 <!-- /planning:delivery -->
 
 <!-- planning:board -->
@@ -40,7 +41,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00536](00536-TASK.md) | Remove the legacy fight-terminal command | — (standalone chore) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -607,4 +608,5 @@ links do not create current claims. Work selection and priority remain in the se
 | — | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | — (standalone bug) | done | — | [PR #152](https://github.com/johnnickell/fight-agent-os/pull/152) |
 | — | [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | — (standalone bug) | done | — | [PR #156](https://github.com/johnnickell/fight-agent-os/pull/156) |
 | — | [TASK-00535](00535-TASK.md) | Launch native Pi with workspace panes already open | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #168](https://github.com/johnnickell/fight-agent-os/pull/168) |
+| — | [TASK-00536](00536-TASK.md) | Remove the legacy fight-terminal command | — (standalone chore) | done | — | [PR #170](https://github.com/johnnickell/fight-agent-os/pull/170) |
 <!-- /planning:board -->
