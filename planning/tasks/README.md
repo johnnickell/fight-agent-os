@@ -542,5 +542,5 @@
 | [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | done | — |
 | [TASK-00538](00538-TASK.md) | Keep installed workspace child activity and runtime logs portable across repositories | done | — |
 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | ready-for-agent | — |
-| [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | in-progress | — |
+| [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | done | — |
 <!-- /planning:records -->
