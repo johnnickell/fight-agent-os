@@ -51,7 +51,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | — (standalone bug) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -622,4 +622,5 @@ links do not create current claims. Work selection and priority remain in the se
 | — | [TASK-00536](00536-TASK.md) | Remove the legacy fight-terminal command | — (standalone chore) | done | — | [PR #170](https://github.com/johnnickell/fight-agent-os/pull/170) |
 | — | [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | — (standalone bug) | done | — | [PR #171](https://github.com/johnnickell/fight-agent-os/pull/171) |
 | — | [TASK-00538](00538-TASK.md) | Keep installed workspace child activity and runtime logs portable across repositories | — (standalone bug) | done | — | [PR #176](https://github.com/johnnickell/fight-agent-os/pull/176) |
+| — | [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | — (standalone bug) | done | — | — |
 <!-- /planning:board -->

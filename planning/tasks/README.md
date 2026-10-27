@@ -542,5 +542,5 @@
 | [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | done | — |
 | [TASK-00538](00538-TASK.md) | Keep installed workspace child activity and runtime logs portable across repositories | done | — |
 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | ready-for-agent | — |
-| [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | in-progress | — |
+| [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | done | — |
 <!-- /planning:records -->
