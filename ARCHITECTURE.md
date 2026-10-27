@@ -4,6 +4,10 @@ Fight Agent OS is an open-source software factory: software for planning, buildi
 software. Its browser and Pi surfaces serve engineering workflows, not a general-purpose personal AI operating
 system or an Internet homepage. It starts with the Slim composition from `johnnickell/project-slim`.
 
+For TASK-00059, [the authoritative TASK](planning/tasks/00059-TASK.md) records current acceptance provenance and
+merged/integrated PR #172. Its pending-merge wording below remains a historical implementation checkpoint, not
+a current human merge action. Other capability states are unchanged.
+
 - `src/Domain/`: business state, invariants, value objects, and capability interfaces as introduced
 - `src/Application/`: command/query handlers and application coordination as introduced
 - `src/Adapter/`: HTTP Actions/Responders, persistence, external services, and runtime integrations
