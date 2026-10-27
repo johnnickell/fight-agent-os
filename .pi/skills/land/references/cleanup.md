@@ -87,8 +87,12 @@ failure retains the affected resource and protections. Return resource/reason/re
 
 The operation preserves every nonexcluded ignored/untracked artifact with old/new locators, per-file digests,
 modes/ownership/extended attributes/ACLs and source stability checks. Each manifest retains both source and
-copied records. macOS may add `com.apple.provenance` when copying a Docker-created file; only that additional
-origin attribute is allowed, recorded and checked unchanged afterward. All source attributes must remain
+copied records. Copy selection comes from the complete no-follow filesystem inventory minus exact tracked
+files and approved exclusions, not Git's incomplete untracked listing. Nonexcluded directories retain their
+metadata; only the checkout's root `.git` entry is Git metadata, never nested Git-shaped evidence. A digest of
+the retained inventory binds every expected source path/record to the manifest; completeness and copy integrity
+are verified before removal, afterward and on resume. macOS may add `com.apple.provenance` when copying a
+Docker-created file; only that additional origin attribute is allowed, recorded and checked unchanged afterward. All source attributes must remain
 present, with identical bytes/modes/owners/ACLs/flags; no metadata is stripped to force equality.
 Validate exclusions before inventory: they must name nonempty relative paths beneath the candidate, not the
 candidate itself or a parent. A symlink at or beneath an explicitly approved disposable exclusion is recorded
@@ -111,7 +115,10 @@ A successful full Docker inventory reconciles an absent ID/name before reading r
 Compose files, env files and cwd may already have been retired. An absent ID with a recreated name still holds,
 even when those inputs are gone. Present resources require all original runtime, ownership, consumer and data
 checks; missing configuration never qualifies a removal. An absent checkout must still have a verifiable prior
-external preservation manifest. Already-absent effects are observed, not replayed. Changed inventory needs a new explicit
+external preservation manifest with matching retained-inventory completeness evidence. A legacy manifest
+without that evidence holds: recorded-copy integrity alone cannot establish completeness. Recover evidence
+through the resource owner; never recreate a removed checkout or assert retrospective preservation.
+Already-absent effects are observed, not replayed. Changed inventory needs a new explicit
 plan in a linked companion receipt preserving prior attempts/manifests; never erase uncertainty or change an
 old plan hash. Do not repeat push/PR, recreate a removed checkout or commit cleanup results.
 
