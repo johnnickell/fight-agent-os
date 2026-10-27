@@ -378,6 +378,16 @@ a corrective PR or tracked changes before ownership-proven cleanup. Do not publi
 repeat gates, rewrite reports or commit metadata just to retire resources. Ended-handoff correction remains a
 separate explicitly requested operation. Return per-subject removed/retained/held results and actual next actions.
 
+### Executable local operation
+
+Local Land and Build's post-worker cleanup-only continuation execute the
+[exact-subject cleanup operation](../../.pi/skills/land/references/cleanup.md), using the existing private handoff/
+receipt. This section remains policy authority; the operation's schema, conservative capability holds and finite
+resume procedure live beside its callers. Normal callers have no ad hoc destructive fallback. Qualification,
+external preservation, effect intent and fresh postconditions are recorded separately from publication. A hold
+never authorizes protection changes or generic runtime setup. This helper is not universal shell enforcement or
+OS isolation; unrestricted agents can bypass it, and arbitrary external races cannot be atomically fenced.
+
 ### Completion ownership
 
 Safe cleanup is a required effect of authorized Land, not an optional follow-up after publication. Remove the

@@ -22,15 +22,12 @@ Land resume for that TASK/PR. Do not silently import another target's checker or
 
 For `/skill:land TASK-NNNNN cleanup-only` or an explicit request to clean this repository's merged TASK resources,
 enter [cleanup-only intake](../../../docs/engineering/LANDING.md#cleanup-only-intake) first, respecting named
-exclusions. Inventory registered checkouts and orphan task Docker stacks independently, prove each subject's
-live merge/publication identity and ownership, and execute only qualified remaining cleanup from a safe checkout.
-Do not fall through to publication or corrective-PR creation; return actual per-subject results and holds.
-
-For `/skill:land TASK-NNNNN cleanup-only` or an explicit request to clean this repository's merged TASK resources,
-enter [cleanup-only intake](../../../docs/engineering/LANDING.md#cleanup-only-intake) first, respecting named
-exclusions. Inventory registered checkouts and orphan task Docker stacks independently, prove each subject's
-live merge/publication identity and ownership, and execute only qualified remaining cleanup from a safe checkout.
-Do not fall through to publication or corrective-PR creation; return actual per-subject results and holds.
+exclusions. Inventory registered checkouts and orphan task Docker stacks independently and prove each subject's
+live merge/publication identity and ownership. Read [the executable cleanup contract](references/cleanup.md),
+extend the existing exact-subject receipt, and run the bounded operation from the canonical safe checkout.
+For Build's post-worker continuation use its caller specified there. No ad hoc destructive shell alternative is
+part of this path. A hold preserves resources and protections; do not bypass it. Never fall through to publication
+or corrective-PR creation; return actual per-subject results and holds.
 
 For an explicit resume concerning a merged or closed-unmerged original PR, enter [ended-handoff recovery](../../../docs/engineering/LANDING.md#resume-an-ended-delivery-handoff) before the ordinary publication steps below. Verify the exact subject and live state, recover only an authorized owned correction checkout/branch, and inspect any existing correction before retry. Reuse the normal synchronization inventory; preserve historical acceptance and canonical reports. Unverified state, missing authority or ambiguous publication produces a precise hold. Already-consistent unchanged state produces a read-only receipt, not another commit. An ended original PR is never the correction's publication target. Return the correction's actual pending action or no-op result, then stop; do not fall through to normal publication of the ended branch.
 
@@ -60,7 +57,19 @@ If attachment support, upload or access is unavailable, report publication pendi
 resources; do not claim complete landing. Keep canonical reports/captures outside disposable worktrees. QA of an
 already-open PR uses the same current-subject checks and does not imply merge approval.
 
-4. **Clean and hand off.** Recheck the inventoried source records and authored current handoffs separately from generated views; record consistency or precise holds before cleanup. Apply the required [cleanup procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff) to the existing handoff's exact Git, Compose/container/network, process/session, evidence and data inventory. Preserve required artifacts outside disposable checkouts first. After delivery verification, remove eligible task containers, unused owned networks, clean inactive isolated worktrees from a separate safe checkout, and eligible local feature refs qualified against the exact published head or verified merge. Re-query each postcondition; do not retain every local branch unconditionally or stop at a successful removal command. Preserve main/current/active resources, shared runtime, durable data and canonical evidence with explicit dispositions. Qualify read-only virtualization handles under [live-consumer rules](../../../docs/engineering/LANDING.md#qualify-live-consumers), not a blanket VM-stop requirement. If this worker's cwd is the only hold, give the coordinator exact cleanup-only continuation from its safe checkout after worker exit. Partial failure or unsafe ownership leaves cleanup incomplete with an exact hold and finite resume action; never broaden deletion or repeat publication. Return the actual PR/delivery state, review/QA provenance, checks, warnings, inventory/results/receipt and remaining human actions without a final-head metadata loop.
+4. **Clean and hand off.** Recheck source records and authored current handoffs separately from generated views.
+Read [the executable cleanup contract](references/cleanup.md) and apply the policy-owned
+[cleanup procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff) through `scripts/cleanup.py` only.
+Carry the existing exact-subject Git/runtime/process/data inventory into its private receipt; bind current
+publication/merge proof, exact qualified Compose/config/override/env-file locators and protected report hashes.
+Missing or contradictory runtime binding is a hold, never generic setup. Preview, inspect each disposition,
+then apply from the canonical safe checkout. No alternative ad hoc removal path is part of normal Land.
+Independently verify actual postconditions and external preservation manifests; helper exit alone is not intake.
+If this worker holds the candidate, record its original monitor attempt/PIDs and return the same receipt to Build
+for its post-exit caller. Do not change protections, kill a consumer, force removal or stop shared runtime to clear
+a hold. Return publication separately from removed/absent/retained/held/failed cleanup, precise finite recovery,
+review/QA provenance and checks. Any cleanup hold leaves Land incomplete; never repeat publication or commit
+cleanup results solely to move the final head.
 
 A conflict that changes implementation, failed required check, inaccessible remote, or ambiguous cleanup blocks successful landing. Landing never approves, merges, force-pushes, deletes the remote branch, archives or deploys.
 
