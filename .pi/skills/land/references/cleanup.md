@@ -90,8 +90,14 @@ modes/ownership/extended attributes/ACLs and source stability checks. Each manif
 copied records. macOS may add `com.apple.provenance` when copying a Docker-created file; only that additional
 origin attribute is allowed, recorded and checked unchanged afterward. All source attributes must remain
 present, with identical bytes/modes/owners/ACLs/flags; no metadata is stripped to force equality.
-Symlinks, special files, foreign-owned or
-flag-protected artifacts conservatively hold; unavailable consumer visibility also holds. Existing conflicting
+Validate exclusions before inventory: they must name nonempty relative paths beneath the candidate, not the
+candidate itself or a parent. A symlink at or beneath an explicitly approved disposable exclusion is recorded
+using its own metadata and link target, without following it, copying it or weakening source-stability checks.
+Nonexcluded symlinks, special files, foreign-owned and flag-protected artifacts still hold. Every file remains
+in the stability inventory, including excluded dependency trees; exclusions do not waive ACL/ownership checks.
+On macOS, native no-follow `find -xattr`/`find -acl` observations before and after each inventory identify paths
+needing detailed metadata reads, avoiding per-file subprocesses for absent metadata. An unavailable or changing
+metadata observation holds rather than assuming no attributes/ACLs. Unavailable consumer visibility also holds. Existing conflicting
 copies are never overwritten. Retain the source until its owner resolves the exact copy/visibility prerequisite.
 Canonical reports are never rewritten. Deny ACLs and unavailable directory write/search permissions hold
 before Git can partially remove a checkout. On the qualified macOS Docker Desktop topology, read-only handles
