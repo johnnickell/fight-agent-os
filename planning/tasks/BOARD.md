@@ -43,7 +43,7 @@ links do not create current claims. Work selection and priority remain in the se
 <!-- planning:delivery -->
 | Subject | Recorded delivery | Exact PR |
 |---|---|---|
-| [TASK-00541](00541-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/178](https://github.com/johnnickell/fight-agent-os/pull/178) |
+| None | — | — |
 <!-- /planning:delivery -->
 
 <!-- planning:board -->
