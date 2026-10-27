@@ -1,7 +1,9 @@
 # Canonical application gate
 
-`./bin/build` is the sole complete local acceptance command. Focused wrappers shorten iteration; they do not
-replace it. A pass is not independent technical review, behavioral QA, merge, release or deployment approval.
+`./bin/build` is the sole complete local acceptance command. Use focused owning wrappers during iteration,
+then one complete final run for changed implementation. Apply [gate evidence reuse](EXECUTION.md#gate-evidence-reuse)
+across later roles, commits and administrative-only updates instead of automatically repeating the suite.
+A pass is not independent technical review, behavioral QA, merge, release or deployment approval.
 
 ## Explicit setup
 
@@ -70,7 +72,9 @@ The host wrapper checks the running `web` service and its Compose configuration 
 7. Both strict TypeScript projects (catalog-only `skipLibCheck`; application declarations still checked),
    zero-warning lint, non-mutating formatting, one V8-instrumented Vitest execution.
 8. Scratch production build/artifact inspection, static Storybook build/artifact inspection, Chromium story/a11y
-   checks, and static catalog captures/resource checks.
+   checks, and static catalog captures/resource checks. Only the capture phase overlaps work: the two widths
+   of one story use separate contexts in one browser, then both close before the next story. No backend,
+   Vitest, Harness or browser-story phase overlaps another phase or a database reset.
 9. Final index/status/content/executable-mode comparison against the starting tracked and unignored files.
 
 Each mandatory command executes once; the orchestrator does not call focused wrappers that duplicate suites.
@@ -86,6 +90,10 @@ Source hashes detect changes that status alone would miss in an already-dirty ch
 while the gate is running. One local gate lock prevents overlapping canonical runs; backend coverage shares its own
 lock with its focused command. Do not run independent test resets or PostgreSQL tests concurrently against that
 same test database, and do not run focused frontend commands concurrently against these report directories.
+Catalog capture concurrency is fixed at two, not configurable worker fan-out. Captures retain independent
+storage/pages and unique screenshot paths; results are appended in story/width order. A failed pair stops
+further scheduling after both contexts settle/close. SIGINT/SIGTERM closes the owned browser and records the
+interruption, leaving a nonzero/incomplete gate, never a pass. SIGKILL/engine loss still requires reconciliation.
 
 ## Runtime boundaries and outputs
 

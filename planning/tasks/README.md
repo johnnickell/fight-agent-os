@@ -543,4 +543,5 @@
 | [TASK-00538](00538-TASK.md) | Keep installed workspace child activity and runtime logs portable across repositories | done | — |
 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | ready-for-agent | — |
 | [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | done | — |
+| [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | done | — |
 <!-- /planning:records -->

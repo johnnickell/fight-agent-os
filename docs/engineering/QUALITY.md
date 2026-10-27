@@ -129,7 +129,10 @@ Name the contract/rule, exact location, practical consequence, counterevidence a
 finding. Distinguish confirmed defects, uncertainty and optional improvements. Report the inspected scope,
 retained exceptions, meaningful coverage removed/replaced and remaining gaps. Work records outcome evidence;
 review performs the detailed assessment independently. Work remains responsible for applicable rules and known
-defects, without having to load this entire checklist. The canonical gate does not replace these judgments.
+defects, without having to load this entire checklist. The canonical gate does not replace these judgments. Apply [gate evidence reuse](EXECUTION.md#gate-evidence-reuse)
+when assessing verification: focused iteration, one complete final gate for changed implementation, and qualified
+reuse across independent roles or administrative-only updates. Instruction/requirement and executable-config
+changes remain substantive; metadata-only diffs need planning/diff/provenance checks, not another full suite.
 
 The [source comparison](SKILL_GAPS.md#test-code-and-documentation-quality-source-decisions) records the four
 upstream inspirations and the local adaptations; this reference is original Agent OS guidance.

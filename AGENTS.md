@@ -39,7 +39,7 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Write testable code, then tests. For bugs, reproduce and add a failing regression test before repairing
 - Test owned application behavior and important integration contracts; never add product-suite tests for architecture, dependency rules, container/configuration wiring, migrations, generated files, wrappers, build/planning/static-analysis mechanisms, or test infrastructure
 - Validate tooling and infrastructure directly with their owning tools; never test that tests or quality tools detect deliberately seeded failures
-- Use repository `./bin/*` Docker wrappers. `./bin/build` is the full gate; focused checks do not replace it
+- Use repository `./bin/*` Docker wrappers. Focus iteration, run one final `./bin/build` for changed implementation, and [qualify evidence reuse](docs/engineering/EXECUTION.md#gate-evidence-reuse) for later roles and metadata-only updates; never infer a pass from status alone
 - Surface warnings and incomplete verification. Do not label inherited receipts as fresh application evidence
 - At authorized Work/Land/substantive planning intake run `./bin/planning-check --reconcile-delivery` before record edits; inspect affected authored handoffs as well as generated views. Only exact verified merged/integrated `done` snapshots retire with evidence. Routing/Review/QA remain read-only; ordinary checks/refresh stay offline
 - Before task publication, record completed implementation and verification; keep formal review and merge status separate
