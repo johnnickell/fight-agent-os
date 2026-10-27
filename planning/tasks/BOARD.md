@@ -10,7 +10,23 @@ Read the referenced current section, not the full historical record. Missing han
 The [blended delivery strategy](../ROADMAP.md#approved-blended-delivery-strategy) permits terminal, browser and
 shared-foundation interleaving; it does not override active work, TASK orders, dependencies or readiness holds below.
 
-### Current human priority — 2026-10-26
+### Current human priority — 2026-10-27
+
+John approved the cleanup-first sequence [TASK-00542](00542-TASK.md) -> [TASK-00543](00543-TASK.md) ->
+[TASK-00544](00544-TASK.md), all `ready-for-agent` at `order: 1`, with explicit blockers enforcing that order:
+qualified disposable-storage cleanup across the current active repositories, exact local worktree testing
+runtimes, then continuous installed workspace child/log following. TASK-00542 retains completed TASK-00540
+as predecessor; [PR #179](https://github.com/johnnickell/fight-agent-os/pull/179) must be integrated into the
+implementation base before starting. The PR carries these approved plans only, not their implementation.
+TASK-00540 remains done with unchanged acceptance/reports and separate delivery provenance.
+
+[TASK-00539](00539-TASK.md) moves to `order: 2`; its scope/status/blockers and prior approval history remain
+unchanged. Every other order and active ownership is preserved. Implementation is unstarted for all three new
+TASKs; use the generated sections for eligibility and select a checkout in the later implementation session.
+Priority/planning publication grants no cross-project repair, package installation, shared-service mutation,
+merge or deployment authority.
+
+### Previous priority checkpoint — 2026-10-26 (historical)
 
 The maintainer selected [TASK-00539](00539-TASK.md) as the highest ready priority (`order: 1`) to make invitation
 API throttle verification deterministic. Its accepted planning record is included in TASK-00537's PR #171;
@@ -57,7 +73,8 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
+| 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | ready-for-agent | — | — |
+| 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -80,6 +97,8 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | [TASK-00542](00542-TASK.md) | — |
+| 1 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | — (standalone bug) | ready-for-agent | [TASK-00543](00543-TASK.md) | — |
 | 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md), [TASK-00498](00498-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00377](00377-TASK.md) | — |
