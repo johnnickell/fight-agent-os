@@ -59,8 +59,10 @@ already-open PR uses the same current-subject checks and does not imply merge ap
 Read [the executable cleanup contract](references/cleanup.md) and apply the policy-owned
 [cleanup procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff) through `scripts/cleanup.py` only.
 Carry the existing exact-subject Git/runtime/process/data inventory into its private receipt; bind current
-publication/merge proof, exact qualified Compose/config/override/env-file locators and protected report hashes.
-Missing or contradictory runtime binding is a hold, never generic setup. Preview, inspect each disposition,
+publication/merge proof, protected report hashes and either exact qualified Compose/config/override/env-file
+locators or the explicit standalone creation capability and retained immutable allocation proof described in the
+cleanup contract. Preserve Compose safeguards; historical standalone adoption uses a linked plan, never invented
+Compose labels or retrospective intent. Missing or contradictory runtime binding is a hold, never generic setup. Preview, inspect each disposition,
 then apply from the canonical safe checkout. No alternative ad hoc removal path is part of normal Land.
 Independently verify actual postconditions and external preservation manifests; helper exit alone is not intake.
 If this worker holds the candidate, record its original monitor attempt/PIDs and return the same receipt to Build

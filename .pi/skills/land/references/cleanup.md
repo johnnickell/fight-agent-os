@@ -63,7 +63,7 @@ original container inspection/runtime, and retains it after disappearance. Missi
 removal even for an already-absent creator. Never overwrite original evidence to qualify a changed workload.
 Docker volume identity fields are conservative recreation detection, not a hostile-actor fence or opaque ID.
 
-For Docker effects, `runtime` must carry the **already qualified** `project`, `working_directory`, `ownership`,
+For Compose Docker effects (`runtime.kind: compose`, also the legacy default), `runtime` must carry the **already qualified** `project`, `working_directory`, `ownership`,
 `config_files`, `env_files` (ordered `{path, sha256}` lists; no ambient/default-file fallback), and
 `resolved_sha256` (helper `fingerprint` of `docker compose --project-name PROJECT --project-directory CWD
 --env-file FILE --file CONFIG … config --format json`, parsed as JSON). Retain the exact wrapper invocation in
@@ -71,6 +71,69 @@ its existing handoff. The helper resolves that same context, compares its digest
 Compose hash/working/configuration paths, and never starts setup. Environment changes that alter the resolved
 model hold it. Implicit Compose env-file loading is disabled; only enumerated env-file arguments are used.
 Do not print raw configuration or container environments to obtain these hashes.
+
+### Standalone creation capability
+
+For independently owned `docker run` resources, select **`runtime.kind: standalone`**, not an optional Compose
+validation switch. Set `ownership: proven`, `creation_record: {path, sha256}` and `resolved_sha256` (helper
+`fingerprint` of that parsed record). This capability never invents Compose labels/configuration, calls setup,
+requires the old source worktree to exist or relaxes the Compose path. Compose-labelled subjects hold here.
+All ordinary subject/publication/protected-file/worker/host-session checks still apply.
+
+Keep the immutable owned/private 0600 creation record and each evidence file outside removal candidates. Its
+schema is `version: 1`, exact `task`, `origin`, `source: {revision, workload}`, nonempty `authority`,
+`data: disposable`, `basis`, and maps `containers`/`networks` keyed by full returned IDs (maximum 32 each).
+`source.revision` is the original creating revision, not automatically the later published candidate. `basis`
+has `kind: allocation` and `evidence: [{path, sha256}]` (1–16 retained original allocation/intent files).
+Evidence must corroborate that revision, each returned ID, container configuration fingerprint and network
+creation timestamp/configuration. Names, labels, a before/after delta or newly written assertion alone do not
+establish creation. Capture the allocation output and inspected identities at creation; retain unknowns.
+
+Each container proof has exact `name`, `image`, `inspection_sha256` (`container_identity`), `mounts_sha256`
+(`fingerprint` of actual Mounts), `workload: {kind, processes_sha256}` and `volume_declarations`. Each network
+proof has `name`, `created`, `inspection_sha256` (`network_identity` excluding mutable endpoints/counters).
+Ordinary container/network entries and creation-intent fields above remain required. The helper checks exact
+current config/image/mounts, all connected networks and stopped/shared/unknown peers before normal stop/remove.
+No host/published-port, privileged, auto-removing or Compose-labelled standalone runtime is qualified.
+
+Supported consumer inspection is deliberately finite: `idle` (one exact sleep process), `postgres` (local
+psql client-session count using the existing POSTGRES_USER/POSTGRES_DB defaults), and `mysql` (local root client-session count using the existing
+container environment, never printing its password). Running subjects require exact current `docker top`
+processes, zero established TCP/IPv6/connected Unix sockets, and the applicable live DB-session query. A changed
+process, client connection, unavailable tool/permission or unsupported workload holds; do not stop its consumers.
+Other session/authentication/topology needs belong to their resource-specific capability hold, not an arbitrary
+caller-provided shell probe. Stopped subjects must still match immutable identity and qualified workload type.
+
+Volumes use the SAME durable creator-mount capture and all-current/stopped-consumer removal checks. For every
+standalone removable volume, `volume_declarations` must contain `{type: volume, target, allocated_name,
+created_absent: true}` corroborated by the declaration-list fingerprint in original allocation evidence.
+The exact volume entry still needs creator/destination, private original intent, `volume_identity`, disposability
+and authority. Merely attached/pre-existing/external or ambiguous volumes hold; unknown/durable data is not
+converted to disposable. No global registry, implicit volume discovery or association-based storage deletion.
+
+### Immutable historical adoption (never retrospective intent)
+
+For a valid historical standalone receipt, leave its bytes, attempts, plan hash, subject, unknowns and original
+allocation evidence untouched. Write a **new linked companion receipt** in the same subject's canonical runs.
+Copy the original plan and explicitly reconcile only the supported resources/evidence; carry original protected
+files, publication, exclusions and uncertainty. The new creation record uses `basis.kind: legacy-adoption`,
+`basis.prior_receipt: {path, sha256}`, `basis.prior_plan_sha256` (fingerprint of the original cleanup plan), and
+`basis.evidence` pointing to original allocation outputs/configuration observations. Each adopted container or
+network entry has `creation: {kind: legacy-created}`; do not manufacture `intent` or change an original hash.
+Original task/origin/candidate must match; adopted IDs must be a subset of the original plan. Actual allocation
+proof/source/config fingerprints must still corroborate every adopted ID. Legacy volume evidence without the
+original creator/destination/intent is a **volume-specific hold**, not retrospective creation proof.
+
+The owning intake must inspect original allocation/narrative evidence and corroborate authority/data before
+writing the linked record. Hashes protect the selected proof from drift; they do not authenticate arbitrary
+assertions or grant discard authority. The helper independently requalifies live identity, sessions, processes,
+connections, mounts, consumers, permission and publication before any effect. Missing historical immutable
+configuration/allocation proof is a precise resource-specific evidence hold, never inferred from its name.
+The old worktree is not a prerequisite for independently owned resources; retained evidence lives externally.
+Absent IDs/names are observed without reading retired runtime inputs; an absent ID with a recreated name holds.
+For Common TASK-00166 all four historical standalone effects are already complete: **do not run adoption or
+cleanup again for them**, recreate resources or repeat Git/publication. Its original diagnostic and final manual
+result remain chronological evidence under TASK-00542's ignored handoff, not an outstanding disposal request.
 
 Use Python's `importlib.util.spec_from_file_location` to load the owning helper for `file_record`,
 `container_identity`, `fingerprint` and `digest` while assembling the receipt from bounded owning-tool
@@ -176,7 +239,20 @@ configuration, exact IDs/mounts, helper digest, stdout/stderr, exits and receipt
 `--resume` observes and resumes the same receipt without recreating resources; partial pre-receipt creation
 recovers only from original intent/current fixture identity. No destructive fallback runs after a hold.
 
-`--prepare-only` records the fixture without invoking cleanup, for actual installed-Pi callers.
+`--runtime standalone --prepare-only` records one new docker-run tmpfs container/network, retained allocation
+proof and an explicit standalone plan for actual installed-Pi callers. Its default is an idle workload;
+`--case database` uses the already-present PostgreSQL fixture image and `--case mysql` uses the already-present
+MySQL fixture image, each tmpfs-only with disposable local test authentication, no published ports/pull/build.
+They qualify the actual supported database consumer checks, not production authentication or general topologies. Without `--prepare-only`, it invokes the
+same helper; `--resume --runtime standalone` observes the same receipt without recreating resources.
+`--standalone-matrix` runs bounded normal/preview, interruption after real stop/removal with same-receipt resume,
+missing/contradictory proof, unavailable inspection, an owned permission-denied socket, a live extra consumer,
+stopped/shared/unknown endpoint, immutable legacy adoption versus missing-proof hold, and recreated-name probes.
+It preserves an independent exact tmpfs sentinel/config/mount/mode/owner across the probes. An unsuccessful setup
+retains its resources/evidence; inspect the exact receipt before a bounded `--resume` (never blanket recreation).
+These direct fixtures use controlled hosting and do not establish independent acceptance or actual publication.
+
+`--prepare-only` records the Compose fixture without invoking cleanup, for actual installed-Pi callers.
 `--case running`, `failure` (observed workload exit 7) and `cancel` (explicit owning Compose stop) qualify their
 actual workload states before retirement. `--case image` imports one uniquely labeled empty disposable image,
 without registry/build cache or shared base layers, then qualifies exact image removal.

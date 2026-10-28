@@ -32,13 +32,333 @@ def private_json(path, value):
         output.write("\n")
 
 
+def standalone(args, module, evidence, helper):
+    """Own a new docker-run tmpfs subject; never adopt resources by name."""
+    root = evidence / "safe"
+    receipt = root / ".runs/tasks/TASK-00542/runs/fixture.json"
+    if not args.resume:
+        evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
+        root.mkdir()
+        run(["git", "init", "--initial-branch=develop"], root)
+        run(["git", "-c", "user.name=Lifecycle fixture", "-c", "user.email=fixture@example.invalid",
+             "commit", "--allow-empty", "-m", "Bounded standalone fixture"], root)
+        origin = "git@github.com:task00542/fixture.git"
+        run(["git", "remote", "add", "origin", origin], root)
+        oid = run(["git", "rev-parse", "HEAD"], root)
+        image = json.loads(run(["docker", "image", "inspect", "mysql:8.4.11" if args.case == "mysql" else "postgres:17-bookworm"], root))[0]
+        name = "task00542-standalone-" + uuid.uuid4().hex[:12]
+        source = {"revision": oid, "workload": "bounded database tmpfs qualification" if args.case in ("database", "mysql") else "bounded idle tmpfs qualification",
+                  "helper_sha256": module.digest(helper.read_bytes()),
+                  "checker_sha256": module.digest(Path(__file__).read_bytes())}
+        intent = evidence / "creation-intent.json"
+        private_json(intent, {"source": source, "name": name, "image": image["Id"],
+                              "authority": "explicit TASK-00542 disposable fixture grant",
+                              "data": "disposable", "tmpfs": "/var/lib/mysql" if args.case == "mysql" else "/var/lib/postgresql/data"})
+        network_id = run(["docker", "network", "create", name], root)
+        network = json.loads(run(["docker", "network", "inspect", network_id], root))[0]
+        database = args.case in ("database", "mysql")
+        if args.case == "mysql":
+            workload_args = ["--env", "MYSQL_ALLOW_EMPTY_PASSWORD=yes", image["Id"]]
+            tmpfs = "/var/lib/mysql"
+        else:
+            workload_args = ["--env", "POSTGRES_HOST_AUTH_METHOD=trust", image["Id"]] if database else [image["Id"], "sleep", "3600"]
+            tmpfs = "/var/lib/postgresql/data"
+        identifier = run(["docker", "run", "--detach", "--name", name, "--network", network_id,
+                          "--tmpfs", tmpfs, "--pull=never", *workload_args], root)
+        if database:
+            health = ["mysqladmin", "ping", "--host=127.0.0.1", "--user=root"] if args.case == "mysql" else ["pg_isready", "-U", "postgres"]
+            deadline = time.monotonic() + 60
+            while subprocess.run(["docker", "exec", identifier, *health], capture_output=True).returncode:
+                if time.monotonic() > deadline:
+                    raise RuntimeError("owned database startup incomplete; retain original intent/ID")
+                time.sleep(1)
+            time.sleep(2)
+        container = json.loads(run(["docker", "inspect", identifier], root))[0]
+        processes = subprocess.check_output(["docker", "top", identifier, "-eo", "pid,ppid,args"])
+        allocation = evidence / "allocation.json"
+        private_json(allocation, {"container": identifier, "network": network_id,
+            "container_identity": module.container_identity(container), "network_created": network["Created"],
+            "source": source, "image": container["Image"], "mounts": container["Mounts"],
+            "intent_sha256": module.digest(intent.read_bytes()), "intent": str(intent)})
+        creation_record = evidence / "standalone-creation.json"
+        refs = [{"path": str(path), "sha256": module.digest(path.read_bytes())} for path in (intent, allocation)]
+        network_config = {key: network.get(key) for key in
+                          ("Id", "Name", "Created", "Scope", "Driver", "EnableIPv4", "EnableIPv6", "IPAM", "Internal", "Attachable", "Ingress", "ConfigFrom", "ConfigOnly", "Options", "Labels")}
+        private_json(creation_record, {"version": 1, "task": "TASK-00542", "origin": origin,
+            "source": source, "authority": "explicit TASK-00542 fixture discard grant", "data": "disposable",
+            "basis": {"kind": "allocation", "evidence": refs},
+            "containers": {identifier: {"name": container["Name"], "image": container["Image"],
+                "inspection_sha256": module.container_identity(container),
+                "mounts_sha256": module.fingerprint(container["Mounts"]),
+                "workload": {"kind": ("mysql" if args.case == "mysql" else "postgres") if database else "idle", "processes_sha256": module.digest(processes)},
+                "volume_declarations": []}},
+            "networks": {network_id: {"name": network["Name"], "created": network["Created"],
+                "inspection_sha256": module.fingerprint(network_config)}}})
+        common = {"disposition": "remove", "ownership": "proven", "consumers": [],
+                  "reason": "new isolated disposable standalone fixture", "data": "disposable",
+                  "authority": "explicit TASK-00542 fixture discard grant",
+                  "creation": {"kind": "created", "intent": str(intent), "intent_sha256": module.digest(intent.read_bytes())}}
+        retained = {"disposition": "retain", "ownership": "proven", "consumers": [],
+                    "reason": "fixture source/evidence; no Git removal subject"}
+        plan = {"task": "TASK-00542", "safe_checkout": str(root), "git_common_dir": str(root / ".git"),
+            "origin": origin, "ref": "refs/heads/feature/task-00542-fixture", "oid": oid,
+            "publication": {"url": "https://github.com/task00542/fixture/pull/1", "repository": "task00542/fixture",
+                "number": 1, "base": "develop", "base_ref": "refs/heads/develop", "delivery_verified": True,
+                "merge_oid": oid, "merged_at": "2026-10-28T00:00:00Z"},
+            "protected_files": [], "exited_workers": [],
+            "runtime": {"kind": "standalone", "ownership": "proven", "project": name,
+                "working_directory": str(root), "env_files": [], "config_files": [],
+                "creation_record": {"path": str(creation_record), "sha256": module.digest(creation_record.read_bytes())},
+                "resolved_sha256": module.fingerprint(json.loads(creation_record.read_text()))},
+            "containers": [dict(common, identity=identifier, name=container["Name"], service="fixture",
+                inspection_sha256=module.container_identity(container), processes_sha256=module.digest(processes), bind_data={})],
+            "networks": [dict(common, identity=network_id, name=network["Name"], created=network["Created"], key="fixture")],
+            "volumes": [], "images": [dict(retained, identity=image["Id"], creation={"kind": "reused"})], "caches": [],
+            "worktree": dict(retained, identity=str(root / "no-removal-candidate")),
+            "branch": dict(retained, identity="refs/heads/feature/task-00542-fixture")}
+        receipt.parent.mkdir(mode=0o700, parents=True)
+        private_json(receipt, {"qualification": "real standalone Docker; controlled hosting, not publication",
+                               "cleanup": {"version": 1, "plan": plan}})
+        shim = evidence / "controlled-hosting"
+        shim.mkdir()
+        response = {"url": plan["publication"]["url"], "state": "MERGED", "mergedAt": plan["publication"]["merged_at"],
+            "mergeCommit": {"oid": oid}, "baseRefName": "develop", "headRefName": "feature/task-00542-fixture",
+            "headRefOid": oid, "headRepository": {"name": "fixture"}, "headRepositoryOwner": {"login": "task00542"}}
+        (shim / "gh").write_text("#!/usr/bin/env python3\nprint(" + repr(json.dumps(response)) + ")\n")
+        (shim / "gh").chmod(0o700)
+    if args.prepare_only:
+        print(json.dumps({"prepared": True, "receipt": str(receipt)}))
+        return 0
+    env = dict(os.environ, PATH=str(evidence / "controlled-hosting") + os.pathsep + os.environ["PATH"])
+    invocation = [sys.executable, str(helper), "--receipt", str(receipt), "--apply"]
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    result = subprocess.run(invocation, cwd=root, env=env, capture_output=True, timeout=180)
+    (evidence / (stamp + ".stdout")).write_bytes(result.stdout)
+    (evidence / (stamp + ".stderr")).write_bytes(result.stderr)
+    private_json(evidence / (stamp + ".result.json"), {"argv": invocation, "exit": result.returncode,
+        "helper_sha256": module.digest(helper.read_bytes()), "receipt": str(receipt), "runtime": "standalone"})
+    print(json.dumps({"helper_exit": result.returncode, "receipt": str(receipt)}))
+    return result.returncode
+
+
+def standalone_matrix(args, module, evidence, helper):
+    """Exercise real effects/holds with immutable linked plans and bounded owned peers."""
+    evidence.mkdir(mode=0o700, parents=True, exist_ok=args.resume)
+    rows = json.loads((evidence / "matrix.json").read_text()) if args.resume and (evidence / "matrix.json").exists() else []
+    checker = Path(__file__).resolve()
+
+    def prepare(name):
+        directory = evidence / name
+        receipt = directory / "safe/.runs/tasks/TASK-00542/runs/fixture.json"
+        if not (args.resume and receipt.exists()):
+            run([sys.executable, checker, "--runtime", "standalone", "--prepare-only", "--helper", helper,
+                 "--evidence", directory], evidence)
+        return directory, receipt, json.loads(receipt.read_text())
+
+    def invoke(directory, receipt, label, env=None, preview=False, expected=0):
+        environment = dict(os.environ, PATH=str(directory / "controlled-hosting") + os.pathsep + os.environ["PATH"])
+        environment.update(env or {})
+        argv = [sys.executable, str(helper), "--receipt", str(receipt)] + ([] if preview else ["--apply"])
+        result = subprocess.run(argv, cwd=directory / "safe", env=environment, capture_output=True, timeout=180)
+        (directory / (label + ".stdout")).write_bytes(result.stdout)
+        (directory / (label + ".stderr")).write_bytes(result.stderr)
+        report = json.loads(result.stdout) if result.stdout.startswith(b"{") else {}
+        semantic = True
+        reasons = " ".join(entry.get("reason", "") for entry in report.get("results", []))
+        if expected == 1 and not preview:
+            expected_reason = {"missing-proof": "FileNotFoundError", "contradictory-proof": "evidence missing/changed",
+                "unavailable": "docker", "permission": "docker", "active-consumer": "processes changed",
+                "stopped-shared-unknown": "consumer", "running-shared-unknown": "consumer",
+                "legacy-missing-proof": "allocation/configuration proof absent",
+                "recreated-name": "recreated under recorded name"}.get(directory.name)
+            semantic = expected_reason is not None and expected_reason in reasons
+            if directory.name != "recreated-name":
+                original_plan = json.loads((directory / "safe/.runs/tasks/TASK-00542/runs/fixture.json").read_text())["cleanup"]["plan"]
+                present = json.loads(run(["docker", "inspect", original_plan["containers"][0]["identity"]], directory))[0]
+                semantic = semantic and module.container_identity(present) == original_plan["containers"][0]["inspection_sha256"]
+                network = json.loads(run(["docker", "network", "inspect", original_plan["networks"][0]["identity"]], directory))[0]
+                semantic = semantic and network["Created"] == original_plan["networks"][0]["created"]
+        row = {"case": directory.name, "label": label, "argv": argv, "exit": result.returncode,
+               "expected_exit": expected, "matched": result.returncode == expected and semantic,
+               "semantic_hold_and_subject_preservation": semantic, "reasons": reasons,
+               "helper_sha256": module.digest(helper.read_bytes()), "receipt": str(receipt)}
+        private_json(directory / (label + ".result.json"), row)
+        rows.append(row)
+        private_json(evidence / "matrix.json", rows)
+        if not row["matched"]:
+            raise RuntimeError("owning cleanup result differs; retain exact fixture and evidence")
+        return report
+
+    def linked(receipt, document, name):
+        result = receipt.with_name(name + ".json")
+        document["prior_receipt"] = {"path": str(receipt), "sha256": module.digest(receipt.read_bytes())}
+        document["cleanup"].pop("plan_sha256", None)
+        document["cleanup"]["attempts"] = []
+        private_json(result, document)
+        return result
+
+    def consumer(directory, document, running=False):
+        plan = document["cleanup"]["plan"]
+        network = plan["networks"][0]
+        image = plan["images"][0]["identity"]
+        intent = directory / "peer-intent.json"
+        private_json(intent, {"network": network["identity"], "image": image, "data": "disposable",
+            "authority": "owned bounded unknown-to-plan peer; linked normal cleanup after hold"})
+        invocation = ["docker", "run", "--detach"] if running else ["docker", "create"]
+        identifier = run([*invocation, "--network", network["identity"], "--tmpfs", "/var/lib/postgresql/data",
+                          "--pull=never", image, "sleep", "3600"], directory)
+        current = json.loads(run(["docker", "inspect", identifier], directory))[0]
+        allocation = directory / "peer-allocation.json"
+        private_json(allocation, {"id": identifier, "inspection_sha256": module.container_identity(current),
+                                  "intent": str(intent), "source": plan["runtime"]["resolved_sha256"]})
+        process_hash = module.digest(subprocess.check_output(["docker", "top", identifier, "-eo", "pid,ppid,args"])) if running else None
+        proof = {"name": current["Name"], "image": current["Image"],
+            "inspection_sha256": module.container_identity(current), "mounts_sha256": module.fingerprint(current["Mounts"]),
+            "workload": {"kind": "idle", "processes_sha256": process_hash}, "volume_declarations": []}
+        entry = dict(plan["containers"][0], identity=identifier, name=current["Name"],
+            inspection_sha256=module.container_identity(current), processes_sha256=process_hash,
+            creation={"kind": "created", "intent": str(intent), "intent_sha256": module.digest(intent.read_bytes())})
+        return identifier, proof, entry, allocation
+
+    protected_dir, protected_receipt, protected_doc = prepare("protected")
+    protected_id = protected_doc["cleanup"]["plan"]["containers"][0]["identity"]
+    if not args.resume:
+        run(["docker", "exec", protected_id, "sh", "-c",
+             "printf TASK00542-protected > /var/lib/postgresql/data/sentinel; chmod 640 /var/lib/postgresql/data/sentinel"], evidence)
+
+    def protection():
+        current = json.loads(run(["docker", "inspect", protected_id], evidence))[0]
+        observation = run(["docker", "exec", protected_id, "sh", "-c",
+            "sha256sum /var/lib/postgresql/data/sentinel; stat -c '%a %u %g' /var/lib/postgresql/data/sentinel"], evidence)
+        return {"configuration": module.container_identity(current), "mounts": module.fingerprint(current["Mounts"]),
+                "sentinel_digest_mode_uid_gid": observation,
+                "receipt_mode": protected_receipt.stat().st_mode & 0o777}
+    before = protection()
+    private_json(evidence / "protected-before.json", before)
+    for case in ("normal", "interrupt-stop", "interrupt-remove", "missing-proof", "contradictory-proof",
+                 "unavailable", "permission", "active-consumer", "stopped-shared-unknown", "running-shared-unknown",
+                 "legacy", "legacy-missing-proof", "recreated-name"):
+        if args.resume and (evidence / case / "protected-after.json").exists():
+            continue
+        directory, receipt, original = prepare(case)
+        document = json.loads(receipt.read_text())
+        plan = document["cleanup"]["plan"]
+        identifier = plan["containers"][0]["identity"]
+        if case == "normal":
+            invoke(directory, receipt, "preview", preview=True, expected=1)
+            invoke(directory, receipt, "apply")
+        elif case.startswith("interrupt-"):
+            real_docker = run(["which", "docker"], evidence)
+            shim = directory / "controlled-hosting/docker"
+            operation = "stop" if case == "interrupt-stop" else "rm"
+            marker = directory / "interrupted-effect.json"
+            shim.write_text("#!/usr/bin/env python3\nimport os,sys,subprocess,json,signal\n"
+                + "r=subprocess.run([" + repr(real_docker) + ",*sys.argv[1:]])\n"
+                + "if sys.argv[1:2]==[" + repr(operation) + "] and " + repr(identifier) + " in sys.argv and r.returncode==0 and not os.path.exists(" + repr(str(marker)) + "):\n"
+                + " open(" + repr(str(marker)) + ",'w').write(json.dumps({'operation':sys.argv[1:],'parent':os.getppid(),'exit':r.returncode}))\n os.kill(os.getppid(),signal.SIGTERM)\n"
+                + "sys.exit(r.returncode)\n")
+            shim.chmod(0o700)
+            invoke(directory, receipt, "interrupted", expected=-signal.SIGTERM)
+            invoke(directory, receipt, "same-receipt-resume")
+        elif case in ("missing-proof", "contradictory-proof"):
+            plan["runtime"]["creation_record"]["sha256"] = "0" * 64
+            if case == "missing-proof":
+                plan["runtime"]["creation_record"]["path"] = str(directory / "never-created.json")
+            held = linked(receipt, document, "held-proof")
+            invoke(directory, held, "hold", expected=1)
+            invoke(directory, receipt, "original-proof-recovery")
+        elif case in ("unavailable", "permission"):
+            endpoint = directory / "probe.sock"
+            listener = None
+            if case == "permission":
+                import socket
+                import tempfile
+                socket_dir = Path(tempfile.mkdtemp(prefix="s4-", dir=evidence.parents[1]))
+                endpoint = socket_dir / "s"
+                private_json(directory / "permission-endpoint.json", {"path": str(endpoint), "owner": os.getuid(),
+                    "purpose": "owned denied inspection fixture, not Docker real socket"})
+                listener = socket.socket(socket.AF_UNIX)
+                listener.bind(str(endpoint))
+                listener.listen(1)
+                endpoint.chmod(0o000)  # Owned probe endpoint only; never Docker's real socket/protections.
+            probe_env = dict(os.environ, DOCKER_CONTEXT="", DOCKER_HOST="unix://" + str(endpoint))
+            observation = subprocess.run(["docker", "ps", "-a"], env=probe_env, capture_output=True, timeout=20)
+            (directory / "endpoint-probe.stderr").write_bytes(observation.stderr)
+            private_json(directory / "endpoint-probe.json", {"exit": observation.returncode,
+                "stderr_sha256": module.digest(observation.stderr),
+                "permission_denied": b"permission denied" in observation.stderr.lower()})
+            if observation.returncode == 0 or (case == "permission" and b"permission denied" not in observation.stderr.lower()):
+                raise RuntimeError("actual endpoint failure was not established; preserve fixture")
+            invoke(directory, receipt, "hold", env={"DOCKER_CONTEXT": "", "DOCKER_HOST": "unix://" + str(endpoint)}, expected=1)
+            if listener:
+                listener.close()
+            invoke(directory, receipt, "same-receipt-recovery")
+        elif case == "active-consumer":
+            child = subprocess.Popen(["docker", "exec", identifier, "sleep", "30"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(1)
+            invoke(directory, receipt, "hold", expected=1)
+            child.wait(timeout=45)  # Do not kill/stop a consumer to clear the hold.
+            invoke(directory, receipt, "consumer-finished-resume")
+        elif case in ("stopped-shared-unknown", "running-shared-unknown"):
+            peer, proof, entry, allocation = consumer(directory, document, running=case.startswith("running"))
+            invoke(directory, receipt, "hold", expected=1)
+            record = json.loads(Path(plan["runtime"]["creation_record"]["path"]).read_text())
+            record["containers"][peer] = proof
+            record["basis"]["evidence"].append({"path": str(allocation), "sha256": module.digest(allocation.read_bytes())})
+            new_record = directory / "linked-creation.json"
+            private_json(new_record, record)
+            plan["runtime"]["creation_record"] = {"path": str(new_record), "sha256": module.digest(new_record.read_bytes())}
+            plan["runtime"]["resolved_sha256"] = module.fingerprint(record)
+            plan["containers"].append(entry)
+            released = linked(receipt, document, "owned-peer-release")
+            invoke(directory, released, "linked-release")
+        elif case in ("legacy", "legacy-missing-proof"):
+            record = json.loads(Path(plan["runtime"]["creation_record"]["path"]).read_text())
+            record["basis"]["kind"] = "legacy-adoption"
+            record["basis"]["prior_receipt"] = {"path": str(receipt), "sha256": module.digest(receipt.read_bytes())}
+            record["basis"]["prior_plan_sha256"] = module.fingerprint(original["cleanup"]["plan"])
+            if case == "legacy-missing-proof":
+                record["basis"]["evidence"] = record["basis"]["evidence"][:1]
+            new_record = directory / "adopted-creation.json"
+            private_json(new_record, record)
+            plan["runtime"]["creation_record"] = {"path": str(new_record), "sha256": module.digest(new_record.read_bytes())}
+            plan["runtime"]["resolved_sha256"] = module.fingerprint(record)
+            for item in plan["containers"] + plan["networks"]:
+                item["creation"] = {"kind": "legacy-created"}
+            adopted = linked(receipt, document, "adopted")
+            invoke(directory, adopted, "adoption", expected=1 if case.endswith("missing-proof") else 0)
+            if case.endswith("missing-proof"):
+                invoke(directory, receipt, "original-proof-recovery")
+        else:
+            invoke(directory, receipt, "original-retirement")
+            # New creation has a new receipt/intent, then gets the old name. Old receipt must hold.
+            replacement_dir, replacement_receipt, replacement = prepare("replacement")
+            replacement_id = replacement["cleanup"]["plan"]["containers"][0]["identity"]
+            run(["docker", "rename", replacement_id, plan["containers"][0]["name"].lstrip("/")], evidence)
+            invoke(directory, receipt, "old-receipt-recreated-name", expected=1)
+            run(["docker", "rename", replacement_id, replacement["cleanup"]["plan"]["containers"][0]["name"].lstrip("/")], evidence)
+            invoke(replacement_dir, replacement_receipt, "new-owned-replacement-retirement")
+            invoke(directory, receipt, "old-receipt-absence")
+        after = protection()
+        private_json(directory / "protected-after.json", {"observation": after, "unchanged": after == before})
+        if after != before:
+            raise RuntimeError("protected data/configuration/permissions changed")
+    invoke(protected_dir, protected_receipt, "explicit-owned-sentinel-release")
+    private_json(evidence / "summary.json", {"rows": len(rows), "all_expected_exits": all(row["matched"] for row in rows),
+        "protected": before, "scope": "direct owning-tool standalone qualification, not independent acceptance"})
+    print(json.dumps({"rows": len(rows), "all_expected_exits": True}))
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", required=True, help="New absolute task-owned evidence directory, outside removal candidates")
     parser.add_argument("--helper", default=str(Path(__file__).with_name("cleanup.py")))
+    parser.add_argument("--runtime", choices=("compose", "standalone"), default="compose")
+    parser.add_argument("--standalone-matrix", action="store_true", help="Bounded owning-tool effects, interruption, evidence and consumer probes")
     parser.add_argument("--resume", action="store_true", help="Reuse this fixture/receipt; never recreate missing resources")
     parser.add_argument("--prepare-only", action="store_true", help="Create and record the bounded fixture for actual Pi caller qualification; do not invoke cleanup")
-    parser.add_argument("--case", choices=("normal", "running", "failure", "cancel", "durable", "shared-stopped", "image", "unavailable", "denied", "changed-identity"), default="normal")
+    parser.add_argument("--case", choices=("normal", "running", "failure", "cancel", "durable", "shared-stopped", "image", "unavailable", "denied", "changed-identity", "mismatched-binding", "database", "mysql"), default="normal")
     parser.add_argument("--release-consumer", action="store_true", help="Resume only: linked new fixture receipt permits its owned stopped consumer retirement")
     parser.add_argument("--interrupt", action="store_true", help="Terminate only this helper subprocess after its first persisted container removal; resume separately")
     args = parser.parse_args()
@@ -50,6 +370,10 @@ def main():
     spec = importlib.util.spec_from_file_location("subject_cleanup", helper)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if args.standalone_matrix:
+        return standalone_matrix(args, module, evidence, helper)
+    if args.runtime == "standalone":
+        return standalone(args, module, evidence, helper)
     root = evidence / "safe"
     receipt = root / ".runs/tasks/TASK-00542/runs/fixture.json"
     env = dict(os.environ, COMPOSE_DISABLE_ENV_FILE="1", COMPOSE_ENV_FILES="")
@@ -222,6 +546,13 @@ def main():
             released["cleanup"].pop("plan_sha256", None)
             released["cleanup"]["attempts"] = []
             private_json(receipt, released)
+    if args.case == "mismatched-binding" and not args.resume:
+        original_receipt = receipt
+        mismatch = json.loads(receipt.read_text())
+        mismatch["prior_receipt"] = {"path": str(receipt), "sha256": module.digest(receipt.read_bytes())}
+        mismatch["cleanup"]["plan"]["runtime"]["project"] += "-mismatch"
+        receipt = receipt.with_name("mismatched-binding.json")
+        private_json(receipt, mismatch)
     document = json.loads(receipt.read_text())
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     invocation = [sys.executable, str(helper), "--receipt", str(receipt), "--apply"]
@@ -230,14 +561,14 @@ def main():
     expected_probe_hold = False
     protected_before = None
     probe_case = json.loads((evidence / "workload.json").read_text()).get("case") if (evidence / "workload.json").exists() else "normal"
-    if not args.resume and probe_case in ("unavailable", "denied", "changed-identity"):
+    if not args.resume and probe_case in ("unavailable", "denied", "changed-identity", "mismatched-binding"):
         protected_before = json.loads(run(["docker", "inspect", *[item["identity"] for item in document["cleanup"]["plan"]["containers"]]], root))
         if probe_case == "unavailable":
             env["DOCKER_HOST"] = "unix://" + str(evidence / "deliberately-unavailable-fixture.sock")
             env.pop("DOCKER_CONTEXT", None)
         elif probe_case == "denied":
             receipt.chmod(0o000)  # Explicit owned fixture denial; restored only as declared probe teardown.
-        else:
+        elif probe_case == "changed-identity":
             run(["docker", "rename", document["cleanup"]["plan"]["containers"][0]["identity"], project + "-changed"], root)
     if args.interrupt:
         process = subprocess.Popen(invocation, cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -265,6 +596,8 @@ def main():
         expected_probe_hold = result.returncode != 0 and (unchanged or probe_case == "changed-identity")
         if probe_case == "denied":
             expected_probe_hold = expected_probe_hold and b"PermissionError" in result.stdout + result.stderr
+        if probe_case == "mismatched-binding":
+            expected_probe_hold = expected_probe_hold and b"resolved runtime binding changed" in result.stdout
         private_json(evidence / (stamp + ".protection.json"), {"case": probe_case, "before": [module.container_identity(a) for a in protected_before],
             "after": [module.container_identity(a) for a in protected_after], "helper_exit": result.returncode, "expected_hold": expected_probe_hold})
         if probe_case == "changed-identity":

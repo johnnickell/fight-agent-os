@@ -401,8 +401,12 @@ remove/retain/hold disposition and reason, command/result and postcondition:
 
 - Selected and canonical safe checkouts, Git common directory, registered worktree paths, local full branch ref,
   local OID, accepted/published candidate and bridge, remote URL/ref/OID, exact PR identity/state/merge evidence.
-- Compose project, absolute configuration/override/env-file **locators** and working directory, wrapper invocation,
-  container IDs/labels, mounts and dependencies; network IDs/labels and every attached endpoint's ownership.
+- Runtime kind: qualified Compose project, absolute configuration/override/env-file **locators** and working
+  directory, or the explicit standalone creation capability with immutable original allocation/source proof.
+  Carry wrapper invocation, container IDs/configuration fingerprints/labels, mounts and dependencies;
+  network IDs/configuration fingerprints/labels and every attached endpoint's ownership. Never invent Compose
+  labels/configuration for standalone subjects; valid historical adoption uses a linked immutable plan or a
+  precise evidence hold under the executable contract, without requiring a retired source worktree.
   Capture exact creating-container mounts and storage identity/provenance before removing the creating
   container, and retain that observation outside removal candidates. For named/image-declared anonymous
   volumes, distinguish task-created, merely used and shared storage, size observation, explicit disposability

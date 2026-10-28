@@ -83,6 +83,13 @@ def container_identity(item):
     return fingerprint({key: item.get(key) for key in ("Id", "Created", "Image", "Name", "Config", "HostConfig", "Mounts")})
 
 
+def network_identity(item):
+    """Hash network configuration, excluding mutable endpoints and runtime counters."""
+    return fingerprint({key: item.get(key) for key in
+                        ("Id", "Name", "Created", "Scope", "Driver", "EnableIPv4", "EnableIPv6", "IPAM",
+                         "Internal", "Attachable", "Ingress", "ConfigFrom", "ConfigOnly", "Options", "Labels")})
+
+
 def volume_identity(item):
     """Bind Docker's available volume identity fields; never use its name alone."""
     return fingerprint({key: item.get(key) for key in
@@ -325,6 +332,120 @@ class Cleanup:
         require(fingerprint(model) == binding["resolved_sha256"] and model["name"] == binding["project"], "resolved runtime binding changed; no generic setup fallback")
         return binding, args, model
 
+    def retained_evidence(self, entry):
+        path = absolute(entry["path"])
+        require(not inside(path, absolute(self.plan["worktree"]["identity"])) and
+                path.stat().st_uid == os.getuid() and stat.S_IMODE(path.stat().st_mode) == 0o600,
+                "standalone evidence must be private, owned and outside removal candidates")
+        raw = path.read_bytes()
+        require(len(raw) <= 16 * 1024 * 1024 and digest(raw) == entry["sha256"],
+                "standalone evidence missing/changed; preserve original and recover proof")
+        return raw
+
+    def standalone(self):
+        """Qualify an explicit creation capability, never a Compose-validation bypass."""
+        binding = self.plan["runtime"]
+        require(binding["kind"] == "standalone" and binding["ownership"] == "proven",
+                "standalone capability ownership unresolved")
+        record = json.loads(self.retained_evidence(binding["creation_record"]))
+        require(record["version"] == 1 and record["task"] == self.subject and
+                record["origin"] == self.plan["origin"] and record["authority"] and
+                record["data"] == "disposable" and fingerprint(record) == binding["resolved_sha256"],
+                "standalone creation subject/authority/configuration contradiction")
+        source = record["source"]
+        require(re.fullmatch(r"[a-f0-9]{40}", source["revision"]) and source["workload"],
+                "standalone source revision/workload unresolved")
+        basis = record["basis"]
+        require(basis["kind"] in ("allocation", "legacy-adoption") and 1 <= len(basis["evidence"]) <= 16,
+                "standalone original allocation evidence unavailable")
+        evidence = b"\n".join(self.retained_evidence(entry) for entry in basis["evidence"])
+        require(source["revision"].encode() in evidence, "standalone source not corroborated by retained evidence")
+        if basis["kind"] == "legacy-adoption":
+            prior = json.loads(self.retained_evidence(basis["prior_receipt"]))
+            old = prior["cleanup"]["plan"]
+            require(old["task"] == self.subject and old["origin"] == self.plan["origin"] and
+                    old["oid"] == self.plan["oid"] and fingerprint(old) == basis["prior_plan_sha256"],
+                    "legacy adoption original subject/plan changed")
+            for kind in ("containers", "networks"):
+                require(set(record[kind]) <= {entry["identity"] for entry in old[kind]},
+                        "legacy adoption adds resources outside original subject")
+        for kind in ("containers", "networks"):
+            require(len(record[kind]) <= 32, "standalone allocation bounds exceeded")
+            for identifier, resource in record[kind].items():
+                require(re.fullmatch(r"[a-f0-9]{64}", identifier) and identifier.encode() in evidence and
+                        (resource["inspection_sha256"].encode() in evidence or
+                         (kind == "networks" and resource["created"].encode() in evidence)),
+                        "exact standalone allocation/configuration proof absent; resource-specific evidence hold")
+        return record
+
+    def standalone_container(self, item, current):
+        record = self.standalone()
+        proof = record["containers"][item["identity"]]
+        require(proof["name"] == current["Name"] == item["name"] and
+                proof["image"] == current["Image"] and
+                proof["inspection_sha256"] == item["inspection_sha256"] == container_identity(current) and
+                proof["mounts_sha256"] == fingerprint(current["Mounts"]),
+                "standalone container creation/configuration/mount identity changed")
+        require(not any(key.startswith("com.docker.compose.") for key in (current["Config"].get("Labels") or {})),
+                "Compose-labelled resource requires the Compose capability")
+        require(not current["HostConfig"].get("PortBindings") and
+                current["NetworkSettings"]["Networks"] and
+                current["HostConfig"]["NetworkMode"] in
+                set(record["networks"]) | {value["name"] for value in record["networks"].values()} and
+                not current["HostConfig"].get("Privileged") and not current["HostConfig"].get("AutoRemove"),
+                "standalone published/host/privileged/auto-removing runtime outside qualified capability")
+        for name, attached in current["NetworkSettings"]["Networks"].items():
+            identifier = attached.get("NetworkID")
+            # Docker drops NetworkID for stopped endpoints; resolve the recorded exact name instead.
+            matches = [key for key, value in record["networks"].items() if value["name"] == name]
+            require(len(matches) == 1 and (not identifier or identifier == matches[0]),
+                    "standalone network identity unknown/shared")
+            network = json_command(["docker", "network", "inspect", matches[0]], self.safe)[0]
+            require(network_identity(network) == record["networks"][matches[0]]["inspection_sha256"],
+                    "standalone network configuration changed")
+            eligible = {entry["identity"]: entry for entry in self.plan["containers"]
+                        if entry["disposition"] == "remove" and entry["ownership"] == "proven" and
+                        entry["data"] == "disposable" and entry["consumers"] == []}
+            peers = {entry["Id"] for entry in docker_inventory(self.safe)
+                     if name in entry["NetworkSettings"]["Networks"]}
+            require(peers <= set(eligible) & set(record["containers"]) and
+                    set(network["Containers"]) <= set(eligible) & set(record["containers"]),
+                    "standalone network has stopped/shared/unknown consumer; preserve workload")
+        workload = proof["workload"]
+        if current["State"]["Running"]:
+            processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
+            require(digest(processes) == workload["processes_sha256"] == item["processes_sha256"],
+                    "standalone processes changed/active consumer")
+            # Connection inspection is live, not a hash of a historical no-consumer declaration.
+            probe = "awk 'FNR > 1 && $4 == \"01\" {n++} END {print n+0}' /proc/net/tcp /proc/net/tcp6; awk 'NR > 1 && $6 == \"03\" {n++} END {print n+0}' /proc/net/unix"
+            sockets = command(["docker", "exec", item["identity"], "sh", "-c", probe], self.safe)
+            require(not sockets.stderr.strip() and sockets.stdout.split() == [b"0", b"0"],
+                    "standalone active connections or unavailable socket inspection")
+            if workload["kind"] == "idle":
+                require(current["Config"]["Cmd"] and current["Config"]["Cmd"][0] == "sleep" and
+                        len(processes.decode().splitlines()) == 2,
+                        "standalone idle workload has unknown processes")
+            elif workload["kind"] == "postgres":
+                sessions = command(["docker", "exec", item["identity"], "sh", "-c",
+                    'psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-${POSTGRES_USER:-postgres}}" -Atc "SELECT count(*) FROM pg_stat_activity WHERE backend_type=\'client backend\' AND pid<>pg_backend_pid()"'], self.safe)
+                require(sessions.stdout.strip() == b"0" and not sessions.stderr.strip(), "standalone PostgreSQL sessions active/unknown")
+            elif workload["kind"] == "mysql":
+                sessions = command(["docker", "exec", item["identity"], "sh", "-c",
+                    'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -Nse "SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE ID<>CONNECTION_ID() AND USER<>\'event_scheduler\'"'], self.safe)
+                require(sessions.stdout.strip() == b"0" and not sessions.stderr.strip(), "standalone MySQL sessions active/unknown")
+            else:
+                raise Hold("standalone workload consumer-inspection capability unavailable")
+        else:
+            require(workload["kind"] in ("idle", "postgres", "mysql") and not current["State"].get("Restarting"),
+                    "stopped standalone workload identity unresolved")
+        # Reuse the SAME named/anonymous provenance implementation. Declarations must come from
+        # original allocation evidence, never inferred from names or invented Compose labels.
+        declarations = proof["volume_declarations"]
+        require(fingerprint(declarations).encode() in b"\n".join(
+            self.retained_evidence(entry) for entry in record["basis"]["evidence"])
+            or not declarations, "standalone volume declaration allocation proof absent")
+        return {"services": {item["service"]: {"volumes": declarations}}, "volumes": {}}
+
     def host_consumers(self, candidate):
         observation = command(["lsof", "-nP", "-Fpcuaftn"], self.safe)
         require(not observation.stderr.strip(), "host consumer visibility incomplete")
@@ -403,17 +524,20 @@ class Cleanup:
             result.update(status="absent", reason="exact ID and recorded name absent on successful full inventory")
             return
         self.creation_evidence(item)
-        binding, args, model = self.runtime()
-        require(container_identity(current) == item["inspection_sha256"], "container identity/configuration/mounts changed")
-        labels = current["Config"]["Labels"]
-        service = item["service"]
-        require(service in model["services"], "container service absent from qualified configuration")
-        require(labels.get("com.docker.compose.project") == binding["project"] and
-                labels.get("com.docker.compose.service") == service and
-                labels.get("com.docker.compose.project.working_dir") == binding["working_directory"] and
-                labels.get("com.docker.compose.project.config_files") == ",".join(entry["path"] for entry in binding["config_files"]), "Compose/resource binding mismatch")
-        expected = text([*args, "config", "--hash", service], binding["working_directory"]).split()
-        require(len(expected) == 2 and labels.get("com.docker.compose.config-hash") == expected[1], "current Compose service hash contradicts container")
+        if self.plan["runtime"].get("kind", "compose") == "standalone":
+            model = self.standalone_container(item, current)
+        else:
+            binding, args, model = self.runtime()
+            require(container_identity(current) == item["inspection_sha256"], "container identity/configuration/mounts changed")
+            labels = current["Config"]["Labels"]
+            service = item["service"]
+            require(service in model["services"], "container service absent from qualified configuration")
+            require(labels.get("com.docker.compose.project") == binding["project"] and
+                    labels.get("com.docker.compose.service") == service and
+                    labels.get("com.docker.compose.project.working_dir") == binding["working_directory"] and
+                    labels.get("com.docker.compose.project.config_files") == ",".join(entry["path"] for entry in binding["config_files"]), "Compose/resource binding mismatch")
+            expected = text([*args, "config", "--hash", service], binding["working_directory"]).split()
+            require(len(expected) == 2 and labels.get("com.docker.compose.config-hash") == expected[1], "current Compose service hash contradicts container")
         if current["State"]["Running"]:
             processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
             require(digest(processes) == item["processes_sha256"], "container processes changed/unknown consumers")
@@ -430,6 +554,8 @@ class Cleanup:
         # Re-read exact immutable identity immediately before normal stop/removal.
         latest = json_command(["docker", "inspect", item["identity"]], self.safe)[0]
         require(container_identity(latest) == item["inspection_sha256"], "container changed before effect")
+        if self.plan["runtime"].get("kind", "compose") == "standalone":
+            self.standalone_container(item, latest)
         if not self.apply:
             result.update(status="qualified", reason="preview only")
             return
@@ -439,8 +565,11 @@ class Cleanup:
             command(["docker", "stop", "--time", "10", item["identity"]], self.safe, timeout=20)
         # Stop is an effect too; an interruption resumes from current stopped state.
         self.subject_checks()
-        self.runtime()
         latest = json_command(["docker", "inspect", item["identity"]], self.safe)[0]
+        if self.plan["runtime"].get("kind", "compose") == "standalone":
+            self.standalone_container(item, latest)
+        else:
+            self.runtime()
         require(container_identity(latest) == item["inspection_sha256"] and not latest["State"]["Running"], "container changed/restarted after stop")
         self.host_consumers(candidate)
         command(["docker", "rm", item["identity"]], self.safe)
@@ -449,6 +578,12 @@ class Cleanup:
 
     def creation_evidence(self, item):
         creation = item["creation"]
+        if creation["kind"] == "legacy-created":
+            record = self.standalone()
+            require(record["basis"]["kind"] == "legacy-adoption" and
+                    (item["identity"] in record["containers"] or item["identity"] in record["networks"]),
+                    "legacy resource missing original allocation proof; hold without retrospective intent")
+            return creation
         require(creation["kind"] == "created", "merely used/shared resource is not task-created")
         intent = absolute(creation["intent"])
         require(not inside(intent, absolute(self.plan["worktree"]["identity"])) and
@@ -492,7 +627,12 @@ class Cleanup:
             require(volume_identity(observed) == volume["inspection_sha256"], "volume identity changed before provenance capture")
             configured = [value for value in model["services"][item["service"]].get("volumes", [])
                           if value["target"] == mount["Destination"]]
-            if configured and configured[0].get("source"):
+            if self.plan["runtime"].get("kind", "compose") == "standalone":
+                require(configured and configured[0]["type"] == "volume" and
+                        configured[0].get("allocated_name") == mount["Name"] and
+                        configured[0].get("created_absent") is True,
+                        "standalone named/anonymous volume original allocation proof unavailable")
+            elif configured and configured[0].get("source"):
                 config = model["volumes"][configured[0]["source"]]
                 require(not config.get("external", False) and config["name"] == mount["Name"],
                         "external/shared configured volume; no discard through task association")
@@ -628,13 +768,22 @@ class Cleanup:
             result.update(status="absent", reason="exact network ID/name absent on successful inventory")
             return
         self.creation_evidence(item)
-        binding, _, model = self.runtime()
+        standalone = self.plan["runtime"].get("kind", "compose") == "standalone"
         network = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
-        configuration = model["networks"][item["key"]]
-        require(not configuration.get("external", False) and configuration["name"] == item["name"] == network["Name"], "external/shared/network identity mismatch")
-        require(network["Labels"].get("com.docker.compose.project") == binding["project"] and
-                network["Labels"].get("com.docker.compose.network") == item["key"] and
-                network["Created"] == item["created"], "network ownership changed")
+        if standalone:
+            proof = self.standalone()["networks"][item["identity"]]
+            require(proof["name"] == network["Name"] == item["name"] and
+                    proof["created"] == network["Created"] == item["created"] and
+                    proof["inspection_sha256"] == network_identity(network), "standalone network allocation/configuration changed")
+            require(not any(key.startswith("com.docker.compose.") for key in (network.get("Labels") or {})),
+                    "Compose-labelled network requires Compose capability")
+        else:
+            binding, _, model = self.runtime()
+            configuration = model["networks"][item["key"]]
+            require(not configuration.get("external", False) and configuration["name"] == item["name"] == network["Name"], "external/shared/network identity mismatch")
+            require(network["Labels"].get("com.docker.compose.project") == binding["project"] and
+                    network["Labels"].get("com.docker.compose.network") == item["key"] and
+                    network["Created"] == item["created"], "network ownership changed")
         require(not network["Containers"], "network has current endpoints (foreign/shared/remaining); retain unchanged")
         require(not any(name == item["name"] or value.get("NetworkID") == item["identity"]
                         for container in docker_inventory(self.safe)
@@ -647,6 +796,9 @@ class Cleanup:
         self.save()
         self.subject_checks()
         latest = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
+        if standalone:
+            require(network_identity(latest) == self.standalone()["networks"][item["identity"]]["inspection_sha256"],
+                    "standalone network changed immediately before effect")
         require(latest["Id"] == item["identity"] and latest["Created"] == item["created"] and not latest["Containers"],
                 "network identity/endpoints changed before effect")
         require(not any(name == item["name"] or value.get("NetworkID") == item["identity"]
