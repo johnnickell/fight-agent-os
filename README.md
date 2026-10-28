@@ -28,6 +28,13 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00542](planning/tasks/00542-TASK.md#land-acceptance-checkpoint--2026-10-28) has independent Review4 ACCEPT
+and nonvisual QA8 PASS for the bounded disposable-storage lifecycle and delivery-mechanism removal. At this frozen
+checkpoint, primary publication and eligible cleanup remain pending; actual results and finite image/cache/consumer
+holds are in canonical ignored `.runs/tasks/TASK-00542/runs/primary-land10-handoff.md`. This is implementation
+acceptance, not complete storage retirement, human merge or integrated-fleet PASS; the original 194 uncertain
+shared-cache exception is not a future disk-growth guarantee. Visual evidence is N/A to these operational changes.
+
 PR #159/#162/#167 publication statements below are preserved historical checkpoints: all three are verified
 merged into `develop` and locally integrated as of 2026-10-26, with no merge action remaining. This observes
 merge, not new acceptance, deployment or release.

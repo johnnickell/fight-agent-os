@@ -10,7 +10,16 @@ Read the referenced current section, not the full historical record. Missing han
 The [blended delivery strategy](../ROADMAP.md#approved-blended-delivery-strategy) permits terminal, browser and
 shared-foundation interleaving; it does not override active work, TASK orders, dependencies or readiness holds below.
 
-### Current planning update — 2026-10-28
+### Accepted implementation checkpoint — 2026-10-28
+
+[TASK-00542](00542-TASK.md#land-acceptance-checkpoint--2026-10-28) records independent Review4 ACCEPT and
+QA8 PASS for candidate `90f6bdd83acb51c22793477398332f702c078116` under 1A/2A. Primary publication and eligible
+cleanup are pending at this frozen checkpoint; actual results and remaining actions are in canonical ignored
+`.runs/tasks/TASK-00542/runs/primary-land10-handoff.md`. Done means accepted implementation, not completed
+resource retirement, human merge or integrated-fleet PASS. No pending-merge queue or post-merge Board chore is
+created. Subsequent TASKs are unstarted; generated eligibility derives from the source records below.
+
+### Planning update — 2026-10-28 (historical checkpoint)
 
 John approved [TASK-00545](00545-TASK.md), a separate standalone bug for the retained-checkout/report guard.
 Its implementation is unstarted and unranked; existing priorities, dependencies and TASK-00542 ownership are
@@ -23,6 +32,9 @@ remains. Its integration prerequisite is satisfied on this planning base. The Oc
 preserved priority/planning checkpoint, not current proof that all three implementations remain unstarted.
 
 ### Current human priority — 2026-10-27
+
+The sequence remains approved. The implementation-start/pending-acceptance wording in the following original
+checkpoint is historical; TASK-00542's accepted implementation and remaining delivery effects are distinguished above.
 
 John approved the cleanup-first sequence [TASK-00542](00542-TASK.md) -> [TASK-00543](00543-TASK.md) ->
 [TASK-00544](00544-TASK.md), at `order: 1`, with explicit blockers enforcing that order:
@@ -69,12 +81,13 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | — | — |
 | 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
@@ -99,7 +112,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | [TASK-00542](00542-TASK.md) | — |
 | 1 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | — (standalone bug) | ready-for-agent | [TASK-00543](00543-TASK.md) | — |
 | 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md), [TASK-00498](00498-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
@@ -507,6 +519,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #158](https://github.com/johnnickell/fight-agent-os/pull/158) |
 | 1 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 | 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | done | — | [PR #166](https://github.com/johnnickell/fight-agent-os/pull/166) |
+| 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | done | — | — |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
