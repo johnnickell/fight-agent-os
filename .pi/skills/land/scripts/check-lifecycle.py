@@ -4,6 +4,8 @@
 import argparse
 from datetime import datetime, timezone
 import importlib.util
+import io
+import tarfile
 import json
 import os
 from pathlib import Path
@@ -35,7 +37,8 @@ def main():
     parser.add_argument("--evidence", required=True, help="New absolute task-owned evidence directory, outside removal candidates")
     parser.add_argument("--helper", default=str(Path(__file__).with_name("cleanup.py")))
     parser.add_argument("--resume", action="store_true", help="Reuse this fixture/receipt; never recreate missing resources")
-    parser.add_argument("--case", choices=("normal", "shared-stopped"), default="normal")
+    parser.add_argument("--prepare-only", action="store_true", help="Create and record the bounded fixture for actual Pi caller qualification; do not invoke cleanup")
+    parser.add_argument("--case", choices=("normal", "running", "failure", "cancel", "durable", "shared-stopped", "image", "unavailable", "denied", "changed-identity"), default="normal")
     parser.add_argument("--release-consumer", action="store_true", help="Resume only: linked new fixture receipt permits its owned stopped consumer retirement")
     parser.add_argument("--interrupt", action="store_true", help="Terminate only this helper subprocess after its first persisted container removal; resume separately")
     args = parser.parse_args()
@@ -67,9 +70,12 @@ def main():
             model = {"services": {"fixture": {"image": image["Id"], "pull_policy": "never",
                      "command": ["sleep", "600"], "volumes": ["scratch:/scratch"]}},
                      "volumes": {"scratch": {"labels": {"io.fight.fixture": token}}}}
-            if args.case == "shared-stopped":
+            if args.case == "failure":
+                model["services"]["fixture"]["command"] = ["sh", "-c", "exit 7"]
+            if args.case in ("shared-stopped", "durable"):
                 model["services"]["consumer"] = {"image": image["Id"], "pull_policy": "never",
-                    "command": ["sleep", "600"], "volumes": ["scratch:/var/lib/postgresql/data"]}
+                    "command": ["sh", "-c", "printf 'TASK00542-protected-sentinel' > /var/lib/postgresql/data/sentinel; exec sleep 600"],
+                    "volumes": ["scratch:/var/lib/postgresql/data"]}
             private_json(config, model)
             named = project + "_scratch"
             before = run(["docker", "volume", "ls", "--format", "{{.Name}}"], root).splitlines()
@@ -82,6 +88,22 @@ def main():
                 "named_volume": named, "named_before_absent": True, "token": token,
                 "argv": [str(arg) for arg in compose] + ["create"], "source_sha256": module.digest(helper.read_bytes())})
             run([*compose, "create"], root, env)
+            workload = {"case": args.case}
+            if args.case in ("running", "failure", "cancel"):
+                run([*compose, "start", "fixture"], root, env)
+            if args.case == "failure":
+                workload["exit"] = run(["docker", "wait", run([*compose, "ps", "--all", "--quiet", "fixture"], root, env)], root, env)
+                failed = json.loads(run(["docker", "inspect", run([*compose, "ps", "--all", "--quiet", "fixture"], root, env)], root))[0]
+                if failed["State"]["ExitCode"] != 7:
+                    raise RuntimeError("failure fixture did not actually fail with exit 7")
+            if args.case == "cancel":
+                run([*compose, "stop", "fixture"], root, env)
+                workload["cancellation"] = "owning Compose stop completed before cleanup"
+            if args.case == "durable":
+                run([*compose, "start", "consumer"], root, env)
+                consumer_id = run([*compose, "ps", "--all", "--quiet", "consumer"], root, env)
+                workload["sentinel"] = run(["docker", "exec", consumer_id, "sha256sum", "/var/lib/postgresql/data/sentinel"], root)
+            private_json(evidence / "workload.json", workload)
         else:
             intent = json.loads((evidence / "creation-intent.json").read_text())
             project = intent["project"]
@@ -128,7 +150,8 @@ def main():
                 "config_files": [{"path": str(config), "sha256": module.digest(config.read_bytes())}],
                 "resolved_sha256": module.fingerprint(resolved)},
             "containers": [dict(common, identity=identifier, name=container["Name"], service="fixture",
-                inspection_sha256=module.container_identity(container), processes_sha256=None,
+                inspection_sha256=module.container_identity(container),
+                processes_sha256=module.digest(subprocess.check_output(["docker", "top", identifier, "-eo", "pid,ppid,args"])) if container["State"]["Running"] else None,
                 data="disposable", bind_data={}, creation={"kind": "created", "intent": str(evidence / "creation-intent.json"),
                     "intent_sha256": module.digest((evidence / "creation-intent.json").read_bytes())})],
             "networks": networks, "volumes": volumes,
@@ -136,6 +159,20 @@ def main():
                 creation={"kind": "reused"}, reason="pre-existing image and shared layers; never remove by association")],
             "caches": [], "worktree": dict(retained, identity=str(root / "no-removal-candidate")),
             "branch": dict(retained, identity="refs/heads/feature/task-00542-fixture")}
+        if args.case == "image":
+            # Import a unique empty task image: no build cache, registry or shared base layers.
+            image_intent = evidence / "image-intent.json"
+            private_json(image_intent, {"token": project, "operation": "docker image import empty tar",
+                                       "authority": "owned disposable fixture image; no shared image mutation"})
+            archive = io.BytesIO()
+            with tarfile.open(fileobj=archive, mode="w"):
+                pass
+            imported = subprocess.run(["docker", "image", "import", "--change", "LABEL io.fight.fixture=" + project, "-"],
+                                      input=archive.getvalue(), capture_output=True, check=True).stdout.decode().strip()
+            observed_image = json.loads(run(["docker", "image", "inspect", imported], root))[0]
+            plan["images"].append(dict(common, identity=imported, data="disposable", authority="explicit task fixture image discard",
+                inspection_sha256=module.fingerprint(observed_image), size_bytes=observed_image["Size"],
+                creation={"kind": "created", "intent": str(image_intent), "intent_sha256": module.digest(image_intent.read_bytes())}))
         if "consumer" in resolved["services"]:
             consumer_id = run([*compose, "ps", "--all", "--quiet", "consumer"], root, env)
             consumer = json.loads(run(["docker", "inspect", consumer_id], root))[0]
@@ -154,6 +191,14 @@ def main():
             "headRefOid": oid, "headRepository": {"name": "fixture"}, "headRepositoryOwner": {"login": "task00542"}}
         (shim / "gh").write_text("#!/usr/bin/env python3\nprint(" + repr(json.dumps(response)) + ")\n")
         (shim / "gh").chmod(0o700)
+    if args.case == "durable" and not args.resume:
+        document = json.loads(receipt.read_text())
+        named = next(item for item in document["cleanup"]["plan"]["volumes"] if item["identity"].endswith("_scratch"))
+        named.update(disposition="retain", data="durable", reason="explicit protected fixture sentinel; no discard during preservation probe")
+        private_json(receipt, document)
+    if args.prepare_only:
+        print(json.dumps({"prepared": True, "receipt": str(receipt), "helper_sha256": module.digest(helper.read_bytes())}))
+        return 0
     env["PATH"] = str(evidence / "controlled-hosting") + os.pathsep + env["PATH"]
     if args.release_consumer:
         if not args.resume:
@@ -165,7 +210,14 @@ def main():
             consumers = [item for item in released["cleanup"]["plan"]["containers"] if item["service"] == "consumer"]
             if len(consumers) != 1:
                 raise RuntimeError("no exact owned fixture consumer to release")
-            consumers[0].update(disposition="remove", reason="explicit bounded fixture consumer release; original held evidence preserved")
+            observed_consumer = json.loads(run(["docker", "inspect", consumers[0]["identity"]], root))[0]
+            if module.container_identity(observed_consumer) != consumers[0]["inspection_sha256"]:
+                raise RuntimeError("fixture consumer identity changed; preserve original hold")
+            consumers[0].update(disposition="remove", reason="explicit bounded fixture consumer release; original held evidence preserved",
+                processes_sha256=module.digest(subprocess.check_output(["docker", "top", consumers[0]["identity"], "-eo", "pid,ppid,args"])) if observed_consumer["State"]["Running"] else None)
+            for volume in released["cleanup"]["plan"]["volumes"]:
+                if volume.get("data") == "durable":
+                    volume.update(disposition="remove", data="disposable", reason="explicit fixture release after verified sentinel preservation; no real durable data")
             released["prior_receipt"] = {"path": str(original), "sha256": module.digest(original.read_bytes())}
             released["cleanup"].pop("plan_sha256", None)
             released["cleanup"]["attempts"] = []
@@ -175,6 +227,18 @@ def main():
     invocation = [sys.executable, str(helper), "--receipt", str(receipt), "--apply"]
     previous_attempts = len(document["cleanup"].get("attempts", []))
     interrupted = False
+    expected_probe_hold = False
+    protected_before = None
+    probe_case = json.loads((evidence / "workload.json").read_text()).get("case") if (evidence / "workload.json").exists() else "normal"
+    if not args.resume and probe_case in ("unavailable", "denied", "changed-identity"):
+        protected_before = json.loads(run(["docker", "inspect", *[item["identity"] for item in document["cleanup"]["plan"]["containers"]]], root))
+        if probe_case == "unavailable":
+            env["DOCKER_HOST"] = "unix://" + str(evidence / "deliberately-unavailable-fixture.sock")
+            env.pop("DOCKER_CONTEXT", None)
+        elif probe_case == "denied":
+            receipt.chmod(0o000)  # Explicit owned fixture denial; restored only as declared probe teardown.
+        else:
+            run(["docker", "rename", document["cleanup"]["plan"]["containers"][0]["identity"], project + "-changed"], root)
     if args.interrupt:
         process = subprocess.Popen(invocation, cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         deadline = time.monotonic() + 30
@@ -192,11 +256,25 @@ def main():
         interrupted = interrupted and result.returncode == -signal.SIGTERM
     else:
         result = subprocess.run(invocation, cwd=root, env=env, capture_output=True, timeout=180)
+    if protected_before is not None:
+        if probe_case == "denied":
+            receipt.chmod(0o600)
+        env.pop("DOCKER_HOST", None)
+        protected_after = json.loads(run(["docker", "inspect", *[item["identity"] for item in document["cleanup"]["plan"]["containers"]]], root))
+        unchanged = all(module.container_identity(a) == module.container_identity(b) for a, b in zip(protected_before, protected_after))
+        expected_probe_hold = result.returncode != 0 and (unchanged or probe_case == "changed-identity")
+        if probe_case == "denied":
+            expected_probe_hold = expected_probe_hold and b"PermissionError" in result.stdout + result.stderr
+        private_json(evidence / (stamp + ".protection.json"), {"case": probe_case, "before": [module.container_identity(a) for a in protected_before],
+            "after": [module.container_identity(a) for a in protected_after], "helper_exit": result.returncode, "expected_hold": expected_probe_hold})
+        if probe_case == "changed-identity":
+            run(["docker", "rename", document["cleanup"]["plan"]["containers"][0]["identity"], protected_before[0]["Name"].lstrip("/")], root)
     (evidence / (stamp + ".stdout")).write_bytes(result.stdout)
     (evidence / (stamp + ".stderr")).write_bytes(result.stderr)
     remaining = set(run(["docker", "volume", "ls", "--format", "{{.Name}}"], root).splitlines())
     leftover = [item["identity"] for item in document["cleanup"]["plan"]["volumes"] if item["identity"] in remaining]
-    latest = json.loads(receipt.read_text())["cleanup"]["attempts"][-1]
+    attempts = json.loads(receipt.read_text())["cleanup"].get("attempts", [])
+    latest = attempts[-1] if attempts else {"results": []}
     consumer_entries = [item for item in document["cleanup"]["plan"]["containers"]
                         if item.get("service") == "consumer" and item["disposition"] == "retain"]
     expected_hold = False
@@ -204,23 +282,29 @@ def main():
         consumer = json.loads(run(["docker", "inspect", consumer_entries[0]["identity"]], root))[0]
         named_entry = next(item for item in document["cleanup"]["plan"]["volumes"] if item["identity"].endswith("_scratch"))
         named_current = json.loads(run(["docker", "volume", "inspect", named_entry["identity"]], root))[0]
-        expected_hold = (not consumer["State"]["Running"] and
+        workload = json.loads((evidence / "workload.json").read_text()) if (evidence / "workload.json").exists() else {}
+        protected = workload.get("case") == "durable"
+        sentinel_ok = not protected or run(["docker", "exec", consumer["Id"], "sha256sum", "/var/lib/postgresql/data/sentinel"], root) == workload["sentinel"]
+        expected_hold = ((protected or not consumer["State"]["Running"]) and sentinel_ok and
                          module.container_identity(consumer) == consumer_entries[0]["inspection_sha256"] and
                          module.volume_identity(named_current) == named_entry["inspection_sha256"] and
                          any(item["kind"] == "volume" and item["identity"] == named_entry["identity"] and
-                             item["status"] == "held" and "consumer" in item["reason"] for item in latest["results"]))
+                             (item["status"] == "retained" if protected else item["status"] == "held" and "consumer" in item["reason"])
+                             for item in latest["results"]))
     summary = {"helper_sha256": module.digest(helper.read_bytes()), "helper_exit": result.returncode,
                "receipt": str(receipt), "required_volume_leftovers": leftover,
                "pass": result.returncode == 0 and not leftover,
                "expected_stopped_shared_hold_verified": expected_hold,
+               "workload": json.loads((evidence / "workload.json").read_text()) if (evidence / "workload.json").exists() else {"case": "historical stopped fixture"},
                "interrupted_after_container_effect": interrupted,
-               "scope": "bounded stopped real-Docker Compose fixture, image-declared anonymous and named storage; controlled hosting",
-               "unrun": ["fleet owning callers", "installed Pi Land/Build", "failure and cancellation",
-                         "other interruption points", "shared/stopped foreign consumers", "durable/protected data",
+               "expected_probe_hold_verified": expected_probe_hold,
+               "scope": "bounded real-Docker Compose fixture, image-declared anonymous and named storage; controlled hosting",
+               "unrun": ["fleet owning callers", "installed Pi Land/Build (separate exact attempt evidence)",
+                         "other interruption points", "foreign consumers",
                          "recreation/inspection/denial", "task-created image/cache retirement"]}
     private_json(evidence / (stamp + ".result.json"), summary)
     print(json.dumps(summary, indent=2))
-    return 0 if summary["pass"] or expected_hold or interrupted else 1
+    return 0 if summary["pass"] or expected_hold or interrupted or expected_probe_hold else 1
 
 
 if __name__ == "__main__":

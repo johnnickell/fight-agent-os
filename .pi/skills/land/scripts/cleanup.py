@@ -597,7 +597,28 @@ class Cleanup:
         result.update(status="removed", reason="content-addressed image absent; no prune or shared-layer reclaim claim")
 
     def cache(self, item, result):
-        raise Hold("exact cache retirement/inspection capability unavailable; owning builder must resolve the bounded cache identity without prune")
+        # BuildKit has no qualified exact deletion path here. Only positively reused
+        # cache may be intentionally retained; eligible created cache still holds.
+        require(item["disposition"] == "retain" and item["creation"]["kind"] == "reused",
+                "exact created-cache retirement unavailable; retain pending owning builder recovery, never prune")
+        builder = item["builder"]
+        require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", builder), "invalid exact builder")
+        builders = [json.loads(line) for line in text(["docker", "buildx", "ls", "--format", "{{json .}}"], self.safe).splitlines()]
+        matches = [entry for entry in builders if entry["Name"] == builder]
+        require(matches and all(sorted(identifier for node in entry["Nodes"] for identifier in node["IDs"]) == item["worker_ids"]
+                                for entry in matches), "builder worker identity changed/unavailable")
+        require(re.fullmatch(r"[a-z0-9]{12,64}", item["identity"]), "invalid exact cache ID")
+        entries = [json.loads(line) for line in text(["docker", "buildx", "du", "--builder", builder,
+                   "--filter", "id=" + item["identity"], "--format", "json"], self.safe).splitlines()]
+        require(len(entries) == 1, "retained cache absent/ambiguous; inspect owning builder")
+        current = entries[0]
+        require(current["ID"] == item["identity"] and current["CreatedAt"] == item["created_at"] and
+                current["Parents"] == item["parents"] and current["Type"] == item["type"] and not current["Mutable"],
+                "retained cache identity changed or currently mutable")
+        result["storage"] = {"docker_size": current["Size"], "shared": current["Shared"],
+                             "reclaimable": current["Reclaimable"], "parents": current["Parents"],
+                             "physical_reclaimed_bytes": None}
+        result["creation"] = item["creation"]
 
     def network(self, item, result):
         ids = text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.safe).splitlines()

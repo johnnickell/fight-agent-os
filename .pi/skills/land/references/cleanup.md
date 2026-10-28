@@ -50,7 +50,7 @@ Additional entry fields:
 | network | `identity`: full ID; `name`; `key`: exact Compose network key; `created`: Docker's exact Created value. Removal requires a nonexternal current configured network, matching project/key/name, zero endpoints and no stopped configured consumer. |
 | volume | `identity`: exact Docker name (Docker exposes no separate immutable volume ID); `inspection_sha256`: `volume_identity(inspect)` including creation time, driver, mountpoint, labels/options/scope; `data: disposable`; nonempty `authority`; `creation` below, with exact `container` and `destination`. Unknown/durable/shared/external volumes are never discarded by task association. Recreated identity holds. Docker's logical display size/links are freshly observed; physical reclaimed bytes remain unknown. |
 | image | `identity`: content-addressed full image ID; `creation.kind`: created/reused; size/dependencies/retention reason. Removal additionally needs complete inspect `inspection_sha256`, `data: disposable`, explicit `authority`, proven creation and no current/stopped consumers. Normal exact-ID removal only; Docker shared-layer protections remain. Reused images are observed retained, never discarded by association. |
-| cache | Exact builder-owned identity, creation versus reuse, size/dependencies and disposition/reason. This helper currently lacks a qualified exact-cache observation/retirement capability: every nonempty cache entry yields a finite hold, even if nominally retained. Never replace it with prune or manufacture `[]`; recover the owning builder capability/proven absence. |
+| cache | Exact builder-owned identity, creation versus reuse, size/dependencies and disposition/reason. A reused cache may be policy-retained only with explicit `builder`, sorted `worker_ids`, `created_at`, `parents` and `type`, freshly matched against `buildx ls`/exact-ID `du`; mutable, missing or changed identity holds. Size/shared/reclaimable/dependencies are observed, never reclaimed-byte claims. Created or removal-requested cache still holds: exact deletion is unqualified. Never substitute prune, nominal retention or a manufactured `[]`. |
 
 Every present Docker removal entry has `creation.kind: created`, `creation.intent` (absolute retained private
 0600 creation-intent locator outside removal candidates) and `creation.intent_sha256`. Volume creation additionally
@@ -168,7 +168,7 @@ affected resources; no Pi version equality check exists.
 ## Bounded direct qualification
 
 `python3 scripts/check-lifecycle.py --evidence ABSOLUTE_NEW_TASK_RUN_DIRECTORY` creates at most one
-stopped Compose fixture container (two with `--case shared-stopped`), two empty volumes (named and
+Compose fixture container (two with `--case shared-stopped` or `--case durable`), two volumes (named and
 image-declared anonymous) and one network,
 reusing the already-present `postgres:17-bookworm` image without pull/build/install. It uses a task-local Git
 fixture and explicitly controlled hosting response, never a real PR or live publication claim. Creation intent,
@@ -176,17 +176,30 @@ configuration, exact IDs/mounts, helper digest, stdout/stderr, exits and receipt
 `--resume` observes and resumes the same receipt without recreating resources; partial pre-receipt creation
 recovers only from original intent/current fixture identity. No destructive fallback runs after a hold.
 
+`--prepare-only` records the fixture without invoking cleanup, for actual installed-Pi callers.
+`--case running`, `failure` (observed workload exit 7) and `cancel` (explicit owning Compose stop) qualify their
+actual workload states before retirement. `--case image` imports one uniquely labeled empty disposable image,
+without registry/build cache or shared base layers, then qualifies exact image removal.
+`--case unavailable` selects an intentionally unavailable task-only Docker socket; `denied` applies real read
+denial to the owned fixture receipt; `changed-identity` changes the owned container name. Each records the
+nonzero safe hold and resource preservation, then releases only its explicitly controlled probe precondition.
+Separate `--resume` qualifies recovery. Fixture permission/rename release is declared probe teardown, never
+permission to clear a real resource hold. `--case durable` preserves a running consumer, declared durable volume
+and exact data sentinel before an explicitly linked owned-fixture release.
+
 `--case shared-stopped` additionally verifies an unchanged owned stopped consumer and held shared volume;
 `--resume --release-consumer` writes a linked new fixture receipt to retire only that owned consumer and
 remaining resources, preserving the original hold. `--interrupt` terminates only the newly created helper
 subprocess after its first persisted container removal; a separate `--resume` qualifies recovery using retained
 mount provenance. It never kills Pi, the coordinator or another owner's process.
 
-Exit 0 means a fixture retirement pass, a verified expected stopped-consumer hold, or an observed controlled
-interruption: inspect `pass`, `expected_stopped_shared_hold_verified`, `interrupted_after_container_effect`
-and exact helper exit separately. A hold/interruption is not cleanup completion. This is not fleet/installed-Pi,
-failure/cancel/other-interruption/protected-data coverage, independent Review/QA or the canonical gate. Output
-lists remaining cases explicitly. The pre-repair failing invocation and repaired same-receipt
+Exit 0 means fixture retirement, an expected preservation/denial/identity hold, or observed controlled
+interruption: inspect `pass`, `expected_stopped_shared_hold_verified`, `expected_probe_hold_verified`,
+`interrupted_after_container_effect` and exact helper exit separately. A hold/interruption is not cleanup
+completion. This is not fleet/installed-Pi proof, exhaustive interruption coverage, independent Review/QA or the
+canonical gate. Actual installed-Pi and Common caller attempts are separately linked in TASK-00542's ignored
+handoff, including unsuccessful attempts. Output lists separate qualification boundaries explicitly.
+The pre-repair failing invocation and repaired same-receipt
 resume live under TASK-00542's canonical ignored `runs/regression/`. All omitted required cases remain finite
 qualification holds, not exemptions or acceptance. Use each actual owning runtime/caller for fleet proof.
 
