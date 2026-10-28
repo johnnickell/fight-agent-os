@@ -49,8 +49,16 @@ Additional entry fields:
 | container | `identity`: full Docker ID; `name`: exact `/name`; `service`; `inspection_sha256`: `container_identity(docker inspect result)`; `processes_sha256`: SHA-256 of current `docker top ID -eo pid,ppid,args` stdout (null if stopped); `data`: `disposable` only for positively qualified temporary data; `bind_data`: map of exact writable bind source to `preserve`. Writable binds outside the candidate hold. Every volume mount must be inventoried; the helper durably captures exact creating-container mount provenance before stop/removal. Volume removal is a separate qualified effect. Hashes do not replace corroboration of actual mounts, service processes, current consumers and handoff ownership. |
 | network | `identity`: full ID; `name`; `key`: exact Compose network key; `created`: Docker's exact Created value. Removal requires a nonexternal current configured network, matching project/key/name, zero endpoints and no stopped configured consumer. |
 | volume | `identity`: exact Docker name (Docker exposes no separate immutable volume ID); `inspection_sha256`: `volume_identity(inspect)` including creation time, driver, mountpoint, labels/options/scope; `data: disposable`; nonempty `authority`; `creation` below, with exact `container` and `destination`. Unknown/durable/shared/external volumes are never discarded by task association. Recreated identity holds. Docker's logical display size/links are freshly observed; physical reclaimed bytes remain unknown. |
-| image | `identity`: content-addressed full image ID; `creation.kind`: created/reused; size/dependencies/retention reason. Removal additionally needs complete inspect `inspection_sha256`, `data: disposable`, explicit `authority`, proven creation and no current/stopped consumers. Normal exact-ID removal only; Docker shared-layer protections remain. Reused images are observed retained, never discarded by association. |
+| image | `identity`: full `sha256:` Docker image ID returned by exact inspection, not an assumed config/reference/index equivalent; `creation.kind`: created/reused; size/dependencies/retention reason. Removal additionally needs complete inspect `inspection_sha256`, `data: disposable`, explicit `authority`, proven creation and no current/stopped consumers. Tagged/digest-referenced images and manifest indexes hold for unqualified exclusive reference/platform retirement. Normal exact-ID removal only; Docker shared-layer protections remain. Reused images are observed retained, never discarded by association. |
 | cache | Exact builder-owned identity, creation versus reuse, size/dependencies and disposition/reason. A reused cache may be policy-retained only with explicit `builder`, sorted `worker_ids`, `created_at`, `parents` and `type`, freshly matched against `buildx ls`/exact-ID `du`; mutable, missing or changed identity holds. Size/shared/reclaimable/dependencies are observed, never reclaimed-byte claims. Created or removal-requested cache still holds: exact deletion is unqualified. Never substitute prune, nominal retention or a manufactured `[]`. |
+
+Image absence requires an explicit exact `docker image inspect` not-found response corroborated by successful
+`docker image ls --all --no-trunc --quiet`, both after removal and at final verification. Default listings hide
+dangling/intermediate images and never prove absence. Inspection/permission errors or contradictory observations
+hold. Same-receipt already-absent resume additionally requires a prior matching `image_observation` of the exact
+ID and creation inspection hash; an unresolvable config digest alone cannot establish image absence. Legacy
+config-ID consumers and current-daemon manifest-descriptor consumers are distinguished; an unknown or mixed
+relationship holds. No reference is silently untagged and no index is guessed equivalent to a config/manifest.
 
 Every present Docker removal entry has `creation.kind: created`, `creation.intent` (absolute retained private
 0600 creation-intent locator outside removal candidates) and `creation.intent_sha256`. Volume creation additionally
@@ -255,7 +263,10 @@ These direct fixtures use controlled hosting and do not establish independent ac
 `--prepare-only` records the Compose fixture without invoking cleanup, for actual installed-Pi callers.
 `--case running`, `failure` (observed workload exit 7) and `cancel` (explicit owning Compose stop) qualify their
 actual workload states before retirement. `--case image` imports one uniquely labeled empty disposable image,
-without registry/build cache or shared base layers, then qualifies exact image removal.
+without registry/build cache or shared base layers, then qualifies exact image removal. The checker independently
+requires exact inspect not-found plus an all-image inventory for removable images, and exact inspect presence for
+retained images; helper success/volume absence alone cannot pass the image case. Original import argv/exits/output,
+creation inspection, postcondition commands and observations are retained.
 `--case unavailable` selects an intentionally unavailable task-only Docker socket; `denied` applies real read
 denial to the owned fixture receipt; `changed-identity` changes the owned container name. Each records the
 nonzero safe hold and resource preservation, then releases only its explicitly controlled probe precondition.

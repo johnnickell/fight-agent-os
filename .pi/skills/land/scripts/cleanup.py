@@ -106,6 +106,55 @@ def docker_inventory(safe):
     return json_command(["docker", "inspect", *ids], safe) if ids else []
 
 
+def inspect_image(safe, identity):
+    """Resolve an exact Docker image ID; denial/aliases are never absence."""
+    require(re.fullmatch(r"sha256:[a-f0-9]{64}", identity), "full exact image ID required; references/config aliases held")
+    observed = command(["docker", "image", "inspect", identity], safe, codes=(0, 1))
+    if observed.returncode:
+        require(observed.stdout.strip() == b"[]" and
+                observed.stderr.decode().strip() == "Error response from daemon: No such image: " + identity,
+                "exact image inspection unavailable/denied/ambiguous; retain unchanged")
+        inventory = text(["docker", "image", "ls", "--all", "--no-trunc", "--quiet"], safe).splitlines()
+        require(all(re.fullmatch(r"sha256:[a-f0-9]{64}", value) for value in inventory) and identity not in inventory,
+                "exact inspection/all-image inventory contradict or are ambiguous; image absence held")
+        return None
+    values = json.loads(observed.stdout)
+    require(len(values) == 1 and values[0]["Id"] == identity,
+            "image reference/config/manifest ID differs; exact identity unresolved")
+    return values[0]
+
+
+def image_representation(current):
+    """Distinguish daemon image IDs from manifest and multi-platform index IDs."""
+    descriptor = current.get("Descriptor")
+    if descriptor is None:
+        return "legacy-image-id"
+    require(descriptor.get("digest") == current["Id"], "image descriptor/config identity ambiguous")
+    media_type = descriptor.get("mediaType")
+    require(media_type in ("application/vnd.oci.image.manifest.v1+json",
+                          "application/vnd.docker.distribution.manifest.v2+json"),
+            "manifest-index or unknown image representation needs owning-platform qualification; retained")
+    return "manifest"
+
+
+def require_no_image_consumers(safe, current):
+    representation = image_representation(current)
+    for container in docker_inventory(safe):
+        config_id = container["Image"]
+        require(re.fullmatch(r"sha256:[a-f0-9]{64}", config_id), "container image identity unavailable")
+        require(config_id != current["Id"], "image has current/stopped container consumer")
+        descriptor = container.get("ImageManifestDescriptor")
+        if representation == "manifest":
+            require(isinstance(descriptor, dict) and
+                    descriptor.get("mediaType") in ("application/vnd.oci.image.manifest.v1+json",
+                                                    "application/vnd.docker.distribution.manifest.v2+json") and
+                    re.fullmatch(r"sha256:[a-f0-9]{64}", descriptor.get("digest", "")),
+                    "container config/manifest relationship unavailable; image consumer inspection held")
+            require(descriptor["digest"] != current["Id"], "image has current/stopped manifest consumer")
+        else:
+            require(descriptor is None, "mixed config/manifest consumer representation unresolved")
+
+
 def file_record(path, allow_symlink=False, metadata=None):
     before = path.lstat()
     link = stat.S_ISLNK(before.st_mode)
@@ -663,8 +712,8 @@ class Cleanup:
             require(volume_identity(current) == item["inspection_sha256"], "retained volume missing/recreated")
             self.volume_size(item["identity"], result)
         else:
-            current = json_command(["docker", "image", "inspect", item["identity"]], self.safe)[0]
-            require(current["Id"] == item["identity"], "retained image identity changed")
+            current = inspect_image(self.safe, item["identity"])
+            require(current is not None, "retained image absent; ownership/identity needs reconciliation")
             result["storage"] = {"size_bytes": current["Size"], "physical_reclaimed_bytes": None}
         result["creation"] = item["creation"]
 
@@ -711,15 +760,26 @@ class Cleanup:
     def image(self, item, result):
         self.creation_evidence(item)
         require(item["data"] == "disposable" and item["authority"], "image discard authority unresolved")
-        inventory = text(["docker", "image", "ls", "--no-trunc", "--quiet"], self.safe).splitlines()
-        if item["identity"] not in inventory:
-            result.update(status="absent", reason="content-addressed image absent on successful inventory")
+        current = inspect_image(self.safe, item["identity"])
+        if current is None:
+            # An arbitrary config digest may be unresolvable even while its manifest
+            # exists. Resume absence only for this plan's previously resolved ID.
+            require(any(entry["identity"] == item["identity"] and
+                        entry.get("image_observation", {}).get("identity") == item["identity"] and
+                        entry["image_observation"].get("representation") in ("manifest", "legacy-image-id") and
+                        entry["image_observation"].get("inspection_sha256") == item["inspection_sha256"]
+                        for attempt in self.state[:-1] for entry in attempt["results"] if entry["kind"] == "image"),
+                    "absent/unresolvable image lacks prior exact image-ID proof; config/index ambiguity held")
+            result.update(status="absent", reason="prior exact image ID absent by explicit inspect and all-image inventory")
             return
-        current = json_command(["docker", "image", "inspect", item["identity"]], self.safe)[0]
-        require(current["Id"] == item["identity"] and fingerprint(current) == item["inspection_sha256"],
+        require(fingerprint(current) == item["inspection_sha256"],
                 "image identity/tags changed; shared or recreated subject held")
-        require(not any(container["Image"] == item["identity"] for container in docker_inventory(self.safe)),
-                "image has current/stopped container consumer")
+        representation = image_representation(current)
+        require(not current["RepoTags"] and not current["RepoDigests"],
+                "image has tag/digest references; exclusive reference creation/retirement unqualified; retained")
+        result["image_observation"] = {"identity": current["Id"], "inspection_sha256": fingerprint(current),
+                                       "representation": representation, "descriptor": current.get("Descriptor")}
+        require_no_image_consumers(self.safe, current)
         result["storage"] = {"size_bytes": current["Size"], "physical_reclaimed_bytes": None}
         if not self.apply:
             result.update(status="qualified", reason="preview only")
@@ -727,14 +787,13 @@ class Cleanup:
         result.update(status="pending", reason="exact created image, normal removal only; shared layers protected by Docker")
         self.save()
         self.subject_checks()
-        require(not any(container["Image"] == item["identity"] for container in docker_inventory(self.safe)),
-                "new/stopped image consumer before effect")
-        require(fingerprint(json_command(["docker", "image", "inspect", item["identity"]], self.safe)[0]) == item["inspection_sha256"],
+        require_no_image_consumers(self.safe, current)
+        latest = inspect_image(self.safe, item["identity"])
+        require(latest is not None and fingerprint(latest) == item["inspection_sha256"],
                 "image changed immediately before effect")
         command(["docker", "image", "rm", item["identity"]], self.safe)
-        require(item["identity"] not in text(["docker", "image", "ls", "--no-trunc", "--quiet"], self.safe).splitlines(),
-                "image removal postcondition failed")
-        result.update(status="removed", reason="content-addressed image absent; no prune or shared-layer reclaim claim")
+        require(inspect_image(self.safe, item["identity"]) is None, "image removal postcondition failed")
+        result.update(status="removed", reason="exact image absent by explicit inspect and all-image inventory; no shared-layer reclaim claim")
 
     def cache(self, item, result):
         # BuildKit has no qualified exact deletion path here. Only positively reused
@@ -956,7 +1015,6 @@ class Cleanup:
         containers = docker_inventory(self.safe)
         volumes = volume_inventory(self.safe)
         networks = text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.safe).splitlines()
-        images = text(["docker", "image", "ls", "--no-trunc", "--quiet"], self.safe).splitlines()
         for result in self.results:
             if result["status"] not in ("removed", "absent", "retained"):
                 continue
@@ -976,7 +1034,7 @@ class Cleanup:
                 require(not any(line.split()[0] == identity or line.split()[1] == item["name"] for line in networks),
                         "network recreated after effect; final verification held")
             else:
-                require(identity not in images, "image present after effect; final verification held")
+                require(inspect_image(self.safe, identity) is None, "image present after effect; final verification held")
 
     def run(self):
         self.save()

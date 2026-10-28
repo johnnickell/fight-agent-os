@@ -487,13 +487,22 @@ def main():
             # Import a unique empty task image: no build cache, registry or shared base layers.
             image_intent = evidence / "image-intent.json"
             private_json(image_intent, {"token": project, "operation": "docker image import empty tar",
-                                       "authority": "owned disposable fixture image; no shared image mutation"})
+                                       "data": "disposable", "budget": "one empty uniquely labelled image; no registry/build/cache",
+                                       "source_sha256": module.digest(helper.read_bytes()),
+                                       "consumers": [], "authority": "owned disposable fixture image; no shared image mutation"})
             archive = io.BytesIO()
             with tarfile.open(fileobj=archive, mode="w"):
                 pass
-            imported = subprocess.run(["docker", "image", "import", "--change", "LABEL io.fight.fixture=" + project, "-"],
-                                      input=archive.getvalue(), capture_output=True, check=True).stdout.decode().strip()
+            import_argv = ["docker", "image", "import", "--change", "LABEL io.fight.fixture=" + project, "-"]
+            allocation = subprocess.run(import_argv, input=archive.getvalue(), capture_output=True)
+            (evidence / "image-import.stdout").write_bytes(allocation.stdout)
+            (evidence / "image-import.stderr").write_bytes(allocation.stderr)
+            private_json(evidence / "image-allocation.json", {"argv": import_argv, "exit": allocation.returncode,
+                "intent_sha256": module.digest(image_intent.read_bytes()), "archive_sha256": module.digest(archive.getvalue())})
+            allocation.check_returncode()
+            imported = allocation.stdout.decode().strip()
             observed_image = json.loads(run(["docker", "image", "inspect", imported], root))[0]
+            private_json(evidence / "image-creation-inspect.json", observed_image)
             plan["images"].append(dict(common, identity=imported, data="disposable", authority="explicit task fixture image discard",
                 inspection_sha256=module.fingerprint(observed_image), size_bytes=observed_image["Size"],
                 creation={"kind": "created", "intent": str(image_intent), "intent_sha256": module.digest(image_intent.read_bytes())}))
@@ -624,9 +633,32 @@ def main():
                          any(item["kind"] == "volume" and item["identity"] == named_entry["identity"] and
                              (item["status"] == "retained" if protected else item["status"] == "held" and "consumer" in item["reason"])
                              for item in latest["results"]))
+    # Independent owning-tool postconditions: never accept the helper's image status
+    # or Docker's default (partial) image listing as proof of actual retirement.
+    image_observations = []
+    for item in document["cleanup"]["plan"]["images"]:
+        identity = item["identity"]
+        exact = subprocess.run(["docker", "image", "inspect", identity], cwd=root, capture_output=True, timeout=90)
+        inventory = subprocess.run(["docker", "image", "ls", "--all", "--no-trunc", "--quiet"],
+                                   cwd=root, capture_output=True, timeout=90)
+        (evidence / (stamp + ".image-" + identity.removeprefix("sha256:") + ".stdout")).write_bytes(exact.stdout)
+        (evidence / (stamp + ".image-" + identity.removeprefix("sha256:") + ".stderr")).write_bytes(exact.stderr)
+        (evidence / (stamp + ".image-" + identity.removeprefix("sha256:") + ".all-inventory.stdout")).write_bytes(inventory.stdout)
+        (evidence / (stamp + ".image-" + identity.removeprefix("sha256:") + ".all-inventory.stderr")).write_bytes(inventory.stderr)
+        missing = (exact.returncode == 1 and exact.stdout.strip() == b"[]" and
+                   exact.stderr.decode().strip() == "Error response from daemon: No such image: " + identity)
+        present = (exact.returncode == 0 and len(json.loads(exact.stdout)) == 1 and
+                   json.loads(exact.stdout)[0]["Id"] == identity)
+        absent = missing and inventory.returncode == 0 and identity not in inventory.stdout.decode().splitlines()
+        image_observations.append({"identity": identity, "disposition": item["disposition"],
+            "inspect_exit": exact.returncode, "all_inventory_exit": inventory.returncode,
+            "present": present, "absent": absent,
+            "matched": absent if item["disposition"] == "remove" else present if item["disposition"] == "retain" else False})
+    private_json(evidence / (stamp + ".image-postconditions.json"), image_observations)
     summary = {"helper_sha256": module.digest(helper.read_bytes()), "helper_exit": result.returncode,
                "receipt": str(receipt), "required_volume_leftovers": leftover,
-               "pass": result.returncode == 0 and not leftover,
+               "image_postconditions": image_observations,
+               "pass": result.returncode == 0 and not leftover and all(item["matched"] for item in image_observations),
                "expected_stopped_shared_hold_verified": expected_hold,
                "workload": json.loads((evidence / "workload.json").read_text()) if (evidence / "workload.json").exists() else {"case": "historical stopped fixture"},
                "interrupted_after_container_effect": interrupted,
@@ -634,7 +666,7 @@ def main():
                "scope": "bounded real-Docker Compose fixture, image-declared anonymous and named storage; controlled hosting",
                "unrun": ["fleet owning callers", "installed Pi Land/Build (separate exact attempt evidence)",
                          "other interruption points", "foreign consumers",
-                         "recreation/inspection/denial", "task-created image/cache retirement"]}
+                         "recreation/inspection/denial", "task-created cache retirement"]}
     private_json(evidence / (stamp + ".result.json"), summary)
     print(json.dumps(summary, indent=2))
     return 0 if summary["pass"] or expected_hold or interrupted or expected_probe_hold else 1
