@@ -10,6 +10,18 @@ Read the referenced current section, not the full historical record. Missing han
 The [blended delivery strategy](../ROADMAP.md#approved-blended-delivery-strategy) permits terminal, browser and
 shared-foundation interleaving; it does not override active work, TASK orders, dependencies or readiness holds below.
 
+### Current planning update — 2026-10-28
+
+John approved [TASK-00545](00545-TASK.md), a separate standalone bug for the retained-checkout/report guard.
+Its implementation is unstarted and unranked; existing priorities, dependencies and TASK-00542 ownership are
+unchanged. The standalone Docker case remains with TASK-00542's active session, not this planning change.
+
+[PR #179](https://github.com/johnnickell/fight-agent-os/pull/179) is verified merged into `develop` at
+`1ccba352f7bbf0bee09139719050d915cec7f2ba` and locally integrated; see
+[TASK-00540's delivery reconciliation](00540-TASK.md#delivery-reconciliation--pr-179). No PR #179 merge action
+remains. Its integration prerequisite is satisfied on this planning base. The October 27 wording below is the
+preserved priority/planning checkpoint, not current proof that all three implementations remain unstarted.
+
 ### Current human priority — 2026-10-27
 
 John approved the cleanup-first sequence [TASK-00542](00542-TASK.md) -> [TASK-00543](00543-TASK.md) ->
@@ -59,7 +71,7 @@ links do not create current claims. Work selection and priority remain in the se
 <!-- planning:delivery -->
 | Subject | Recorded delivery | Exact PR |
 |---|---|---|
-| [TASK-00540](00540-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/179](https://github.com/johnnickell/fight-agent-os/pull/179) |
+| None | — | — |
 <!-- /planning:delivery -->
 
 <!-- planning:board -->
@@ -92,6 +104,7 @@ links do not create current claims. Work selection and priority remain in the se
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | ready-for-agent | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
+| — | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | — (standalone bug) | ready-for-agent | — | — |
 
 ## Waiting
 

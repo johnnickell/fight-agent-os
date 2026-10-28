@@ -77,10 +77,18 @@ publication/merge authority. Read the Board for work selection and priority.
 <!-- planning:delivery -->
 | Subject | Recorded delivery | Exact PR |
 |---|---|---|
-| [TASK-00540](tasks/00540-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/179](https://github.com/johnnickell/fight-agent-os/pull/179) |
+| None | — | — |
 <!-- /planning:delivery -->
 
 ## Current planning handoff
+
+**Planning update — 2026-10-28:** John approved standalone [TASK-00545](tasks/00545-TASK.md) for retained-checkout
+report protection; implementation is unstarted and existing priority/dependency/active ownership is unchanged.
+TASK-00542 retains its separate active session and standalone Docker case. PR #179 is verified merged at
+`1ccba352f7bbf0bee09139719050d915cec7f2ba` and locally integrated; its base-integration prerequisite is satisfied
+here. See [TASK-00540's reconciliation](tasks/00540-TASK.md#delivery-reconciliation--pr-179). The October 27
+paragraph below is preserved as its planning checkpoint, not a current merge request or implementation-state
+observation. This planning change does not repair or accept either bug.
 
 **Current approved priority — 2026-10-27:** John selected [TASK-00542](tasks/00542-TASK.md) ->
 [TASK-00543](tasks/00543-TASK.md) -> [TASK-00544](tasks/00544-TASK.md), all `ready-for-agent`, `order: 1`:
