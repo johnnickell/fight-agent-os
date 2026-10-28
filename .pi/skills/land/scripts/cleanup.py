@@ -88,25 +88,32 @@ def docker_inventory(safe):
     return json_command(["docker", "inspect", *ids], safe) if ids else []
 
 
-def file_record(path):
+def file_record(path, allow_symlink=False, metadata=None):
     before = path.lstat()
-    require(stat.S_ISREG(before.st_mode) or stat.S_ISDIR(before.st_mode),
+    link = stat.S_ISLNK(before.st_mode)
+    require(stat.S_ISREG(before.st_mode) or stat.S_ISDIR(before.st_mode) or (allow_symlink and link),
             "special file or symlink in preservation inventory; owner must resolve")
     require(before.st_uid == os.getuid(), "artifact ownership unresolved")
     require(not getattr(before, "st_flags", 0), "protected artifact flags; retain unchanged")
-    if hasattr(os, "listxattr"):
-        attrs = {name: digest(os.getxattr(path, name)) for name in os.listxattr(path)}
-    else:
-        names = command(["xattr", str(path)], path.parent).stdout.decode().splitlines()
-        attrs = {name: digest(command(["xattr", "-p", name, str(path)], path.parent).stdout) for name in names}
+    attrs = {}
+    if metadata is None or metadata[0]:
+        if hasattr(os, "listxattr"):
+            attrs = {name: digest(os.getxattr(path, name, follow_symlinks=not link))
+                     for name in os.listxattr(path, follow_symlinks=not link)}
+        else:
+            flags = ["-s"] if link else []
+            names = command(["xattr", *flags, str(path)], path.parent).stdout.decode().splitlines()
+            attrs = {name: digest(command(["xattr", *flags, "-p", name, str(path)], path.parent).stdout) for name in names}
     acl = []
-    if sys.platform == "darwin":
-        listing = command(["ls", "-lde", str(path)], path.parent).stdout.decode().splitlines()
+    if sys.platform == "darwin" and (metadata is None or metadata[1]):
+        listing = command(["ls", "-ldeP", str(path)], path.parent).stdout.decode().splitlines()
         acl = [line.strip() for line in listing[1:]]
-    result = {"kind": "directory" if path.is_dir() else "file", "mode": stat.S_IMODE(before.st_mode),
-              "uid": before.st_uid, "gid": before.st_gid, "xattrs": attrs,
-              "flags": getattr(before, "st_flags", 0), "acl": acl}
-    if path.is_file():
+    result = {"kind": "symlink" if link else "directory" if stat.S_ISDIR(before.st_mode) else "file",
+              "mode": stat.S_IMODE(before.st_mode), "uid": before.st_uid, "gid": before.st_gid,
+              "xattrs": attrs, "flags": getattr(before, "st_flags", 0), "acl": acl}
+    if link:
+        result["target"] = os.readlink(path)
+    elif stat.S_ISREG(before.st_mode):
         result["sha256"] = digest(path.read_bytes())
     after = path.lstat()
     require((before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns) ==
@@ -130,9 +137,36 @@ def preserved_record(source, destination):
     return actual
 
 
-def artifact_inventory(root):
-    """Inventory everything Git may delete, including empty dirs and ignored state."""
-    result = {".": file_record(root)}
+def exclusion_paths(entries):
+    paths = []
+    for entry in entries:
+        path = Path(entry["path"])
+        require(path.parts and not path.is_absolute() and ".." not in path.parts and entry["reason"] and
+                entry["disposable"] is True, "exclusion must name a proven disposable relative path and reason")
+        paths.append(path)
+    return tuple(paths)
+
+
+def metadata_paths(root):
+    """Index native macOS metadata without following links; never assume an error means empty."""
+    if sys.platform != "darwin":
+        return None
+    result = []
+    for predicate in ("-xattr", "-acl"):
+        observed = command(["find", "-P", ".", "-path", "./.git", "-prune", "-o",
+                            predicate, "-print0"], root, timeout=60)
+        require(not observed.stderr.strip(), "artifact metadata visibility incomplete")
+        result.append({root / name for name in observed.stdout.decode().split("\0") if name})
+    return tuple(result)
+
+
+def artifact_inventory(root, exclusions=()):
+    """Inventory all bytes/metadata; only approved disposable symlinks are recorded without following."""
+    metadata = metadata_paths(root)
+    def record(path, disposable=False):
+        flags = tuple(path in paths for paths in metadata) if metadata is not None else None
+        return file_record(path, allow_symlink=disposable, metadata=flags)
+    result = {".": record(root)}
     def unavailable(error):
         raise error
     for parent, directories, files in os.walk(root, followlinks=False, onerror=unavailable):
@@ -141,7 +175,9 @@ def artifact_inventory(root):
             files = [name for name in files if name != ".git"]
         for name in sorted(directories + files):
             path = Path(parent) / name
-            result[str(path.relative_to(root))] = file_record(path)
+            relative = path.relative_to(root)
+            result[str(relative)] = record(path, any(inside(relative, excluded) for excluded in exclusions))
+    require(metadata_paths(root) == metadata, "artifact metadata index changed while inspected")
     return result
 
 
@@ -417,27 +453,35 @@ class Cleanup:
         require(current == self.plan["oid"], "local ref missing/changed or unpublished commits")
         require(text(["git", "rev-list", "--count", f"{self.plan['oid']}..{ref}"], self.safe) == "0", "local-only commits")
 
+    def verify_preservation(self, preservation):
+        """Verify complete retained-inventory coverage, not just integrity of listed copies."""
+        source, destination = Path(preservation["source"]), Path(preservation["destination"])
+        files = preservation["files"]
+        records = {str(Path(entry["old"]).relative_to(source)): entry["record"] for entry in files}
+        require(len(records) == len(files) and
+                fingerprint(records) == preservation.get("retained_inventory_sha256"),
+                "external preservation completeness unverified; retain resource and recover inventory evidence")
+        require(all(Path(entry["new"]) == destination / "files" / Path(entry["old"]).relative_to(source) and
+                    file_record(Path(entry["new"])) == entry.get("destination_record", entry["record"])
+                    for entry in files), "external preservation copy changed or unavailable")
+
     def preserve(self, candidate, item):
-        before = artifact_inventory(candidate)
-        excluded = item["exclusions"]
-        for entry in excluded:
-            path = Path(entry["path"])
-            require(not path.is_absolute() and ".." not in path.parts and entry["reason"] and
-                    entry["disposable"] is True, "exclusion must name a proven disposable relative path and reason")
+        excluded = exclusion_paths(item["exclusions"])
+        before = artifact_inventory(candidate, excluded)
         def excluded_path(name):
-            return any(inside(Path(name), Path(entry["path"])) for entry in excluded)
-        # Every ignored/untracked file is copied unless explicitly disposable. Tracked bytes
-        # also enter the stability inventory, not the retained copy.
-        untracked = command(["git", "ls-files", "--others", "-z"], candidate).stdout.decode().split("\0")
-        names = {name for name in untracked if name and not excluded_path(name)}
-        names |= {name for name, record in before.items() if name != "." and record["kind"] == "directory" and not excluded_path(name) and
-                  (any(inside(Path(child), Path(name)) for child in names) or not any(inside(Path(child), Path(name)) and child != name for child in before))}
+            return any(inside(Path(name), path) for path in excluded)
+        # Git's untracked listing can omit nested Git-shaped evidence. Select from the
+        # complete no-follow inventory instead, subtracting only exact tracked files and
+        # approved exclusions. Preserve directory metadata, including tracked-file parents.
+        tracked = set(command(["git", "ls-files", "--cached", "-z"], candidate).stdout.decode().split("\0"))
+        retained = {name: record for name, record in before.items() if name != "." and not excluded_path(name) and
+                    (record["kind"] == "directory" or name not in tracked)}
         destination = absolute(item["preserve_to"])
         require(inside(destination, self.store) and not inside(destination, candidate), "preservation destination must be canonical task-owned runs")
         destination.mkdir(mode=0o700, parents=True, exist_ok=True)
         require(destination.stat().st_uid == os.getuid() and stat.S_IMODE(destination.stat().st_mode) == 0o700, "preservation destination not private/owned")
         manifest = []
-        for name in sorted(names, key=lambda value: (len(Path(value).parts), value)):
+        for name in sorted(retained, key=lambda value: (len(Path(value).parts), value)):
             source, target = candidate / name, destination / "files" / name
             absolute(str(target))  # Refuse symlinked destination parents before any private copy.
             record = before[name]
@@ -459,10 +503,12 @@ class Cleanup:
                         shutil.copy2(source, target, follow_symlinks=False)
                 copied = preserved_record(record, target)
             manifest.append({"old": str(source), "new": str(target), "record": record, "destination_record": copied})
-        require(artifact_inventory(candidate) == before, "source inventory changed during preservation")
+        require(artifact_inventory(candidate, excluded) == before, "source inventory changed during preservation")
         self.attempt["preservation"] = {"source": str(candidate), "destination": str(destination),
-                                        "exclusions": excluded, "files": manifest,
-                                        "source_inventory_sha256": fingerprint(before)}
+                                        "exclusions": item["exclusions"], "files": manifest,
+                                        "source_inventory_sha256": fingerprint(before),
+                                        "retained_inventory_sha256": fingerprint(retained)}
+        self.verify_preservation(self.attempt["preservation"])
         self.save()
         return before, manifest
 
@@ -475,8 +521,8 @@ class Cleanup:
         if registered is None:
             require(not candidate.exists(), "unregistered path exists/recreated; held")
             prior = [attempt["preservation"] for attempt in self.state if "preservation" in attempt]
-            require(prior and all(file_record(Path(entry["new"])) == entry.get("destination_record", entry["record"])
-                                  for entry in prior[-1]["files"]), "absent checkout has no verifiable external preservation receipt")
+            require(prior, "absent checkout has no verifiable external preservation receipt")
+            self.verify_preservation(prior[-1])
             result.update(status="absent", reason="worktree registration/filesystem absent; prior external copy verified")
             return
         require(candidate.is_dir() and candidate.stat().st_ino == item["inode"] and
@@ -485,7 +531,8 @@ class Cleanup:
         self.local_tip()
         require(not text(["git", "status", "--porcelain", "--untracked-files=all"], candidate), "tracked/untracked changes; preserve unpublished work")
         self.consumers(candidate)
-        inventory = artifact_inventory(candidate)
+        excluded = exclusion_paths(item["exclusions"])
+        inventory = artifact_inventory(candidate, excluded)
         require(not any(" deny " in (" " + acl + " ") for record in inventory.values() for acl in record["acl"]),
                 "filesystem deny ACL/protection present; permission hold; no removal or protection changes")
         require(all(record["mode"] & 0o300 == 0o300 for record in inventory.values() if record["kind"] == "directory"),
@@ -493,17 +540,17 @@ class Cleanup:
         if not self.apply:
             result.update(status="qualified", reason="preview only; external preservation still required on apply")
             return
-        before, manifest = self.preserve(candidate, item)
+        before, _ = self.preserve(candidate, item)
         self.subject_checks()
         self.local_tip()
         self.consumers(candidate)
-        require(artifact_inventory(candidate) == before, "source changed immediately before removal")
-        require(all(file_record(Path(entry["new"])) == entry["destination_record"] for entry in manifest), "external copy changed before removal")
+        require(artifact_inventory(candidate, excluded) == before, "source changed immediately before removal")
+        self.verify_preservation(self.attempt["preservation"])
         result.update(status="pending", reason="preservation verified; qualified normal Git removal; reobserve outcome")
         self.save()
         command(["git", "worktree", "remove", str(candidate)], self.safe, timeout=60)
         require(not candidate.exists() and not any(tree["worktree"] == str(candidate) for tree in worktrees(self.safe)), "checkout removal postcondition failed")
-        require(all(file_record(Path(entry["new"])) == entry["destination_record"] for entry in manifest), "external preservation postcondition failed")
+        self.verify_preservation(self.attempt["preservation"])
         result.update(status="removed", reason="filesystem/registration absent and external digests/modes verified")
 
     def branch_configuration(self):
