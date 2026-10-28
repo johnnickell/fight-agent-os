@@ -210,3 +210,10 @@ unaffected evidence remains applicable. Broad reruns need interaction risk or un
 Retain reports/captures outside disposable worktrees. Stop only owned temporary processes and remove only proven
 disposable data when authorized; preserve useful failed-run environments for repair. Landing cleanup must not
 remove the only copy of QA evidence or leave required publication pending while claiming success.
+
+Carry the existing [exact-subject cleanup inventory](LANDING.md#inventory-and-preserve) forward with each
+probe's creation provenance before its container disappears: exact mounts, named/anonymous volume identities,
+created versus merely used/shared resources, data disposability/discard authority, sizes and retained/held
+reasons. Include images/caches and stopped consumers. A receipt grants no discard authority. Use Land's
+bounded helper/Build continuation for retirement; unavailable inspection or exact-cache capability is a finite
+hold, never a blanket teardown/prune fallback or a silent successful cleanup claim.

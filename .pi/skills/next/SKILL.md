@@ -47,19 +47,12 @@ repository/TASK and the claimed subject; an older report does not establish curr
 current handoff cannot establish an applicable subject/bridge, report evidence reconciliation or independent
 reassessment, not a guessed pass, repair or delivery. Do not perform that assessment inside `next`.
 
-Before evaluating or repeating a relevant current delivery/merge handoff, follow
-[live handoff evaluation](../../../docs/engineering/HANDOFFS.md#live-delivery-handoff-evaluation).
-Require the target's qualified bounded live check for only the relevant explicit current subjects (in Agent OS,
-`./bin/planning-check --check-delivery` with their TASK IDs). If the target has no qualified checker, use its
-supported exact-PR hosting read within the same bounds or report the missing capability; do not assume command
-compatibility. Exact MERGED evidence for an already-`done` subject resolves read-only only with published-head
-→ merge → local-HEAD ancestry (replacement objects/lazy fetching disabled); report it and continue routing,
-without a routine cleanup request. The next authorized mutation retires its marker. CLOSED-without-merge,
-nonterminal or unintegrated MERGED evidence retains its precise decision/integration or explicit exceptional
-Land reconciliation route; never repeat the ended merge action.
-Unavailable/mismatched/partial evidence holds that delivery recommendation with the exact recovery action.
-Do not invoke Land, refresh views or inspect unmarked historical PRs. Preserve unrelated available work,
-Board ordering and planning routes; reconciled history alone creates neither requests nor selection holds.
+Do not turn completed TASKs or historical publication checkpoints into pending-merge routing. Land owns
+accepted TASK/current-doc closeout, exact live publication verification and eligible local retirement. There
+is no persistent delivery-marker queue or routine post-merge maintenance. Only an explicitly requested relevant
+delivery observation uses [bounded exact-PR evidence](../../../docs/engineering/HANDOFFS.md#live-delivery-handoff-evaluation);
+report unverified proof as such. Never invoke Land, refresh views or scan historical PRs during routing.
+Preserve Board ordering and separate planning routes; history alone creates no selection hold.
 
 Use this stage routing once evidence supports it:
 

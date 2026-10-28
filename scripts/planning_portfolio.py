@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate planning offline, refresh views, or explicitly observe current delivery handoffs."""
+"""Validate planning offline and explicitly refresh generated views."""
 
 from __future__ import annotations
 
@@ -9,8 +9,6 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-
-from planning_delivery import verify_delivery as observe_delivery, reconcile_delivery
 
 ROOT = Path(__file__).resolve().parents[1]
 PLANNING = ROOT / "planning"
@@ -87,11 +85,6 @@ def load_records() -> tuple[dict, list[str]]:
                     raise ValueError("pr must be a pull-request URL")
                 if "archive" in path.parts and data["status"] not in TERMINAL:
                     raise ValueError("archived record is not terminal")
-                if data.get("delivery"):
-                    if kind != "TASK" or "archive" in path.parts or data["delivery"] != "awaiting-merge":
-                        raise ValueError("delivery must be awaiting-merge on a live TASK, or empty; Land owns correction")
-                    if not data.get("pr"):
-                        raise ValueError("delivery: awaiting-merge requires the exact subject PR URL; Land owns correction")
                 records[identifier] = (path, data)
             except ValueError as exception:
                 errors.append(f"{path.relative_to(ROOT)}: {exception}")
@@ -166,65 +159,6 @@ def complete_parents(records: dict) -> dict[Path, str]:
     return pending
 
 
-def current_delivery(records: dict) -> list[tuple[str, Path, dict]]:
-    """Select explicit subject markers, never status, historical prose or ordinary PR links."""
-    return [(identifier, path, data) for identifier, (path, data) in sorted(records.items())
-            if data.get("delivery") == "awaiting-merge"]
-
-
-def validate_delivery_identity(records: dict) -> list[str]:
-    """Compare marked PRs with local origin configuration without contacting hosting."""
-    handoffs = current_delivery(records)
-    if not handoffs:
-        return []
-    try:
-        origin = subprocess.run(
-            ["git", "-c", f"safe.directory={ROOT.resolve()}", "remote", "get-url", "origin"],
-            cwd=ROOT, capture_output=True, text=True, timeout=5, check=True,
-        ).stdout.strip()
-    except (OSError, subprocess.SubprocessError):
-        return ["delivery identity unavailable: cannot read local origin; restore repository identity before refresh"]
-    match = re.fullmatch(
-        r"(?:git@github\.com:|https://github\.com/)([A-Za-z0-9_][A-Za-z0-9_.-]*/[A-Za-z0-9_][A-Za-z0-9_.-]*?)(?:\.git)?",
-        origin,
-    )
-    if not match:
-        return ["delivery identity invalid: local origin must identify one GitHub repository (SSH or HTTPS)"]
-    repository = match[1]
-    errors = []
-    subjects = {}
-    for identifier, path, data in handoffs:
-        label = f"{path.relative_to(ROOT)} ({identifier})"
-        if not re.fullmatch(rf"https://github\.com/{re.escape(repository)}/pull/[1-9][0-9]*", data["pr"]):
-            errors.append(f"{label}: delivery PR must be https://github.com/{repository}/pull/<positive-number>; Land must resolve identity")
-        elif data["pr"] in subjects:
-            errors.append(f"{label}: delivery PR already belongs to marked subject {subjects[data['pr']]}; Land must resolve conflicting subjects")
-        else:
-            subjects[data["pr"]] = identifier
-    return errors
-
-
-def verify_delivery(records: dict, subjects: list[str]) -> int:
-    """Observe exact marked PRs and resolve only already-done integrated merges."""
-    handoffs = current_delivery(records)
-    if subjects:
-        marked = {identifier for identifier, _, _ in handoffs}
-        if len(subjects) != len(set(subjects)) or any(subject not in marked for subject in subjects):
-            print("Delivery UNVERIFIED: select unique explicitly marked TASK IDs; Land must resolve missing/current subject identity. No hosting requests made.")
-            return 2
-        handoffs = [row for row in handoffs if row[0] in subjects]
-    if len(handoffs) > 16:
-        print("Delivery UNVERIFIED: limit is 16 marked subjects per invocation; select the relevant TASK IDs with --check-delivery. No hosting requests made.")
-        return 2
-    if not handoffs:
-        print("No recorded current delivery handoffs; no hosting requests made. Historical PRs were not queried.")
-        return 0
-    resolved, errors = observe_delivery(ROOT, records, subjects)
-    for error in errors:
-        print(error)
-    return 1 if errors else 0
-
-
 def projections(records: dict) -> dict[tuple[Path, str], str]:
     views = {}
     board = PLANNING / "tasks/BOARD.md"
@@ -261,11 +195,6 @@ def projections(records: dict) -> dict[tuple[Path, str], str]:
             views[source, "records"] = table(["ID", "Title", "Status", "Parent"], rows)
 
     roadmap = PLANNING / "ROADMAP.md"
-    for source in (board, roadmap):
-        views[source, "delivery"] = table(["Subject", "Recorded delivery", "Exact PR"], [
-            [linked(source, path, identifier), "awaiting-merge; live state unverified", f'[{data["pr"]}]({data["pr"]})']
-            for identifier, path, data in current_delivery(records)
-        ])
     rows = [[linked(roadmap, path, identifier), cell(data["title"]), cell(data.get("target", "")), cell(data["status"])]
             for identifier, (path, data) in sorted(records.items())
             if identifier.startswith("EPIC-") and "archive" not in path.parts]
@@ -347,14 +276,10 @@ def projections(records: dict) -> dict[tuple[Path, str], str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--write", action="store_true", help="offline: close eligible parents and refresh generated views after validation")
-    mode.add_argument("--check-delivery", nargs="*", metavar="TASK-ID", help="read-only live check of explicit marked subjects (default: all, maximum 16)")
-    mode.add_argument("--reconcile-delivery", nargs="*", metavar="TASK-ID", help="authorized retirement of verified merged/integrated done markers, preserving evidence and refreshing views")
+    parser.add_argument("--write", action="store_true", help="offline: close eligible parents and refresh generated views after validation")
     args = parser.parse_args()
-    writing = args.write or args.reconcile_delivery is not None
+    writing = args.write
     records, errors = load_records()
-    errors.extend(validate_delivery_identity(records))
     for path in PLANNING.rglob("*.md"):
         if path.name.startswith("_"):
             continue
@@ -369,11 +294,6 @@ def main() -> int:
     if not errors:
         closures = complete_parents(records)
         pending = dict(closures) if writing else {}
-        if args.reconcile_delivery is not None:
-            resolved, delivery_errors = observe_delivery(ROOT, records, args.reconcile_delivery)
-            errors.extend(delivery_errors)
-            if not errors:
-                pending.update(reconcile_delivery(records, resolved))
         if not writing:
             for path in closures:
                 errors.append(f"{path.relative_to(ROOT)}: parent completion out of sync; run ./bin/planning-check --write")
@@ -406,9 +326,6 @@ def main() -> int:
         return 1
     active = sum(data["status"] not in TERMINAL for _, data in records.values())
     print(f"Planning validation passed: {len(records)} records, {active} active; generated views {'refreshed' if writing else 'current'}")
-    print(f"Delivery identity checked offline: {len(current_delivery(records))} marked handoff(s); live PR state NOT CHECKED by local validation")
-    if args.check_delivery is not None:
-        return verify_delivery(records, args.check_delivery)
     return 0
 
 

@@ -83,6 +83,17 @@ def container_identity(item):
     return fingerprint({key: item.get(key) for key in ("Id", "Created", "Image", "Name", "Config", "HostConfig", "Mounts")})
 
 
+def volume_identity(item):
+    """Bind Docker's available volume identity fields; never use its name alone."""
+    return fingerprint({key: item.get(key) for key in
+                        ("Name", "Driver", "Mountpoint", "CreatedAt", "Labels", "Options", "Scope")})
+
+
+def volume_inventory(safe):
+    names = text(["docker", "volume", "ls", "--format", "{{.Name}}"], safe).splitlines()
+    return json_command(["docker", "volume", "inspect", *names], safe) if names else []
+
+
 def docker_inventory(safe):
     ids = text(["docker", "ps", "-a", "--no-trunc", "--format", "{{.ID}}"], safe).splitlines()
     return json_command(["docker", "inspect", *ids], safe) if ids else []
@@ -196,8 +207,15 @@ class Cleanup:
         require(self.path.stat().st_uid == os.getuid() and stat.S_IMODE(self.path.stat().st_mode) == 0o600,
                 "receipt must already be private and owned (0600)")
         require(self.document["cleanup"]["version"] == 1, "unsupported cleanup receipt")
-        require(len(self.plan["containers"]) <= 32 and len(self.plan["networks"]) <= 32 and
+        require(all(isinstance(self.plan.get(kind), list) for kind in
+                    ("containers", "networks", "volumes", "images", "caches")),
+                "explicit storage/image/cache inventory missing; recover creation evidence before cleanup")
+        require(all(len(self.plan[kind]) <= 32 for kind in
+                    ("containers", "networks", "volumes", "images", "caches")) and
                 len(self.plan["protected_files"]) <= 128, "exact-subject resource bounds exceeded")
+        for kind in ("containers", "networks", "volumes", "images", "caches"):
+            identities = [item["identity"] for item in self.plan[kind]]
+            require(len(identities) == len(set(identities)), "duplicate exact-subject resource identity")
         self.plan_hash = fingerprint(self.plan)
         previous = self.document["cleanup"].get("plan_sha256")
         require(previous is None or previous == self.plan_hash, "plan changed; reconcile explicitly in a new receipt linked to prior results")
@@ -230,6 +248,11 @@ class Cleanup:
         try:
             require(item["disposition"] in ("remove", "retain", "hold"), "unknown disposition")
             if item["disposition"] == "retain":
+                require(item["reason"], "retention reason missing")
+                if kind in ("container", "network", "volume", "image"):
+                    self.observe_retained(kind, item, result)
+                elif kind == "cache":
+                    self.cache(item, result)
                 result.update(status="retained", reason=item["reason"])
             else:
                 require(item["disposition"] == "remove", item["reason"])
@@ -379,6 +402,7 @@ class Cleanup:
             require(not any(value["Name"] == item["name"] for value in inventory), "container recreated under recorded name; new identity held")
             result.update(status="absent", reason="exact ID and recorded name absent on successful full inventory")
             return
+        self.creation_evidence(item)
         binding, args, model = self.runtime()
         require(container_identity(current) == item["inspection_sha256"], "container identity/configuration/mounts changed")
         labels = current["Config"]["Labels"]
@@ -393,7 +417,8 @@ class Cleanup:
         if current["State"]["Running"]:
             processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
             require(digest(processes) == item["processes_sha256"], "container processes changed/unknown consumers")
-        require(item["data"] == "disposable" and all(mount["Type"] != "volume" for mount in current["Mounts"]), "durable or unresolved data disposition")
+        require(item["data"] == "disposable", "durable or unresolved data disposition")
+        self.capture_mounts(item, current, model)
         candidate = absolute(self.plan["worktree"]["identity"])
         for mount in current["Mounts"]:
             if mount["Type"] == "bind" and mount.get("RW"):
@@ -420,7 +445,159 @@ class Cleanup:
         self.host_consumers(candidate)
         command(["docker", "rm", item["identity"]], self.safe)
         require(not any(value["Id"] == item["identity"] or value["Name"] == item["name"] for value in docker_inventory(self.safe)), "container removal postcondition failed/recreated")
-        result.update(status="removed", reason="exact container ID/name absence verified; no volumes removed")
+        result.update(status="removed", reason="exact container ID/name absence verified; mount provenance retained for separate volume qualification")
+
+    def creation_evidence(self, item):
+        creation = item["creation"]
+        require(creation["kind"] == "created", "merely used/shared resource is not task-created")
+        intent = absolute(creation["intent"])
+        require(not inside(intent, absolute(self.plan["worktree"]["identity"])) and
+                intent.stat().st_uid == os.getuid() and stat.S_IMODE(intent.stat().st_mode) == 0o600,
+                "creation intent must be owned/private and outside removal candidates")
+        require(digest(intent.read_bytes()) == creation["intent_sha256"], "creation intent missing/changed; recover original evidence")
+        return creation
+
+    def volume_size(self, name, result):
+        # Docker reports approximate display units, not exact reclaimed physical bytes.
+        usage = json_command(["docker", "system", "df", "--verbose", "--format", "{{json .Volumes}}"], self.safe)
+        matches = [item for item in usage if item["Name"] == name]
+        require(len(matches) == 1, "volume size observation unavailable; retain and recover inspection")
+        result["storage"] = {"docker_size": matches[0]["Size"], "links": matches[0]["Links"],
+                             "observed_at": datetime.now(timezone.utc).isoformat(),
+                             "physical_reclaimed_bytes": None}
+
+    def capture_mounts(self, item, current, model):
+        """Persist exact creating-container observations before any stop/removal effect."""
+        mounts = [{key: mount.get(key) for key in ("Type", "Name", "Source", "Destination", "RW")}
+                  for mount in current["Mounts"]]
+        volumes = {entry["identity"]: entry for entry in self.plan["volumes"]}
+        image = json_command(["docker", "image", "inspect", current["Image"]], self.safe)[0]
+        declared = image["Config"].get("Volumes") or {}
+        for mount in mounts:
+            if mount["Type"] != "volume":
+                continue
+            require(mount["Name"] in volumes, "mounted volume missing from exact inventory; retain creating container")
+            volume = volumes[mount["Name"]]
+            require(volume["disposition"] in ("remove", "retain", "hold") and volume["reason"],
+                    "volume data/retention disposition unresolved")
+            if volume["disposition"] != "remove":
+                continue  # Removing a disposable container never implies discarding retained data.
+            creation = self.creation_evidence(volume)
+            require(volume["data"] == "disposable" and volume["authority"], "volume data/authority unresolved")
+            if creation["container"] != current["Id"]:
+                continue  # This task container merely uses storage; only its creator can supply creation proof.
+            require(creation["destination"] == mount["Destination"],
+                    "volume creation destination not bound to this workload")
+            observed = json_command(["docker", "volume", "inspect", mount["Name"]], self.safe)[0]
+            require(volume_identity(observed) == volume["inspection_sha256"], "volume identity changed before provenance capture")
+            configured = [value for value in model["services"][item["service"]].get("volumes", [])
+                          if value["target"] == mount["Destination"]]
+            if configured and configured[0].get("source"):
+                config = model["volumes"][configured[0]["source"]]
+                require(not config.get("external", False) and config["name"] == mount["Name"],
+                        "external/shared configured volume; no discard through task association")
+            else:
+                require(mount["Destination"] in declared or
+                        (configured and configured[0]["type"] == "volume"),
+                        "anonymous mount declaration unresolved")
+        observation = {"container": current["Id"], "container_identity": container_identity(current),
+                       "image": current["Image"], "mounts": mounts,
+                       "runtime_sha256": self.plan["runtime"]["resolved_sha256"]}
+        provenance = self.document["cleanup"].setdefault("mount_provenance", {})
+        require(current["Id"] not in provenance or provenance[current["Id"]] == observation,
+                "creating workload provenance changed; retain original evidence")
+        provenance[current["Id"]] = observation
+        self.save()
+
+    def observe_retained(self, kind, item, result):
+        """Retention is an observed policy disposition, not a silent missing-resource exemption."""
+        if kind == "container":
+            current = json_command(["docker", "inspect", item["identity"]], self.safe)[0]
+            require(container_identity(current) == item["inspection_sha256"], "retained container missing/recreated/changed")
+        elif kind == "network":
+            current = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
+            require(current["Id"] == item["identity"] and current["Name"] == item["name"] and
+                    current["Created"] == item["created"], "retained network missing/recreated/changed")
+        elif kind == "volume":
+            current = json_command(["docker", "volume", "inspect", item["identity"]], self.safe)[0]
+            require(volume_identity(current) == item["inspection_sha256"], "retained volume missing/recreated")
+            self.volume_size(item["identity"], result)
+        else:
+            current = json_command(["docker", "image", "inspect", item["identity"]], self.safe)[0]
+            require(current["Id"] == item["identity"], "retained image identity changed")
+            result["storage"] = {"size_bytes": current["Size"], "physical_reclaimed_bytes": None}
+        result["creation"] = item["creation"]
+
+    def volume(self, item, result):
+        self.creation_evidence(item)
+        require(item["data"] == "disposable" and item["authority"], "durable/unknown storage or discard authority unresolved")
+        provenance = self.document["cleanup"].get("mount_provenance", {}).get(item["creation"]["container"])
+        require(provenance, "creating-container mount provenance unavailable; recover original evidence")
+        creator = next((entry for entry in self.plan["containers"] if entry["identity"] == provenance["container"]), None)
+        require(creator and creator["inspection_sha256"] == provenance["container_identity"] and
+                provenance["runtime_sha256"] == self.plan["runtime"]["resolved_sha256"] and
+                any(mount["Type"] == "volume" and mount["Name"] == item["identity"] and
+                    mount["Destination"] == item["creation"]["destination"] for mount in provenance["mounts"]),
+                "storage provenance does not match the original creating workload")
+        inventory = volume_inventory(self.safe)
+        current = next((value for value in inventory if value["Name"] == item["identity"]), None)
+        if current is None:
+            result.update(status="absent", reason="exact volume name absent on successful inventory; original creation evidence retained")
+            return
+        require(volume_identity(current) == item["inspection_sha256"], "volume recreated/identity changed; retain new resource")
+        self.volume_size(item["identity"], result)
+        require(not any(mount["Type"] == "volume" and mount["Name"] == item["identity"]
+                        for container in docker_inventory(self.safe) for mount in container["Mounts"]),
+                "volume has current consumer, including stopped/shared containers; retain unchanged")
+        # Repeat exact identity and all-consumer observations immediately before the effect.
+        latest = json_command(["docker", "volume", "inspect", item["identity"]], self.safe)[0]
+        require(volume_identity(latest) == item["inspection_sha256"], "volume changed before removal")
+        if not self.apply:
+            result.update(status="qualified", reason="preview only")
+            return
+        result.update(status="pending", reason="qualified task-created disposable volume; reobserve absence")
+        self.save()
+        self.subject_checks()
+        require(not any(mount["Type"] == "volume" and mount["Name"] == item["identity"]
+                        for container in docker_inventory(self.safe) for mount in container["Mounts"]),
+                "new/stopped volume consumer before effect; retain unchanged")
+        latest = json_command(["docker", "volume", "inspect", item["identity"]], self.safe)[0]
+        require(volume_identity(latest) == item["inspection_sha256"], "volume changed immediately before effect")
+        command(["docker", "volume", "rm", item["identity"]], self.safe)
+        require(not any(value["Name"] == item["identity"] for value in volume_inventory(self.safe)),
+                "volume removal postcondition failed/recreated")
+        result.update(status="removed", reason="exact disposable volume absence verified; physical disk reclaim not inferred")
+
+    def image(self, item, result):
+        self.creation_evidence(item)
+        require(item["data"] == "disposable" and item["authority"], "image discard authority unresolved")
+        inventory = text(["docker", "image", "ls", "--no-trunc", "--quiet"], self.safe).splitlines()
+        if item["identity"] not in inventory:
+            result.update(status="absent", reason="content-addressed image absent on successful inventory")
+            return
+        current = json_command(["docker", "image", "inspect", item["identity"]], self.safe)[0]
+        require(current["Id"] == item["identity"] and fingerprint(current) == item["inspection_sha256"],
+                "image identity/tags changed; shared or recreated subject held")
+        require(not any(container["Image"] == item["identity"] for container in docker_inventory(self.safe)),
+                "image has current/stopped container consumer")
+        result["storage"] = {"size_bytes": current["Size"], "physical_reclaimed_bytes": None}
+        if not self.apply:
+            result.update(status="qualified", reason="preview only")
+            return
+        result.update(status="pending", reason="exact created image, normal removal only; shared layers protected by Docker")
+        self.save()
+        self.subject_checks()
+        require(not any(container["Image"] == item["identity"] for container in docker_inventory(self.safe)),
+                "new/stopped image consumer before effect")
+        require(fingerprint(json_command(["docker", "image", "inspect", item["identity"]], self.safe)[0]) == item["inspection_sha256"],
+                "image changed immediately before effect")
+        command(["docker", "image", "rm", item["identity"]], self.safe)
+        require(item["identity"] not in text(["docker", "image", "ls", "--no-trunc", "--quiet"], self.safe).splitlines(),
+                "image removal postcondition failed")
+        result.update(status="removed", reason="content-addressed image absent; no prune or shared-layer reclaim claim")
+
+    def cache(self, item, result):
+        raise Hold("exact cache retirement/inspection capability unavailable; owning builder must resolve the bounded cache identity without prune")
 
     def network(self, item, result):
         ids = text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.safe).splitlines()
@@ -429,6 +606,7 @@ class Cleanup:
             require(not any(value[1] == item["name"] for value in matches), "network recreated under recorded name; held")
             result.update(status="absent", reason="exact network ID/name absent on successful inventory")
             return
+        self.creation_evidence(item)
         binding, _, model = self.runtime()
         network = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
         configuration = model["networks"][item["key"]]
@@ -437,11 +615,23 @@ class Cleanup:
                 network["Labels"].get("com.docker.compose.network") == item["key"] and
                 network["Created"] == item["created"], "network ownership changed")
         require(not network["Containers"], "network has current endpoints (foreign/shared/remaining); retain unchanged")
+        require(not any(name == item["name"] or value.get("NetworkID") == item["identity"]
+                        for container in docker_inventory(self.safe)
+                        for name, value in container["NetworkSettings"]["Networks"].items()),
+                "network has current or stopped configured consumer; retain unchanged")
         if not self.apply:
             result.update(status="qualified", reason="preview only")
             return
         result.update(status="pending", reason="qualified empty owned network; reobserve outcome")
         self.save()
+        self.subject_checks()
+        latest = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
+        require(latest["Id"] == item["identity"] and latest["Created"] == item["created"] and not latest["Containers"],
+                "network identity/endpoints changed before effect")
+        require(not any(name == item["name"] or value.get("NetworkID") == item["identity"]
+                        for container in docker_inventory(self.safe)
+                        for name, value in container["NetworkSettings"]["Networks"].items()),
+                "new/stopped configured network consumer before effect")
         command(["docker", "network", "rm", item["identity"]], self.safe)
         after = text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.safe).splitlines()
         require(not any(item["identity"] in line or line.split()[-1] == item["name"] for line in after), "network postcondition failed/recreated")
@@ -586,16 +776,52 @@ class Cleanup:
         self.branch_configuration()
         result.update(status="removed", reason="OID-guarded local ref/config absence verified; remote untouched")
 
+    def verify_docker_results(self):
+        """Reobserve successful effects/retentions at final intake; receipts are not postconditions."""
+        if not any(self.plan[kind] for kind in ("containers", "networks", "volumes", "images", "caches")):
+            return
+        containers = docker_inventory(self.safe)
+        volumes = volume_inventory(self.safe)
+        networks = text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.safe).splitlines()
+        images = text(["docker", "image", "ls", "--no-trunc", "--quiet"], self.safe).splitlines()
+        for result in self.results:
+            if result["status"] not in ("removed", "absent", "retained"):
+                continue
+            kind, identity = result["kind"], result["identity"]
+            if kind not in ("container", "network", "volume", "image"):
+                continue
+            item = next(value for value in self.plan[kind + "s"] if value["identity"] == identity)
+            if result["status"] == "retained":
+                self.observe_retained(kind, item, result)
+                continue
+            if kind == "container":
+                require(not any(value["Id"] == identity or value["Name"] == item["name"] for value in containers),
+                        "container recreated after effect; final verification held")
+            elif kind == "volume":
+                require(not any(value["Name"] == identity for value in volumes), "volume recreated after effect; final verification held")
+            elif kind == "network":
+                require(not any(line.split()[0] == identity or line.split()[1] == item["name"] for line in networks),
+                        "network recreated after effect; final verification held")
+            else:
+                require(identity not in images, "image present after effect; final verification held")
+
     def run(self):
         self.save()
         for item in self.plan["containers"]:
             self.effect("container", item, self.container)
+        for item in self.plan["volumes"]:
+            self.effect("volume", item, self.volume)
         for item in self.plan["networks"]:
             self.effect("network", item, self.network)
+        for item in self.plan["images"]:
+            self.effect("image", item, self.image)
+        for item in self.plan["caches"]:
+            self.effect("cache", item, self.cache)
         self.effect("worktree", self.plan["worktree"], self.checkout)
         self.effect("ref", self.plan["branch"], self.branch)
         try:
             self.subject_checks()
+            self.verify_docker_results()
             self.attempt["retained_protected_files_verified"] = True
         except (Hold, OSError, ValueError, KeyError) as error:
             self.results.append({"kind": "final-verification", "identity": self.subject,

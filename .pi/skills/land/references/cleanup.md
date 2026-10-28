@@ -30,8 +30,9 @@ The following is a **schema description**, not a runnable fixture or established
 - `exited_workers`: list of `{pid}` from the original monitor's `process.json`. Any live/reused PID holds effects.
   Initially use `[]` when no original worker is pending. `original_land_attempt` binds the original monitor attempt
   for Build continuation. Set it and both PIDs before the worker's first operation, once `process.json` exists.
-- `containers`, `networks`: explicit lists (at most 32 each), including `[]` when proven none. No discovery
-  expands these lists. `protected_files` is bounded to 128 entries.
+- `containers`, `networks`, `volumes`, `images`, `caches`: explicit lists (at most 32 each), including `[]`
+  only when proven none. Missing storage inventory holds legacy receipts until the owner recovers it in a
+  linked new receipt; no discovery expands lists. `protected_files` is bounded to 128 entries.
 - `worktree`, `branch`: the entries below. A non-removal entry still requires an explicit identity and reason.
 
 Every resource entry has `identity`, `disposition` (`remove`, `retain`, or `hold`), `reason`, `ownership`
@@ -45,8 +46,22 @@ Additional entry fields:
 |---|---|
 | worktree | `identity`: absolute registered path; `inode`: current directory inode; `preserve_to`: absolute new/private canonical TASK run directory; `exclusions`: explicit `{path, reason, disposable: true}` relative directory/file entries (or `[]`). Exclude only proven reproducible caches/dependencies, never reports, captures, private settings, keys or unknown files. Everything untracked/ignored not excluded is copied; all source files enter stability checks. |
 | branch | `identity`: same full `ref`. Checked against the exact OID and every worktree; deletion uses compare-and-delete, never force branch deletion. |
-| container | `identity`: full Docker ID; `name`: exact `/name`; `service`; `inspection_sha256`: `container_identity(docker inspect result)`; `processes_sha256`: SHA-256 of current `docker top ID -eo pid,ppid,args` stdout (null if stopped); `data`: `disposable` only for positively qualified temporary data; `bind_data`: map of exact writable bind source to `preserve`. Writable binds outside the candidate and volume-backed containers hold. Hashes do not replace corroboration of actual mounts, service processes, current consumers and handoff ownership. |
-| network | `identity`: full ID; `name`; `key`: exact Compose network key; `created`: Docker's exact Created value. Removal requires a nonexternal current configured network, matching project/key/name and zero current endpoints. |
+| container | `identity`: full Docker ID; `name`: exact `/name`; `service`; `inspection_sha256`: `container_identity(docker inspect result)`; `processes_sha256`: SHA-256 of current `docker top ID -eo pid,ppid,args` stdout (null if stopped); `data`: `disposable` only for positively qualified temporary data; `bind_data`: map of exact writable bind source to `preserve`. Writable binds outside the candidate hold. Every volume mount must be inventoried; the helper durably captures exact creating-container mount provenance before stop/removal. Volume removal is a separate qualified effect. Hashes do not replace corroboration of actual mounts, service processes, current consumers and handoff ownership. |
+| network | `identity`: full ID; `name`; `key`: exact Compose network key; `created`: Docker's exact Created value. Removal requires a nonexternal current configured network, matching project/key/name, zero endpoints and no stopped configured consumer. |
+| volume | `identity`: exact Docker name (Docker exposes no separate immutable volume ID); `inspection_sha256`: `volume_identity(inspect)` including creation time, driver, mountpoint, labels/options/scope; `data: disposable`; nonempty `authority`; `creation` below, with exact `container` and `destination`. Unknown/durable/shared/external volumes are never discarded by task association. Recreated identity holds. Docker's logical display size/links are freshly observed; physical reclaimed bytes remain unknown. |
+| image | `identity`: content-addressed full image ID; `creation.kind`: created/reused; size/dependencies/retention reason. Removal additionally needs complete inspect `inspection_sha256`, `data: disposable`, explicit `authority`, proven creation and no current/stopped consumers. Normal exact-ID removal only; Docker shared-layer protections remain. Reused images are observed retained, never discarded by association. |
+| cache | Exact builder-owned identity, creation versus reuse, size/dependencies and disposition/reason. This helper currently lacks a qualified exact-cache observation/retirement capability: every nonempty cache entry yields a finite hold, even if nominally retained. Never replace it with prune or manufacture `[]`; recover the owning builder capability/proven absence. |
+
+Every present Docker removal entry has `creation.kind: created`, `creation.intent` (absolute retained private
+0600 creation-intent locator outside removal candidates) and `creation.intent_sha256`. Volume creation additionally
+binds exact creating container/destination and source revision. The caller records intent and exact named-volume
+absence before creating workloads, then captures returned container IDs and actual mounts while creators still
+exist; distinguish image-declared anonymous storage from configured named storage and merely used resources.
+The intent must corroborate real workload creation/source/data authority; a hash or receipt never creates discard
+authority. The helper persists `cleanup.mount_provenance` atomically before container effects, binds it to the
+original container inspection/runtime, and retains it after disappearance. Missing provenance holds volume
+removal even for an already-absent creator. Never overwrite original evidence to qualify a changed workload.
+Docker volume identity fields are conservative recreation detection, not a hostile-actor fence or opaque ID.
 
 For Docker effects, `runtime` must carry the **already qualified** `project`, `working_directory`, `ownership`,
 `config_files`, `env_files` (ordered `{path, sha256}` lists; no ambient/default-file fallback), and
@@ -137,8 +152,9 @@ python3 "$build_skill_dir/scripts/cleanup-continuation.py" \
 
 This caller refuses absent/wrong monitor evidence, live or reused PIDs, wrong subject and unsafe cwd, then
 executes the same operation. Build independently reobserves Git registration/filesystem/ref and Docker IDs,
-external file digests and retained protected files. `removed`, already `absent`, policy `retained`, `held` and
-`failed` remain separate results. Publication with any unresolved cleanup hold remains incomplete Land/Build.
+external file digests and retained protected files. Containers, named/anonymous volumes, networks, images/cache holds, checkout and ref use this same plan and
+operation; no continuation-specific volume teardown exists. `removed`, already `absent`, policy `retained`,
+`held` and `failed` remain separate results. Publication with any unresolved cleanup hold remains incomplete Land/Build.
 
 ## Enforcement and qualification boundary
 
@@ -149,7 +165,32 @@ rechecks mutable facts; new external activity in the final check-to-effect inter
 by this local helper. Unavailable visibility holds instead of asserting absence. Missing capabilities hold only
 affected resources; no Pi version equality check exists.
 
-TASK-00540's canonical ignored Work run records actual installed-Pi/owning-tool qualification, configured model
+## Bounded direct qualification
+
+`python3 scripts/check-lifecycle.py --evidence ABSOLUTE_NEW_TASK_RUN_DIRECTORY` creates at most one
+stopped Compose fixture container (two with `--case shared-stopped`), two empty volumes (named and
+image-declared anonymous) and one network,
+reusing the already-present `postgres:17-bookworm` image without pull/build/install. It uses a task-local Git
+fixture and explicitly controlled hosting response, never a real PR or live publication claim. Creation intent,
+configuration, exact IDs/mounts, helper digest, stdout/stderr, exits and receipts remain in that directory.
+`--resume` observes and resumes the same receipt without recreating resources; partial pre-receipt creation
+recovers only from original intent/current fixture identity. No destructive fallback runs after a hold.
+
+`--case shared-stopped` additionally verifies an unchanged owned stopped consumer and held shared volume;
+`--resume --release-consumer` writes a linked new fixture receipt to retire only that owned consumer and
+remaining resources, preserving the original hold. `--interrupt` terminates only the newly created helper
+subprocess after its first persisted container removal; a separate `--resume` qualifies recovery using retained
+mount provenance. It never kills Pi, the coordinator or another owner's process.
+
+Exit 0 means a fixture retirement pass, a verified expected stopped-consumer hold, or an observed controlled
+interruption: inspect `pass`, `expected_stopped_shared_hold_verified`, `interrupted_after_container_effect`
+and exact helper exit separately. A hold/interruption is not cleanup completion. This is not fleet/installed-Pi,
+failure/cancel/other-interruption/protected-data coverage, independent Review/QA or the canonical gate. Output
+lists remaining cases explicitly. The pre-repair failing invocation and repaired same-receipt
+resume live under TASK-00542's canonical ignored `runs/regression/`. All omitted required cases remain finite
+qualification holds, not exemptions or acceptance. Use each actual owning runtime/caller for fleet proof.
+
+TASK-00540's canonical ignored Work run records historical actual installed-Pi/owning-tool qualification, configured model
 identity, controlled hosting responses, live Git/Docker/filesystem observations, failures and remaining coverage.
 Those diagnostic probes are not independent Review or QA acceptance. Do not claim unrun scenarios or cross-project
 adoption from helper-only success.

@@ -13,7 +13,7 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 ### Current human priority — 2026-10-27
 
 John approved the cleanup-first sequence [TASK-00542](00542-TASK.md) -> [TASK-00543](00543-TASK.md) ->
-[TASK-00544](00544-TASK.md), all `ready-for-agent` at `order: 1`, with explicit blockers enforcing that order:
+[TASK-00544](00544-TASK.md), at `order: 1`, with explicit blockers enforcing that order:
 qualified disposable-storage cleanup across the current active repositories, exact local worktree testing
 runtimes, then continuous installed workspace child/log following. TASK-00542 retains completed TASK-00540
 as predecessor; [PR #179](https://github.com/johnnickell/fight-agent-os/pull/179) must be integrated into the
@@ -21,10 +21,12 @@ implementation base before starting. The PR carries these approved plans only, n
 TASK-00540 remains done with unchanged acceptance/reports and separate delivery provenance.
 
 [TASK-00539](00539-TASK.md) moves to `order: 2`; its scope/status/blockers and prior approval history remain
-unchanged. Every other order and active ownership is preserved. Implementation is unstarted for all three new
-TASKs; use the generated sections for eligibility and select a checkout in the later implementation session.
-Priority/planning publication grants no cross-project repair, package installation, shared-service mutation,
-merge or deployment authority.
+unchanged. Every other order and active ownership is preserved. TASK-00542 Engineer work started October 28
+in the selected isolated checkout from integrated PR #179. Its updated scope records John's eight-project
+inventory, authorized isolated secondary fixes/PRs without extra TASKs, and complete removal of delivery-marker
+bookkeeping. All acceptance/integration criteria remain pending; subsequent TASKs have not started. Use the
+generated sections for eligibility. No package installation, foreign workload mutation, merge or deployment
+is authorized by priority/planning publication.
 
 ### Previous priority checkpoint — 2026-10-26 (historical)
 
@@ -50,30 +52,17 @@ human review/merge and deployment remain separate; current delivery/cleanup resu
 
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 
-## Current delivery handoffs
-
-[Explicit TASK markers](../CONVENTIONS.md#current-delivery-handoffs) are the local authority for this view.
-Recorded identity is not live PR evidence or a merge instruction. Land owns subject corrections; historical PR
-links do not create current claims. Work selection and priority remain in the separate Board sections below.
-
-<!-- planning:delivery -->
-| Subject | Recorded delivery | Exact PR |
-|---|---|---|
-| [TASK-00540](00540-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/179](https://github.com/johnnickell/fight-agent-os/pull/179) |
-<!-- /planning:delivery -->
-
 <!-- planning:board -->
 ## Active Work
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | ready-for-agent | — | — |
 | 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |

@@ -23,18 +23,14 @@ Dashboard using the sole principal cache, safe identity, independent administrat
 unavailable-capability copy (independent Review/QA pending). Other product UI journeys,
 managed Pi execution and database-authoritative Planning remain planned. See the [capability inventory](planning/FOUNDATION.md).
 
-## Current delivery handoffs
+Land closes accepted TASKs and applicable current documentation during delivery, validates the exact live PR
+and retires eligible owned local Git/Docker/storage resources. Human merge remains separate, without a tracked
+pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
+acceptance/publication checkpoints below are evidence, not current merge instructions.
 
-Use the [generated current-delivery view](planning/tasks/BOARD.md#current-delivery-handoffs), sourced only from
-[explicit TASK identity](planning/CONVENTIONS.md#current-delivery-handoffs). Ordinary PR links and historical
-acceptance/publication checkpoints in this README are not live delivery authority. The offline view does not
-establish current PR state or readiness to merge. Before evaluating a relevant handoff, use the
-[targeted read-only live check](planning/CONVENTIONS.md#live-delivery-verification). Exact merged/integrated `done`
-handoffs resolve read-only without routine cleanup requests; authorized Work/Land/substantive planning intake
-retires their markers with evidence. Exceptional/unavailable evidence retains its precise hold; ordinary
-planning/build stays offline. PR #159/#162/#167 publication statements elsewhere below are preserved historical
-checkpoints: all three are verified merged into `develop` and locally integrated as of 2026-10-26, with no merge
-action remaining. This observes merge, not new acceptance, deployment or release.
+PR #159/#162/#167 publication statements below are preserved historical checkpoints: all three are verified
+merged into `develop` and locally integrated as of 2026-10-26, with no merge action remaining. This observes
+merge, not new acceptance, deployment or release.
 
 [TASK-00059's current reconciliation](planning/tasks/00059-TASK.md) also records original PR #172 as merged
 into `develop` and locally integrated. Its acceptance/report provenance remains with that TASK. The user-directory

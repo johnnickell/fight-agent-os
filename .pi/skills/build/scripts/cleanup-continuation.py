@@ -23,6 +23,9 @@ def main():
         receipt = absolute(args.receipt)
         document = json.loads(receipt.read_text())
         plan = document["cleanup"]["plan"]
+        require(all(isinstance(plan.get(kind), list) for kind in
+                    ("containers", "networks", "volumes", "images", "caches")),
+                "creation/storage inventory missing; recover it without recreating removed workloads")
         require(Path.cwd().resolve() == absolute(plan["safe_checkout"]), "continuation must run from canonical safe checkout")
         require(absolute(plan["original_land_attempt"]) == attempt, "wrong original Land attempt")
         require(attempt.is_dir() and (attempt / "dispatch.lock").is_dir(), "original monitor evidence missing")

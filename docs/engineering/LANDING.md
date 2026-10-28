@@ -120,24 +120,17 @@ README handoffs, not just parent statuses and generated views. Apply this proced
 checkout before closeout/publication commits, and recheck it before returning control to the human. Follow the
 target's paths and bindings; shared provider links do not authorize edits in a different checkout or project.
 
-For Agent OS's offline representation, use [current delivery handoffs](../../planning/CONVENTIONS.md#current-delivery-handoffs):
-the TASK's explicit marker and canonical PR identify the subject; Board/Roadmap delivery blocks are derived.
-Set/correct markers only from established publication evidence within Land authority, then explicitly refresh.
-Routine retirement is also included at authorized Work/Land/substantive planning intake through the target's
-qualified `--reconcile-delivery` mode: only exact verified MERGED, already-`done`, locally integrated handoffs
-retire with exact head/base/merge/time/integration evidence. Inspect affected authored Board/Roadmap/README
-claims separately, roll up eligible parents and refresh views. Repeat intake is a no-op; it does not require a
-correction-only PR or another routine cleanup prompt. Read-only routing resolves that same case and continues;
-Review/QA/routing never write or dispatch Land. A later merge after intake resolves read-only until the next
-authorized mutation. Closed-unmerged, nonterminal, unintegrated or uncertain evidence retains the exceptional
-recovery below; do not infer acceptance from merge or `done`.
-Unmarked historical PRs are not current claims; local validation does not replace the live evidence below.
-Require [live handoff evaluation](HANDOFFS.md#live-delivery-handoff-evaluation) before evaluating a relevant
-current delivery/merge action. Agent OS's targeted `--check-delivery` observes only selected marked subjects;
-its ended exit is a Land reconciliation handback, not a checker failure to bypass or automatic correction.
-Before a marker exists, or for an explicitly resumed original PR whose marker was already retired, use the
-supported exact-PR read below within the same finite bounds; do not create a marker to perform discovery.
-Other targets retain their qualified local representation; this does not grant cross-project mutation authority.
+Land closes the independently accepted TASK, eligible parents and applicable authored current documentation
+in this delivery. There is no tracked delivery marker/table, persistent awaiting-merge section, routine
+reconciliation mode or post-merge maintenance obligation. A TASK's `pr` records publication history, not a
+current merge action. Freeze truthful acceptance/publication-pending checkpoints and point delivery results
+to the durable ignored receipt and actual PR; do not maintain a competing tracked live ledger.
+
+Require [exact live PR evidence](HANDOFFS.md#live-delivery-handoff-evaluation) during publication and explicit
+resume. Preserve exact repository/default/base/head/OID, independent Review/QA and accepted-candidate bridge.
+A missing or contradictory observation holds the affected effect, never a guessed merge. Human merge remains
+separate; do not delete its remote head. Planning checks/build stay offline. Preserve all historical
+acceptance/publication and canonical reports. These provider instructions grant no secondary edit authority.
 
 1. **Inventory and classify.** Resolve the authoritative TASK/parent records, Board, Roadmap and README from
    the target's instructions, planning tools and existing bindings, not provider path defaults. Inventory the
@@ -194,8 +187,8 @@ recovery below consumes this inventory and preservation contract rather than rep
 
 ## Resume an ended delivery handoff
 
-Use this path only on an **explicit Land resume for the exact TASK and ended original PR**, when qualified
-routine integrated-`done` intake cannot resolve it or an exceptional factual correction is actually necessary. A routing
+Use this path only on an **explicit Land resume for the exact TASK and ended original PR**, when an exceptional
+factual correction is actually necessary. No routine post-merge maintenance or new correction is required. A routing
 recommendation or observed merge is not an invocation. This is factual current-handoff reconciliation, not
 implementation repair or a replacement delivery attempt. Read the TASK, parent, Board and original canonical
 Review/QA and accepted-candidate receipts; keep their identities and bytes intact. No new independent acceptance
@@ -373,8 +366,8 @@ ownership/merge cleanup under the explicit request.
 
 Reconcile the existing receipt with **current** Git/Docker/process state, including resources recreated since a
 recorded removal. Apply the inventory, preservation, consumer and postcondition rules below to remaining effects
-only. A stale current-handoff marker is recorded as a separate factual-reconciliation action; it does not require
-a corrective PR or tracked changes before ownership-proven cleanup. Do not publish, create a correction checkout,
+only. Historical publication wording does not require a corrective PR or tracked changes before independently
+qualified ownership-proven cleanup. Do not publish, create a correction checkout,
 repeat gates, rewrite reports or commit metadata just to retire resources. Ended-handoff correction remains a
 separate explicitly requested operation. Return per-subject removed/retained/held results and actual next actions.
 
@@ -391,7 +384,9 @@ OS isolation; unrestricted agents can bypass it, and arbitrary external races ca
 ### Completion ownership
 
 Safe cleanup is a required effect of authorized Land, not an optional follow-up after publication. Remove the
-eligible isolated worktree, local feature branch, disposable test containers and unused task-owned networks.
+eligible isolated worktree, local feature branch, disposable test containers, unused task-owned networks and
+qualified task-created named/anonymous disposable volumes. Account separately for created versus reused/shared
+images and caches; unsupported exact retirement is a finite hold, never an implicit leak exemption.
 Publication does not require merge first. A resource that fails qualification stays in place with an explicit
 hold; successful publication with cleanup held is **not complete Land**. Do not request another cleanup prompt
 for effects already within Land authority. Never delete the main checkout or a current/active branch, terminate
@@ -408,6 +403,11 @@ remove/retain/hold disposition and reason, command/result and postcondition:
   local OID, accepted/published candidate and bridge, remote URL/ref/OID, exact PR identity/state/merge evidence.
 - Compose project, absolute configuration/override/env-file **locators** and working directory, wrapper invocation,
   container IDs/labels, mounts and dependencies; network IDs/labels and every attached endpoint's ownership.
+  Capture exact creating-container mounts and storage identity/provenance before removing the creating
+  container, and retain that observation outside removal candidates. For named/image-declared anonymous
+  volumes, distinguish task-created, merely used and shared storage, size observation, explicit disposability
+  and discard authority. Inventory images/caches with creation versus reuse, sizes/dependencies and retention
+  reasons; shared layers and unknown caches are not disposable by association.
   Names or Compose labels alone are not sufficient: compare them with the handoff, resolved configuration,
   actual checkout/mount paths and current consumers. Include task stacks whose working/configuration directory
   is no longer a registered worktree. If original configuration is gone, corroborate exact project/config paths
@@ -499,7 +499,11 @@ bounded retirement. Inspect resolved configuration, labels, mounts and consumers
 run a generic wrapper that selects the shared default stack. If no scoped wrapper exists, use explicit Compose
 project/config arguments or exact Docker IDs with the same ownership proof. Use `docker inspect` for exact
 container IDs and `docker network inspect` for network IDs/labels/endpoints. Stop/remove only the enumerated
-disposable task containers, without force or volume deletion. A shared container/mount or active task session
+disposable task containers without force; preserve creating-container volume/mount provenance durably first.
+Then qualify each explicitly authorized task-created disposable volume separately: reobserve its exact identity
+and all current consumers, including stopped containers, immediately before normal removal and verify actual
+absence. Missing provenance, recreated identity, unknown/durable/shared data or inspection/permission failure
+holds it. Never use blanket `rm -v`, `down -v` or prune. A shared container/mount or active task session
 holds the affected container and dependent worktree. Inspect network endpoints again **after** container removal;
 remove an inventoried network by exact ID only when it is task-owned, non-external/non-shared and has zero
 endpoints. A foreign/shared endpoint, unknown dependency, label/config mismatch or inspection failure holds the
@@ -512,7 +516,9 @@ Keep the durable receipt outside every removal candidate and update it after eac
 retained-by-policy, held and failed entries separately, including exact exits/errors and remaining dependencies.
 Permission failures are holds, not permission to use force, sudo, broad pruning or an alternate owner. Re-query
 `git worktree list --porcelain`, the exact ref with `git for-each-ref`, `docker ps -a --no-trunc` and
-`docker network ls --no-trunc`/`docker network inspect` to prove absence or retained state. Distinguish a
+`docker network ls --no-trunc`/`docker network inspect`, exact volume inventories/inspections and content-addressed
+image observations to prove absence or retained state. Report Docker logical size separately from unknown
+physical host reclaim; do not sum shared layer sizes into a reclaim claim. Distinguish a
 successful empty inventory query from a daemon/auth/permission failure. Verify retained data/evidence digests,
 canonical reports and shared runtime, and recheck the published remote ref/PR remains intact (or the already
 verified merged/deleted-remote state is unchanged). Failed postconditions leave cleanup incomplete.

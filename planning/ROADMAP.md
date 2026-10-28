@@ -67,30 +67,21 @@ human action; missing runtime evidence needs qualification of the accepted contr
 visible instead of treating every `needs-info` record as ordinary implementation work. Do not reopen closed
 Wayfinder decisions merely because their downstream delivery remains unimplemented.
 
-## Current delivery handoffs
-
-This view derives from [explicit TASK markers](CONVENTIONS.md#current-delivery-handoffs), not historical PR
-references or planning publication checkpoints. Live PR state is unverified; Land owns current delivery
-correction. Planning/decomposition handoffs below retain their distinct meaning and do not establish live
-publication/merge authority. Read the Board for work selection and priority.
-
-<!-- planning:delivery -->
-| Subject | Recorded delivery | Exact PR |
-|---|---|---|
-| [TASK-00540](tasks/00540-TASK.md) | awaiting-merge; live state unverified | [https://github.com/johnnickell/fight-agent-os/pull/179](https://github.com/johnnickell/fight-agent-os/pull/179) |
-<!-- /planning:delivery -->
-
 ## Current planning handoff
 
 **Current approved priority — 2026-10-27:** John selected [TASK-00542](tasks/00542-TASK.md) ->
-[TASK-00543](tasks/00543-TASK.md) -> [TASK-00544](tasks/00544-TASK.md), all `ready-for-agent`, `order: 1`:
+[TASK-00543](tasks/00543-TASK.md) -> [TASK-00544](tasks/00544-TASK.md), `order: 1`:
 current active-repository disposable-storage cleanup qualification, exact local worktree testing runtimes,
 then continuous installed workspace child/log following. Explicit blockers enforce the cleanup-first sequence;
 TASK-00542 retains completed TASK-00540 as predecessor, with PR #179 integration required before implementation
-starts on base. These are approved unstarted plans for addition to PR #179, not accepted implementations.
+starts on base. PR #179 is integrated; TASK-00542 Engineer work started October 28 in its selected isolated
+checkout. Its updated scope records the eight-project inventory, authorized isolated secondary fixes/PRs
+without extra TASKs, and complete removal of delivery-marker bookkeeping. Acceptance/integration remain
+pending and later TASKs are unstarted.
 TASK-00540 stays done with its existing reports/delivery provenance unchanged. TASK-00539 moves to `order: 2`;
 all other orders/active ownership remain unchanged. Use the [Board](tasks/BOARD.md#current-human-priority--2026-10-27)
-for actual eligibility. Cross-project fixes need their own owning-project authority; local skills do not deliver
+for actual eligibility. Secondary fixes must follow each owning project's instructions and verified default;
+John retains every merge. Local skills do not deliver
 managed TASK-00140 or browser execution authority.
 
 **Previous priority checkpoint — 2026-10-26 (historical):** [TASK-00539](tasks/00539-TASK.md), `order: 1`, is the maintainer-approved
