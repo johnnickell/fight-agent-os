@@ -350,6 +350,230 @@ def standalone_matrix(args, module, evidence, helper):
     return 0
 
 
+def owned_image_fixture(args, module, evidence, helper):
+    """Load two empty owned OCI roots sharing a child; no pull/build/cache or real publication."""
+    root = evidence / "safe"
+    receipt = root / ".runs/tasks/TASK-00542/runs/fixture.json"
+    def reference(path):
+        return {"path": str(path), "sha256": module.digest(path.read_bytes())}
+    if not args.resume:
+        evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
+        root.mkdir()
+        run(["git", "init", "--initial-branch=develop"], root)
+        run(["git", "-c", "user.name=Lifecycle fixture", "-c", "user.email=fixture@example.invalid",
+             "commit", "--allow-empty", "-m", "Bounded owned OCI root fixture"], root)
+        origin = "git@github.com:task00542/fixture.git"
+        run(["git", "remote", "add", "origin", origin], root)
+        oid = run(["git", "rev-parse", "HEAD"], root)
+        token = uuid.uuid4().hex
+        tags = ["task00542-owned-" + token + ":latest", "task00542-protected-" + token + ":latest"]
+        project = "task00542-root-" + token[:12]
+        intent = evidence / "creation-intent.json"
+        require_absent = project + "_scratch"
+        if require_absent in run(["docker", "volume", "ls", "--format", "{{.Name}}"], root).splitlines():
+            raise RuntimeError("fixture named volume already exists")
+        private_json(intent, {"source_revision": oid, "helper_sha256": module.digest(helper.read_bytes()),
+            "references": tags, "operation": "docker image load; owning Compose create only",
+            "named_volume": require_absent, "named_before_absent": True,
+            "data": "disposable", "authority": "explicit TASK-00542 bounded fixture discard",
+            "budget": {"roots": 2, "layers": 0, "containers": 1, "networks": 1, "volumes": 2,
+                       "pulls": 0, "builds": 0, "shared_cache_growth": 0}})
+        blobs = {}
+        def blob(value, media):
+            data = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+            identifier = "sha256:" + module.digest(data)
+            blobs["blobs/sha256/" + identifier[7:]] = data
+            return {"mediaType": media, "digest": identifier, "size": len(data)}
+        children = []
+        for architecture in ("arm64", "amd64"):
+            config = blob({"architecture": architecture, "os": "linux", "config": {
+                "Labels": {"io.fight.fixture": token}, "Volumes": {"/declared": {}}},
+                "rootfs": {"type": "layers", "diff_ids": []}}, "application/vnd.oci.image.config.v1+json")
+            child = blob({"schemaVersion": 2, "mediaType": "application/vnd.oci.image.manifest.v1+json",
+                "config": config, "layers": []}, "application/vnd.oci.image.manifest.v1+json")
+            child["platform"] = {"os": "linux", "architecture": architecture}
+            children.append(child)
+        descriptors = []
+        for index, tag in enumerate(tags):
+            descriptor = blob({"schemaVersion": 2, "mediaType": "application/vnd.oci.image.index.v1+json",
+                "manifests": children if index == 0 else children[:1],
+                "annotations": {"io.fight.fixture.root": token + str(index)}}, "application/vnd.oci.image.index.v1+json")
+            descriptor["annotations"] = {"org.opencontainers.image.ref.name": tag}
+            descriptors.append(descriptor)
+        archive = evidence / "owned.oci.tar"
+        with tarfile.open(archive, "w") as output:
+            files = dict(blobs, **{"oci-layout": b'{"imageLayoutVersion":"1.0.0"}',
+                "index.json": json.dumps({"schemaVersion": 2, "manifests": descriptors}).encode()})
+            for name, data in files.items():
+                info = tarfile.TarInfo(name)
+                info.size, info.mode = len(data), 0o600
+                output.addfile(info, io.BytesIO(data))
+        argv = ["docker", "image", "load", "--input", str(archive)]
+        loaded = subprocess.run(argv, cwd=root, capture_output=True, timeout=90)
+        (evidence / "load.stdout").write_bytes(loaded.stdout)
+        (evidence / "load.stderr").write_bytes(loaded.stderr)
+        loaded.check_returncode()
+        images = [json.loads(run(["docker", "image", "inspect", value["digest"]], root))[0] for value in descriptors]
+        for index, image in enumerate(images):
+            private_json(evidence / ("original-image-" + str(index) + ".json"), image)
+        allocation = evidence / "allocation.json"
+        private_json(allocation, {"source_revision": oid, "intent": reference(intent), "argv": argv,
+            "archive_sha256": module.digest(archive.read_bytes()), "exit": loaded.returncode,
+            "roots": [{"id": image["Id"], "references": image["RepoTags"] + image["RepoDigests"]} for image in images]})
+        config = root / "compose.json"
+        private_json(config, {"services": {"fixture": {"image": images[0]["Id"], "pull_policy": "never",
+            "command": ["/fixture-never-started"], "volumes": ["scratch:/scratch"]}}, "volumes": {"scratch": {}}})
+        compose = ["docker", "compose", "--project-name", project, "--project-directory", str(root), "--file", str(config)]
+        run([*compose, "create"], root)
+        identifier = run([*compose, "ps", "--all", "--quiet", "fixture"], root)
+        current = json.loads(run(["docker", "inspect", identifier], root))[0]
+        private_json(evidence / "original-containers.json", [current])
+        platform = json.loads(run(["docker", "image", "inspect", "--platform", "linux/arm64", images[0]["Id"]], root))[0]
+        private_json(evidence / "original-platform-images.json", [platform])
+        model = json.loads(run([*compose, "config", "--format", "json"], root))
+        common = {"disposition": "remove", "ownership": "proven", "consumers": [], "data": "disposable",
+            "authority": "explicit TASK-00542 bounded fixture discard", "reason": "new owned disposable fixture",
+            "creation": {"kind": "created", "intent": str(intent), "intent_sha256": module.digest(intent.read_bytes())}}
+        retained = {"disposition": "retain", "ownership": "proven", "consumers": [], "reason": "protected fixture alias/evidence, no Git removal"}
+        volumes = []
+        for mount in current["Mounts"]:
+            if mount["Type"] == "volume":
+                observed = json.loads(run(["docker", "volume", "inspect", mount["Name"]], root))[0]
+                volumes.append(dict(common, identity=mount["Name"], inspection_sha256=module.volume_identity(observed),
+                    creation=dict(common["creation"], container=identifier, destination=mount["Destination"])))
+        network_id = run(["docker", "network", "ls", "--no-trunc", "--filter", "label=com.docker.compose.project=" + project,
+                          "--format", "{{.ID}}"], root)
+        network = json.loads(run(["docker", "network", "inspect", network_id], root))[0]
+        plan = {"task": "TASK-00542", "safe_checkout": str(root), "git_common_dir": str(root / ".git"),
+            "origin": origin, "ref": "refs/heads/feature/task-00542-fixture", "oid": oid,
+            "publication": {"url": "https://github.com/task00542/fixture/pull/1", "repository": "task00542/fixture",
+                "number": 1, "base": "develop", "base_ref": "refs/heads/develop", "delivery_verified": True,
+                "merge_oid": oid, "merged_at": "2026-10-28T00:00:00Z"}, "protected_files": [], "exited_workers": [],
+            "runtime": {"project": project, "working_directory": str(root), "ownership": "proven", "env_files": [],
+                "config_files": [reference(config)], "resolved_sha256": module.fingerprint(model)},
+            "containers": [dict(common, identity=identifier, name=current["Name"], service="fixture", bind_data={},
+                processes_sha256=None, inspection_sha256=module.container_identity(current))],
+            "networks": [dict(common, identity=network_id, name=network["Name"], created=network["Created"], key="default")],
+            "volumes": volumes, "images": [dict(common, identity=images[0]["Id"], inspection_sha256=module.fingerprint(images[0])),
+                dict(retained, identity=images[1]["Id"], creation=dict(common["creation"]))], "caches": [],
+            "worktree": dict(retained, identity=str(root / "no-removal-candidate")),
+            "branch": dict(retained, identity="refs/heads/feature/task-00542-fixture")}
+        if args.original_land_attempt:
+            attempt = Path(args.original_land_attempt).resolve()
+            processes = json.loads((attempt / "process.json").read_text())
+            plan["original_land_attempt"] = str(attempt)
+            plan["exited_workers"] = [{"pid": processes[key]} for key in ("monitor_pid", "pi_pid")]
+        private_json(evidence / "original-plan.json", {"cleanup": {"plan": plan}})
+        declaration = evidence / "original-declaration.json"
+        private_json(declaration, {"version": 1, "task": plan["task"], "origin": origin, "container": identifier,
+            "config_id": current["Image"], "root": images[0]["Id"], "platform": current["ImageManifestDescriptor"]["platform"],
+            "original_containers": reference(evidence / "original-containers.json"),
+            "original_platform_images": reference(evidence / "original-platform-images.json"),
+            "original_root_plan": reference(evidence / "original-plan.json")})
+        plan["containers"][0]["image_declaration"] = reference(declaration)
+        for index, image in enumerate(images):
+            proof = evidence / ("root-proof-" + str(index) + ".json")
+            private_json(proof, {"version": 1, "task": plan["task"], "origin": origin, "root": image["Id"],
+                "data": "disposable", "authority": common["authority"], "original_image": reference(evidence / ("original-image-" + str(index) + ".json")),
+                "graph": module.image_root_graph(root, image), "references": sorted(image["RepoTags"] + image["RepoDigests"]),
+                "basis": {"source_revision": oid, "evidence": [reference(intent), reference(allocation)]}})
+        plan["images"][0]["retirement"] = {"kind": "owned-root-references", "proof": reference(evidence / "root-proof-0.json")}
+        receipt.parent.mkdir(mode=0o700, parents=True)
+        private_json(receipt, {"qualification": "real Docker, controlled hosting only; no live publication", "cleanup": {"version": 1, "plan": plan}})
+        shim = evidence / "controlled-hosting"
+        shim.mkdir()
+        response = {"url": plan["publication"]["url"], "state": "MERGED", "mergedAt": plan["publication"]["merged_at"],
+            "mergeCommit": {"oid": oid}, "baseRefName": "develop", "headRefName": "feature/task-00542-fixture",
+            "headRefOid": oid, "headRepository": {"name": "fixture"}, "headRepositoryOwner": {"login": "task00542"}}
+        (shim / "gh").write_text("#!/usr/bin/env python3\nprint(" + repr(json.dumps(response)) + ")\n")
+        (shim / "gh").chmod(0o700)
+        # Observe the actual stopped creator as a root consumer before any cleanup effect.
+        operation = module.Cleanup(str(receipt))
+        operation.save = lambda: (_ for _ in ()).throw(RuntimeError("unexpected save in read-only consumer probe"))
+        try:
+            operation.image(plan["images"][0], {})
+            raise RuntimeError("stopped image consumer was not protected")
+        except module.Hold as error:
+            if "consumer" not in str(error):
+                raise
+            private_json(evidence / "stopped-consumer-hold.json", {"reason": str(error), "container": identifier,
+                "configuration_sha256": module.container_identity(current), "effects": 0})
+    if args.release_image_alias:
+        if not args.resume:
+            raise RuntimeError("alias release requires the original completed fixture receipt")
+        release = receipt.with_name("alias-release.json")
+        if not release.exists():
+            document = json.loads(receipt.read_text())
+            original = json.loads((evidence / "original-image-1.json").read_text())
+            if module.inspect_image(root, original["Id"]) != original or module.inspect_image(root, document["cleanup"]["plan"]["images"][0]["identity"]) is not None:
+                raise RuntimeError("owned alias release requires exact preserved alias and retired primary root")
+            private_json(evidence / "alias-preserved-before-release.json", original)
+            alias = dict(document["cleanup"]["plan"]["images"][0], identity=original["Id"], inspection_sha256=module.fingerprint(original),
+                         retirement={"kind": "owned-root-references", "proof": reference(evidence / "root-proof-1.json")})
+            document["prior_receipt"] = reference(receipt)
+            document["cleanup"]["plan"]["images"] = [alias]
+            document["cleanup"].pop("plan_sha256", None)
+            document["cleanup"]["attempts"] = []
+            private_json(release, document)
+        receipt = release
+    if args.prepare_only:
+        print(json.dumps({"prepared": True, "receipt": str(receipt)}))
+        return 0
+    env = dict(os.environ, PATH=str(evidence / "controlled-hosting") + os.pathsep + os.environ["PATH"])
+    argv = [sys.executable, str(helper), "--receipt", str(receipt), "--apply"]
+    if args.original_land_attempt:
+        caller = helper.parents[2] / "build/scripts/cleanup-continuation.py"
+        argv = [sys.executable, str(caller), "--attempt", str(Path(args.original_land_attempt).resolve()),
+                "--receipt", str(receipt), "--apply"]
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    process = subprocess.Popen(argv, cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    interrupted = False
+    if args.interrupt:
+        deadline = time.monotonic() + 120
+        while process.poll() is None and time.monotonic() < deadline:
+            state = json.loads(receipt.read_text())["cleanup"].get("attempts", [])
+            if state and any(value.get("reference_effects") for value in state[-1]["results"]):
+                process.terminate()
+                interrupted = True
+                break
+            time.sleep(0.005)
+    stdout, stderr = process.communicate(timeout=180)
+    (evidence / (stamp + ".stdout")).write_bytes(stdout)
+    (evidence / (stamp + ".stderr")).write_bytes(stderr)
+    plan = json.loads(receipt.read_text())["cleanup"]["plan"]
+    # Independent Docker oracles, not the helper's inspection or reported status.
+    inventory = subprocess.run(["docker", "image", "ls", "--all", "--no-trunc", "--quiet"], cwd=root, capture_output=True, timeout=90)
+    (evidence / (stamp + ".all-images.stdout")).write_bytes(inventory.stdout)
+    (evidence / (stamp + ".all-images.stderr")).write_bytes(inventory.stderr)
+    observations, matches = {}, []
+    for entry in plan["images"]:
+        exact = subprocess.run(["docker", "image", "inspect", entry["identity"]], cwd=root, capture_output=True, timeout=90)
+        prefix = stamp + ".image-" + entry["identity"][7:]
+        (evidence / (prefix + ".stdout")).write_bytes(exact.stdout)
+        (evidence / (prefix + ".stderr")).write_bytes(exact.stderr)
+        absent = exact.returncode == 1 and exact.stdout.strip() == b"[]" and exact.stderr.decode().strip() == \
+            "Error response from daemon: No such image: " + entry["identity"] and inventory.returncode == 0 and \
+            entry["identity"] not in inventory.stdout.decode().splitlines()
+        observations[entry["identity"]] = absent
+        original = json.loads((evidence / "original-image-1.json").read_text())
+        preserved = exact.returncode == 0 and json.loads(exact.stdout) == [original]
+        matches.append(absent if entry["disposition"] == "remove" else preserved)
+    containers = set(run(["docker", "ps", "-a", "--no-trunc", "--quiet"], root).splitlines())
+    volumes = set(run(["docker", "volume", "ls", "--format", "{{.Name}}"], root).splitlines())
+    networks = set(run(["docker", "network", "ls", "--no-trunc", "--quiet"], root).splitlines())
+    disposable_absent = all(entry["identity"] not in containers for entry in plan["containers"]) and \
+        all(entry["identity"] not in volumes for entry in plan["volumes"]) and \
+        all(entry["identity"] not in networks for entry in plan["networks"])
+    matched = all(matches) and disposable_absent
+    result = {"argv": argv, "helper_exit": process.returncode, "container_network_volume_absence": disposable_absent, "helper_sha256": module.digest(helper.read_bytes()),
+        "checker_sha256": module.digest(Path(__file__).read_bytes()), "receipt": str(receipt), "images_absent": observations,
+        "interrupted_after_real_reference_effect": interrupted and process.returncode == -signal.SIGTERM,
+        "pass": process.returncode == 0 and matched, "physical_reclaimed_bytes": None}
+    private_json(evidence / (stamp + ".result.json"), result)
+    print(json.dumps(result))
+    return 0 if result["pass"] or result["interrupted_after_real_reference_effect"] else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", required=True, help="New absolute task-owned evidence directory, outside removal candidates")
@@ -358,18 +582,26 @@ def main():
     parser.add_argument("--standalone-matrix", action="store_true", help="Bounded owning-tool effects, interruption, evidence and consumer probes")
     parser.add_argument("--resume", action="store_true", help="Reuse this fixture/receipt; never recreate missing resources")
     parser.add_argument("--prepare-only", action="store_true", help="Create and record the bounded fixture for actual Pi caller qualification; do not invoke cleanup")
-    parser.add_argument("--case", choices=("normal", "running", "failure", "cancel", "durable", "shared-stopped", "image", "unavailable", "denied", "changed-identity", "mismatched-binding", "database", "mysql"), default="normal")
+    parser.add_argument("--case", choices=("normal", "running", "failure", "cancel", "durable", "shared-stopped", "image", "unavailable", "denied", "changed-identity", "mismatched-binding", "database", "mysql", "image-root"), default="normal")
     parser.add_argument("--release-consumer", action="store_true", help="Resume only: linked new fixture receipt permits its owned stopped consumer retirement")
+    parser.add_argument("--original-land-attempt", help="Image-root fixture only: bind real exited original monitor and execute the SAME Build cleanup-only caller; controlled hosting remains explicit")
+    parser.add_argument("--release-image-alias", action="store_true", help="Resume image-root only: release its separately owned preserved alias with a linked plan")
     parser.add_argument("--interrupt", action="store_true", help="Terminate only this helper subprocess after its first persisted container removal; resume separately")
     args = parser.parse_args()
     if args.release_consumer and not args.resume:
         parser.error("--release-consumer requires --resume")
+    if args.original_land_attempt and (args.case != "image-root" or args.interrupt):
+        parser.error("--original-land-attempt requires image-root without interruption; never terminate its caller parent")
+    if args.release_image_alias and (args.case != "image-root" or not args.resume):
+        parser.error("--release-image-alias requires image-root --resume")
     os.umask(0o077)
     evidence = Path(args.evidence).resolve()
     helper = Path(args.helper).resolve()
     spec = importlib.util.spec_from_file_location("subject_cleanup", helper)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if args.case == "image-root":
+        return owned_image_fixture(args, module, evidence, helper)
     if args.standalone_matrix:
         return standalone_matrix(args, module, evidence, helper)
     if args.runtime == "standalone":

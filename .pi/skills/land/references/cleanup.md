@@ -49,7 +49,7 @@ Additional entry fields:
 | container | `identity`: full Docker ID; `name`: exact `/name`; `service`; `inspection_sha256`: `container_identity(docker inspect result)`; `processes_sha256`: SHA-256 of current `docker top ID -eo pid,ppid,args` stdout (null if stopped); `data`: `disposable` only for positively qualified temporary data; `bind_data`: map of exact writable bind source to `preserve`. Writable binds outside the candidate hold. Every volume mount must be inventoried; the helper durably captures exact creating-container mount provenance before stop/removal. Volume removal is a separate qualified effect. Hashes do not replace corroboration of actual mounts, service processes, current consumers and handoff ownership. |
 | network | `identity`: full ID; `name`; `key`: exact Compose network key; `created`: Docker's exact Created value. Removal requires a nonexternal current configured network, matching project/key/name, zero endpoints and no stopped configured consumer. |
 | volume | `identity`: exact Docker name (Docker exposes no separate immutable volume ID); `inspection_sha256`: `volume_identity(inspect)` including creation time, driver, mountpoint, labels/options/scope; `data: disposable`; nonempty `authority`; `creation` below, with exact `container` and `destination`. Unknown/durable/shared/external volumes are never discarded by task association. Recreated identity holds. Docker's logical display size/links are freshly observed; physical reclaimed bytes remain unknown. |
-| image | `identity`: full `sha256:` Docker image ID returned by exact inspection, not an assumed config/reference/index equivalent; `creation.kind`: created/reused; size/dependencies/retention reason. Removal additionally needs complete inspect `inspection_sha256`, `data: disposable`, explicit `authority`, proven creation and no current/stopped consumers. Tagged/digest-referenced images and manifest indexes hold for unqualified exclusive reference/platform retirement. Normal exact-ID removal only; Docker shared-layer protections remain. Reused images are observed retained, never discarded by association. |
+| image | `identity`: full `sha256:` Docker image ID returned by exact inspection, not an assumed config/reference/index equivalent; `creation.kind`: created/reused; size/dependencies/retention reason. Removal additionally needs complete inspect `inspection_sha256`, `data: disposable`, explicit `authority`, proven creation and no current/stopped consumers. Without explicit `retirement` proof, tagged/digest-referenced images and indexes still hold. The bounded owned-root/reference capability below supports qualified immutable graphs and exact owned references; it never grants layer ownership or general GC. Docker's normal shared-layer protections remain. Reused images are observed retained, never discarded by association. |
 | cache | Exact builder-owned identity, creation versus reuse, size/dependencies and disposition/reason. A reused cache may be policy-retained only with explicit `builder`, sorted `worker_ids`, `created_at`, `parents` and `type`, freshly matched against `buildx ls`/exact-ID `du`; mutable, missing or changed identity holds. Size/shared/reclaimable/dependencies are observed, never reclaimed-byte claims. Created or removal-requested cache still holds: exact deletion is unqualified. Never substitute prune, nominal retention or a manufactured `[]`. |
 
 Image absence requires an explicit exact `docker image inspect` not-found response corroborated by successful
@@ -59,6 +59,58 @@ hold. Same-receipt already-absent resume additionally requires a prior matching 
 ID and creation inspection hash; an unresolvable config digest alone cannot establish image absence. Legacy
 config-ID consumers and current-daemon manifest-descriptor consumers are distinguished; an unknown or mixed
 relationship holds. No reference is silently untagged and no index is guessed equivalent to a config/manifest.
+
+### Immutable declarations and owned root references
+
+The normal creator config-ID declaration lookup remains first. Only an explicit not-found response can enter
+`container.image_declaration: {path, sha256}` recovery; denied/ambiguous lookup still holds. This private retained
+JSON record has `version: 1`, exact `task`, `origin`, `container`, `config_id`, immutable `root` and full
+`platform` (`os`, `architecture`, optional `variant`). It references original private snapshots through
+`original_containers`, `original_platform_images` and `original_root_plan`, each `{path, sha256}`. The first two
+are original Docker inspect objects/lists; the last is an immutable original cleanup receipt whose image entry
+binds the root's complete inspection hash. The operation matches the original creator/config/mount identity,
+creator manifest/platform descriptor, immutable root and current platform Config/RootFS/declarations. A mutable
+tag, guessed config/index equivalence, newly asserted empty declarations or missing original evidence never
+qualifies. Named and image-declared anonymous mounts still traverse every existing declaration, creator,
+provenance, authority and consumer check. The declaration observation is retained separately in each attempt;
+existing mount-provenance records are not rewritten.
+
+For an explicitly owned tagged/index root, add `image.retirement: {kind: owned-root-references, proof: {path,
+sha256}}` in a **new linked plan**, never by turning an old HOLD into remove. The retained private proof has:
+
+- `version: 1`, exact `task`, `origin`, `root`, `data: disposable` and the entry's nonempty `authority`;
+- `original_image: {path, sha256}`: the original full root inspection, equal to `inspection_sha256`;
+- `references`: sorted complete original `RepoTags` plus `RepoDigests`, without duplicates (maximum 32);
+- `graph`: the owning `image_root_graph(safe, original_image)` result: exact root descriptor, every available
+  image child descriptor/platform and Config/RootFS hashes, and every qualified attestation's target;
+- `basis: {source_revision, evidence}`: exact original creating Git revision and 1–16 retained original
+  source/build/allocation/naming records, each `{path, sha256}`. These corroborate the exported root and every
+  owned tag; digest references must bind that same root and owned repository naming relationship. Inspect the
+  actual original intent/allocation/build/source/data authority before assembling proof. A new assertion,
+  task-like name, unique tag or absent consumer is not original creation or discard authority.
+
+Original `creation.kind: created`, intent/hash, data/authority and all subject/publication/protected/worker
+checks remain required. Recover actual original proof or return a specific evidence hold; do not invent
+retrospective intent. All evidence is owned/private, bounded and outside removal candidates. Hashes detect
+drift; they do not authenticate arbitrary caller assertions or grant permission.
+
+This capability reads the SAME local CLI engine's bounded read-only image/manifest API, corroborating its engine
+ID. A remote/unknown endpoint, unavailable API, incomplete/unknown child, denied observation or platform/config
+mismatch holds. No version equality gate, registry query, save/build/pull, shared-cache growth or installation
+is needed. Complete all-current/stopped container and engine-platform consumer observations precede each effect.
+A consumer through a shared-platform alias still holds. All foreign/reused roots, references and child descriptors
+are observed before/after every effect; shared children/base layers need not be exclusively owned merely to
+retire an independently owned root reference.
+
+Normal `docker image rm` retires only an exact owned reference/root. The complete owned before-set and immutable
+proof/graph are saved before effects; the last naming relationship may remove its repository digest and root.
+A refusal holds, never force/prune/blanket untagging. Exact root not-found plus all-image inventory and each
+original reference's exact not-found/census establish postconditions. Rebound tags, unknown absence, changed
+protected roots or failed inspection hold. Same-receipt interruption recovery needs the prior matching root
+observation **and effect intent**; it requalifies the current graph/reference subset, protected roots and all
+consumers, then performs only missing effects. No prior plan, attempt or unknown outcome is erased. Physical
+reclaimed bytes and layer GC remain unknown/unpromised. Existing untagged-image absence/legacy input guards
+remain separate and unchanged; the helper never silently upgrades old HOLD plans.
 
 Every present Docker removal entry has `creation.kind: created`, `creation.intent` (absolute retained private
 0600 creation-intent locator outside removal candidates) and `creation.intent_sha256`. Volume creation additionally
@@ -191,8 +243,11 @@ metadata observation holds rather than assuming no attributes/ACLs. Unavailable 
 copies are never overwritten. Retain the source until its owner resolves the exact copy/visibility prerequisite.
 Canonical reports are never rewritten. Deny ACLs and unavailable directory write/search permissions hold
 before Git can partially remove a checkout. On the qualified macOS Docker Desktop topology, read-only handles
-are distinguished from cwd/writers and requalified through the signed executable, process owner/birth, open
-Docker VM disk/kernel, local context and engine. Other reader topologies remain holds. Parent-only container
+are distinguished from cwd/writers and requalified through the signed executable, process owner/birth,
+descriptor type/mode, local context and engine. The Apple-signed VM must hold its Docker disk/kernel;
+the Docker Inc-signed backend must hold the actual local engine/backend Unix sockets. Process/executable and
+matching descriptors are reobserved unchanged. This does not waive any all-container/parent-mount/process,
+preservation or source-stability check. Other readers, unknown visibility and changed identities remain holds. Parent-only container
 mounts require successful live process cwd/descriptor inspection establishing no actual candidate use; explicit
 candidate mounts always hold. The receipt records these observations; no shared VM/container is stopped.
 
@@ -267,6 +322,18 @@ without registry/build cache or shared base layers, then qualifies exact image r
 requires exact inspect not-found plus an all-image inventory for removable images, and exact inspect presence for
 retained images; helper success/volume absence alone cannot pass the image case. Original import argv/exits/output,
 creation inspection, postcondition commands and observations are retained.
+`--case image-root` loads two uniquely owned empty OCI roots (two platforms in the primary, one shared child
+in its protected alias), without layers, builds, pulls or shared cache. It creates at most one **stopped**
+Compose creator, one network and two volumes (named plus image-declared anonymous). Original intent/allocation,
+source/ref/graph/declaration proof and controlled hosting remain private. It first observes the real stopped
+image-consumer hold, then uses the SAME operation for eligible retirement and independent exact Docker
+postconditions/alias preservation. `--interrupt` terminates only its helper after a real root/reference effect;
+`--resume` reconciles the same receipt, never reallocates. `--resume --release-image-alias` explicitly releases
+only the separately owned preserved alias via a linked new plan. `--original-land-attempt ABSOLUTE_ATTEMPT`
+binds actual exited original monitor/Pi evidence and invokes the existing Build cleanup-only caller, not a
+Build workflow or a live publication. It cannot be combined with interruption (never kill a caller parent).
+These fixtures do not establish real delivery eligibility, independent Review/QA or physical reclaim.
+
 `--case unavailable` selects an intentionally unavailable task-only Docker socket; `denied` applies real read
 denial to the owned fixture receipt; `changed-identity` changes the owned container name. Each records the
 nonzero safe hold and resource preservation, then releases only its explicitly controlled probe precondition.

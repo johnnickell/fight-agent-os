@@ -69,6 +69,11 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Current revision:** [TASK-00542](tasks/00542-TASK.md#current-revision--review5-r6r8) is reopened for canonical
+Review5 R6–R8 owning-helper repairs and independent reassessment. Prior acceptance below remains historical
+for its supported scope. Remaining resources and primary runtime are protected; TASK-00543/00544 stay unstarted
+and blocked. No delivery queue or post-merge chore is introduced.
+
 **Accepted implementation checkpoint — 2026-10-28:** [TASK-00542](tasks/00542-TASK.md#land-acceptance-checkpoint--2026-10-28)
 has independent Review4 ACCEPT and QA8 PASS for candidate `90f6bdd83acb51c22793477398332f702c078116` under 1A/2A.
 Primary publication and safe eligible cleanup are pending at this frozen checkpoint; actual delivery results and
