@@ -2,6 +2,7 @@
 """Qualify and retire one TASK's enumerated local resources (Python 3.9+)."""
 
 import argparse
+import ctypes
 from datetime import datetime, timezone
 import fcntl
 import hashlib
@@ -1317,7 +1318,20 @@ class Cleanup:
                 target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
                 if record["kind"] == "directory":
                     target.mkdir(mode=record["mode"], exist_ok=True)
-                    shutil.copystat(source, target, follow_symlinks=False)
+                    if sys.platform == "darwin":
+                        # copyfile.h: METADATA = ACL | STAT | XATTR; NOFOLLOW on both paths.
+                        # No DATA or RECURSIVE: copying a directory must not admit its children.
+                        try:
+                            copyfile = ctypes.CDLL("/usr/lib/libSystem.B.dylib", use_errno=True).copyfile
+                            copyfile.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p, ctypes.c_uint32]
+                            copyfile.restype = ctypes.c_int
+                            require(copyfile(os.fsencode(source), os.fsencode(target), None,
+                                             7 | (1 << 18) | (1 << 19)) == 0,
+                                    "directory metadata copy denied/unavailable; retain source and partial copy")
+                        except (OSError, AttributeError):
+                            raise Hold("native directory metadata capability unavailable; retain source") from None
+                    else:
+                        shutil.copystat(source, target, follow_symlinks=False)
                 else:
                     # No mode/ACL changes on a source or an existing destination.
                     if sys.platform == "darwin":

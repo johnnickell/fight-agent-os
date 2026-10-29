@@ -69,6 +69,15 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Current repair — R10:** [TASK-00542](tasks/00542-TASK.md#current-repair--r10-directory-metadata) is reopened
+for Review10's confirmed macOS directory-xattr defect. Same-helper native metadata-only/no-follow repair needs
+fresh final verification, independent Review and affected QA. Sixth/final cycle is consumed (6/6; none remaining).
+Fresh isolated verification is authorized with original provenance, never retired-runtime recreation; ignored
+`.runs/tasks/TASK-00542/runs/repair-6/handoff.md` owns evidence/resources/finite later recovery. Real source,
+private data and partial Land15 copy stay protected. P1/P2/F1 remain separate holds, no real apply/publication,
+full delivery or foreign-preservation PASS. TASK-00543/00544 remain unstarted; TASK-00545 stays separate.
+Earlier checkpoints below retain original facts/allowances, not current R10 acceptance/readiness.
+
 **Accepted F closeout checkpoint — 2026-10-29:**
 [TASK-00542](tasks/00542-TASK.md#accepted-f-closeout-checkpoint--2026-10-29) records independent Review9
 ACCEPT and QA11 PASS on repaired F; R9 is resolved. Done records accepted implementation, not full delivery.

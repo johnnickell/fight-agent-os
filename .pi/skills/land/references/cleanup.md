@@ -233,7 +233,10 @@ The operation preserves every nonexcluded ignored/untracked artifact with old/ne
 modes/ownership/extended attributes/ACLs and source stability checks. Each manifest retains both source and
 copied records. Copy selection comes from the complete no-follow filesystem inventory minus exact tracked
 files and approved exclusions, not Git's incomplete untracked listing. Nonexcluded directories retain their
-metadata; only the checkout's root `.git` entry is Git metadata, never nested Git-shaped evidence. A digest of
+metadata. On macOS the helper transfers directory ACLs/stat/xattrs with native metadata-only, no-follow
+`copyfile`, without data or recursive-copy flags; directory children still enter only through the exact inventory
+selection. Python `copystat` alone is not full macOS xattr support. Only the checkout's root `.git` entry is Git
+metadata, never nested Git-shaped evidence. A digest of
 the retained inventory binds every expected source path/record to the manifest; completeness and copy integrity
 are verified before removal, afterward and on resume. macOS may add `com.apple.provenance` when copying a
 Docker-created file; only that additional origin attribute is allowed, recorded and checked unchanged afterward. All source attributes must remain

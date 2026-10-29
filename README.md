@@ -28,6 +28,16 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00542 is reopened for Review10 R10](planning/tasks/00542-TASK.md#current-repair--r10-directory-metadata):
+required directory xattrs were omitted on supported macOS Python. The same helper now uses native metadata-only,
+no-follow directory transfer without recursive copying or weakened verification. Fresh final local verification,
+independent Review and affected QA are required; canonical ignored `repair-6/handoff.md` under
+`.runs/tasks/TASK-00542/runs/` owns evidence and new isolated verification resource provenance. Sixth/final repair
+is consumed (6/6; none remaining). Original primary runtime is retired, never replayed; source/ref/private data
+and the incomplete immutable Land15 copy remain protected. P1/P2/F1 remain separate holds; no real cleanup,
+publication, full delivery, physical-reclaim or foreign-preservation PASS claim. John owns merge.
+
+The following F closeout is a preserved checkpoint, not current R10 acceptance/readiness.
 [TASK-00542's repaired F](planning/tasks/00542-TASK.md#accepted-f-closeout-checkpoint--2026-10-29) has independent
 Review9 ACCEPT and QA11 PASS (20 candidate scenarios; 63 fresh expected reader/filesystem observations plus
 qualified accumulated reuse); R9 is resolved. Done means accepted implementation, not completed delivery.
