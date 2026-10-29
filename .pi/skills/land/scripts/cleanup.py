@@ -16,6 +16,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+from urllib.parse import quote
 
 
 COMMANDS = None
@@ -160,8 +161,8 @@ def require_no_image_consumers(safe, current):
             require(descriptor is None, "mixed config/manifest consumer representation unresolved")
 
 
-def local_image_graphs(safe):
-    """Read complete root/manifest metadata from the SAME local CLI engine, without saving layers."""
+def local_image_metadata(safe, routes):
+    """Read bounded metadata from the positively associated local CLI engine."""
     context = json_command(["docker", "context", "inspect"], safe)
     require(len(context) == 1, "local image graph context ambiguous")
     endpoint = os.environ.get("DOCKER_HOST") if not os.environ.get("DOCKER_CONTEXT") else None
@@ -191,7 +192,16 @@ def local_image_graphs(safe):
             connection.close()
     engine = json_command(["docker", "info", "--format", "{{json .}}"], safe)
     require(engine["ID"] and get("/info")["ID"] == engine["ID"], "CLI/API engine association changed")
-    rows = get("/images/json?all=1&manifests=1")
+    values = [get(route) for route in routes]
+    require(get("/info")["ID"] == engine["ID"] and
+            json_command(["docker", "info", "--format", "{{json .}}"], safe)["ID"] == engine["ID"],
+            "CLI/API engine association changed during observation")
+    return values
+
+
+def local_image_graphs(safe):
+    """Read complete root/manifest metadata from the SAME local CLI engine, without saving layers."""
+    rows, = local_image_metadata(safe, ["/images/json?all=1&manifests=1"])
     require(isinstance(rows, list) and len(rows) <= 4096 and
             len({row["Id"] for row in rows}) == len(rows), "complete root inventory ambiguous")
     return rows
@@ -966,9 +976,35 @@ class Cleanup:
         matches = [row for row in rows if row["Id"] == identity]
         require(len(matches) == (1 if current else 0), "root exact inspection/complete graph census contradict")
         if current:
-            require(sorted((current["RepoTags"] or []) + (current["RepoDigests"] or [])) ==
-                    sorted(set((matches[0]["RepoTags"] or []) + (matches[0]["RepoDigests"] or []))),
+            summary = matches[0]
+            tags, digests = set(current["RepoTags"] or []), set(current["RepoDigests"] or [])
+            require(tags == set(summary["RepoTags"] or []) and
+                    set(summary["RepoDigests"] or []) <= digests,
                     "root reference census changed")
+            require(len(tags) + len(digests) <= 32 and
+                    all(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/@-]{0,511}", value) for value in tags | digests),
+                    "root reference census ambiguous/oversized")
+            for reference in digests:
+                repository, separator, identifier = reference.rpartition("@")
+                require(separator and identifier == identity and any(tag.startswith(repository + ":") for tag in tags),
+                        "repository digest lacks exact root/owned naming relationship")
+            # The summary may omit RepoDigests. Never synthesize them from tags: exact
+            # CLI AND same-engine API lookups must positively resolve every digest to
+            # this entire root inspection. Raw OCI-load tags remain exact census names.
+            selectors = [identity, *sorted(digests)]
+            observations = local_image_metadata(self.safe, ["/images/json?all=1&manifests=1",
+                *["/images/" + quote(value, safe="") + "/json" for value in selectors]])
+            require(isinstance(observations[0], list) and len(observations[0]) == len(rows) and
+                    {row["Id"]: row for row in observations[0]} == {row["Id"]: row for row in rows} and
+                    all(value == current for value in observations[1:]),
+                    "root reference/inspection census changed or contradicts exact API lookup")
+            require(not any(row["Id"] != identity and (tags | digests) &
+                    set((row["RepoTags"] or []) + (row["RepoDigests"] or [])) for row in rows),
+                    "foreign/rebound reference in complete root census")
+            for reference in sorted(digests):
+                require(json_command(["docker", "image", "inspect", reference], self.safe) == [current],
+                        "repository digest exact CLI/root relationship changed")
+            require(inspect_image(self.safe, identity) == current, "root changed during reference corroboration")
         return current
 
     def protected_image_roots(self, rows, identity):

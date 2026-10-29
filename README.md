@@ -28,9 +28,9 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
-[TASK-00542 is reopened for Review5 R6–R8](planning/tasks/00542-TASK.md#current-revision--review5-r6r8):
-backend file sharing, immutable declarations and owned image-root/reference retirement require repair and
-independent reassessment. The prior acceptance checkpoint below remains historical, not current completion.
+[TASK-00542 remains in-progress for QA-02](planning/tasks/00542-TASK.md#current-repair--qa-02): the owned-root
+reference census is repaired and locally qualified on the original QA fixture; fresh final verification,
+independent Review and affected QA are required. Prior acceptance below remains historical, not completion.
 
 [TASK-00542](planning/tasks/00542-TASK.md#land-acceptance-checkpoint--2026-10-28) has independent Review4 ACCEPT
 and nonvisual QA8 PASS for the bounded disposable-storage lifecycle and delivery-mechanism removal. At this frozen

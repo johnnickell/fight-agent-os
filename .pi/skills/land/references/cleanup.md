@@ -95,7 +95,13 @@ retrospective intent. All evidence is owned/private, bounded and outside removal
 drift; they do not authenticate arbitrary caller assertions or grant permission.
 
 This capability reads the SAME local CLI engine's bounded read-only image/manifest API, corroborating its engine
-ID. A remote/unknown endpoint, unavailable API, incomplete/unknown child, denied observation or platform/config
+ID before and after observations. Root tags must agree exactly as sets between exact CLI inspection and the
+complete engine summary; duplicate summary entries do not create references. A summary may omit repository
+digests only when exact CLI and same-engine API root/digest inspections positively agree on the complete root,
+immutable identity and reference set. Every digest must name that root and an owned repository/tag relationship;
+no digest is inferred from a tag. Extra/contradictory summary references, foreign/rebound claims, changed census
+or denied lookup hold. Raw OCI-load tag names remain exact census names, not guessed normalized aliases.
+A remote/unknown endpoint, unavailable API, incomplete/unknown child, denied observation or platform/config
 mismatch holds. No version equality gate, registry query, save/build/pull, shared-cache growth or installation
 is needed. Complete all-current/stopped container and engine-platform consumer observations precede each effect.
 A consumer through a shared-platform alias still holds. All foreign/reused roots, references and child descriptors

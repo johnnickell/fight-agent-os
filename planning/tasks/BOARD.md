@@ -12,9 +12,9 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 
 ### Current revision — TASK-00542
 
-[TASK-00542](00542-TASK.md#current-revision--review5-r6r8) is reopened for canonical Review5 R6–R8 owning-helper
-repairs. Prior acceptance below covers only its historical supported scope. Primary runtime and remaining
-delivery resources are protected; independent reassessment follows Engineer qualification. TASK-00543/00544
+[TASK-00542](00542-TASK.md#current-repair--qa-02) remains in-progress for canonical QA9 QA-02. The original
+owned-root fixture is recovered through the repaired helper; final verification and independent Review/affected
+QA are required. Earlier acceptance is historical. Primary runtime and real delivery resources stay protected. TASK-00543/00544
 remain unstarted and blocked by this revision. No queue or post-merge maintenance is added.
 
 ### Accepted implementation checkpoint — 2026-10-28
