@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | — (standalone bug) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -595,4 +595,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00538](00538-TASK.md) | Keep installed workspace child activity and runtime logs portable across repositories | — (standalone bug) | done | — | [PR #176](https://github.com/johnnickell/fight-agent-os/pull/176) |
 | — | [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | — (standalone bug) | done | — | [PR #179](https://github.com/johnnickell/fight-agent-os/pull/179) |
 | — | [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | — (standalone chore) | done | — | [PR #178](https://github.com/johnnickell/fight-agent-os/pull/178) |
+| — | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | — (standalone bug) | done | — | — |
 <!-- /planning:board -->
