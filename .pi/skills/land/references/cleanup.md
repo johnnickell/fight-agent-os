@@ -27,6 +27,9 @@ The following is a **schema description**, not a runnable fixture or established
 - `protected_files`: list of `{path, record}` for canonical reports and retained evidence/private files. Populate
   `record` with this helper's `file_record(Path(path))`; include explicit `[]` only when none exist. These bytes,
   modes, ownership, flags, extended attributes and macOS ACLs are checked before effects and at final intake.
+  An explicit retained checkout may contain these files; an actual worktree removal candidate may not.
+  Integrity verification still applies to retained/held checkouts and malformed dispositions. A held or
+  missing/invalid disposition cannot produce completion; retention grants no removal authority.
 - `exited_workers`: list of `{pid}` from the original monitor's `process.json`. Any live/reused PID holds effects.
   Initially use `[]` when no original worker is pending. `original_land_attempt` binds the original monitor attempt
   for Build continuation. Set it and both PIDs before the worker's first operation, once `process.json` exists.

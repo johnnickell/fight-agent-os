@@ -547,6 +547,6 @@
 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | done | — |
 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | ready-for-agent | — |
 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | ready-for-agent | — |
-| [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | ready-for-agent | — |
+| [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | done | — |
 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | ready-for-agent | — |
 <!-- /planning:records -->
