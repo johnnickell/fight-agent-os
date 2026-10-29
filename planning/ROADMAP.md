@@ -69,6 +69,16 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Approved new TASK, implementation pending:**
+[TASK-00546](tasks/00546-TASK.md) owns the approved recoverable-image/cache reclamation policy, cautious disposable
+volume retirement, executor-enforced visibility holds and cache-retention/pre-build reserve admission. Historical
+task ownership is not required for qualified recoverable artifacts; unknown data and host/foreign protections
+remain. John requested a new TASK in the selected isolated checkout rather than reopening TASK-00542. Next is
+Work on TASK-00546 with its own normal run accounting; TASK-00542's prior limits/evidence remain unchanged.
+TASK-00543 now depends on TASK-00546 to preserve cleanup-first sequencing; TASK-00544 follows transitively.
+TASK-00545 stays separate and needs shared-helper coordination. Policy acceptance is not implementation
+acceptance, cleanup or physical-reclaim evidence. The following closeouts are historical.
+
 **Accepted H closeout checkpoint — 2026-10-29:**
 [TASK-00542](tasks/00542-TASK.md#accepted-h-closeout-checkpoint--2026-10-29) records independent Review11
 ACCEPT and QA12 PASS; R10 is resolved. Done records implementation acceptance, not completed delivery.
