@@ -541,7 +541,7 @@
 | [TASK-00536](00536-TASK.md) | Remove the legacy fight-terminal command | done | — |
 | [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | done | — |
 | [TASK-00538](00538-TASK.md) | Keep installed workspace child activity and runtime logs portable across repositories | done | — |
-| [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | in-progress | — |
+| [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | done | — |
 | [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | done | — |
 | [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | done | — |
 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | done | — |
