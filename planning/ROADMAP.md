@@ -69,6 +69,20 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Accepted H closeout checkpoint — 2026-10-29:**
+[TASK-00542](tasks/00542-TASK.md#accepted-h-closeout-checkpoint--2026-10-29) records independent Review11
+ACCEPT and QA12 PASS; R10 is resolved. Done records implementation acceptance, not completed delivery.
+Repaired publication/checks and eligible cleanup are pending at this frozen checkpoint; actual results and finite
+next actions are in canonical ignored `.runs/tasks/TASK-00542/runs/primary-land16-handoff.md` and
+[PR #181](https://github.com/johnnickell/fight-agent-os/pull/181). NEW repair6 resources remain obligations;
+original retirements are never replayed, the old partial stays immutable. P1/P2/F1/current effects keep full
+delivery INCOMPLETE; no all-disk-clean, foreign-preservation, physical-reclaim or integrated-fleet runtime PASS.
+Shared allowance is 6/6 consumed, none remaining. John owns merge without a post-merge chore.
+TASK-00543/00544 remain unstarted; generated eligibility does not waive cleanup-first effects. TASK-00545 is
+separate. Earlier checkpoints below retain original facts and allowances, not current acceptance/readiness.
+
+The following R10 repair paragraph is a preserved checkpoint, not current acceptance/readiness.
+
 **Current repair — R10:** [TASK-00542](tasks/00542-TASK.md#current-repair--r10-directory-metadata) is reopened
 for Review10's confirmed macOS directory-xattr defect. Same-helper native metadata-only/no-follow repair needs
 fresh final verification, independent Review and affected QA. Sixth/final cycle is consumed (6/6; none remaining).

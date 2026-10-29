@@ -28,6 +28,18 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00542's repaired H](planning/tasks/00542-TASK.md#accepted-h-closeout-checkpoint--2026-10-29) has independent
+Review11 ACCEPT and QA12 PASS (42 fresh observations / 12 groups plus twenty explicit accumulated rows);
+R10 is resolved. Done records implementation acceptance, not completed delivery. Repaired publication/checks
+and eligible cleanup are pending at this frozen checkpoint; actual results and finite next actions are in
+canonical ignored `.runs/tasks/TASK-00542/runs/primary-land16-handoff.md` and
+[PR #181](https://github.com/johnnickell/fight-agent-os/pull/181). NEW repair6 verification resources remain
+later Land obligations; original retired resources are never replayed and the old partial stays immutable.
+P1/P2/F1/current effects keep full delivery INCOMPLETE; no foreign-preservation, physical-reclaim, all-disk-clean
+or integrated-fleet runtime PASS. Sixth/final repair stays 6/6 consumed, none remaining. John owns merge,
+without post-merge Board maintenance. Visual evidence is N/A; behavioral QA is PASS.
+
+The following R10 repair paragraph is a preserved checkpoint, not current acceptance/readiness.
 [TASK-00542 is reopened for Review10 R10](planning/tasks/00542-TASK.md#current-repair--r10-directory-metadata):
 required directory xattrs were omitted on supported macOS Python. The same helper now uses native metadata-only,
 no-follow directory transfer without recursive copying or weakened verification. Fresh final local verification,
