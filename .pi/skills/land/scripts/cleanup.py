@@ -447,10 +447,15 @@ class Cleanup:
         require(text(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], self.safe) == self.plan["git_common_dir"], "Git common directory changed")
         require(re.fullmatch(r"refs/heads/feature/task-" + self.subject[5:] + r"-[a-z0-9-]+", self.plan["ref"]), "ref not bound to subject")
         require(re.fullmatch(r"[a-f0-9]{40}", self.plan["oid"]), "invalid candidate OID")
+        candidate = absolute(self.plan["worktree"]["identity"])
         for report in self.plan["protected_files"]:
             path = absolute(report["path"])
-            require(not inside(path, absolute(self.plan["worktree"]["identity"])), "canonical report inside deletion candidate")
             require(file_record(path) == report["record"], "protected report/private evidence changed")
+        disposition = self.plan["worktree"]["disposition"]
+        require(disposition in ("remove", "retain", "hold"), "unknown worktree disposition")
+        if disposition == "remove":
+            require(not any(inside(absolute(report["path"]), candidate) for report in self.plan["protected_files"]),
+                    "canonical report inside deletion candidate")
         for worker in self.plan["exited_workers"]:
             # PID reuse is not an exit observation. A live PID always holds, even after reuse.
             observed = command(["ps", "-p", str(worker["pid"]), "-o", "lstart="], self.safe, codes=(0, 1))
