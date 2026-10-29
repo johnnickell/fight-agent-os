@@ -69,6 +69,17 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Current accepted candidate — 2026-10-29:** [TASK-00542](tasks/00542-TASK.md#current-accepted-candidate--2026-10-29)
+records independent Review7 ACCEPT and QA10 PASS on repaired D; QA-02 is resolved. Done records accepted
+implementation, not full delivery. Repaired publication/checks and eligible cleanup are pending at this frozen
+checkpoint; actual results and finite consumer/authority holds are in canonical ignored
+`.runs/tasks/TASK-00542/runs/primary-land12-handoff.md` and [PR #181](https://github.com/johnnickell/fight-agent-os/pull/181).
+No all-disk-clean, integrated-fleet runtime PASS or future growth-cap claim. John owns merge without a delivery
+queue or post-merge Board chore. TASK-00543/00544 remain unstarted; generated eligibility does not waive the
+outstanding cleanup-first effects. TASK-00545 remains separate future work, not a dependency.
+
+The revision and Review4/QA8 checkpoints immediately below are preserved history, not current stage instructions.
+
 **Current revision:** [TASK-00542](tasks/00542-TASK.md#current-repair--qa-02) remains in-progress for canonical
 QA9 QA-02. The original owned-root fixture is recovered through the repaired helper; final verification and
 independent Review/affected QA are required. Earlier acceptance is historical. Real delivery resources and

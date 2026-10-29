@@ -28,6 +28,15 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00542's repaired candidate D](planning/tasks/00542-TASK.md#current-accepted-candidate--2026-10-29) has
+independent Review7 ACCEPT and QA10 PASS (17 bounded accumulated scenarios); QA-02 is resolved. Done records
+accepted implementation, not complete delivery. Repaired publication/checks and eligible cleanup are pending at
+this frozen checkpoint; actual results and finite authority/consumer holds are in canonical ignored
+`.runs/tasks/TASK-00542/runs/primary-land12-handoff.md` and [PR #181](https://github.com/johnnickell/fight-agent-os/pull/181).
+No all-disk-clean, integrated-fleet runtime PASS or future growth-cap claim; only the original 194 uncertain
+cache IDs are excepted. John owns merge, without post-merge Board maintenance. Visual evidence is N/A.
+
+The following repair and Review4/QA8 paragraphs are preserved historical checkpoints, not current stage instructions.
 [TASK-00542 remains in-progress for QA-02](planning/tasks/00542-TASK.md#current-repair--qa-02): the owned-root
 reference census is repaired and locally qualified on the original QA fixture; fresh final verification,
 independent Review and affected QA are required. Prior acceptance below remains historical, not completion.
