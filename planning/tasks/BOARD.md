@@ -44,7 +44,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | ready-for-agent | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
-| — | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | — (standalone bug) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -596,4 +595,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00538](00538-TASK.md) | Keep installed workspace child activity and runtime logs portable across repositories | — (standalone bug) | done | — | [PR #176](https://github.com/johnnickell/fight-agent-os/pull/176) |
 | — | [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | — (standalone bug) | done | — | [PR #179](https://github.com/johnnickell/fight-agent-os/pull/179) |
 | — | [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | — (standalone chore) | done | — | [PR #178](https://github.com/johnnickell/fight-agent-os/pull/178) |
+| — | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | — (standalone bug) | done | — | [PR #183](https://github.com/johnnickell/fight-agent-os/pull/183) |
 <!-- /planning:board -->
