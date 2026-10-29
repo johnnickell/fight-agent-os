@@ -69,7 +69,14 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00546 Work2 implementation checkpoint:**
+**TASK-00546 repair cycle 1:** [R1/R2 owning repair](tasks/00546-TASK.md#repair-cycle-1--r1r2-2026-10-29)
+passes focused endpoint-alias/effective-Compose-input regressions, but its one final changed-source gate failed in
+`ActivationApiTest::testRateBoundary` (429 expected, 500 received). Work verification is incomplete; coordinator
+intake owns the out-of-scope gate failure. Renewed independent Review and nonvisual QA remain pending. Scope/order/dependencies and
+predecessor protections are unchanged; shared allowance is 5 effective / 1 consumed / 4 remaining. Canonical
+ignored Work handoff/resource companion retain current evidence. No independent acceptance or publication.
+
+**TASK-00546 Work2 historical checkpoint — not current review readiness:**
 [TASK-00546](tasks/00546-TASK.md#work2-implementation-checkpoint--2026-10-29) implements bounded recoverable
 storage, host reserve/retention admission and same-helper disposable-runtime retirement. Focused direct
 helper/runtime/Build-caller evidence is retained; the frozen-source 24-phase local gate passed with a complete

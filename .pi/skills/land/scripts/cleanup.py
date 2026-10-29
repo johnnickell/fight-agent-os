@@ -182,20 +182,52 @@ def require_no_image_consumers(safe, current):
 
 def local_image_metadata(safe, routes):
     """Read bounded metadata from the positively associated local CLI engine."""
-    context = json_command(["docker", "context", "inspect"], safe)
-    require(len(context) == 1, "local image graph context ambiguous")
-    endpoint = os.environ.get("DOCKER_HOST") if not os.environ.get("DOCKER_CONTEXT") else None
-    endpoint = endpoint or context[0]["Endpoints"]["docker"]["Host"]
-    require(endpoint.startswith("unix:///"), "image graph capability requires an explicit local Unix engine")
-    path = absolute(endpoint.removeprefix("unix://"))
-    require(stat.S_ISSOCK(path.stat().st_mode), "local image graph endpoint unavailable")
+    def selected_endpoint():
+        context = json_command(["docker", "context", "inspect"], safe)
+        require(len(context) == 1, "local image graph context ambiguous")
+        host = os.environ.get("DOCKER_HOST") if not os.environ.get("DOCKER_CONTEXT") else None
+        host = host or context[0]["Endpoints"]["docker"]["Host"]
+        require(isinstance(host, str) and host.startswith("unix:///") and
+                not any(ord(char) < 33 or ord(char) == 127 for char in host),
+                "image graph capability requires an explicit local Unix engine")
+        return host
+
+    endpoint = selected_endpoint()
+    supplied = Path(endpoint.removeprefix("unix://"))
+
+    def binding():
+        # Only trusted CLI socket spellings may resolve aliases (e.g. Linux /var/run).
+        # Provenance/report/source paths still use the unchanged strict absolute().
+        try:
+            path = supplied.resolve(strict=True)
+            metadata = path.lstat()
+            require(stat.S_ISSOCK(metadata.st_mode), "local image graph endpoint is not a socket")
+            links = []
+            for part in (*reversed(supplied.parents), supplied):
+                observed = part.lstat()
+                if stat.S_ISLNK(observed.st_mode):
+                    links.append((str(part), observed.st_dev, observed.st_ino, observed.st_ctime_ns,
+                                  os.readlink(part)))
+            return path, (metadata.st_dev, metadata.st_ino, metadata.st_mode,
+                          metadata.st_uid, metadata.st_gid, metadata.st_ctime_ns), links
+        except (OSError, RuntimeError, ValueError):
+            raise Hold("local image graph socket binding unavailable/changed; retain unchanged") from None
+
+    initial = binding()
+    path = initial[0]
+
+    def stable():
+        require(selected_endpoint() == endpoint and binding() == initial,
+                "local CLI endpoint/socket identity changed during observation")
 
     def get(route):
+        stable()
         connection = http.client.HTTPConnection("localhost", timeout=15)
         try:
             connection.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             connection.sock.settimeout(15)
             connection.sock.connect(str(path))
+            stable()
             connection.request("GET", route)
             response = connection.getresponse()
             raw = response.read(32 * 1024 * 1024 + 1)
@@ -215,6 +247,7 @@ def local_image_metadata(safe, routes):
     require(get("/info")["ID"] == engine["ID"] and
             json_command(["docker", "info", "--format", "{{json .}}"], safe)["ID"] == engine["ID"],
             "CLI/API engine association changed during observation")
+    stable()
     return values
 
 

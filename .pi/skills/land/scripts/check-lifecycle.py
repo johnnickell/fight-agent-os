@@ -11,6 +11,8 @@ import os
 from pathlib import Path
 import re
 import signal
+import socket
+import threading
 import subprocess
 import sys
 import time
@@ -825,6 +827,208 @@ def storage_contracts(module, evidence, helper):
     return 0 if summary["pass"] else 1
 
 
+def endpoint_contracts(module, evidence, helper):
+    """Exercise actual endpoint admission with a real local Unix metadata server"""
+    evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
+    real, other = evidence / "r", evidence / "o"
+    real.mkdir()
+    other.mkdir()
+    alias = evidence / "a"
+    alias.symlink_to(real, target_is_directory=True)
+    regular = evidence / "file"
+    regular.write_text("not a socket")
+    socket_alias = evidence / "s"
+    socket_alias.symlink_to(real / "s")
+    listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    path = real / "s"
+    listener.bind(str(path))
+    listener.listen(4)
+    listener.settimeout(0.1)
+    state, errors, rows = {}, [], []
+    stopped = threading.Event()
+    info = {"ID": "controlled-local-engine", "DockerRootDir": str(evidence), "OperatingSystem": "Controlled Linux shape"}
+    def serve():
+        while not stopped.is_set():
+            try:
+                connection, _ = listener.accept()
+            except socket.timeout:
+                continue
+            try:
+                with connection:
+                    connection.settimeout(2)
+                    raw = b""
+                    while b"\r\n\r\n" not in raw:
+                        chunk = connection.recv(4096)
+                        if not chunk:
+                            break
+                        raw += chunk
+                    state["requests"] += 1
+                    case = state["case"]
+                    changed = case == "api-engine-mismatch" or case == "api-engine-changed" and state["requests"] > 1
+                    body = json.dumps(dict(info, ID="unassociated") if changed else info).encode()
+                    status = b"403 Forbidden" if case == "api-denied" else b"200 OK"
+                    if case == "malformed-api":
+                        body = b"not-json"
+                    if case == "alias-changed" and state["requests"] == 1:
+                        alias.unlink()
+                        alias.symlink_to(other, target_is_directory=True)
+                    if case == "socket-replaced" and state["requests"] == 1:
+                        path.unlink()
+                        path.write_text("replaced socket")
+                    connection.sendall(b"HTTP/1.1 " + status + b"\r\nContent-Length: " + str(len(body)).encode() + b"\r\nConnection: close\r\n\r\n" + body)
+            except (OSError, ValueError) as error:
+                errors.append(type(error).__name__)
+    thread = threading.Thread(target=serve)
+    original = module.json_command
+    saved = {key: os.environ.pop(key, None) for key in ("DOCKER_HOST", "DOCKER_CONTEXT")}
+    thread.start()
+    try:
+        for case in ("canonical", "parent-alias", "socket-alias", "host-alias", "context-precedence", "remote", "not-socket", "missing",
+                     "api-denied", "api-engine-mismatch", "api-engine-changed", "cli-engine-changed", "context-changed", "malformed-api", "alias-changed", "socket-replaced"):
+            state.update(case=case, requests=0)
+            endpoint = "unix://" + str(alias / "s" if case in ("parent-alias", "alias-changed") else path)
+            if case == "socket-alias":
+                endpoint = "unix://" + str(socket_alias)
+            if case == "remote":
+                endpoint = "tcp://127.0.0.1:2375"
+            if case in ("not-socket", "missing"):
+                endpoint = "unix://" + str(regular if case == "not-socket" else evidence / "missing")
+            if case == "host-alias":
+                os.environ["DOCKER_HOST"] = "unix://" + str(alias / "s")
+            if case == "context-precedence":
+                os.environ.update(DOCKER_HOST="tcp://unselected:2375", DOCKER_CONTEXT="selected")
+            calls = {"info": 0, "context": 0}
+            def observed(argv, cwd):
+                if argv[:2] == ["docker", "info"]:
+                    calls["info"] += 1
+                    return dict(info, ID="changed") if case == "cli-engine-changed" and calls["info"] > 2 else info
+                if argv == ["docker", "context", "inspect"]:
+                    calls["context"] += 1
+                    host = "unix://" + str(other / "s") if case == "context-changed" and state["requests"] else endpoint
+                    return [{"Endpoints": {"docker": {"Host": host}}}]
+                raise AssertionError("unexpected external endpoint dependency")
+            module.json_command = observed
+            operation = module.Storage.__new__(module.Storage)
+            operation.safe = evidence
+            reason = None
+            try:
+                operation.engine()
+            except module.Hold as error:
+                reason = str(error)
+            except OSError as error:
+                reason = type(error).__name__
+            expected = case in ("canonical", "parent-alias", "socket-alias", "host-alias", "context-precedence")
+            rows.append({"case": case, "passed": (reason is None) == expected,
+                         "qualified": reason is None, "reason": reason, "api_requests": state["requests"]})
+            for key in saved:
+                os.environ.pop(key, None)
+            if case == "alias-changed":
+                alias.unlink()
+                alias.symlink_to(real, target_is_directory=True)
+        try:
+            module.absolute(alias / "s")
+            global_path_held = False
+        except module.Hold:
+            global_path_held = True
+        rows.append({"case": "global-provenance-path-stays-strict", "passed": global_path_held})
+    finally:
+        stopped.set()
+        thread.join(timeout=3)
+        listener.close()
+        path.unlink()
+        module.json_command = original
+        for key, value in saved.items():
+            if value is not None:
+                os.environ[key] = value
+    summary = {"helper_sha256": module.digest(helper.read_bytes()), "rows": rows,
+               "pass": all(row["passed"] for row in rows) and not errors and not thread.is_alive(), "server_errors": errors,
+               "boundary": "Actual Storage.engine/local_image_metadata, real owned Unix server; controlled CLI observations; no Docker effects",
+               "resources": "Listener closed, server thread joined, exact socket/replacement removed; directories and alias retained",
+               "unverified": ["hosted Ubuntu", "installed/fleet callers", "hostile-actor atomic fencing"]}
+    private_json(evidence / "endpoint-contracts.json", summary)
+    print(json.dumps(summary, indent=2))
+    return 0 if summary["pass"] else 1
+
+
+def startup_input_contracts(module, evidence, helper):
+    """Intercept real bin/up admission and challenge its actual Compose input mapping"""
+    evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
+    root = helper.parents[4]
+    shim = evidence / "shim"
+    shim.mkdir()
+    capture = evidence / "argv.json"
+    # Only configuration observations may reach Docker; admission exits before effects.
+    docker = run(["sh", "-c", "command -v docker"], root)
+    (shim / "docker").write_text("#!/bin/sh\ncase \" $* \" in *' config '*) [ \"${PROBE_CONFIG_FAIL:-}\" != yes ] || exit 72; exec " + docker + " \"$@\";; *) exit 80;; esac\n")
+    (shim / "docker").chmod(0o700)
+    (shim / "python3").write_text("#!" + sys.executable + "\nimport json,os,sys\nfrom pathlib import Path\nif any(v.endswith('/cleanup.py') for v in sys.argv[1:]):\n Path(" + repr(str(capture)) + ").write_text(json.dumps(sys.argv[1:]))\n sys.exit(79)\nos.execv(" + repr(sys.executable) + ", [" + repr(sys.executable) + ", *sys.argv[1:]])\n")
+    (shim / "python3").chmod(0o700)
+    gateway = "nginx@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951"
+    node = next(line.split()[1] for line in (root / "etc/docker/cli/Dockerfile").read_text().splitlines() if line.startswith("FROM node@"))
+    rows = []
+    selected = "docker.io/library/nginx@" + gateway.split("@", 1)[1]
+    dockerfile = evidence / "Dockerfile"
+    dockerfile.write_text("ARG BASE=" + selected + "\nFROM ${BASE} AS input\nFROM input AS final\n")
+    for case in ("digest-runtime", "selected-override", "selected-build", "build-only", "config-failed", "config-unavailable", "build-unavailable"):
+        override = evidence / (case + ".json")
+        model = {"services": {"https": {"image": selected if case == "selected-override" else gateway}}}
+        if case in ("selected-build", "build-unavailable"):
+            model["services"]["web"] = {"build": {"dockerfile": str(dockerfile if case == "selected-build" else evidence / "missing-Dockerfile")}}
+        private_json(override, model)
+        env = dict(os.environ, PATH=str(shim) + os.pathsep + os.environ["PATH"],
+                   COMPOSE_FILE=str(root / "compose.yaml") + os.pathsep + str(override))
+        env.pop("COMPOSE_PATH_SEPARATOR", None)
+        if case == "config-failed":
+            env["PROBE_CONFIG_FAIL"] = "yes"
+        if case == "config-unavailable":
+            env["COMPOSE_FILE"] = str(evidence / "nonexistent.yaml")
+        if capture.exists():
+            capture.unlink()
+        result = subprocess.run([str(root / "bin/up"), *(["--build-only"] if case == "build-only" else [])],
+                                cwd=root, env=env, capture_output=True, timeout=30)
+        (evidence / (case + ".stderr")).write_bytes(result.stderr)
+        argv = json.loads(capture.read_text()) if capture.exists() else []
+        protected = [argv[index + 1] for index, value in enumerate(argv) if value == "--protect-image"]
+        if case in ("config-failed", "config-unavailable", "build-unavailable"):
+            passed = result.returncode not in (0, 79) and not argv
+            effects = []
+        else:
+            reference = selected if case in ("selected-override", "selected-build") else gateway
+            operation = module.Storage.__new__(module.Storage)
+            operation.safe, operation.retention, operation.limit = root, 1, 8
+            identity = reference.split("@", 1)[1]
+            operation.selection = {"cache_ids": [], "image_ids": [identity]}
+            operation.protected_inputs = protected
+            operation.engine_identity = {"id": "controlled"}
+            operation.engine = lambda: operation.engine_identity
+            operation.builder_identity = lambda: {"name": "controlled"}
+            operation.usage = lambda: []
+            operation.image_census = lambda: [{"id": identity, "created": 1, "digests": [reference], "tags": []}]
+            operation.attempt, effects = {"results": []}, []
+            operation.save = lambda: None
+            operation.image = lambda item, row: (effects.append(item["id"]), row.update(status="removed"))
+            operation.reclaim()
+            # build-only does not start https, but fixed Node inputs are still required.
+            passed = result.returncode == 79 and node in protected and (case == "build-only" or reference in protected and not effects)
+            if case == "digest-runtime":
+                operation.protected_inputs = []
+                operation.attempt = {"results": []}
+                effects.clear()
+                operation.reclaim()
+                rows.append({"case": "unprotected-no-consumer-control", "passed": effects == [identity],
+                             "intercepted_image_effects": list(effects)})
+                effects.clear()
+        rows.append({"case": case, "passed": passed, "exit": result.returncode,
+                     "protected_inputs": protected, "intercepted_image_effects": effects})
+    summary = {"helper_sha256": module.digest(helper.read_bytes()), "wrapper_sha256": module.digest((root / "bin/up").read_bytes()),
+               "resolver_sha256": module.digest((root / "scripts/compose_storage_inputs.py").read_bytes()),
+               "checker_sha256": module.digest(Path(__file__).read_bytes()), "rows": rows, "pass": all(row["passed"] for row in rows),
+               "boundary": "Actual bin/up and config-only Docker Compose with selected overrides; admission/effect intercepted; no allocation, registry or removal"}
+    private_json(evidence / "startup-input-contracts.json", summary)
+    print(json.dumps(summary, indent=2))
+    return 0 if summary["pass"] else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", required=True, help="New absolute task-owned evidence directory, outside removal candidates")
@@ -837,6 +1041,8 @@ def main():
     parser.add_argument("--standalone-matrix", action="store_true", help="Bounded owning-tool effects, interruption, evidence and consumer probes")
     parser.add_argument("--visibility-contracts", action="store_true", help="Controlled executor regressions; no Docker allocation or external effects")
     parser.add_argument("--storage-contracts", action="store_true", help="Controlled admission/recoverability/retention decisions; no external effects")
+    parser.add_argument("--endpoint-contracts", action="store_true", help="Real local Unix endpoint with controlled CLI; no Docker effects")
+    parser.add_argument("--startup-input-contracts", action="store_true", help="Actual bin/up/Compose input mapping with intercepted admission; no Docker effects")
     parser.add_argument("--resume", action="store_true", help="Reuse this fixture/receipt; never recreate missing resources")
     parser.add_argument("--prepare-only", action="store_true", help="Create and record the bounded fixture for actual Pi caller qualification; do not invoke cleanup")
     parser.add_argument("--case", choices=("normal", "completed", "running", "failure", "cancel", "durable", "shared-stopped", "image", "unavailable", "denied", "changed-identity", "mismatched-binding", "database", "mysql", "image-root"), default="normal")
@@ -859,6 +1065,10 @@ def main():
     spec = importlib.util.spec_from_file_location("subject_cleanup", helper)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if args.endpoint_contracts:
+        return endpoint_contracts(module, evidence, helper)
+    if args.startup_input_contracts:
+        return startup_input_contracts(module, evidence, helper)
     if args.visibility_contracts:
         return visibility_contracts(module, evidence, helper)
     if args.storage_contracts:

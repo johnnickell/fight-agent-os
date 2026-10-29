@@ -16,6 +16,14 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 ### Current human decision
 
+[TASK-00546](00546-TASK.md#repair-cycle-1--r1r2-2026-10-29) is in owning repair cycle 1 for canonical Review
+R1/R2. Endpoint-alias and effective Compose-input regressions pass, but the one final changed-source gate failed
+in `ActivationApiTest::testRateBoundary` (429 expected, 500 received). Work verification is incomplete; coordinator
+intake owns this out-of-scope failure. Independent renewed Review and applicable nonvisual QA remain pending. Scope/order/
+blockers are unchanged; allowance is 5 effective / 1 consumed / 4 remaining. Current evidence remains canonical
+ignored `.runs/tasks/TASK-00546/runs/work-handoff.md` and its SAME resource companion. No self-acceptance.
+
+The following Work2 checkpoint is historical, not current review readiness.
 [TASK-00546](00546-TASK.md#work2-implementation-checkpoint--2026-10-29) remains in-progress. Bounded recoverable
 storage, executable retention/reserve admission and same-helper runtime retirement are implemented with focused
 owning-tool evidence. The frozen-source 24-phase local gate passed; **Next:** coordinator-owned independent

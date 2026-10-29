@@ -14,12 +14,20 @@ case "$#:${1:-}" in
     1:--build-only) build_only=yes ;;
     *) echo 'Usage: ./bin/up [--build-only]' >&2; exit 2 ;;
 esac
-# Admission protects the actual version-controlled build inputs before any pull/build.
+# Resolve the same effective Compose selection (including local overrides) before
+# reclamation. Config failure must not become an empty protection list.
+if [ "$build_only" = yes ]; then
+    images=$(python3 scripts/compose_storage_inputs.py --build-only)
+else
+    images=$(python3 scripts/compose_storage_inputs.py)
+fi
 set -- python3 .pi/skills/land/scripts/cleanup.py --storage-admit
 if [ -n "${FIGHT_STORAGE_RECEIPT:-}" ]; then set -- "$@" --receipt "$FIGHT_STORAGE_RECEIPT"; fi
-for image in $(awk '$1 == "FROM" {print $2}' etc/docker/cli/Dockerfile etc/docker/fpm/Dockerfile); do
+set -f
+for image in $images; do
     set -- "$@" --protect-image "$image"
 done
+set +f
 "$@"
 if [ "$build_only" = yes ]; then exec docker compose build web; fi
 if [ ! -f vendor/autoload.php ]; then

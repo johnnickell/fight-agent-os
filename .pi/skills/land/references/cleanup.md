@@ -163,7 +163,11 @@ Reserve/allocation must be positive integers, at most `2^60`. Admission requires
 **at least reserve + allocation** on both source and Docker backing filesystems. Linux uses the local engine's
 DockerRootDir; the qualified macOS topology uses Docker Desktop's default Docker.raw with a live open-file
 observation. Remote/custom/unknown backing topology, unavailable observations, changed engine or insufficient
-space refuses allocation with a finite owner action. Docker logical usage, physical host availability and the
+space refuses allocation with a finite owner action. The trusted local CLI socket may use an alias such as Linux
+`/var/run -> /run`; the helper resolves only this endpoint, requires an actual socket and rechecks alias/socket
+identity, CLI selection and same-engine API identity across observations. Unassociated, denied or changed endpoints
+hold. Report/source/provenance paths retain strict canonical, no-symlink validation.
+Docker logical usage, physical host availability and the
 engine's cache-size report are separate; no logical-size sum or before/after host delta is called reclaimed bytes.
 A qualified reserve can admit work despite unrelated reclamation holds, but aggregate cleanup remains incomplete.
 
@@ -186,10 +190,14 @@ The supported automatic candidates need **no historical TASK ownership**:
   and changed references hold. All other local image roots/references must remain unchanged afterward.
   Explicit image-selector resume reports absence only with prior SAME-receipt exact-root/content observation
   plus explicit exact inspect/all-image not-found. Unproven config/index aliases hold, never imply completion.
-- Callers declare current inputs with repeated `--protect-image REFERENCE_OR_ROOT`. `bin/up` reads its actual
-  Dockerfile FROM inputs; `bin/client` protects its selected runtime/build images, including newly pulled inputs.
-  Protection is applied before candidate selection; a downloadable image is not disposable while needed by
-  the current operation. Current/stopped container consumers remain additional independent holds.
+- Callers declare current inputs with repeated `--protect-image REFERENCE_OR_ROOT`. Before admission, `bin/up`
+  resolves the same effective Compose configuration used by startup/build, including selected local overrides.
+  It protects runtime images, effective local Dockerfile FROM inputs (including global ARG/build-argument
+  substitution), and the fixed repository build inputs. Failed/unavailable config, unresolved FROM expressions
+  or unsupported remote/additional build contexts refuse before reclamation; no empty-input fallback exists.
+  `bin/client` protects its selected runtime/build images, including newly pulled inputs. Protection is applied
+  before candidate selection; a downloadable image is not disposable while needed by the current operation.
+  Current/stopped container consumers remain additional independent holds.
 
 Every pass appends `storage_attempts` in the SAME companion, recording engine/worker, selection, raw observations,
 content proofs, effect intent/argv/exits, postconditions, host measurements and per-effect held/removed/absent results.
@@ -202,6 +210,11 @@ upgraded, and old attempts/plans are immutable. Recover a linked explicit policy
 `check-lifecycle.py --storage-contracts --evidence ABSOLUTE_NEW_DIRECTORY` challenges controlled reserve,
 retention, denial, stale identity, unique work, protected inputs and active/stopped consumers with zero real effects.
 Real Docker/helper/caller receipts remain required for real-runtime claims. No installed/fleet claim follows.
+`check-lifecycle.py --endpoint-contracts --evidence ABSOLUTE_NEW_DIRECTORY` uses a real owned Unix metadata
+server with controlled CLI observations to qualify aliases and reject denied/unassociated/changed endpoints.
+`--startup-input-contracts` uses actual `bin/up` and config-only Compose resolution, intercepting admission and
+retirement to challenge digest-only inputs, selected overrides/build inputs and unavailable configuration.
+Neither mode allocates Docker resources, performs reclamation or establishes hosted/installed/fleet acceptance.
 
 ### Disposable runtime caller
 

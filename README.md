@@ -28,7 +28,15 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
-[TASK-00546](planning/tasks/00546-TASK.md#work2-implementation-checkpoint--2026-10-29) now implements bounded
+[TASK-00546](planning/tasks/00546-TASK.md#repair-cycle-1--r1r2-2026-10-29) is in bounded Work repair for
+Review R1/R2: trusted local Docker socket aliases and effective Compose startup/build image protection.
+Focused owning regressions pass, but the final changed-source gate failed in the unchanged activation rate-boundary
+test (expected 429, received 500); Work verification is incomplete. Coordinator intake owns that out-of-scope
+failure; independent renewed Review/nonvisual QA remain pending. The retained verification runtime and current
+Work handoff remain available; no acceptance or publication is claimed.
+
+The following Work2 checkpoint is historical, not current review readiness.
+[TASK-00546](planning/tasks/00546-TASK.md#work2-implementation-checkpoint--2026-10-29) implements bounded
 recoverable-storage reclamation, configurable retention/reserve admission and same-helper disposable-runtime
 retirement. Real Docker cache/image effects, worker visibility and runtime/Build caller qualification are recorded
 in its canonical Work handoff. The frozen-source 24-phase `./bin/build` passed with an exact input/artifact
