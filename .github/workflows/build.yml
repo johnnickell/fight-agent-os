@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       COMPOSE_PROJECT_NAME: fight-agent-os-ci-${{ github.run_id }}-${{ github.run_attempt }}
+      # Disposable hosted runner budget, distinct from the local 20 GiB reserve default.
+      FIGHT_STORAGE_RESERVE_BYTES: 2147483648
+      FIGHT_STORAGE_ALLOCATION_BYTES: 4294967296
     steps:
       - uses: actions/checkout@v5
       - name: Explicit locked tooling and dependency setup
@@ -56,7 +59,7 @@ jobs:
           )
           export CURL_CA_BUNDLE="$PWD/var/https/ci/ca.pem"
           printf 'CURL_CA_BUNDLE=%s\n' "$CURL_CA_BUNDLE" >> "$GITHUB_ENV"
-          docker compose build web
+          ./bin/up --build-only
           ./bin/composer install --no-interaction --prefer-dist --no-progress
           ./bin/client setup
           ./bin/client build

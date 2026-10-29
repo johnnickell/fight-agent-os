@@ -16,6 +16,13 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 ### Current human decision
 
+[TASK-00546](00546-TASK.md#work2-implementation-checkpoint--2026-10-29) remains in-progress. Bounded recoverable
+storage, executable retention/reserve admission and same-helper runtime retirement are implemented with focused
+owning-tool evidence. The frozen-source 24-phase local gate passed; **Next:** coordinator-owned independent
+Review and applicable nonvisual QA using the committed Work handoff and qualified evidence bridge. No scope/order/blocker change or self-acceptance. The canonical ignored
+`.runs/tasks/TASK-00546/runs/work-handoff.md` owns current evidence and resource dispositions.
+
+The following Work1 route is historical, not the current continuation instruction.
 [TASK-00546](00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) is in-progress, not accepted.
 Partial executor visibility holds have bounded controlled/real-probe evidence. Cache-to-source recoverability
 qualification is held; automatic reclamation, retention/reserve and lifecycle/caller integration are unfinished.

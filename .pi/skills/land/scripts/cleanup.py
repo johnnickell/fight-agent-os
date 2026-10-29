@@ -3,7 +3,7 @@
 
 import argparse
 import ctypes
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import fcntl
 import hashlib
 import http.client
@@ -17,7 +17,10 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 from urllib.parse import quote
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 
 COMMANDS = None
@@ -40,10 +43,11 @@ def fingerprint(value):
     return digest(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
 
 
-def command(args, cwd, codes=(0,), timeout=15):
+def command(args, cwd, codes=(0,), timeout=15, confirmation=None):
     """Capture privately; never replay provider, configuration or environment output."""
     try:
-        result = subprocess.run(args, cwd=cwd, stdin=subprocess.DEVNULL,
+        result = subprocess.run(args, cwd=cwd, input=confirmation,
+                                stdin=subprocess.DEVNULL if confirmation is None else None,
                                 capture_output=True, timeout=timeout,
                                 env=dict(os.environ, GIT_NO_REPLACE_OBJECTS="1", GIT_NO_LAZY_FETCH="1",
                                          COMPOSE_DISABLE_ENV_FILE="1", COMPOSE_ENV_FILES=""))
@@ -67,6 +71,20 @@ def text(args, cwd, **kwargs):
 
 def json_command(args, cwd):
     return json.loads(text(args, cwd))
+
+
+def docker_timestamp(value):
+    """Normalize raw RFC3339 nanoseconds conservatively on Python 3.9"""
+    require(isinstance(value, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})", value),
+            "raw Docker timestamp unavailable/malformed")
+    value = value.replace("Z", "+00:00")
+    fractional = re.search(r"\.(\d+)", value)
+    rounded = False
+    if fractional:
+        digits = fractional[1]
+        rounded = len(digits) > 6 and any(char != "0" for char in digits[6:])
+        value = value[:fractional.start()] + "." + digits[:6].ljust(6, "0") + value[fractional.end():]
+    return datetime.fromisoformat(value) + timedelta(microseconds=1 if rounded else 0)
 
 
 def inside(path, root):
@@ -364,6 +382,355 @@ def artifact_inventory(root, exclusions=()):
     return result
 
 
+class Storage:
+    """Admit bounded allocation and reclaim independently recoverable Docker artifacts
+
+    Cache retirement uses the Docker driver's external-image reference checker, not
+    inferred task ownership. Private/mutable/source/cache-mount records never qualify.
+    """
+
+    def __init__(self, receipt, root, document=None, policy=None):
+        self.path = absolute(str(receipt))
+        self.safe = absolute(str(root))
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if self.path.exists():
+            require(self.path.stat().st_uid == os.getuid() and
+                    stat.S_IMODE(self.path.stat().st_mode) == 0o600, "storage receipt must be owned/private")
+        self.document = document if document is not None else (json.loads(self.path.read_text()) if self.path.exists() else {})
+        policy = policy or {}
+        def setting(key, default, minimum, maximum):
+            value = policy.get(key, os.environ.get("FIGHT_STORAGE_" + key.upper(), default))
+            require(str(value).isdigit() and minimum <= int(value) <= maximum, "invalid bounded storage setting: " + key)
+            return int(value)
+        self.reserve = setting("reserve_bytes", 20 * 1024 ** 3, 1, 2 ** 60)
+        self.allocation = setting("allocation_bytes", 4 * 1024 ** 3, 1, 2 ** 60)
+        self.retention = setting("retention_seconds", 604800, 1, 315360000)
+        self.limit = setting("max_candidates", 8, 1, 32)
+        self.builder = policy.get("builder", os.environ.get("FIGHT_STORAGE_BUILDER", ""))
+        self.protected_inputs = policy.get("protected_images", [])
+        require(isinstance(self.protected_inputs, list) and len(self.protected_inputs) <= 64 and
+                all(isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/@-]{0,511}", value)
+                    for value in self.protected_inputs), "invalid protected build/runtime image inputs")
+        self.selection = {kind: policy.get(kind) for kind in ("cache_ids", "image_ids")}
+        require(all(value is None or isinstance(value, list) and len(value) <= 32 and
+                    all(isinstance(identifier, str) and re.fullmatch(r"[a-z0-9]{12,64}" if kind == "cache_ids" else
+                        r"sha256:[a-f0-9]{64}", identifier) for identifier in value) and
+                    len(value) == len(set(value)) for kind, value in self.selection.items()), "invalid bounded storage selection")
+        self.attempt = {"time": datetime.now(timezone.utc).isoformat(), "operation_sha256": digest(Path(__file__).read_bytes()),
+                        "source": str(self.safe), "reserve_bytes": self.reserve, "allocation_bytes": self.allocation,
+                        "retention_seconds": self.retention, "max_candidates": self.limit, "selection": self.selection, "protected_inputs": self.protected_inputs,
+                        "results": [], "complete": False, "admitted": False, "physical_reclaimed_bytes": None}
+        self.document.setdefault("storage_attempts", []).append(self.attempt)
+
+    def save(self):
+        descriptor, temporary = tempfile.mkstemp(prefix=".storage-", dir=self.path.parent)
+        try:
+            with os.fdopen(descriptor, "w") as output:
+                json.dump(self.document, output, indent=2)
+                output.write("\n")
+                output.flush()
+                os.fsync(output.fileno())
+            os.replace(temporary, self.path)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+
+    def engine(self):
+        info = json_command(["docker", "info", "--format", "{{json .}}"], self.safe)
+        context = json_command(["docker", "context", "inspect"], self.safe)
+        require(len(context) == 1 and info.get("ID"), "engine/context identity unavailable")
+        endpoint = os.environ.get("DOCKER_HOST") if not os.environ.get("DOCKER_CONTEXT") else None
+        endpoint = endpoint or context[0]["Endpoints"]["docker"]["Host"]
+        require(endpoint.startswith("unix:///"), "storage admission requires a local Unix engine")
+        # Cross-check the CLI against that exact socket; never measure a remote host as local.
+        observed, = local_image_metadata(self.safe, ["/info"])
+        require(observed["ID"] == info["ID"], "storage engine association changed")
+        return {"id": info["ID"], "endpoint": endpoint, "root": info["DockerRootDir"], "os": info["OperatingSystem"]}
+
+    def host_space(self):
+        engine = self.engine()
+        require(not hasattr(self, "engine_identity") or engine == self.engine_identity, "storage engine changed")
+        self.engine_identity = engine
+        if sys.platform == "darwin":
+            backing = Path.home() / "Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw"
+            require(engine["os"] == "Docker Desktop" and "docker" in engine["endpoint"].lower(),
+                    "unqualified local VM backing store")
+            handles = text(["lsof", "-Fn", str(backing)], self.safe).splitlines()
+            require("n" + str(backing) in handles, "active Desktop backing-file observation unavailable; allocation refused")
+        elif sys.platform.startswith("linux"):
+            backing = Path(engine["root"])
+        else:
+            raise Hold("host storage observation unsupported; allocation refused")
+        # Override must identify the actual locally managed engine backing store, not a
+        # guessed writable filesystem. Unknown Desktop/custom topologies hold for setup.
+        require(backing.exists() and not backing.is_symlink(), "engine backing filesystem unavailable; allocation refused")
+        rows = []
+        for path in (self.safe, backing):
+            device = path.stat().st_dev
+            space = os.statvfs(path)
+            require(space.f_bavail >= 0 and space.f_frsize > 0, "host free-space measurement unavailable")
+            rows.append({"path": str(path), "device": device, "free_bytes": space.f_bavail * space.f_frsize})
+        return rows
+
+    def builder_identity(self):
+        rows = [json.loads(line) for line in text(["docker", "buildx", "ls", "--format", "{{json .}}"], self.safe).splitlines()]
+        candidates = [row for row in rows if row["Name"] == self.builder] if self.builder else [row for row in rows if row["Current"]]
+        # Buildx may print the same node twice for its platform groups.
+        unique = {fingerprint(row): row for row in candidates}
+        require(len(unique) == 1, "owning builder ambiguous/unavailable")
+        row = next(iter(unique.values()))
+        require(row["Driver"] == "docker" and len(row["Nodes"]) == 1 and
+                row["Nodes"][0]["Endpoint"] == json_command(["docker", "context", "inspect"], self.safe)[0]["Name"] and
+                not os.environ.get("DOCKER_HOST"), "cache retirement requires the same local Docker-driver worker")
+        node = row["Nodes"][0]
+        require(node["Status"] == "running" and node["IDs"], "cache worker identity unavailable")
+        return {"name": row["Name"], "workers": sorted(node["IDs"]), "endpoint": node["Endpoint"]}
+
+    def usage(self):
+        current, = local_image_metadata(self.safe, ["/system/df"])
+        require(isinstance(current.get("BuildCache"), list) and len(current["BuildCache"]) <= 16384,
+                "raw cache inventory unavailable/oversized")
+        require(len({row["ID"] for row in current["BuildCache"]}) == len(current["BuildCache"]), "duplicate raw cache identity")
+        self.attempt["docker_logical_usage_sha256"] = fingerprint(current)
+        return current["BuildCache"]
+
+    def image_census(self):
+        # Keep the immutable root/reference/child census, not usage counters or sizes.
+        return sorted([{"id": row["Id"], "created": row["Created"], "tags": sorted(row.get("RepoTags") or []),
+                        "digests": sorted(row.get("RepoDigests") or []), "descriptor": row.get("Descriptor"),
+                        "children": sorted([{"id": child["ID"], "descriptor": child["Descriptor"],
+                                             "available": child["Available"], "kind": child["Kind"]}
+                                            for child in row.get("Manifests", [])], key=lambda child: child["id"])}
+                       for row in local_image_graphs(self.safe)], key=lambda row: row["id"])
+
+    def cache_filters(self, identifier):
+        require(re.fullmatch(r"[a-z0-9]{12,64}", identifier), "invalid exact cache identity")
+        # Buildx converts id= to a regexp. Anchor it; boolean fields expose an empty
+        # string only when present. Regex ^$ tests presence, unlike shared=true.
+        return ["--filter", "id=^" + identifier + "$", "--filter", "shared~=^$",
+                "--filter", "immutable~=^$", "--filter", "type=regular"]
+
+    def cache(self, original, result):
+        builder = self.builder_identity()
+        require(builder == self.builder_snapshot, "builder worker changed")
+        identifier = original["ID"]
+        latest = next((row for row in self.usage() if row["ID"] == identifier), None)
+        if latest is None:
+            result.update(status="absent", reason="exact cache absent from successful raw engine inventory")
+            return
+        require(latest == original and original["InUse"] is False and original["Shared"] is True and
+                original["Type"] == "regular", "cache changed/in-use/private/unique; preserve")
+        last = docker_timestamp(original["LastUsedAt"])
+        require(last.tzinfo is not None and (datetime.now(timezone.utc) - last).total_seconds() >= self.retention,
+                "cache is inside retention window")
+        filters = self.cache_filters(identifier)
+        observed = [json.loads(line) for line in text(["docker", "buildx", "du", "--builder", builder["name"],
+                    *filters, "--format", "json"], self.safe).splitlines()]
+        require(len(observed) == 1 and observed[0]["ID"] == identifier and observed[0]["Shared"] is True and
+                observed[0]["Mutable"] is False and observed[0]["Reclaimable"] is True and observed[0]["Type"] == "regular",
+                "raw engine/builder recoverability observations disagree")
+        protected = self.image_census()
+        require(protected and protected == self.protected_images, "retained image backing changed/unavailable")
+        result.update(recovery_basis="same-engine external-image reference checker plus retained image-root census; no private cache",
+                      observation=original, builder=builder, protected_images_sha256=fingerprint(protected))
+        self.save()
+        require(self.engine() == self.engine_identity and self.builder_identity() == builder,
+                "engine/builder changed before cache effect")
+        require(self.image_census() == protected, "image backing changed before cache effect")
+        result.update(status="pending", reason="exact bounded filtered cache retirement intent")
+        self.save()
+        # --all admits shared records to the candidate check; exact-ID + shared +
+        # immutable + regular remain conjunctive engine filters. The engine rechecks
+        # active refs and last-use under its cache lock. No unfiltered prune or force.
+        command(["docker", "buildx", "prune", "--builder", builder["name"], "--all", *filters,
+                 "--filter", "until=" + str(self.retention) + "s"], self.safe, timeout=60, confirmation=b"y\n")
+        require(self.engine() == self.engine_identity and self.image_census() == protected,
+                "protected image census changed after cache effect")
+        remaining = next((row for row in self.usage() if row["ID"] == identifier), None)
+        result.update(status="removed" if remaining is None else "held",
+                      reason="exact cache absent; backing image roots retained" if remaining is None else
+                             "engine retained cache (new use/retention/reference); no retry")
+
+    def downloadable(self, current):
+        """Verify every immutable manifest/blob through the public Docker Hub API
+
+        No local credentials, registry mutation, mutable tag assertion or manifest-only
+        availability claim. Bounded streamed content hashes are retained, not tokens.
+        """
+        references = sorted(set((current.get("RepoDigests") or []) + (current.get("RepoTags") or [])))
+        require(references and len(references) <= 8 and all("@" in value for value in references),
+                "mutable/unreferenced image may contain unique work; preserve")
+        repositories = set()
+        for value in references:
+            repository, identity = value.rsplit("@", 1)
+            require(identity == current["Id"], "image reference does not bind exact root")
+            repository = repository.removeprefix("docker.io/")
+            require("." not in repository.split("/")[0] and re.fullmatch(r"[a-z0-9_/-]+", repository),
+                    "registry recoverability capability unavailable; preserve")
+            repositories.add(repository if "/" in repository else "library/" + repository)
+        require(len(repositories) == 1, "multiple remote repositories require separate qualification")
+        repository = repositories.pop()
+        token_url = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:" + repository + ":pull"
+        with urlopen(token_url, timeout=15) as response:
+            token = json.loads(response.read(65537))["token"]
+        require(isinstance(token, str) and len(token) <= 65536, "public registry token unavailable")
+        budget, records, seen = 256 * 1024 * 1024, [], set()
+        deadline = time.monotonic() + 60
+        def fetch(identity, media, size=None):
+            nonlocal budget
+            require(re.fullmatch(r"sha256:[a-f0-9]{64}", identity), "unsupported remote content digest")
+            if identity in seen:
+                return
+            require(len(seen) < 128 and time.monotonic() < deadline, "remote graph exceeds bounded qualification")
+            seen.add(identity)
+            manifest = "manifest" in media or "index" in media or "list" in media
+            route = "manifests/" if manifest else "blobs/"
+            request = Request("https://registry-1.docker.io/v2/" + repository + "/" + route + identity,
+                              headers={"Authorization": "Bearer " + token, "Accept": media})
+            hashed, length, chunks = hashlib.sha256(), 0, []
+            with urlopen(request, timeout=15) as response:
+                while True:
+                    require(time.monotonic() < deadline, "remote content qualification deadline reached; preserve image")
+                    chunk = response.read(min(1024 * 1024, budget + 1))
+                    if not chunk:
+                        break
+                    budget -= len(chunk)
+                    require(budget >= 0, "remote graph exceeds byte qualification budget")
+                    hashed.update(chunk)
+                    length += len(chunk)
+                    if manifest:
+                        require(length <= 1024 * 1024, "remote manifest oversized")
+                        chunks.append(chunk)
+            require("sha256:" + hashed.hexdigest() == identity and (size is None or length == size),
+                    "remote immutable content hash/size mismatch")
+            records.append({"digest": identity, "bytes": length})
+            if manifest:
+                value = json.loads(b"".join(chunks))
+                children = value.get("manifests", []) if "manifests" in value else [value["config"], *value["layers"]]
+                require(isinstance(children, list) and len(children) <= 64, "remote graph unsupported")
+                for child in children:
+                    fetch(child["digest"], child["mediaType"], child["size"])
+        descriptor = current.get("Descriptor")
+        require(descriptor and descriptor["digest"] == current["Id"], "legacy image remote identity unresolved")
+        fetch(current["Id"], descriptor["mediaType"], descriptor["size"])
+        return {"repository": repository, "root": current["Id"], "verified_content": records}
+
+    def image_consumers(self, current):
+        roots = local_image_graphs(self.safe)
+        matches = [row for row in roots if row["Id"] == current["Id"]]
+        require(len(matches) == 1 and matches[0].get("Manifests"), "image platform graph unavailable")
+        manifests = {child["ID"] for child in matches[0]["Manifests"]}
+        require(all(re.fullmatch(r"sha256:[a-f0-9]{64}", value) for value in manifests), "invalid image child identity")
+        for consumer in docker_inventory(self.safe):
+            require(consumer["Image"] != current["Id"], "image has current/stopped consumer")
+            descriptor = consumer.get("ImageManifestDescriptor")
+            require(descriptor and re.fullmatch(r"sha256:[a-f0-9]{64}", descriptor.get("digest", "")),
+                    "image consumer platform visibility unavailable")
+            require(descriptor["digest"] not in manifests | {current["Id"]}, "image has current/stopped platform consumer")
+
+    def image(self, original, result):
+        current = inspect_image(self.safe, original["id"])
+        require(current is not None, "image changed/absent before qualification")
+        created = docker_timestamp(current["Created"])
+        require((datetime.now(timezone.utc) - created).total_seconds() >= self.retention, "image inside retention window")
+        self.image_consumers(current)
+        recovery = self.downloadable(current)
+        result.update(recovery=recovery, inspection_sha256=fingerprint(current))
+        self.save()
+        before = self.image_census()
+        require(original in before and self.engine() == self.engine_identity, "image/engine changed before effect")
+        self.image_consumers(current)
+        require(fingerprint(inspect_image(self.safe, original["id"])) == fingerprint(current), "image identity/references changed")
+        result.update(status="pending", reason="verified downloadable exact image retirement intent")
+        self.save()
+        command(["docker", "image", "rm", current["Id"]], self.safe, timeout=60)
+        require(inspect_image(self.safe, current["Id"]) is None and self.engine() == self.engine_identity,
+                "image removal postcondition failed")
+        require(self.image_census() == [row for row in before if row["id"] != current["Id"]],
+                "other image roots/references changed; aggregate incomplete")
+        result.update(status="removed", reason="exact image absent; full immutable remote content verified; no layer ownership claim")
+
+    def reclaim(self):
+        self.builder_snapshot = self.builder_identity()
+        self.attempt["builder"] = self.builder_snapshot
+        caches = self.usage()
+        self.protected_images = self.image_census()
+        require(self.engine() == self.engine_identity, "engine changed during storage inventory")
+        # Cache first: its recoverability depends on preserving ALL image roots.
+        now = datetime.now(timezone.utc)
+        candidates = [("cache", row) for row in caches if row.get("Type") == "regular" and
+                      row.get("Shared") is True and row.get("InUse") is False and
+                      (self.selection["cache_ids"] is not None or
+                       (now - docker_timestamp(row["LastUsedAt"])).total_seconds() >= self.retention)]
+        candidates += [("image", row) for row in self.protected_images if row["digests"] and not
+                       any("@" not in reference for reference in row["tags"]) and
+                       isinstance(row["created"], int) and now.timestamp() - row["created"] >= self.retention]
+        protected_ids = {value.rsplit("@", 1)[-1] for value in self.protected_inputs if "@" in value or value.startswith("sha256:")}
+        protected_ids.update(row["id"] for row in self.protected_images if set(self.protected_inputs) &
+                             set(row.get("tags", []) + row.get("digests", [])))
+        candidates = [(kind, row) for kind, row in candidates if kind != "image" or row["id"] not in protected_ids]
+        self.attempt["protected_input_ids"] = sorted(protected_ids)
+        candidates = [(kind, row) for kind, row in candidates if self.selection[kind + "_ids"] is None or
+                      (row["ID"] if kind == "cache" else row["id"]) in self.selection[kind + "_ids"]]
+        self.attempt["candidate_count"] = len(candidates)
+        self.attempt["budget_exhausted"] = len(candidates) > self.limit
+        self.attempt["protected_cache_count"] = len(caches) - sum(kind == "cache" for kind, _ in candidates)
+        self.attempt["excluded_storage_policy"] = "private, mutable, source and cache-mount records; unique/unproven or mutable-tagged images; all volumes/host data remain untouched"
+        for kind, item in candidates[:self.limit]:
+            identifier = item["ID"] if kind == "cache" else item["id"]
+            result = {"kind": kind, "identity": identifier, "status": "held", "commands": [],
+                      "ownership": "historical task ownership not required for positively recoverable artifacts"}
+            self.attempt["results"].append(result)
+            global COMMANDS
+            COMMANDS = result["commands"]
+            try:
+                getattr(self, kind)(item, result)
+            except (Hold, OSError, ValueError, KeyError, TypeError) as error:
+                result.update(status="held", reason=str(error) if isinstance(error, Hold) else type(error).__name__)
+            finally:
+                COMMANDS = None
+                self.save()
+        for kind, observed in (("cache", {row["ID"] for row in caches}),
+                               ("image", {row["id"] for row in self.protected_images})):
+            for identifier in self.selection[kind + "_ids"] or []:
+                if identifier not in observed:
+                    result = {"kind": kind, "identity": identifier, "status": "absent", "commands": [],
+                              "reason": "exact identity absent from successful same-engine inventory; no effect replayed"}
+                    if kind == "image":
+                        COMMANDS = result["commands"]
+                        try:
+                            require(any(entry.get("identity") == identifier and
+                                        entry.get("recovery", {}).get("root") == identifier and entry.get("inspection_sha256")
+                                        for attempt in self.document.get("storage_attempts", [])[:-1]
+                                        for entry in attempt["results"]),
+                                    "absent/unresolvable image lacks prior exact-root recovery proof; config/index ambiguity held")
+                            require(inspect_image(self.safe, identifier) is None,
+                                    "image census contradicts exact inspection; absence held")
+                        except (Hold, OSError, ValueError, KeyError, TypeError) as error:
+                            result.update(status="held", reason=str(error) if isinstance(error, Hold) else type(error).__name__)
+                        finally:
+                            COMMANDS = None
+                    self.attempt["results"].append(result)
+        self.attempt["complete"] = not self.attempt["budget_exhausted"] and all(
+            row["status"] in ("removed", "absent") for row in self.attempt["results"])
+
+    def run(self, admit=True):
+        self.save()
+        try:
+            self.attempt["host_before"] = self.host_space()
+            self.attempt["engine"] = self.engine_identity
+            self.reclaim()
+            self.attempt["host_after"] = self.host_space()
+            self.attempt["admitted"] = admit and all(row["free_bytes"] >= self.reserve + self.allocation
+                                                     for row in self.attempt["host_after"])
+            if admit and not self.attempt["admitted"]:
+                self.attempt["hold"] = "reserve plus bounded allocation unavailable after one reclaim pass; stop allocation; owner frees known disposable storage or provisions capacity"
+        except (Hold, OSError, ValueError, KeyError, TypeError) as error:
+            self.attempt.update(admitted=False, complete=False, hold=str(error) if isinstance(error, Hold) else type(error).__name__)
+        self.save()
+        return self.attempt
+
+
 class Cleanup:
     def __init__(self, receipt, apply=False):
         self.path = absolute(receipt)
@@ -460,6 +827,13 @@ class Cleanup:
             # PID reuse is not an exit observation. A live PID always holds, even after reuse.
             observed = command(["ps", "-p", str(worker["pid"]), "-o", "lstart="], self.safe, codes=(0, 1))
             require(observed.returncode == 1 and not observed.stdout.strip(), "original worker PID still live or reused; coordinator must observe exit")
+        if self.plan.get("purpose") == "disposable-runtime":
+            require(self.plan["worktree"]["disposition"] == "retain" and self.plan["branch"]["disposition"] == "retain" and
+                    self.plan["runtime"]["ownership"] == "proven" and self.plan["runtime"]["disposable_authority"],
+                    "runtime-only authority cannot retire source/ref or unqualified data")
+            command(["git", "cat-file", "-e", self.plan["oid"] + "^{commit}"], self.safe)
+            self.attempt["runtime_authority_observed_at"] = datetime.now(timezone.utc).isoformat()
+            return
         publication = self.plan["publication"]
         fields = "url,state,mergedAt,mergeCommit,baseRefName,headRefName,headRefOid,headRepository,headRepositoryOwner"
         raw = command(["gh", "pr", "view", publication["url"], "--repo", publication["repository"], "--json", fields], self.safe)
@@ -1597,6 +1971,13 @@ print(json.dumps({'complete': True, 'workers': len(before), 'sha256': hashlib.sh
             self.effect("image", item, self.image)
         for item in self.plan["caches"]:
             self.effect("cache", item, self.cache)
+        if self.plan.get("recoverable_storage") is not None and self.apply:
+            storage = Storage(self.path, self.safe, document=self.document, policy=self.plan["recoverable_storage"])
+            observation = storage.run(admit=False)
+            self.results.append({"kind": "recoverable-storage", "identity": self.subject,
+                                 "status": ("removed" if any(row["status"] == "removed" for row in observation["results"]) else "absent") if observation["complete"] else "held",
+                                 "reason": observation.get("hold", "inspect independent storage per-effect results"),
+                                 "storage_attempt": len(self.document["storage_attempts"]) - 1})
         self.effect("worktree", self.plan["worktree"], self.checkout)
         self.effect("ref", self.plan["branch"], self.branch)
         try:
@@ -1615,15 +1996,36 @@ print(json.dumps({'complete': True, 'workers': len(before), 'sha256': hashlib.sh
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--receipt", required=True, help="Existing private exact-subject JSON handoff/receipt")
+    parser.add_argument("--receipt", help="Private exact-subject handoff, or storage admission receipt (default var/storage.json)")
     parser.add_argument("--apply", action="store_true", help="Execute qualified effects; default is observation only")
+    parser.add_argument("--runtime-retire", action="store_true", help="Retire only an explicitly disposable runtime receipt; retain source/ref")
+    parser.add_argument("--protect-image", action="append", default=[], help="Current caller input reference/root; excluded from image reclamation")
+    storage_mode = parser.add_mutually_exclusive_group()
+    storage_mode.add_argument("--storage-admit", action="store_true", help="One automatic bounded recoverable-artifact pass; refuse insufficient/unavailable reserve")
+    storage_mode.add_argument("--storage-reclaim", action="store_true", help="Same bounded storage operation without allocation admission")
     args = parser.parse_args()
     os.umask(0o077)
+    if not args.receipt:
+        if not (args.storage_admit or args.storage_reclaim):
+            parser.error("--receipt is required for exact-subject cleanup")
+        args.receipt = str(Path.cwd() / "var/storage.json")
     try:
+        absolute(args.receipt).parent.mkdir(parents=True, exist_ok=True)
+        if args.runtime_retire:
+            require(not (args.storage_admit or args.storage_reclaim), "runtime retirement is not storage admission")
+            plan = json.loads(absolute(args.receipt).read_text())["cleanup"]["plan"]
+            require(plan.get("purpose") == "disposable-runtime" and plan["worktree"]["disposition"] == "retain" and
+                    plan["branch"]["disposition"] == "retain", "runtime retirement needs explicit original disposable authority; source/ref retained")
+            os.chdir(absolute(plan["safe_checkout"]))
         # Separate persistent lock inode survives atomic receipt replacement; never delete it.
         lock = absolute(args.receipt + ".lock")
         with lock.open("a") as handle:
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            if args.storage_admit or args.storage_reclaim:
+                storage = Storage(args.receipt, Path.cwd(), policy={"protected_images": args.protect_image})
+                observation = storage.run(admit=args.storage_admit)
+                print(json.dumps({key: value for key, value in observation.items() if key != "results"}, indent=2))
+                return 0 if (observation["admitted"] if args.storage_admit else observation["complete"]) else 1
             return Cleanup(args.receipt, args.apply).run()
     except (Hold, OSError, ValueError, KeyError, TypeError) as error:
         reason = str(error) if isinstance(error, Hold) else type(error).__name__

@@ -387,6 +387,10 @@ Safe cleanup is a required effect of authorized Land, not an optional follow-up 
 eligible isolated worktree, local feature branch, disposable test containers, unused task-owned networks and
 qualified task-created named/anonymous disposable volumes. Account separately for created versus reused/shared
 images and caches; unsupported exact retirement is a finite hold, never an implicit leak exemption.
+TASK-00546 additionally permits bounded unused positively downloadable/recoverable image/cache reclamation
+without historical TASK ownership through the SAME operation's documented storage policy. Qualify actual engine,
+worker, retained backing/content, protected inputs, retention and consumers first. This exception never extends
+to unique work, volumes, host/source/private data, unfiltered prune or a protection-changing fallback.
 Publication does not require merge first. A resource that fails qualification stays in place with an explicit
 hold; successful publication with cleanup held is **not complete Land**. Do not request another cleanup prompt
 for effects already within Land authority. Never delete the main checkout or a current/active branch, terminate
@@ -507,7 +511,9 @@ disposable task containers without force; preserve creating-container volume/mou
 Then qualify each explicitly authorized task-created disposable volume separately: reobserve its exact identity
 and all current consumers, including stopped containers, immediately before normal removal and verify actual
 absence. Missing provenance, recreated identity, unknown/durable/shared data or inspection/permission failure
-holds it. Never use blanket `rm -v`, `down -v` or prune. A shared container/mount or active task session
+holds it. Never use blanket `rm -v`, `down -v` or unqualified/unfiltered prune. The bounded recoverable-storage
+capability is separately qualified by the [owning operation](../../.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546),
+not a fallback after a volume/service hold. A shared container/mount or active task session
 holds the affected container and dependent worktree. Inspect network endpoints again **after** container removal;
 remove an inventoried network by exact ID only when it is task-owned, non-external/non-shared and has zero
 endpoints. A foreign/shared endpoint, unknown dependency, label/config mismatch or inspection failure holds the

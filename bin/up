@@ -8,6 +8,20 @@ for tool in docker python3 openssl curl; do
         exit 1
     }
 done
+build_only=no
+case "$#:${1:-}" in
+    0:) ;;
+    1:--build-only) build_only=yes ;;
+    *) echo 'Usage: ./bin/up [--build-only]' >&2; exit 2 ;;
+esac
+# Admission protects the actual version-controlled build inputs before any pull/build.
+set -- python3 .pi/skills/land/scripts/cleanup.py --storage-admit
+if [ -n "${FIGHT_STORAGE_RECEIPT:-}" ]; then set -- "$@" --receipt "$FIGHT_STORAGE_RECEIPT"; fi
+for image in $(awk '$1 == "FROM" {print $2}' etc/docker/cli/Dockerfile etc/docker/fpm/Dockerfile); do
+    set -- "$@" --protect-image "$image"
+done
+"$@"
+if [ "$build_only" = yes ]; then exec docker compose build web; fi
 if [ ! -f vendor/autoload.php ]; then
     echo "Dependencies are not installed. Run: ./bin/composer install --no-interaction --prefer-dist --no-progress" >&2
     exit 1

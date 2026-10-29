@@ -9,6 +9,7 @@ import tarfile
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import subprocess
 import sys
@@ -698,25 +699,158 @@ def visibility_contracts(module, evidence, helper):
     return 0 if summary["pass"] else 1
 
 
+def storage_contracts(module, evidence, helper):
+    """Challenge owning storage decisions with controlled observations, never product tests"""
+    evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
+    rows = []
+    for case, free, expected in (("reserve-boundary", 24, True), ("reserve-below", 23, False),
+                                 ("insufficient-reclaim", 1, False), ("measurement-unavailable", None, False),
+                                 ("measurement-lost-after-reclaim", 24, False), ("reclaim-unavailable", 24, False),
+                                 ("independent-hold-sufficient", 24, True)):
+        operation = module.Storage.__new__(module.Storage)
+        operation.reserve, operation.allocation = 20, 4
+        operation.engine_identity = {"id": "controlled"}
+        operation.attempt = {"admitted": False, "complete": False, "results": []}
+        operation.save = lambda: None
+        observations = []
+        def space():
+            observations.append("host")
+            if free is None or case == "measurement-lost-after-reclaim" and len(observations) > 1:
+                raise module.Hold("controlled host observation unavailable")
+            return [{"free_bytes": free}]
+        operation.host_space = space
+        def reclaim():
+            if case == "reclaim-unavailable":
+                raise module.Hold("controlled reclaim observation unavailable")
+            operation.attempt.update(complete=case != "independent-hold-sufficient")
+        operation.reclaim = reclaim
+        result = operation.run()
+        rows.append({"case": case, "passed": result["admitted"] == expected, "admitted": result["admitted"]})
+    original = {name: getattr(module, name) for name in
+                ("command", "local_image_graphs", "docker_inventory", "inspect_image")}
+    identifier = "a" * 24
+    root = "sha256:" + "b" * 64
+    cache = {"ID": identifier, "Type": "regular", "Shared": True, "InUse": False,
+             "CreatedAt": "2020-01-01T00:00:00.123456789Z", "LastUsedAt": "2020-01-01T00:00:00.123456789Z",
+             "Size": 1024, "UsageCount": 1}
+    try:
+        for case in ("cache-no-historical-owner", "cache-retention", "cache-stale", "builder-stale", "cache-denied",
+                     "cache-private", "cache-mutable", "image-backing-changed", "engine-retained"):
+            operation = module.Storage.__new__(module.Storage)
+            operation.safe, operation.retention = evidence, 1
+            operation.engine_identity = {"id": "controlled"}
+            operation.builder_snapshot = {"name": "fixture", "workers": ["worker"], "endpoint": "fixture"}
+            operation.protected_images = [{"id": root}]
+            operation.attempt = {}
+            operation.save = lambda: None
+            present, calls = [True], []
+            raw = dict(cache)
+            if case == "cache-retention":
+                raw["LastUsedAt"] = datetime.now(timezone.utc).isoformat()
+            if case == "cache-private":
+                raw["Shared"] = False
+            operation.builder_identity = lambda: ({"name": "changed"} if case == "builder-stale" else operation.builder_snapshot)
+            operation.engine = lambda: operation.engine_identity
+            operation.image_census = lambda: ([] if case == "image-backing-changed" else operation.protected_images)
+            operation.usage = lambda: ([dict(raw, UsageCount=2) if case == "cache-stale" else raw] if present[0] else [])
+            def command(argv, cwd, **kwargs):
+                calls.append(argv)
+                if case == "cache-denied":
+                    raise module.Hold("controlled denied builder inspection")
+                if argv[2] == "du":
+                    value = {"ID": identifier, "Shared": True, "Mutable": case == "cache-mutable",
+                             "Reclaimable": True, "Type": "regular"}
+                    return subprocess.CompletedProcess(argv, 0, json.dumps(value).encode(), b"")
+                if argv[2] == "prune":
+                    assert "--force" not in argv and "--all" in argv and "id=^" + identifier + "$" in argv
+                    assert "shared~=^$" in argv and "immutable~=^$" in argv and "type=regular" in argv and "until=1s" in argv
+                    present[0] = case == "engine-retained"
+                    return subprocess.CompletedProcess(argv, 0, b"", b"")
+                raise AssertionError("unexpected controlled effect")
+            module.command = command
+            result, reason = {}, None
+            try:
+                operation.cache(raw, result)
+            except module.Hold as error:
+                reason = str(error)
+            effects = sum(argv[2] == "prune" for argv in calls)
+            passed = (result.get("status") == "removed" and effects == 1) if case == "cache-no-historical-owner" else (
+                result.get("status") == "held" and effects == 1 if case == "engine-retained" else reason is not None and effects == 0)
+            rows.append({"case": case, "passed": passed, "effects": effects, "reason": reason, "result": result})
+        for case in ("image-active-consumer", "image-stopped-consumer", "image-unique-work"):
+            current = {"Id": root, "Created": "2020-01-01T00:00:00Z", "RepoTags": ["unique:unrecoverable"], "RepoDigests": []}
+            operation = module.Storage.__new__(module.Storage)
+            operation.safe, operation.retention = evidence, 1
+            module.inspect_image = lambda *args: current
+            module.local_image_graphs = lambda *args: [{"Id": root, "Manifests": [{"ID": root}]}]
+            module.docker_inventory = lambda *args: ([] if case == "image-unique-work" else
+                [{"Image": "sha256:" + "c" * 64, "ImageManifestDescriptor": {"digest": root},
+                  "State": {"Running": case == "image-active-consumer"}}])
+            reason = None
+            try:
+                operation.image({"id": root}, {})
+            except module.Hold as error:
+                reason = str(error)
+            rows.append({"case": case, "passed": reason is not None, "reason": reason, "effects": 0})
+    finally:
+        for name, value in original.items():
+            setattr(module, name, value)
+    operation = module.Storage.__new__(module.Storage)
+    operation.safe, operation.retention, operation.limit = evidence, 1, 1
+    operation.selection = {"cache_ids": [], "image_ids": None}
+    operation.protected_inputs = [root]
+    operation.engine_identity = {"id": "controlled"}
+    operation.engine = lambda: operation.engine_identity
+    operation.builder_identity = lambda: {"name": "fixture"}
+    operation.usage = lambda: []
+    operation.image_census = lambda: [{"id": root, "created": 1, "digests": ["node@" + root], "tags": []}]
+    operation.attempt = {"results": []}
+    operation.save = lambda: None
+    effects = []
+    operation.image = lambda item, result: (effects.append(item["id"]), result.update(status="removed"))
+    operation.reclaim()
+    rows.append({"case": "protected-input-image", "passed": not effects, "effects": len(effects)})
+    operation.selection = {"cache_ids": [], "image_ids": ["sha256:" + "d" * 64]}
+    operation.protected_inputs = []
+    operation.document = {"storage_attempts": []}
+    operation.attempt = {"results": []}
+    operation.reclaim()
+    rows.append({"case": "unproven-image-absence", "passed": operation.attempt["results"][0]["status"] == "held",
+                 "result": operation.attempt["results"][0], "effects": 0})
+    rows.append({"case": "raw-nanosecond-retention", "passed": module.docker_timestamp(cache["LastUsedAt"]).microsecond == 123457})
+    summary = {"helper_sha256": module.digest(helper.read_bytes()), "boundary": "controlled owning admission/cache/image methods; no real effects",
+               "pass": all(row["passed"] for row in rows), "rows": rows}
+    private_json(evidence / "storage-contracts.json", summary)
+    print(json.dumps(summary, indent=2))
+    return 0 if summary["pass"] else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", required=True, help="New absolute task-owned evidence directory, outside removal candidates")
     parser.add_argument("--helper", default=str(Path(__file__).with_name("cleanup.py")))
     parser.add_argument("--runtime", choices=("compose", "standalone"), default="compose")
+    parser.add_argument("--task", default="TASK-00542", help="Owning TASK for new Compose fixtures; historical resumes keep their original identity")
+    parser.add_argument("--fixture-image", default="postgres:17-bookworm", help="Already-present image; no pull/build. Explicit anonymous declaration when overriding")
+    parser.add_argument("--caller", choices=("helper", "runtime", "build"), default="helper", help="Actual owning caller; runtime retains source/ref and uses original disposable authority")
+    parser.add_argument("--recoverable-cache", help="One explicit existing cache candidate; SAME automatic storage policy, not historical task ownership")
     parser.add_argument("--standalone-matrix", action="store_true", help="Bounded owning-tool effects, interruption, evidence and consumer probes")
     parser.add_argument("--visibility-contracts", action="store_true", help="Controlled executor regressions; no Docker allocation or external effects")
+    parser.add_argument("--storage-contracts", action="store_true", help="Controlled admission/recoverability/retention decisions; no external effects")
     parser.add_argument("--resume", action="store_true", help="Reuse this fixture/receipt; never recreate missing resources")
     parser.add_argument("--prepare-only", action="store_true", help="Create and record the bounded fixture for actual Pi caller qualification; do not invoke cleanup")
-    parser.add_argument("--case", choices=("normal", "running", "failure", "cancel", "durable", "shared-stopped", "image", "unavailable", "denied", "changed-identity", "mismatched-binding", "database", "mysql", "image-root"), default="normal")
+    parser.add_argument("--case", choices=("normal", "completed", "running", "failure", "cancel", "durable", "shared-stopped", "image", "unavailable", "denied", "changed-identity", "mismatched-binding", "database", "mysql", "image-root"), default="normal")
     parser.add_argument("--release-consumer", action="store_true", help="Resume only: linked new fixture receipt permits its owned stopped consumer retirement")
-    parser.add_argument("--original-land-attempt", help="Image-root fixture only: bind real exited original monitor and execute the SAME Build cleanup-only caller; controlled hosting remains explicit")
+    parser.add_argument("--original-land-attempt", help="Image-root or --caller build: bind actual exited monitor evidence and execute the SAME cleanup-only caller; controlled hosting remains explicit")
     parser.add_argument("--release-image-alias", action="store_true", help="Resume image-root only: release its separately owned preserved alias with a linked plan")
     parser.add_argument("--interrupt", action="store_true", help="Terminate only this helper subprocess after its first persisted container removal; resume separately")
     args = parser.parse_args()
     if args.release_consumer and not args.resume:
         parser.error("--release-consumer requires --resume")
-    if args.original_land_attempt and (args.case != "image-root" or args.interrupt):
-        parser.error("--original-land-attempt requires image-root without interruption; never terminate its caller parent")
+    if args.original_land_attempt and (args.interrupt or (args.case != "image-root" and args.caller != "build")):
+        parser.error("original attempt requires image-root or Build caller, without interruption; never terminate its caller parent")
+    if args.caller == "build" and not args.original_land_attempt:
+        parser.error("Build caller requires actual original monitor evidence")
     if args.release_image_alias and (args.case != "image-root" or not args.resume):
         parser.error("--release-image-alias requires image-root --resume")
     os.umask(0o077)
@@ -727,34 +861,43 @@ def main():
     spec.loader.exec_module(module)
     if args.visibility_contracts:
         return visibility_contracts(module, evidence, helper)
+    if args.storage_contracts:
+        return storage_contracts(module, evidence, helper)
     if args.case == "image-root":
         return owned_image_fixture(args, module, evidence, helper)
     if args.standalone_matrix:
         return standalone_matrix(args, module, evidence, helper)
     if args.runtime == "standalone":
         return standalone(args, module, evidence, helper)
+    if not re.fullmatch(r"TASK-\d{5}", args.task):
+        parser.error("invalid TASK identity")
+    task = args.task
+    namespace = task.lower().replace("-", "")
+    ref = "feature/" + task.lower() + "-fixture"
     root = evidence / "safe"
-    receipt = root / ".runs/tasks/TASK-00542/runs/fixture.json"
+    receipt = root / (".runs/tasks/" + task + "/runs/fixture.json")
     env = dict(os.environ, COMPOSE_DISABLE_ENV_FILE="1", COMPOSE_ENV_FILES="")
     if not args.resume or not receipt.exists():
-        origin = "git@github.com:task00542/fixture.git"
+        origin = "git@github.com:" + namespace + "/fixture.git"
         config = root / "compose.json"
         if not args.resume:
             evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
             root.mkdir()
             run(["git", "init", "--initial-branch=develop"], root)
             run(["git", "-c", "user.name=Lifecycle fixture", "-c", "user.email=fixture@example.invalid",
-                 "commit", "--allow-empty", "-m", "Bounded TASK-00542 disposable fixture"], root)
+                 "commit", "--allow-empty", "-m", "Bounded " + task + " disposable fixture"], root)
             run(["git", "remote", "add", "origin", origin], root)
             token = uuid.uuid4().hex
-            project = "task00542-" + token[:12]
+            project = namespace + "-" + token[:12]
             # Use an already-present image; no pull, build, dependency install or global setup.
-            image = json.loads(run(["docker", "image", "inspect", "postgres:17-bookworm"], root))[0]
+            image = json.loads(run(["docker", "image", "inspect", args.fixture_image], root))[0]
             model = {"services": {"fixture": {"image": image["Id"], "pull_policy": "never",
                      "command": ["sleep", "600"], "volumes": ["scratch:/scratch"]}},
                      "volumes": {"scratch": {"labels": {"io.fight.fixture": token}}}}
-            if args.case == "failure":
-                model["services"]["fixture"]["command"] = ["sh", "-c", "exit 7"]
+            if args.fixture_image != "postgres:17-bookworm":
+                model["services"]["fixture"]["volumes"].append("/anonymous")
+            if args.case in ("failure", "completed"):
+                model["services"]["fixture"]["command"] = ["sh", "-c", "exit 7" if args.case == "failure" else "exit 0"]
             if args.case in ("shared-stopped", "durable"):
                 model["services"]["consumer"] = {"image": image["Id"], "pull_policy": "never",
                     "command": ["sh", "-c", "printf 'TASK00542-protected-sentinel' > /var/lib/postgresql/data/sentinel; exec sleep 600"],
@@ -772,13 +915,13 @@ def main():
                 "argv": [str(arg) for arg in compose] + ["create"], "source_sha256": module.digest(helper.read_bytes())})
             run([*compose, "create"], root, env)
             workload = {"case": args.case}
-            if args.case in ("running", "failure", "cancel"):
+            if args.case in ("running", "failure", "completed", "cancel"):
                 run([*compose, "start", "fixture"], root, env)
-            if args.case == "failure":
+            if args.case in ("failure", "completed"):
                 workload["exit"] = run(["docker", "wait", run([*compose, "ps", "--all", "--quiet", "fixture"], root, env)], root, env)
                 failed = json.loads(run(["docker", "inspect", run([*compose, "ps", "--all", "--quiet", "fixture"], root, env)], root))[0]
-                if failed["State"]["ExitCode"] != 7:
-                    raise RuntimeError("failure fixture did not actually fail with exit 7")
+                if failed["State"]["ExitCode"] != (7 if args.case == "failure" else 0):
+                    raise RuntimeError("fixture did not exit with its expected completion code")
             if args.case == "cancel":
                 run([*compose, "stop", "fixture"], root, env)
                 workload["cancellation"] = "owning Compose stop completed before cleanup"
@@ -799,7 +942,7 @@ def main():
         container = json.loads(run(["docker", "inspect", identifier], root))[0]
         resolved = json.loads(run([*compose, "config", "--format", "json"], root, env))
         common = {"disposition": "remove", "ownership": "proven", "consumers": [],
-                  "reason": "explicit bounded TASK-00542 fixture; newly created empty disposable data"}
+                  "reason": "explicit bounded " + task + " fixture; newly created empty disposable data"}
         volumes = []
         for mount in container["Mounts"]:
             if mount["Type"] != "volume":
@@ -823,9 +966,9 @@ def main():
                                  creation={"kind": "created", "intent": str(evidence / "creation-intent.json"),
                                            "intent_sha256": module.digest((evidence / "creation-intent.json").read_bytes())}))
         retained = dict(disposition="retain", ownership="proven", consumers=[], reason="fixture source/evidence, not a product delivery checkout")
-        plan = {"task": "TASK-00542", "safe_checkout": str(root), "git_common_dir": str(root / ".git"),
-            "origin": origin, "ref": "refs/heads/feature/task-00542-fixture", "oid": oid,
-            "publication": {"url": "https://github.com/task00542/fixture/pull/1", "repository": "task00542/fixture",
+        plan = {"task": task, "safe_checkout": str(root), "git_common_dir": str(root / ".git"),
+            "origin": origin, "ref": "refs/heads/" + ref, "oid": oid,
+            "publication": {"url": "https://github.com/" + namespace + "/fixture/pull/1", "repository": namespace + "/fixture",
                 "number": 1, "base": "develop", "base_ref": "refs/heads/develop", "delivery_verified": True,
                 "merge_oid": oid, "merged_at": "2026-10-28T00:00:00Z"},
             "protected_files": [], "exited_workers": [],
@@ -841,7 +984,7 @@ def main():
             "images": [dict(retained, identity=image["Id"], size_bytes=image["Size"],
                 creation={"kind": "reused"}, reason="pre-existing image and shared layers; never remove by association")],
             "caches": [], "worktree": dict(retained, identity=str(root / "no-removal-candidate")),
-            "branch": dict(retained, identity="refs/heads/feature/task-00542-fixture")}
+            "branch": dict(retained, identity="refs/heads/" + ref)}
         if args.case == "image":
             # Import a unique empty task image: no build cache, registry or shared base layers.
             image_intent = evidence / "image-intent.json"
@@ -873,6 +1016,19 @@ def main():
                 disposition="retain", reason="owned stopped shared-consumer fixture; preserve until explicit linked release",
                 creation={"kind": "created", "intent": str(evidence / "creation-intent.json"),
                           "intent_sha256": module.digest((evidence / "creation-intent.json").read_bytes())}))
+        if args.recoverable_cache:
+            if not re.fullmatch(r"[a-z0-9]{12,64}", args.recoverable_cache):
+                raise RuntimeError("invalid exact fixture cache selection")
+            plan["recoverable_storage"] = {"cache_ids": [args.recoverable_cache], "image_ids": [],
+                                           "retention_seconds": 1, "max_candidates": 1}
+        if args.caller == "runtime":
+            plan["purpose"] = "disposable-runtime"
+            plan["runtime"]["disposable_authority"] = "explicit bounded " + task + " empty fixture discard grant; original intent retained"
+        if args.caller == "build":
+            attempt = Path(args.original_land_attempt).resolve()
+            processes = json.loads((attempt / "process.json").read_text())
+            plan["original_land_attempt"] = str(attempt)
+            plan["exited_workers"] = [{"pid": processes[key]} for key in ("monitor_pid", "pi_pid")]
         receipt.parent.mkdir(mode=0o700, parents=True)
         private_json(receipt, {"qualification": "controlled hosting response; real Docker/Git; NOT live publication or fleet proof",
                                "cleanup": {"version": 1, "plan": plan}})
@@ -881,6 +1037,8 @@ def main():
         response = {"url": plan["publication"]["url"], "state": "MERGED", "mergedAt": plan["publication"]["merged_at"],
             "mergeCommit": {"oid": oid}, "baseRefName": "develop", "headRefName": "feature/task-00542-fixture",
             "headRefOid": oid, "headRepository": {"name": "fixture"}, "headRepositoryOwner": {"login": "task00542"}}
+        response["headRefName"] = ref
+        response["headRepositoryOwner"]["login"] = namespace
         (shim / "gh").write_text("#!/usr/bin/env python3\nprint(" + repr(json.dumps(response)) + ")\n")
         (shim / "gh").chmod(0o700)
     if args.case == "durable" and not args.resume:
@@ -924,6 +1082,11 @@ def main():
     document = json.loads(receipt.read_text())
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     invocation = [sys.executable, str(helper), "--receipt", str(receipt), "--apply"]
+    if args.caller == "runtime":
+        invocation = [str(helper.parents[4] / "bin/down"), "--receipt", str(receipt)]
+    elif args.caller == "build":
+        invocation = [sys.executable, str(helper.parents[2] / "build/scripts/cleanup-continuation.py"),
+                      "--attempt", str(Path(args.original_land_attempt).resolve()), "--receipt", str(receipt), "--apply"]
     previous_attempts = len(document["cleanup"].get("attempts", []))
     interrupted = False
     expected_probe_hold = False

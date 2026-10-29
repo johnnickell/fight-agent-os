@@ -69,7 +69,14 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00546 Work incomplete — cache qualification hold:**
+**TASK-00546 Work2 implementation checkpoint:**
+[TASK-00546](tasks/00546-TASK.md#work2-implementation-checkpoint--2026-10-29) implements bounded recoverable
+storage, host reserve/retention admission and same-helper disposable-runtime retirement. Focused direct
+helper/runtime/Build-caller evidence is retained; the frozen-source 24-phase local gate passed with a complete
+source/input/artifact bridge. Independent Review/QA are next from the committed Work handoff. Scope/order/dependencies and prior TASK limits are unchanged. No acceptance, publication,
+fleet or physical-reclaim claim. Current evidence is canonical ignored `.runs/tasks/TASK-00546/runs/work-handoff.md`.
+
+**TASK-00546 Work1 historical checkpoint — not current Work readiness:**
 [TASK-00546](tasks/00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) has a partial executor visibility
 repair with a 15-case controlled matrix and a bounded fresh worker probe, not full implementation acceptance.
 Cache-to-source recoverability remains uncorroborated; the unqualified reclamation/admission draft was withdrawn.

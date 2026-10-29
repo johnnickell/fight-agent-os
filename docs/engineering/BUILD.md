@@ -12,7 +12,7 @@ already exist. Setup may contact registries; acceptance never installs, updates,
 
 ```sh
 export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
-docker compose build web
+./bin/up --build-only
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/client setup
 ./bin/client build
@@ -23,6 +23,15 @@ docker compose build web
 ./bin/validations export
 ./bin/build
 ```
+
+The host entry points run [bounded storage admission](../../.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546)
+before expensive allocation: one recoverable-artifact pass, then fresh host free-space checks. Export the documented
+host-shell reserve/allowance/retention settings; Compose `.env` alone does not configure host wrappers. Defaults
+require 20 GiB reserve plus a 4 GiB allocation allowance. Missing/unsupported observation or insufficient space
+refuses new work with a finite action, never a global prune or logical-size-as-physical-reclaim assumption.
+Current build/runtime image inputs and active/stopped consumers stay protected. A passing admission is not a
+cleanup-complete or application-gate verdict. `FIGHT_STORAGE_RECEIPT` can bind the existing private Work companion;
+otherwise admission state stays under ignored `var/`. No application runtime depends on `.runs/`.
 
 `./bin/up` prepares ignored cache mounts and builds/starts the complete HTTP/HTTPS stack explicitly, preserving
 database data. Use it again after environment or image/configuration changes so both PHP runtimes agree.

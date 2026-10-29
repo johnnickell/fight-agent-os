@@ -279,7 +279,10 @@ review/QA provenance, required checks and accessible applicable captures, plus L
 handoffs and verified eligible Git/container/network/named-and-anonymous-volume cleanup under the
 [owning procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff). Created versus used/shared
 images and caches require explicit size/dependency/retention accounting; unavailable exact retirement holds
-that resource, never a prune fallback or silent leak exemption. No tracked awaiting-merge queue or routine
+that resource, never an unqualified prune fallback or silent leak exemption. The SAME helper's
+[bounded recoverable-storage policy](../land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546)
+can independently reclaim positively recoverable image/cache without historical ownership; it never clears
+service/volume holds or weakens unique-work, consumer, retention or reserve protections. No tracked awaiting-merge queue or routine
 post-merge Board maintenance is created; human merge and remote-head retention remain separate.
 Inspect its durable inventory/postconditions; publication with cleanup held is not complete Land/Build.
 If the remaining hold is the Land worker's own cwd/session, observe that worker's actual exit, then dispatch a

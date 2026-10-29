@@ -1,3 +1,10 @@
 #!/usr/bin/env sh
 set -eu
-docker compose down --remove-orphans
+cd "$(dirname "$0")/.."
+if [ "${1:-}" = --receipt ] && [ "$#" -eq 2 ]; then
+    # The same executor validates original creation, disposability, workers, peers,
+    # mounts and all stopped consumers; no down -v or anonymous-volume fallback.
+    exec python3 .pi/skills/land/scripts/cleanup.py --receipt "$2" --runtime-retire --apply
+fi
+echo 'Shutdown requires ./bin/down --receipt ABSOLUTE_DISPOSABLE_RUNTIME_RECEIPT. Recover original creation/mount/data authority in the existing Work companion; unknown or durable storage stays protected.' >&2
+exit 1

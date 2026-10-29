@@ -16,4 +16,5 @@ if [ -z "$expected" ] || [ "$actual" != "$expected" ]; then
   exit 1
 fi
 
+python3 .pi/skills/land/scripts/cleanup.py --storage-admit ${FIGHT_STORAGE_RECEIPT:+--receipt "$FIGHT_STORAGE_RECEIPT"}
 exec docker compose exec -T web php scripts/build.php

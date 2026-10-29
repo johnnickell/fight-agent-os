@@ -28,6 +28,13 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00546](planning/tasks/00546-TASK.md#work2-implementation-checkpoint--2026-10-29) now implements bounded
+recoverable-storage reclamation, configurable retention/reserve admission and same-helper disposable-runtime
+retirement. Real Docker cache/image effects, worker visibility and runtime/Build caller qualification are recorded
+in its canonical Work handoff. The frozen-source 24-phase `./bin/build` passed with an exact input/artifact
+bridge; independent Review/QA are next. No acceptance, publication, fleet or physical-reclaim claim follows.
+
+The following Work1 checkpoint is preserved history, not current Work readiness.
 [TASK-00546](planning/tasks/00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) is in progress but
 incomplete. Its partial executor repair holds unavailable/changed worker visibility and unresolved connected
 peers. The 15-case controlled matrix and one fresh real worker probe passed their bounded checks, not full
@@ -266,7 +273,8 @@ managed assignment is available through the separate invitation API.
 ./bin/planning-check --write  # Refresh planning views
 ./bin/planning-check          # Validate planning
 ./bin/build                   # Complete gate: backend coverage + frontend/catalog in running web service
-./bin/down                    # Stop the development service
+# Retire only a positively disposable runtime using its original private Work receipt:
+./bin/down --receipt /absolute/disposable-runtime-receipt.json
 ```
 
 Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
@@ -280,6 +288,12 @@ both initialization and direct spec reads. `.env.example` starts with `["local"]
 it. Independent strict APP_DEBUG supports only closed sanitized diagnostics and refuses true in prod/production.
 No public spec, long-lived Swagger credential or production-mail exception is supplied. Full production startup
 qualification remains explicitly deferred until the independent real-mail prerequisite exists.
+
+Expensive local wrappers first run [bounded storage admission](.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546).
+Export its host-shell settings when the default 20 GiB reserve plus 4 GiB allocation allowance is unsuitable;
+unknown measurements or insufficient space refuse allocation, never trigger a global prune. `./bin/up --build-only`
+is the guarded initial image setup. Unknown/durable volumes remain protected; `bin/down` requires the same
+helper's original disposable-runtime receipt rather than an unqualified Compose teardown.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots

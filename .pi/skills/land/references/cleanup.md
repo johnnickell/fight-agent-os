@@ -141,7 +141,95 @@ Compose hash/working/configuration paths, and never starts setup. Environment ch
 model hold it. Implicit Compose env-file loading is disabled; only enumerated env-file arguments are used.
 Do not print raw configuration or container environments to obtain these hashes.
 
-### Service visibility prerequisite (TASK-00546 partial implementation)
+### Recoverable storage and allocation admission (TASK-00546)
+
+`cleanup.py --storage-admit` performs one automatic bounded recovery pass before allocating expensive work.
+Local `bin/up` (including `--build-only`), `bin/build`, `bin/client` and `bin/composer` call it. Set
+`FIGHT_STORAGE_RECEIPT` to the existing private Work companion to retain those observations there; otherwise
+local runtime state is `var/storage.json`, never an application dependency on `.runs/`. The persistent receipt
+lock serializes operations using that receipt. It is not a global reservation or protection against external races.
+
+Export host-shell settings (Compose `.env` alone does not export them):
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `FIGHT_STORAGE_RETENTION_SECONDS` | `604800` | Minimum cache last-use age; 1–315360000 seconds |
+| `FIGHT_STORAGE_RESERVE_BYTES` | `21474836480` | Host free bytes to leave after the admitted allocation |
+| `FIGHT_STORAGE_ALLOCATION_BYTES` | `4294967296` | Bounded allocation allowance; increase for larger builds |
+| `FIGHT_STORAGE_MAX_CANDIDATES` | `8` | Maximum candidates per invocation, 1–32; no retry loop |
+| `FIGHT_STORAGE_BUILDER` | current builder | Explicit same-engine Docker-driver builder when needed |
+
+Reserve/allocation must be positive integers, at most `2^60`. Admission requires freshly observed free space
+**at least reserve + allocation** on both source and Docker backing filesystems. Linux uses the local engine's
+DockerRootDir; the qualified macOS topology uses Docker Desktop's default Docker.raw with a live open-file
+observation. Remote/custom/unknown backing topology, unavailable observations, changed engine or insufficient
+space refuses allocation with a finite owner action. Docker logical usage, physical host availability and the
+engine's cache-size report are separate; no logical-size sum or before/after host delta is called reclaimed bytes.
+A qualified reserve can admit work despite unrelated reclamation holds, but aggregate cleanup remains incomplete.
+
+The supported automatic candidates need **no historical TASK ownership**:
+
+- **Cache:** raw SAME-engine `/system/df` ID/creation/last-use/type/usage observations must agree with the single
+  Docker-driver Buildx worker and exact-ID `du`. Only unused immutable `regular` records externally backed by
+  retained image content qualify. BuildKit's external-image reference checker establishes that relationship;
+  the full retained image root/reference/child census must remain unchanged before and after each effect.
+  This is content retained by the image store, not an assertion that arbitrary cache flags certify source recovery.
+  Private, mutable, source and `exec.cachemount` records remain protected, including potentially unique work.
+  Normal filtered `buildx prune --all` is bounded by an anchored exact ID AND shared/immutable/regular selectors
+  AND engine-side `until`. `--all` merely admits shared records to those conjunctive checks. No unfiltered prune,
+  force flag, eviction of active refs or approximate age parsing is used. The engine rechecks refs and retention
+  under its cache lock. Raw RFC3339 nanoseconds are conservatively rounded up for Python 3.9 observation.
+- **Images:** only immutable digest-only references with an unused current/stopped platform census qualify.
+  Public Docker Hub root/child manifests **and every config/layer blob** are streamed and hash/size verified
+  before normal exact-root removal (128 objects / 256 MiB / 60 seconds, plus bounded network timeout).
+  Mutable tags, unique/unreferenced work, other registries, unavailable content, ambiguous consumer visibility
+  and changed references hold. All other local image roots/references must remain unchanged afterward.
+  Explicit image-selector resume reports absence only with prior SAME-receipt exact-root/content observation
+  plus explicit exact inspect/all-image not-found. Unproven config/index aliases hold, never imply completion.
+- Callers declare current inputs with repeated `--protect-image REFERENCE_OR_ROOT`. `bin/up` reads its actual
+  Dockerfile FROM inputs; `bin/client` protects its selected runtime/build images, including newly pulled inputs.
+  Protection is applied before candidate selection; a downloadable image is not disposable while needed by
+  the current operation. Current/stopped container consumers remain additional independent holds.
+
+Every pass appends `storage_attempts` in the SAME companion, recording engine/worker, selection, raw observations,
+content proofs, effect intent/argv/exits, postconditions, host measurements and per-effect held/removed/absent results.
+`--storage-reclaim` uses the same operation without admission. A cleanup plan can opt into `recoverable_storage`
+with the same policy keys (`retention_seconds`, `reserve_bytes`, `allocation_bytes`, `max_candidates`, `builder`,
+optional narrower `cache_ids`/`image_ids` and `protected_images`). It executes independently of held containers or
+volumes; partial success never completes an aggregate with holds. Legacy exact cache entries are not silently
+upgraded, and old attempts/plans are immutable. Recover a linked explicit policy rather than rewriting old holds.
+
+`check-lifecycle.py --storage-contracts --evidence ABSOLUTE_NEW_DIRECTORY` challenges controlled reserve,
+retention, denial, stale identity, unique work, protected inputs and active/stopped consumers with zero real effects.
+Real Docker/helper/caller receipts remain required for real-runtime claims. No installed/fleet claim follows.
+
+### Disposable runtime caller
+
+`./bin/down --receipt ABSOLUTE_RECEIPT` invokes this SAME helper with `--runtime-retire --apply`. There is no
+unqualified Compose teardown or `down -v` fallback. Missing original proof holds; do not create a replacement
+registry or relabel durable storage disposable. Extend the existing private companion **before** allocation with
+original intent/authority and capture exact returned IDs, immutable config, all mounts/volumes and creation identities
+while creators exist. Use the ordinary runtime/container/volume schemas above.
+
+For pre-publication disposable-runtime retirement, the plan additionally has `purpose: disposable-runtime`,
+`runtime.disposable_authority` corroborated by that original intent, and retained worktree/ref dispositions.
+This removes only the publication prerequisite for temporary runtime data: TASK/repository/source identity,
+original creation, runtime hashes, protected files, exited workers, visibility/peer checks, mount preservation,
+all current/stopped consumers and exact postconditions still apply. It cannot retire source/ref, durable/shared/
+unknown data or bypass a service hold. It does not confer Land publication/acceptance authority.
+Failure/cancellation and interruption use this same receipt/operation; reconcile actual state before a finite
+resume, never recreate a missing creator. Long-lived/default development databases remain retained unless
+positively qualified as newly created disposable data. One-shot `--rm` tool containers retain Docker's normal
+anonymous-volume lifecycle; their original intent and actual mounts still belong in the owning handoff.
+
+New Compose qualification can use `check-lifecycle.py --task TASK-00546 --caller runtime --fixture-image EXACT_ID`
+with the documented cases, plus `completed` (actual exit 0). An image override adds one explicitly declared
+anonymous volume; the default PostgreSQL image retains image-declared anonymous-volume qualification.
+`--caller build --original-land-attempt ABSOLUTE_EXITED_ATTEMPT` qualifies the actual Build continuation caller
+using the same operation and actual monitor exit evidence, with controlled hosting clearly separate from delivery.
+Historical standalone/image-root modes retain their original TASK-00542 identity; do not repurpose those allocations.
+
+### Service visibility prerequisite (TASK-00546)
 
 The executor now requires complete live worker cwd/executable/root, descriptor/fdinfo and socket-table
 visibility before qualifying or stopping a running service, and rechecks it immediately before the effect.
@@ -165,12 +253,10 @@ unresolved peers, stale identity, preview/apply and stopped/interrupted resume. 
 real-runtime, installed-caller or fleet pass. Ordinary lifecycle fixture modes retain their existing resource
 allocation behavior and historical TASK-00542 identity; do not use them as TASK-00546 allocation recipes.
 
-This is a partial safety repair, **not** completed TASK-00546 storage policy. Automatic recoverable-image/cache
-reclamation, executable retention/reserve admission and caller/volume qualification remain unfinished. Do not
-infer that unknown cache content is reconstructible from `Shared`, a display description or an image digest;
-obtain corroborated cache-to-source recovery evidence before effects. An unqualified exploratory storage draft
-was withdrawn rather than shipped as a deletion/admission capability. No cache removal or new reserve setting
-is authorized by this paragraph; the accepted TASK and actual qualification still govern.
+This guard is additional to the bounded recoverable-storage operation above. Unknown/private cache content is
+not reconstructible merely because of a description or image name. The retained Work1 exploratory draft remains
+withdrawn historical evidence, not a supported API or a deletion recipe. Acceptance, installed-caller and fleet
+claims still require their own actual evidence; no version equality gate or protection-changing workaround exists.
 
 ### Standalone creation capability
 

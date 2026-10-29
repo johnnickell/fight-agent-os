@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(dirname "$0")/.."
+python3 .pi/skills/land/scripts/cleanup.py --storage-admit ${FIGHT_STORAGE_RECEIPT:+--receipt "$FIGHT_STORAGE_RECEIPT"}
 mkdir -p .runs/cache/client/dependency-cache .runs/cache/client/vite-temp var \
     client/node_modules/.cache client/node_modules/.vite-temp
 # Only the explicit maintenance service mounts source writable.
