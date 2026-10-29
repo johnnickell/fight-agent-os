@@ -28,12 +28,13 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
-[TASK-00546](planning/tasks/00546-TASK.md) is the approved standalone follow-up to prevent local Docker disk
-exhaustion: automatically reclaim unused recoverable images/build cache even without historical task ownership,
-protect unknown/shared volumes and host files, enforce affected visibility holds and check a configured pre-build
-free-space reserve. The isolated checkout is selected; implementation has not started. TASK-00542's acceptance,
-limits and delivery evidence remain unchanged and do not transfer to the new TASK. No cleanup or new implementation
-verification is claimed; prior checkpoints below remain historical.
+[TASK-00546](planning/tasks/00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) is in progress but
+incomplete. Its partial executor repair holds unavailable/changed worker visibility and unresolved connected
+peers. The 14-case controlled matrix and one fresh real worker probe passed their bounded checks, not full
+helper/caller or application acceptance. Cache-to-source recoverability qualification is held; automatic
+reclamation, retention/reserve admission and lifecycle/caller work remain unfinished. The unqualified storage
+draft was withdrawn. No final application gate, cleanup, independent acceptance or physical reclaim is claimed.
+TASK-00542's acceptance, limits and delivery evidence remain separate; prior checkpoints below are historical.
 
 [TASK-00542's repaired H](planning/tasks/00542-TASK.md#accepted-h-closeout-checkpoint--2026-10-29) has independent
 Review11 ACCEPT and QA12 PASS (42 fresh observations / 12 groups plus twenty explicit accumulated rows);

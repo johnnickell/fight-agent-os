@@ -69,15 +69,16 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**Approved new TASK, implementation pending:**
-[TASK-00546](tasks/00546-TASK.md) owns the approved recoverable-image/cache reclamation policy, cautious disposable
-volume retirement, executor-enforced visibility holds and cache-retention/pre-build reserve admission. Historical
-task ownership is not required for qualified recoverable artifacts; unknown data and host/foreign protections
-remain. John requested a new TASK in the selected isolated checkout rather than reopening TASK-00542. Next is
-Work on TASK-00546 with its own normal run accounting; TASK-00542's prior limits/evidence remain unchanged.
-TASK-00543 now depends on TASK-00546 to preserve cleanup-first sequencing; TASK-00544 follows transitively.
-TASK-00545 stays separate and needs shared-helper coordination. Policy acceptance is not implementation
-acceptance, cleanup or physical-reclaim evidence. The following closeouts are historical.
+**TASK-00546 Work incomplete — cache qualification hold:**
+[TASK-00546](tasks/00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) has a partial executor visibility
+repair with a 14-case controlled matrix and a bounded fresh worker probe, not full implementation acceptance.
+Cache-to-source recoverability remains uncorroborated; the unqualified reclamation/admission draft was withdrawn.
+Automatic reclamation, executable retention/reserve and lifecycle/caller work remain unfinished. Build owns
+prerequisite recovery/Work continuation via canonical ignored `.runs/tasks/TASK-00546/runs/work-handoff.md`;
+no final gate or independent stages have run. Historical ownership is still not required for positively
+recoverable artifacts; scope and protections are unchanged. TASK-00545's accepted source is integrated and its
+ownership hold is resolved. TASK-00543 depends on TASK-00546; TASK-00544 follows transitively. TASK-00542's
+limits/evidence remain separate. No cleanup or physical-reclaim claim. The following closeouts are historical.
 
 **TASK-00545 acceptance checkpoint — 2026-10-29:** [TASK-00545](tasks/00545-TASK.md#accepted-implementation-checkpoint--2026-10-29)
 received independent Review ACCEPT and scoped nonvisual QA PASS for candidate `946949e9240b3b16db7bde7425d93da3589b0fb8`.

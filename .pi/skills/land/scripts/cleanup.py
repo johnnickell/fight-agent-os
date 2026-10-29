@@ -741,6 +741,127 @@ class Cleanup:
                     "source": str(source), "candidate_target": exposed,
                     "configuration_sha256": container_identity(item), "process_paths_sha256": digest(observed.stdout)})
 
+    def service_visibility(self, item, current):
+        """Observe complete worker descriptors and connections without changing execution identity"""
+        require(not current["State"].get("Restarting") and not current["State"].get("Paused"),
+                "service restarting/paused; descriptor visibility held")
+        if not current["State"]["Running"]:
+            # A stopped container has no workers, but immutable identity and all mount/consumer
+            # protections still apply. Never convert an inspection error into stopped state.
+            return
+        host = current["HostConfig"]
+        network = host.get("NetworkMode", "")
+        require(host.get("PidMode", "") in ("", "private") and isinstance(network, str) and
+                network != "host" and not network.startswith("container:"),
+                "shared/host worker namespace outside service visibility capability")
+        def engine_workers():
+            raw = command(["docker", "top", item["identity"], "-eo", "pid,ppid"], self.safe).stdout
+            lines = [line.split() for line in raw.decode().splitlines()]
+            require(lines and lines[0] == ["PID", "PPID"] and 1 <= len(lines) - 1 <= 256 and
+                    all(len(line) == 2 and all(value.isdecimal() for value in line) for line in lines[1:]) and
+                    len({line[0] for line in lines[1:]}) == len(lines) - 1,
+                    "complete engine worker census unavailable")
+            return sorted(tuple(line) for line in lines[1:])
+        census = engine_workers()
+        # Python is a capability, not an installation or version prerequisite. Do not retry as
+        # another user or add ptrace/DAC capabilities when procfs denies any worker descriptor.
+        probe = r'''
+import hashlib, json, os, pathlib, re
+root = pathlib.Path('/proc')
+me = os.getpid()
+def workers():
+    return sorted(int(p.name) for p in root.iterdir() if p.name.isdigit() and int(p.name) != me)
+def observe(pid):
+    p = root / str(pid)
+    birth = (p / 'stat').read_text().rsplit(')', 1)[1].split()[19]
+    links = {name: os.readlink(p / name) for name in ('cwd', 'exe', 'root')}
+    fd = p / 'fd'
+    names = sorted(os.listdir(fd))
+    if len(names) > 4096:
+        raise RuntimeError('descriptor budget exceeded')
+    descriptors = []
+    for name in names:
+        target = os.readlink(fd / name)
+        info = (p / 'fdinfo' / name).read_text()
+        descriptors.append([name, target, info])
+    if sorted(os.listdir(fd)) != names:
+        raise RuntimeError('descriptor set changed')
+    return [pid, birth, links, descriptors]
+before = workers()
+if not 1 <= len(before) <= 256:
+    raise RuntimeError('worker census unavailable/oversized')
+first = [observe(pid) for pid in before]
+# All network namespaces visible from these workers must be the service namespace.
+network = os.readlink(root / str(me) / 'ns/net')
+for pid in before:
+    if os.readlink(root / str(pid) / 'ns/net') != network:
+        raise RuntimeError('worker network namespace unresolved')
+# A connected peer needs positive ownership, not inference from endpoint names. This
+# finite capability accepts no connected sockets; internal/unknown peers HOLD alike.
+tables = {}
+for name in ('tcp', 'tcp6', 'udp', 'udp6'):
+    tables[name] = (root / 'net' / name).read_text()
+    rows = tables[name].splitlines()
+    if not rows or 'rem_address' not in rows[0] and 'remote_address' not in rows[0]:
+        raise RuntimeError('socket table unavailable')
+    for line in rows[1:]:
+        fields = line.split()
+        if len(fields) < 10 or fields[3] != '0A' and fields[2].split(':')[1] != '0000':
+            raise RuntimeError('connected network peer unresolved')
+tables['unix'] = (root / 'net/unix').read_text()
+rows = tables['unix'].splitlines()
+if not rows or 'Inode' not in rows[0]:
+    raise RuntimeError('Unix socket table unavailable')
+owned_sockets = {re.fullmatch(r'socket:\[(\d+)\]', d[1]).group(1)
+                 for worker in first for d in worker[3] if re.fullmatch(r'socket:\[(\d+)\]', d[1])}
+table = set()
+for line in rows[1:]:
+    fields = line.split()
+    if len(fields) < 7:
+        raise RuntimeError('Unix socket table incomplete')
+    table.add(fields[6])
+    if fields[5] != '01':
+        raise RuntimeError('connected Unix peer ownership unresolved')
+# TCP sockets do not appear in the Unix table. Require every socket descriptor to
+# occur in a successfully read namespace socket table, including listening sockets.
+for name in ('tcp', 'tcp6', 'udp', 'udp6', 'raw', 'raw6'):
+    if name not in tables:
+        tables[name] = (root / 'net' / name).read_text()
+    rows = tables[name].splitlines()
+    if not rows or len(rows) > 8192 or name.startswith('raw') and len(rows) > 1:
+        raise RuntimeError('socket table incomplete/unsupported/oversized')
+    for line in rows[1:]:
+        fields = line.split()
+        if len(fields) < 10:
+            raise RuntimeError('socket table malformed')
+        table.add(fields[9])
+if not owned_sockets <= table:
+    raise RuntimeError('unsupported socket descriptor')
+second = [observe(pid) for pid in before]
+if workers() != before or first != second or any(
+        (root / 'net' / name).read_text() != value for name, value in tables.items()):
+    raise RuntimeError('worker/descriptor/peer observations changed')
+print(json.dumps({'complete': True, 'workers': len(before), 'sha256': hashlib.sha256(
+    json.dumps([first, tables], sort_keys=True).encode()).hexdigest(), 'connected_peers': 0}))
+'''
+        try:
+            observed = command(["docker", "exec", item["identity"], "python3", "-B", "-c", probe], self.safe)
+        except Hold as error:
+            raise Hold("service worker descriptor/peer inspection unavailable; " + str(error)) from None
+        require(not observed.stderr.strip(), "service descriptor/peer visibility incomplete")
+        visibility = json.loads(observed.stdout)
+        require(visibility.get("complete") is True and visibility.get("workers") == len(census) and
+                visibility.get("connected_peers") == 0 and
+                re.fullmatch(r"[a-f0-9]{64}", visibility.get("sha256", "")),
+                "service descriptor/peer visibility unavailable or unsupported")
+        require(engine_workers() == census, "engine worker census changed during descriptor inspection")
+        visibility["engine_workers_sha256"] = fingerprint(census)
+        observations = self.attempt.setdefault("service_visibility", [])
+        previous = [value for value in observations if value["container"] == item["identity"]]
+        require(not previous or previous[-1] == {"container": item["identity"], **visibility},
+                "service worker/descriptor/peer observations changed before effect")
+        observations.append({"container": item["identity"], **visibility})
+
     def container(self, item, result):
         # Reconcile absence before reading runtime inputs that checkout retirement
         # may have deleted. A present resource still needs every runtime check.
@@ -768,6 +889,7 @@ class Cleanup:
         if current["State"]["Running"]:
             processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
             require(digest(processes) == item["processes_sha256"], "container processes changed/unknown consumers")
+        self.service_visibility(item, current)
         require(item["data"] == "disposable", "durable or unresolved data disposition")
         self.capture_mounts(item, current, model)
         candidate = absolute(self.plan["worktree"]["identity"])
@@ -783,6 +905,7 @@ class Cleanup:
         require(container_identity(latest) == item["inspection_sha256"], "container changed before effect")
         if self.plan["runtime"].get("kind", "compose") == "standalone":
             self.standalone_container(item, latest)
+        self.service_visibility(item, latest)
         if not self.apply:
             result.update(status="qualified", reason="preview only")
             return
@@ -798,6 +921,7 @@ class Cleanup:
         else:
             self.runtime()
         require(container_identity(latest) == item["inspection_sha256"] and not latest["State"]["Running"], "container changed/restarted after stop")
+        self.service_visibility(item, latest)
         self.host_consumers(candidate)
         command(["docker", "rm", item["identity"]], self.safe)
         require(not any(value["Id"] == item["identity"] or value["Name"] == item["name"] for value in docker_inventory(self.safe)), "container removal postcondition failed/recreated")

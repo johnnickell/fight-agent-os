@@ -16,26 +16,26 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 ### Current human decision
 
-[TASK-00546](00546-TASK.md) is the approved new `order: 1` standalone bug: automatically reclaim unused,
-recoverable images/cache without historical task ownership, protect unknown/shared volumes and host files,
-enforce affected worker-visibility holds and check pre-build free-space reserve. **Next:** Work in the selected
-`.runs/worktrees/task-00546-recoverable-docker-storage` checkout. TASK-00542 remains historically done with its
-original limits/evidence intact; they do not transfer to this new subject. TASK-00543 now depends on TASK-00546
-to preserve cleanup-first sequencing; TASK-00544 follows transitively. Coordinate TASK-00545's separate helper
-work. Policy/record approval is not implementation acceptance, cleanup, publication or an unlimited run grant.
+[TASK-00546](00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) is in-progress, not accepted.
+Partial executor visibility holds have bounded controlled/real-probe evidence. Cache-to-source recoverability
+qualification is held; automatic reclamation, retention/reserve and lifecycle/caller integration are unfinished.
+**Next:** Build-owned prerequisite recovery/Work continuation from canonical ignored
+`.runs/tasks/TASK-00546/runs/work-handoff.md`, preserving the selected checkout and recorded fixtures.
+TASK-00545 is integrated; its source-ownership hold is resolved. TASK-00542's original limits/evidence remain
+separate. TASK-00543 depends on TASK-00546; TASK-00544 follows transitively. No final application gate,
+independent acceptance, cleanup or publication is claimed; policy approval is not an unlimited run grant.
 
 <!-- planning:board -->
 ## Active Work
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 1 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | — (standalone bug) | ready-for-agent | — | — |
 | 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |

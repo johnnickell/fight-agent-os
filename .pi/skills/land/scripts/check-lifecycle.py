@@ -574,12 +574,133 @@ def owned_image_fixture(args, module, evidence, helper):
     return 0 if result["pass"] or result["interrupted_after_real_reference_effect"] else 1
 
 
+def visibility_contracts(module, evidence, helper):
+    """Exercise the executor boundary with controlled observations and zero external effects"""
+    evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
+    identifier = "a" * 64
+    safe = evidence.resolve()
+    rows = []
+    original = {name: getattr(module, name) for name in ("command", "text", "json_command", "docker_inventory")}
+    try:
+        for case in ("missing-preview", "missing-apply", "denied", "incomplete", "unsupported",
+                     "unresolved-peer", "hidden-worker-census", "changed-engine-census",
+                     "changed-observation", "stale-identity", "positive-preview",
+                     "positive-apply", "stopped-resume", "interrupt-resume"):
+            calls = []
+            state = {"running": case != "stopped-resume", "present": True, "probes": 0,
+                     "census_reads": 0, "interrupted": False}
+            current = {"Id": identifier, "Created": "controlled", "Image": "sha256:" + "b" * 64,
+                       "Name": "/fixture", "Config": {"Labels": {
+                           "com.docker.compose.project": "fixture", "com.docker.compose.service": "web",
+                           "com.docker.compose.project.working_dir": str(safe),
+                           "com.docker.compose.project.config_files": "/fixture.yaml",
+                           "com.docker.compose.config-hash": "hash"}}, "HostConfig": {}, "Mounts": []}
+            def inspection():
+                observed = json.loads(json.dumps(current))
+                observed["State"] = {"Running": state["running"]}
+                return observed
+            item = {"identity": identifier, "name": "/fixture", "service": "web",
+                    "inspection_sha256": module.container_identity(current),
+                    "processes_sha256": module.digest(b"processes"), "data": "disposable", "bind_data": {}}
+            def command(argv, cwd, **kwargs):
+                calls.append(argv[:3])
+                if argv[:2] == ["docker", "top"]:
+                    raw = b"processes"
+                    if argv[-1] == "pid,ppid":
+                        state["census_reads"] += 1
+                        raw = b"PID PPID\n100 0\n"
+                        if case == "changed-engine-census" and state["census_reads"] > 1:
+                            raw = b"PID PPID\n101 0\n"
+                    return subprocess.CompletedProcess(argv, 0, raw, b"")
+                if argv[:2] == ["docker", "exec"]:
+                    state["probes"] += 1
+                    if case in ("missing-preview", "missing-apply", "denied", "unresolved-peer"):
+                        raise module.Hold("controlled missing/denied/peer visibility")
+                    visibility = {"complete": True, "workers": 1, "connected_peers": 0, "sha256": "c" * 64}
+                    if case == "incomplete":
+                        visibility["complete"] = False
+                    elif case == "hidden-worker-census":
+                        visibility["workers"] = 2
+                    elif case == "unsupported":
+                        visibility.pop("sha256")
+                    elif case == "changed-observation" and state["probes"] > 1:
+                        visibility["sha256"] = "d" * 64
+                    return subprocess.CompletedProcess(argv, 0, json.dumps(visibility).encode(), b"")
+                if argv[:2] == ["docker", "stop"]:
+                    state["running"] = False
+                    if case == "interrupt-resume" and not state["interrupted"]:
+                        state["interrupted"] = True
+                        raise module.Hold("controlled interruption after stop")
+                    return subprocess.CompletedProcess(argv, 0, b"", b"")
+                if argv[:2] == ["docker", "rm"]:
+                    state["present"] = False
+                    return subprocess.CompletedProcess(argv, 0, b"", b"")
+                raise AssertionError("unexpected controlled command")
+            def json_command(argv, cwd):
+                observed = inspection()
+                if case == "stale-identity":
+                    observed["Name"] = "/recreated"
+                return [observed]
+            module.command = command
+            module.text = lambda *args, **kwargs: "web hash"
+            module.json_command = json_command
+            module.docker_inventory = lambda *args: [inspection()] if state["present"] else []
+            operation = module.Cleanup.__new__(module.Cleanup)
+            operation.safe = safe
+            operation.plan = {"runtime": {"kind": "compose"}, "worktree": {"identity": str(safe)}}
+            operation.apply = case not in ("missing-preview", "positive-preview")
+            operation.attempt = {}
+            operation.creation_evidence = lambda *args: None
+            operation.capture_mounts = lambda *args: None
+            operation.host_consumers = lambda *args: None
+            operation.subject_checks = lambda: None
+            operation.save = lambda: None
+            operation.runtime = lambda: ({"project": "fixture", "working_directory": str(safe),
+                "config_files": [{"path": "/fixture.yaml"}]}, ["docker", "compose"], {"services": {"web": {}}})
+            result, reason = {}, None
+            try:
+                operation.container(item, result)
+            except module.Hold as error:
+                reason = str(error)
+            if case == "interrupt-resume":
+                first_reason = reason
+                operation.attempt = {}  # A fresh attempt requalifies the actual stopped state.
+                operation.container(item, result)
+                reason = first_reason
+            stops = sum(argv[:2] == ["docker", "stop"] for argv in calls)
+            removes = sum(argv[:2] == ["docker", "rm"] for argv in calls)
+            positive = case in ("positive-preview", "positive-apply", "stopped-resume", "interrupt-resume")
+            expected_status = "qualified" if case == "positive-preview" else "removed"
+            passed = result.get("status") == expected_status if positive else reason is not None and stops == removes == 0
+            if case == "positive-apply":
+                passed = passed and stops == removes == 1 and state["probes"] == 2
+            elif case == "stopped-resume":
+                passed = passed and stops == state["probes"] == 0 and removes == 1
+            elif case == "interrupt-resume":
+                passed = passed and stops == removes == 1 and state["interrupted"]
+            elif case == "positive-preview":
+                passed = passed and stops == removes == 0
+            rows.append({"case": case, "passed": passed, "result": result, "reason": reason,
+                         "stop_calls": stops, "remove_calls": removes, "probe_calls": state["probes"]})
+    finally:
+        for name, value in original.items():
+            setattr(module, name, value)
+    summary = {"helper": str(helper), "helper_sha256": module.digest(helper.read_bytes()),
+               "boundary": "controlled method-level executor; all external observations/effects replaced",
+               "pass": all(row["passed"] for row in rows), "rows": rows,
+               "unverified": ["real service procfs/peer parsing", "actual helper/installed callers", "fleet", "storage policy", "application gate"]}
+    private_json(evidence / "visibility-contracts.json", summary)
+    print(json.dumps(summary, indent=2))
+    return 0 if summary["pass"] else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", required=True, help="New absolute task-owned evidence directory, outside removal candidates")
     parser.add_argument("--helper", default=str(Path(__file__).with_name("cleanup.py")))
     parser.add_argument("--runtime", choices=("compose", "standalone"), default="compose")
     parser.add_argument("--standalone-matrix", action="store_true", help="Bounded owning-tool effects, interruption, evidence and consumer probes")
+    parser.add_argument("--visibility-contracts", action="store_true", help="Controlled executor regressions; no Docker allocation or external effects")
     parser.add_argument("--resume", action="store_true", help="Reuse this fixture/receipt; never recreate missing resources")
     parser.add_argument("--prepare-only", action="store_true", help="Create and record the bounded fixture for actual Pi caller qualification; do not invoke cleanup")
     parser.add_argument("--case", choices=("normal", "running", "failure", "cancel", "durable", "shared-stopped", "image", "unavailable", "denied", "changed-identity", "mismatched-binding", "database", "mysql", "image-root"), default="normal")
@@ -600,6 +721,8 @@ def main():
     spec = importlib.util.spec_from_file_location("subject_cleanup", helper)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    if args.visibility_contracts:
+        return visibility_contracts(module, evidence, helper)
     if args.case == "image-root":
         return owned_image_fixture(args, module, evidence, helper)
     if args.standalone_matrix:

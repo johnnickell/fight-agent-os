@@ -141,6 +141,36 @@ Compose hash/working/configuration paths, and never starts setup. Environment ch
 model hold it. Implicit Compose env-file loading is disabled; only enumerated env-file arguments are used.
 Do not print raw configuration or container environments to obtain these hashes.
 
+### Service visibility prerequisite (TASK-00546 partial implementation)
+
+The executor now requires complete live worker cwd/executable/root, descriptor/fdinfo and socket-table
+visibility before qualifying or stopping a running service, and rechecks it immediately before the effect.
+It corroborates the visible worker count against stable before/after engine process censuses and compares
+worker birth, descriptors and namespace socket observations within each attempt. Any unavailable,
+denied, incomplete, changed or unsupported observation holds that container; matching process hashes or zero
+DB sessions are not substitutes. Stopped-state resume still requires immutable identity and all original
+creation, mount, data, host-consumer and publication checks.
+
+This finite capability invokes an already installed `python3` in the existing container identity. It never
+installs tooling, selects another user or adds capabilities. Shared host/container PID or network namespaces,
+raw/unsupported sockets and **all connected TCP/UDP/Unix peers** currently hold: this implementation does not
+yet positively resolve internal connected peers. Missing Python/procfs visibility also holds. It does not
+retry protected old workloads. Existing standalone process/network/DB-session checks remain additional guards.
+
+Run the zero-effect controlled executor matrix with
+`python3 scripts/check-lifecycle.py --visibility-contracts --evidence ABSOLUTE_NEW_TASK_RUN_DIRECTORY`.
+It covers missing/denied/incomplete/unsupported/changed observations, hidden/changing worker census,
+unresolved peers, stale identity, preview/apply and stopped/interrupted resume. Its external observations/effects are replaced; it is not a
+real-runtime, installed-caller or fleet pass. Ordinary lifecycle fixture modes retain their existing resource
+allocation behavior and historical TASK-00542 identity; do not use them as TASK-00546 allocation recipes.
+
+This is a partial safety repair, **not** completed TASK-00546 storage policy. Automatic recoverable-image/cache
+reclamation, executable retention/reserve admission and caller/volume qualification remain unfinished. Do not
+infer that unknown cache content is reconstructible from `Shared`, a display description or an image digest;
+obtain corroborated cache-to-source recovery evidence before effects. An unqualified exploratory storage draft
+was withdrawn rather than shipped as a deletion/admission capability. No cache removal or new reserve setting
+is authorized by this paragraph; the accepted TASK and actual qualification still govern.
+
 ### Standalone creation capability
 
 For independently owned `docker run` resources, select **`runtime.kind: standalone`**, not an optional Compose
