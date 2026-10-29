@@ -28,6 +28,16 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00542's repaired F](planning/tasks/00542-TASK.md#accepted-f-closeout-checkpoint--2026-10-29) has independent
+Review9 ACCEPT and QA11 PASS (20 candidate scenarios; 63 fresh expected reader/filesystem observations plus
+qualified accumulated reuse); R9 is resolved. Done means accepted implementation, not completed delivery.
+Repaired publication/checks and eligible primary cleanup are pending at this frozen checkpoint; actual results
+and finite next actions are in canonical ignored `.runs/tasks/TASK-00542/runs/primary-land14-handoff.md` and
+[PR #181](https://github.com/johnnickell/fight-agent-os/pull/181). P1/P2 holds and F1 strict foreign-preservation
+FAIL remain; no all-disk-clean, integrated-fleet runtime PASS or future growth-cap claim. John owns merge;
+no post-merge Board chore. Visual evidence is N/A. Shared repairs remain exhausted at 5/5.
+
+The following R9 repair paragraph is a preserved checkpoint, not current acceptance/readiness.
 [TASK-00542 is reopened for Review8 R9](planning/tasks/00542-TASK.md#current-repair--r9-excluded-link-readers):
 read-only LINKs under the original dependency exclusion now require stable no-follow metadata through the same
 signed-reader qualification. New local verification, independent Review and affected QA are required; prior D

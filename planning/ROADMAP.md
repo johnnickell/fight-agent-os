@@ -69,6 +69,18 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Accepted F closeout checkpoint — 2026-10-29:**
+[TASK-00542](tasks/00542-TASK.md#accepted-f-closeout-checkpoint--2026-10-29) records independent Review9
+ACCEPT and QA11 PASS on repaired F; R9 is resolved. Done records accepted implementation, not full delivery.
+Repaired publication/checks and eligible primary cleanup are pending at this frozen checkpoint; actual results
+and finite next actions are in canonical ignored `.runs/tasks/TASK-00542/runs/primary-land14-handoff.md` and
+[PR #181](https://github.com/johnnickell/fight-agent-os/pull/181). P1/P2 holds and F1 strict preservation FAIL
+remain, with 5/5 repairs exhausted. No all-disk-clean, integrated-fleet runtime PASS, future growth cap, queue
+or post-merge chore. John owns merge. TASK-00543/00544 remain unstarted; generated eligibility does not waive
+outstanding cleanup-first effects. TASK-00545 is separate future work, not a dependency.
+
+The following R9 repair and D acceptance paragraphs are preserved checkpoints, not current stage instructions.
+
 **Current repair — R9:** [TASK-00542](tasks/00542-TASK.md#current-repair--r9-excluded-link-readers) is reopened
 for the confirmed excluded read-only LINK capability gap. Final cycle5 is consumed (5/5; none remaining).
 New local verification, independent Review and affected QA are required; canonical ignored
