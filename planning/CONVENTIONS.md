@@ -21,18 +21,13 @@ still apply when the selected workflow is invoked.
    Verify the named phase in the owning record's current progress/approval section. Map closure, parent status
    and child counts do not prove complete decomposition. If the handoff is missing or contradictory, report
    the missing phase/owner; do not reconstruct it by reading every closed map and descendant.
-5. Before repeating a relevant delivery action run `./bin/planning-check --check-delivery` with its marked
-   TASK IDs. Verified MERGED/integrated `done` handoffs resolve read-only; continue routing without a routine
-   cleanup request. Exceptional/uncertain states hold their affected route; never write or dispatch Land.
-6. Read canonical review/QA identity and disposition only when they change the selected route. Unresolved
+5. Read canonical review/QA identity and disposition only when they change the selected route. Unresolved
    identity is an evidence handoff, never acceptance. Confirm a suggested skill from supplied capability
    metadata/bindings; load its full instructions and references when invoked, not merely to recommend it.
-6. Before evaluating or repeating a relevant current delivery/merge handoff, require the
-   [bounded live check](#live-delivery-verification). Select only subjects relevant to that recommendation;
-   do not audit the delivery table or historical PRs. Report verified ended state and the exact Land handback,
-   or unverified evidence and recovery, separately from unrelated TASK/Wayfinder/planning routes. Do not edit,
-   refresh, invoke Land or let a delivery observation reorder the Board. Historical references alone trigger no
-   query; after Land retires an ended current claim, preserved evidence does not keep blocking selection.
+6. Completed TASKs and historical publication checkpoints do not create a pending-merge route. Land owns
+   accepted TASK/current-doc closeout and exact live PR validation during publication. Do not scan historical
+   PRs, create persistent delivery queues or request routine post-merge maintenance. An explicitly requested
+   delivery observation remains read-only and subject-specific under [handoff rules](../docs/engineering/HANDOFFS.md#live-delivery-handoff-evaluation).
 
 Prefer heading searches and bounded section reads. Aim to retrieve no more than about 24,000 characters
 of routing evidence; stop with a precise unresolved input before exceeding that scope unless the user requests
@@ -144,119 +139,18 @@ when the accepted policy permits that split. A literal-final-head acceptance pre
 owner amendment, not a silent exemption. Record independent review, delivery, merge, release, and deployment
 separately; done does not grant approval for those actions.
 
-## Current delivery handoffs
+## Publication closeout
 
-A live (non-archived) TASK may carry this optional frontmatter:
+Land records independently accepted implementation and required verification in the TASK, closes eligible
+parents and reconciles applicable current Board/Roadmap/README/docs before its final publication. The PR URL
+is historical publication metadata, not a persistent merge queue or proof of current hosting state. Keep exact
+live PR/default/base/head/OID and required delivery checks in Land's durable ignored receipt and actual PR.
+Human merge remains separate; no routine post-merge Board or marker retirement is required.
 
-```yaml
-delivery: awaiting-merge
-pr: https://github.com/johnnickell/fight-agent-os/pull/162
-```
-
-This is a representation example, not a declaration about PR #162. The subject is the record's `id`, bound
-by its canonical filename and unique identifier. The exact canonical GitHub `pr` URL binds repository and
-positive decimal PR number (no leading zero, query, fragment or trailing slash). For marked records only,
-its repository must match local `origin`, supported as `git@github.com:owner/repository.git` or
-`https://github.com/owner/repository.git` (optional `.git`). Comparison is exact/case-sensitive; aliases,
-credential-bearing URLs and other hosts/transports need local identity resolution, not a guessed repository.
-Two marked subjects cannot claim the same PR. Empty/absent `delivery` means no current delivery claim;
-other values, marked parents/archives and missing/mismatched PR identity are errors.
-
-Land owns setting/correcting markers; authorized Work/Land/substantive planning intake owns routine retirement
-under the [subject synchronization contract](../docs/engineering/LANDING.md#synchronize-current-subject-handoffs).
-Set it only from exact publication evidence at the authorized human review/merge handoff. It records a
-publication snapshot, **not** an assertion that the PR remains open, readiness/CI success, independent acceptance,
-merge or deployment. Status remains independent: `done`, ordinary `pr` links and historical prose never create
-markers. Do not backfill markers by scanning old completion notes or promote an example into current authority.
-Keep applicable authored current delivery handoffs pointed at the subject and generated delivery section;
-resolve contradictions through Land rather than maintaining a competing live instruction.
-
-The Board and Roadmap `planning:delivery` tables derive only from these markers, sorted by subject ID. An empty
-table means no **recorded** current delivery handoffs, not proof that no PRs exist. These tables do not select
-work, reorder the Board or replace the distinct planning/decomposition handoff and frontier. README points to
-the Board's delivery section; historical PR/acceptance/checkpoint bytes remain evidence, not live authority.
-
-| Supported command | Effect and failure/recovery |
-|---|---|
-| `./bin/planning-check` | Offline, read-only identity and view validation. Malformed/conflicting identity fails; stale views fail with the explicit refresh command. Success and failure write nothing. |
-| `./bin/planning-check --write` | Offline, explicit parent rollup and generated-view refresh after validation. Identity or structural errors prevent planned writes. Reports actual updated paths; it never sets/retires markers or repairs history. Inspect disk state after an I/O failure before retry; this is not a filesystem transaction. |
-
-Neither path invokes hosting tools, fetches, needs hosting credentials or claims live PR freshness. Local origin
-inspection is a bounded five-second Git configuration read only and is skipped when no markers exist. A missing
-origin holds marked identity validation; restore the intended repository configuration through its owner.
-Land resolves malformed identity before an authorized refresh; read-only routing never performs that refresh.
-The explicit live modes below are separate from offline checks and writes. At authorized Work/Land/substantive
-planning intake run `./bin/planning-check --reconcile-delivery [TASK-ID …]` before record edits. It verifies exact
-merged/integrated `done` snapshots, retires only resolved markers with exact PR/base/head/merge/time/local-HEAD
-evidence, rolls up eligible parents and refreshes views. Inspect affected authored Board/Roadmap/README claims
-separately; preserve historical checkpoints and canonical reports. No separate routine correction prompt/PR is
-required. Repeat intake is a no-op and retired history triggers no queries. A later merge resolves read-only until
-the next authorized mutation; no watcher or post-exit update is implied. Validation/live errors prevent planned
-writes; inspect disk after I/O failure before retry. Review/QA/routing never use the writing mode.
-
-### Live delivery verification
-
-Before Land or read-only routing evaluates a relevant delivery/merge handoff, run:
-
-```sh
-./bin/planning-check --check-delivery TASK-00517
-```
-
-This is a real subject example; use the actual relevant marked TASK IDs. `--check-delivery` with no IDs checks
-all explicit current markers, not historical PR links. Prefer explicit IDs for routing. The tool first requires
-successful offline validation and fresh generated views; on failure, no hosting lookup occurs. Routing never
-runs `--write` to recover freshness. Unknown, duplicate or unmarked requested IDs fail without hosting calls;
-resolve the current subject with Land, rather than promoting historical evidence into a marker.
-
-Bounds: maximum **16 selected subjects**, one sequential `gh pr view` invocation per exact PR, **15 seconds**
-per invocation (at most 240 seconds of hosting-command waits), no checker retries/polling or auth preflight.
-The CLI may make multiple underlying HTTP requests; 16 is a CLI lookup bound, not a wire-request guarantee.
-Local origin lookup has its existing five-second timeout. Responses above **16,384 UTF-8 bytes** are rejected
-(after capture). Existing operator `gh` access is used noninteractively, with explicit `github.com` host/repository;
-no credentials are printed or grants changed. No marker means zero hosting commands, including without `gh`.
-
-The canonical URL/repository/number, exact TASK ID and title, `develop` base, subject-owned
-`feature/task-NNNNN-<slug>` head and full 40-hex head OID must match. All requested state/merge fields must be
-present. MERGED additionally requires a valid UTC merge time and full merge OID; OPEN/CLOSED require null
-merge time/commit. Mismatched or contradictory evidence is never an observation of a trusted PR state.
-This verifies the recorded subject and advertised branch, **not** an accepted-candidate/remote-head provenance
-bridge: Land still compares exact recorded base/head/OIDs, fork identity, independent reports and delivery holds
-under [landing standards](../docs/engineering/LANDING.md#synchronize-current-subject-handoffs).
-
-| Result | Meaning and next action |
-|---|---|
-| OPEN | Verified observation only. Evaluate actual acceptance, QA, provenance and delivery holds before recommending the supported human/Land action; open alone proves no readiness or CI success. |
-| MERGED | Resolve read-only only for an already-`done` subject with exact published-head → merge → local-HEAD ancestry, using five-second local Git calls without replacement objects/lazy fetching. Report exact merge/time/integration and continue; no routine cleanup request. Missing integration/nonterminal scope holds for the Git/requirement owner. Merge is not acceptance, QA or deployment. |
-| CLOSED WITHOUT MERGE | Report non-delivery through that PR and the same explicit Land correction handback. Preserve acceptance; maintainer owns any future-delivery decision. |
-| UNVERIFIED | Hold only the affected delivery recommendation. Restore missing CLI, existing authentication/access/network or complete exact PR metadata; Land resolves identity contradictions. Rerun the same subject after recovery, never assume open/merged or silently use offline success as freshness. |
-
-Exit **0** means selected observations are OPEN or verified merged/integrated `done`, or no markers exist
-(not proof that no PRs exist). Exit **1** means a local/live evidence, scope, integration or ended-state hold.
-Exit **2** means invalid command-line arguments or selection/bounds rejected before hosting requests. Inspect per-subject output: no aggregate success overrides an unverified subject. Raw hosting
-stdout/stderr is never replayed on failure. The command writes no records/views, invokes no Land, scans no
-history, fetches/publishes/merges nothing, and checks no CI. `--write`, `--check-delivery` and `--reconcile-delivery` are mutually exclusive.
-Ordinary check/write and `./bin/build` planning remain network-independent. A correctly reconciled unmarked
-historical PR is not queried again merely because its evidence remains recorded.
-
-### Qualified reference
-
-Read-only inspection of Fight Common at source commit `2c4d1d529f6057f0a4ef2d7483b92d0327a58403`
-qualified `scripts/planning_portfolio.py` and its current-delivery conventions: explicit live-TASK marker plus
-PR, generated Board delivery block, ordinary offline check/write, and local origin matching.
-
-TASK-00518 separately inspected Common at `59ba43b40cfa6fee681f6dde2bfe075aeb1f2aa3`: its
-`--check-delivery` validates at most 16 markers, uses one 15-second `gh pr view` per PR, checks URL/number,
-exact title, develop base, subject branch, full head OID and complete consistent merge metadata, and rejects
-responses over 16,384 characters. Common additionally checks local ancestry with five-second local Git calls,
-disabled replacement objects/lazy fetching and no fetch; merged/integrated `done` subjects can resolve read-only.
-Its `--reconcile-delivery` writes marker retirement and views; its closed-unmerged/incomplete output names a
-planning owner. These are qualified **source observations**, not fresh Common execution or fleet acceptance.
-
-TASK-00519 adapts Common's integrated-merge resolution and explicit retirement while retaining Agent OS's
-canonical marked-PR/conflicting-subject validation, targeted selection, byte-counted response bounds, separate
-Board/Roadmap delivery tables and existing selection/parent/frontier authority. The earlier TASK-00518 receipts
-remain historical evidence of their original scope, not acceptance of this prospective extension. Common's
-source observations alone are not fleet acceptance; TASK-00519 owns all nine active project outcomes.
+`./bin/planning-check` and `--write` are offline only. They validate source records and generated views; the
+writing mode additionally rolls up eligible parents. Neither performs hosting lookup, delivery reconciliation
+or acceptance. Preserve historical TASK-00518/00519/00540 receipts and publication facts without carrying their
+removed delivery mechanism forward. See [landing standards](../docs/engineering/LANDING.md#synchronize-current-subject-handoffs).
 
 ## Automatic parent completion
 

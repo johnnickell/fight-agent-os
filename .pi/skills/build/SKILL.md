@@ -276,7 +276,11 @@ screenshots. Missing required/requested proof holds delivery rather than weakeni
 
 Success requires a verified open, ready PR against the correct base, exact published remote head, current
 review/QA provenance, required checks and accessible applicable captures, plus Land's reconciled source/current
-handoffs and verified eligible Git/container/network cleanup under the [owning procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff).
+handoffs and verified eligible Git/container/network/named-and-anonymous-volume cleanup under the
+[owning procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff). Created versus used/shared
+images and caches require explicit size/dependency/retention accounting; unavailable exact retirement holds
+that resource, never a prune fallback or silent leak exemption. No tracked awaiting-merge queue or routine
+post-merge Board maintenance is created; human merge and remote-head retention remain separate.
 Inspect its durable inventory/postconditions; publication with cleanup held is not complete Land/Build.
 If the remaining hold is the Land worker's own cwd/session, observe that worker's actual exit, then dispatch a
 fresh **cleanup-only** Land continuation from the verified canonical safe checkout, not the disposable TASK

@@ -2,18 +2,22 @@
 """Qualify and retire one TASK's enumerated local resources (Python 3.9+)."""
 
 import argparse
+import ctypes
 from datetime import datetime, timezone
 import fcntl
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path
 import re
 import shutil
+import socket
 import stat
 import subprocess
 import sys
 import tempfile
+from urllib.parse import quote
 
 
 COMMANDS = None
@@ -48,6 +52,9 @@ def command(args, cwd, codes=(0,), timeout=15):
     if COMMANDS is not None:
         COMMANDS.append({"argv": [str(value) for value in args], "exit": result.returncode,
                          "stdout_sha256": digest(result.stdout), "stderr_sha256": digest(result.stderr)})
+    if result.returncode not in codes and COMMANDS is not None and args[:3] == ["docker", "image", "rm"]:
+        # Exact Docker retirement errors contain resource references, not configuration/env values.
+        COMMANDS[-1]["retirement_error"] = result.stderr.decode("utf-8", errors="replace")[:4096]
     require(result.returncode in codes,
             f"{args[0]} {args[1]} exit {result.returncode}; retain resource; no protection-changing recovery")
     require(len(result.stdout) <= 64 * 1024 * 1024, "inspection exceeds bounded capture")
@@ -83,9 +90,185 @@ def container_identity(item):
     return fingerprint({key: item.get(key) for key in ("Id", "Created", "Image", "Name", "Config", "HostConfig", "Mounts")})
 
 
+def network_identity(item):
+    """Hash network configuration, excluding mutable endpoints and runtime counters."""
+    return fingerprint({key: item.get(key) for key in
+                        ("Id", "Name", "Created", "Scope", "Driver", "EnableIPv4", "EnableIPv6", "IPAM",
+                         "Internal", "Attachable", "Ingress", "ConfigFrom", "ConfigOnly", "Options", "Labels")})
+
+
+def volume_identity(item):
+    """Bind Docker's available volume identity fields; never use its name alone."""
+    return fingerprint({key: item.get(key) for key in
+                        ("Name", "Driver", "Mountpoint", "CreatedAt", "Labels", "Options", "Scope")})
+
+
+def volume_inventory(safe):
+    names = text(["docker", "volume", "ls", "--format", "{{.Name}}"], safe).splitlines()
+    return json_command(["docker", "volume", "inspect", *names], safe) if names else []
+
+
 def docker_inventory(safe):
     ids = text(["docker", "ps", "-a", "--no-trunc", "--format", "{{.ID}}"], safe).splitlines()
     return json_command(["docker", "inspect", *ids], safe) if ids else []
+
+
+def inspect_image(safe, identity):
+    """Resolve an exact Docker image ID; denial/aliases are never absence."""
+    require(re.fullmatch(r"sha256:[a-f0-9]{64}", identity), "full exact image ID required; references/config aliases held")
+    observed = command(["docker", "image", "inspect", identity], safe, codes=(0, 1))
+    if observed.returncode:
+        require(observed.stdout.strip() == b"[]" and
+                observed.stderr.decode().strip() == "Error response from daemon: No such image: " + identity,
+                "exact image inspection unavailable/denied/ambiguous; retain unchanged")
+        inventory = text(["docker", "image", "ls", "--all", "--no-trunc", "--quiet"], safe).splitlines()
+        require(all(re.fullmatch(r"sha256:[a-f0-9]{64}", value) for value in inventory) and identity not in inventory,
+                "exact inspection/all-image inventory contradict or are ambiguous; image absence held")
+        return None
+    values = json.loads(observed.stdout)
+    require(len(values) == 1 and values[0]["Id"] == identity,
+            "image reference/config/manifest ID differs; exact identity unresolved")
+    return values[0]
+
+
+def image_representation(current):
+    """Distinguish daemon image IDs from manifest and multi-platform index IDs."""
+    descriptor = current.get("Descriptor")
+    if descriptor is None:
+        return "legacy-image-id"
+    require(descriptor.get("digest") == current["Id"], "image descriptor/config identity ambiguous")
+    media_type = descriptor.get("mediaType")
+    require(media_type in ("application/vnd.oci.image.manifest.v1+json",
+                          "application/vnd.docker.distribution.manifest.v2+json"),
+            "manifest-index or unknown image representation needs owning-platform qualification; retained")
+    return "manifest"
+
+
+def require_no_image_consumers(safe, current):
+    representation = image_representation(current)
+    for container in docker_inventory(safe):
+        config_id = container["Image"]
+        require(re.fullmatch(r"sha256:[a-f0-9]{64}", config_id), "container image identity unavailable")
+        require(config_id != current["Id"], "image has current/stopped container consumer")
+        descriptor = container.get("ImageManifestDescriptor")
+        if representation == "manifest":
+            require(isinstance(descriptor, dict) and
+                    descriptor.get("mediaType") in ("application/vnd.oci.image.manifest.v1+json",
+                                                    "application/vnd.docker.distribution.manifest.v2+json") and
+                    re.fullmatch(r"sha256:[a-f0-9]{64}", descriptor.get("digest", "")),
+                    "container config/manifest relationship unavailable; image consumer inspection held")
+            require(descriptor["digest"] != current["Id"], "image has current/stopped manifest consumer")
+        else:
+            require(descriptor is None, "mixed config/manifest consumer representation unresolved")
+
+
+def local_image_metadata(safe, routes):
+    """Read bounded metadata from the positively associated local CLI engine."""
+    context = json_command(["docker", "context", "inspect"], safe)
+    require(len(context) == 1, "local image graph context ambiguous")
+    endpoint = os.environ.get("DOCKER_HOST") if not os.environ.get("DOCKER_CONTEXT") else None
+    endpoint = endpoint or context[0]["Endpoints"]["docker"]["Host"]
+    require(endpoint.startswith("unix:///"), "image graph capability requires an explicit local Unix engine")
+    path = absolute(endpoint.removeprefix("unix://"))
+    require(stat.S_ISSOCK(path.stat().st_mode), "local image graph endpoint unavailable")
+
+    def get(route):
+        connection = http.client.HTTPConnection("localhost", timeout=15)
+        try:
+            connection.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            connection.sock.settimeout(15)
+            connection.sock.connect(str(path))
+            connection.request("GET", route)
+            response = connection.getresponse()
+            raw = response.read(32 * 1024 * 1024 + 1)
+            require(response.status == 200 and len(raw) <= 32 * 1024 * 1024,
+                    "complete local image graph unavailable/denied/oversized")
+            if COMMANDS is not None:
+                COMMANDS.append({"observation": "local-engine-get", "endpoint": endpoint,
+                                 "route": route, "status": response.status, "sha256": digest(raw)})
+            return json.loads(raw)
+        except (OSError, http.client.HTTPException, ValueError):
+            raise Hold("local image graph observation unavailable/denied/malformed; retain unchanged") from None
+        finally:
+            connection.close()
+    engine = json_command(["docker", "info", "--format", "{{json .}}"], safe)
+    require(engine["ID"] and get("/info")["ID"] == engine["ID"], "CLI/API engine association changed")
+    values = [get(route) for route in routes]
+    require(get("/info")["ID"] == engine["ID"] and
+            json_command(["docker", "info", "--format", "{{json .}}"], safe)["ID"] == engine["ID"],
+            "CLI/API engine association changed during observation")
+    return values
+
+
+def local_image_graphs(safe):
+    """Read complete root/manifest metadata from the SAME local CLI engine, without saving layers."""
+    rows, = local_image_metadata(safe, ["/images/json?all=1&manifests=1"])
+    require(isinstance(rows, list) and len(rows) <= 4096 and
+            len({row["Id"] for row in rows}) == len(rows), "complete root inventory ambiguous")
+    return rows
+
+
+def image_root_graph(safe, current, rows=None):
+    """Bind each available image and attestation child; unknown/incomplete graphs hold."""
+    rows = local_image_graphs(safe) if rows is None else rows
+    matches = [row for row in rows if row["Id"] == current["Id"]]
+    require(len(matches) == 1, "exact image root graph missing")
+    root = matches[0]
+    require(root.get("Descriptor") == current.get("Descriptor") and
+            root["Descriptor"]["digest"] == current["Id"] and
+            root["Descriptor"]["mediaType"] in ("application/vnd.oci.image.index.v1+json",
+                "application/vnd.docker.distribution.manifest.list.v2+json",
+                "application/vnd.oci.image.manifest.v1+json",
+                "application/vnd.docker.distribution.manifest.v2+json"), "root descriptor unresolved")
+    children = root.get("Manifests")
+    require(isinstance(children, list) and 1 <= len(children) <= 32 and
+            len({child["ID"] for child in children}) == len(children), "complete immutable child graph unavailable")
+    images, attestations = [], []
+    for child in children:
+        descriptor = child["Descriptor"]
+        require(child["Available"] is True and descriptor["digest"] == child["ID"] and
+                re.fullmatch(r"sha256:[a-f0-9]{64}", child["ID"]) and
+                descriptor["mediaType"] in ("application/vnd.oci.image.manifest.v1+json",
+                                            "application/vnd.docker.distribution.manifest.v2+json"),
+                "missing/unknown child descriptor; root retirement held")
+        if child["Kind"] == "image":
+            platform = child["ImageData"]["Platform"]
+            require(platform == descriptor.get("platform") and platform["os"] != "unknown" and
+                    platform["architecture"] != "unknown", "image child platform ambiguous")
+            selector = "/".join(platform[key] for key in ("os", "architecture", "variant") if platform.get(key))
+            observed = json_command(["docker", "image", "inspect", "--platform", selector, current["Id"]], safe)
+            require(len(observed) == 1 and observed[0]["Id"] == child["ID"] and
+                    observed[0]["Descriptor"] == descriptor and observed[0]["Os"] == platform["os"] and
+                    observed[0]["Architecture"] == platform["architecture"], "immutable root/platform mapping changed")
+            images.append({"descriptor": descriptor, "config_sha256": fingerprint(observed[0]["Config"]),
+                           "rootfs_sha256": fingerprint(observed[0]["RootFS"])})
+        else:
+            require(child["Kind"] == "attestation" and child["AttestationData"]["For"] in
+                    {value["ID"] for value in children if value["Kind"] == "image"} and
+                    descriptor.get("annotations", {}).get("vnd.docker.reference.digest") == child["AttestationData"]["For"],
+                    "unknown attestation/child relationship")
+            attestations.append({"descriptor": descriptor, "for": child["AttestationData"]["For"]})
+    require(images, "root has no qualified image platform")
+    return {"root": root["Descriptor"], "images": sorted(images, key=lambda value: value["descriptor"]["digest"]),
+            "attestations": sorted(attestations, key=lambda value: value["descriptor"]["digest"])}
+
+
+def open_processes(raw):
+    """Parse lsof's typed fields without inheriting a prior process descriptor."""
+    processes, process, descriptor = {}, None, None
+    for line in raw.decode().splitlines():
+        if line.startswith("p"):
+            process = {"pid": int(line[1:]), "files": []}
+            processes[process["pid"]] = process
+            descriptor = None
+        elif line.startswith("u") and process is not None:
+            process["uid"] = line[1:]
+        elif line.startswith("f") and process is not None:
+            descriptor = {"fd": line[1:]}
+            process["files"].append(descriptor)
+        elif line[:1] in ("a", "n", "t") and descriptor is not None:
+            descriptor[line[0]] = line[1:]
+    return processes
 
 
 def file_record(path, allow_symlink=False, metadata=None):
@@ -196,8 +379,15 @@ class Cleanup:
         require(self.path.stat().st_uid == os.getuid() and stat.S_IMODE(self.path.stat().st_mode) == 0o600,
                 "receipt must already be private and owned (0600)")
         require(self.document["cleanup"]["version"] == 1, "unsupported cleanup receipt")
-        require(len(self.plan["containers"]) <= 32 and len(self.plan["networks"]) <= 32 and
+        require(all(isinstance(self.plan.get(kind), list) for kind in
+                    ("containers", "networks", "volumes", "images", "caches")),
+                "explicit storage/image/cache inventory missing; recover creation evidence before cleanup")
+        require(all(len(self.plan[kind]) <= 32 for kind in
+                    ("containers", "networks", "volumes", "images", "caches")) and
                 len(self.plan["protected_files"]) <= 128, "exact-subject resource bounds exceeded")
+        for kind in ("containers", "networks", "volumes", "images", "caches"):
+            identities = [item["identity"] for item in self.plan[kind]]
+            require(len(identities) == len(set(identities)), "duplicate exact-subject resource identity")
         self.plan_hash = fingerprint(self.plan)
         previous = self.document["cleanup"].get("plan_sha256")
         require(previous is None or previous == self.plan_hash, "plan changed; reconcile explicitly in a new receipt linked to prior results")
@@ -230,6 +420,11 @@ class Cleanup:
         try:
             require(item["disposition"] in ("remove", "retain", "hold"), "unknown disposition")
             if item["disposition"] == "retain":
+                require(item["reason"], "retention reason missing")
+                if kind in ("container", "network", "volume", "image"):
+                    self.observe_retained(kind, item, result)
+                elif kind == "cache":
+                    self.cache(item, result)
                 result.update(status="retained", reason=item["reason"])
             else:
                 require(item["disposition"] == "remove", item["reason"])
@@ -302,49 +497,220 @@ class Cleanup:
         require(fingerprint(model) == binding["resolved_sha256"] and model["name"] == binding["project"], "resolved runtime binding changed; no generic setup fallback")
         return binding, args, model
 
+    def retained_evidence(self, entry):
+        path = absolute(entry["path"])
+        require(not inside(path, absolute(self.plan["worktree"]["identity"])) and
+                path.stat().st_uid == os.getuid() and stat.S_IMODE(path.stat().st_mode) == 0o600,
+                "standalone evidence must be private, owned and outside removal candidates")
+        raw = path.read_bytes()
+        require(len(raw) <= 16 * 1024 * 1024 and digest(raw) == entry["sha256"],
+                "standalone evidence missing/changed; preserve original and recover proof")
+        return raw
+
+    def standalone(self):
+        """Qualify an explicit creation capability, never a Compose-validation bypass."""
+        binding = self.plan["runtime"]
+        require(binding["kind"] == "standalone" and binding["ownership"] == "proven",
+                "standalone capability ownership unresolved")
+        record = json.loads(self.retained_evidence(binding["creation_record"]))
+        require(record["version"] == 1 and record["task"] == self.subject and
+                record["origin"] == self.plan["origin"] and record["authority"] and
+                record["data"] == "disposable" and fingerprint(record) == binding["resolved_sha256"],
+                "standalone creation subject/authority/configuration contradiction")
+        source = record["source"]
+        require(re.fullmatch(r"[a-f0-9]{40}", source["revision"]) and source["workload"],
+                "standalone source revision/workload unresolved")
+        basis = record["basis"]
+        require(basis["kind"] in ("allocation", "legacy-adoption") and 1 <= len(basis["evidence"]) <= 16,
+                "standalone original allocation evidence unavailable")
+        evidence = b"\n".join(self.retained_evidence(entry) for entry in basis["evidence"])
+        require(source["revision"].encode() in evidence, "standalone source not corroborated by retained evidence")
+        if basis["kind"] == "legacy-adoption":
+            prior = json.loads(self.retained_evidence(basis["prior_receipt"]))
+            old = prior["cleanup"]["plan"]
+            require(old["task"] == self.subject and old["origin"] == self.plan["origin"] and
+                    old["oid"] == self.plan["oid"] and fingerprint(old) == basis["prior_plan_sha256"],
+                    "legacy adoption original subject/plan changed")
+            for kind in ("containers", "networks"):
+                require(set(record[kind]) <= {entry["identity"] for entry in old[kind]},
+                        "legacy adoption adds resources outside original subject")
+        for kind in ("containers", "networks"):
+            require(len(record[kind]) <= 32, "standalone allocation bounds exceeded")
+            for identifier, resource in record[kind].items():
+                require(re.fullmatch(r"[a-f0-9]{64}", identifier) and identifier.encode() in evidence and
+                        (resource["inspection_sha256"].encode() in evidence or
+                         (kind == "networks" and resource["created"].encode() in evidence)),
+                        "exact standalone allocation/configuration proof absent; resource-specific evidence hold")
+        return record
+
+    def standalone_container(self, item, current):
+        record = self.standalone()
+        proof = record["containers"][item["identity"]]
+        require(proof["name"] == current["Name"] == item["name"] and
+                proof["image"] == current["Image"] and
+                proof["inspection_sha256"] == item["inspection_sha256"] == container_identity(current) and
+                proof["mounts_sha256"] == fingerprint(current["Mounts"]),
+                "standalone container creation/configuration/mount identity changed")
+        require(not any(key.startswith("com.docker.compose.") for key in (current["Config"].get("Labels") or {})),
+                "Compose-labelled resource requires the Compose capability")
+        require(not current["HostConfig"].get("PortBindings") and
+                current["NetworkSettings"]["Networks"] and
+                current["HostConfig"]["NetworkMode"] in
+                set(record["networks"]) | {value["name"] for value in record["networks"].values()} and
+                not current["HostConfig"].get("Privileged") and not current["HostConfig"].get("AutoRemove"),
+                "standalone published/host/privileged/auto-removing runtime outside qualified capability")
+        for name, attached in current["NetworkSettings"]["Networks"].items():
+            identifier = attached.get("NetworkID")
+            # Docker drops NetworkID for stopped endpoints; resolve the recorded exact name instead.
+            matches = [key for key, value in record["networks"].items() if value["name"] == name]
+            require(len(matches) == 1 and (not identifier or identifier == matches[0]),
+                    "standalone network identity unknown/shared")
+            network = json_command(["docker", "network", "inspect", matches[0]], self.safe)[0]
+            require(network_identity(network) == record["networks"][matches[0]]["inspection_sha256"],
+                    "standalone network configuration changed")
+            eligible = {entry["identity"]: entry for entry in self.plan["containers"]
+                        if entry["disposition"] == "remove" and entry["ownership"] == "proven" and
+                        entry["data"] == "disposable" and entry["consumers"] == []}
+            peers = {entry["Id"] for entry in docker_inventory(self.safe)
+                     if name in entry["NetworkSettings"]["Networks"]}
+            require(peers <= set(eligible) & set(record["containers"]) and
+                    set(network["Containers"]) <= set(eligible) & set(record["containers"]),
+                    "standalone network has stopped/shared/unknown consumer; preserve workload")
+        workload = proof["workload"]
+        if current["State"]["Running"]:
+            processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
+            require(digest(processes) == workload["processes_sha256"] == item["processes_sha256"],
+                    "standalone processes changed/active consumer")
+            # Connection inspection is live, not a hash of a historical no-consumer declaration.
+            probe = "awk 'FNR > 1 && $4 == \"01\" {n++} END {print n+0}' /proc/net/tcp /proc/net/tcp6; awk 'NR > 1 && $6 == \"03\" {n++} END {print n+0}' /proc/net/unix"
+            sockets = command(["docker", "exec", item["identity"], "sh", "-c", probe], self.safe)
+            require(not sockets.stderr.strip() and sockets.stdout.split() == [b"0", b"0"],
+                    "standalone active connections or unavailable socket inspection")
+            if workload["kind"] == "idle":
+                require(current["Config"]["Cmd"] and current["Config"]["Cmd"][0] == "sleep" and
+                        len(processes.decode().splitlines()) == 2,
+                        "standalone idle workload has unknown processes")
+            elif workload["kind"] == "postgres":
+                sessions = command(["docker", "exec", item["identity"], "sh", "-c",
+                    'psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-${POSTGRES_USER:-postgres}}" -Atc "SELECT count(*) FROM pg_stat_activity WHERE backend_type=\'client backend\' AND pid<>pg_backend_pid()"'], self.safe)
+                require(sessions.stdout.strip() == b"0" and not sessions.stderr.strip(), "standalone PostgreSQL sessions active/unknown")
+            elif workload["kind"] == "mysql":
+                sessions = command(["docker", "exec", item["identity"], "sh", "-c",
+                    'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -Nse "SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE ID<>CONNECTION_ID() AND USER<>\'event_scheduler\'"'], self.safe)
+                require(sessions.stdout.strip() == b"0" and not sessions.stderr.strip(), "standalone MySQL sessions active/unknown")
+            else:
+                raise Hold("standalone workload consumer-inspection capability unavailable")
+        else:
+            require(workload["kind"] in ("idle", "postgres", "mysql") and not current["State"].get("Restarting"),
+                    "stopped standalone workload identity unresolved")
+        # Reuse the SAME named/anonymous provenance implementation. Declarations must come from
+        # original allocation evidence, never inferred from names or invented Compose labels.
+        declarations = proof["volume_declarations"]
+        require(fingerprint(declarations).encode() in b"\n".join(
+            self.retained_evidence(entry) for entry in record["basis"]["evidence"])
+            or not declarations, "standalone volume declaration allocation proof absent")
+        return {"services": {item["service"]: {"volumes": declarations}}, "volumes": {}}
+
     def host_consumers(self, candidate):
         observation = command(["lsof", "-nP", "-Fpcuaftn"], self.safe)
         require(not observation.stderr.strip(), "host consumer visibility incomplete")
-        processes, process, descriptor = {}, None, None
-        for line in observation.stdout.decode().splitlines():
-            if line.startswith("p"):
-                process = {"pid": int(line[1:]), "files": []}
-                processes[process["pid"]] = process
-            elif line.startswith("u") and process is not None:
-                process["uid"] = line[1:]
-            elif line.startswith("f") and process is not None:
-                descriptor = {"fd": line[1:]}
-                process["files"].append(descriptor)
-            elif line[:1] in ("a", "n", "t") and descriptor is not None:
-                descriptor[line[0]] = line[1:]
-        for process in processes.values():
+        for process in open_processes(observation.stdout).values():
             matching = [entry for entry in process["files"] if entry.get("n", "").startswith("/") and
                         inside(Path(entry["n"].removesuffix(" (deleted)")), candidate)]
             if not matching:
                 continue
-            require(all(entry.get("a") == "r" and re.fullmatch(r"\*?\d+", entry["fd"]) for entry in matching),
+            require(all(entry.get("a") == "r" and entry.get("t") in ("DIR", "REG", "LINK") and
+                        re.fullmatch(r"\*?\d+", entry["fd"]) for entry in matching),
                     "active cwd/writer/unknown descriptor; retain resource")
-            # Qualify one supported local Docker Desktop file-sharing topology from live
-            # executable, process birth/owner, open VM disk/kernel, context and engine.
-            require(sys.platform == "darwin" and process.get("uid") == str(os.getuid()), "unknown read-only consumer")
-            exe = "/System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine"
-            identity = text(["ps", "-p", str(process["pid"]), "-o", "uid=,lstart=,comm="], self.safe)
-            require(identity.endswith(exe), "read-only consumer is not qualified Docker VM executable")
-            command(["codesign", "--verify", "--strict", exe], self.safe)
-            files = {entry.get("n"): entry for entry in process["files"]}
-            disk = str(Path.home() / "Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw")
-            kernel = "/Applications/Docker.app/Contents/Resources/linuxkit/kernel"
+            links = self.excluded_link_records(matching, candidate)
+            self.readonly_file_sharing(process, matching, candidate)
+            require(self.excluded_link_records(matching, candidate) == links,
+                    "excluded link/parent metadata changed during reader qualification")
+            if links:
+                self.attempt.setdefault("readonly_file_sharing", {})[str(process["pid"])]["excluded_links"] = links
+
+    def excluded_link_records(self, matching, candidate):
+        """Bind explicitly disposable LINKs and ordinary parents without following targets."""
+        links = [entry for entry in matching if entry.get("t") == "LINK"]
+        if not links:
+            return {}
+        worktree = self.plan["worktree"]
+        require(absolute(worktree["identity"]) == candidate, "LINK candidate differs from approved worktree")
+        exclusions = exclusion_paths(worktree["exclusions"])
+        require(all(path.parts and str(path) != "." for path in exclusions), "invalid LINK exclusion")
+        records = {}
+        for entry in links:
+            path = Path(entry["n"])
+            relative = path.relative_to(candidate)
+            require(str(path) == entry["n"] and ".." not in relative.parts and
+                    any(inside(relative, excluded) for excluded in exclusions),
+                    "LINK is not an explicitly excluded disposable path")
+            require(not any(inside(Path(protected["path"]), path) for protected in self.plan["protected_files"]),
+                    "LINK overlaps protected evidence")
+            # Inspect parents from the canonical candidate outward, never through a link.
+            parents = list(path.parents)
+            parents = list(reversed(parents[:parents.index(candidate) + 1]))
+            for current in [*parents, path]:
+                if str(current) in records:
+                    continue
+                before = current.lstat()
+                record = file_record(current, allow_symlink=current == path)
+                require(record["kind"] == ("symlink" if current == path else "directory") and
+                        not any(" deny " in (" " + acl + " ") for acl in record["acl"]) and
+                        (current == path or record["mode"] & 0o300 == 0o300),
+                        "excluded LINK/parent kind or protection unresolved")
+                after = current.lstat()
+                identity = lambda value: (value.st_dev, value.st_ino, value.st_mode, value.st_uid,
+                    value.st_gid, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+                require(identity(before) == identity(after), "excluded LINK/parent changed while inspected")
+                records[str(current)] = {"identity": identity(after), "record": record}
+        return records
+
+    def readonly_file_sharing(self, process, matching, candidate):
+        """Qualify signed local VM or backend readers, never arbitrary read-only consumers."""
+        require(sys.platform == "darwin" and process.get("uid") == str(os.getuid()), "unknown read-only consumer")
+        vm = "/System/Library/Frameworks/Virtualization.framework/Versions/A/XPCServices/com.apple.Virtualization.VirtualMachine.xpc/Contents/MacOS/com.apple.Virtualization.VirtualMachine"
+        backend = "/Applications/Docker.app/Contents/MacOS/com.docker.backend"
+        identity_args = ["ps", "-p", str(process["pid"]), "-o", "uid=,lstart=,comm="]
+        identity = text(identity_args, self.safe)
+        parts = identity.split(maxsplit=6)
+        require(len(parts) == 7 and parts[0] == process["uid"] and parts[6] in (vm, backend),
+                "read-only consumer is not qualified Docker VM/backend executable")
+        exe = parts[6]
+        requirement = 'anchor apple' if exe == vm else 'anchor apple generic and certificate leaf[subject.OU] = "9BNSXJN65R"'
+        command(["codesign", "--verify", "--strict", "-R", "=" + requirement, exe], self.safe)
+        executable_hash = digest(Path(exe).read_bytes())
+        files = {entry.get("n"): entry for entry in process["files"]}
+        disk = str(Path.home() / "Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw")
+        kernel = "/Applications/Docker.app/Contents/Resources/linuxkit/kernel"
+        endpoint = str(Path.home() / ".docker/run/docker.sock")
+        backend_socket = str(Path.home() / "Library/Containers/com.docker.docker/Data/backend.sock")
+        if exe == vm:
             require(files.get(disk, {}).get("a") == "u" and files.get(kernel, {}).get("a") == "r", "VM/Docker backing identity unavailable")
-            context = json_command(["docker", "context", "inspect"], self.safe)
-            engine = json_command(["docker", "info", "--format", "{{json .}}"], self.safe)
-            require(len(context) == 1 and context[0]["Endpoints"]["docker"]["Host"] ==
-                    "unix://" + str(Path.home() / ".docker/run/docker.sock") and
-                    engine["OperatingSystem"] == "Docker Desktop" and engine["ID"], "VM/local Docker context binding unavailable")
-            self.attempt.setdefault("readonly_file_sharing", {})[str(process["pid"])] = {
-                "process_identity": identity, "executable_sha256": digest(Path(exe).read_bytes()),
-                "disk": disk, "kernel": kernel, "engine_id": engine["ID"],
-                "context_endpoint": context[0]["Endpoints"]["docker"]["Host"],
-                "candidate_readonly_descriptors": len(matching)}
+            associated = {name: files[name] for name in (disk, kernel)}
+        else:
+            require(all(files.get(name, {}).get("t") == "unix" and files[name].get("a") == "u"
+                        for name in (endpoint, backend_socket)),
+                    "backend/local Docker socket association unavailable")
+            associated = {name: files[name] for name in (endpoint, backend_socket)}
+        context = json_command(["docker", "context", "inspect"], self.safe)
+        engine = json_command(["docker", "info", "--format", "{{json .}}"], self.safe)
+        require(len(context) == 1 and context[0]["Endpoints"]["docker"]["Host"] == "unix://" + endpoint and
+                not os.environ.get("DOCKER_HOST") and engine["OperatingSystem"] == "Docker Desktop" and engine["ID"],
+                "VM/backend local Docker context binding unavailable")
+        fresh = command(["lsof", "-nP", "-p", str(process["pid"]), "-Fpcuaftn"], self.safe)
+        require(not fresh.stderr.strip(), "file-sharing descriptor visibility incomplete")
+        latest = open_processes(fresh.stdout).get(process["pid"], {})
+        latest_matching = [entry for entry in latest.get("files", []) if entry.get("n", "").startswith("/") and
+                           inside(Path(entry["n"].removesuffix(" (deleted)")), candidate)]
+        require(latest.get("uid") == process["uid"] and latest_matching == matching and
+                all(entry in latest["files"] for entry in associated.values()) and
+                text(identity_args, self.safe) == identity and digest(Path(exe).read_bytes()) == executable_hash,
+                "file-sharing process birth/executable/descriptor identity changed")
+        self.attempt.setdefault("readonly_file_sharing", {})[str(process["pid"])] = {
+            "process_identity": identity, "executable_sha256": executable_hash,
+            "association": associated, "engine_id": engine["ID"], "context_endpoint": "unix://" + endpoint,
+            "candidate_readonly_descriptors": matching}
 
     def consumers(self, candidate):
         self.host_consumers(candidate)
@@ -379,21 +745,26 @@ class Cleanup:
             require(not any(value["Name"] == item["name"] for value in inventory), "container recreated under recorded name; new identity held")
             result.update(status="absent", reason="exact ID and recorded name absent on successful full inventory")
             return
-        binding, args, model = self.runtime()
-        require(container_identity(current) == item["inspection_sha256"], "container identity/configuration/mounts changed")
-        labels = current["Config"]["Labels"]
-        service = item["service"]
-        require(service in model["services"], "container service absent from qualified configuration")
-        require(labels.get("com.docker.compose.project") == binding["project"] and
-                labels.get("com.docker.compose.service") == service and
-                labels.get("com.docker.compose.project.working_dir") == binding["working_directory"] and
-                labels.get("com.docker.compose.project.config_files") == ",".join(entry["path"] for entry in binding["config_files"]), "Compose/resource binding mismatch")
-        expected = text([*args, "config", "--hash", service], binding["working_directory"]).split()
-        require(len(expected) == 2 and labels.get("com.docker.compose.config-hash") == expected[1], "current Compose service hash contradicts container")
+        self.creation_evidence(item)
+        if self.plan["runtime"].get("kind", "compose") == "standalone":
+            model = self.standalone_container(item, current)
+        else:
+            binding, args, model = self.runtime()
+            require(container_identity(current) == item["inspection_sha256"], "container identity/configuration/mounts changed")
+            labels = current["Config"]["Labels"]
+            service = item["service"]
+            require(service in model["services"], "container service absent from qualified configuration")
+            require(labels.get("com.docker.compose.project") == binding["project"] and
+                    labels.get("com.docker.compose.service") == service and
+                    labels.get("com.docker.compose.project.working_dir") == binding["working_directory"] and
+                    labels.get("com.docker.compose.project.config_files") == ",".join(entry["path"] for entry in binding["config_files"]), "Compose/resource binding mismatch")
+            expected = text([*args, "config", "--hash", service], binding["working_directory"]).split()
+            require(len(expected) == 2 and labels.get("com.docker.compose.config-hash") == expected[1], "current Compose service hash contradicts container")
         if current["State"]["Running"]:
             processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
             require(digest(processes) == item["processes_sha256"], "container processes changed/unknown consumers")
-        require(item["data"] == "disposable" and all(mount["Type"] != "volume" for mount in current["Mounts"]), "durable or unresolved data disposition")
+        require(item["data"] == "disposable", "durable or unresolved data disposition")
+        self.capture_mounts(item, current, model)
         candidate = absolute(self.plan["worktree"]["identity"])
         for mount in current["Mounts"]:
             if mount["Type"] == "bind" and mount.get("RW"):
@@ -405,6 +776,8 @@ class Cleanup:
         # Re-read exact immutable identity immediately before normal stop/removal.
         latest = json_command(["docker", "inspect", item["identity"]], self.safe)[0]
         require(container_identity(latest) == item["inspection_sha256"], "container changed before effect")
+        if self.plan["runtime"].get("kind", "compose") == "standalone":
+            self.standalone_container(item, latest)
         if not self.apply:
             result.update(status="qualified", reason="preview only")
             return
@@ -414,13 +787,439 @@ class Cleanup:
             command(["docker", "stop", "--time", "10", item["identity"]], self.safe, timeout=20)
         # Stop is an effect too; an interruption resumes from current stopped state.
         self.subject_checks()
-        self.runtime()
         latest = json_command(["docker", "inspect", item["identity"]], self.safe)[0]
+        if self.plan["runtime"].get("kind", "compose") == "standalone":
+            self.standalone_container(item, latest)
+        else:
+            self.runtime()
         require(container_identity(latest) == item["inspection_sha256"] and not latest["State"]["Running"], "container changed/restarted after stop")
         self.host_consumers(candidate)
         command(["docker", "rm", item["identity"]], self.safe)
         require(not any(value["Id"] == item["identity"] or value["Name"] == item["name"] for value in docker_inventory(self.safe)), "container removal postcondition failed/recreated")
-        result.update(status="removed", reason="exact container ID/name absence verified; no volumes removed")
+        result.update(status="removed", reason="exact container ID/name absence verified; mount provenance retained for separate volume qualification")
+
+    def creation_evidence(self, item):
+        creation = item["creation"]
+        if creation["kind"] == "legacy-created":
+            record = self.standalone()
+            require(record["basis"]["kind"] == "legacy-adoption" and
+                    (item["identity"] in record["containers"] or item["identity"] in record["networks"]),
+                    "legacy resource missing original allocation proof; hold without retrospective intent")
+            return creation
+        require(creation["kind"] == "created", "merely used/shared resource is not task-created")
+        intent = absolute(creation["intent"])
+        require(not inside(intent, absolute(self.plan["worktree"]["identity"])) and
+                intent.stat().st_uid == os.getuid() and stat.S_IMODE(intent.stat().st_mode) == 0o600,
+                "creation intent must be owned/private and outside removal candidates")
+        require(digest(intent.read_bytes()) == creation["intent_sha256"], "creation intent missing/changed; recover original evidence")
+        return creation
+
+    def volume_size(self, name, result):
+        # Docker reports approximate display units, not exact reclaimed physical bytes.
+        usage = json_command(["docker", "system", "df", "--verbose", "--format", "{{json .Volumes}}"], self.safe)
+        matches = [item for item in usage if item["Name"] == name]
+        require(len(matches) == 1, "volume size observation unavailable; retain and recover inspection")
+        result["storage"] = {"docker_size": matches[0]["Size"], "links": matches[0]["Links"],
+                             "observed_at": datetime.now(timezone.utc).isoformat(),
+                             "physical_reclaimed_bytes": None}
+
+    def image_declarations(self, item, current):
+        """Resolve original declarations; only an explicit immutable proof can recover config-ID not-found."""
+        lookup = command(["docker", "image", "inspect", current["Image"]], self.safe, codes=(0, 1))
+        if lookup.returncode == 0:
+            images = json.loads(lookup.stdout)
+            require(len(images) == 1 and images[0]["Id"] == current["Image"], "creator config lookup is an unresolved alias")
+            return images[0]["Config"].get("Volumes") or {}
+        require(lookup.stdout.strip() == b"[]" and lookup.stderr.decode().strip() ==
+                "Error response from daemon: No such image: " + current["Image"],
+                "creator image declaration inspection unavailable/denied")
+        require(isinstance(item.get("image_declaration"), dict),
+                "config-ID declaration unavailable; original immutable root/platform proof required")
+        proof = json.loads(self.retained_evidence(item["image_declaration"]))
+        require(proof["version"] == 1 and proof["task"] == self.subject and proof["origin"] == self.plan["origin"] and
+                proof["container"] == current["Id"] and proof["config_id"] == current["Image"],
+                "original declaration subject/config mismatch")
+        originals = json.loads(self.retained_evidence(proof["original_containers"]))
+        originals = originals if isinstance(originals, list) else [originals]
+        creators = [value for value in originals if value["Id"] == current["Id"]]
+        require(len(creators) == 1 and container_identity(creators[0]) == container_identity(current) == item["inspection_sha256"],
+                "original declaration creator/configuration/mount mismatch")
+        descriptor = current["ImageManifestDescriptor"]
+        require(descriptor == creators[0]["ImageManifestDescriptor"] and descriptor["platform"] == proof["platform"],
+                "original declaration descriptor/platform mismatch")
+        root = inspect_image(self.safe, proof["root"])
+        require(root is not None, "original immutable declaration root missing")
+        old_plan = json.loads(self.retained_evidence(proof["original_root_plan"]))["cleanup"]["plan"]
+        require(old_plan["task"] == self.subject and old_plan["origin"] == self.plan["origin"] and
+                any(value["identity"] == root["Id"] and value["inspection_sha256"] == fingerprint(root)
+                    for value in old_plan["images"]), "original root inspection binding missing/changed")
+        platform = proof["platform"]
+        selector = "/".join(platform[key] for key in ("os", "architecture", "variant") if platform.get(key))
+        observed = json_command(["docker", "image", "inspect", "--platform", selector, root["Id"]], self.safe)
+        original_images = json.loads(self.retained_evidence(proof["original_platform_images"]))
+        original_images = original_images if isinstance(original_images, list) else [original_images]
+        matches = [value for value in original_images if value["Id"] == descriptor["digest"]]
+        require(len(observed) == len(matches) == 1 and observed[0]["Descriptor"] == descriptor and
+                observed[0]["Id"] == descriptor["digest"] and observed[0]["Os"] == platform["os"] and
+                observed[0]["Architecture"] == platform["architecture"] and
+                matches[0]["Descriptor"] == descriptor and
+                all(observed[0][key] == matches[0][key] for key in ("Config", "RootFS", "Descriptor")),
+                "original immutable platform/config/RootFS/declarations differ")
+        graph = image_root_graph(self.safe, root)
+        require(any(value["descriptor"] == descriptor and value["config_sha256"] == fingerprint(matches[0]["Config"])
+                    and value["rootfs_sha256"] == fingerprint(matches[0]["RootFS"]) for value in graph["images"]),
+                "creator descriptor not in immutable root graph")
+        self.attempt.setdefault("image_declarations", {})[current["Id"]] = {
+            "proof": item["image_declaration"], "root": root["Id"], "config_id": current["Image"],
+            "descriptor": descriptor, "graph_sha256": fingerprint(graph),
+            "declarations_sha256": fingerprint(matches[0]["Config"].get("Volumes") or {})}
+        return matches[0]["Config"].get("Volumes") or {}
+
+    def capture_mounts(self, item, current, model):
+        """Persist exact creating-container observations before any stop/removal effect."""
+        mounts = [{key: mount.get(key) for key in ("Type", "Name", "Source", "Destination", "RW")}
+                  for mount in current["Mounts"]]
+        volumes = {entry["identity"]: entry for entry in self.plan["volumes"]}
+        declared = self.image_declarations(item, current)
+        for mount in mounts:
+            if mount["Type"] != "volume":
+                continue
+            require(mount["Name"] in volumes, "mounted volume missing from exact inventory; retain creating container")
+            volume = volumes[mount["Name"]]
+            require(volume["disposition"] in ("remove", "retain", "hold") and volume["reason"],
+                    "volume data/retention disposition unresolved")
+            if volume["disposition"] != "remove":
+                continue  # Removing a disposable container never implies discarding retained data.
+            creation = self.creation_evidence(volume)
+            require(volume["data"] == "disposable" and volume["authority"], "volume data/authority unresolved")
+            if creation["container"] != current["Id"]:
+                continue  # This task container merely uses storage; only its creator can supply creation proof.
+            require(creation["destination"] == mount["Destination"],
+                    "volume creation destination not bound to this workload")
+            observed = json_command(["docker", "volume", "inspect", mount["Name"]], self.safe)[0]
+            require(volume_identity(observed) == volume["inspection_sha256"], "volume identity changed before provenance capture")
+            configured = [value for value in model["services"][item["service"]].get("volumes", [])
+                          if value["target"] == mount["Destination"]]
+            if self.plan["runtime"].get("kind", "compose") == "standalone":
+                require(configured and configured[0]["type"] == "volume" and
+                        configured[0].get("allocated_name") == mount["Name"] and
+                        configured[0].get("created_absent") is True,
+                        "standalone named/anonymous volume original allocation proof unavailable")
+            elif configured and configured[0].get("source"):
+                config = model["volumes"][configured[0]["source"]]
+                require(not config.get("external", False) and config["name"] == mount["Name"],
+                        "external/shared configured volume; no discard through task association")
+            else:
+                require(mount["Destination"] in declared or
+                        (configured and configured[0]["type"] == "volume"),
+                        "anonymous mount declaration unresolved")
+        observation = {"container": current["Id"], "container_identity": container_identity(current),
+                       "image": current["Image"], "mounts": mounts,
+                       "runtime_sha256": self.plan["runtime"]["resolved_sha256"]}
+        provenance = self.document["cleanup"].setdefault("mount_provenance", {})
+        require(current["Id"] not in provenance or provenance[current["Id"]] == observation,
+                "creating workload provenance changed; retain original evidence")
+        provenance[current["Id"]] = observation
+        self.save()
+
+    def observe_retained(self, kind, item, result):
+        """Retention is an observed policy disposition, not a silent missing-resource exemption."""
+        if kind == "container":
+            current = json_command(["docker", "inspect", item["identity"]], self.safe)[0]
+            require(container_identity(current) == item["inspection_sha256"], "retained container missing/recreated/changed")
+        elif kind == "network":
+            current = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
+            require(current["Id"] == item["identity"] and current["Name"] == item["name"] and
+                    current["Created"] == item["created"], "retained network missing/recreated/changed")
+        elif kind == "volume":
+            current = json_command(["docker", "volume", "inspect", item["identity"]], self.safe)[0]
+            require(volume_identity(current) == item["inspection_sha256"], "retained volume missing/recreated")
+            self.volume_size(item["identity"], result)
+        else:
+            current = inspect_image(self.safe, item["identity"])
+            require(current is not None, "retained image absent; ownership/identity needs reconciliation")
+            result["storage"] = {"size_bytes": current["Size"], "physical_reclaimed_bytes": None}
+        result["creation"] = item["creation"]
+
+    def volume(self, item, result):
+        self.creation_evidence(item)
+        require(item["data"] == "disposable" and item["authority"], "durable/unknown storage or discard authority unresolved")
+        provenance = self.document["cleanup"].get("mount_provenance", {}).get(item["creation"]["container"])
+        require(provenance, "creating-container mount provenance unavailable; recover original evidence")
+        creator = next((entry for entry in self.plan["containers"] if entry["identity"] == provenance["container"]), None)
+        require(creator and creator["inspection_sha256"] == provenance["container_identity"] and
+                provenance["runtime_sha256"] == self.plan["runtime"]["resolved_sha256"] and
+                any(mount["Type"] == "volume" and mount["Name"] == item["identity"] and
+                    mount["Destination"] == item["creation"]["destination"] for mount in provenance["mounts"]),
+                "storage provenance does not match the original creating workload")
+        inventory = volume_inventory(self.safe)
+        current = next((value for value in inventory if value["Name"] == item["identity"]), None)
+        if current is None:
+            result.update(status="absent", reason="exact volume name absent on successful inventory; original creation evidence retained")
+            return
+        require(volume_identity(current) == item["inspection_sha256"], "volume recreated/identity changed; retain new resource")
+        self.volume_size(item["identity"], result)
+        require(not any(mount["Type"] == "volume" and mount["Name"] == item["identity"]
+                        for container in docker_inventory(self.safe) for mount in container["Mounts"]),
+                "volume has current consumer, including stopped/shared containers; retain unchanged")
+        # Repeat exact identity and all-consumer observations immediately before the effect.
+        latest = json_command(["docker", "volume", "inspect", item["identity"]], self.safe)[0]
+        require(volume_identity(latest) == item["inspection_sha256"], "volume changed before removal")
+        if not self.apply:
+            result.update(status="qualified", reason="preview only")
+            return
+        result.update(status="pending", reason="qualified task-created disposable volume; reobserve absence")
+        self.save()
+        self.subject_checks()
+        require(not any(mount["Type"] == "volume" and mount["Name"] == item["identity"]
+                        for container in docker_inventory(self.safe) for mount in container["Mounts"]),
+                "new/stopped volume consumer before effect; retain unchanged")
+        latest = json_command(["docker", "volume", "inspect", item["identity"]], self.safe)[0]
+        require(volume_identity(latest) == item["inspection_sha256"], "volume changed immediately before effect")
+        command(["docker", "volume", "rm", item["identity"]], self.safe)
+        require(not any(value["Name"] == item["identity"] for value in volume_inventory(self.safe)),
+                "volume removal postcondition failed/recreated")
+        result.update(status="removed", reason="exact disposable volume absence verified; physical disk reclaim not inferred")
+
+    def owned_root_proof(self, item):
+        """Require original source/allocation/reference authority, not a unique tag or no consumers."""
+        retirement = item["retirement"]
+        require(retirement["kind"] == "owned-root-references", "unknown image retirement capability")
+        proof = json.loads(self.retained_evidence(retirement["proof"]))
+        require(proof["version"] == 1 and proof["task"] == self.subject and proof["origin"] == self.plan["origin"] and
+                proof["root"] == item["identity"] and proof["data"] == item["data"] == "disposable" and
+                proof["authority"] == item["authority"] and proof["authority"], "image root/source/discard authority mismatch")
+        original = json.loads(self.retained_evidence(proof["original_image"]))
+        require(original["Id"] == item["identity"] and fingerprint(original) == item["inspection_sha256"] and
+                proof["graph"]["root"] == original["Descriptor"], "original root inspection/graph mismatch")
+        references = sorted((original["RepoTags"] or []) + (original["RepoDigests"] or []))
+        require(references and references == proof["references"] and len(references) <= 32 and
+                len(references) == len(set(references)) and
+                all(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/@-]{0,511}", value) for value in references),
+                "exact original owned reference set missing/ambiguous")
+        basis = proof["basis"]
+        require(re.fullmatch(r"[a-f0-9]{40}", basis["source_revision"]) and 1 <= len(basis["evidence"]) <= 16,
+                "original image source/allocation evidence missing")
+        evidence = b"\n".join(self.retained_evidence(entry) for entry in basis["evidence"])
+        require(basis["source_revision"].encode() in evidence and item["identity"].encode() in evidence,
+                "original source/exported root not corroborated")
+        for reference in references:
+            if "@" in reference:
+                repository, identifier = reference.rsplit("@", 1)
+                require(identifier == item["identity"] and any(value.startswith(repository + ":") for value in references),
+                        "digest reference has no original owned naming relationship")
+            else:
+                require(reference.encode() in evidence, "original reference creation/naming proof missing")
+        self.creation_evidence(item)
+        return proof, original
+
+    def root_reference_state(self, identity, rows):
+        """Do not conflate config aliases, rebound references or denied inspection with absence."""
+        current = inspect_image(self.safe, identity)
+        matches = [row for row in rows if row["Id"] == identity]
+        require(len(matches) == (1 if current else 0), "root exact inspection/complete graph census contradict")
+        if current:
+            summary = matches[0]
+            tags, digests = set(current["RepoTags"] or []), set(current["RepoDigests"] or [])
+            require(tags == set(summary["RepoTags"] or []) and
+                    set(summary["RepoDigests"] or []) <= digests,
+                    "root reference census changed")
+            require(len(tags) + len(digests) <= 32 and
+                    all(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/@-]{0,511}", value) for value in tags | digests),
+                    "root reference census ambiguous/oversized")
+            for reference in digests:
+                repository, separator, identifier = reference.rpartition("@")
+                require(separator and identifier == identity and any(tag.startswith(repository + ":") for tag in tags),
+                        "repository digest lacks exact root/owned naming relationship")
+            # The summary may omit RepoDigests. Never synthesize them from tags: exact
+            # CLI AND same-engine API lookups must positively resolve every digest to
+            # this entire root inspection. Raw OCI-load tags remain exact census names.
+            selectors = [identity, *sorted(digests)]
+            observations = local_image_metadata(self.safe, ["/images/json?all=1&manifests=1",
+                *["/images/" + quote(value, safe="") + "/json" for value in selectors]])
+            require(isinstance(observations[0], list) and len(observations[0]) == len(rows) and
+                    {row["Id"]: row for row in observations[0]} == {row["Id"]: row for row in rows} and
+                    all(value == current for value in observations[1:]),
+                    "root reference/inspection census changed or contradicts exact API lookup")
+            require(not any(row["Id"] != identity and (tags | digests) &
+                    set((row["RepoTags"] or []) + (row["RepoDigests"] or [])) for row in rows),
+                    "foreign/rebound reference in complete root census")
+            for reference in sorted(digests):
+                require(json_command(["docker", "image", "inspect", reference], self.safe) == [current],
+                        "repository digest exact CLI/root relationship changed")
+            require(inspect_image(self.safe, identity) == current, "root changed during reference corroboration")
+        return current
+
+    def protected_image_roots(self, rows, identity):
+        """Record unrelated root references and child descriptors; shared layers stay engine-owned."""
+        return {row["Id"]: {"descriptor": row.get("Descriptor"),
+                    "references": sorted(set((row["RepoTags"] or []) + (row["RepoDigests"] or []))),
+                    "children": [{key: child.get(key) for key in ("ID", "Descriptor", "Available", "Kind")}
+                                 for child in row.get("Manifests", [])]}
+                for row in rows if row["Id"] != identity}
+
+    def require_no_root_consumers(self, proof, rows):
+        manifests = {child["descriptor"]["digest"] for child in proof["graph"]["images"]}
+        summary = next((row for row in rows if row["Id"] == proof["root"]), None)
+        require(summary is not None and all(not child.get("ImageData", {}).get("Containers") for child in summary["Manifests"]),
+                "root platform has current/stopped engine consumers")
+        for container in docker_inventory(self.safe):
+            require(re.fullmatch(r"sha256:[a-f0-9]{64}", container["Image"]), "container config identity unknown")
+            descriptor = container.get("ImageManifestDescriptor")
+            require(isinstance(descriptor, dict) and descriptor.get("mediaType") in
+                    ("application/vnd.oci.image.manifest.v1+json", "application/vnd.docker.distribution.manifest.v2+json") and
+                    re.fullmatch(r"sha256:[a-f0-9]{64}", descriptor.get("digest", "")),
+                    "root/config/platform consumer visibility incomplete")
+            require(container["Image"] != proof["root"] and descriptor["digest"] not in manifests,
+                    "image root/platform has current/stopped consumer, including alias consumers")
+
+    def verify_root_references(self, proof):
+        rows = local_image_graphs(self.safe)
+        require(not any(row["Id"] == proof["root"] or set(proof["references"]) &
+                        set((row["RepoTags"] or []) + (row["RepoDigests"] or [])) for row in rows),
+                "owned reference/root present or rebound after effect")
+        for reference in proof["references"]:
+            lookup = command(["docker", "image", "inspect", reference], self.safe, codes=(0, 1))
+            require(lookup.returncode == 1 and lookup.stdout.strip() == b"[]" and
+                    lookup.stderr.decode().strip() == "Error response from daemon: No such image: " + reference,
+                    "exact original reference absence unavailable/denied/rebound")
+
+    def image_root(self, item, result):
+        proof, original = self.owned_root_proof(item)
+        proof_hash = fingerprint(proof)
+        previous = [entry for attempt in self.state for entry in attempt["results"]
+                    if entry["kind"] == "image" and entry["identity"] == item["identity"] and
+                    entry.get("root_observation", {}).get("proof_sha256") == proof_hash and entry.get("reference_intent")]
+        rows = local_image_graphs(self.safe)
+        current = self.root_reference_state(item["identity"], rows)
+        protected = self.protected_image_roots(rows, item["identity"])
+        if previous:
+            # Only another proven completed root effect may explain a missing protected root on resume.
+            completed = {entry["identity"] for attempt in self.state for entry in attempt["results"]
+                         if entry["kind"] == "image" and entry.get("root_observation") and entry["status"] in ("removed", "absent")}
+            expected = {key: value for key, value in previous[-1]["protected_image_roots"].items() if key not in completed}
+            require(protected == expected, "protected root/reference/child graph changed during interrupted retirement")
+        if current is None:
+            require(previous, "absent root lacks same-receipt original observation/effect intent")
+            self.verify_root_references(proof)
+            result.update(status="absent", reason="original owned root/references absent; no removal replay",
+                          root_observation=previous[-1]["root_observation"])
+            return
+        graph = image_root_graph(self.safe, current, rows)
+        require(graph == proof["graph"], "immutable image-root/platform/config graph changed")
+        references = sorted((current["RepoTags"] or []) + (current["RepoDigests"] or []))
+        require(set(references) <= set(proof["references"]), "new/foreign image reference; preserve root")
+        require(references == proof["references"] or previous, "changed reference set has no original persisted retirement intent")
+        require({key: value for key, value in current.items() if key not in ("RepoTags", "RepoDigests")} ==
+                {key: value for key, value in original.items() if key not in ("RepoTags", "RepoDigests")},
+                "image root immutable inspection changed")
+        self.require_no_root_consumers(proof, rows)
+        result.update(root_observation={"identity": current["Id"], "proof_sha256": proof_hash,
+                       "inspection_sha256": item["inspection_sha256"], "graph": graph, "references": proof["references"]},
+                      protected_image_roots=protected, storage={"size_bytes": current["Size"], "physical_reclaimed_bytes": None})
+        if not self.apply:
+            result.update(status="qualified", reason="preview of exact owned root/reference retirement only")
+            return
+        # Normal removal can also retire its repository digest/root on the last tag.
+        # Persist the entire owned before-set before the supported effect.
+        for _ in range(len(proof["references"]) + 1):
+            self.subject_checks()
+            rows = local_image_graphs(self.safe)
+            require(self.protected_image_roots(rows, item["identity"]) == protected, "foreign root/reference/child changed before effect")
+            current = self.root_reference_state(item["identity"], rows)
+            if current is None:
+                break
+            require(image_root_graph(self.safe, current, rows) == graph and
+                    {key: value for key, value in current.items() if key not in ("RepoTags", "RepoDigests")} ==
+                    {key: value for key, value in original.items() if key not in ("RepoTags", "RepoDigests")},
+                    "root graph/immutable inspection changed immediately before effect")
+            references = sorted((current["RepoTags"] or []) + (current["RepoDigests"] or []))
+            require(set(references) <= set(proof["references"]), "foreign/rebound reference before effect")
+            self.require_no_root_consumers(proof, rows)
+            tags = [value for value in references if "@" not in value]
+            # Exact-ID normal removal handles a single owned naming relationship, including
+            # OCI-load names not normalized like CLI tags. Docker may refuse; never force it.
+            target = tags[0] if len(tags) > 1 else item["identity"]
+            result.update(status="pending", reason="normal exact owned reference/root removal; postconditions pending",
+                          reference_intent={"target": target, "before_references": references})
+            self.save()
+            command(["docker", "image", "rm", target], self.safe, timeout=60)
+            after_rows = local_image_graphs(self.safe)
+            require(self.protected_image_roots(after_rows, item["identity"]) == protected,
+                    "protected root/reference/child postcondition failed")
+            after = self.root_reference_state(item["identity"], after_rows)
+            after_refs = sorted((after["RepoTags"] or []) + (after["RepoDigests"] or [])) if after else []
+            require(after is None or set(after_refs) < set(references), "image reference retirement made no bounded progress")
+            result.setdefault("reference_effects", []).append({"target": target, "before": references, "after": after_refs})
+            self.save()
+        require(inspect_image(self.safe, item["identity"]) is None, "owned image root remains; retirement incomplete")
+        self.verify_root_references(proof)
+        result.update(status="removed", reason="owned root/references absent; foreign roots/shared children preserved; physical reclaim unknown")
+
+    def image(self, item, result):
+        if item.get("retirement") is not None:
+            self.image_root(item, result)
+            return
+        self.creation_evidence(item)
+        require(item["data"] == "disposable" and item["authority"], "image discard authority unresolved")
+        current = inspect_image(self.safe, item["identity"])
+        if current is None:
+            # An arbitrary config digest may be unresolvable even while its manifest
+            # exists. Resume absence only for this plan's previously resolved ID.
+            require(any(entry["identity"] == item["identity"] and
+                        entry.get("image_observation", {}).get("identity") == item["identity"] and
+                        entry["image_observation"].get("representation") in ("manifest", "legacy-image-id") and
+                        entry["image_observation"].get("inspection_sha256") == item["inspection_sha256"]
+                        for attempt in self.state[:-1] for entry in attempt["results"] if entry["kind"] == "image"),
+                    "absent/unresolvable image lacks prior exact image-ID proof; config/index ambiguity held")
+            result.update(status="absent", reason="prior exact image ID absent by explicit inspect and all-image inventory")
+            return
+        require(fingerprint(current) == item["inspection_sha256"],
+                "image identity/tags changed; shared or recreated subject held")
+        representation = image_representation(current)
+        require(not current["RepoTags"] and not current["RepoDigests"],
+                "image has tag/digest references; exclusive reference creation/retirement unqualified; retained")
+        result["image_observation"] = {"identity": current["Id"], "inspection_sha256": fingerprint(current),
+                                       "representation": representation, "descriptor": current.get("Descriptor")}
+        require_no_image_consumers(self.safe, current)
+        result["storage"] = {"size_bytes": current["Size"], "physical_reclaimed_bytes": None}
+        if not self.apply:
+            result.update(status="qualified", reason="preview only")
+            return
+        result.update(status="pending", reason="exact created image, normal removal only; shared layers protected by Docker")
+        self.save()
+        self.subject_checks()
+        require_no_image_consumers(self.safe, current)
+        latest = inspect_image(self.safe, item["identity"])
+        require(latest is not None and fingerprint(latest) == item["inspection_sha256"],
+                "image changed immediately before effect")
+        command(["docker", "image", "rm", item["identity"]], self.safe)
+        require(inspect_image(self.safe, item["identity"]) is None, "image removal postcondition failed")
+        result.update(status="removed", reason="exact image absent by explicit inspect and all-image inventory; no shared-layer reclaim claim")
+
+    def cache(self, item, result):
+        # BuildKit has no qualified exact deletion path here. Only positively reused
+        # cache may be intentionally retained; eligible created cache still holds.
+        require(item["disposition"] == "retain" and item["creation"]["kind"] == "reused",
+                "exact created-cache retirement unavailable; retain pending owning builder recovery, never prune")
+        builder = item["builder"]
+        require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", builder), "invalid exact builder")
+        builders = [json.loads(line) for line in text(["docker", "buildx", "ls", "--format", "{{json .}}"], self.safe).splitlines()]
+        matches = [entry for entry in builders if entry["Name"] == builder]
+        require(matches and all(sorted(identifier for node in entry["Nodes"] for identifier in node["IDs"]) == item["worker_ids"]
+                                for entry in matches), "builder worker identity changed/unavailable")
+        require(re.fullmatch(r"[a-z0-9]{12,64}", item["identity"]), "invalid exact cache ID")
+        entries = [json.loads(line) for line in text(["docker", "buildx", "du", "--builder", builder,
+                   "--filter", "id=" + item["identity"], "--format", "json"], self.safe).splitlines()]
+        require(len(entries) == 1, "retained cache absent/ambiguous; inspect owning builder")
+        current = entries[0]
+        require(current["ID"] == item["identity"] and current["CreatedAt"] == item["created_at"] and
+                current["Parents"] == item["parents"] and current["Type"] == item["type"] and not current["Mutable"],
+                "retained cache identity changed or currently mutable")
+        result["storage"] = {"docker_size": current["Size"], "shared": current["Shared"],
+                             "reclaimable": current["Reclaimable"], "parents": current["Parents"],
+                             "physical_reclaimed_bytes": None}
+        result["creation"] = item["creation"]
 
     def network(self, item, result):
         ids = text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.safe).splitlines()
@@ -429,19 +1228,44 @@ class Cleanup:
             require(not any(value[1] == item["name"] for value in matches), "network recreated under recorded name; held")
             result.update(status="absent", reason="exact network ID/name absent on successful inventory")
             return
-        binding, _, model = self.runtime()
+        self.creation_evidence(item)
+        standalone = self.plan["runtime"].get("kind", "compose") == "standalone"
         network = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
-        configuration = model["networks"][item["key"]]
-        require(not configuration.get("external", False) and configuration["name"] == item["name"] == network["Name"], "external/shared/network identity mismatch")
-        require(network["Labels"].get("com.docker.compose.project") == binding["project"] and
-                network["Labels"].get("com.docker.compose.network") == item["key"] and
-                network["Created"] == item["created"], "network ownership changed")
+        if standalone:
+            proof = self.standalone()["networks"][item["identity"]]
+            require(proof["name"] == network["Name"] == item["name"] and
+                    proof["created"] == network["Created"] == item["created"] and
+                    proof["inspection_sha256"] == network_identity(network), "standalone network allocation/configuration changed")
+            require(not any(key.startswith("com.docker.compose.") for key in (network.get("Labels") or {})),
+                    "Compose-labelled network requires Compose capability")
+        else:
+            binding, _, model = self.runtime()
+            configuration = model["networks"][item["key"]]
+            require(not configuration.get("external", False) and configuration["name"] == item["name"] == network["Name"], "external/shared/network identity mismatch")
+            require(network["Labels"].get("com.docker.compose.project") == binding["project"] and
+                    network["Labels"].get("com.docker.compose.network") == item["key"] and
+                    network["Created"] == item["created"], "network ownership changed")
         require(not network["Containers"], "network has current endpoints (foreign/shared/remaining); retain unchanged")
+        require(not any(name == item["name"] or value.get("NetworkID") == item["identity"]
+                        for container in docker_inventory(self.safe)
+                        for name, value in container["NetworkSettings"]["Networks"].items()),
+                "network has current or stopped configured consumer; retain unchanged")
         if not self.apply:
             result.update(status="qualified", reason="preview only")
             return
         result.update(status="pending", reason="qualified empty owned network; reobserve outcome")
         self.save()
+        self.subject_checks()
+        latest = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
+        if standalone:
+            require(network_identity(latest) == self.standalone()["networks"][item["identity"]]["inspection_sha256"],
+                    "standalone network changed immediately before effect")
+        require(latest["Id"] == item["identity"] and latest["Created"] == item["created"] and not latest["Containers"],
+                "network identity/endpoints changed before effect")
+        require(not any(name == item["name"] or value.get("NetworkID") == item["identity"]
+                        for container in docker_inventory(self.safe)
+                        for name, value in container["NetworkSettings"]["Networks"].items()),
+                "new/stopped configured network consumer before effect")
         command(["docker", "network", "rm", item["identity"]], self.safe)
         after = text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.safe).splitlines()
         require(not any(item["identity"] in line or line.split()[-1] == item["name"] for line in after), "network postcondition failed/recreated")
@@ -494,7 +1318,20 @@ class Cleanup:
                 target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
                 if record["kind"] == "directory":
                     target.mkdir(mode=record["mode"], exist_ok=True)
-                    shutil.copystat(source, target, follow_symlinks=False)
+                    if sys.platform == "darwin":
+                        # copyfile.h: METADATA = ACL | STAT | XATTR; NOFOLLOW on both paths.
+                        # No DATA or RECURSIVE: copying a directory must not admit its children.
+                        try:
+                            copyfile = ctypes.CDLL("/usr/lib/libSystem.B.dylib", use_errno=True).copyfile
+                            copyfile.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p, ctypes.c_uint32]
+                            copyfile.restype = ctypes.c_int
+                            require(copyfile(os.fsencode(source), os.fsencode(target), None,
+                                             7 | (1 << 18) | (1 << 19)) == 0,
+                                    "directory metadata copy denied/unavailable; retain source and partial copy")
+                        except (OSError, AttributeError):
+                            raise Hold("native directory metadata capability unavailable; retain source") from None
+                    else:
+                        shutil.copystat(source, target, follow_symlinks=False)
                 else:
                     # No mode/ACL changes on a source or an existing destination.
                     if sys.platform == "darwin":
@@ -586,16 +1423,54 @@ class Cleanup:
         self.branch_configuration()
         result.update(status="removed", reason="OID-guarded local ref/config absence verified; remote untouched")
 
+    def verify_docker_results(self):
+        """Reobserve successful effects/retentions at final intake; receipts are not postconditions."""
+        if not any(self.plan[kind] for kind in ("containers", "networks", "volumes", "images", "caches")):
+            return
+        containers = docker_inventory(self.safe)
+        volumes = volume_inventory(self.safe)
+        networks = text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.safe).splitlines()
+        for result in self.results:
+            if result["status"] not in ("removed", "absent", "retained"):
+                continue
+            kind, identity = result["kind"], result["identity"]
+            if kind not in ("container", "network", "volume", "image"):
+                continue
+            item = next(value for value in self.plan[kind + "s"] if value["identity"] == identity)
+            if result["status"] == "retained":
+                self.observe_retained(kind, item, result)
+                continue
+            if kind == "container":
+                require(not any(value["Id"] == identity or value["Name"] == item["name"] for value in containers),
+                        "container recreated after effect; final verification held")
+            elif kind == "volume":
+                require(not any(value["Name"] == identity for value in volumes), "volume recreated after effect; final verification held")
+            elif kind == "network":
+                require(not any(line.split()[0] == identity or line.split()[1] == item["name"] for line in networks),
+                        "network recreated after effect; final verification held")
+            else:
+                require(inspect_image(self.safe, identity) is None, "image present after effect; final verification held")
+                if item.get("retirement") is not None:
+                    proof, _ = self.owned_root_proof(item)
+                    self.verify_root_references(proof)
+
     def run(self):
         self.save()
         for item in self.plan["containers"]:
             self.effect("container", item, self.container)
+        for item in self.plan["volumes"]:
+            self.effect("volume", item, self.volume)
         for item in self.plan["networks"]:
             self.effect("network", item, self.network)
+        for item in self.plan["images"]:
+            self.effect("image", item, self.image)
+        for item in self.plan["caches"]:
+            self.effect("cache", item, self.cache)
         self.effect("worktree", self.plan["worktree"], self.checkout)
         self.effect("ref", self.plan["branch"], self.branch)
         try:
             self.subject_checks()
+            self.verify_docker_results()
             self.attempt["retained_protected_files_verified"] = True
         except (Hold, OSError, ValueError, KeyError) as error:
             self.results.append({"kind": "final-verification", "identity": self.subject,

@@ -11,14 +11,12 @@ operator-selected role, actual file-access denials and any independently selecte
 Native shell requires no Jev command assessment or confirmation. Targets need no copy of this rule.
 
 Read [landing standards](../../../docs/engineering/LANDING.md). The standards own reconciliation proof, publication and cleanup boundaries; this skill executes them for one TASK.
-Before evaluating a current delivery/merge handoff, require
-[live handoff evaluation](../../../docs/engineering/HANDOFFS.md#live-delivery-handoff-evaluation) using the target's
-qualified bounded exact-subject read (Agent OS: `./bin/planning-check --check-delivery` with relevant marked TASK
-IDs). This is separate from offline planning/build and never proves acceptance or candidate provenance.
-Unverified evidence holds affected mutation/publication. At authorized normal intake use the target's qualified
-`--reconcile-delivery` mode for exact MERGED/integrated `done` handoffs and inspect authored current claims;
-no separate routine correction request is needed. Exceptional ended states enter recovery only on explicit
-Land resume for that TASK/PR. Do not silently import another target's checker or mutation mode.
+Land owns accepted TASK and applicable current Board/Roadmap/README/docs closeout in this delivery,
+not a persistent awaiting-merge queue or later routine post-merge maintenance. Preserve historical facts and
+canonical reports. Require [exact live PR evidence](../../../docs/engineering/HANDOFFS.md#live-delivery-handoff-evaluation)
+during publication/resume, separately from offline planning; unavailable identity or required proof holds
+affected effects. Exceptional ended states enter recovery only on explicit Land resume for that TASK/PR.
+Never set tracked delivery markers, infer merge, delete the remote head of an open PR or weaken cleanup holds.
 
 For `/skill:land TASK-NNNNN cleanup-only` or an explicit request to clean this repository's merged TASK resources,
 enter [cleanup-only intake](../../../docs/engineering/LANDING.md#cleanup-only-intake) first, respecting named
@@ -61,8 +59,10 @@ already-open PR uses the same current-subject checks and does not imply merge ap
 Read [the executable cleanup contract](references/cleanup.md) and apply the policy-owned
 [cleanup procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff) through `scripts/cleanup.py` only.
 Carry the existing exact-subject Git/runtime/process/data inventory into its private receipt; bind current
-publication/merge proof, exact qualified Compose/config/override/env-file locators and protected report hashes.
-Missing or contradictory runtime binding is a hold, never generic setup. Preview, inspect each disposition,
+publication/merge proof, protected report hashes and either exact qualified Compose/config/override/env-file
+locators or the explicit standalone creation capability and retained immutable allocation proof described in the
+cleanup contract. Preserve Compose safeguards; historical standalone adoption uses a linked plan, never invented
+Compose labels or retrospective intent. Missing or contradictory runtime binding is a hold, never generic setup. Preview, inspect each disposition,
 then apply from the canonical safe checkout. No alternative ad hoc removal path is part of normal Land.
 Independently verify actual postconditions and external preservation manifests; helper exit alone is not intake.
 If this worker holds the candidate, record its original monitor attempt/PIDs and return the same receipt to Build

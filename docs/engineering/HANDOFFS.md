@@ -58,14 +58,16 @@ not successful landing. Distinguish missing initial acceptance from land-owned d
 acceptance using the routes above; retain required evidence gates without a completion or repair loop.
 For an open-PR QA invocation, the observed PR URL can be the resume target; resolve its TASK for work/review/land.
 
-In Agent OS, point current delivery claims to the subject's [explicit TASK marker and generated view](../../planning/CONVENTIONS.md#current-delivery-handoffs).
-A fresh offline view establishes local identity consistency only, not live PR state, acceptance or a merge action.
-Preserve distinct planning/decomposition handoffs and historical PR evidence; never infer a marker from them.
-Other targets use their qualified local representation rather than inheriting Agent OS's script interface.
+Land owns accepted TASK/current-doc closeout during publication. Keep live delivery results in the durable
+ignored receipt and actual PR, not tracked delivery markers/tables or a persistent awaiting-merge queue. A PR
+link is publication history, not proof of current state; no routine post-merge planning maintenance is required.
+Preserve independent reports, historical facts and separate planning/decomposition handoffs. Planning stays offline.
 
 Work and Build carry the exact [resource inventory](LANDING.md#inventory-and-preserve) in their existing
 handoffs to Land: Git checkout/ref/published OIDs, Compose context/container/network identities, live sessions,
-evidence and data ownership/dependencies, including unknowns and explicit main/current/active holds. Land owns
+evidence and data ownership/dependencies, including unknowns and explicit main/current/active holds. Capture
+creating-container mounts and named/anonymous volume provenance before disappearance; inventory created versus
+merely used/shared containers, networks, volumes, images and caches with size, authority and retention reasons. Land owns
 [required safe cleanup and postcondition verification](LANDING.md#cleanup-and-handoff), not another registry or
 an unconditional branch-retention handoff. Return published/delivery state separately from cleanup: a verified
 PR with a held resource is publication with incomplete cleanup, naming the resource, reason, recovery owner/action
@@ -84,11 +86,8 @@ views. A historical acceptance/delivery-pending checkpoint is not today's instru
 reports, and distinguish the current stage/action with an evidenced current section or durable result locator.
 Missing proof or unresolved contradictory handoffs need a precise hold, not an inferred merge, unrelated repair
 or another metadata commit merely to certify final-head success. Recommendations and read-only routing do not
-perform this reconciliation or acquire Land authority. Routine verified merged/integrated `done` retirement is
-also included at authorized Work/substantive planning intake through the target's qualified explicit mode,
-without a separate correction-only PR. Inspect authored claims as well as generated views; preserve exact merge/
-head/base/time/integration evidence. A later human merge after intake resolves read-only until the next authorized
-mutation. There is no background watcher or promise of updates after an agent stops. When explicitly resumed after an ended original PR,
+perform this reconciliation or acquire Land authority. There is no background watcher, post-exit update or
+routine marker retirement. When explicitly resumed after an ended original PR,
 Land uses the [bounded recovery path](LANDING.md#resume-an-ended-delivery-handoff), including safe checkout
 selection after cleanup and inspection of existing correction/publication state before retry. A verified merge
 and a closed-unmerged outcome require distinct instructions; unavailable or mismatched proof holds correction.
@@ -97,20 +96,19 @@ intact, and observing closure never authorizes reopening or replacing the origin
 
 ## Live delivery handoff evaluation
 
-This applies when Land or read-only routing evaluates a **relevant current delivery/merge action**, not whenever
-a historical PR URL or `done` record is read. Resolve exact subject/repository/PR from the target's authoritative
-current representation. In Agent OS, run the [targeted live mode](../../planning/CONVENTIONS.md#live-delivery-verification)
-with those marked TASK IDs after offline validation. For other targets qualify their actual interface, finite
-lookup count/timeouts and result semantics; do not infer compatibility from a flag name or use a writing mode.
-If no qualified checker covers an explicit current action, make at most one supported exact-PR hosting lookup
-per relevant subject, at most 16 subjects and 15 seconds per command, with no retries/history search, or report
-the missing capability. Bind URL/repository/number/TASK/base/head and complete consistent state/merge evidence;
-Land additionally checks recorded candidate OIDs/provenance. A missing marker is not permission to create one.
+This applies during Land publication/resume, or an explicitly requested read-only delivery observation, not
+ordinary routing, historical PR references or `done` records. Resolve the exact subject/repository/PR from the
+TASK and durable publication receipt. Use at most one supported exact-PR hosting lookup per relevant subject,
+at most 16 subjects, 15 seconds and 16 KiB per response, without retries/history scanning; missing capability
+or inconsistent evidence holds the affected recommendation/effect. Bind canonical URL/repository/number,
+TASK/title, live default/base, subject-owned branch, full head OID and complete consistent state/merge fields.
+Land additionally checks independent acceptance/QA, the recorded candidate bridge and exact remote head.
+Planning validation never performs these requests or creates delivery markers.
 
 | Live observation | Required recommendation |
 |---|---|
 | Verified OPEN | Return the actual evidence-supported human/Land action, retaining acceptance, QA and delivery holds. Open is not readiness, acceptance, CI success or permission to merge. |
-| Verified MERGED, already `done`, published-head → merge → local-HEAD ancestry proven | Report exact PR, base/head, merge time/OID and local integration, then continue read-only routing. No routine cleanup request. The next authorized Work/Land/substantive planning intake retires the marker and reconciles authored/generated claims with evidence. |
+| Verified MERGED, already `done`, published-head → merge → local-HEAD ancestry proven | Report exact PR, base/head, merge time/OID and integration as an observation, not new acceptance. No routine post-merge Board maintenance or marker retirement. |
 | MERGED but nonterminal or local integration unverified | Hold the affected route for its requirement/Git owner; merge is not acceptance. Recover scope/integration without a read-only fetch or guessed retirement. |
 | Verified CLOSED without merge | Report **not delivered through this PR**, exact PR and the same Land reconciliation route. Future delivery is a maintainer decision; do not infer merge, reopen implementation or propose an automatic replacement PR. |
 | Missing CLI/access/authentication, timeout/API failure, malformed/incomplete or mismatched/contradictory identity/state | State **unverified** and hold the affected recommendation. Name the operator's exact access/metadata recovery or Land identity-resolution action, then rerun only that subject. Never fall back to an offline freshness claim or assumed state. |
@@ -120,8 +118,8 @@ Report observation separately from correction: this checker does not dispatch La
 exact original PR, observed state/time/OIDs, selected checkout and authority/holds. Read-only routing changes no
 tracked files, refreshes no views and fetches/publishes/merges nothing. Keep available unrelated TASK work,
 Board ordering and separate planning/Wayfinder routes visible. Do not audit every marker on ordinary navigation.
-Once authorized intake retires the current marker/action, preserved historical references trigger no more live requests or
-selection holds solely for that history. Local validation/build remains offline; live proof is a separate,
+Preserved historical references trigger no live requests or selection holds solely for that history.
+Local validation/build remains offline; live proof is a separate,
 subject-specific observation and must never be relabelled independent acceptance.
 
 ## Release handoffs

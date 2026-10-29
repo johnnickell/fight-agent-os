@@ -10,7 +10,85 @@ Read the referenced current section, not the full historical record. Missing han
 The [blended delivery strategy](../ROADMAP.md#approved-blended-delivery-strategy) permits terminal, browser and
 shared-foundation interleaving; it does not override active work, TASK orders, dependencies or readiness holds below.
 
-### Current planning update — 2026-10-28
+### Accepted H closeout checkpoint — TASK-00542
+
+[TASK-00542](00542-TASK.md#accepted-h-closeout-checkpoint--2026-10-29) records independent Review11 ACCEPT
+and QA12 PASS on repaired H; R10 is resolved. Done records accepted implementation, not full delivery.
+Repaired publication/checks and eligible cleanup are pending at this frozen checkpoint; actual results and finite
+next actions are in canonical ignored `.runs/tasks/TASK-00542/runs/primary-land16-handoff.md` and
+[PR #181](https://github.com/johnnickell/fight-agent-os/pull/181). New repair6 resources remain obligations;
+original retirements are never replayed, the incomplete old copy stays immutable. P1/P2/F1/current effects keep
+full delivery INCOMPLETE; no all-disk-clean, foreign-preservation or integrated-fleet runtime PASS. Allowance
+6/6 consumed, none remaining. John merges separately, no post-merge chore. TASK-00543/00544 remain unstarted;
+generated eligibility does not waive cleanup-first effects. TASK-00545 remains separate. Earlier checkpoints
+below retain their original subjects and allowances, not current acceptance/readiness.
+
+### Current repair — TASK-00542 R10
+
+This R10 repair checkpoint is historical; accepted H and the actual Land16 result pointer above govern current status.
+
+[TASK-00542](00542-TASK.md#current-repair--r10-directory-metadata) is reopened for Review10's confirmed
+macOS directory-xattr transfer defect. The same helper is repaired; fresh final local verification, independent
+Review and affected QA are required. Sixth/final cycle is consumed (6/6; none remaining); new isolated
+verification is explicitly authorized with original resource intent, never retired-runtime recreation.
+Canonical ignored `.runs/tasks/TASK-00542/runs/repair-6/handoff.md` owns evidence and finite later recovery.
+Real source/ref/private data and incomplete Land15 copy remain protected; no real apply/publication by Work.
+P1/P2/F1 remain separate owner holds, no all-disk-clean/full-delivery claim or TASK-00545 dependency.
+TASK-00543/00544 remain unstarted. Earlier checkpoints below retain their original subjects and allowances,
+not current R10 acceptance/readiness.
+
+### Accepted F closeout checkpoint — TASK-00542
+
+[TASK-00542](00542-TASK.md#accepted-f-closeout-checkpoint--2026-10-29) records independent Review9 ACCEPT
+and QA11 PASS on repaired F; R9 is resolved. Done records accepted implementation, not full delivery. Repaired
+publication/checks and eligible primary cleanup are pending at this frozen checkpoint; actual results and finite
+next actions are in canonical ignored `.runs/tasks/TASK-00542/runs/primary-land14-handoff.md` and
+[PR #181](https://github.com/johnnickell/fight-agent-os/pull/181). P1/P2 and F1 strict preservation FAIL remain;
+no integrated-fleet runtime PASS, all-storage-clean claim, delivery queue or post-merge chore. The 5/5 repair
+allowance is exhausted. TASK-00543/00544 remain unstarted; generated eligibility does not waive outstanding
+cleanup-first effects. Historical checkpoints below retain their original subjects and stage limits.
+
+### Current repair — TASK-00542 R9
+
+This R9 repair checkpoint is historical; accepted F and the actual Land14 result pointer above govern current status.
+
+[TASK-00542](00542-TASK.md#current-repair--r9-excluded-link-readers) is reopened for Review8's confirmed
+excluded read-only LINK capability gap. Final repair cycle5 is consumed (5/5; none remaining). New local
+verification, independent Review and affected QA are required; canonical ignored `repair-5/handoff.md` under
+`.runs/tasks/TASK-00542/runs/` owns evidence. P1/P2/F1 and live-worker/mount holds remain; no cleanup/publication
+is performed by Work. Later cleanup-first work remains dependent on this TASK; requirements are unchanged.
+
+### Current accepted candidate — TASK-00542
+
+This D acceptance checkpoint is historical; the R9 repair above governs current status.
+
+[TASK-00542](00542-TASK.md#current-accepted-candidate--2026-10-29) records Review7 ACCEPT and QA10 PASS on
+repaired D; QA-02 is resolved. Done records implementation acceptance, not completed delivery. Repaired
+publication/checks and eligible cleanup are pending at this frozen checkpoint; actual results and finite
+consumer/authority holds are in canonical ignored `.runs/tasks/TASK-00542/runs/primary-land12-handoff.md` and
+[PR #181](https://github.com/johnnickell/fight-agent-os/pull/181). Real resources remain protected until qualified.
+No integrated-fleet runtime PASS, all-storage-clean claim, delivery queue or post-merge chore. TASK-00543/00544
+remain unstarted; source-derived eligibility is not an instruction to bypass the outstanding cleanup-first effects.
+
+### Current revision — TASK-00542
+
+This revision and the Review4/QA8 checkpoint below are preserved history; current acceptance is recorded above.
+
+[TASK-00542](00542-TASK.md#current-repair--qa-02) remains in-progress for canonical QA9 QA-02. The original
+owned-root fixture is recovered through the repaired helper; final verification and independent Review/affected
+QA are required. Earlier acceptance is historical. Primary runtime and real delivery resources stay protected. TASK-00543/00544
+remain unstarted and blocked by this revision. No queue or post-merge maintenance is added.
+
+### Accepted implementation checkpoint — 2026-10-28
+
+[TASK-00542](00542-TASK.md#land-acceptance-checkpoint--2026-10-28) records independent Review4 ACCEPT and
+QA8 PASS for candidate `90f6bdd83acb51c22793477398332f702c078116` under 1A/2A. Primary publication and eligible
+cleanup are pending at this frozen checkpoint; actual results and remaining actions are in canonical ignored
+`.runs/tasks/TASK-00542/runs/primary-land10-handoff.md`. Done means accepted implementation, not completed
+resource retirement, human merge or integrated-fleet PASS. No pending-merge queue or post-merge Board chore is
+created. Subsequent TASKs are unstarted; generated eligibility derives from the source records below.
+
+### Planning update — 2026-10-28 (historical checkpoint)
 
 John approved [TASK-00545](00545-TASK.md), a separate standalone bug for the retained-checkout/report guard.
 Its implementation is unstarted and unranked; existing priorities, dependencies and TASK-00542 ownership are
@@ -24,8 +102,11 @@ preserved priority/planning checkpoint, not current proof that all three impleme
 
 ### Current human priority — 2026-10-27
 
+The sequence remains approved. The implementation-start/pending-acceptance wording in the following original
+checkpoint is historical; TASK-00542's accepted implementation and remaining delivery effects are distinguished above.
+
 John approved the cleanup-first sequence [TASK-00542](00542-TASK.md) -> [TASK-00543](00543-TASK.md) ->
-[TASK-00544](00544-TASK.md), all `ready-for-agent` at `order: 1`, with explicit blockers enforcing that order:
+[TASK-00544](00544-TASK.md), at `order: 1`, with explicit blockers enforcing that order:
 qualified disposable-storage cleanup across the current active repositories, exact local worktree testing
 runtimes, then continuous installed workspace child/log following. TASK-00542 retains completed TASK-00540
 as predecessor; [PR #179](https://github.com/johnnickell/fight-agent-os/pull/179) must be integrated into the
@@ -33,10 +114,12 @@ implementation base before starting. The PR carries these approved plans only, n
 TASK-00540 remains done with unchanged acceptance/reports and separate delivery provenance.
 
 [TASK-00539](00539-TASK.md) moves to `order: 2`; its scope/status/blockers and prior approval history remain
-unchanged. Every other order and active ownership is preserved. Implementation is unstarted for all three new
-TASKs; use the generated sections for eligibility and select a checkout in the later implementation session.
-Priority/planning publication grants no cross-project repair, package installation, shared-service mutation,
-merge or deployment authority.
+unchanged. Every other order and active ownership is preserved. TASK-00542 Engineer work started October 28
+in the selected isolated checkout from integrated PR #179. Its updated scope records John's eight-project
+inventory, authorized isolated secondary fixes/PRs without extra TASKs, and complete removal of delivery-marker
+bookkeeping. All acceptance/integration criteria remain pending; subsequent TASKs have not started. Use the
+generated sections for eligibility. No package installation, foreign workload mutation, merge or deployment
+is authorized by priority/planning publication.
 
 ### Previous priority checkpoint — 2026-10-26 (historical)
 
@@ -62,18 +145,6 @@ human review/merge and deployment remain separate; current delivery/cleanup resu
 
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 
-## Current delivery handoffs
-
-[Explicit TASK markers](../CONVENTIONS.md#current-delivery-handoffs) are the local authority for this view.
-Recorded identity is not live PR evidence or a merge instruction. Land owns subject corrections; historical PR
-links do not create current claims. Work selection and priority remain in the separate Board sections below.
-
-<!-- planning:delivery -->
-| Subject | Recorded delivery | Exact PR |
-|---|---|---|
-| None | — | — |
-<!-- /planning:delivery -->
-
 <!-- planning:board -->
 ## Active Work
 
@@ -85,7 +156,7 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | ready-for-agent | — | — |
+| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | — | — |
 | 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
@@ -110,7 +181,6 @@ links do not create current claims. Work selection and priority remain in the se
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | [TASK-00542](00542-TASK.md) | — |
 | 1 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | — (standalone bug) | ready-for-agent | [TASK-00543](00543-TASK.md) | — |
 | 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md), [TASK-00498](00498-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
@@ -518,6 +588,7 @@ links do not create current claims. Work selection and priority remain in the se
 | 1 | [TASK-00515](00515-TASK.md) | Synchronize current handoffs during Land publication | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #158](https://github.com/johnnickell/fight-agent-os/pull/158) |
 | 1 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 | 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | done | — | [PR #166](https://github.com/johnnickell/fight-agent-os/pull/166) |
+| 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | done | — | [PR #181](https://github.com/johnnickell/fight-agent-os/pull/181) |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |

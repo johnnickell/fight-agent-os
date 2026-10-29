@@ -23,6 +23,14 @@ def main():
         receipt = absolute(args.receipt)
         document = json.loads(receipt.read_text())
         plan = document["cleanup"]["plan"]
+        require(all(isinstance(plan.get(kind), list) for kind in
+                    ("containers", "networks", "volumes", "images", "caches")),
+                "creation/storage inventory missing; recover it without recreating removed workloads")
+        binding = plan.get("runtime", {})
+        require(binding.get("kind", "compose") in ("compose", "standalone"), "unknown runtime capability; recover exact subject binding")
+        if binding.get("kind") == "standalone":
+            require(isinstance(binding.get("creation_record"), dict) and binding.get("resolved_sha256"),
+                    "standalone allocation capability missing; recover original proof, never invent Compose binding")
         require(Path.cwd().resolve() == absolute(plan["safe_checkout"]), "continuation must run from canonical safe checkout")
         require(absolute(plan["original_land_attempt"]) == attempt, "wrong original Land attempt")
         require(attempt.is_dir() and (attempt / "dispatch.lock").is_dir(), "original monitor evidence missing")
