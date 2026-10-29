@@ -69,6 +69,12 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Current repair — R9:** [TASK-00542](tasks/00542-TASK.md#current-repair--r9-excluded-link-readers) is reopened
+for the confirmed excluded read-only LINK capability gap. Final cycle5 is consumed (5/5; none remaining).
+New local verification, independent Review and affected QA are required; canonical ignored
+`.runs/tasks/TASK-00542/runs/repair-5/handoff.md` owns repair evidence. P1/P2/F1 remain separate holds; no
+real apply/publication, requirement expansion or TASK-00545 dependency. Prior D acceptance is historical.
+
 **Current accepted candidate — 2026-10-29:** [TASK-00542](tasks/00542-TASK.md#current-accepted-candidate--2026-10-29)
 records independent Review7 ACCEPT and QA10 PASS on repaired D; QA-02 is resolved. Done records accepted
 implementation, not full delivery. Repaired publication/checks and eligible cleanup are pending at this frozen

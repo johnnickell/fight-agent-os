@@ -618,10 +618,52 @@ class Cleanup:
                         inside(Path(entry["n"].removesuffix(" (deleted)")), candidate)]
             if not matching:
                 continue
-            require(all(entry.get("a") == "r" and entry.get("t") in ("DIR", "REG") and
+            require(all(entry.get("a") == "r" and entry.get("t") in ("DIR", "REG", "LINK") and
                         re.fullmatch(r"\*?\d+", entry["fd"]) for entry in matching),
                     "active cwd/writer/unknown descriptor; retain resource")
+            links = self.excluded_link_records(matching, candidate)
             self.readonly_file_sharing(process, matching, candidate)
+            require(self.excluded_link_records(matching, candidate) == links,
+                    "excluded link/parent metadata changed during reader qualification")
+            if links:
+                self.attempt.setdefault("readonly_file_sharing", {})[str(process["pid"])]["excluded_links"] = links
+
+    def excluded_link_records(self, matching, candidate):
+        """Bind explicitly disposable LINKs and ordinary parents without following targets."""
+        links = [entry for entry in matching if entry.get("t") == "LINK"]
+        if not links:
+            return {}
+        worktree = self.plan["worktree"]
+        require(absolute(worktree["identity"]) == candidate, "LINK candidate differs from approved worktree")
+        exclusions = exclusion_paths(worktree["exclusions"])
+        require(all(path.parts and str(path) != "." for path in exclusions), "invalid LINK exclusion")
+        records = {}
+        for entry in links:
+            path = Path(entry["n"])
+            relative = path.relative_to(candidate)
+            require(str(path) == entry["n"] and ".." not in relative.parts and
+                    any(inside(relative, excluded) for excluded in exclusions),
+                    "LINK is not an explicitly excluded disposable path")
+            require(not any(inside(Path(protected["path"]), path) for protected in self.plan["protected_files"]),
+                    "LINK overlaps protected evidence")
+            # Inspect parents from the canonical candidate outward, never through a link.
+            parents = list(path.parents)
+            parents = list(reversed(parents[:parents.index(candidate) + 1]))
+            for current in [*parents, path]:
+                if str(current) in records:
+                    continue
+                before = current.lstat()
+                record = file_record(current, allow_symlink=current == path)
+                require(record["kind"] == ("symlink" if current == path else "directory") and
+                        not any(" deny " in (" " + acl + " ") for acl in record["acl"]) and
+                        (current == path or record["mode"] & 0o300 == 0o300),
+                        "excluded LINK/parent kind or protection unresolved")
+                after = current.lstat()
+                identity = lambda value: (value.st_dev, value.st_ino, value.st_mode, value.st_uid,
+                    value.st_gid, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+                require(identity(before) == identity(after), "excluded LINK/parent changed while inspected")
+                records[str(current)] = {"identity": identity(after), "record": record}
+        return records
 
     def readonly_file_sharing(self, process, matching, candidate):
         """Qualify signed local VM or backend readers, never arbitrary read-only consumers."""

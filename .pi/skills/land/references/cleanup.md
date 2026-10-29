@@ -252,7 +252,13 @@ before Git can partially remove a checkout. On the qualified macOS Docker Deskto
 are distinguished from cwd/writers and requalified through the signed executable, process owner/birth,
 descriptor type/mode, local context and engine. The Apple-signed VM must hold its Docker disk/kernel;
 the Docker Inc-signed backend must hold the actual local engine/backend Unix sockets. Process/executable and
-matching descriptors are reobserved unchanged. This does not waive any all-container/parent-mount/process,
+matching descriptors are reobserved unchanged. A read-only numeric LINK descriptor additionally requires the
+same approved worktree and an explicitly disposable exclusion, owned no-follow symlink metadata/target, and
+ordinary owned parents from the candidate to the link. Missing/invalid exclusions, protected evidence, flags,
+deny ACLs or unavailable directory write/search access hold. Link and parent identity (including inode and
+change times) and full metadata must remain identical across the SAME signed-reader qualification; the receipt
+records them separately. Never follow a target to establish ownership, admit arbitrary readers or add LINK to
+an unconditional type exemption. This does not waive any all-container/parent-mount/process,
 preservation or source-stability check. Other readers, unknown visibility and changed identities remain holds. Parent-only container
 mounts require successful live process cwd/descriptor inspection establishing no actual candidate use; explicit
 candidate mounts always hold. The receipt records these observations; no shared VM/container is stopped.

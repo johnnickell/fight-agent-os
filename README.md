@@ -28,6 +28,13 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00542 is reopened for Review8 R9](planning/tasks/00542-TASK.md#current-repair--r9-excluded-link-readers):
+read-only LINKs under the original dependency exclusion now require stable no-follow metadata through the same
+signed-reader qualification. New local verification, independent Review and affected QA are required; prior D
+acceptance is historical. P1/P2 and F1 owner holds remain; no real cleanup or publication occurs in this repair.
+Canonical ignored `.runs/tasks/TASK-00542/runs/repair-5/handoff.md` owns the repair evidence and next action.
+
+The following D acceptance paragraph is a preserved checkpoint, not current readiness.
 [TASK-00542's repaired candidate D](planning/tasks/00542-TASK.md#current-accepted-candidate--2026-10-29) has
 independent Review7 ACCEPT and QA10 PASS (17 bounded accumulated scenarios); QA-02 is resolved. Done records
 accepted implementation, not complete delivery. Repaired publication/checks and eligible cleanup are pending at
