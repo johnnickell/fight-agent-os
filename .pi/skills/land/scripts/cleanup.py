@@ -855,6 +855,8 @@ print(json.dumps({'complete': True, 'workers': len(before), 'sha256': hashlib.sh
                 re.fullmatch(r"[a-f0-9]{64}", visibility.get("sha256", "")),
                 "service descriptor/peer visibility unavailable or unsupported")
         require(engine_workers() == census, "engine worker census changed during descriptor inspection")
+        processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
+        require(digest(processes) == item["processes_sha256"], "service process evidence changed before effect")
         visibility["engine_workers_sha256"] = fingerprint(census)
         observations = self.attempt.setdefault("service_visibility", [])
         previous = [value for value in observations if value["container"] == item["identity"]]

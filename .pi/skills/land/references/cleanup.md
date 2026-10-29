@@ -146,7 +146,8 @@ Do not print raw configuration or container environments to obtain these hashes.
 The executor now requires complete live worker cwd/executable/root, descriptor/fdinfo and socket-table
 visibility before qualifying or stopping a running service, and rechecks it immediately before the effect.
 It corroborates the visible worker count against stable before/after engine process censuses and compares
-worker birth, descriptors and namespace socket observations within each attempt. Any unavailable,
+worker birth, descriptors and namespace socket observations within each attempt. Original process evidence
+is rechecked after each probe as well. Any unavailable,
 denied, incomplete, changed or unsupported observation holds that container; matching process hashes or zero
 DB sessions are not substitutes. Stopped-state resume still requires immutable identity and all original
 creation, mount, data, host-consumer and publication checks.

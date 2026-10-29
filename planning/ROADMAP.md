@@ -71,7 +71,7 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 **TASK-00546 Work incomplete — cache qualification hold:**
 [TASK-00546](tasks/00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) has a partial executor visibility
-repair with a 14-case controlled matrix and a bounded fresh worker probe, not full implementation acceptance.
+repair with a 15-case controlled matrix and a bounded fresh worker probe, not full implementation acceptance.
 Cache-to-source recoverability remains uncorroborated; the unqualified reclamation/admission draft was withdrawn.
 Automatic reclamation, executable retention/reserve and lifecycle/caller work remain unfinished. Build owns
 prerequisite recovery/Work continuation via canonical ignored `.runs/tasks/TASK-00546/runs/work-handoff.md`;

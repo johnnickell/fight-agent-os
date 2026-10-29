@@ -30,7 +30,7 @@ acceptance/publication checkpoints below are evidence, not current merge instruc
 
 [TASK-00546](planning/tasks/00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) is in progress but
 incomplete. Its partial executor repair holds unavailable/changed worker visibility and unresolved connected
-peers. The 14-case controlled matrix and one fresh real worker probe passed their bounded checks, not full
+peers. The 15-case controlled matrix and one fresh real worker probe passed their bounded checks, not full
 helper/caller or application acceptance. Cache-to-source recoverability qualification is held; automatic
 reclamation, retention/reserve admission and lifecycle/caller work remain unfinished. The unqualified storage
 draft was withdrawn. No final application gate, cleanup, independent acceptance or physical reclaim is claimed.

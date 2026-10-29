@@ -584,11 +584,11 @@ def visibility_contracts(module, evidence, helper):
     try:
         for case in ("missing-preview", "missing-apply", "denied", "incomplete", "unsupported",
                      "unresolved-peer", "hidden-worker-census", "changed-engine-census",
-                     "changed-observation", "stale-identity", "positive-preview",
+                     "changed-observation", "changed-process-evidence", "stale-identity", "positive-preview",
                      "positive-apply", "stopped-resume", "interrupt-resume"):
             calls = []
             state = {"running": case != "stopped-resume", "present": True, "probes": 0,
-                     "census_reads": 0, "interrupted": False}
+                     "census_reads": 0, "process_reads": 0, "interrupted": False}
             current = {"Id": identifier, "Created": "controlled", "Image": "sha256:" + "b" * 64,
                        "Name": "/fixture", "Config": {"Labels": {
                            "com.docker.compose.project": "fixture", "com.docker.compose.service": "web",
@@ -611,6 +611,10 @@ def visibility_contracts(module, evidence, helper):
                         raw = b"PID PPID\n100 0\n"
                         if case == "changed-engine-census" and state["census_reads"] > 1:
                             raw = b"PID PPID\n101 0\n"
+                    else:
+                        state["process_reads"] += 1
+                        if case == "changed-process-evidence" and state["process_reads"] > 1:
+                            raw = b"changed processes"
                     return subprocess.CompletedProcess(argv, 0, raw, b"")
                 if argv[:2] == ["docker", "exec"]:
                     state["probes"] += 1
