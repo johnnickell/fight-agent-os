@@ -204,7 +204,11 @@ Add `--repair-boundaries` for cold profile/dependency builds, standalone capacit
 interruption holds and real reused-exec timeout/recovery. These use four bounded fixture worktrees; the live-CLI
 case stops before Docker creation and deliberately preserves its unresolved original dispatch (no allocated
 resources), while real cold/standalone/exec cases reach Docker. Controlled hosting is explicitly NOT actual
-publication or independent role execution. Inspect `result.json`, commands,
+publication or independent role execution. The qualifier is bounded to 1,800 seconds total and 256 recorded
+commands, in addition to per-command limits. Normal interruption waits for the original wait-process identity
+to be durably captured. A failed allocation may receive one nonrecursive reconciliation observation; a failed
+recovery command never triggers fallback. An unchanged hold stops with original evidence and its owner prerequisite;
+missing pre-capture identity remains held, not successful cancel/resume. Inspect `result.json`, commands,
 all per-resource outcomes and exact absence/protected-state observations; cache uncertainty remains incomplete cleanup.
 The check is an owning-tool qualification, never a product-suite test. Actual independent role callers must separately
 record their own stage journey and verdicts. Failed/partial fixtures retain original evidence and finite dispositions.

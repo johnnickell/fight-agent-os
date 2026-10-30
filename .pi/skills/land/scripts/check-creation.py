@@ -36,31 +36,50 @@ def main():
     source = Path(__file__).resolve().parents[4]
     real_git = shutil.which("git")
     commands = []
+    deadline = time.monotonic() + 1800
+    max_commands = 256
 
-    def run(argv, cwd, expected=0, env=None, timeout=180):
+    def expired(signum, frame):
+        raise TimeoutError("qualification total budget expired; preserve original receipts and resolve unfinished operations through their owners")
+
+    signal.signal(signal.SIGALRM, expired)
+    signal.alarm(1800)  # Also bounds polling, sleeps and direct child/cleanup waits.
+
+    def invoke(argv, cwd, env=None, timeout=180):
+        remaining = deadline - time.monotonic()
+        assert remaining > 0 and len(commands) < max_commands, "qualification total time/command budget exhausted; preserve unfinished original operations"
         result = subprocess.run([str(v) for v in argv], cwd=cwd, capture_output=True,
-                                env=dict(os.environ, **(env or {})), timeout=timeout)
+                                env=dict(os.environ, **(env or {})), timeout=min(timeout, remaining))
         number = len(commands)
         (evidence / f"{number:03}-stdout.log").write_bytes(result.stdout)
         (evidence / f"{number:03}-stderr.log").write_bytes(result.stderr)
         commands.append({"argv": [str(v) for v in argv], "cwd": str(cwd), "exit": result.returncode,
                          "stdout": f"{number:03}-stdout.log", "stderr": f"{number:03}-stderr.log"})
         (evidence / "commands.json").write_text(json.dumps(commands, indent=2))
-        if result.returncode != expected and expected in (0, 7) and str(argv[0]) in ("./bin/exec", "./bin/runtime"):
+        return result
+
+    def run(argv, cwd, expected=0, env=None, timeout=180):
+        number = len(commands)
+        result = invoke(argv, cwd, env=env, timeout=timeout)
+        recovery_command = str(argv[0]) == "./bin/runtime" and len(argv) > 1 and str(argv[1]) in ("reconcile", "resume", "cancel")
+        # Recovery failures are final. Only a failed original allocation may get
+        # one observation; that observation can never invoke another fallback.
+        if result.returncode != expected and expected in (0, 7) and not recovery_command and str(argv[0]) in ("./bin/exec", "./bin/runtime"):
             locator = Path(cwd) / "var/resource-lifecycle.json"
             if locator.exists():
                 receipt = Path(json.loads(locator.read_text())["receipt"])
                 last = json.loads(receipt.read_text())["lifecycle"]["operations"][-1]
                 if last["status"] == "pending" and last["kind"] in ("run", "create") and last["steps"] and last["steps"][0].get("exit") == 0:
-                    # A concurrent Docker observation may be unavailable. Reconcile once;
-                    # never repeat the allocation or relabel the original nonzero exit.
-                    run(["./bin/runtime", "reconcile", "--operation", last["id"]], cwd)
+                    # Never repeat allocation or relabel its original nonzero exit.
+                    observation = invoke(["./bin/runtime", "reconcile", "--operation", last["id"]], cwd, env=env, timeout=timeout)
+                    if observation.returncode != 0:
+                        raise RuntimeError(f"single recovery observation held operation {last['id']}; preserve {receipt}; prerequisite: original evidence/identity must be resolved through its owner; see {commands[-1]['stderr']}: {observation.stderr.decode().strip()}")
                     recovered = json.loads(receipt.read_text())["lifecycle"]["operations"][-1]
-                    assert recovered["status"] == "recorded" and (last["kind"] == "create" or recovered.get("exit") == expected)
+                    assert recovered["status"] == "recorded" and (last["kind"] == "create" or recovered.get("exit") == expected), f"recovery incomplete; preserve {receipt} and resolve original evidence through its owner"
                     commands[number]["bounded_capture_recovery"] = {"operation": last["id"], "outcome": recovered["outcome"], "workload_exit": recovered.get("exit")}
                     (evidence / "commands.json").write_text(json.dumps(commands, indent=2))
                     return result.stdout.decode().strip()
-        assert result.returncode == expected, (number, result.returncode, expected)
+        assert result.returncode == expected, (number, result.returncode, expected, result.stderr.decode().strip(), "preserve original evidence; resolve the named prerequisite through its owner before continuation")
         return result.stdout.decode().strip()
 
     image = run(["docker", "image", "inspect", "postgres:17-bookworm", "--format", "{{.Id}}"], source)
@@ -79,7 +98,7 @@ def main():
                     "volumes": 24 if args.repair_boundaries else 16, "networks": 2, "images_created": 3 if args.repair_boundaries else 1,
                     "builds": 3 if args.repair_boundaries else 1,
                     "build_source": "checkout-b/build-source; metadata-only FROM scratch/existing PostgreSQL root, no RUN/pull",
-                    "builder": builder, "pulls": 0, "seconds_per_command": 180, "memory_per_container": "32m", "pids": 8},
+                    "builder": builder, "pulls": 0, "seconds_per_command": 180, "seconds_total": 1800, "commands_total": max_commands, "memory_per_container": "32m", "pids": 8},
          "repair_boundaries": args.repair_boundaries,
          "live_cli_limit": "pre-Docker-effect adapter pause only; original ambiguous dispatch remains held with no allocated resource",
          "image": {"identity": image, "base_reference": base_reference, "creation": "reused/shared; retain"},
@@ -208,11 +227,16 @@ def main():
     operation = None
     for _ in range(200):
         value = document("a")["lifecycle"]["operations"][-1]
-        if value["status"] == "pending" and value.get("returned_container") and len(value["steps"]) >= 2:
+        wait = next((step for step in value["steps"] if step["argv"] == ["docker", "wait", value.get("returned_container")]), None)
+        process = wait.get("process") if wait else None
+        if value["status"] == "pending" and value.get("returned_container") and process and process.get("exit") == 0 and process.get("observation") and wait["status"] == "pending":
             operation = value["id"]
+            save(evidence / "original-interrupt-boundary.json", {"operation": value, "receipt": str(subjects["a"]["receipt"]),
+                 "boundary": "original docker wait process identity durably captured before signalling the owned wrapper"})
             break
+        assert child.poll() is None, "owning wrapper exited before durable wait identity; preserve original receipt"
         time.sleep(.1)
-    assert operation
+    assert operation and child.poll() is None, "durable original wait identity unavailable; preserve original receipt, do not manufacture readiness"
     child.send_signal(signal.SIGTERM)
     out, err = child.communicate(timeout=15)
     assert child.returncode == -signal.SIGTERM
@@ -506,4 +530,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        signal.alarm(0)
