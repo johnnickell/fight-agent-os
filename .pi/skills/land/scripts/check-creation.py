@@ -28,7 +28,7 @@ def save(path, value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", required=True)
-    parser.add_argument("--repair-boundaries", action="store_true", help="Also qualify cold dependency builds, standalone budgets, live original CLI and reused exec timeout")
+    parser.add_argument("--repair-boundaries", action="store_true", help="Also qualify cold dependency builds, standalone/Compose budgets, attach signal, live original CLI and reused exec timeout")
     args = parser.parse_args()
     os.umask(0o077)
     evidence = Path(args.evidence).resolve()
@@ -75,7 +75,7 @@ def main():
          "source_revision": run([real_git, "rev-parse", "HEAD"], source),
          "authority": "John's bounded disposable Work qualification only; controlled hosting is NOT publication",
          "purpose": "two concurrent worktrees, original creation, failure, cancellation/interruption, write-denial/release only on owned fixture evidence/runtime directories, binding/directory recovery, replacement, independent effects and protected shared data",
-         "budget": {"worktrees": 4 if args.repair_boundaries else 2, "containers": 14 if args.repair_boundaries else 10,
+         "budget": {"worktrees": 4 if args.repair_boundaries else 2, "containers": 15 if args.repair_boundaries else 10,
                     "volumes": 24 if args.repair_boundaries else 16, "networks": 2, "images_created": 3 if args.repair_boundaries else 1,
                     "builds": 3 if args.repair_boundaries else 1,
                     "build_source": "checkout-b/build-source; metadata-only FROM scratch/existing PostgreSQL root, no RUN/pull",
@@ -121,6 +121,13 @@ def main():
         if foreign:
             service["volumes"].append("foreign:/foreign-shared:ro")
             model["volumes"]["foreign"] = {"external": True, "name": foreign}
+        if args.repair_boundaries and name == "c":
+            # Isolate reused-volume evidence capacity: no internal or anonymous
+            # storage can mask the missing external mount in preflight.
+            assert foreign
+            service["volumes"] = ["foreign:/foreign-shared:ro"]
+            service["tmpfs"] = ["/var/lib/postgresql/data"]
+            model["volumes"] = {"foreign": {"external": True, "name": foreign}}
         config = store / (name + "-compose.json")
         save(config, model)
         spec = store / (name + "-spec.json")
@@ -134,7 +141,7 @@ def main():
                                           "seconds": 30 if args.repair_boundaries else 180,
                                           "containers": 12 if args.repair_boundaries else 8, "networks": 4,
                                           "volumes": 0 if name == "c" else 20 if args.repair_boundaries else 12,
-                                          "images": 0 if name == "c" else 8 if args.repair_boundaries else 4,
+                                          "images": 1 if name == "c" else 8 if args.repair_boundaries else 4,
                                           "caches": 4 if args.repair_boundaries else 1}},
                     "private_paths": [{"path": str(subject["root"] / "var"), "disposition": "preserve", "reason": "runtime binding/configuration evidence"}],
                     "protected_files": [str(sentinel)]})
@@ -270,7 +277,23 @@ def main():
         standalone = document("b")["lifecycle"]["operations"][-1]
         assert standalone["kind"] == "standalone-run" and standalone["status"] == "recorded" and standalone["standalone_preflight"]
         repair_coverage.append("real-standalone-declared-volume-preflight-and-creator")
-        prepare("c")
+        # The exact original adapter self-signals AFTER forwarding a real finite
+        # attach. This is a caller-outcome boundary, not a live daemon race.
+        adapter = evidence / "attach-signal"
+        adapter.mkdir()
+        (adapter / "docker").write_text("#!/usr/bin/env python3\nimport os,signal,subprocess,sys,json\nfrom pathlib import Path\nr=subprocess.run([" + repr(real_docker) + ",*sys.argv[1:]])\nif sys.argv[1:3]==['start','--attach']:\n Path(" + repr(str(adapter / "original-docker-return.json")) + ").write_text(json.dumps({'argv':sys.argv[1:],'exit':r.returncode,'pid':os.getpid()}))\n os.kill(os.getpid(),signal.SIGTERM)\nsys.exit(r.returncode)\n")
+        (adapter / "docker").chmod(0o700)
+        run(["./bin/runtime", "docker", "run", "--pull=never", "--network=none", "--read-only", "--tmpfs", "/var/lib/postgresql/data", "--memory=32m", "--pids-limit=8", image, "true"], subjects["b"]["root"], expected=1,
+            env={"PATH": str(adapter) + os.pathsep + os.environ["PATH"]})
+        signalled = document("b")["lifecycle"]["operations"][-1]
+        assert signalled["status"] == "pending" and signalled["steps"][-1]["exit"] == -signal.SIGTERM
+        assert json.loads((adapter / "original-docker-return.json").read_text())["exit"] == 0
+        run(["./bin/runtime", "validate", "--stage", "work"], subjects["b"]["root"], expected=1)
+        run(["./bin/runtime", "reconcile", "--operation", signalled["id"]], subjects["b"]["root"])
+        recovered_signal = document("b")["lifecycle"]["operations"][-1]
+        assert recovered_signal["status"] == "recorded" and recovered_signal["steps"] == signalled["steps"]
+        repair_coverage.append("real-attach-signal-hold-and-stopped-creator-same-operation-recovery")
+        prepare("c", shared)
         # Real owning preflight/daemon observations; zero capacity must reject BEFORE
         # Docker allocation, including the image's declared anonymous PostgreSQL data.
         before_containers = run(["docker", "ps", "-aq", "--no-trunc"], safe).splitlines()
@@ -280,6 +303,17 @@ def main():
         assert set(run(["docker", "ps", "-aq", "--no-trunc"], safe).splitlines()) <= set(before_containers)
         assert set(run(["docker", "volume", "ls", "-q"], safe).splitlines()) <= set(before_volumes)
         repair_coverage.append("standalone-zero-budget-no-effect")
+        run(["./bin/runtime", "docker", "compose", "create", "web"], subjects["c"]["root"], expected=1)
+        external_pending = document("c")["lifecycle"]["operations"][-1]
+        assert external_pending["status"] == "pending" and not external_pending["steps"]
+        assert "volume budget insufficient before creation" in (evidence / commands[-1]["stderr"]).read_text()
+        assert not run(["docker", "ps", "-aq", "--filter", "label=com.docker.compose.project=" + subjects["c"]["project"]], safe)
+        run(["./bin/runtime", "reconcile", "--operation", external_pending["id"]], subjects["c"]["root"])
+        assert document("c")["lifecycle"]["policy"]["budget"]["volumes"] == 0
+        used = next(v for v in document("a")["lifecycle"]["resources"]["volumes"] if v["identity"] == shared)
+        assert used["creation"]["kind"] == "reused" and used["ownership"] == "unknown" and used["disposition"] == "hold"
+        assert data_sentinel() == before_shared
+        repair_coverage.append("compose-external-zero-budget-before-creator-and-adequate-reuse-unknown")
 
         # Cold owning startup: exact bin/up Compose argv, real enabled-profile
         # dependency closure and metadata-only builds; no TLS/HTTP readiness claim.

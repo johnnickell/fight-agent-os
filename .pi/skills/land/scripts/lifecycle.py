@@ -265,6 +265,9 @@ class Lifecycle:
                           "builder_observations": op.get("builder_observations", [])}, exclusive=True)
         step["dispatch"] = reference(dispatch)
         op["steps"].append(step)
+        # Resume can enter from a recorded failed startup. Reopen durably before
+        # dispatch so interruption/timeout cannot leave the new effect complete.
+        op["status"] = "pending"
         self.save()
         # Do not use auto-removal. Even SIGKILL leaves the creator available to reconciliation.
         try:
@@ -308,6 +311,10 @@ class Lifecycle:
             require(len(result.stdout or b"") <= 16384, "returned allocation output exceeds bound; retain pending creator")
         self.command_return(op, step, result if capture else None)
         self.save()
+        # Every normal consumer shares this barrier, not just exec/recovery.
+        # Preserve the original signal and pending daemon effect for legitimate
+        # same-operation reconciliation; a local CLI exit is not a remote exit.
+        require(result.returncode >= 0, "owning CLI terminated by signal; daemon outcome unknown, operation remains pending")
         return result
 
     def command_return(self, op, step, captured=None):
@@ -928,17 +935,22 @@ class Lifecycle:
                         frontier.append(dependency)
         budget = self.state["policy"]["budget"]
         require(len(self.state["resources"]["containers"]) + len(selected) <= budget["containers"], "container budget insufficient before allocation")
-        named = {v["name"] for v in model.get("volumes", {}).values() if not v.get("external") and v["name"] not in op["before"]["volumes"]}
+        # The bound limits evidence entries, not only newly allocated storage.
+        # Compose may initialize declared internal volumes before mounting them;
+        # all used external/reused names also need room in the same history.
+        named = {v["identity"] for v in self.state["resources"]["volumes"]}
+        named.update(v["name"] for v in model.get("volumes", {}).values() if not v.get("external"))
         anonymous, images = 0, set()
         for name in selected:
             service = model["services"][name]
             image = query(["docker", "image", "inspect", service.get("image", binding["project"] + "-" + name)], self.root)[0]
             images.add(image["Id"])
             mounts = service.get("volumes", [])
+            named.update(model["volumes"][v["source"]]["name"] for v in mounts if v["type"] == "volume" and v.get("source"))
             covered = {v["target"] for v in mounts if v.get("source") or v["type"] != "volume"}
             covered.update(value.split(":", 1)[0] for value in service.get("tmpfs", []))
             anonymous += len((set(image["Config"].get("Volumes") or {}) | {v["target"] for v in mounts if v["type"] == "volume" and not v.get("source")}) - covered)
-        require(len(self.state["resources"]["volumes"]) + len(named) + anonymous <= budget["volumes"], "volume budget insufficient before creation")
+        require(len(named) + anonymous <= budget["volumes"], "volume budget insufficient before creation")
         require(len({v["identity"] for v in self.state["resources"]["images"]} | images) <= budget["images"], "image evidence budget insufficient before creation")
         network_names = {line.split(" ", 1)[1] for line in text(["docker", "network", "ls", "--format", "{{.ID}} {{.Name}}"], self.root).splitlines()}
         missing = {v["name"] for v in model.get("networks", {}).values() if not v.get("external") and v["name"] not in network_names}
