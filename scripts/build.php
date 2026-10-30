@@ -185,14 +185,15 @@ try {
     }
 
     // Frontend/Pi tools receive no application, database, provider or host credential environment.
+    // Explicit runner setup may select tool/browser paths without inheriting its ambient PATH or HOME.
     $frontendEnvironment = array_fill_keys(array_keys(getenv()), false);
     $frontendEnvironment = array_replace($frontendEnvironment, [
-        'PATH'                        => '/usr/local/bin:/usr/bin:/bin',
+        'PATH'                        => getenv('FIGHT_BUILD_TOOL_PATH') ?: '/usr/local/bin:/usr/bin:/bin',
         'HOME'                        => $run.'/home',
         'CI'                          => '1',
         'TZ'                          => 'UTC',
         'STORYBOOK_DISABLE_TELEMETRY' => '1',
-        'PLAYWRIGHT_BROWSERS_PATH'    => '/ms-playwright',
+        'PLAYWRIGHT_BROWSERS_PATH'    => getenv('PLAYWRIGHT_BROWSERS_PATH') ?: '/ms-playwright',
         'npm_config_cache'            => $root.'/.runs/cache/client/npm',
         'npm_config_update_notifier'  => 'false',
         'npm_config_offline'          => 'true'

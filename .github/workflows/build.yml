@@ -8,63 +8,56 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
-      COMPOSE_PROJECT_NAME: fight-agent-os-ci-${{ github.run_id }}-${{ github.run_attempt }}
+      DATABASE_URL: postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test
+      TEST_DATABASE_URL: postgresql://agent_os_test:agent_os_test_ci@127.0.0.1:5432/agent_os_test
+      TEST_DATABASE_ALLOWED_HOST: 127.0.0.1
     steps:
       - uses: actions/checkout@v5
+      - name: Set up native PHP and coverage
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_pgsql, mbstring, dom, xml, xmlwriter, simplexml, sodium
+          coverage: xdebug
+          tools: composer:v2
+          ini-values: xdebug.mode=off, date.timezone=UTC, memory_limit=512M, zend.assertions=1, error_reporting=E_ALL
+        env:
+          fail-fast: true
+      - name: Set up locked Node runtime
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: client/package.json
+          package-manager-cache: false
       - name: Explicit locked tooling and dependency setup
         run: |
-          export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
-          printf 'FIGHT_AGENT_OS_USER=%s\n' "$FIGHT_AGENT_OS_USER" >> "$GITHUB_ENV"
-          # Ephemeral CI-only keys stay private and outside uploaded gate reports.
-          # No host/browser trust enrollment: only this job's curl uses the generated CA.
-          python3 - <<'PY'
-          import json, os, secrets
-          os.umask(0o077)
-          config = {
-              'algorithm': 'HS256', 'issuer': 'https://agent-os.test',
-              'audience': 'agent-os-api', 'active_kid': 'ci',
-              'keys': [{'kid': 'ci', 'secret_hex': secrets.token_hex(32)}]
-          }
-          with open('.env', 'w') as env:
-              env.write('APP_BROWSER_ORIGIN=https://localhost:18443\n')
-              for name in ('APP_CSRF_MAC_KEY', 'APP_ACTIVATION_RATE_KEY', 'APP_AUTH_RATE_KEY'):
-                  env.write(name + '=' + secrets.token_hex(32) + '\n')
-              env.write("APP_ACCESS_TOKEN_CONFIG='" + json.dumps(config) + "'\n")
-          os.chmod('.env', 0o600)
-          PY
-          mkdir -p var
+          composer install --no-interaction --prefer-dist --no-progress
+          export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/playwright"
+          printf 'PLAYWRIGHT_BROWSERS_PATH=%s\n' "$PLAYWRIGHT_BROWSERS_PATH" >> "$GITHUB_ENV"
+          mkdir -p .runs/build/reports/client
+          npm install --global "npm@$(node -p "require('./client/package.json').engines.npm")" --ignore-scripts --no-fund --no-audit
+          # Qualify only the selected tool directories, not the runner's entire ambient PATH.
+          printf 'FIGHT_BUILD_TOOL_PATH=%s:%s:/usr/local/bin:/usr/bin:/bin\n' \
+            "$(dirname "$(command -v node)")" "$(dirname "$(command -v npm)")" >> "$GITHUB_ENV"
           (
-            umask 077
-            mkdir -p var/https/certs var/https/ci
-            openssl req -x509 -newkey rsa:2048 -nodes -days 2 \
-              -subj '/CN=Fight ephemeral CI CA' \
-              -addext 'basicConstraints=critical,CA:TRUE' \
-              -addext 'keyUsage=critical,keyCertSign,cRLSign' \
-              -keyout var/https/ci/ca-key.pem -out var/https/ci/ca.pem 2>/dev/null
-            openssl req -new -newkey rsa:2048 -nodes -subj '/CN=localhost' \
-              -keyout var/https/certs/localhost-key.pem -out var/https/ci/localhost.csr 2>/dev/null
-            printf '%s\n' 'subjectAltName=DNS:localhost' 'basicConstraints=critical,CA:FALSE' \
-              'keyUsage=critical,digitalSignature,keyEncipherment' 'extendedKeyUsage=serverAuth' \
-              > var/https/ci/localhost.ext
-            openssl x509 -req -days 2 -in var/https/ci/localhost.csr \
-              -CA var/https/ci/ca.pem -CAkey var/https/ci/ca-key.pem -CAcreateserial \
-              -extfile var/https/ci/localhost.ext -out var/https/certs/localhost.pem
-            rm -f var/https/ci/ca-key.pem var/https/ci/ca.srl \
-              var/https/ci/localhost.csr var/https/ci/localhost.ext
+            cd client
+            npm ci --ignore-scripts --no-fund --no-audit
+            node scripts/dependencies.mjs record
+            node node_modules/playwright/cli.js install --with-deps chromium
+            npm run build
           )
-          export CURL_CA_BUNDLE="$PWD/var/https/ci/ca.pem"
-          printf 'CURL_CA_BUNDLE=%s\n' "$CURL_CA_BUNDLE" >> "$GITHUB_ENV"
-          docker compose build web
-          ./bin/composer install --no-interaction --prefer-dist --no-progress
-          ./bin/client setup
-          ./bin/client build
-          ./bin/up
-          ./bin/openapi export
-          ./bin/validations export
+          php scripts/openapi.php export
+          php scripts/validations.php export
+      - name: Prepare native guarded PostgreSQL
+        run: |
+          sudo systemctl start postgresql.service
+          sudo -u postgres psql --set ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE agent_os_test LOGIN PASSWORD 'agent_os_test_ci' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+          SQL
+          sudo -u postgres createdb --owner=agent_os_test agent_os_test
       - name: Run the sole canonical gate
-        run: ./bin/build
+        run: php scripts/build.php
       - name: Retain gate receipts
         if: always()
         uses: actions/upload-artifact@v4
@@ -79,12 +72,3 @@ jobs:
             .runs/build/reports/client/coverage/coverage-summary.json
             .runs/build/reports/client/*-artifacts.json
             .runs/build/reports/client/catalog-evidence/receipt.json
-      - name: Stop owned CI services
-        if: always()
-        run: |
-          status=0
-          docker compose --profile https down --volumes --remove-orphans || status=$?
-          # Delete only this disposable job's private configuration and TLS material, even on failure.
-          rm -f .env
-          rm -rf var/https
-          exit "$status"
