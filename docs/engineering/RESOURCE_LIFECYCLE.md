@@ -176,6 +176,40 @@ acceptance/QA, Land must publish the repaired candidate and explicitly regenerat
 with fresh protected records. Replanning the original failed candidate is refused. Work cannot supply its own
 independent acceptance or silently relabel the failed publication as verified delivery.
 
+### Recover a completed legacy no-effect append during suspension
+
+If an older cleanup helper appended one attempt to a suspended published setup-failure receipt, normal stage
+entry must continue to refuse the changed history. An explicitly authorized recovery Engineer may use:
+
+```sh
+./bin/runtime recover-verification --receipt-sha256 "$incident_receipt_sha256" \
+  --legacy-source "$original_legacy_commit" --protected-history "$original_report_locators"
+```
+
+This is a bounded compatibility recovery, not arbitrary receipt repair. The private JSON input maps each changed
+canonical Review/QA report path to its already-preserved original file under the same TASK's canonical runs.
+All original bytes and full protected-file metadata must match; unchanged protected files must still match live.
+No other protected-path replacement is supported. The operation records current report metadata, not acceptance.
+
+Under the existing persistent lock, the owner qualifies only the exact legacy cleanup source whose early-hold
+path is implemented in `qualify_legacy_append`; it reads that source from the named ancestor Git commit and
+**never executes it**. The original return, subject, plan chain, attempts, runtime, original capture/spec, budgets
+and unknowns must be unchanged, except exactly one completed legacy APPLY without a plan-hash field. Every
+result must exactly match that source's no-effect path: nonremoval early holds, observed reused images, and
+failed protected-file final verification. Complete ordered resource/result coverage and exact successful
+read-only image-command/output coverage are required. Effect intents, extra/unknown fields, other commands,
+missing/interrupted outcomes, changed workers, unavailable visibility or changed resource identities hold.
+Fresh resource presence must agree with the original immutable pre-incident noncreation census; previously
+nonlisted identities remain unknown/nonlisted, never a new retirement claim.
+
+Success adds a version-2 immutable successor to the SAME return binding, with the exact incident snapshot,
+predecessor, qualified source, original report records and fresh identity/worker observations. It neither adds
+fields to the legacy attempt nor replaces/truncates any attempt, plan, snapshot or transition. Normal stage
+validation and finite supervised SAME-runtime verification may then resume. Allocation, rebind, allocation
+recovery, removal and stale preview/apply stay frozen. A second recovery is refused. Later independently
+accepted repaired publication and explicit fresh linked Land replan must retain and revalidate the entire
+incident/successor history; required resource holds and all budgets survive.
+
 Build's cleanup-only post-worker launch is the one safe-checkout exception. Supply `--cleanup-receipt "$receipt"`
 to the provider stage entrypoint as well as its normal pinned model/attempt arguments. It verifies an existing
 exact-task plan at that safe checkout instead of requiring the disposable runtime locator. The child must use
@@ -227,6 +261,18 @@ published-open failed-setup/no-effect-APPLY mode and its live-observation advers
 uses real private files, persistent locks, plan/preview/CLI and finite supervised host children, and substitutes
 Docker observations, hosting and original-worker outcomes. It performs no Docker/hosting effects and retains
 its fixture source/evidence. Inspect `result.json`; simulated publication is not delivery or independent QA.
+
+For this bounded recovery, run:
+
+```sh
+python3 .pi/skills/land/scripts/check-verification-recovery.py --evidence "$new_evidence_directory" \
+  --receipt "$immutable_incident_snapshot" --legacy-source "$original_legacy_commit" \
+  --protected-history "$original_report_locators"
+```
+
+It operates on isolated private receipt copies, with real original evidence, Git, locks and read-only runtime/worker observations. Adversarial
+visibility/identity inputs and future repaired-publication hosting are explicitly substituted. No main receipt,
+workload, original artifact or resource is mutated; inspect every result and reached hold in `result.json`.
 
 Run `python3 .pi/skills/land/scripts/check-pull.py --evidence "$new_evidence_directory"` for direct pull
 capacity and SAME-operation recovery regression checks. It uses actual dispatcher/receipt/supervisor/capture

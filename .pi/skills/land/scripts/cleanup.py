@@ -372,6 +372,126 @@ def artifact_inventory(root, exclusions=()):
     return result
 
 
+# Qualified legacy operation, not a version gate or permission to execute old code.
+LEGACY_NO_EFFECT_OPERATION = "05b3758fb220514dd8e656de9fdb101546770394bb1c0a4b7fdbf1187a87ae2c"
+
+
+def qualify_legacy_append(plan, attempt, source_bytes, image_outputs):
+    """Corroborate the one supported legacy early-hold path, without executing it."""
+    require(digest(source_bytes) == LEGACY_NO_EFFECT_OPERATION and
+            set(attempt) == {"time", "apply", "operation_sha256", "results", "complete"} and
+            attempt["operation_sha256"] == LEGACY_NO_EFFECT_OPERATION and attempt["apply"] is True and
+            attempt["complete"] is False, "unqualified legacy source/attempt; recovery held")
+    require(datetime.fromisoformat(attempt["time"]).tzinfo is not None, "legacy attempt time unavailable")
+    require(not plan["caches"] and set(image_outputs) == {v["identity"] for v in plan["images"]},
+            "legacy cache/image coverage unsupported")
+    expected = []
+    for kind, items in (("container", plan["containers"]), ("volume", plan["volumes"]),
+                        ("network", plan["networks"]), ("image", plan["images"]),
+                        ("worktree", [plan["worktree"]]), ("ref", [plan["branch"]])):
+        for item in items:
+            result = {"kind": kind, "identity": item["identity"], "status": "held", "commands": [],
+                      "recovery": "resource owner resolves the named prerequisite, then resume this receipt once"}
+            if item["disposition"] == "retain":
+                require(kind == "image" and item["reason"] and item["creation"]["kind"] == "reused",
+                        "legacy retention path unsupported")
+                raw = image_outputs[item["identity"]]
+                images = json.loads(raw)
+                require(len(images) == 1 and images[0]["Id"] == item["identity"] and
+                        fingerprint(images[0]) == item["inspection_sha256"], "legacy image identity changed")
+                result.update(status="retained", reason=item["reason"], creation=item["creation"],
+                              storage={"size_bytes": images[0]["Size"], "physical_reclaimed_bytes": None},
+                              commands=[{"argv": ["docker", "image", "inspect", item["identity"]], "exit": 0,
+                                         "stdout_sha256": digest(raw), "stderr_sha256": digest(b"")}])
+            else:
+                require(item["disposition"] == "hold" or
+                        (item["disposition"] == "remove" and (item["ownership"] != "proven" or item["consumers"] != [])),
+                        "legacy attempt could reach an effect; recovery held")
+                result["reason"] = item["reason"] if item["disposition"] == "hold" else "ownership or consumers unresolved/active"
+            expected.append(result)
+    expected.append({"kind": "final-verification", "identity": plan["task"], "status": "failed",
+                     "reason": "protected report/private evidence changed"})
+    require(attempt["results"] == expected, "legacy result/read-only-command coverage changed/unknown")
+
+
+def verification_snapshot(reference, plan):
+    """Read an immutable return and its exact snapshot, including the bounded successor."""
+    def retained(entry):
+        path = absolute(entry["path"])
+        require(set(entry) == {"path", "sha256"} and
+                inside(path, Path(plan["safe_checkout"]) / ".runs/tasks" / plan["task"] / "runs") and
+                not inside(path, absolute(plan["worktree"]["identity"])) and path.is_file() and not path.is_symlink() and
+                path.stat().st_uid == os.getuid() and stat.S_IMODE(path.stat().st_mode) == 0o600,
+                "verification history must remain private and external")
+        raw = path.read_bytes()
+        require(digest(raw) == entry["sha256"], "immutable verification history changed")
+        return raw
+
+    event = json.loads(retained(reference))
+    require(event["version"] in (1, 2) and event["kind"] == "return-to-verification" and
+            event["plan_sha256"] == fingerprint(plan) and
+            all(event["subject"][key] == plan[key] for key in ("task", "origin", "ref", "safe_checkout", "git_common_dir")),
+            "verification history subject/link changed")
+    original = json.loads(retained(event["original_receipt"]))
+    require(original["cleanup"]["plan"] == plan and original["lifecycle"]["subject"] == event["subject"],
+            "verification snapshot subject/plan changed")
+    if event["version"] == 2:
+        require(set(event) == {"version", "kind", "at", "subject", "source", "plan_sha256", "original_receipt",
+                              "predecessor", "legacy_source", "image_observations", "protected_history", "workers",
+                              "original_monitor", "exit_records", "publication_observations", "authority", "identity_observation"},
+                "unknown verification recovery state")
+        predecessor = json.loads(retained(event["predecessor"]))
+        require(predecessor["version"] == 1 and "published_setup_failure" in predecessor["publication_observations"] and
+                original["cleanup"]["verification_return"] == event["predecessor"], "unsupported recovery predecessor")
+        _, previous = verification_snapshot(event["predecessor"], plan)
+        old, current = previous["cleanup"], original["cleanup"]
+        mutable = {"operations", "stages", "resources", "processes", "monitor_attempts"}
+        require({k: v for k, v in original["lifecycle"].items() if k not in mutable} ==
+                {k: v for k, v in previous["lifecycle"].items() if k not in mutable} and
+                all(original["lifecycle"][key][:len(previous["lifecycle"][key])] == previous["lifecycle"][key]
+                    for key in ("operations", "stages", "processes", "monitor_attempts")), "original recovery private state/history changed")
+        require({k: v for k, v in current.items() if k not in ("attempts", "verification_return")} ==
+                {k: v for k, v in old.items() if k != "attempts"} and
+                len(current["attempts"]) == len(old["attempts"]) + 1 and current["attempts"][:-1] == old["attempts"],
+                "recovery must preserve all original cleanup fields and append exactly one attempt")
+        require(event["publication_observations"] == predecessor["publication_observations"] and
+                event["original_monitor"] == predecessor["original_monitor"] and event["exit_records"] == predecessor["exit_records"],
+                "original return/worker/hosting evidence changed")
+        require(datetime.fromisoformat(current["attempts"][-1]["time"]) > datetime.fromisoformat(predecessor["at"]),
+                "legacy append predates suspension")
+        require(set(event["legacy_source"]) == {"revision", "record"} and
+                re.fullmatch(r"[a-f0-9]{40}", event["legacy_source"]["revision"]), "legacy Git source unavailable")
+        qualify_legacy_append(plan, current["attempts"][-1], retained(event["legacy_source"]["record"]),
+                              {key: retained(value) for key, value in event["image_observations"].items()})
+        observation = event["identity_observation"]
+        require(set(observation) == {"baseline_intent", "current"} and
+                original["lifecycle"]["operations"][-1]["intent"] == observation["baseline_intent"], "original census linkage changed")
+        intent = json.loads(retained(observation["baseline_intent"]))
+        inventory = json.loads(retained(observation["current"]))
+        require(intent["kind"] == "compose-command" and intent["subject"] == event["subject"] and
+                intent["runtime"] == original["lifecycle"]["runtime"] and
+                datetime.fromisoformat(intent["at"]) < datetime.fromisoformat(current["attempts"][-1]["time"]),
+                "pre-incident census subject/time changed")
+        for kind, key, identity in (("containers", "Id", container_identity), ("networks", "Id", network_identity),
+                                    ("volumes", "Name", volume_identity)):
+            known = {v["identity"]: v for v in original["lifecycle"]["resources"][kind]}
+            require({v[key] for v in inventory[kind]} & set(known) == set(intent["before"][kind]) & set(known) and
+                    all(identity(value) == known[value[key]]["inspection_sha256"] for value in inventory[kind] if value[key] in known),
+                    "recovery census identity/presence changed")
+        replacements = event["protected_history"]
+        changed = {entry["path"]: entry for entry in replacements}
+        require(len(changed) == len(replacements) and changed and set(changed) <= {
+            str(Path(plan["safe_checkout"]) / ".runs" / directory / plan["task"] / name)
+            for directory, name in (("reviews", "review.md"), ("qa", "qa.md"))}, "only canonical report succession supported")
+        for report in replacements:
+            original_report = next(v for v in plan["protected_files"] if v["path"] == report["path"])
+            require(set(report) == {"path", "original", "current_record"} and
+                    file_record(absolute(report["original"]["path"])) == original_report["record"] and
+                    digest(retained(report["original"])) == original_report["record"]["sha256"] and
+                    report["current_record"] != original_report["record"], "original protected report not preserved")
+    return event, original
+
+
 def verify_plan_history(cleanup):
     """Verify the immutable plan chain without creating an execution attempt."""
     plan_hash = fingerprint(cleanup["plan"])
@@ -387,24 +507,14 @@ def verify_plan_history(cleanup):
             continue
         plan = entry["plan"]
 
-        def retained(reference):
-            path = absolute(reference["path"])
-            require(inside(path, Path(plan["safe_checkout"]) / ".runs/tasks" / plan["task"] / "runs") and
-                    not inside(path, absolute(plan["worktree"]["identity"])) and path.is_file() and not path.is_symlink() and
-                    path.stat().st_uid == os.getuid() and stat.S_IMODE(path.stat().st_mode) == 0o600,
-                    "verification history must remain private and external")
-            raw = path.read_bytes()
-            require(digest(raw) == reference["sha256"], "immutable verification history changed")
-            return json.loads(raw)
-
-        event = retained(entry["verification_return"])
-        require(event["version"] == 1 and event["kind"] == "return-to-verification" and event["plan_sha256"] == entry["plan_sha256"] and
-                all(event["subject"][key] == plan[key] for key in ("task", "origin", "ref", "safe_checkout", "git_common_dir")),
-                "verification history subject/link changed")
-        original = retained(event["original_receipt"])
-        require(original["cleanup"]["plan"] == plan and
-                cleanup["attempts"][:len(original["cleanup"]["attempts"])] == original["cleanup"]["attempts"],
+        _, original = verification_snapshot(entry["verification_return"], plan)
+        require(cleanup["attempts"][:len(original["cleanup"]["attempts"])] == original["cleanup"]["attempts"],
                 "original verification plan/attempts changed")
+    if cleanup.get("verification_return"):
+        _, original = verification_snapshot(cleanup["verification_return"], cleanup["plan"])
+        require({k: v for k, v in cleanup.items() if k != "verification_return"} ==
+                {k: v for k, v in original["cleanup"].items() if k != "verification_return"},
+                "suspended plan/history/attempts changed")
     return plan_hash
 
 

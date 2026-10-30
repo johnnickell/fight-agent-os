@@ -31,6 +31,14 @@ It preserves the same guards/freeze and all original history; read the lifecycle
 before use. Fresh independent acceptance/QA, repaired publication and linked replan remain necessary. Effects,
 interruption, merged/closed/changed identity or unknown outcomes never gain return authority.
 
+An erroneous completed legacy append to an already suspended published return is **not** a retry/reset case.
+Normal entry must hold. Explicitly authorized recovery uses only the lifecycle's
+[bounded audited successor](../../../../docs/engineering/RESOURCE_LIFECYCLE.md#recover-a-completed-legacy-no-effect-append-during-suspension),
+which qualifies the exact original source/result/read-only-command path and current identity/protected evidence.
+It preserves every actual attempt verbatim, including the legacy attempt's missing plan-hash field. The old
+plan stays ineligible; later accepted repaired publication and explicit linked Land replan retain the incident.
+Never run an older helper, hand-edit a transition or replace the main receipt to bypass suspension.
+
 A lifecycle `plan --refresh` archives the old immutable plan/hash and links the new hash inside the SAME receipt;
 legacy linked-companion recovery below remains for historical receipts without this versioned lifecycle. Do not
 rewrite old attempts or relabel eligible unknowns retained. Direct single-manifest image roots may omit platform
