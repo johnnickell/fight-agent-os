@@ -55,7 +55,9 @@ inputs are supported conservatively; implicit pulls, external/unknown builders, 
 Dockerfile inputs hold before the affected effect. Pull bases explicitly; built tags must be task-project-owned
 and absent. Exactly one separate `--tag`/`-t` output is supported; repeated tags, compact/equal aliases and
 other output/export forms are rejected before effects. Existing task image references are never silently
-overwritten. Explicit startup builds qualify the actual enabled-profile dependency closure before creation;
+overwritten. Explicit pulls reserve a new image-evidence entry before dispatch unless an exact immutable reference
+is locally inspected and its full result is already represented. Mutable tags or ambiguous/unavailable identity
+still need spare original capacity; shared pulled roots never acquire removal ownership. Explicit startup builds qualify the actual enabled-profile dependency closure before creation;
 `up --no-deps` suppresses dependency creation/builds, while one-offs remain dependency-free. Missing/opaque
 inputs hold the whole build selection before its first build. Normal runtime reuse needs no setup.
 
@@ -145,6 +147,11 @@ Refresh explicitly afterward. Legacy receipts without lifecycle capture still us
 bounded historical adoption/evidence holds, not this original-creation path.
 
 ## Direct qualification
+
+Run `python3 .pi/skills/land/scripts/check-pull.py --evidence "$new_evidence_directory"` for direct pull
+capacity and SAME-operation recovery regression checks. It uses actual dispatcher/receipt/supervisor/capture
+methods with substituted Docker observations and finite host children; it performs no Docker pull, registry
+access or image acquisition. Inspect `result.json`; this is owning-tool evidence, not independent QA.
 
 Run `python3 .pi/skills/land/scripts/check-creation.py --evidence "$new_evidence_directory"` only within bounded
 TASK fixture authority. It records original intent, allocates two independent fixture Git worktrees, uses the

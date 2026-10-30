@@ -585,6 +585,38 @@ class Lifecycle:
         self.save()
         return reference(path)
 
+    def pull_image(self, image_ref):
+        require(image_ref and not image_ref.startswith("-"), "one image reference, not a pull option, required")
+        op = self.begin(["docker", "pull", image_ref], "pull-shared-image")
+        images = self.state["resources"]["images"]
+        # A local mutable tag can resolve differently when pulled. Only an exact
+        # immutable reference, inspected and already represented, needs no slot.
+        image, represented = None, False
+        if re.fullmatch(r"[^@\s]+@sha256:[0-9a-f]{64}", image_ref):
+            try:
+                image = query(["docker", "image", "inspect", image_ref], self.root)[0]
+                expected = image_ref.split("@", 1)[1]
+                represented = (image["Id"] == expected or image_ref in (image.get("RepoDigests") or [])) and any(
+                    value["identity"] == image["Id"] and value["inspection_sha256"] == fingerprint(image) for value in images)
+            except (Hold, OSError, ValueError, KeyError, TypeError, IndexError, subprocess.SubprocessError):
+                pass  # Unavailable/ambiguous identity reserves a new entry, never guessed reuse.
+        required = len(images) + (0 if represented else 1)
+        admission = self.path.parent / ("pull-admission-" + op["id"] + ".json")
+        atomic(admission, {"operation": op["id"], "reference": image_ref, "inspection": image,
+                           "represented": represented, "historical_entries": len(images), "required_entries": required,
+                           "original_capacity": self.state["policy"]["budget"]["images"]}, exclusive=True)
+        op["pull_admission"] = reference(admission)
+        self.save()
+        require(required <= self.state["policy"]["budget"]["images"], "image evidence budget insufficient before pull")
+        result = self.step(op, ["docker", "pull", image_ref])
+        sys.stdout.buffer.write(result.stdout)
+        sys.stderr.write(sanitized(result.stderr, op["runtime"]))
+        require(result.returncode == 0, "pull failed; original pending operation retained")
+        self.image_use(op, image_ref)
+        op.update(status="recorded", exit=0, outcome="shared-image-acquired")
+        self.save()
+        return 0
+
     def image_use(self, op, image_ref, created=False):
         image = query(["docker", "image", "inspect", image_ref], self.root)[0]
         require(not created or (image["Config"].get("Labels") or {}).get(LABEL) == op["id"], "build root lacks original operation binding")
@@ -1623,15 +1655,7 @@ def main():
                     return lifecycle.build_image(args.argv[1:])
                 if args.argv[0] == "pull":
                     require(len(args.argv) == 2, "one exact shared image per pull")
-                    op = lifecycle.begin(["docker", *args.argv], "pull-shared-image")
-                    result = lifecycle.step(op, ["docker", *args.argv])
-                    sys.stdout.buffer.write(result.stdout)
-                    sys.stderr.write(sanitized(result.stderr, op["runtime"]))
-                    require(result.returncode == 0, "pull failed; original pending operation retained")
-                    lifecycle.image_use(op, args.argv[1])
-                    op.update(status="recorded", exit=0, outcome="shared-image-acquired")
-                    lifecycle.save()
-                    return 0
+                    return lifecycle.pull_image(args.argv[1])
                 require(args.argv[0] == "compose", "unsupported owning Docker effect; no allocation")
                 return lifecycle.execute_compose(args.argv[1:])
             if args.action == "image-name":
