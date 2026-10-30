@@ -50,7 +50,9 @@ an abandoned observer cwd inside the candidate. Active coordinators, reused PIDs
 protected; there is no arbitrary process-kill capability.
 
 Existing non-TASK/CI callers without a locator preserve their ordinary wrappers; they are not claimed as enrolled
-or captured. A TASK feature branch must initialize before using the owning wrappers. Explicit Compose build
+or captured. Unbound detached HEAD (including a CI synthetic PR merge) uses Git's quiet symbolic-ref semantics;
+real Git observation errors still hold. An existing locator must validate its exact named TASK branch and runtime,
+never fall back to ordinary CI. A named TASK feature branch must initialize before using the owning wrappers. Explicit Compose build
 inputs are supported conservatively; implicit pulls, external/unknown builders, output/cache exports and opaque
 Dockerfile inputs hold before the affected effect. Pull bases explicitly; built tags must be task-project-owned
 and absent. Exactly one separate `--tag`/`-t` output is supported; repeated tags, compact/equal aliases and
@@ -126,7 +128,8 @@ prerequisite; original Land monitor/process binding, recorded exits and both PID
 exact-ref/all-state exact-head hosting observations proving no publication. Missing or contradictory proof holds.
 The supported preview is a finished, non-destructive attempt whose resources are held/retained and whose final
 verification failed. No preview, partial/unknown outcomes, apply/effect records, published/delivery-qualified plans,
-unknown cleanup fields or unqualified command forms remain held. This is deliberately not post-removal recovery.
+unknown cleanup fields or unqualified command forms remain held in this unpublished mode. The narrowly supported
+published setup-failure return below is explicit; neither mode supports post-removal recovery.
 
 The transition retains the **exact original receipt bytes** in a private immutable external snapshot and adds a
 versioned immutable return record in the SAME receipt. The old plan/hash, attempts, protected records, original
@@ -142,7 +145,36 @@ with current-source, qualified delivery facts. Replanning requires a freshly mat
 identity, current head and preserved protected paths (explicit new records for legitimately replaced canonical
 reports). It retains the old plan and return/snapshot link in immutable plan history, with the new hash linked
 from the old one; original attempts and uncertainty survive. Until that explicit replan, even asserted delivery
-success cannot make the stale plan executable. Other published/merged/post-effect recovery contracts are unchanged.
+success cannot make the stale plan executable. Merged/post-effect recovery contracts are unchanged.
+
+### Return a published candidate after hosted setup failure
+
+When the exact current published candidate has a confirmed defect that requires preserving its runtime for
+repair, use the same transition with an explicit hosted run ID:
+
+```sh
+./bin/runtime return-to-verification --plan-sha256 "$original_plan_sha256" --failed-setup-run "$run_id"
+```
+
+All original capture, subject/runtime, protected-file metadata, persistent-lock, no-pending-allocation and
+original exited Land monitor/Pi guards above still apply. Every prior attempt must have complete resource
+coverage, only held/retained outcomes, read-only commands and a failed final verification. A completed APPLY
+attempt is supported **only for the exact current plan with those proven no-effect outcomes**. Effect intents,
+removed/absent/preview/unknown results, interrupted attempts, unknown fields or commands still hold. No receipt,
+plan, attempt, snapshot, transition or uncertainty is cleared or rewritten.
+
+The owning observation must freshly establish the exact same-repository ready OPEN PR, URL/number/head/ref,
+local and remote candidate OID, intended local/remote base OID, and that run's matching PR head/base. Only this
+target's `.github/workflows/build.yml` pull-request run with a completed FAILURE, one completed failed owning
+job, failed `Explicit locked tooling and dependency setup` and skipped `Run the sole canonical gate` qualifies.
+Unavailable/malformed/changed/closed/merged/draft/pending or contradictory observations hold. The immutable
+return retains those actual hosting observations; this is not a hosted corrected-source PASS.
+
+The resulting freeze and finite SAME-runtime noncreation verification are identical to the unpublished return.
+Allocation, rebind, cancellation/recovery, removal and stale cleanup stay frozen. After fresh independent
+acceptance/QA, Land must publish the repaired candidate and explicitly regenerate a linked current-source plan
+with fresh protected records. Replanning the original failed candidate is refused. Work cannot supply its own
+independent acceptance or silently relabel the failed publication as verified delivery.
 
 Build's cleanup-only post-worker launch is the one safe-checkout exception. Supply `--cleanup-receipt "$receipt"`
 to the provider stage entrypoint as well as its normal pinned model/attempt arguments. It verifies an existing
@@ -184,8 +216,14 @@ bounded historical adoption/evidence holds, not this original-creation path.
 
 ## Direct qualification
 
+Run `python3 .pi/skills/land/scripts/check-runtime-paths.py --evidence "$new_evidence_directory"` for actual local
+Git named/detached/PR-merge path admission and malformed/unavailable observation checks. It retains one local
+repository and exact owning wrapper/helper bytes, without Docker, dependency installation or hosting effects.
+Inspect `result.json`; actual hosted corrected-source proof still belongs to later Land.
+
 Run `python3 .pi/skills/land/scripts/check-verification-return.py --evidence "$new_evidence_directory"` for
-preview-return regression and adverse-state qualification. It creates one bounded local Git fixture/worktree,
+preview-return regression and adverse-state qualification. Add `--published-setup-failure` for the explicit
+published-open failed-setup/no-effect-APPLY mode and its live-observation adversaries. It creates one bounded local Git fixture/worktree,
 uses real private files, persistent locks, plan/preview/CLI and finite supervised host children, and substitutes
 Docker observations, hosting and original-worker outcomes. It performs no Docker/hosting effects and retains
 its fixture source/evidence. Inspect `result.json`; simulated publication is not delivery or independent QA.

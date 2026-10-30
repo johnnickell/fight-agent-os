@@ -1442,8 +1442,56 @@ class Lifecycle:
                         after["history"][:len(before["history"])] == before["history"], "original resource state/unknowns changed")
         return entry
 
-    def return_to_verification(self, expected_hash):
-        """Suspend only an unpublished, finished non-destructive preview under the shared lock."""
+    def failed_setup_publication(self, plan, run_id):
+        """Observe the exact still-open published candidate's completed setup failure."""
+        publication = plan["publication"]
+        repository = publication["repository"]
+        require(type(run_id) is int and run_id > 0 and publication["delivery_verified"] is True and
+                type(publication["number"]) is int and publication["number"] > 0 and
+                publication["url"] == f"https://github.com/{repository}/pull/{publication['number']}" and
+                publication["merge_oid"] is None and publication["merged_at"] is None,
+                "exact published-open failed-setup subject required")
+        require(plan["oid"] == text(["git", "rev-parse", "HEAD"], self.root), "failed setup is not the current local head")
+        remote = text(["git", "ls-remote", "--heads", "origin", self.subject["ref"]], self.root)
+        require(remote == plan["oid"] + "\t" + self.subject["ref"], "published failed-setup remote/head changed")
+        pr = query(["gh", "pr", "view", publication["url"], "--repo", repository, "--json",
+                    "url,number,state,isDraft,baseRefName,baseRefOid,headRefName,headRefOid,headRepository,headRepositoryOwner,mergedAt,mergeCommit"], self.root)
+        owner, name = repository.split("/")
+        base_ref = "refs/heads/" + publication["base"]
+        require(publication["base_ref"] in (base_ref, "refs/remotes/origin/" + publication["base"]), "ambiguous failed-setup base ref")
+        require(pr["url"] == publication["url"] and pr["number"] == publication["number"] and pr["state"] == "OPEN" and
+                pr["isDraft"] is False and pr["baseRefName"] == publication["base"] and
+                pr["headRefName"] == self.subject["ref"].removeprefix("refs/heads/") and pr["headRefOid"] == plan["oid"] and
+                pr["headRepository"]["name"] == name and pr["headRepositoryOwner"]["login"] == owner and
+                pr["mergedAt"] is None and pr["mergeCommit"] is None, "failed-setup PR identity/state changed")
+        base_remote = text(["git", "ls-remote", "--heads", "origin", base_ref], self.root)
+        require(re.fullmatch(r"[0-9a-f]{40}", pr["baseRefOid"]) and
+                base_remote == pr["baseRefOid"] + "\t" + base_ref and
+                text(["git", "rev-parse", publication["base_ref"]], self.root) == pr["baseRefOid"], "failed-setup base changed/unavailable")
+        run = query(["gh", "api", f"repos/{repository}/actions/runs/{run_id}"], self.root)
+        require(run["id"] == run_id and run["event"] == "pull_request" and run["status"] == "completed" and
+                run["conclusion"] == "failure" and run["head_sha"] == plan["oid"] and run["head_branch"] == pr["headRefName"] and
+                run["path"] == ".github/workflows/build.yml" and run["repository"]["full_name"] == repository and
+                run["head_repository"]["full_name"] == repository, "current-head hosted setup failure unavailable")
+        require(len(run["pull_requests"]) == 1 and run["pull_requests"][0]["number"] == publication["number"] and
+                run["pull_requests"][0]["head"]["sha"] == plan["oid"] and
+                run["pull_requests"][0]["head"]["ref"] == pr["headRefName"] and
+                run["pull_requests"][0]["base"]["sha"] == pr["baseRefOid"] and
+                run["pull_requests"][0]["base"]["ref"] == publication["base"], "hosted PR head/base mismatch")
+        jobs = query(["gh", "api", f"repos/{repository}/actions/runs/{run_id}/jobs?per_page=100"], self.root)
+        require(jobs["total_count"] == 1 and len(jobs["jobs"]) == 1, "single owning setup/gate job required; incomplete coverage held")
+        job = jobs["jobs"][0]
+        require(type(job["id"]) is int and job["id"] > 0 and job["run_id"] == run_id and job["head_sha"] == plan["oid"] and
+                job["status"] == "completed" and job["conclusion"] == "failure" and
+                all(step["status"] == "completed" and step["conclusion"] in ("success", "failure", "skipped") for step in job["steps"]),
+                "hosted job pending/unknown or mismatched")
+        for name, conclusion in (("Explicit locked tooling and dependency setup", "failure"), ("Run the sole canonical gate", "skipped")):
+            steps = [step for step in job["steps"] if step["name"] == name]
+            require(len(steps) == 1 and steps[0]["conclusion"] == conclusion, "owning setup failure/gate skip not established")
+        return {"pr": pr, "run": run, "jobs": jobs, "remote": remote, "base_remote": base_remote}
+
+    def return_to_verification(self, expected_hash, failed_setup_run=None):
+        """Suspend a finished no-effect plan; published return needs exact live setup-failure proof."""
         cleanup = self.document["cleanup"]
         require(not cleanup.get("verification_return"), "already returned; reuse the SAME verification binding")
         require(set(cleanup) <= {"version", "mount_provenance", "plan", "plan_sha256", "lifecycle_sha256", "attempts", "plan_history"},
@@ -1455,8 +1503,9 @@ class Lifecycle:
                     candidate["worktree"]["identity"] == str(self.root) and candidate["branch"]["identity"] == self.subject["ref"] and
                     candidate["runtime"] == self.binding, "original plan subject/runtime mismatch")
             publication = candidate["publication"]
-            require(publication["delivery_verified"] is False and all(publication[key] is None for key in ("url", "number", "merge_oid", "merged_at")),
-                    "published/delivery-qualified or ambiguous plan cannot return")
+            unpublished = publication["delivery_verified"] is False and all(publication[key] is None for key in ("url", "number", "merge_oid", "merged_at"))
+            require(unpublished or (failed_setup_run is not None and publication == plan["publication"] and candidate["oid"] == plan["oid"]),
+                    "published/delivery-qualified or ambiguous plan cannot return without exact failed-setup proof")
             require(not candidate.get("pending_operations"), "original pending allocation must be reconciled first")
             for item in [candidate["worktree"], candidate["branch"], *[item for kind in KINDS for item in candidate[kind]]]:
                 require(item.get("consumers") in (None, []), "known original consumer prerequisite unresolved")
@@ -1465,7 +1514,9 @@ class Lifecycle:
         hashes = {expected_hash, *[entry["plan_sha256"] for entry in cleanup.get("plan_history", [])]}
         for attempt in attempts:
             require(set(attempt) == {"time", "apply", "operation_sha256", "plan_sha256", "results", "complete"} and
-                    attempt["apply"] is False and attempt["complete"] is False and attempt["plan_sha256"] in hashes,
+                    type(attempt["apply"]) is bool and (attempt["apply"] is False or
+                        (failed_setup_run is not None and attempt["plan_sha256"] == expected_hash)) and
+                    attempt["complete"] is False and attempt["plan_sha256"] in hashes,
                     "apply/effect/unknown cleanup attempt; return held")
             results = attempt["results"]
             attempt_plan = next((entry["plan"] for entry in cleanup.get("plan_history", []) if entry["plan_sha256"] == attempt["plan_sha256"]), plan)
@@ -1513,10 +1564,14 @@ class Lifecycle:
         repository = plan["publication"]["repository"]
         require(re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository) and
                 self.subject["origin"] in (f"git@github.com:{repository}.git", f"https://github.com/{repository}.git"), "hosting subject mismatch")
-        remote = observe(["git", "ls-remote", "--heads", "origin", self.subject["ref"]], self.root)
-        prs = observe(["gh", "pr", "list", "--repo", repository, "--state", "all", "--head", self.subject["ref"].removeprefix("refs/heads/"),
-                       "--limit", "1", "--json", "url"], self.root)
-        require(not remote.stdout.strip() and json.loads(prs.stdout) == [], "subject already published; return held")
+        if failed_setup_run is not None:
+            publication_observations = {"published_setup_failure": self.failed_setup_publication(plan, failed_setup_run)}
+        else:
+            remote = observe(["git", "ls-remote", "--heads", "origin", self.subject["ref"]], self.root)
+            prs = observe(["gh", "pr", "list", "--repo", repository, "--state", "all", "--head", self.subject["ref"].removeprefix("refs/heads/"),
+                           "--limit", "1", "--json", "url"], self.root)
+            require(not remote.stdout.strip() and json.loads(prs.stdout) == [], "subject already published; return held")
+            publication_observations = {"remote_stdout_sha256": digest(remote.stdout), "prs_stdout_sha256": digest(prs.stdout)}
         identifier = uuid.uuid4().hex
         snapshot = self.path.parent / ("verification-original-" + identifier + ".json")
         atomic(snapshot, original_bytes, exclusive=True)
@@ -1524,7 +1579,7 @@ class Lifecycle:
         atomic(event, {"version": 1, "kind": "return-to-verification", "at": now(), "subject": self.subject,
             "source": source(self.root), "plan_sha256": expected_hash, "original_receipt": reference(snapshot),
             "workers": workers, "original_monitor": original_monitor[0], "exit_records": exits,
-            "publication_observations": {"remote_stdout_sha256": digest(remote.stdout), "prs_stdout_sha256": digest(prs.stdout)},
+            "publication_observations": publication_observations,
             "authority": "supervised SAME-runtime verification only; no allocation/removal; explicit fresh qualified Land plan required"}, exclusive=True)
         cleanup["verification_return"] = reference(event)
         self.save()  # Atomic exclusion of stale cleanup and admission of verification on SAME persistent lock.
@@ -1596,6 +1651,9 @@ class Lifecycle:
         returned = cleanup.get("verification_return")
         if returned:
             self.verification_return()
+            event = json.loads(private(Path(returned["path"])))
+            if "published_setup_failure" in event["publication_observations"]:
+                require(delivery["oid"] != old_plan["oid"], "failed-setup candidate needs repaired, freshly accepted/published source; stale replan held")
             self.complete()
             require(refresh and delivery["oid"] == text(["git", "rev-parse", "HEAD"], self.root) and
                     delivery["publication"]["delivery_verified"] is True and delivery["publication"]["url"] and
@@ -1765,8 +1823,9 @@ def main():
     resume.add_argument("--operation", required=True)
     cancel = sub.add_parser("cancel")
     cancel.add_argument("--operation", required=True)
-    verification = sub.add_parser("return-to-verification", help="Suspend an unpublished finished preview; reuse only, no allocation/removal authority")
+    verification = sub.add_parser("return-to-verification", help="Suspend a finished no-effect plan; reuse only, no allocation/removal authority")
     verification.add_argument("--plan-sha256", required=True, help="Exact original immutable cleanup plan hash")
+    verification.add_argument("--failed-setup-run", type=int, help="Explicit published-open return: exact current-head hosted setup FAILURE and skipped gate required")
     plan = sub.add_parser("plan")
     plan.add_argument("--delivery", required=True)
     plan.add_argument("--refresh", action="store_true", help="Archive the old immutable plan in this SAME receipt; preserve every prior attempt")
@@ -1780,7 +1839,7 @@ def main():
         locator = root / "var/resource-lifecycle.json"
         if not locator.exists():
             # Existing non-TASK/CI use is not silently enrolled or claimed as captured.
-            branch = observe(["git", "symbolic-ref", "--short", "HEAD"], root, codes=(0, 1)).stdout.decode().strip()
+            branch = observe(["git", "symbolic-ref", "--quiet", "--short", "HEAD"], root, codes=(0, 1)).stdout.decode().strip()
             require(args.action in ("docker", "paths") and not re.match(r"feature/task-\d{5}-", branch), "TASK runtime requires original lifecycle init before owning commands")
             if args.action == "paths":
                 for path in args.paths:
@@ -1828,7 +1887,7 @@ def main():
             elif args.action == "cancel":
                 lifecycle.cancel(args.operation)
             elif args.action == "return-to-verification":
-                lifecycle.return_to_verification(args.plan_sha256)
+                lifecycle.return_to_verification(args.plan_sha256, args.failed_setup_run)
             elif args.action == "plan":
                 lifecycle.plan(json.loads(private(absolute(args.delivery))), args.refresh)
         print(json.dumps({"task": lifecycle.subject["task"], "operation": args.action, "recorded": True}))

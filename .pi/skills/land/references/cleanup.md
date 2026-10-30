@@ -23,8 +23,13 @@ non-destructive held/retained preview to supervised SAME-runtime verification. R
 before use. It preserves exact original receipt bytes and an immutable versioned transition; the old plan is
 ineligible for preview/apply under the SAME persistent lock. No allocation/removal authority is added. Actual
 publication and fresh qualified current-source `plan --refresh` are required to leave that state; the new plan
-retains the original plan, attempts, protected records, uncertainty and transition/snapshot link. Apply/effect,
-published, interrupted or unknown states do not gain this return authority.
+retains the original plan, attempts, protected records, uncertainty and transition/snapshot link. The explicit
+`--failed-setup-run RUN_ID` mode additionally supports an exact ready OPEN published candidate after its actual
+current-head hosted setup failure and skipped gate, with completed strictly no-effect held/retained attempts.
+It preserves the same guards/freeze and all original history; read the lifecycle's
+[published setup-failure contract](../../../../docs/engineering/RESOURCE_LIFECYCLE.md#return-a-published-candidate-after-hosted-setup-failure)
+before use. Fresh independent acceptance/QA, repaired publication and linked replan remain necessary. Effects,
+interruption, merged/closed/changed identity or unknown outcomes never gain return authority.
 
 A lifecycle `plan --refresh` archives the old immutable plan/hash and links the new hash inside the SAME receipt;
 legacy linked-companion recovery below remains for historical receipts without this versioned lifecycle. Do not
