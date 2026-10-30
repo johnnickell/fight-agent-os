@@ -3,7 +3,7 @@ import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
-import { custodianScript, sessionFileIdentity } from './custody.mjs';
+import { custodianScript, sessionFileIdentity, sameSessionFile } from './custody.mjs';
 import { childEnvironment } from '../workspace/rpc.mjs';
 
 // Observation resources only. There is deliberately no execute, launch or cancel method.
@@ -26,7 +26,7 @@ export class NativeObservation {
     try { witness = sessionFileIdentity(this.sessionFile); }
     catch (error) { if (error.code === 'ENOENT' && this.pendingParentFile) return; throw error; }
     if (this.parentFile) {
-      if (JSON.stringify(witness) !== JSON.stringify(this.parentFile)) throw new Error('Native session file replaced');
+      if (!sameSessionFile(witness, this.parentFile)) throw new Error('Native session file replaced');
       return;
     }
     if (witness.path !== this.pendingParentFile) throw new Error('Native session file replaced');

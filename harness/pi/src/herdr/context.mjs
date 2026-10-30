@@ -2,7 +2,7 @@ import net from 'node:net';
 import { randomUUID } from 'node:crypto';
 import { constants, closeSync, fstatSync, lstatSync, openSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { sessionFileIdentity } from '../observation/custody.mjs';
+import { sessionFileIdentity, validSessionFile, sameSessionFile } from '../observation/custody.mjs';
 
 export const contextLimit = 16384;
 export const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -20,7 +20,8 @@ export function readBinding(file) {
         typeof value.primary?.sessionId !== 'string' || !value.primary.sessionId || value.primary.sessionId.length > 256 ||
         !Number.isSafeInteger(value.primary.pid) || value.primary.pid < 1 ||
         typeof value.primary.cwd !== 'string' || realpathSync(value.primary.cwd) !== value.primary.cwd ||
-        (value.primary.sessionFile !== null && typeof value.primary.sessionFile !== 'string')) throw Error('Invalid native binding identity');
+        (value.primary.sessionFile !== null && typeof value.primary.sessionFile !== 'string') ||
+        (value.file !== null && !validSessionFile(value.file))) throw Error('Invalid native binding identity');
     return value;
   } finally { closeSync(fd); }
 }
@@ -101,7 +102,7 @@ export class NativeWorkspaceContext {
       this.close(); throw Error('Actual native context changed');
     }
     const file = this.primary.sessionFile ? this.fileIdentity(!this.file) : null;
-    if (this.file && !same(file, this.file)) { this.close(); throw Error('Actual native session file replaced'); }
+    if (this.file && !sameSessionFile(file, this.file)) { this.close(); throw Error('Actual native session file replaced'); }
     this.file = file;
     return { version: 1, generation: this.generation, primary: this.primary, file, at: Date.now() };
   }
@@ -142,7 +143,7 @@ export class NativeWorkspaceContext {
 export function validateContext(binding, value) {
   if (value?.version !== 1 || value.generation !== binding.generation || !same(value.primary, binding.primary) ||
       !Number.isSafeInteger(value.at) || Math.abs(Date.now() - value.at) > 1500 ||
-      (binding.file && !same(binding.file, value.file)) ||
-      (value.file && !same(sessionFileIdentity(binding.primary.sessionFile), value.file))) throw Error('Native context stale/replaced/mismatched');
+      (binding.file !== null && !sameSessionFile(binding.file, value.file)) ||
+      (value.file !== null && !sameSessionFile(sessionFileIdentity(binding.primary.sessionFile), value.file))) throw Error('Native context stale/replaced/mismatched');
   return value;
 }

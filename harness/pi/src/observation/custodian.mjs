@@ -6,7 +6,7 @@ import { chmodSync, lstatSync, readFileSync, realpathSync, unlinkSync, writeFile
 import { createServer } from 'node:net';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { directory, limits, privateDirectory, privateFile, processIdentity, endpointPath, sessionFileIdentity, pruneCandidates } from './custody.mjs';
+import { directory, limits, privateDirectory, privateFile, processIdentity, endpointPath, sessionFileIdentity, sameSessionFile, pruneCandidates } from './custody.mjs';
 import { clean } from '../workspace/presentation.mjs';
 
 const script = fileURLToPath(import.meta.url);
@@ -26,7 +26,7 @@ export function applyProgress(registration, event) {
 }
 export function bindParentFile(pendingPath, witness) {
   if (typeof pendingPath !== 'string' || witness?.path !== pendingPath ||
-      JSON.stringify(sessionFileIdentity(pendingPath)) !== JSON.stringify(witness)) throw new Error('Native session file witness refused');
+      !sameSessionFile(sessionFileIdentity(pendingPath), witness)) throw new Error('Native session file witness refused');
   return witness;
 }
 // Exact ancestry is launch evidence, not PID/cwd proximity. Bootstrap witnesses alone cannot
@@ -67,6 +67,7 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
   if (native.mode !== 'tui' || !process.send || typeof parent !== 'string' || !parent || !/^[a-f0-9-]{36}$/.test(generation)) throw new Error('native-context-unavailable');
   if (pendingParentFile !== undefined && (parentFile !== null || typeof pendingParentFile !== 'string' ||
       join(realpathSync(dirname(pendingParentFile)), basename(pendingParentFile)) !== pendingParentFile)) throw new Error('native-session-path-unavailable');
+  if (pendingParentFile === undefined && (!parentFile || !sameSessionFile(sessionFileIdentity(parentFile.path), parentFile))) throw new Error('native-session-lifetime-unavailable');
   const launcher = { pid: native.pid, entry: realpathSync(native.entry), processId: createHash('sha256').update(native.process).digest('hex') };
   primary = realpathSync(primary);
   const root = directory(primary, parent); privateDirectory(root); pruneCandidates(primary, parent);

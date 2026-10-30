@@ -224,6 +224,7 @@ try {
             '../harness/pi/tests/concurrent-children.test.mjs',
             '../harness/pi/tests/registered-children.test.mjs',
             '../harness/pi/tests/custody.test.mjs',
+            '../harness/pi/tests/session-file.test.mjs',
             '../harness/pi/tests/runtime-logs.test.mjs',
             '../harness/pi/tests/worktree-logs.test.mjs'
         ]

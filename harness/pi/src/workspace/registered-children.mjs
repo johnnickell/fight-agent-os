@@ -1,6 +1,6 @@
 import { constants, closeSync, fstatSync, ftruncateSync, openSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { candidates, challenge, directory, privateDirectory, privateFile, sessionFileIdentity, limits } from '../observation/custody.mjs';
+import { candidates, challenge, directory, privateDirectory, privateFile, sessionFileIdentity, sameSessionFile, limits } from '../observation/custody.mjs';
 import { clean } from './presentation.mjs';
 
 const activeStates = new Set(['starting', 'running', 'settled-awaiting-exit']);
@@ -32,6 +32,7 @@ export class RegisteredChildren {
     if (this.closed || this.session !== null || typeof session !== 'string' || !session) return;
     this.session = session; this.sessionFile = file;
     try { this.file = file ? sessionFileIdentity(file) : null; } catch { this.file = null; }
+    if (!this.file) this.notice = 'Native session file lifetime pending/unavailable; no child or log authority admitted';
     this.loadPreference(); return this.refresh();
   }
   sessionChanged(session, file) {
@@ -55,7 +56,7 @@ export class RegisteredChildren {
   }
   fileCurrent() {
     if (!this.file) return true;
-    try { if (JSON.stringify(sessionFileIdentity(this.sessionFile)) === JSON.stringify(this.file)) return true; } catch {}
+    try { if (sameSessionFile(sessionFileIdentity(this.sessionFile), this.file)) return true; } catch {}
     this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null;
     this.session = null; this.file = null; this.sessionFile = null;
     this.notice = 'Actual session file replaced/unavailable: admissions, pin and source authority cleared; reopen explicitly';
@@ -65,7 +66,7 @@ export class RegisteredChildren {
     this.epoch++; this.refreshController?.abort(); this.refreshController = null; this.pending = null;
   }
   async refresh() {
-    if (this.closed || !this.open || !this.session || !this.fileCurrent() || this.pending) return this.pending;
+    if (this.closed || !this.open || !this.session || !this.fileCurrent() || !this.file || this.pending) return this.pending;
     const epoch = this.epoch, session = this.session, file = this.file;
     const controller = new AbortController(); this.refreshController = controller;
     const pending = (async () => {
@@ -76,7 +77,7 @@ export class RegisteredChildren {
           try {
             const witness = await this.verify(this.cwd, session, candidate.path, candidate.descriptor, { signal: controller.signal });
             if (epoch !== this.epoch || this.closed || !this.open || !this.fileCurrent()) return;
-            if (JSON.stringify(witness.parentFile) !== JSON.stringify(file)) throw new Error('Actual Pi session file does not match launch custody');
+            if (!sameSessionFile(witness.parentFile, file)) throw new Error('Actual Pi session file does not match launch custody');
             if (!Array.isArray(witness.children) || witness.children.length > limits.children) throw new Error('Custody child capacity exceeded');
             const admittedItems = [];
             for (const value of witness.children) {
