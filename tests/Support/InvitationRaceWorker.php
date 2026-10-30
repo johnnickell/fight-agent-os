@@ -17,10 +17,17 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
+use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Messaging\Command\CommandFilter;
+use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use Throwable;
@@ -68,6 +75,18 @@ final class InvitationRaceWorker
                 putenv('DATABASE_URL='.$url);
                 $container = require dirname(__DIR__, 2).'/config/services.php';
                 $container->set(Connection::class, static fn(): Connection => $connection);
+                $clock = new AccessClock(new DateTimeImmutable($input['now']));
+                $container->set(Clock::class, static fn(): Clock => $clock);
+                $container->set(
+                    AuthoritativePrincipalResolver::class,
+                    static fn(Container $c): AuthoritativePrincipalResolver => new AuthoritativePrincipalResolver(
+                        $c->get(UserRepository::class),
+                        $c->get(RefreshSessionRepository::class),
+                        $c->get(RoleRepository::class),
+                        $c->get(PermissionRepository::class),
+                        $clock
+                    )
+                );
                 $filter = new class implements CommandFilter {
                     /**
                      * @inheritDoc
