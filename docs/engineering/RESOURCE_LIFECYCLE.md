@@ -53,7 +53,18 @@ Existing non-TASK/CI callers without a locator preserve their ordinary wrappers;
 or captured. A TASK feature branch must initialize before using the owning wrappers. Explicit Compose build
 inputs are supported conservatively; implicit pulls, external/unknown builders, output/cache exports and opaque
 Dockerfile inputs hold before the affected effect. Pull bases explicitly; built tags must be task-project-owned
-and absent. Existing task image references are never silently overwritten. Normal runtime reuse needs no setup.
+and absent. Exactly one separate `--tag`/`-t` output is supported; repeated tags, compact/equal aliases and
+other output/export forms are rejected before effects. Existing task image references are never silently
+overwritten. Explicit startup builds qualify the actual enabled-profile dependency closure before creation;
+`up --no-deps` suppresses dependency creation/builds, while one-offs remain dependency-free. Missing/opaque
+inputs hold the whole build selection before its first build. Normal runtime reuse needs no setup.
+
+Standalone runs preflight the exact present image, image-declared anonymous volumes, existing network and
+historical evidence capacity before `docker create`. Supported explicit bind sources must already exist;
+volume/driver mounts and unsupported allocation options are rejected, not forwarded. Replaced/absent evidence
+still consumes the original bound. Noncreation Compose commands also use recorded finite supervision with
+ordinary streamed output. Enrolled `exec` requires an explicit noninteractive `-T` target/command; detached
+execution is unsupported.
 
 ## Stage intake and recovery
 
@@ -83,7 +94,14 @@ Reconcile observes the retained original creator, dispatch, returned ID/iid and 
 Docker resource. A pending original directory preparation may complete only its recorded paths. Resume starts
 only an incomplete original startup's retained creators, never recreates them. Cancel requires original explicit
 authority, exact disposable one-off identity and then records its stopped outcome. A missing original proof,
-changed identity or still-running unknown CLI stays held. If initialization wrote its receipt but failed writing
+changed identity or still-running unknown CLI stays held. Recovery checks every original dispatch before
+releasing completeness or starting anything else. A partial creator does not prove the original CLI ended;
+CLI absence alone does not resolve an unknown allocation/start outcome. Never kill a recovered/reused PID.
+Cancellation may end an authorized exact one-off while its original read-only `docker wait` is active, but
+completeness remains held until that wait also exits. After an exec timeout/interruption, CLI termination does
+not establish remote workload exit: retain the hold until the exact original target container has stopped
+naturally or its owner resolves that workload. Never stop unrelated service consumers to clear the hold.
+Original exit uncertainty stays explicit after reconciliation. If initialization wrote its receipt but failed writing
 the locator, retry the exact original init/spec/receipt on unchanged source; it verifies the original intent and
 binds only that initialization. Never replace its receipt. No atomic Docker/filesystem transaction or exactly-once
 effect is promised. Restore unavailable evidence storage through its owner, not protection-changing cleanup.
@@ -133,7 +151,11 @@ TASK fixture authority. It records original intent, allocates two independent fi
 already-present PostgreSQL image without pulling, and builds one metadata-only scratch image on the already-running
 local builder. It exercises wrapper creation, short-lived mounts, shared data, concurrent worktrees, nonzero workload,
 interruption/cancel/resume, real evidence-write failure, same-operation recovery, replacement and interrupted cleanup.
-Controlled hosting is explicitly NOT actual publication or independent role execution. Inspect `result.json`, commands,
+Add `--repair-boundaries` for cold profile/dependency builds, standalone capacity rejection, original live-CLI
+interruption holds and real reused-exec timeout/recovery. These use four bounded fixture worktrees; the live-CLI
+case stops before Docker creation and deliberately preserves its unresolved original dispatch (no allocated
+resources), while real cold/standalone/exec cases reach Docker. Controlled hosting is explicitly NOT actual
+publication or independent role execution. Inspect `result.json`, commands,
 all per-resource outcomes and exact absence/protected-state observations; cache uncertainty remains incomplete cleanup.
 The check is an owning-tool qualification, never a product-suite test. Actual independent role callers must separately
 record their own stage journey and verdicts. Failed/partial fixtures retain original evidence and finite dispositions.
