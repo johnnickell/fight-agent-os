@@ -25,7 +25,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -467,6 +466,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 2 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | done | — | [PR #165](https://github.com/johnnickell/fight-agent-os/pull/165) |
 | 2 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | done | — | [PR #169](https://github.com/johnnickell/fight-agent-os/pull/169) |
 | 2 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | [TICKET-00120 — Align the nine active projects with current delivery handoffs](../tickets/00120-TICKET.md) | done | — | [PR #175](https://github.com/johnnickell/fight-agent-os/pull/175) |
+| 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | done | — | [PR #184](https://github.com/johnnickell/fight-agent-os/pull/184) |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |

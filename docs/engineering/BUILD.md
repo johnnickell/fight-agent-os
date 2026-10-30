@@ -46,6 +46,11 @@ The CLI image includes Node 24.22.1/npm 11.19.1 from the same digest as `bin/cli
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
 at image setup, not downloaded at runtime. The PHP image is larger; the focused frontend wrapper retains its
 separate Node/browser environments and requires `./bin/client storybook-setup` before focused browser checks.
+Both PHP Dockerfiles compile the same pinned Xdebug source archive from `https://xdebug.org/files/`,
+checking its SHA-256 against the publisher's [historical release checksum](https://xdebug.org/download/historical)
+before extraction. This avoids PECL's release-metadata lookup, which failed during TASK-00539's hosted setup;
+HTTP, checksum and compilation failures still fail setup. When deliberately changing Xdebug, update both
+Dockerfiles' version and publisher-verified checksum together and qualify CLI coverage and FPM loading.
 No Docker CLI or daemon socket is added to PHP. The October security candidate uses a human-authorized
 catalog-only `skipLibCheck` exception; see [runtime security qualification](SECURITY_RUNTIME_UPDATES.md).
 Application declaration validation and source strictness remain enabled. Passing focused checks does not
