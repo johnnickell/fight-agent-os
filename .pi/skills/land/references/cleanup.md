@@ -5,6 +5,24 @@ own policy. Run `scripts/cleanup.py` beside the owning Land skill from the subje
 never from the removal candidate. Build's post-worker continuation uses
 `../../build/scripts/cleanup-continuation.py` instead. Both execute the same operation; neither publishes.
 
+## Creation-to-retirement binding
+
+For targets with `bin/runtime`, first read the target's [local resource lifecycle](../../../../docs/engineering/RESOURCE_LIFECYCLE.md).
+It owns original capture, same-receipt stage validation/recovery and mechanical plan generation. Land supplies actual
+delivery/worker facts only; it must not reconstruct ownership from Markdown. The generated plan uses this SAME
+schema/executor. `consumer_policy: fresh` with `consumers: null` defers the conclusion to the executor's existing
+live consumer checks; a known nonempty consumer list never qualifies. Per-resource `runtime` binds original
+creator generations (including explicit profiles), rather than applying the newest runtime to older resources.
+Compose one-offs additionally carry immutable original dispatch/returned-ID/configuration proof; stopped standalone
+one-offs may retire their creator without claiming or removing its reused network. Unsupported running workloads
+remain held. No publication, preservation or fresh consumer guard is waived.
+
+A lifecycle `plan --refresh` archives the old immutable plan/hash and links the new hash inside the SAME receipt;
+legacy linked-companion recovery below remains for historical receipts without this versioned lifecycle. Do not
+rewrite old attempts or relabel eligible unknowns retained. Direct single-manifest image roots may omit platform
+in their descriptor; the helper corroborates the separate engine platform with exact `inspect --platform`, retaining
+the original descriptor unchanged. Unknown/incomplete graphs still hold.
+
 ## Inputs and result
 
 Extend the existing private JSON Work/Land handoff or receipt with `cleanup` below. Do not create a resource

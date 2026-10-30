@@ -3,20 +3,20 @@ set -eu
 cd "$(dirname "$0")/.."
 case "${1:-}" in
     up)
-        docker compose --profile mail up --detach --no-deps mailcatcher
-        docker compose --profile mail port mailcatcher 8025
+        ./bin/runtime docker compose --profile mail up --detach --no-deps mailcatcher
+        ./bin/runtime docker compose --profile mail port mailcatcher 8025
         ;;
     status)
-        docker compose --profile mail ps mailcatcher
-        docker compose --profile mail port mailcatcher 8025
+        ./bin/runtime docker compose --profile mail ps mailcatcher
+        ./bin/runtime docker compose --profile mail port mailcatcher 8025
         ;;
     clear)
         # Removing this service destroys its tmpfs mailbox; never touches application databases.
-        docker compose --profile mail rm --stop --force mailcatcher
-        docker compose --profile mail up --detach --no-deps mailcatcher
+        ./bin/runtime docker compose --profile mail rm --stop --force mailcatcher
+        ./bin/runtime docker compose --profile mail up --detach --no-deps mailcatcher
         ;;
     down)
-        docker compose --profile mail rm --stop --force mailcatcher
+        ./bin/runtime docker compose --profile mail rm --stop --force mailcatcher
         ;;
     *)
         echo 'Usage: ./bin/mail-catcher {up|status|clear|down}' >&2

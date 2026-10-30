@@ -25,7 +25,7 @@ def environment():
     if ignored.returncode != 0:
         raise ValueError("Ignore .env in Git before HTTPS setup.")
     result = subprocess.run(
-        ["docker", "compose", "--profile", "https", "config", "--format", "json"],
+        [str(ROOT / "bin/runtime"), "docker", "compose", "--profile", "https", "config", "--format", "json"],
         cwd=ROOT, capture_output=True, text=True,
     )
     if result.returncode != 0:

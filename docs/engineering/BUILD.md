@@ -5,6 +5,14 @@ then one complete final run for changed implementation. Apply [gate evidence reu
 across later roles, commits and administrative-only updates instead of automatically repeating the suite.
 A pass is not independent technical review, behavioral QA, merge, release or deployment approval.
 
+## TASK runtime binding
+
+Before local TASK setup, follow the [local resource lifecycle](RESOURCE_LIFECYCLE.md) and initialize one private
+original-intent receipt through `bin/runtime`. Existing owning wrappers then capture allocations and creator mounts.
+Later Work/Review/QA/repair stages validate and reuse that exact runtime, not another default stack. Missing/pending
+creation evidence holds advancement. Non-TASK/CI callers without a lifecycle locator retain their ordinary setup;
+this does not claim those external allocations were captured. The gate itself never initializes or replaces a runtime.
+
 ## Explicit setup
 
 Docker Compose, locked Composer dependencies, the pinned frontend installation and private metadata exports must

@@ -1,0 +1,1380 @@
+#!/usr/bin/env python3
+"""Record owning local Docker allocations in the existing exact-TASK handoff."""
+
+import argparse
+from contextlib import contextmanager
+from datetime import datetime, timezone
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import signal
+import stat
+import subprocess
+import sys
+import tempfile
+import uuid
+
+sys.dont_write_bytecode = True
+from cleanup import (Hold, absolute, container_identity, digest, file_record,
+                     fingerprint, image_root_graph, inside, network_identity, require, volume_identity)
+
+LABEL = "io.fight.lifecycle.operation"
+KINDS = ("containers", "networks", "volumes", "images", "caches")
+SAFE_CWD = None  # One CLI invocation; never an asynchronous observer in the candidate
+
+
+def now():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def atomic(path, value, exclusive=False):
+    """Flush a private record and its directory before allowing an external effect."""
+    require(path.parent.is_dir(), "record parent must already exist")
+    descriptor, temporary = tempfile.mkstemp(prefix=".lifecycle-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w") as output:
+            json.dump(value, output, indent=2)
+            output.write("\n")
+            output.flush()
+            os.fsync(output.fileno())
+        if exclusive:
+            os.link(temporary, path)
+        else:
+            os.replace(temporary, path)
+        directory = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def private(path):
+    require(path.is_file() and not path.is_symlink() and path.stat().st_uid == os.getuid()
+            and stat.S_IMODE(path.stat().st_mode) == 0o600, "evidence must be owned, regular and private (0600)")
+    return path.read_bytes()
+
+
+def reference(path):
+    return {"path": str(path), "sha256": digest(private(path))}
+
+
+def observe(argv, cwd, codes=(0,), timeout=30):
+    result = subprocess.run([str(arg) for arg in argv], cwd=SAFE_CWD if SAFE_CWD is not None and argv[0] != "git" else cwd, capture_output=True,
+                            stdin=subprocess.DEVNULL, timeout=timeout,
+                            env=dict(os.environ, COMPOSE_DISABLE_ENV_FILE="1", COMPOSE_ENV_FILES=""))
+    require(result.returncode in codes, f"{' '.join(str(value) for value in argv[:3])} observation exit {result.returncode}; no dependent allocation")
+    require(len(result.stdout) <= 32 * 1024 * 1024, "observation exceeds finite capture")
+    return result
+
+
+def text(argv, cwd):
+    return observe(argv, cwd).stdout.decode().strip()
+
+
+def query(argv, cwd):
+    return json.loads(observe(argv, cwd).stdout)
+
+
+def source(root):
+    names = observe(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"], root).stdout.split(b"\0")
+    records = {}
+    for name in set(names) - {b""}:
+        path = root / os.fsdecode(name)
+        if path.is_symlink():
+            records[os.fsdecode(name)] = {"link": os.readlink(path)}
+        elif path.is_file():
+            records[os.fsdecode(name)] = {"sha256": digest(path.read_bytes()), "mode": stat.S_IMODE(path.stat().st_mode)}
+    return {"revision": text(["git", "rev-parse", "HEAD"], root), "files_sha256": fingerprint(records)}
+
+
+def sanitized(raw, binding):
+    output = raw.decode(errors="replace")
+    values = [value for key, value in os.environ.items() if re.search(r"KEY|TOKEN|SECRET|PASSWORD|AUTH", key, re.I)]
+    for entry in binding.get("env_files", []):
+        for line in Path(entry["path"]).read_text().splitlines():
+            if "=" in line and not line.lstrip().startswith("#"):
+                values.append(line.split("=", 1)[1].strip().strip("'\""))
+    for value in sorted(set(values), key=len, reverse=True):
+        if len(value) >= 8:
+            output = output.replace(value, "<redacted>")
+    return output
+
+
+def process_identity(pid, cwd):
+    observed = observe(["ps", "-p", str(pid), "-o", "pid=,ppid=,uid=,lstart=,comm="], cwd, codes=(0, 1))
+    return {"pid": pid, "observation": observed.stdout.decode().strip(), "exit": observed.returncode}
+
+
+def compose(binding):
+    argv = ["docker", "compose", "--project-name", binding["project"],
+            "--project-directory", binding["working_directory"]]
+    for profile in binding.get("profiles", []):
+        require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", profile), "invalid explicit profile")
+        argv += ["--profile", profile]
+    for key, flag in (("env_files", "--env-file"), ("config_files", "--file")):
+        for entry in binding[key]:
+            require(digest(Path(entry["path"]).read_bytes()) == entry["sha256"], "bound configuration/env input changed")
+            argv += [flag, entry["path"]]
+    return argv
+
+
+def resolved(binding):
+    model = query([*compose(binding), "config", "--format", "json"], binding["working_directory"])
+    require(model["name"] == binding["project"], "resolved project mismatch")
+    return model
+
+
+def inventory(root):
+    ids = text(["docker", "ps", "-aq", "--no-trunc"], root).splitlines()
+    networks = text(["docker", "network", "ls", "-q", "--no-trunc"], root).splitlines()
+    volumes = text(["docker", "volume", "ls", "-q"], root).splitlines()
+    images = sorted(set(text(["docker", "image", "ls", "-aq", "--no-trunc"], root).splitlines()))
+    return {"containers": query(["docker", "inspect", *ids], root) if ids else [],
+            "networks": query(["docker", "network", "inspect", *networks], root) if networks else [],
+            "volumes": query(["docker", "volume", "inspect", *volumes], root) if volumes else [],
+            "images": images}
+
+
+def public_args(argv):
+    """Keep argument identity without recording inline environment or build-argument values."""
+    answer, sensitive = [], False
+    for value in argv:
+        if sensitive:
+            answer.append({"sha256": digest(value.encode())})
+            sensitive = False
+        elif value in ("-e", "--env", "--build-arg"):
+            answer.append(value)
+            sensitive = True
+        elif value.startswith(("--env=", "--build-arg=")):
+            answer.append({"sha256": digest(value.encode())})
+        else:
+            answer.append(value)
+    return answer
+
+
+class Lifecycle:
+    def __init__(self, root, receipt):
+        self.root, self.path = absolute(str(root)), absolute(str(receipt))
+        self.document = json.loads(private(self.path))
+        self.state = self.document["lifecycle"]
+        require(self.state["version"] == 1, "unsupported lifecycle version")
+        self.subject = self.state["subject"]
+        require(self.subject["checkout"] == str(self.root), "lifecycle checkout mismatch")
+        require(text(["git", "remote", "get-url", "origin"], root) == self.subject["origin"], "origin mismatch")
+        require(text(["git", "symbolic-ref", "HEAD"], root) == self.subject["ref"], "branch mismatch")
+        require(text(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], root) == self.subject["git_common_dir"], "Git identity mismatch")
+        trees = text(["git", "worktree", "list", "--porcelain"], root)
+        require(trees.splitlines()[0] == "worktree " + self.subject["safe_checkout"], "canonical safe checkout changed")
+        require("worktree " + str(root) + "\n" in trees, "checkout is not registered")
+        store = Path(self.subject["safe_checkout"]) / ".runs/tasks" / self.subject["task"] / "runs"
+        require(inside(self.path, store) and (self.subject["safe_checkout"] == str(root) or not inside(self.path, root)), "receipt must survive outside removal candidate")
+        self.binding = self.state["runtime"]
+        require(self.binding["working_directory"] == str(root), "runtime checkout mismatch")
+        require(fingerprint(resolved(self.binding)) == self.binding["resolved_sha256"], "runtime/configuration/env drift; explicit replacement required")
+
+    def save(self):
+        atomic(self.path, self.document)
+
+    @contextmanager
+    def locked(self):
+        # SAME persistent lock as cleanup; atomic replacement never changes its inode.
+        with Path(str(self.path) + ".lock").open("a") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            current = json.loads(private(self.path))
+            require(current == self.document, "receipt changed before lock; retry observation, not effects")
+            yield
+
+    def complete(self):
+        pending = [op["id"] for op in self.state["operations"] if op["status"] != "recorded"]
+        require(not pending, "pending allocation requires same-operation reconciliation: " + ",".join(pending))
+
+    def begin(self, argv, kind):
+        self.complete()
+        require(not self.document.get("cleanup", {}).get("plan"), "allocation frozen after cleanup plan; preserve old plan and reconcile explicitly")
+        if kind in ("run", "standalone-run"):
+            require(len(self.state["resources"]["containers"]) < self.state["policy"]["budget"]["containers"], "container evidence budget exhausted before allocation")
+        budget = self.state["policy"]["budget"]
+        require(len(self.state["operations"]) < budget["operations"], "finite operation budget exhausted")
+        before = inventory(self.root)
+        known = {value["identity"]: value for value in self.state["resources"]["containers"]}
+        for container in before["containers"]:
+            if (container["Config"].get("Labels") or {}).get("com.docker.compose.project") == self.binding["project"]:
+                require(container["Id"] in known and container_identity(container) == known[container["Id"]]["inspection_sha256"],
+                        "unrecorded/changed project creator; no allocation or implicit replacement")
+        model = query([*compose(self.binding), "--profile", "*", "config", "--format", "json"], self.root)
+        intended = {"command_kind": kind, "services": {name: {"image": value.get("image"), "data": self.state["policy"]["services"].get(name, {}).get("data", "unknown")}
+                    for name, value in model["services"].items()},
+                    "networks": [{"name": value["name"], "external": value.get("external", False),
+                                  "intent": "reuse" if any(v["Name"] == value["name"] for v in before["networks"]) else "create-if-needed"} for value in model.get("networks", {}).values()],
+                    "volumes": [{"name": value["name"], "external": value.get("external", False),
+                                 "intent": "reuse" if any(v["Name"] == value["name"] for v in before["volumes"]) else "create-if-needed"} for value in model.get("volumes", {}).values()]}
+        identifier = uuid.uuid4().hex
+        op = {"id": identifier, "kind": kind, "at": now(), "subject": self.subject, "status": "pending", "steps": [],
+              "source": source(self.root), "argv": public_args(argv), "before": {
+                  "containers": [v["Id"] for v in before["containers"]],
+                  "networks": [v["Id"] for v in before["networks"]],
+                  "volumes": {v["Name"]: volume_identity(v) for v in before["volumes"]},
+                  "images": before["images"]},
+              "runtime": self.binding, "intended": intended, "policy": self.state["policy"],
+              "caller": process_identity(os.getpid(), self.root),
+              "parent": process_identity(os.getppid(), self.root),
+              "session": {"id": os.environ.get("PI_SESSION_ID"), "provider": os.environ.get("PI_PROVIDER"),
+                          "model": os.environ.get("PI_MODEL"), "provider_reported_execution_identity": None}}
+        intent = self.path.parent / ("allocation-" + identifier + ".json")
+        atomic(intent, op, exclusive=True)
+        op["intent"] = reference(intent)
+        self.state["operations"].append(op)
+        self.save()  # No effect before BOTH durable records exist.
+        return op
+
+    def step(self, op, argv, capture=True, input_data=None):
+        step = {"argv": public_args(argv), "status": "pending", "at": now()}
+        dispatch = self.path.parent / ("dispatch-" + op["id"] + "-" + str(len(op["steps"]) + 1) + ".json")
+        atomic(dispatch, {"operation": op["id"], "subject": self.subject, "intent": op["intent"],
+                          "runtime": op["runtime"], "argv": step["argv"], "at": step["at"],
+                          "builder_observations": op.get("builder_observations", [])}, exclusive=True)
+        step["dispatch"] = reference(dispatch)
+        op["steps"].append(step)
+        self.save()
+        # Do not use auto-removal. Even SIGKILL leaves the creator available to reconciliation.
+        try:
+            child = subprocess.Popen(argv, cwd=self.subject["safe_checkout"], stdin=subprocess.PIPE if input_data is not None else subprocess.DEVNULL,
+                                     stdout=subprocess.PIPE if capture else None,
+                                     stderr=subprocess.PIPE if capture else None,
+                                     env=dict(os.environ, COMPOSE_DISABLE_ENV_FILE="1", COMPOSE_ENV_FILES=""))
+            step["process"] = process_identity(child.pid, self.root)
+            step["cwd"] = self.subject["safe_checkout"]
+            self.save()
+            try:
+                stdout, stderr = child.communicate(input=input_data, timeout=self.state["policy"]["budget"]["seconds"])
+            except subprocess.TimeoutExpired:
+                # Only this exact still-owned CLI is supervised; the daemon workload is retained.
+                child.terminate()
+                try:
+                    child.communicate(timeout=10)
+                except subprocess.TimeoutExpired:
+                    raise Hold("owned command exit unavailable; retain pending process identity") from None
+                raise Hold("owning command budget expired; reconcile original creator without allocating again") from None
+            result = subprocess.CompletedProcess(argv, child.returncode, stdout, stderr)
+        except (OSError, subprocess.SubprocessError):
+            step["status"] = "unknown"
+            self.save()
+            raise Hold("command interrupted/unavailable; reconcile exact pending operation without reallocation") from None
+        step.update(status="returned", exit=result.returncode,
+                    stdout_sha256=digest(result.stdout or b""), stderr_sha256=digest(result.stderr or b""))
+        if capture:
+            require(len(result.stdout or b"") <= 16384, "returned allocation output exceeds bound; retain pending creator")
+            output = self.path.parent / ("returned-" + op["id"] + "-" + str(len(op["steps"])) + ".json")
+            atomic(output, {"operation": op["id"], "argv_sha256": fingerprint(step["argv"]),
+                            "stdout": (result.stdout or b"").decode(), "stderr_redacted": sanitized(result.stderr or b"", op["runtime"]),
+                            "exit": result.returncode}, exclusive=True)
+            step["returned_output"] = reference(output)
+        self.save()
+        return result
+
+    def generation(self, op):
+        model = query([*compose(self.binding), "--profile", "*", "config", "--format", "json"], self.root)
+        network_names = dict(line.split(" ", 1)[::-1] for line in text(["docker", "network", "ls", "--no-trunc", "--format", "{{.ID}} {{.Name}}"], self.root).splitlines())
+        override = {"services": {name: {"labels": {LABEL: op["id"]}} for name in model["services"]}, "networks": {}, "volumes": {}}
+        for kind in ("networks", "volumes"):
+            for key, value in model.get(kind, {}).items():
+                if value.get("external"):
+                    continue
+                existing = network_names.get(value["name"]) if kind == "networks" else value["name"] if value["name"] in op["before"]["volumes"] else None
+                original = next((v for v in self.state["resources"][kind] if v["identity"] == existing and v["creation"]["kind"] == "created"), None)
+                require(not existing or original is not None, "internal network/volume exists without original allocation; declare external reuse or recover proof before allocation")
+                # Stable resource labels survive service generations. Changing a network label
+                # makes Compose replace it; never mutate a reused network to label a new creator.
+                label = original["operation"] if original else op["id"]
+                override[kind][key] = {"labels": {LABEL: label}}
+        directory = self.root / "var/lifecycle"
+        directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+        path = directory / (op["id"] + ".json")
+        atomic(path, override, exclusive=True)
+        binding = dict(self.binding, config_files=[*self.binding["config_files"], reference(path)])
+        binding["resolved_sha256"] = fingerprint(resolved(binding))
+        op["runtime"] = binding
+        self.state["private_paths"].append({"path": str(path), "operation": op["id"], "disposition": "preserve", "sha256": digest(path.read_bytes())})
+        self.save()
+        return binding
+
+    def add(self, kind, item, op):
+        values = self.state["resources"][kind]
+        previous = next((v for v in values if v["identity"] == item["identity"]), None)
+        if previous:
+            # Never upgrade reuse/unknown into ownership, or erase original creation.
+            if kind == "containers" and previous["inspection_sha256"] != item["inspection_sha256"]:
+                require(previous["operation"] == op["id"], "existing resource identity/configuration changed outside original startup")
+                current = query(["docker", "inspect", item["identity"]], self.root)[0]
+                originals = []
+                for entry in op.get("observations", []):
+                    value = json.loads(private(Path(entry["path"])))
+                    if isinstance(value, dict):
+                        originals.extend(value.get("containers", []) if isinstance(value.get("containers"), list) else [])
+                        if value.get("original_creator"):
+                            originals.append(value["original_creator"])
+                original = next((v for v in originals if v["Id"] == item["identity"] and container_identity(v) == previous["inspection_sha256"]), None)
+                require(original is not None and original["HostConfig"].get("OomKillDisable") in (None, False) and current["HostConfig"].get("OomKillDisable") in (None, False),
+                        "creator configuration changed; retain original startup evidence")
+                original["HostConfig"]["OomKillDisable"] = current["HostConfig"]["OomKillDisable"]
+                require(container_identity(original) == item["inspection_sha256"] and any(step.get("status") == "returned" for step in op["steps"]),
+                        "unexpected creator configuration drift; reconciliation held")
+                previous["history"].append({"at": now(), "state": "startup-normalization", "before": previous["inspection_sha256"],
+                                            "after": item["inspection_sha256"], "field": "HostConfig.OomKillDisable: engine null/false normalization"})
+                previous["inspection_sha256"] = item["inspection_sha256"]
+                previous["runtime"] = item["runtime"]
+            require(previous["inspection_sha256"] == item["inspection_sha256"], "existing resource identity/configuration changed")
+            previous["history"].append({"operation": op["id"], "state": "reused", "at": now(),
+                                        "processes_sha256": item.get("processes_sha256")})
+            if kind == "containers":
+                previous["processes_sha256"] = item["processes_sha256"]
+            elif kind == "volumes" and previous["creation"]["kind"] == "created" and not previous["creation"].get("container") and item["creation"].get("container"):
+                previous["creation"].update(container=item["creation"]["container"], destination=item["creation"]["destination"],
+                                            creator_source_revision=op["source"]["revision"])
+                previous["history"].append({"at": now(), "state": "first-creator-observed", "operation": op["id"], "creator": item["creation"]["container"]})
+                if previous["data"] == item["data"] == "disposable" and previous["authority"] == item["authority"]:
+                    previous.update(disposition="remove", reason="original allocation plus first creator/mount observed; fresh guards remain required")
+            return previous
+        require(len(values) < self.state["policy"]["budget"][kind], "finite resource budget exhausted; reconcile allocated resource")
+        item["consumers"] = None  # Creation evidence is not a fresh no-consumer assertion.
+        item["history"] = [{"operation": op["id"], "state": item["creation"]["kind"], "at": now()}]
+        item["operation"] = op["id"]
+        item["dependencies"] = item.get("dependencies", [])
+        values.append(item)
+        return item
+
+    def creation(self, op, created):
+        return {"kind": "created" if created else "reused", "intent": op["intent"]["path"],
+                "intent_sha256": op["intent"]["sha256"], "source_revision": op["source"]["revision"]}
+
+    def volume_usage(self, names):
+        unavailable = None
+        try:
+            rows = query(["docker", "system", "df", "--verbose", "--format", "{{json .Volumes}}"], self.root) if names else []
+            require(isinstance(rows, list), "logical volume usage table unavailable")
+        except (Hold, OSError, ValueError, subprocess.SubprocessError):
+            # Docker's global size scan can be busy while independent worktrees run.
+            # This metric is not creator/ownership proof. Preserve unknown, never zero;
+            # retirement still requires the existing helper's fresh successful size read.
+            rows, unavailable = [], "logical size unavailable at creation; fresh retirement observation still mandatory"
+            print("Lifecycle warning: volume logical size unavailable; identities/mount proof retained; no size/reclaim claim", file=sys.stderr)
+        return {name: {"docker_size": next((v["Size"] for v in rows if v["Name"] == name), None),
+                       "links": next((v["Links"] for v in rows if v["Name"] == name), None), "unavailable": unavailable,
+                       "observed_at": now(), "physical_reclaimed_bytes": None} for name in names}
+
+    def creator_processes(self, container, op):
+        if not container["State"]["Running"]:
+            return None
+        result = observe(["docker", "top", container["Id"], "-eo", "pid,ppid,args"], self.root, codes=(0, 1))
+        if result.returncode:
+            latest = query(["docker", "inspect", container["Id"]], self.root)[0]
+            require(latest["Id"] == container["Id"] and not latest["State"]["Running"], "creator process visibility unavailable while running")
+            op.setdefault("process_transitions", []).append({"container": container["Id"], "top_exit": result.returncode, "observed": "exited-before-top", "at": now()})
+            container.clear()
+            container.update(latest)
+            return None
+        return result.stdout
+
+    def capture(self, op):
+        """Synchronously retain creator evidence; labels corroborate original command, not names/deltas alone."""
+        current = inventory(self.root)
+        binding = op["runtime"]
+        model = query([*compose(binding), "--profile", "*", "config", "--format", "json"], self.root)
+        observation = {"operation": op["id"], "source": op["source"], "at": now(),
+                       "containers": [], "networks": [], "volumes": [], "images": []}
+        known = {v["identity"] for v in self.state["resources"]["containers"]}
+        returned = op.get("returned_container")
+        returned_proven = any(returned and returned in json.loads(private(Path(step["returned_output"]["path"]))).get("stdout", "")
+                              for step in op["steps"] if step.get("returned_output"))
+        creators = [v for v in current["containers"] if (v["Config"].get("Labels") or {}).get(LABEL) == op["id"] or
+                    (returned_proven and v["Id"] == returned and v["Name"] == "/" + op.get("creator_name", "") and returned not in op["before"]["containers"])]
+        implicit_profiles = sorted({profile for v in creators for profile in model["services"][v["Config"]["Labels"]["com.docker.compose.service"]].get("profiles", [])})
+        if implicit_profiles:
+            binding = dict(binding, profiles=sorted(set(binding.get("profiles", []) + implicit_profiles)))
+            binding["resolved_sha256"] = fingerprint(resolved(binding))
+            op["runtime"] = binding
+            self.save()
+        if op.get("returned_container"):
+            require(any(v["Id"] == op["returned_container"] for v in creators), "returned creator unavailable; retain pending allocation")
+        for container in creators:
+            identifier = container["Id"]
+            for old in self.state["resources"]["containers"]:
+                if old["name"] == container["Name"] and old["identity"] != identifier and not any(v["Id"] == old["identity"] for v in current["containers"]):
+                    old["history"].append({"at": now(), "state": "replaced", "by": identifier, "operation": op["id"]})
+            labels = container["Config"]["Labels"]
+            require(labels.get("com.docker.compose.project") == binding["project"] and
+                    labels.get("com.docker.compose.project.working_dir") == str(self.root), "creator subject mismatch")
+            service = labels["com.docker.compose.service"]
+            policy = self.state["policy"]["services"].get(service)
+            require(policy and policy["data"] in ("disposable", "durable", "unknown") and policy["authority"], "service data/authority missing")
+            created = identifier not in op["before"]["containers"]
+            require(created or identifier in known, "uninstrumented creator requires an evidence hold")
+            processes = self.creator_processes(container, op)
+            item = {"identity": identifier, "name": container["Name"], "service": service,
+                    "inspection_sha256": container_identity(container), "processes_sha256": digest(processes) if processes else None,
+                    "creation": self.creation(op, created), "ownership": "proven" if created else "unknown",
+                    "data": policy["data"], "authority": policy["authority"], "disposition": "remove" if created and policy["data"] == "disposable" else "hold",
+                    "reason": "original owning allocation; fresh consumers/publication still required" if created else "reused resource is not owned",
+                    "consumers": [], "bind_data": {v["Source"]: "preserve" for v in container["Mounts"] if v["Type"] == "bind" and v.get("RW") and inside(Path(v["Source"]), self.root)},
+                    "runtime": binding, "dependencies": []}
+            observation["containers"].append(container)  # Private original; never print raw configuration/environment.
+            for mount in container["Mounts"]:
+                if mount["Type"] != "volume":
+                    continue
+                volume = next(v for v in current["volumes"] if v["Name"] == mount["Name"])
+                declared = [v for v in model["services"][service].get("volumes", []) if v["target"] == mount["Destination"] and v["type"] == "volume"]
+                external = bool(declared and declared[0].get("source") and model.get("volumes", {}).get(declared[0]["source"], {}).get("external"))
+                absent = volume["Name"] not in op["before"]["volumes"]
+                labelled = (volume.get("Labels") or {}).get(LABEL) == op["id"]
+                # Anonymous volumes are corroborated by the returned exact creator's original mount and image declaration.
+                anonymous = not declared or not declared[0].get("source")
+                image = query(["docker", "image", "inspect", container["Config"]["Image"]], self.root)[0]
+                declared_anonymous = mount["Destination"] in (image["Config"].get("Volumes") or {}) or bool(declared)
+                owned = created and absent and not external and (labelled or (anonymous and declared_anonymous))
+                creation = dict(self.creation(op, owned), container=identifier, destination=mount["Destination"])
+                volume_item = {"identity": volume["Name"], "inspection_sha256": volume_identity(volume), "creation": creation,
+                               "ownership": "proven" if owned else "unknown", "data": policy["data"], "authority": policy["authority"],
+                               "disposition": "remove" if owned and policy["data"] == "disposable" else "hold",
+                               "reason": "original creator/mount and pre-allocation absence" if owned else "shared/external or original allocation unknown",
+                               "consumers": [], "dependencies": [identifier]}
+                self.add("volumes", volume_item, op)
+                observation["volumes"].append(volume)
+                item["dependencies"].append(volume["Name"])
+            for network in container["NetworkSettings"]["Networks"].values():
+                if network.get("NetworkID"):
+                    item["dependencies"].append(network["NetworkID"])
+            self.add("containers", item, op)
+            # Durable provenance matches the existing executor's schema, even after creator disappearance.
+            self.document.setdefault("cleanup", {"version": 1}).setdefault("mount_provenance", {})[identifier] = {
+                "container": identifier, "container_identity": item["inspection_sha256"], "image": container["Image"],
+                "mounts": [{key: v.get(key) for key in ("Type", "Name", "Source", "Destination", "RW")} for v in container["Mounts"]],
+                "runtime_sha256": binding["resolved_sha256"]}
+        for network in current["networks"]:
+            labels = network.get("Labels") or {}
+            if labels.get("com.docker.compose.project") != binding["project"]:
+                continue
+            owned = labels.get(LABEL) == op["id"] and network["Id"] not in op["before"]["networks"]
+            self.add("networks", {"identity": network["Id"], "name": network["Name"], "key": labels.get("com.docker.compose.network"),
+                     "created": network["Created"], "inspection_sha256": network_identity(network), "creation": self.creation(op, owned),
+                     "ownership": "proven" if owned else "unknown", "disposition": "remove" if owned else "hold",
+                     "reason": "original labelled creation" if owned else "reused/shared original allocation unknown", "consumers": [], "runtime": binding}, op)
+            observation["networks"].append(network)
+        # Compose can allocate a declared volume before any container mounts it. Record
+        # that fact now; later first-mount capture completes, never invents, its provenance.
+        for volume in current["volumes"]:
+            if (volume.get("Labels") or {}).get(LABEL) != op["id"] or volume["Name"] in op["before"]["volumes"]:
+                continue
+            if any(v["identity"] == volume["Name"] for v in self.state["resources"]["volumes"]):
+                continue
+            keys = {key for key, value in model.get("volumes", {}).items() if value.get("name") == volume["Name"] and not value.get("external")}
+            services = [name for name, value in model["services"].items() if any(mount.get("source") in keys for mount in value.get("volumes", []))]
+            policies = [self.state["policy"]["services"][name] for name in services]
+            policy = policies[0] if len(policies) == 1 else {"data": "unknown", "authority": "multiple/unknown original data owners; hold"}
+            self.add("volumes", {"identity": volume["Name"], "inspection_sha256": volume_identity(volume),
+                     "creation": dict(self.creation(op, True), container=None, destination=None), "ownership": "proven",
+                     "data": policy["data"], "authority": policy["authority"], "disposition": "hold", "consumers": [],
+                     "reason": "original labelled allocation recorded; first creating-container mount not yet observed"}, op)
+            observation["volumes"].append(volume)
+        # Image use is not creation. Retain exact reused roots; never claim their shared layers or caches.
+        for image_ref in sorted({v["Config"]["Image"] for v in creators}):
+            image = query(["docker", "image", "inspect", image_ref], self.root)[0]
+            self.add("images", {"identity": image["Id"], "inspection_sha256": fingerprint(image), "creation": self.creation(op, False),
+                     "ownership": "unknown", "disposition": "retain", "reason": "explicitly reused image; no ownership of shared root/layers", "consumers": [],
+                     "size_bytes": image["Size"], "references": sorted((image.get("RepoTags") or []) + (image.get("RepoDigests") or []))}, op)
+            observation["images"].append(image)
+        observation["volume_usage"] = self.volume_usage({v["Name"] for v in observation["volumes"]})
+        for item in self.state["resources"]["volumes"]:
+            if item["identity"] in observation["volume_usage"]:
+                item["storage"] = observation["volume_usage"][item["identity"]]
+        path = self.path.parent / ("observation-" + op["id"] + "-" + uuid.uuid4().hex + ".json")
+        atomic(path, observation, exclusive=True)
+        op.setdefault("observations", []).append(reference(path))
+        if op["kind"] == "run":
+            returned = next((step["returned_output"] for step in op["steps"] if step.get("returned_output") and
+                             any(v["Id"] in json.loads(private(Path(step["returned_output"]["path"]))).get("stdout", "") for v in creators)), None)
+            dispatch = next((step["dispatch"] for step in op["steps"] if step.get("dispatch")), None)
+            if returned or dispatch:
+                for creator in creators:
+                    proof_path = self.path.parent / ("oneoff-proof-" + op["id"] + "-" + uuid.uuid4().hex + ".json")
+                    atomic(proof_path, {"version": 1, "task": self.subject["task"], "origin": self.subject["origin"],
+                        "operation": op["id"], "container": creator["Id"], "runtime_sha256": binding["resolved_sha256"],
+                        "original_intent": op["intent"], "original_return": returned, "original_dispatch": dispatch,
+                        "mode": "returned-id" if returned else "dispatch-reconciliation", "original_observation": reference(path)}, exclusive=True)
+                    resource = next(v for v in self.state["resources"]["containers"] if v["identity"] == creator["Id"])
+                    resource["oneoff_proof"] = reference(proof_path)
+                    resource["history"].append({"at": now(), "state": "oneoff-creation-proof", "proof": reference(proof_path)})
+        self.save()
+        return creators
+
+    def cache_snapshot(self, op, label):
+        builder = self.state["policy"].get("builder")
+        require(isinstance(builder, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", builder), "explicit already-running local Docker builder required before build")
+        builders = observe(["docker", "buildx", "ls", "--format", "{{json .}}"], self.root).stdout
+        rows = [json.loads(v) for v in builders.splitlines()]
+        context = query(["docker", "context", "inspect"], self.root)
+        require(len(context) == 1 and context[0]["Endpoints"]["docker"]["Host"].startswith("unix://") and
+                (not os.environ.get("DOCKER_HOST") or os.environ.get("DOCKER_CONTEXT") or os.environ["DOCKER_HOST"] == context[0]["Endpoints"]["docker"]["Host"]),
+                "builder/local CLI engine binding unavailable; no remote or fallback builder")
+        matches = [value for value in rows if value["Name"] == builder]
+        require(matches and all(value["Driver"] == "docker" and all(node["Status"] == "running" and node["Endpoint"] == context[0]["Name"] and node["IDs"] for node in value["Nodes"]) for value in matches),
+                "builder is not the already-running same-context Docker worker; no bootstrap/allocation fallback")
+        usage = observe(["docker", "buildx", "du", "--builder", builder, "--format", "json"], self.root, timeout=60).stdout
+        path = self.path.parent / ("builder-" + op["id"] + "-" + label + ".json")
+        value = {"builder": builder, "builders": matches, "context": context[0]["Name"],
+                 "engine_id": query(["docker", "info", "--format", "{{json .}}"], self.root)["ID"],
+                 "usage": [json.loads(v) for v in usage.splitlines()], "at": now()}
+        require(len(value["usage"]) <= 4096, "builder observation exceeds finite record budget; retain pending operation")
+        atomic(path, value, exclusive=True)
+        op.setdefault("builder_observations", []).append(reference(path))
+        self.save()
+        return reference(path)
+
+    def image_use(self, op, image_ref, created=False):
+        image = query(["docker", "image", "inspect", image_ref], self.root)[0]
+        require(not created or (image["Config"].get("Labels") or {}).get(LABEL) == op["id"], "build root lacks original operation binding")
+        observation_id = op["id"] + "-" + uuid.uuid4().hex
+        path = self.path.parent / ("image-" + observation_id + ".json")
+        atomic(path, image, exclusive=True)
+        allocation = self.path.parent / ("image-allocation-" + observation_id + ".json")
+        atomic(allocation, {"source_revision": op["source"]["revision"], "operation": op["id"],
+                           "root": image["Id"], "returned_iid": op.get("returned_iid"), "inspection_sha256": fingerprint(image),
+                           "references": sorted((image.get("RepoTags") or []) + (image.get("RepoDigests") or []))}, exclusive=True)
+        item = {"identity": image["Id"], "inspection_sha256": fingerprint(image), "creation": self.creation(op, created),
+                "ownership": "proven" if created else "unknown", "disposition": "hold" if created else "retain",
+                "reason": "created root; immutable reference retirement proof required" if created else "explicit shared/reused image policy; never remove by association",
+                "consumers": [], "size_bytes": image["Size"], "data": "disposable" if created else "shared",
+                "authority": self.state["policy"].get("image_authority", ""),
+                "references": sorted((image.get("RepoTags") or []) + (image.get("RepoDigests") or []))}
+        if created and item["authority"]:
+            try:
+                graph = image_root_graph(self.root, image)
+                proof_path = self.path.parent / ("root-proof-" + observation_id + ".json")
+                atomic(proof_path, {"version": 1, "task": self.subject["task"], "origin": self.subject["origin"],
+                    "root": image["Id"], "data": "disposable", "authority": item["authority"], "original_image": reference(path),
+                    "references": item["references"], "graph": graph,
+                    "basis": {"source_revision": op["source"]["revision"], "evidence": [op["intent"], reference(allocation)]}}, exclusive=True)
+                item.update(disposition="remove", reason="original created root/reference proof; fresh shared-child/consumer guards still apply",
+                            retirement={"kind": "owned-root-references", "proof": reference(proof_path)})
+            except Hold as error:
+                item["reason"] = str(error)
+        item["creation"]["local_acquisition"] = "shared-root-pull" if op["kind"] == "pull-shared-image" else "build" if created else "already-used-root"
+        self.add("images", item, op)
+        op.setdefault("observations", []).extend([reference(path), reference(allocation)])
+        self.save()
+
+    def record_builder_effect(self, op, before, after):
+        item = next((v for v in self.state["resources"]["caches"] if v["identity"] == "builder-operation-" + op["id"]), None)
+        if item is not None:
+            item["history"].append({"at": now(), "state": "held", "observation": after})
+        else:
+            self.add("caches", {"identity": "builder-operation-" + op["id"], "inspection_sha256": fingerprint([before, after]),
+                     "creation": {"kind": "unknown", "intent": op["intent"]["path"], "intent_sha256": op["intent"]["sha256"]},
+                     "ownership": "unknown", "consumers": None, "disposition": "hold",
+                     "reason": "exact build cache association/retirement unqualified; preserve original builder/worker and every observed ID for storage owner; never prune",
+                     "observations": [before, after]}, op)
+        op.setdefault("observations", []).extend([before, after])
+        self.save()
+
+    def build_image(self, options):
+        require(self.state["policy"].get("image_authority") and self.state["policy"].get("builder"), "explicit build/discard authority and already-running builder binding missing")
+        require(len(self.state["resources"]["caches"]) < self.state["policy"]["budget"]["caches"] and
+                len(self.state["resources"]["images"]) < self.state["policy"]["budget"]["images"], "image/cache evidence budget exhausted before build")
+        require(not any(v.startswith(("--iidfile", "--metadata-file", "--output", "--push", "--load", "--cache-to", "--cache-from", "--secret", "--ssh", "--builder")) for v in options), "unsupported build output/cache/private-input capability")
+        require(not any(value == "--pull" or (value.startswith("--pull=") and value != "--pull=false") or value.startswith("--file=") for value in options),
+                "implicit pull/opaque Dockerfile selection unqualified; use explicit owning pulls and --file locator")
+        require("--tag" in options or "-t" in options, "exact task-owned image tag required")
+        tag_flag = "--tag" if "--tag" in options else "-t"
+        options = list(options)
+        tag = options[options.index(tag_flag) + 1]
+        require("@" not in tag, "build requires an explicit local tag, not a guessed digest reference")
+        if tag.rfind(":") <= tag.rfind("/"):
+            tag += ":latest"
+            options[options.index(tag_flag) + 1] = tag
+        require(tag.startswith(self.binding["project"] + "-"), "build cannot replace foreign/shared image reference")
+        prior = observe(["docker", "image", "inspect", tag], self.root, codes=(0, 1))
+        require(prior.returncode == 1 and prior.stdout.strip() == b"[]" and b"No such image:" in prior.stderr,
+                "image reference already present or lookup ambiguous; explicit replacement not qualified")
+        require(options, "explicit finite build context required")
+        options = list(options)
+        input_data, input_records = None, []
+        if options[-1] == "-":
+            input_data = sys.stdin.buffer.read(1024 * 1024 + 1)
+            require(0 < len(input_data) <= 1024 * 1024, "stdin Dockerfile must be nonempty and at most 1 MiB")
+            input_path = self.path.parent / ("build-input-" + uuid.uuid4().hex + ".json")
+            atomic(input_path, {"kind": "stdin-dockerfile", "sha256": digest(input_data), "bytes_hex": input_data.hex()}, exclusive=True)
+            input_records.append(reference(input_path))
+        else:
+            context = absolute(str((self.root / options[-1]).resolve()))
+            require(inside(context, self.root) and context.is_dir(), "only checkout-local explicit build contexts are qualified")
+            options[-1] = str(context)
+            file_flag = "--file" if "--file" in options else "-f" if "-f" in options else None
+            dockerfile = absolute(str((self.root / options[options.index(file_flag) + 1]).resolve())) if file_flag else context / "Dockerfile"
+            require(inside(dockerfile, self.root) and dockerfile.is_file(), "original Dockerfile unavailable")
+            if file_flag:
+                options[options.index(file_flag) + 1] = str(dockerfile)
+            input_path = self.path.parent / ("build-input-" + uuid.uuid4().hex + ".json")
+            atomic(input_path, {"kind": "context-dockerfile", "path": str(dockerfile), "sha256": digest(dockerfile.read_bytes()),
+                                "bytes_hex": dockerfile.read_bytes().hex(), "context": str(context), "source": source(self.root)}, exclusive=True)
+            input_records.append(reference(input_path))
+        dockerfile_text = bytes.fromhex(json.loads(private(Path(input_records[0]["path"]))) ["bytes_hex"]).decode()
+        require(not re.search(r"(?im)^\s*#\s*syntax\s*=", dockerfile_text), "custom build frontend needs its own qualified original allocation capability")
+        build_args = {}
+        for index, value in enumerate(options):
+            if value == "--build-arg":
+                require(index + 1 < len(options) and "=" in options[index + 1], "explicit build argument values required")
+                key, value = options[index + 1].split("=", 1)
+                build_args[key] = value
+        defaults = dict((match[0], match[1]) for match in re.findall(r"(?m)^\s*ARG\s+([A-Za-z_][A-Za-z0-9_]*)=(.*)$", dockerfile_text))
+        defaults.update(build_args)
+        def expanded(value):
+            value = re.sub(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)", lambda match: defaults.get(match[1] or match[2], "$unresolved"), value)
+            require("$" not in value and "\\" not in value, "unresolved/multiline build image source; refuse implicit allocation")
+            return value
+        stages, bases = set(), set()
+        for line in dockerfile_text.splitlines():
+            if re.match(r"(?i)^\s*FROM\s+", line):
+                parts = line.split()
+                require(len(parts) in (2, 4) and not parts[1].startswith("--"), "unsupported FROM/platform input; no implicit pull")
+                base_image = expanded(parts[1])
+                if base_image.lower() != "scratch" and base_image not in stages:
+                    bases.add(base_image)
+                if len(parts) == 4:
+                    require(parts[2].upper() == "AS", "unknown build stage declaration")
+                    stages.add(parts[3])
+        for value in re.findall(r"--from=([^\s]+)", dockerfile_text):
+            value = expanded(value)
+            if value not in stages and not value.isdigit():
+                bases.add(value)
+        base_images = [{"reference": value, "inspection": query(["docker", "image", "inspect", value], self.root)[0]} for value in sorted(bases)]
+        known_images = {value["identity"] for value in self.state["resources"]["images"]}
+        require(len(known_images | {value["inspection"]["Id"] for value in base_images}) + 1 <= self.state["policy"]["budget"]["images"], "base/output image evidence budget exhausted before build")
+        base_path = self.path.parent / ("build-bases-" + uuid.uuid4().hex + ".json")
+        atomic(base_path, base_images, exclusive=True)
+        input_records.append(reference(base_path))
+        op = self.begin(["docker", "build", *options, "original-input-record=" + input_records[0]["path"], "original-input-sha256=" + input_records[0]["sha256"],
+                         "original-bases-record=" + str(base_path), "original-bases-sha256=" + input_records[1]["sha256"]], "build")
+        op["image_reference"] = tag
+        op["build_inputs"] = input_records
+        self.save()
+        for value in base_images:
+            self.image_use(op, value["reference"])
+        before = self.cache_snapshot(op, "before")
+        iid = self.path.parent / ("iid-" + op["id"])
+        op["iidfile"] = str(iid)
+        self.save()
+        result = self.step(op, ["docker", "build", "--builder", self.state["policy"]["builder"], "--iidfile", str(iid), "--label", LABEL + "=" + op["id"], *options], capture=False, input_data=input_data)
+        after = self.cache_snapshot(op, "after")
+        original_builder = json.loads(private(Path(before["path"])))
+        current_builder = json.loads(private(Path(after["path"])))
+        require(original_builder["engine_id"] == current_builder["engine_id"] and
+                sorted({identifier for value in original_builder["builders"] for node in value["Nodes"] for identifier in node["IDs"]}) ==
+                sorted({identifier for value in current_builder["builders"] for node in value["Nodes"] for identifier in node["IDs"]}), "builder/worker engine changed during effect; preserve original uncertain allocation")
+        # A delta never establishes cache ownership; preserve the exact complete observations.
+        self.record_builder_effect(op, before, after)
+        require(result.returncode == 0 and iid.exists(), "build failed/uncertain; reconcile exact iid/operation, never repeat build")
+        require(all(query(["docker", "image", "inspect", value["reference"]], self.root)[0]["Id"] == value["inspection"]["Id"] for value in base_images),
+                "base image reference drift; preserve original build output, never invent actual inputs")
+        op["returned_iid"] = iid.read_text().strip()
+        self.image_use(op, tag, created=True)
+        op.update(status="recorded", exit=result.returncode, outcome="completed-cache-held")
+        self.state["cache_policy"] = {"state": "builder-observed-association-held", "reason": "exact storage capability remains separately owned"}
+        self.save()
+        return result.returncode
+
+    def standalone_run(self, options):
+        # The existing focused wrappers use explicit --pull=never and no implicit image allocation.
+        require("--pull=never" in options, "standalone runs must explicitly prohibit implicit pull")
+        require(not any(v.startswith(("--cidfile", "--name", "--restart")) or v in ("-d", "--detach", "--privileged") for v in options), "unsupported standalone creator/restart authority")
+        op = self.begin(["docker", "run", *options], "standalone-run")
+        name = self.subject["task"].lower() + "-" + op["id"]
+        op["creator_name"] = name
+        self.save()
+        result = self.step(op, ["docker", "create", "--name", name, "--label", LABEL + "=" + op["id"], *[v for v in options if v != "--rm"]])
+        require(result.returncode == 0 and re.fullmatch(rb"[a-f0-9]{64}", result.stdout.strip()), "standalone create failed; retain exact pending name/operation")
+        op["returned_container"] = result.stdout.decode().strip()
+        self.save()
+        self.capture_standalone(op)
+        result = self.step(op, ["docker", "start", "--attach", op["returned_container"]], capture=False)
+        self.capture_standalone(op)
+        op.update(status="recorded", exit=result.returncode, outcome="completed" if result.returncode == 0 else "failed")
+        self.save()
+        return result.returncode
+
+    def capture_standalone(self, op):
+        current = query(["docker", "inspect", op.get("returned_container", op["creator_name"])], self.root)[0]
+        require((current["Config"].get("Labels") or {}).get(LABEL) == op["id"] and current["Id"] not in op["before"]["containers"], "pending standalone creator lacks original allocation binding")
+        op["returned_container"] = current["Id"]
+        image = query(["docker", "image", "inspect", current["Config"]["Image"]], self.root)[0]
+        declarations, volume_items, volume_observations = [], [], []
+        for mount in current["Mounts"]:
+            if mount["Type"] != "volume":
+                continue
+            volume = query(["docker", "volume", "inspect", mount["Name"]], self.root)[0]
+            volume_observations.append(volume)
+            absent = volume["Name"] not in op["before"]["volumes"]
+            declared = mount["Destination"] in (image["Config"].get("Volumes") or {})
+            owned = absent and declared
+            declarations.append({"type": "volume", "target": mount["Destination"], "allocated_name": mount["Name"], "created_absent": owned})
+            volume_items.append({"identity": mount["Name"], "inspection_sha256": volume_identity(volume),
+                "creation": dict(self.creation(op, owned), container=current["Id"], destination=mount["Destination"]),
+                "ownership": "proven" if owned else "unknown", "data": "disposable", "authority": self.state["policy"].get("oneoff_authority", ""),
+                "consumers": [], "disposition": "remove" if owned else "hold", "reason": "original short-lived creator/declaration/mount" if owned else "merely mounted storage; allocation unproven",
+                "dependencies": [current["Id"]]})
+        networks = {}
+        for name, attached in current["NetworkSettings"]["Networks"].items():
+            if name in ("none", "host"):
+                continue
+            network = query(["docker", "network", "inspect", attached["NetworkID"] or name], self.root)[0]
+            networks[network["Id"]] = {"name": network["Name"], "created": network["Created"], "inspection_sha256": network_identity(network), "creation": "reused"}
+        processes = self.creator_processes(current, op)
+        proof = {"name": current["Name"], "image": current["Image"], "inspection_sha256": container_identity(current),
+                 "mounts_sha256": fingerprint(current["Mounts"]), "volume_declarations": declarations,
+                 "workload": {"kind": "oneoff", "processes_sha256": digest(processes) if processes else None}}
+        allocation = self.path.parent / ("standalone-allocation-" + op["id"] + "-" + uuid.uuid4().hex + ".json")
+        atomic(allocation, {"source_revision": op["source"]["revision"], "returned_id": current["Id"], "proof": proof,
+                            "volume_declarations_sha256": fingerprint(declarations), "original_creator": current, "image": image, "networks": networks,
+                            "volumes": volume_observations, "volume_usage": self.volume_usage({v["Name"] for v in volume_observations})}, exclusive=True)
+        record = {"version": 1, "task": self.subject["task"], "origin": self.subject["origin"],
+                  "source": {"revision": op["source"]["revision"], "workload": "bounded owning one-off"},
+                  "data": "disposable", "authority": self.state["policy"].get("oneoff_authority", ""),
+                  "basis": {"kind": "allocation", "evidence": [op["intent"], reference(allocation)]},
+                  "containers": {current["Id"]: proof}, "networks": networks}
+        require(record["authority"], "one-off data/discard authority missing; retain original creator")
+        record_path = self.path.parent / ("standalone-" + op["id"] + "-" + uuid.uuid4().hex + ".json")
+        atomic(record_path, record, exclusive=True)
+        binding = {"kind": "standalone", "ownership": "proven", "creation_record": reference(record_path), "resolved_sha256": fingerprint(record)}
+        item = {"identity": current["Id"], "name": current["Name"], "service": "oneoff", "inspection_sha256": container_identity(current),
+                "creation": self.creation(op, True), "ownership": "proven", "data": "disposable", "authority": record["authority"],
+                "consumers": [], "disposition": "remove", "reason": "original owning one-off; only stopped workload retirement qualified",
+                "processes_sha256": proof["workload"]["processes_sha256"], "runtime": binding,
+                "bind_data": {v["Source"]: "preserve" for v in current["Mounts"] if v["Type"] == "bind" and v.get("RW") and inside(Path(v["Source"]), self.root)}}
+        previous = self.add("containers", item, op)
+        # The second observation retains the original immutable creator and a new stopped-workload binding.
+        binding = previous["runtime"]
+        for volume in volume_items:
+            self.add("volumes", volume, op)
+        self.document.setdefault("cleanup", {"version": 1}).setdefault("mount_provenance", {})[current["Id"]] = {
+            "container": current["Id"], "container_identity": item["inspection_sha256"], "image": current["Image"],
+            "mounts": [{key: v.get(key) for key in ("Type", "Name", "Source", "Destination", "RW")} for v in current["Mounts"]],
+            "runtime_sha256": binding["resolved_sha256"]}
+        if not op.get("observations"):
+            self.image_use(op, current["Config"]["Image"])
+        op.setdefault("observations", []).extend([reference(allocation), reference(record_path)])
+        self.save()
+
+    def compose_budget(self, op, binding, services, dependencies):
+        model = resolved(binding)
+        selected = set(services)
+        if dependencies:
+            frontier = list(selected)
+            while frontier:
+                service = frontier.pop()
+                for dependency in model["services"][service].get("depends_on", {}):
+                    if dependency not in selected:
+                        selected.add(dependency)
+                        frontier.append(dependency)
+        budget = self.state["policy"]["budget"]
+        require(len(self.state["resources"]["containers"]) + len(selected) <= budget["containers"], "container budget insufficient before allocation")
+        named = {v["name"] for v in model.get("volumes", {}).values() if not v.get("external") and v["name"] not in op["before"]["volumes"]}
+        anonymous, images = 0, set()
+        for name in selected:
+            service = model["services"][name]
+            image = query(["docker", "image", "inspect", service.get("image", binding["project"] + "-" + name)], self.root)[0]
+            images.add(image["Id"])
+            mounts = service.get("volumes", [])
+            covered = {v["target"] for v in mounts if v.get("source") or v["type"] != "volume"}
+            covered.update(value.split(":", 1)[0] for value in service.get("tmpfs", []))
+            anonymous += len((set(image["Config"].get("Volumes") or {}) | {v["target"] for v in mounts if v["type"] == "volume" and not v.get("source")}) - covered)
+        require(len(self.state["resources"]["volumes"]) + len(named) + anonymous <= budget["volumes"], "volume budget insufficient before creation")
+        require(len({v["identity"] for v in self.state["resources"]["images"]} | images) <= budget["images"], "image evidence budget insufficient before creation")
+        network_names = {line.split(" ", 1)[1] for line in text(["docker", "network", "ls", "--format", "{{.ID}} {{.Name}}"], self.root).splitlines()}
+        missing = {v["name"] for v in model.get("networks", {}).values() if not v.get("external") and v["name"] not in network_names}
+        require(len(self.state["resources"]["networks"]) + len(missing) <= budget["networks"], "network budget insufficient before creation")
+
+    def execute_compose(self, argv):
+        require(argv, "missing compose command")
+        profiles = []
+        while argv and argv[0] == "--profile":
+            require(len(argv) > 2, "missing profile/command")
+            profiles += argv[:2]
+            argv = argv[2:]
+        action, options = argv[0], argv[1:]
+        if action not in ("up", "create", "run"):
+            require(action in ("config", "ps", "port", "logs", "exec", "top", "version", "images"),
+                    "unsupported allocation/retirement command; use qualified lifecycle capability, never generic teardown/build/pull")
+            self.complete()
+            return subprocess.run([*compose(self.binding), *profiles, *argv], cwd=self.subject["safe_checkout"],
+                                  env=dict(os.environ, COMPOSE_DISABLE_ENV_FILE="1", COMPOSE_ENV_FILES="")).returncode
+        require(not any(v in options for v in ("--force-recreate", "--renew-anon-volumes", "-V", "--remove-orphans")),
+                "implicit replacement/removal refused; use recorded generation replacement")
+        if "--build" in options:
+            model = resolved(self.binding)
+            services = [v for v in options if v in model["services"]]
+            for service in services:
+                build = model["services"][service].get("build")
+                if build:
+                    require(set(build) <= {"context", "dockerfile", "args", "target"}, "unsupported Compose build inputs")
+                    build_args = ["--tag", model["services"][service].get("image", self.binding["project"] + "-" + service),
+                                  "--file", str(Path(build["context"]) / build.get("dockerfile", "Dockerfile"))]
+                    for key, value in build.get("args", {}).items():
+                        build_args += ["--build-arg", key + "=" + str(value)]
+                    if build.get("target"):
+                        build_args += ["--target", build["target"]]
+                    self.build_image([*build_args, build["context"]])
+            options = [v for v in options if v != "--build"]
+        op = self.begin(["docker", "compose", *profiles, *argv], action)
+        binding = self.generation(op)
+        if profiles:
+            binding["profiles"] = sorted(set(binding.get("profiles", []) + profiles[1::2]))
+            binding["resolved_sha256"] = fingerprint(resolved(binding))
+            op["runtime"] = binding
+            self.save()
+        base = compose(binding)
+        if action == "run":
+            # An explicit task/operation name plus the returned ID survives interruption. Never --rm.
+            require(not any(v.startswith("--name") or v in ("-d", "--detach") for v in options), "one-off name/detach is lifecycle-owned")
+            all_model = query([*compose(binding), "--profile", "*", "config", "--format", "json"], self.root)
+            index = 0
+            while index < len(options) and options[index].startswith("-"):
+                flag = options[index]
+                if flag in ("--user", "-u", "-e", "--env", "--entrypoint", "--workdir", "-w"):
+                    require(index + 1 < len(options), "missing one-off option value")
+                    if flag in ("-e", "--env"):
+                        require("=" in options[index + 1], "inline env requires an explicit value, not ambient inheritance")
+                    index += 2
+                else:
+                    require(flag in ("--rm", "--no-deps", "-T"), "unsupported one-off option; refuse before allocation")
+                    index += 1
+            require(index < len(options) and options[index] in all_model["services"], "explicit known one-off service required")
+            selected = options[index]
+            implicit = all_model["services"][selected].get("profiles", [])
+            if implicit:
+                binding = dict(binding, profiles=sorted(set(binding.get("profiles", []) + implicit)))
+                binding["resolved_sha256"] = fingerprint(resolved(binding))
+                op["runtime"] = binding
+                base = compose(binding)
+            options = [v for v in options[:index] if v != "--rm"] + options[index:]
+            name = self.subject["task"].lower() + "-" + op["id"]
+            op["creator_name"] = name
+            self.compose_budget(op, binding, [selected], dependencies=False)
+            result = self.step(op, [*base, "run", "--detach", "--no-deps", "--pull", "never", "--name", name, *options])
+            if result.returncode == 0:
+                identifiers = re.findall(r"\b[a-f0-9]{64}\b", result.stdout.decode())
+                require(len(identifiers) == 1, "returned container ID unavailable; reconcile pending creator from retained original output")
+                op["returned_container"] = identifiers[0]
+                self.save()
+            creators = self.capture(op)
+            require(result.returncode == 0 and len(creators) == 1, "setup failed; observed partial allocation retained for reconciliation")
+            waited = self.step(op, ["docker", "wait", op["returned_container"]])
+            require(waited.returncode == 0 and waited.stdout.strip().isdigit(), "one-off outcome unavailable")
+            code = int(waited.stdout.strip())
+            # Logs are the command's ordinary output, not resource evidence/configuration.
+            subprocess.run(["docker", "logs", op["returned_container"]], cwd=self.subject["safe_checkout"])
+            self.capture(op)
+            op.update(status="recorded", exit=code, outcome="completed" if code == 0 else "failed")
+        else:
+            services = [v for v in options if not v.startswith("-") and v in resolved(binding)["services"]]
+            require(services, "explicit finite service selection required")
+            require(len(services) <= 8, "service budget exceeded")
+            self.compose_budget(op, binding, services, dependencies=True)
+            # All creators remain stopped until evidence is durable. Compose may allocate dependencies.
+            result = self.step(op, [*base, "create", "--no-build", "--pull", "never", *services])
+            self.capture(op)
+            require(result.returncode == 0, "create failed; original partial allocation retained")
+            code = 0
+            if action == "up":
+                started = self.step(op, [*base, "start", "--wait", "--wait-timeout", "120", *services])
+                code = started.returncode
+                self.capture(op)
+            op.update(status="recorded", exit=code, outcome="completed" if code == 0 else "failed")
+            self.state["runtime"] = binding
+            self.binding = binding
+        self.save()
+        return code
+
+    def paths(self, paths):
+        targets = [absolute(path) for path in paths]
+        require(1 <= len(targets) <= 16 and all(inside(path, self.root) and path != self.root for path in targets), "bounded checkout-local directory preparation only")
+        allowed = [Path(v["path"]) for v in self.state["private_paths"]]
+        require(all(any(inside(path, parent) or inside(parent, path) for parent in allowed) for path in targets), "path missing original private-path intent")
+        op = self.begin(["prepare-paths", *[str(v) for v in targets]], "paths")
+        planned = sorted({parent for target in targets for parent in [target, *target.parents] if inside(parent, self.root) and parent != self.root}, key=lambda v: len(v.parts))
+        op["planned_paths"] = [{"path": str(path), "existed": path.exists()} for path in planned]
+        self.save()
+        records = []
+        for path in planned:
+            existed = path.exists()
+            if not existed:
+                path.mkdir(mode=0o700)
+            require(path.is_dir() and not path.is_symlink(), "directory path changed or unsafe")
+            records.append({"path": str(path), "state": "reused" if existed else "created", "record": file_record(path), "disposition": "preserve"})
+        evidence = self.path.parent / ("paths-" + op["id"] + ".json")
+        atomic(evidence, records, exclusive=True)
+        op.update(status="recorded", outcome="directories-prepared", observations=[reference(evidence)])
+        self.save()
+
+    def qualify_image(self, identifier):
+        item = next(value for value in self.state["resources"]["images"] if value["identity"] == identifier)
+        require(item["ownership"] == "proven" and item["creation"]["kind"] == "created" and item["data"] == "disposable", "only originally proven created disposable images can gain a retirement capability")
+        op = next(value for value in self.state["operations"] if value["id"] == item["operation"])
+        require(reference(Path(op["intent"]["path"])) == op["intent"], "original intent changed")
+        intent = json.loads(private(Path(op["intent"]["path"])))
+        require(intent["subject"]["task"] == self.subject["task"] and intent["subject"]["origin"] == self.subject["origin"] and
+                intent["kind"] == "build" and intent["policy"]["image_authority"] == item["authority"], "original creation subject/data authority unavailable; never retrofit ownership")
+        original, allocation = None, None
+        for entry in op["observations"]:
+            require(reference(Path(entry["path"])) == entry, "original image observation changed")
+            value = json.loads(private(Path(entry["path"])))
+            if isinstance(value, dict) and value.get("Id") == identifier and fingerprint(value) == item["inspection_sha256"]:
+                original = entry
+            if isinstance(value, dict) and value.get("root") == identifier and value.get("source_revision") == op["source"]["revision"] and value.get("inspection_sha256") == item["inspection_sha256"]:
+                allocation = entry
+        require(original is not None and allocation is not None, "original full image/allocation observation missing; preserve hold")
+        current = query(["docker", "image", "inspect", identifier], self.root)[0]
+        require(fingerprint(current) == item["inspection_sha256"] and (current["Config"].get("Labels") or {}).get(LABEL) == op["id"], "original immutable image/reference set changed")
+        argv = intent["argv"]
+        flag = "--tag" if "--tag" in argv else "-t"
+        requested = argv[argv.index(flag) + 1]
+        normalized = requested if requested.rfind(":") > requested.rfind("/") else requested + ":latest"
+        references = sorted((current.get("RepoTags") or []) + (current.get("RepoDigests") or []))
+        require(current["RepoTags"] == [normalized] and references == item["references"] and
+                all(value == normalized.rsplit(":", 1)[0] + "@" + identifier for value in current.get("RepoDigests") or []),
+                "additional/foreign/digest naming relationship requires original explicit owner proof")
+        graph = image_root_graph(self.root, current)
+        path = self.path.parent / ("qualified-root-" + op["id"] + "-" + uuid.uuid4().hex + ".json")
+        atomic(path, {"version": 1, "task": self.subject["task"], "origin": self.subject["origin"], "root": identifier,
+            "data": "disposable", "authority": item["authority"], "original_image": original, "references": references, "graph": graph,
+            "basis": {"source_revision": op["source"]["revision"], "evidence": [op["intent"], original, allocation]}}, exclusive=True)
+        item["history"].append({"at": now(), "state": "retirement-capability-qualified", "prior_disposition": item["disposition"], "proof": reference(path)})
+        item.update(disposition="remove", reason="original creation/naming authority unchanged; newly qualified immutable representation, fresh retirement guards mandatory",
+                    retirement={"kind": "owned-root-references", "proof": reference(path)})
+        op["observations"].append(reference(path))
+        self.save()  # Existing cleanup plans/attempts are untouched; explicit plan --refresh is required.
+
+    def rebind(self, spec_path):
+        spec = json.loads(private(spec_path))
+        require(re.fullmatch(r"task" + self.subject["task"][5:] + r"-[a-z0-9-]{1,40}", spec["project"]), "replacement project not task-isolated")
+        binding = {"kind": "compose", "ownership": "proven", "project": spec["project"], "working_directory": str(self.root)}
+        for key in ("config_files", "env_files"):
+            require(isinstance(spec[key], list) and len(spec[key]) <= 8, "explicit replacement inputs required")
+            binding[key] = [{"path": str(absolute(path)), "sha256": digest(Path(path).read_bytes())} for path in spec[key]]
+        require(binding["config_files"], "replacement configuration required")
+        model = resolved(binding)
+        all_model = query([*compose(binding), "--profile", "*", "config", "--format", "json"], self.root)
+        require(set(self.state["policy"]["services"]) >= set(all_model["services"]), "replacement cannot introduce unclassified services")
+        binding["resolved_sha256"] = fingerprint(model)
+        op = self.begin(["rebind", str(spec_path), digest(private(spec_path))], "runtime-rebind")
+        op.update(status="recorded", outcome="bound-no-allocation", observations=[reference(spec_path)], replacement_runtime=binding)
+        self.state.setdefault("runtime_history", []).append(self.binding)
+        self.state["runtime"] = binding
+        self.state["private_paths"].extend(spec["private_paths"])
+        self.binding = binding
+        self.save()
+
+    def reconcile(self, identifier):
+        op = next(v for v in self.state["operations"] if v["id"] == identifier)
+        require(op["status"] == "pending", "operation already recorded; never replay allocations")
+        require(reference(Path(op["intent"]["path"])) == op["intent"], "original intent changed/unavailable")
+        if not op["steps"] and op["kind"] in ("run", "up", "create", "standalone-run", "build", "pull-shared-image"):
+            # This owning implementation persists a step BEFORE every Docker effect.
+            # A pre-step inspection failure cannot have dispatched allocation.
+            op.update(status="recorded", outcome="failed-before-docker-effect", observations=[op["intent"]], reconciled_at=now())
+            self.save()
+            return
+        if op["kind"] == "pull-shared-image":
+            image_ref = op["argv"][2]
+            require(isinstance(image_ref, str) and "@sha256:" in image_ref, "uncertain mutable pull needs original digest evidence; never repeat allocation or invent the original root")
+            image = query(["docker", "image", "inspect", image_ref], self.root)[0]
+            expected = image_ref.split("@", 1)[1]
+            require(image["Id"] == expected or any(v.endswith("@" + expected) for v in image.get("RepoDigests", [])), "original pinned pull root unavailable/changed")
+            self.image_use(op, image_ref)
+            op.update(status="recorded", outcome="reconciled-shared-pinned-root; original CLI exit may remain unknown", reconciled_at=now())
+            self.save()
+            return
+        if op["kind"] == "build":
+            require(op.get("builder_observations"), "original pre-build builder identity missing; no retrospective cache ownership")
+            before = op["builder_observations"][0]
+            after = self.cache_snapshot(op, "reconcile-" + uuid.uuid4().hex)
+            self.record_builder_effect(op, before, after)
+            iid = Path(op["iidfile"])
+            if iid.exists():
+                bases = json.loads(private(Path(op["build_inputs"][-1]["path"])))
+                require(all(query(["docker", "image", "inspect", value["reference"]], self.root)[0]["Id"] == value["inspection"]["Id"] for value in bases),
+                        "original base image binding changed; preserve output and recover original builder input proof")
+                op["returned_iid"] = private(iid).decode().strip()
+                self.image_use(op, op["image_reference"], created=True)
+                op.update(status="recorded", outcome="reconciled-build-cache-held", reconciled_at=now())
+            else:
+                require(op["steps"][-1].get("status") == "returned" and op["steps"][-1].get("exit", 0) != 0,
+                        "original build outcome unknown and iid unavailable; preserve pending operation, never repeat build")
+                op.update(status="recorded", outcome="failed-build-cache-held", reconciled_at=now())
+            self.save()
+            return
+        if op["kind"] == "standalone-run":
+            self.capture_standalone(op)
+            current = query(["docker", "inspect", op["returned_container"]], self.root)[0]
+            require(not current["State"]["Running"], "original workload still running; no reallocation")
+            op.update(status="recorded", outcome="reconciled-partial", exit=current["State"]["ExitCode"], reconciled_at=now())
+            self.save()
+            return
+        if op["kind"] == "paths":
+            require(op.get("planned_paths") and not op["steps"], "original directory intent missing")
+            records = []
+            for entry in op["planned_paths"]:
+                path = absolute(entry["path"])
+                require(inside(path, self.root) and path != self.root, "directory intent escaped checkout")
+                if not path.exists():
+                    require(not entry["existed"], "original reused directory disappeared; recover through its owner")
+                    path.mkdir(mode=0o700)
+                require(path.is_dir() and not path.is_symlink(), "directory identity changed; preserve partial preparation")
+                records.append({"path": str(path), "state": "reused" if entry["existed"] else "created-or-reconciled",
+                                "record": file_record(path), "disposition": "preserve"})
+            path = self.path.parent / ("paths-reconciled-" + op["id"] + "-" + uuid.uuid4().hex + ".json")
+            atomic(path, records, exclusive=True)
+            op.setdefault("observations", []).append(reference(path))
+            op.update(status="recorded", outcome="directories-reconciled", reconciled_at=now())
+            self.save()
+            return
+        creators = self.capture(op)
+        # Original labels and retained creators establish bounded observation, never a new create.
+        if op.get("creator_name") and creators:
+            matches = [v for v in creators if v["Name"] == "/" + op["creator_name"]]
+            require(len(matches) == 1, "exact pending creator unavailable; no duplicate allocation")
+            require(not matches[0]["State"]["Running"], "original workload still running; wait outside this operation")
+            op["returned_container"] = matches[0]["Id"]
+            op["exit"] = matches[0]["State"]["ExitCode"]
+        if not creators:
+            current = inventory(self.root)
+            require(op["steps"] and all(step.get("status") == "returned" for step in op["steps"]) and op["steps"][-1].get("exit", 0) != 0 and
+                    {v["Id"] for v in current["containers"]} == set(op["before"]["containers"]) and
+                    {v["Id"] for v in current["networks"]} == set(op["before"]["networks"]) and
+                    {v["Name"]: volume_identity(v) for v in current["volumes"]} == op["before"]["volumes"] and
+                    current["images"] == op["before"]["images"],
+                    "no corroborated creator and uncertain effects; retain pending operation")
+            op.update(status="recorded", outcome="failed-observed-absent", exit=op["steps"][-1]["exit"], reconciled_at=now())
+            self.save()
+            return
+        op.update(status="recorded", outcome="reconciled-partial", reconciled_at=now())
+        self.save()
+
+    def resume(self, identifier):
+        op = next(v for v in self.state["operations"] if v["id"] == identifier)
+        require(op["kind"] == "up" and (op["status"] == "pending" or op.get("exit") != 0), "only incomplete original startup can resume")
+        require(op["steps"] and op["steps"][0].get("exit") == 0, "original create outcome uncertain; reconcile before startup")
+        creators = self.capture(op)
+        require(creators, "original creators unavailable; never reallocate on resume")
+        model = resolved(op["runtime"])
+        services = [v for v in op["argv"] if isinstance(v, str) and v in model["services"]]
+        require(services, "original service selection unavailable")
+        result = self.step(op, [*compose(op["runtime"]), "start", "--wait", "--wait-timeout", "120", *services])
+        self.capture(op)
+        op.update(status="recorded", exit=result.returncode, outcome="resumed" if result.returncode == 0 else "failed")
+        self.state["runtime"] = op["runtime"]
+        self.binding = op["runtime"]
+        self.save()
+        return result.returncode
+
+    def cancel(self, identifier):
+        require(self.state["policy"].get("cancel_authority"), "explicit original workload cancellation authority missing")
+        op = next(v for v in self.state["operations"] if v["id"] == identifier)
+        require(op["kind"] in ("run", "standalone-run"), "only an original owning one-off can be cancelled")
+        identifier = op.get("returned_container")
+        item = next((v for v in self.state["resources"]["containers"] if v["identity"] == identifier and v["operation"] == op["id"]), None)
+        require(item and item["ownership"] == "proven" and item["data"] == "disposable", "original exact disposable creator evidence required")
+        current = query(["docker", "inspect", identifier], self.root)[0]
+        require(container_identity(current) == item["inspection_sha256"] and not current["HostConfig"].get("AutoRemove"), "creator changed/reused; preserve workload")
+        result = self.step(op, ["docker", "stop", "--time", "10", identifier]) if current["State"]["Running"] else None
+        require(result is None or result.returncode == 0, "cancellation uncertain; retain original operation")
+        if op["kind"] == "standalone-run":
+            self.capture_standalone(op)
+        else:
+            self.capture(op)
+        current = query(["docker", "inspect", identifier], self.root)[0]
+        require(not current["State"]["Running"], "original workload still running")
+        op.update(status="recorded", outcome="cancelled", exit=current["State"]["ExitCode"], cancelled_at=now())
+        self.save()
+
+    def validate(self, stage, attempt=None):
+        self.complete()
+        require(len(self.state["stages"]) < 128, "finite stage-observation budget exhausted")
+        pid, seen = os.getpid(), set()
+        for _ in range(8):
+            if pid <= 0 or pid in seen:
+                break
+            seen.add(pid)
+            identity = process_identity(pid, self.root)
+            cwd = observe(["lsof", "-a", "-p", str(pid), "-d", "cwd", "-Fn"], self.root, codes=(0, 1))
+            record = dict(identity, cwd_observation=cwd.stdout.decode().strip(), visibility_exit=cwd.returncode,
+                          stage=stage, at=now(), disposition="protected", creation="reused/not claimed")
+            if not any(v.get("observation") == identity["observation"] and v.get("pid") == pid for v in self.state["processes"]):
+                self.state["processes"].append(record)
+            fields = identity["observation"].split()
+            pid = int(fields[1]) if identity["exit"] == 0 and len(fields) >= 2 else 0
+        if attempt is not None:
+            attempt = absolute(attempt)
+            require(inside(attempt, Path(self.subject["safe_checkout"]) / ".runs/build" / self.subject["task"]), "wrong original monitor attempt scope")
+            process_file = attempt / "process.json"
+            processes = json.loads(private(process_file))
+            self.state.setdefault("monitor_attempts", []).append({"stage": stage, "attempt": str(attempt), "original_process_record": reference(process_file),
+                "identities": [process_identity(processes[key], self.root) for key in ("monitor_pid", "pi_pid")], "disposition": "protected; no termination authority"})
+        for op in self.state["operations"]:
+            require(reference(Path(op["intent"]["path"])) == op["intent"], "original intent unavailable")
+            for entry in op.get("builder_observations", []) + op.get("build_inputs", []):
+                require(reference(Path(entry["path"])) == entry, "original builder observation changed")
+            for step in op["steps"]:
+                if step.get("dispatch"):
+                    require(reference(Path(step["dispatch"]["path"])) == step["dispatch"], "original dispatch evidence changed")
+                if step.get("returned_output"):
+                    require(reference(Path(step["returned_output"]["path"])) == step["returned_output"], "original returned identity output unavailable")
+            require(op.get("observations"), "required creation observation missing")
+            for entry in op["observations"]:
+                require(reference(Path(entry["path"])) == entry, "original observation unavailable/changed")
+        current = inventory(self.root)
+        known = {v["identity"] for v in self.state["resources"]["containers"]}
+        for item in self.state["resources"]["containers"]:
+            match = next((v for v in current["containers"] if v["Id"] == item["identity"]), None)
+            if match:
+                require(container_identity(match) == item["inspection_sha256"], "runtime generation changed; explicit replacement evidence required")
+            else:
+                replacements = {event["by"] for event in item["history"] if event["state"] == "replaced"}
+                require(not any(v["Name"] == item["name"] and v["Id"] not in replacements for v in current["containers"]), "creator name reused by unknown replacement")
+                item["history"].append({"at": now(), "state": "absent", "stage": stage})
+        known = {v["identity"] for v in self.state["resources"]["containers"]}
+        require(not any((v["Config"].get("Labels") or {}).get("com.docker.compose.project") == self.binding["project"] and v["Id"] not in known for v in current["containers"]), "uninstrumented project allocation; hold advancement")
+        for kind, key, identity in (("networks", "Id", network_identity), ("volumes", "Name", volume_identity)):
+            known = {value["identity"] for value in self.state["resources"][kind]}
+            for item in self.state["resources"][kind]:
+                match = next((value for value in current[kind] if value[key] == item["identity"]), None)
+                require(match is None or identity(match) == item["inspection_sha256"], "recorded storage/network identity changed; hold advancement")
+            require(not any((value.get("Labels") or {}).get("com.docker.compose.project") == self.binding["project"] and value[key] not in known
+                            for value in current[kind]), "uninstrumented project storage/network allocation; hold advancement")
+        self.state["stages"].append({"stage": stage, "at": now(), "source": source(self.root),
+                                     "session": {"id": os.environ.get("PI_SESSION_ID"), "file": os.environ.get("PI_SESSION_FILE"),
+                                                 "provider": os.environ.get("PI_PROVIDER"), "model": os.environ.get("PI_MODEL"), "provider_reported_execution_identity": None},
+                                     "resources_sha256": fingerprint(self.state["resources"])})
+        self.save()
+
+    def plan(self, delivery, refresh=False):
+        cleanup = self.document.get("cleanup", {})
+        old_plan = cleanup.get("plan")
+        if old_plan and not refresh:
+            require(old_plan["oid"] == delivery["oid"] and old_plan["publication"] == delivery["publication"], "delivery changed; explicitly refresh while preserving original plan/attempts")
+            return
+        required = ("publication", "oid", "exited_workers", "protected_files")
+        require(all(key in delivery for key in required), "delivery binding incomplete; ownership inventory is generated, not authored")
+        plan = {key: self.subject[key] for key in ("task", "safe_checkout", "git_common_dir", "origin", "ref")}
+        plan.update({key: delivery[key] for key in required})
+        if "original_land_attempt" in delivery:
+            plan["original_land_attempt"] = delivery["original_land_attempt"]
+        plan["runtime"] = self.binding
+        candidate = Path(self.subject["checkout"])
+        safe = Path(self.subject["safe_checkout"])
+        for kind, identity in (("worktree", str(candidate)), ("branch", self.subject["ref"])):
+            options = delivery.get(kind, {})
+            require(options.get("identity", identity) == identity, "delivery cannot change lifecycle resource identity")
+            disposition = options.get("disposition", "retain" if candidate == safe else "remove")
+            require(candidate != safe or disposition == "retain", "canonical checkout/ref must remain protected")
+            plan[kind] = {"identity": identity, "ownership": "proven", "consumers": None, "consumer_policy": "fresh",
+                          "disposition": disposition, "reason": options.get("reason", "recorded task-owned candidate; fresh qualification required")}
+        plan["worktree"].update(inode=self.subject.get("checkout_inode", candidate.stat().st_ino),
+            preserve_to=delivery.get("worktree", {}).get("preserve_to", str(self.path.parent / ("preserved-" + candidate.name))),
+            exclusions=delivery.get("worktree", {}).get("exclusions", []))
+        plan.update({kind: json.loads(json.dumps(self.state["resources"][kind])) for kind in KINDS})
+        for kind in KINDS:
+            for item in plan[kind]:
+                if item["disposition"] == "remove" and item.get("consumers") in (None, []):
+                    item.update(consumers=None, consumer_policy="fresh")
+        pending = [op for op in self.state["operations"] if op["status"] != "recorded"]
+        plan["pending_operations"] = [{"identity": op["id"], "kind": op["kind"], "intent": op["intent"],
+                                       "project": op["runtime"]["project"], "reason": "original allocation outcome/evidence incomplete; reconcile only this operation"} for op in pending]
+        pending_projects = {op["runtime"]["project"] for op in pending}
+        creators = {v["identity"]: v for v in plan["containers"]}
+        for kind in ("containers", "networks", "volumes", "images"):
+            for item in plan[kind]:
+                runtime = item.get("runtime", creators.get(item.get("creation", {}).get("container"), {}).get("runtime", {}))
+                associated = runtime.get("project") in pending_projects or (kind == "images" and any(reference.startswith(project + "-") for project in pending_projects for reference in item.get("references", [])))
+                if associated and item["disposition"] == "remove":
+                    item.update(disposition="hold", reason="dependent original allocation pending; reconcile and refresh this versioned plan")
+        for entry in self.state["protected_files"]:
+            require(file_record(Path(entry["path"])) == entry["record"], "protected original changed")
+            if entry not in plan["protected_files"]:
+                plan["protected_files"].append(entry)
+        cleanup = self.document.setdefault("cleanup", {"version": 1})
+        if old_plan:
+            old_hash = fingerprint(old_plan)
+            require(cleanup.get("plan_sha256", old_hash) == old_hash, "prior immutable plan changed; retain it and recover original evidence")
+            cleanup.setdefault("plan_history", []).append({"plan": old_plan, "plan_sha256": old_hash,
+                "next_plan_sha256": fingerprint(plan), "at": now(), "attempt_count": len(cleanup.get("attempts", []))})
+        cleanup["plan"] = plan
+        cleanup["plan_sha256"] = fingerprint(plan)
+        cleanup["lifecycle_sha256"] = fingerprint(self.state)
+        self.save()
+
+
+def initialize(root, task, receipt, spec_path):
+    require(re.fullmatch(r"TASK-\d{5}", task), "invalid task")
+    require(not (root / "var/resource-lifecycle.json").exists(), "runtime already bound; reuse/reconcile original receipt")
+    spec = json.loads(private(absolute(spec_path)))
+    safe = Path(text(["git", "worktree", "list", "--porcelain"], root).splitlines()[0].split(" ", 1)[1])
+    store = safe / ".runs/tasks" / task / "runs"
+    require(inside(receipt, store) and (root == safe or not inside(receipt, root)), "receipt must be in canonical exact-task evidence outside candidate")
+    require(receipt.parent.is_dir(), "receipt requires existing private run directory")
+    ref = text(["git", "symbolic-ref", "HEAD"], root)
+    require(re.fullmatch(r"refs/heads/feature/task-" + task[5:] + r"-[a-z0-9-]+", ref), "wrong task branch")
+    project = spec["project"]
+    require(re.fullmatch(r"task" + task[5:] + r"-[a-z0-9-]{1,40}", project), "project must be exact-task isolated")
+    binding = {"kind": "compose", "ownership": "proven", "project": project, "working_directory": str(root)}
+    for key in ("config_files", "env_files"):
+        require(isinstance(spec[key], list) and len(spec[key]) <= 8, "explicit ordered config/env files required")
+        binding[key] = [{"path": str(absolute(path)), "sha256": digest(Path(path).read_bytes())} for path in spec[key]]
+    require(binding["config_files"], "explicit configuration required")
+    model = resolved(binding)
+    binding["resolved_sha256"] = fingerprint(model)
+    policy = spec["policy"]
+    all_model = query([*compose(binding), "--profile", "*", "config", "--format", "json"], root)
+    require(set(policy["services"]) >= set(all_model["services"]), "classify every service/profile before allocation")
+    for service in policy["services"].values():
+        require(service["data"] in ("disposable", "durable", "unknown") and service["authority"], "data/authority missing")
+    for key, maximum in {"operations": 128, "seconds": 1800, "containers": 32, "networks": 32, "volumes": 32, "images": 32, "caches": 32}.items():
+        require(type(policy["budget"][key]) is int and 0 <= policy["budget"][key] <= maximum, "invalid finite budget")
+    require(policy["budget"]["seconds"] > 0, "positive timeout required")
+    subject = {"task": task, "safe_checkout": str(safe), "checkout": str(root), "checkout_inode": root.stat().st_ino, "ref": ref,
+               "origin": text(["git", "remote", "get-url", "origin"], root),
+               "git_common_dir": text(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], root),
+               "source": source(root)}
+    document = {"lifecycle": {"version": 1, "subject": subject, "runtime": binding, "policy": policy,
+                 "original_spec": reference(Path(spec_path)), "operations": [], "stages": [],
+                 "resources": {kind: [] for kind in KINDS}, "protected_files": [
+                     {"path": str(absolute(path)), "record": file_record(Path(path))} for path in spec["protected_files"]],
+                 "private_paths": spec["private_paths"], "processes": [],
+                 "binding_intent": {"path": str(root / "var/resource-lifecycle.json"), "mode": "0600", "data": "private runtime locator", "disposition": "preserve"},
+                 "observers": {"state": "none created by this owning interface; command subprocesses are synchronously supervised from the safe checkout"},
+                 "cache_policy": {"state": "no-build-requested", "reason": "image reuse/pulls grant no cache/layer ownership; any build adds explicit builder observations and association holds"}}}
+    # Receipt intent precedes the first runtime directory/binding allocation. If that
+    # write fails, retry ONLY this original initialization, never a second receipt.
+    with Path(str(receipt) + ".lock").open("a") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if receipt.exists():
+            original = json.loads(private(receipt))
+            state = original["lifecycle"]
+            require(state["version"] == 1 and state["subject"] == subject and state["runtime"] == binding and
+                    state["original_spec"] == document["lifecycle"]["original_spec"] and not state["operations"],
+                    "existing initialization differs; retain original receipt and recover exact inputs")
+        else:
+            atomic(receipt, document, exclusive=True)
+        (root / "var").mkdir(mode=0o700, exist_ok=True)
+        require((root / "var").is_dir() and not (root / "var").is_symlink(), "runtime directory changed")
+        atomic(root / "var/resource-lifecycle.json", {"version": 1, "task": task, "receipt": str(receipt), "checkout": str(root)}, exclusive=True)
+
+
+def main():
+    global SAFE_CWD
+    os.umask(0o077)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", default=os.getcwd())
+    sub = parser.add_subparsers(dest="action", required=True)
+    init = sub.add_parser("init")
+    init.add_argument("--task", required=True)
+    init.add_argument("--receipt", required=True)
+    init.add_argument("--spec", required=True)
+    docker = sub.add_parser("docker")
+    docker.add_argument("argv", nargs=argparse.REMAINDER)
+    validate = sub.add_parser("validate")
+    validate.add_argument("--stage", required=True)
+    validate.add_argument("--attempt", help="Existing original stage monitor attempt; records protected reuse, never creation or exit authority")
+    qualify_image = sub.add_parser("qualify-image")
+    qualify_image.add_argument("--identity", required=True)
+    image_name = sub.add_parser("image-name")
+    image_name.add_argument("name")
+    paths = sub.add_parser("paths")
+    paths.add_argument("paths", nargs="+")
+    rebind = sub.add_parser("rebind")
+    rebind.add_argument("--spec", required=True)
+    reconcile = sub.add_parser("reconcile")
+    reconcile.add_argument("--operation", required=True)
+    resume = sub.add_parser("resume")
+    resume.add_argument("--operation", required=True)
+    cancel = sub.add_parser("cancel")
+    cancel.add_argument("--operation", required=True)
+    plan = sub.add_parser("plan")
+    plan.add_argument("--delivery", required=True)
+    plan.add_argument("--refresh", action="store_true", help="Archive the old immutable plan in this SAME receipt; preserve every prior attempt")
+    args = parser.parse_args()
+    try:
+        root = absolute(args.root)
+        SAFE_CWD = absolute(text(["git", "worktree", "list", "--porcelain"], root).splitlines()[0].split(" ", 1)[1])
+        if args.action == "init":
+            initialize(root, args.task, absolute(args.receipt), str(absolute(args.spec)))
+            return 0
+        locator = root / "var/resource-lifecycle.json"
+        if not locator.exists():
+            # Existing non-TASK/CI use is not silently enrolled or claimed as captured.
+            branch = observe(["git", "symbolic-ref", "--short", "HEAD"], root, codes=(0, 1)).stdout.decode().strip()
+            require(args.action in ("docker", "paths") and not re.match(r"feature/task-\d{5}-", branch), "TASK runtime requires original lifecycle init before owning commands")
+            if args.action == "paths":
+                for path in args.paths:
+                    Path(path).mkdir(parents=True, exist_ok=True)
+                return 0
+            return subprocess.run(["docker", *args.argv], cwd=root).returncode
+        binding = json.loads(private(locator))
+        require(binding["version"] == 1 and binding["checkout"] == str(root), "invalid runtime binding")
+        lifecycle = Lifecycle(root, binding["receipt"])
+        require(binding["task"] == lifecycle.subject["task"], "binding subject mismatch")
+        with lifecycle.locked():
+            if args.action == "docker":
+                require(args.argv, "missing Docker command")
+                if args.argv[0] == "inspect" or args.argv[:2] in (["image", "inspect"], ["image", "ls"], ["network", "inspect"], ["network", "ls"], ["volume", "inspect"], ["volume", "ls"]):
+                    return subprocess.run(["docker", *args.argv], cwd=SAFE_CWD).returncode
+                if args.argv[0] == "run":
+                    return lifecycle.standalone_run(args.argv[1:])
+                if args.argv[0] == "build":
+                    return lifecycle.build_image(args.argv[1:])
+                if args.argv[0] == "pull":
+                    require(len(args.argv) == 2, "one exact shared image per pull")
+                    op = lifecycle.begin(["docker", *args.argv], "pull-shared-image")
+                    result = lifecycle.step(op, ["docker", *args.argv])
+                    sys.stdout.buffer.write(result.stdout)
+                    sys.stderr.write(sanitized(result.stderr, op["runtime"]))
+                    require(result.returncode == 0, "pull failed; original pending operation retained")
+                    lifecycle.image_use(op, args.argv[1])
+                    op.update(status="recorded", exit=0, outcome="shared-image-acquired")
+                    lifecycle.save()
+                    return 0
+                require(args.argv[0] == "compose", "unsupported owning Docker effect; no allocation")
+                return lifecycle.execute_compose(args.argv[1:])
+            if args.action == "image-name":
+                require(re.fullmatch(r"[a-z0-9][a-z0-9.-]{0,48}", args.name), "invalid task image suffix")
+                lifecycle.complete()
+                print(lifecycle.binding["project"] + "-" + args.name)
+                return 0
+            if args.action == "validate":
+                lifecycle.validate(args.stage, args.attempt)
+            elif args.action == "qualify-image":
+                lifecycle.qualify_image(args.identity)
+            elif args.action == "paths":
+                lifecycle.paths([str((root / path).resolve()) if not Path(path).is_absolute() else path for path in args.paths])
+            elif args.action == "rebind":
+                lifecycle.rebind(absolute(args.spec))
+            elif args.action == "reconcile":
+                lifecycle.reconcile(args.operation)
+            elif args.action == "resume":
+                return lifecycle.resume(args.operation)
+            elif args.action == "cancel":
+                lifecycle.cancel(args.operation)
+            elif args.action == "plan":
+                lifecycle.plan(json.loads(private(absolute(args.delivery))), args.refresh)
+        print(json.dumps({"task": lifecycle.subject["task"], "operation": args.action, "recorded": True}))
+        return 0
+    except (Hold, OSError, ValueError, KeyError, TypeError, StopIteration, subprocess.SubprocessError) as error:
+        print(json.dumps({"complete": False, "hold": str(error) if isinstance(error, Hold) else type(error).__name__,
+                          "recovery": "inspect original exact-operation receipt; no duplicate allocation or destructive fallback"}), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
