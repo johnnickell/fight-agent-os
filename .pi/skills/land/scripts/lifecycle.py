@@ -19,7 +19,7 @@ import uuid
 
 sys.dont_write_bytecode = True
 from cleanup import (Hold, absolute, container_identity, digest, file_record,
-                     fingerprint, image_root_graph, inside, network_identity, require, volume_identity)
+                     fingerprint, image_root_graph, inside, network_identity, require, verify_plan_history, volume_identity)
 
 LABEL = "io.fight.lifecycle.operation"
 KINDS = ("containers", "networks", "volumes", "images", "caches")
@@ -35,9 +35,8 @@ def atomic(path, value, exclusive=False):
     require(path.parent.is_dir(), "record parent must already exist")
     descriptor, temporary = tempfile.mkstemp(prefix=".lifecycle-", dir=path.parent)
     try:
-        with os.fdopen(descriptor, "w") as output:
-            json.dump(value, output, indent=2)
-            output.write("\n")
+        with os.fdopen(descriptor, "wb") as output:
+            output.write(value if isinstance(value, bytes) else (json.dumps(value, indent=2) + "\n").encode())
             output.flush()
             os.fsync(output.fileno())
         if exclusive:
@@ -198,7 +197,9 @@ class Lifecycle:
 
     def begin(self, argv, kind):
         self.complete()
-        require(not self.document.get("cleanup", {}).get("plan"), "allocation frozen after cleanup plan; preserve old plan and reconcile explicitly")
+        if self.document.get("cleanup", {}).get("plan"):
+            self.verification_return()
+            require(kind == "compose-command", "verification return permits supervised reuse only; allocation remains frozen")
         if kind in ("run", "standalone-run"):
             require(len(self.state["resources"]["containers"]) < self.state["policy"]["budget"]["containers"], "container evidence budget exhausted before allocation")
         budget = self.state["policy"]["budget"]
@@ -1418,7 +1419,117 @@ class Lifecycle:
         op.update(status="recorded", outcome="cancelled", exit=current["State"]["ExitCode"], cancelled_at=now())
         self.save()
 
-    def validate(self, stage, attempt=None):
+    def verification_return(self):
+        """Prove the active immutable return without granting allocation or removal."""
+        cleanup = self.document["cleanup"]
+        entry = cleanup.get("verification_return")
+        require(entry and reference(Path(entry["path"])) == entry, "plan frozen; explicit return-to-verification required")
+        event = json.loads(private(Path(entry["path"])))
+        require(event["version"] == 1 and event["kind"] == "return-to-verification" and event["subject"] == self.subject,
+                "verification transition subject/version changed")
+        original = event["original_receipt"]
+        require(reference(Path(original["path"])) == original, "original transition snapshot changed")
+        previous = json.loads(private(Path(original["path"])))
+        require({key: value for key, value in cleanup.items() if key != "verification_return"} == previous["cleanup"] and
+                verify_plan_history(cleanup) == event["plan_sha256"], "suspended plan/history/attempts changed")
+        old = previous["lifecycle"]
+        require(old["subject"] == self.subject and old["runtime"] == self.binding and old["policy"] == self.state["policy"] and
+                self.state["operations"][:len(old["operations"])] == old["operations"], "original allocation/runtime/budget changed")
+        for kind in KINDS:
+            require(len(self.state["resources"][kind]) == len(old["resources"][kind]), "verification cannot allocate resources")
+            for before, after in zip(old["resources"][kind], self.state["resources"][kind]):
+                require({k: v for k, v in before.items() if k != "history"} == {k: v for k, v in after.items() if k != "history"} and
+                        after["history"][:len(before["history"])] == before["history"], "original resource state/unknowns changed")
+        return entry
+
+    def return_to_verification(self, expected_hash):
+        """Suspend only an unpublished, finished non-destructive preview under the shared lock."""
+        cleanup = self.document["cleanup"]
+        require(not cleanup.get("verification_return"), "already returned; reuse the SAME verification binding")
+        require(set(cleanup) <= {"version", "mount_provenance", "plan", "plan_sha256", "lifecycle_sha256", "attempts", "plan_history"},
+                "unknown cleanup state; no return authority")
+        require(cleanup["version"] == 1 and verify_plan_history(cleanup) == expected_hash, "wrong original plan hash/version")
+        plan = cleanup["plan"]
+        for candidate in [entry["plan"] for entry in cleanup.get("plan_history", [])] + [plan]:
+            require(all(candidate[key] == self.subject[key] for key in ("task", "safe_checkout", "git_common_dir", "origin", "ref")) and
+                    candidate["worktree"]["identity"] == str(self.root) and candidate["branch"]["identity"] == self.subject["ref"] and
+                    candidate["runtime"] == self.binding, "original plan subject/runtime mismatch")
+            publication = candidate["publication"]
+            require(publication["delivery_verified"] is False and all(publication[key] is None for key in ("url", "number", "merge_oid", "merged_at")),
+                    "published/delivery-qualified or ambiguous plan cannot return")
+            require(not candidate.get("pending_operations"), "original pending allocation must be reconciled first")
+            for item in [candidate["worktree"], candidate["branch"], *[item for kind in KINDS for item in candidate[kind]]]:
+                require(item.get("consumers") in (None, []), "known original consumer prerequisite unresolved")
+        attempts = cleanup.get("attempts")
+        require(isinstance(attempts, list) and attempts, "finished non-destructive preview required")
+        hashes = {expected_hash, *[entry["plan_sha256"] for entry in cleanup.get("plan_history", [])]}
+        for attempt in attempts:
+            require(set(attempt) == {"time", "apply", "operation_sha256", "plan_sha256", "results", "complete"} and
+                    attempt["apply"] is False and attempt["complete"] is False and attempt["plan_sha256"] in hashes,
+                    "apply/effect/unknown cleanup attempt; return held")
+            results = attempt["results"]
+            attempt_plan = next((entry["plan"] for entry in cleanup.get("plan_history", []) if entry["plan_sha256"] == attempt["plan_sha256"]), plan)
+            expected_results = [(kind[:-1], item["identity"]) for kind in KINDS for item in attempt_plan[kind]] + [
+                ("worktree", attempt_plan["worktree"]["identity"]), ("ref", attempt_plan["branch"]["identity"])]
+            require(sorted((entry["kind"], entry["identity"]) for entry in results[:-1]) == sorted(expected_results),
+                    "preview resource coverage missing/contradictory")
+            require(results and results[-1]["kind"] == "final-verification" and results[-1]["status"] == "failed",
+                    "preview interruption/completion unknown; return held")
+            for result in results:
+                require(set(result) <= {"kind", "identity", "status", "commands", "recovery", "reason", "creation", "storage"} and
+                        (result["status"] in ("held", "retained") or result is results[-1]),
+                        "effect/unknown preview outcome; return held")
+                for command in result.get("commands", []):
+                    argv = command["argv"]
+                    require(argv[:3] in (["git", "worktree", "list"], ["git", "remote", "get-url"], ["git", "rev-parse", "--path-format=absolute"],
+                                          ["docker", "image", "inspect"]) or
+                            (argv and argv[0] in ("ps", "ls", "xattr") and (argv[0] != "xattr" or len(argv) == 2 or argv[1] == "-p")),
+                            "preview command not qualified read-only; return held")
+        original_bytes = private(self.path)
+        # Validate original immutable capture and current creator/storage identities.
+        # No intermediate receipt write: failed guards preserve the original bytes.
+        self.validate("return-verification", persist=False)
+        require(reference(Path(self.state["original_spec"]["path"])) == self.state["original_spec"], "original spec changed")
+        for report in plan["protected_files"]:
+            require(file_record(Path(report["path"])) == report["record"], "protected original changed")
+        attempt_path = absolute(plan["original_land_attempt"])
+        require(inside(attempt_path, Path(self.subject["safe_checkout"]) / ".runs/build" / self.subject["task"]) and
+                (attempt_path / "dispatch.lock").is_dir(), "original Land monitor scope/evidence missing")
+        original_monitor = [entry for entry in self.state.get("monitor_attempts", []) if entry["stage"] == "land" and entry["attempt"] == str(attempt_path)]
+        require(len(original_monitor) == 1 and reference(attempt_path / "process.json") == original_monitor[0]["original_process_record"],
+                "original Land process binding changed/missing")
+        processes = json.loads(private(attempt_path / "process.json"))
+        pids = [processes[key] for key in ("monitor_pid", "pi_pid")]
+        require(len(set(pids)) == 2 and all(type(pid) is int and pid > 0 for pid in pids) and
+                sorted(entry["pid"] for entry in plan["exited_workers"]) == sorted(pids), "original workers not bound")
+        exits = []
+        for name in ("exit-code", "pi-exit-code"):
+            path = attempt_path / name
+            require(re.fullmatch(r"-?\d+", private(path).decode().strip()), "original worker exit unavailable")
+            exits.append(reference(path))
+        workers = [process_identity(pid, self.root) for pid in pids]
+        require(all(entry["exit"] == 1 and entry["visibility"] == "absent" and not entry["observation"] for entry in workers),
+                "original worker live/reused/visibility unknown")
+        repository = plan["publication"]["repository"]
+        require(re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository) and
+                self.subject["origin"] in (f"git@github.com:{repository}.git", f"https://github.com/{repository}.git"), "hosting subject mismatch")
+        remote = observe(["git", "ls-remote", "--heads", "origin", self.subject["ref"]], self.root)
+        prs = observe(["gh", "pr", "list", "--repo", repository, "--state", "all", "--head", self.subject["ref"].removeprefix("refs/heads/"),
+                       "--limit", "1", "--json", "url"], self.root)
+        require(not remote.stdout.strip() and json.loads(prs.stdout) == [], "subject already published; return held")
+        identifier = uuid.uuid4().hex
+        snapshot = self.path.parent / ("verification-original-" + identifier + ".json")
+        atomic(snapshot, original_bytes, exclusive=True)
+        event = self.path.parent / ("verification-return-" + identifier + ".json")
+        atomic(event, {"version": 1, "kind": "return-to-verification", "at": now(), "subject": self.subject,
+            "source": source(self.root), "plan_sha256": expected_hash, "original_receipt": reference(snapshot),
+            "workers": workers, "original_monitor": original_monitor[0], "exit_records": exits,
+            "publication_observations": {"remote_stdout_sha256": digest(remote.stdout), "prs_stdout_sha256": digest(prs.stdout)},
+            "authority": "supervised SAME-runtime verification only; no allocation/removal; explicit fresh qualified Land plan required"}, exclusive=True)
+        cleanup["verification_return"] = reference(event)
+        self.save()  # Atomic exclusion of stale cleanup and admission of verification on SAME persistent lock.
+
+    def validate(self, stage, attempt=None, persist=True):
         self.complete()
         require(len(self.state["stages"]) < 128, "finite stage-observation budget exhausted")
         pid, seen = os.getpid(), set()
@@ -1476,11 +1587,35 @@ class Lifecycle:
                                      "session": {"id": os.environ.get("PI_SESSION_ID"), "file": os.environ.get("PI_SESSION_FILE"),
                                                  "provider": os.environ.get("PI_PROVIDER"), "model": os.environ.get("PI_MODEL"), "provider_reported_execution_identity": None},
                                      "resources_sha256": fingerprint(self.state["resources"])})
-        self.save()
+        if persist:
+            self.save()
 
     def plan(self, delivery, refresh=False):
         cleanup = self.document.get("cleanup", {})
         old_plan = cleanup.get("plan")
+        returned = cleanup.get("verification_return")
+        if returned:
+            self.verification_return()
+            self.complete()
+            require(refresh and delivery["oid"] == text(["git", "rev-parse", "HEAD"], self.root) and
+                    delivery["publication"]["delivery_verified"] is True and delivery["publication"]["url"] and
+                    type(delivery["publication"]["number"]) is int, "verification return requires explicit fresh qualified current-source Land plan")
+            publication = delivery["publication"]
+            repository = old_plan["publication"]["repository"]
+            require(publication["repository"] == repository and publication["url"] == f"https://github.com/{repository}/pull/{publication['number']}" and
+                    publication["base"] == old_plan["publication"]["base"] and
+                    publication["base_ref"] in (f"refs/heads/{publication['base']}", f"refs/remotes/origin/{publication['base']}") and
+                    publication["merge_oid"] is None and publication["merged_at"] is None,
+                    "fresh delivery subject/base mismatch; only actual published-open replanning supported")
+            remote = text(["git", "ls-remote", "--heads", "origin", self.subject["ref"]], self.root)
+            require(remote == delivery["oid"] + "\t" + self.subject["ref"], "current source not published; no fresh plan")
+            pr = query(["gh", "pr", "view", publication["url"], "--repo", repository, "--json",
+                        "url,state,baseRefName,headRefName,headRefOid,headRepository,headRepositoryOwner,mergedAt,mergeCommit"], self.root)
+            owner, name = repository.split("/")
+            require(pr["url"] == publication["url"] and pr["state"] == "OPEN" and pr["baseRefName"] == publication["base"] and
+                    pr["headRefName"] == self.subject["ref"].removeprefix("refs/heads/") and pr["headRefOid"] == delivery["oid"] and
+                    pr["headRepository"]["name"] == name and pr["headRepositoryOwner"]["login"] == owner and
+                    pr["mergedAt"] is None and pr["mergeCommit"] is None, "fresh PR/current-source provenance mismatch")
         if old_plan and not refresh:
             require(old_plan["oid"] == delivery["oid"] and old_plan["publication"] == delivery["publication"], "delivery changed; explicitly refresh while preserving original plan/attempts")
             return
@@ -1519,6 +1654,13 @@ class Lifecycle:
                 associated = runtime.get("project") in pending_projects or (kind == "images" and any(reference.startswith(project + "-") for project in pending_projects for reference in item.get("references", [])))
                 if associated and item["disposition"] == "remove":
                     item.update(disposition="hold", reason="dependent original allocation pending; reconcile and refresh this versioned plan")
+        if returned:
+            # New independent owners may replace canonical reports; explicit current
+            # delivery records replace those paths, never the immutable old records.
+            current_paths = {entry["path"] for entry in plan["protected_files"]}
+            plan["protected_files"].extend(entry for entry in old_plan["protected_files"] if entry["path"] not in current_paths)
+            for entry in plan["protected_files"]:
+                require(file_record(Path(entry["path"])) == entry["record"], "fresh protected-file binding missing/changed")
         for entry in self.state["protected_files"]:
             require(file_record(Path(entry["path"])) == entry["record"], "protected original changed")
             if entry not in plan["protected_files"]:
@@ -1528,7 +1670,10 @@ class Lifecycle:
             old_hash = fingerprint(old_plan)
             require(cleanup.get("plan_sha256", old_hash) == old_hash, "prior immutable plan changed; retain it and recover original evidence")
             cleanup.setdefault("plan_history", []).append({"plan": old_plan, "plan_sha256": old_hash,
-                "next_plan_sha256": fingerprint(plan), "at": now(), "attempt_count": len(cleanup.get("attempts", []))})
+                "next_plan_sha256": fingerprint(plan), "at": now(), "attempt_count": len(cleanup.get("attempts", [])),
+                **({"verification_return": returned} if returned else {})})
+        if returned:
+            del cleanup["verification_return"]
         cleanup["plan"] = plan
         cleanup["plan_sha256"] = fingerprint(plan)
         cleanup["lifecycle_sha256"] = fingerprint(self.state)
@@ -1620,6 +1765,8 @@ def main():
     resume.add_argument("--operation", required=True)
     cancel = sub.add_parser("cancel")
     cancel.add_argument("--operation", required=True)
+    verification = sub.add_parser("return-to-verification", help="Suspend an unpublished finished preview; reuse only, no allocation/removal authority")
+    verification.add_argument("--plan-sha256", required=True, help="Exact original immutable cleanup plan hash")
     plan = sub.add_parser("plan")
     plan.add_argument("--delivery", required=True)
     plan.add_argument("--refresh", action="store_true", help="Archive the old immutable plan in this SAME receipt; preserve every prior attempt")
@@ -1645,6 +1792,9 @@ def main():
         lifecycle = Lifecycle(root, binding["receipt"])
         require(binding["task"] == lifecycle.subject["task"], "binding subject mismatch")
         with lifecycle.locked():
+            if lifecycle.document.get("cleanup", {}).get("verification_return"):
+                lifecycle.verification_return()
+                require(args.action in ("validate", "docker", "plan", "image-name"), "verification return cannot rebind/recover/mutate allocation; retain original holds")
             if args.action == "docker":
                 require(args.argv, "missing Docker command")
                 if args.argv[0] == "inspect" or args.argv[:2] in (["image", "inspect"], ["image", "ls"], ["network", "inspect"], ["network", "ls"], ["volume", "inspect"], ["volume", "ls"]):
@@ -1677,6 +1827,8 @@ def main():
                 return lifecycle.resume(args.operation)
             elif args.action == "cancel":
                 lifecycle.cancel(args.operation)
+            elif args.action == "return-to-verification":
+                lifecycle.return_to_verification(args.plan_sha256)
             elif args.action == "plan":
                 lifecycle.plan(json.loads(private(absolute(args.delivery))), args.refresh)
         print(json.dumps({"task": lifecycle.subject["task"], "operation": args.action, "recorded": True}))

@@ -108,6 +108,42 @@ the locator, retry the exact original init/spec/receipt on unchanged source; it 
 binds only that initialization. Never replace its receipt. No atomic Docker/filesystem transaction or exactly-once
 effect is promised. Restore unavailable evidence storage through its owner, not protection-changing cleanup.
 
+### Return from an unpublished preview to verification
+
+If Land returns an unpublished candidate for integration or repair **after preview**, use the explicit owning
+transition, never delete/edit its plan or replace the receipt/runtime:
+
+```sh
+./bin/runtime return-to-verification --plan-sha256 "$original_plan_sha256"
+./bin/runtime validate --stage work
+# Existing supervised Compose status/exec and the normal verification wrappers may now reuse this runtime.
+```
+
+This command uses the SAME exclusive persistent receipt lock as allocation and cleanup. It requires the exact
+original subject/runtime and immutable plan/hash/history, complete original capture, unchanged original spec,
+protected records and current creator/storage identities; no pending allocation or known original consumer
+prerequisite; original Land monitor/process binding, recorded exits and both PIDs freshly absent; and successful
+exact-ref/all-state exact-head hosting observations proving no publication. Missing or contradictory proof holds.
+The supported preview is a finished, non-destructive attempt whose resources are held/retained and whose final
+verification failed. No preview, partial/unknown outcomes, apply/effect records, published/delivery-qualified plans,
+unknown cleanup fields or unqualified command forms remain held. This is deliberately not post-removal recovery.
+
+The transition retains the **exact original receipt bytes** in a private immutable external snapshot and adds a
+versioned immutable return record in the SAME receipt. The old plan/hash, attempts, protected records, original
+allocation/budgets and unknowns stay unchanged. While suspended, cleanup preview/apply refuses before creating
+an attempt; stale apply and resumed verification cannot race through the shared lock. Only finite supervised
+noncreation Compose commands and ordinary inspection/validation are available. Allocation, rebind, cancellation
+and allocation recovery remain frozen; this does not grant removal authority, clear resource holds or sandbox exec.
+Focused wrappers that allocate a new one-off also remain frozen: use supported `bin/runtime docker compose exec -T`
+on the recorded service for guarded test reset/migration and focused tests, rather than starting another creator.
+
+After fresh independent Review/QA and actual publication, Land must explicitly run `plan --delivery ... --refresh`
+with current-source, qualified delivery facts. Replanning requires a freshly matching published-open remote/PR
+identity, current head and preserved protected paths (explicit new records for legitimately replaced canonical
+reports). It retains the old plan and return/snapshot link in immutable plan history, with the new hash linked
+from the old one; original attempts and uncertainty survive. Until that explicit replan, even asserted delivery
+success cannot make the stale plan executable. Other published/merged/post-effect recovery contracts are unchanged.
+
 Build's cleanup-only post-worker launch is the one safe-checkout exception. Supply `--cleanup-receipt "$receipt"`
 to the provider stage entrypoint as well as its normal pinned model/attempt arguments. It verifies an existing
 exact-task plan at that safe checkout instead of requiring the disposable runtime locator. The child must use
@@ -147,6 +183,12 @@ Refresh explicitly afterward. Legacy receipts without lifecycle capture still us
 bounded historical adoption/evidence holds, not this original-creation path.
 
 ## Direct qualification
+
+Run `python3 .pi/skills/land/scripts/check-verification-return.py --evidence "$new_evidence_directory"` for
+preview-return regression and adverse-state qualification. It creates one bounded local Git fixture/worktree,
+uses real private files, persistent locks, plan/preview/CLI and finite supervised host children, and substitutes
+Docker observations, hosting and original-worker outcomes. It performs no Docker/hosting effects and retains
+its fixture source/evidence. Inspect `result.json`; simulated publication is not delivery or independent QA.
 
 Run `python3 .pi/skills/land/scripts/check-pull.py --evidence "$new_evidence_directory"` for direct pull
 capacity and SAME-operation recovery regression checks. It uses actual dispatcher/receipt/supervisor/capture

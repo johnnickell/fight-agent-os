@@ -372,10 +372,48 @@ def artifact_inventory(root, exclusions=()):
     return result
 
 
+def verify_plan_history(cleanup):
+    """Verify the immutable plan chain without creating an execution attempt."""
+    plan_hash = fingerprint(cleanup["plan"])
+    require(cleanup.get("plan_sha256") == plan_hash, "original immutable plan hash missing/changed")
+    history = cleanup.get("plan_history", [])
+    require(isinstance(history, list) and len(history) <= 128 and
+            all(fingerprint(entry["plan"]) == entry["plan_sha256"] for entry in history),
+            "historical immutable plan changed")
+    require(all(entry["next_plan_sha256"] == (history[index + 1]["plan_sha256"] if index + 1 < len(history) else plan_hash)
+                for index, entry in enumerate(history)), "plan revision linkage changed")
+    for entry in history:
+        if "verification_return" not in entry:
+            continue
+        plan = entry["plan"]
+
+        def retained(reference):
+            path = absolute(reference["path"])
+            require(inside(path, Path(plan["safe_checkout"]) / ".runs/tasks" / plan["task"] / "runs") and
+                    not inside(path, absolute(plan["worktree"]["identity"])) and path.is_file() and not path.is_symlink() and
+                    path.stat().st_uid == os.getuid() and stat.S_IMODE(path.stat().st_mode) == 0o600,
+                    "verification history must remain private and external")
+            raw = path.read_bytes()
+            require(digest(raw) == reference["sha256"], "immutable verification history changed")
+            return json.loads(raw)
+
+        event = retained(entry["verification_return"])
+        require(event["version"] == 1 and event["kind"] == "return-to-verification" and event["plan_sha256"] == entry["plan_sha256"] and
+                all(event["subject"][key] == plan[key] for key in ("task", "origin", "ref", "safe_checkout", "git_common_dir")),
+                "verification history subject/link changed")
+        original = retained(event["original_receipt"])
+        require(original["cleanup"]["plan"] == plan and
+                cleanup["attempts"][:len(original["cleanup"]["attempts"])] == original["cleanup"]["attempts"],
+                "original verification plan/attempts changed")
+    return plan_hash
+
+
 class Cleanup:
     def __init__(self, receipt, apply=False):
         self.path = absolute(receipt)
         self.document = json.loads(self.path.read_text())
+        require(not self.document["cleanup"].get("verification_return"),
+                "plan suspended for verification; Land must explicitly generate a fresh qualified plan")
         self.plan = self.document["cleanup"]["plan"]
         self.state = self.document["cleanup"].setdefault("attempts", [])
         self.apply = apply
@@ -400,6 +438,8 @@ class Cleanup:
         previous = self.document["cleanup"].get("plan_sha256")
         require(previous is None or previous == self.plan_hash, "plan changed; reconcile explicitly in a new receipt linked to prior results")
         history = self.document["cleanup"].get("plan_history", [])
+        if any("verification_return" in entry for entry in history):
+            verify_plan_history(self.document["cleanup"])
         require(len(history) <= 128 and all(fingerprint(entry["plan"]) == entry["plan_sha256"] for entry in history), "historical immutable plan changed")
         if history:
             require(all(entry["next_plan_sha256"] == (history[index + 1]["plan_sha256"] if index + 1 < len(history) else self.plan_hash)

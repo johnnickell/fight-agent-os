@@ -17,6 +17,15 @@ Compose one-offs additionally carry immutable original dispatch/returned-ID/conf
 one-offs may retire their creator without claiming or removing its reused network. Unsupported running workloads
 remain held. No publication, preservation or fresh consumer guard is waived.
 
+A lifecycle `return-to-verification --plan-sha256 HASH` is the explicit return from a finished unpublished,
+non-destructive held/retained preview to supervised SAME-runtime verification. Read its
+[supported/rejected states](../../../../docs/engineering/RESOURCE_LIFECYCLE.md#return-from-an-unpublished-preview-to-verification)
+before use. It preserves exact original receipt bytes and an immutable versioned transition; the old plan is
+ineligible for preview/apply under the SAME persistent lock. No allocation/removal authority is added. Actual
+publication and fresh qualified current-source `plan --refresh` are required to leave that state; the new plan
+retains the original plan, attempts, protected records, uncertainty and transition/snapshot link. Apply/effect,
+published, interrupted or unknown states do not gain this return authority.
+
 A lifecycle `plan --refresh` archives the old immutable plan/hash and links the new hash inside the SAME receipt;
 legacy linked-companion recovery below remains for historical receipts without this versioned lifecycle. Do not
 rewrite old attempts or relabel eligible unknowns retained. Direct single-manifest image roots may omit platform
