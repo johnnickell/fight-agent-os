@@ -315,6 +315,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00019](epics/00019-EPIC.md) | Diagnose Agent OS operations and managed runs with live and archived logs | operational-diagnosis | ready-for-agent |
 | [EPIC-00020](epics/00020-EPIC.md) | Keep delivery handoffs synchronized through Land | land-owned-delivery-handoff-synchronization | done |
 | [EPIC-00021](epics/00021-EPIC.md) | Deploy and recover private Fight Agent OS in staging and production | first-private-production | ready-for-agent |
+| [EPIC-00022](epics/00022-EPIC.md) | Make feature architecture reviewable with Python diagrams | feature-architecture-review | ready-for-agent |
 <!-- /planning:epics -->
 
 ## Planning Frontier
