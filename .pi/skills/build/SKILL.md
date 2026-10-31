@@ -28,8 +28,9 @@ resume; release only your lock after children stop. One concise ledger holds aut
 checkout/base/head, pinned models, stage/attempt/report/PR locators, shared repairs and incomplete effects.
 Keep active coordinator/session protected. No duplicate resource registry or permanent local source archive.
 Use the **one shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md)**: Work prepares one
-runtime/record, all roles reuse it. Validate identity before dispatch; inspect actual handoffs, not per-stage
-proof trees. Missing identity holds affected advancement, not independent eligible cleanup.
+explicit Compose project, all roles reuse it. Main up/down and registered `--worktree` up/down are separate;
+Docker lifecycle has no receipt/PID/worker-registration gate. Inspect actual handoffs/native resources, not
+per-stage proof trees. Missing browser prerequisites hold affected advancement, not explicit task teardown.
 
 ## Pin models, then launch fresh roles
 
@@ -50,8 +51,8 @@ human-only/best-effort; missing visibility never authorizes relaunch or executor
 
 Create a fresh private attempt with `request.md`. Include role, TASK, verified checkout/base/head, absolute owning
 skill/context/instruction paths, permitted effects, relevant evidence, pinned model/thinking, remaining repair
-allowance and expected canonical report/handoff. Pass the original attempt so each child explicitly registers
-its live consumer through the shared resource procedure before using the runtime. Do not copy Engineer dialogue into independent requests or
+allowance and expected canonical report/handoff. Carry the exact Compose project/checkout and native state;
+no Docker worker registration. Preserve native session/custody admission separately. Do not copy Engineer dialogue into independent requests or
 suggest verdicts. Tell each child to verify target identity, read instructions, perform only its role and stop.
 No `--continue`, `--resume`, `--session`, `--fork`, parent transcript or reused session directory.
 
@@ -96,11 +97,12 @@ human decision. Evidence recovery consumes no repair, but unchanged holds are no
 Inspect native Git/Docker absence and protected/shared state, not a cleanup invocation or passing mechanism.
 Record necessary outcomes in the existing TASK/PR, then retire eligible temporary runtimes, worktrees/refs,
 fixtures/logs/sessions and cleanup's own files through the shared procedure. Do not retain them automatically.
-If original Land itself was the consumer, observe both original exits/PID absence and continue from canonical
-safe checkout using `scripts/cleanup-continuation.py --attempt ORIGINAL --receipt SAME --apply --finish`.
-Use a fresh cleanup-only Land worker when required, same pinned model/ledger, with `--cleanup-receipt` at stage
-entry. No publication, new runtime or tracked edits in that continuation. Preserve active coordinator and real
-holds; never stop shared services/VMs or bypass protections. Independent effects proceed beside narrow holds.
+All Docker retirement uses `bin/down --worktree SELECTOR`, including Worktrunk's pre-remove hook; Docker
+precedes source/config deletion and needs no worker/PID receipt. If original Land itself consumes source,
+observe its actual exit, then continue source-qualified Worktrunk cleanup from the canonical safe checkout.
+Use a fresh cleanup-only Land worker when required, with the same pinned model/ledger and ordinary trusted
+stage entry. No publication, new runtime or tracked edits in that continuation. Preserve active coordinator,
+unique source and real protections; never stop shared services/VMs. Report Docker and source holds separately.
 
 Return actual PR/publication state, fresh/reused verification, warnings, removed/remaining counts, finite holds
 and shared repair usage. Follow [handoff rules](../../../docs/engineering/HANDOFFS.md); success ends with the

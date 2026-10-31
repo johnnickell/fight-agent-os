@@ -45,7 +45,7 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Before task publication, record completed implementation and verification; keep formal review and merge status separate
 - Ask for checkout/worktree choice before implementation unless already provided. Use `feature/*` from `develop`
 - Prefer the simplest native-tool workflow; delete unnecessary machinery instead of adding compatibility/proof/recovery layers
-- Reuse one task runtime and small resource record across roles. Routine owned cleanup is standing authority:
+- Reuse one native Compose project per registered worktree across roles; follow [explicit main/worktree commands](docs/engineering/RESOURCE_LIFECYCLE.md), not resource/PID/worker receipts. Main data stays persistent; task DB/storage is disposable. Docker teardown precedes Worktrunk source removal. Routine owned cleanup is standing authority:
   completed, failed or cancelled tasks must not accumulate temporary worktrees, runtimes, fixtures, logs, sessions
   or cleanup archives. Keep evidence only while needed and record final outcomes in the existing TASK/PR. Preserve
   unique work, active consumers, unknown/shared/durable data and genuine protections; a narrow hold cannot block

@@ -47,7 +47,7 @@ archive them or create permanent source copies. Preserve existing historical evi
 TASK, credentials, unique work, active consumers and shared/unknown/durable data. Status alone is not proof.
 
 Use the one [resource procedure](RESOURCE_LIFECYCLE.md) on success, failure and cancellation, with exact native
-identities and a small task resource record outside disposable source. Independent role owners publish their own
+Compose projects and only a minimum interrupted-teardown locator outside disposable source (no resource ledger). Independent role owners publish their own
 reports; keep those bytes while still needed, then retain the necessary verdict/outcome in existing TASK/PR rather
 than a mandatory local archive. Genuine preservation needs a verified specific destination, not full-source-copy
 ceremony. Narrow holds do not block independent effects. No tracked cleanup-certification commit loop.

@@ -19,7 +19,7 @@ Include required release scenarios and return to that coordinator; TASK routing 
    interruption cannot leave an old PASS looking current. QA writes only its owned reports/evidence, not source/tests.
 2. **Select proportionate scenarios.** Apply standards' applicability/adversarial guidance: intended use plus
    likely/high-impact failures and forbidden effects, with independently derived expectations. No UI does not mean
-   no QA. Reuse Work's one runtime/record under the shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md).
+   no QA. Reuse Work's one Compose project/native state (no Docker worker-registration/receipt gate) under the shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md).
    Missing identity/prerequisites are INCOMPLETE, never another stack or shared/production fallback. Authorized
    disposable settings/credentials/terminals need no repeated permission. No global installation or shared stop.
 3. **Exercise actual behavior.** Use the real browser/API/CLI/PTY/library/worker interface, not source-only claims
