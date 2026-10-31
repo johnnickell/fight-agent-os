@@ -1,0 +1,4 @@
+# Docker teardown must finish before Worktrunk deletes source/configuration.
+# Approve this project hook explicitly in Worktrunk; no automatic hook approval.
+[pre-remove]
+runtime = "{{ primary_worktree_path }}/bin/down --worktree {{ worktree_path }}"

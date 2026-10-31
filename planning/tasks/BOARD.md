@@ -14,72 +14,18 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
 
-### Current human decision
-
-[TASK-00546](00546-TASK.md#accepted-repair-closeout-checkpoint--2026-10-31) has independent Review ACCEPT
-and affected nonvisual QA PASS on repaired candidate `369664f`. Publication and cleanup were pending at this
-checkpoint; actual results and holds are in the canonical ignored TASK Land handoff and
-[PR #186](https://github.com/johnnickell/fight-agent-os/pull/186). Human merge is separate. Allowance remains
-**5 effective / 3 consumed / 2 remaining**.
-
-The following acceptance checkpoint is historical, not acceptance of the LAND-01 repair.
-[TASK-00546](00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
-
-The following repair checkpoint is historical, not current acceptance.
-[TASK-00546](00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31) is in bounded Work repair for Review2 R3/R4/R5.
-Shared plan guards, original protected-image policy and failed-inventory cache reporting have regression-first
-repairs and passing focused owning checks. The new final gate passed all 24 phases (`20261031T034831Z-22913`).
-Gate PASS is not upstream READY; canonical Work handoff owns current-source observation/proof and exact holds.
-SAME runtime/receipt and original capability/ACL/history holds remain protected. Independent renewed
-Review and nonvisual QA are next after the committed handoff; no acceptance or publication. Allowance is
-**5 effective / 2 consumed / 3 remaining**. Canonical ignored Work handoff owns exact proof/resource dispositions.
-
-The following integration checkpoint is historical, not current repair verification.
-[TASK-00546](00546-TASK.md#integration-and-standing-land-readiness--2026-10-31) is in owner-directed Work
-completion after accepted TASK-00547 integration: one lifecycle/receipt, recoverable storage and executable
-upstream Land readiness. The final combined-source 24-phase gate passed (`20261031T023423Z-15117`), with
-qualified real fixture retirement/resume and external preservation. Original capability/ACL and historical
-resource holds remain explicit; readiness is not an all-clean claim. Independent Review/QA remain pending.
-SAME canonical Work handoff/companion own current proof and exact resource holds. Allowance remains **5 effective / 1 consumed / 4 remaining**;
-no other-TASK ledger, self-acceptance or publication is implied.
-
-The following Repair 1 checkpoint is historical, not today's continuation instruction.
-[TASK-00546](00546-TASK.md#repair-cycle-1--r1r2-2026-10-29) is in owning repair cycle 1 for canonical Review
-R1/R2. Endpoint-alias and effective Compose-input regressions pass, but the one final changed-source gate failed
-in `ActivationApiTest::testRateBoundary` (429 expected, 500 received). Work verification is incomplete; coordinator
-intake owns this out-of-scope failure. Independent renewed Review and applicable nonvisual QA remain pending. Scope/order/
-blockers are unchanged; allowance is 5 effective / 1 consumed / 4 remaining. Current evidence remains canonical
-ignored `.runs/tasks/TASK-00546/runs/work-handoff.md` and its SAME resource companion. No self-acceptance.
-
-The following Work2 checkpoint is historical, not current review readiness.
-[TASK-00546](00546-TASK.md#work2-implementation-checkpoint--2026-10-29) remains in-progress. Bounded recoverable
-storage, executable retention/reserve admission and same-helper runtime retirement are implemented with focused
-owning-tool evidence. The frozen-source 24-phase local gate passed; **Next:** coordinator-owned independent
-Review and applicable nonvisual QA using the committed Work handoff and qualified evidence bridge. No scope/order/blocker change or self-acceptance. The canonical ignored
-`.runs/tasks/TASK-00546/runs/work-handoff.md` owns current evidence and resource dispositions.
-
-The following Work1 route is historical, not the current continuation instruction.
-[TASK-00546](00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) is in-progress, not accepted.
-Partial executor visibility holds have bounded controlled/real-probe evidence. Cache-to-source recoverability
-qualification is held; automatic reclamation, retention/reserve and lifecycle/caller integration are unfinished.
-**Next:** Build-owned prerequisite recovery/Work continuation from canonical ignored
-`.runs/tasks/TASK-00546/runs/work-handoff.md`, preserving the selected checkout and recorded fixtures.
-TASK-00545 is integrated; its source-ownership hold is resolved. TASK-00542's original limits/evidence remain
-separate. TASK-00543 depends on TASK-00546; TASK-00544 follows transitively. No final application gate,
-independent acceptance, cleanup or publication is claimed; policy approval is not an unlimited run grant.
-
 <!-- planning:board -->
 ## Active Work
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 1 | [TASK-00543](00543-TASK.md) | Manage local task resources from preparation through verified cleanup | — (standalone chore) | in-progress | [TASK-00553](00553-TASK.md) | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | — | — |
+| 1 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -114,7 +60,7 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 | 64 | [TASK-00064](00064-TASK.md) | Prove integrated authorization throttling and secret safety | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00063](00063-TASK.md) | — |
 | 65 | [TASK-00065](00065-TASK.md) | Prove the integrated accessibility and responsive baseline | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00063](00063-TASK.md) | — |
 | 66 | [TASK-00066](00066-TASK.md) | Prove critical browser continuity and close the foundation gate | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00064](00064-TASK.md), [TASK-00065](00065-TASK.md) | — |
-| 69 | [TASK-00072](00072-TASK.md) | Establish the installation-owned Planning runtime | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00066](00066-TASK.md) | — |
+| 69 | [TASK-00072](00072-TASK.md) | Establish the installation-owned Planning runtime | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00066](00066-TASK.md), [TASK-00553](00553-TASK.md) | — |
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00072](00072-TASK.md) | — |
 | 71 | [TASK-00074](00074-TASK.md) | Expose authorized installation capabilities and diagnostics | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00073](00073-TASK.md) | — |
 | 72 | [TASK-00075](00075-TASK.md) | Deliver the guided Planning installation journey | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00074](00074-TASK.md) | — |

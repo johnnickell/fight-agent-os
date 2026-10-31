@@ -196,11 +196,18 @@ requires separate operator selection on the qualified runtime; it is not Jev scr
 ## Development
 
 Docker Compose is required for application development. [Worktrunk](https://worktrunk.dev/) (`wt` on PATH)
-is required only for the Git worktree/local-branch removal path in `bin/runtime finish`; it is not a prerequisite
-for ordinary Pi or independent Docker retirement. Local TASK execution uses one isolated runtime and small resource
-record through [Local task resources](docs/engineering/RESOURCE_LIFECYCLE.md), reused across independent stages and repairs.
-Routine task-owned cleanup is already authorized; temporary task output is not a permanent archive. The ordinary
-non-TASK setup below remains available without claiming task ownership. This is an application with committed Composer lockfiles:
+owns eligible Git worktree/local-branch removal, not Docker lifecycle or ordinary Pi. Use
+[explicit main/worktree commands](docs/engineering/RESOURCE_LIFECYCLE.md), reusing one native project across roles:
+`bin/up` / `bin/down` operate main and retain its persistent data; `bin/up --worktree SELECTOR` /
+`bin/down --worktree SELECTOR` operate a registered checkout's disposable isolated stack. No TASK receipt,
+worker/PID or stale feature-branch gate. Worktrunk/Land use the same Docker-first teardown.
+
+**TASK-00543 amendment is incomplete:** direct isolated Compose qualification is available, but
+[TASK-00553](planning/tasks/00553-TASK.md) must deliver shared local HTTPS ingress before full main/worktree
+browser readiness can be accepted. Intended origins are `https://fight-agent-os.localhost` and distinct
+`https://fight-wt-<checkout-hash>.localhost` names. Startup reports that missing prerequisite; consumer scaffolding
+does not deliver ingress. Existing localhost setup/running-stack guidance below describes the inherited transport,
+not proof of the new supplier. Trust/certificates remain explicit. This application has committed Composer lockfiles:
 
 ```sh
 export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
@@ -320,10 +327,8 @@ managed assignment is available through the separate invitation API.
 ./bin/planning-check          # Validate planning
 ./bin/build                   # Complete gate; automatically reuses an unchanged verified success
 ./bin/build --force           # Run every phase even when a reusable success exists
-# Bound temporary runtime: exact native cleanup, without discarding unknown/durable data:
-./bin/down
-# The same path from the canonical safe checkout:
-./bin/down --receipt /absolute/task-resources.json
+./bin/down                         # Main: retain persistent data
+./bin/down --worktree task-00543    # Registered task: disposable stack/data cleanup
 ```
 
 Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
@@ -341,11 +346,12 @@ qualification remains explicitly deferred until the independent real-mail prereq
 Expensive local wrappers check host free space (20 GiB reserve plus 4 GiB allowance by default) and daemon
 availability; insufficient space refuses allocation, never triggers global prune. Configure host-shell
 `FIGHT_STORAGE_RESERVE_BYTES` / `FIGHT_STORAGE_ALLOCATION_BYTES` when needed. `./bin/up --build-only` is explicit
-image setup. Task builds use one disposable native builder/cache; shared/unknown storage remains protected.
-`bin/down` uses the same [exact-resource cleanup](docs/engineering/RESOURCE_LIFECYCLE.md) as Land. Containers
-retire independently of unrelated source protections, without `-v`; unknown/durable volumes remain. Keep needed
-role evidence outside disposable source, then remove temporary data after outcomes reach the existing TASK/PR.
-No per-stage full-source copies or mandatory local archives.
+image setup. Builds normally use native shared caches; task-specific image tags are disposable, shared downloads/
+caches require separate explicit maintenance. `bin/down --worktree SELECTOR` uses the same
+[Compose cleanup](docs/engineering/RESOURCE_LIFECYCLE.md) as Land/Worktrunk: `down --volumes --remove-orphans`,
+then remaining project-owned resources/task tags and a dedicated builder if created. Main data and foreign
+projects remain protected; source protections do not block explicit task Docker teardown. Keep needed role
+evidence outside disposable source until outcomes reach TASK/PR, then retire it. No source copies or archives.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots

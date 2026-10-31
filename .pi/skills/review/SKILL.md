@@ -17,7 +17,8 @@ and canonical version path. Never guess a TASK from recent history or use TASK r
    implementation/evidence contributions: a contributor cannot independently accept. Review is read-only over
    source/planning; only the independent owner publishes canonical base `.runs/reviews/<TASK-ID>/review.md`.
 2. **Reuse, don't multiply.** Follow the one shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md).
-   Validate/reuse Work's runtime/record; missing required identity is Unverified, not another setup stack. Own
+   Validate/reuse Work's Compose project/native state; no Docker worker-registration or receipt gate.
+   Missing required source/readiness identity is Unverified, not another setup stack. Own
    probes have finite `finally` teardown. Keep evidence while roles need it, not permanent source/fixture archives.
 3. **Challenge both passes.** Map every criterion to Spec IDs and separately apply Standards IDs. Use
    [quality guidance](../../../docs/engineering/QUALITY.md) and relevant engineering standards for changed code,

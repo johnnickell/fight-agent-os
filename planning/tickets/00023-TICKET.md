@@ -77,9 +77,16 @@ upgrade, reconfigure, or repair services from a read-only check.
 | [TASK-00074](../tasks/00074-TASK.md) | Expose authorized installation capabilities and diagnostics | ready-for-agent |
 | [TASK-00075](../tasks/00075-TASK.md) | Deliver the guided Planning installation journey | ready-for-agent |
 | [TASK-00076](../tasks/00076-TASK.md) | Qualify supported local Planning operation | ready-for-human |
+| [TASK-00553](../tasks/00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+On 2026-10-31 John explicitly approved the bounded early supplier [TASK-00553](../tasks/00553-TASK.md), extracted
+from TASK-00072 to unblock TASK-00543's main/worktree HTTPS readiness. It reuses TASK-00145 and accepted WF-023
+Nginx/docker-gen separation without the full TASK-00066 dependency chain. TASK-00072 consumes it later and keeps
+TASK-00066 and remaining installation dependencies. This narrower decomposition does not complete the TICKET,
+map, full installation or supplier implementation.
 
 Implements the EPIC-00005 operating boundary from
 [WF-020](../wayfinder/tickets/WF-020-define-developer-onboarding-and-operator-guidance.md) and
