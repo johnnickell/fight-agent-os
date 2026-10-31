@@ -30,9 +30,10 @@ acceptance/publication checkpoints below are evidence, not current merge instruc
 
 [TASK-00546](planning/tasks/00546-TASK.md#repair-cycle-3--land-01-2026-10-31) is reopened for LAND-01:
 actual published-state plan generation failed on original string creation evidence. The SAME planner has a
-regression-first local repair and 32 whole-plan cases plus adjacent owning checks passing; its new final gate
-and current-source handoff observation are pending. Original receipt/runtime/unknowns/holds and PR #186 draft
-remain protected. Renewed independent Review and affected QA are required; no Work publication or cleanup.
+regression-first local repair and 32 whole-plan cases plus adjacent owning checks passing. The single new
+24-phase gate passed (`20261031T060343Z-30852`); this is not READY. The canonical Work handoff owns the supported
+final-source observation, current proof and exact original holds. Original receipt/runtime/unknowns and PR #186
+draft remain protected. Renewed independent Review and affected QA are required; no Work publication or cleanup.
 
 The following acceptance checkpoint is historical, not acceptance of LAND-01's repair.
 [TASK-00546](planning/tasks/00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current delivery results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.

@@ -18,9 +18,11 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 [TASK-00546](00546-TASK.md#repair-cycle-3--land-01-2026-10-31) is reopened for bounded Work repair of
 LAND-01's actual plan-generation failure on original string evidence. The SAME planner's regression-first
-repair passes 32 whole-plan cases and adjacent owning checks; its new final gate and handoff observation are
-pending. Renewed independent Review/affected QA follow the committed handoff. Preserve PR #186 draft, original
-receipt/runtime/holds and historical acceptance. Allowance: **5 effective / 3 consumed / 2 remaining**.
+repair passes 32 whole-plan cases and adjacent owning checks. Its single new 24-phase gate passed
+(`20261031T060343Z-30852`), not a READY claim. Canonical Work handoff owns the supported final-source observation,
+current proof and precise holds. Renewed independent Review/affected QA follow the committed handoff. Preserve
+PR #186 draft, original receipt/runtime/holds and historical acceptance. Allowance: **5 effective / 3 consumed /
+2 remaining**.
 
 The following acceptance checkpoint is historical, not acceptance of the LAND-01 repair.
 [TASK-00546](00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
