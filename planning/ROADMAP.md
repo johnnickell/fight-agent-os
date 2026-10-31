@@ -69,7 +69,13 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00546 accepted implementation checkpoint:** [TASK-00546](tasks/00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
+**TASK-00546 repair cycle 3 — current:** [LAND-01 repair](tasks/00546-TASK.md#repair-cycle-3--land-01-2026-10-31)
+reopens the actual published-state plan crash on original string creation evidence. Regression-first local repair
+passes 32 whole-plan cases and adjacent owning checks; new final gate/current-source handoff remain pending.
+SAME receipt/runtime, original holds, accepted-A history and PR #186 draft remain protected. Renewed independent
+Review and affected QA are next after the committed Work handoff; no Work publication or cleanup.
+
+**TASK-00546 accepted implementation checkpoint — historical:** [TASK-00546](tasks/00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
 
 **TASK-00546 repair cycle 2 — historical checkpoint:** [R3/R4/R5 repair](tasks/00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31)
 restores shared storage-effect prerequisites, original protected-image policy and truthful cache-inventory outcomes.

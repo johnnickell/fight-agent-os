@@ -2046,10 +2046,25 @@ class Lifecycle:
         creators = {v["identity"]: v for v in plan["containers"]}
         for kind in ("containers", "networks", "volumes", "images"):
             for item in plan[kind]:
-                runtime = item.get("runtime", creators.get(item.get("creation", {}).get("container"), {}).get("runtime", {}))
-                associated = runtime.get("project") in pending_projects or (kind == "images" and any(reference.startswith(project + "-") for project in pending_projects for reference in item.get("references", [])))
-                if associated and item["disposition"] == "remove":
-                    item.update(disposition="hold", reason="dependent original allocation pending; reconcile and refresh this versioned plan")
+                # Historical creation markers are evidence, not creator mappings.
+                # Resolve fallback lazily and never replace an explicit runtime.
+                runtime = item.get("runtime")
+                if "runtime" not in item:
+                    creation = item.get("creation")
+                    creator = creation.get("container") if isinstance(creation, dict) else None
+                    runtime = creators.get(creator, {}).get("runtime") if isinstance(creator, str) else None
+                project = runtime.get("project") if isinstance(runtime, dict) else None
+                project = project if isinstance(project, str) and project else None
+                references = item.get("references")
+                known_references = (isinstance(references, list) and bool(references) and
+                                    all(isinstance(value, str) and value for value in references))
+                associated = project in pending_projects or (kind == "images" and isinstance(references, list) and
+                    any(isinstance(reference, str) and reference.startswith(pending_project + "-")
+                        for pending_project in pending_projects for reference in references))
+                unresolved = (project is None and kind != "images") or (kind == "images" and not known_references)
+                if pending and (associated or unresolved) and item["disposition"] == "remove":
+                    item.update(disposition="hold", reason=("dependent original allocation pending" if associated else
+                                "pending allocation association unavailable") + "; reconcile and refresh this versioned plan")
         if returned:
             # New independent owners may replace canonical reports; explicit current
             # delivery records replace those paths, never the immutable old records.
