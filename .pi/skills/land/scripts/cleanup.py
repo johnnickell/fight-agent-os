@@ -472,7 +472,7 @@ class Storage:
     inferred task ownership. Private/mutable/source/cache-mount records never qualify.
     """
 
-    def __init__(self, receipt, root, document=None, policy=None):
+    def __init__(self, receipt, root, document=None, policy=None, subject_check=None):
         self.path = absolute(str(receipt))
         self.safe = absolute(str(root))
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -490,10 +490,10 @@ class Storage:
         self.retention = setting("retention_seconds", 604800, 1, 315360000)
         self.limit = setting("max_candidates", 8, 1, 32)
         self.builder = policy.get("builder", os.environ.get("FIGHT_STORAGE_BUILDER", ""))
-        self.protected_inputs = policy.get("protected_images", [])
-        require(isinstance(self.protected_inputs, list) and len(self.protected_inputs) <= 64 and
-                all(isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/@-]{0,511}", value)
-                    for value in self.protected_inputs), "invalid protected build/runtime image inputs")
+        self.protected_inputs = self.protected_image_inputs(policy.get("protected_images", []))
+        # Only plan-dispatched recovery inherits delivery/runtime subject checks.
+        # Ordinary pre-build admission retains its separately scoped authority.
+        self.subject_check = subject_check
         self.selection = {kind: policy.get(kind) for kind in ("cache_ids", "image_ids")}
         require(all(value is None or isinstance(value, list) and len(value) <= 32 and
                     all(isinstance(identifier, str) and re.fullmatch(r"[a-z0-9]{12,64}" if kind == "cache_ids" else
@@ -504,6 +504,20 @@ class Storage:
                         "retention_seconds": self.retention, "max_candidates": self.limit, "selection": self.selection, "protected_inputs": self.protected_inputs,
                         "results": [], "complete": False, "admitted": False, "physical_reclaimed_bytes": None}
         self.document.setdefault("storage_attempts", []).append(self.attempt)
+
+    @staticmethod
+    def protected_image_inputs(*groups):
+        for values in groups:
+            require(isinstance(values, list) and len(values) <= 64 and
+                    all(isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/@-]{0,511}", value)
+                        for value in values), "invalid protected build/runtime image inputs")
+        combined = sorted({value for values in groups for value in values})
+        require(len(combined) <= 64, "combined protected build/runtime image inputs exceed bound")
+        return combined
+
+    def check_subject(self):
+        if getattr(self, "subject_check", None) is not None:
+            self.subject_check()
 
     def save(self):
         descriptor, temporary = tempfile.mkstemp(prefix=".storage-", dir=self.path.parent)
@@ -620,6 +634,7 @@ class Storage:
         require(self.engine() == self.engine_identity and self.builder_identity() == builder,
                 "engine/builder changed before cache effect")
         require(self.image_census() == protected, "image backing changed before cache effect")
+        self.check_subject()
         result.update(status="pending", reason="exact bounded filtered cache retirement intent")
         self.save()
         # --all admits shared records to the candidate check; exact-ID + shared +
@@ -724,6 +739,7 @@ class Storage:
         require(original in before and self.engine() == self.engine_identity, "image/engine changed before effect")
         self.image_consumers(current)
         require(fingerprint(inspect_image(self.safe, original["id"])) == fingerprint(current), "image identity/references changed")
+        self.check_subject()
         result.update(status="pending", reason="verified downloadable exact image retirement intent")
         self.save()
         command(["docker", "image", "rm", current["Id"]], self.safe, timeout=60)
@@ -735,16 +751,19 @@ class Storage:
 
     def reclaim(self):
         caches = []
+        cache_inventory_complete = False
         self.builder_snapshot = None
         try:
             self.builder_snapshot = self.builder_identity()
             self.attempt["builder"] = self.builder_snapshot
             caches = self.usage()
+            cache_inventory_complete = True
         except (Hold, OSError, ValueError, KeyError, TypeError) as error:
             # Builder visibility is not an image-retirement dependency. Retain the
             # precise cache hold while independently qualifying image effects.
             self.attempt["results"].append({"kind": "cache", "identity": "builder-inventory", "status": "held",
                 "reason": str(error) if isinstance(error, Hold) else type(error).__name__, "commands": []})
+        self.attempt["cache_inventory_complete"] = cache_inventory_complete
         self.protected_images = self.image_census()
         require(self.engine() == self.engine_identity, "engine changed during storage inventory")
         # Cache first: its recoverability depends on preserving ALL image roots.
@@ -771,7 +790,7 @@ class Storage:
                       (row["ID"] if kind == "cache" else row["id"]) in self.selection[kind + "_ids"]]
         self.attempt["candidate_count"] = len(candidates)
         self.attempt["budget_exhausted"] = len(candidates) > self.limit
-        self.attempt["protected_cache_count"] = len(caches) - sum(kind == "cache" for kind, _ in candidates)
+        self.attempt["protected_cache_count"] = len(caches) - sum(kind == "cache" for kind, _ in candidates) if cache_inventory_complete else None
         self.attempt["excluded_storage_policy"] = "private, mutable, source and cache-mount records; unique/unproven or mutable-tagged images; all volumes/host data remain untouched"
         for kind, item in candidates[:self.limit]:
             identifier = item["ID"] if kind == "cache" else item["id"]
@@ -781,6 +800,7 @@ class Storage:
             global COMMANDS
             COMMANDS = result["commands"]
             try:
+                self.check_subject()
                 getattr(self, kind)(item, result)
             except (Hold, OSError, ValueError, KeyError, TypeError) as error:
                 result.update(status="held", reason=str(error) if isinstance(error, Hold) else type(error).__name__)
@@ -793,6 +813,8 @@ class Storage:
                 if identifier not in observed:
                     result = {"kind": kind, "identity": identifier, "status": "absent", "commands": [],
                               "reason": "exact identity absent from successful same-engine inventory; no effect replayed"}
+                    if kind == "cache" and not cache_inventory_complete:
+                        result.update(status="held", reason="owning cache inventory unavailable; exact selected identity unobserved, not absent")
                     if kind == "image":
                         COMMANDS = result["commands"]
                         try:
@@ -814,6 +836,7 @@ class Storage:
     def run(self, admit=True):
         self.save()
         try:
+            self.check_subject()
             self.engine_identity = self.engine()
             self.attempt["engine"] = self.engine_identity
             measured = True
@@ -2314,7 +2337,8 @@ print(json.dumps({'complete': True, 'workers': len(before), 'sha256': hashlib.sh
         for item in self.plan["caches"]:
             self.effect("cache", item, self.cache)
         if self.plan.get("recoverable_storage") is not None and self.apply:
-            storage = Storage(self.path, self.safe, document=self.document, policy=self.plan["recoverable_storage"])
+            storage = Storage(self.path, self.safe, document=self.document, policy=self.plan["recoverable_storage"],
+                              subject_check=self.subject_checks)
             observation = storage.run(admit=False)
             self.results.append({"kind": "recoverable-storage", "identity": self.subject,
                                  "status": ("removed" if any(row["status"] == "removed" for row in observation["results"]) else "absent") if observation["complete"] else "held",

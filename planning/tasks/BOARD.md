@@ -16,6 +16,14 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 ### Current human decision
 
+[TASK-00546](00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31) is in bounded Work repair for Review2 R3/R4/R5.
+Shared plan guards, original protected-image policy and failed-inventory cache reporting have regression-first
+repairs and passing focused owning checks. The new final gate and current-source readiness observation are
+pending. SAME runtime/receipt and original capability/ACL/history holds remain protected. Independent renewed
+Review and nonvisual QA are next after the committed handoff; no acceptance or publication. Allowance is
+**5 effective / 2 consumed / 3 remaining**. Canonical ignored Work handoff owns exact proof/resource dispositions.
+
+The following integration checkpoint is historical, not current repair verification.
 [TASK-00546](00546-TASK.md#integration-and-standing-land-readiness--2026-10-31) is in owner-directed Work
 completion after accepted TASK-00547 integration: one lifecycle/receipt, recoverable storage and executable
 upstream Land readiness. The final combined-source 24-phase gate passed (`20261031T023423Z-15117`), with

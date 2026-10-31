@@ -1749,7 +1749,8 @@ class Lifecycle:
         require(not requested or absolute(requested) == self.path, "bound TASK cannot allocate through a competing storage receipt")
         model = query([*compose(self.binding), "--profile", "*", "config", "--format", "json"], self.root)
         policy = dict(self.state["policy"].get("recoverable_storage", {}))
-        policy["protected_images"] = sorted(set(protected + storage_inputs(model, self.root)))
+        policy["protected_images"] = Storage.protected_image_inputs(
+            policy.get("protected_images", []), protected, storage_inputs(model, self.root))
         storage = Storage(self.path, self.root, document=self.document, policy=policy)
         result = storage.run()
         print(json.dumps({"admitted": result["admitted"], "complete": result["complete"], "receipt": str(self.path),

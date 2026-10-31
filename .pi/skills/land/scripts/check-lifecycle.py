@@ -701,6 +701,80 @@ def visibility_contracts(module, evidence, helper):
     return 0 if summary["pass"] else 1
 
 
+def plan_storage_contracts(module, evidence):
+    """Keep shared plan guards distinct from resource-specific service holds"""
+    from contextlib import redirect_stdout
+    from unittest.mock import patch
+    safe = evidence / "safe"
+    safe.mkdir()
+    run(["git", "init", "--initial-branch=develop"], safe)
+    run(["git", "-c", "user.name=Lifecycle fixture", "-c", "user.email=fixture@example.invalid",
+         "commit", "--allow-empty", "-m", "Bounded storage guard fixture"], safe)
+    origin = "git@github.com:task00546/fixture.git"
+    run(["git", "remote", "add", "origin", origin], safe)
+    oid = run(["git", "rev-parse", "HEAD"], safe)
+    common = run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], safe)
+    protected = evidence / "protected.txt"
+    protected.write_text("unchanged private evidence\n")
+    record = module.file_record(protected)
+    root = "sha256:" + "b" * 64
+    rows, previous = [], Path.cwd()
+    try:
+        os.chdir(safe)
+        for case in ("plan-live-worker", "plan-protected-drift", "plan-origin-drift",
+                     "plan-worker-live-after-inventory", "plan-service-hold-independent-storage"):
+            plan = {"task": "TASK-00546", "safe_checkout": str(safe), "git_common_dir": common,
+                    "origin": origin, "ref": "refs/heads/feature/task-00546-guard-fixture", "oid": oid,
+                    "purpose": "disposable-runtime", "runtime": {"ownership": "proven", "disposable_authority": "original temporary-runtime authority"},
+                    "exited_workers": [{"pid": os.getpid()}] if case == "plan-live-worker" else [],
+                    "protected_files": [{"path": str(protected), "record": dict(record, sha256="0" * 64) if case == "plan-protected-drift" else record}],
+                    "containers": [{"identity": "a" * 64, "disposition": "remove", "ownership": "proven", "consumers": [], "reason": "controlled disposable service"}],
+                    "volumes": [], "networks": [], "images": [], "caches": [],
+                    "recoverable_storage": {"retention_seconds": 1, "cache_ids": []},
+                    "worktree": {"identity": str(safe / "candidate"), "disposition": "retain", "reason": "preserve source"},
+                    "branch": {"identity": "refs/heads/feature/task-00546-guard-fixture", "disposition": "retain", "reason": "preserve ref"}}
+            if case == "plan-origin-drift":
+                plan["origin"] = "git@github.com:changed/fixture.git"
+            operation = module.Cleanup.__new__(module.Cleanup)
+            operation.path, operation.safe, operation.subject, operation.apply = evidence / (case + ".json"), safe, "TASK-00546", True
+            operation.plan, operation.results = plan, []
+            operation.attempt = {"results": operation.results, "complete": False}
+            operation.state = [operation.attempt]
+            operation.document = {"cleanup": {"plan": plan, "attempts": operation.state}}
+            operation.save, operation.verify_docker_results = lambda: None, lambda: None
+            def container(item, result):
+                raise module.Hold("controlled missing service descriptor capability")
+            operation.container = container
+            effects = []
+            def census(storage):
+                if case == "plan-worker-live-after-inventory":
+                    plan["exited_workers"] = [{"pid": os.getpid()}]
+                return [{"id": root, "created": 1, "digests": ["busybox@" + root], "tags": []}]
+            def image(storage, item, result):
+                effects.append(item["id"])
+                result.update(status="removed", reason="intercepted; zero real effects")
+            with patch.object(module.Storage, "engine", lambda self: {"id": "controlled"}), \
+                 patch.object(module.Storage, "host_space", lambda self: [{"free_bytes": 100}]), \
+                 patch.object(module.Storage, "builder_identity", lambda self: {"name": "controlled"}), \
+                 patch.object(module.Storage, "usage", lambda self: []), \
+                 patch.object(module.Storage, "image_census", census), patch.object(module.Storage, "image", image), \
+                 patch.object(module.Storage, "save", lambda self: None), redirect_stdout(io.StringIO()):
+                code = operation.run()
+            positive = case == "plan-service-hold-independent-storage"
+            expected_reason = "controlled missing service descriptor capability" if positive else (
+                "protected report/private evidence changed" if case == "plan-protected-drift" else
+                "origin changed" if case == "plan-origin-drift" else "original worker PID still live or reused")
+            reasons = [row.get("reason", "") for row in operation.results]
+            reasons += [attempt.get("hold", "") for attempt in operation.document.get("storage_attempts", [])]
+            reasons += [row.get("reason", "") for attempt in operation.document.get("storage_attempts", []) for row in attempt["results"]]
+            rows.append({"case": case, "passed": code == 1 and effects == ([root] if positive else []) and any(expected_reason in reason for reason in reasons),
+                         "intercepted_image_effects": len(effects), "results": operation.results,
+                         "storage_results": operation.document.get("storage_attempts", [])})
+    finally:
+        os.chdir(previous)
+    return rows
+
+
 def storage_contracts(module, evidence, helper):
     """Challenge owning storage decisions with controlled observations, never product tests"""
     evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
@@ -738,7 +812,7 @@ def storage_contracts(module, evidence, helper):
              "Size": 1024, "UsageCount": 1}
     try:
         for case in ("cache-no-historical-owner", "cache-retention", "cache-stale", "builder-stale", "cache-denied",
-                     "cache-private", "cache-mutable", "image-backing-changed", "engine-retained"):
+                     "cache-private", "cache-mutable", "image-backing-changed", "engine-retained", "cache-subject-changed"):
             operation = module.Storage.__new__(module.Storage)
             operation.safe, operation.retention = evidence, 1
             operation.engine_identity = {"id": "controlled"}
@@ -754,6 +828,10 @@ def storage_contracts(module, evidence, helper):
                 raw["Shared"] = False
             operation.builder_identity = lambda: ({"name": "changed"} if case == "builder-stale" else operation.builder_snapshot)
             operation.engine = lambda: operation.engine_identity
+            def subject_check():
+                if case == "cache-subject-changed":
+                    raise module.Hold("controlled shared prerequisite changed during cache qualification")
+            operation.subject_check = subject_check
             operation.image_census = lambda: ([] if case == "image-backing-changed" else operation.protected_images)
             operation.usage = lambda: ([dict(raw, UsageCount=2) if case == "cache-stale" else raw] if present[0] else [])
             def command(argv, cwd, **kwargs):
@@ -841,7 +919,60 @@ def storage_contracts(module, evidence, helper):
         operation.reclaim()
         rows.append({"case": case, "passed": effects == [root] and any(v["kind"] == "cache" and v["status"] == "held" for v in operation.attempt["results"]),
                      "image_effects": len(effects), "results": operation.attempt["results"]})
-    summary = {"helper_sha256": module.digest(helper.read_bytes()), "boundary": "controlled owning admission/cache/image methods; no real effects",
+    from unittest.mock import patch
+    for changed in (False, True):
+        operation = module.Storage.__new__(module.Storage)
+        operation.safe, operation.retention = evidence, 1
+        operation.engine_identity = {"id": "controlled"}
+        operation.engine = lambda: operation.engine_identity
+        current = {"Id": root, "Created": "2020-01-01T00:00:00Z"}
+        original = {"id": root}
+        present, effects, checks = [True], [], []
+        operation.image_census = lambda: [original] if present[0] else []
+        operation.image_consumers = lambda current: None
+        operation.downloadable = lambda current: {"root": root}
+        operation.save = lambda: None
+        def subject_check():
+            checks.append(True)
+            if changed:
+                raise module.Hold("controlled protected evidence changed during image qualification")
+        operation.subject_check = subject_check
+        def command(argv, cwd, **kwargs):
+            effects.append(argv)
+            present[0] = False
+            return subprocess.CompletedProcess(argv, 0, b"", b"")
+        result, reason = {}, None
+        with patch.object(module, "inspect_image", lambda *args: current if present[0] else None), patch.object(module, "command", command):
+            try:
+                operation.image(original, result)
+            except module.Hold as error:
+                reason = str(error)
+        rows.append({"case": "image-final-subject-" + ("changed" if changed else "positive"),
+                     "passed": (reason is not None and not effects) if changed else result.get("status") == "removed" and len(effects) == 1,
+                     "subject_checks": len(checks), "intercepted_effects": len(effects), "reason": reason})
+    for available in (False, True):
+        operation = module.Storage.__new__(module.Storage)
+        operation.safe, operation.retention, operation.limit = evidence, 1, 8
+        operation.engine_identity = {"id": "controlled"}
+        operation.engine = lambda: operation.engine_identity
+        def builder():
+            if not available:
+                raise module.Hold("controlled builder inventory unavailable")
+            return {"name": "controlled"}
+        operation.builder_identity, operation.usage = builder, lambda: []
+        operation.image_census = lambda: [{"id": root, "created": 1, "tags": [], "digests": ["busybox@" + root]}]
+        operation.selection = {"cache_ids": [identifier], "image_ids": [root]}
+        operation.protected_inputs, operation.attempt = [], {"results": []}
+        operation.save = lambda: None
+        effects = []
+        operation.image = lambda item, result: (effects.append(item["id"]), result.update(status="removed"))
+        operation.reclaim()
+        selected = next(row for row in operation.attempt["results"] if row["identity"] == identifier)
+        rows.append({"case": "selected-cache-" + ("successful-empty" if available else "inventory-unavailable"),
+                     "passed": selected["status"] == ("absent" if available else "held") and effects == [root] and operation.attempt["complete"] == available,
+                     "selected": selected, "results": operation.attempt["results"], "complete": operation.attempt["complete"]})
+    rows.extend(plan_storage_contracts(module, evidence))
+    summary = {"helper_sha256": module.digest(helper.read_bytes()), "boundary": "controlled owning admission/cache/image methods; real local Git/ps/file plan guards; no real Docker effects",
                "pass": all(row["passed"] for row in rows), "rows": rows}
     private_json(evidence / "storage-contracts.json", summary)
     print(json.dumps(summary, indent=2))
@@ -981,7 +1112,7 @@ def startup_input_contracts(module, evidence, helper):
     node = next(line.split()[1] for line in (root / "etc/docker/cli/Dockerfile").read_text().splitlines() if line.startswith("FROM node@"))
     rows = []
     original_query = lifecycle.query
-    for case in ("digest-runtime", "selected-override", "selected-build", "config-failed", "build-unavailable", "competing-receipt"):
+    for case in ("digest-runtime", "selected-override", "selected-build", "original-policy-real-compose", "config-failed", "build-unavailable", "competing-receipt"):
         reference = "docker.io/library/nginx@" + gateway.split("@", 1)[1] if case == "selected-override" else gateway
         override = evidence / (case + ".json")
         model = {"services": {"https": {"image": reference}}}
@@ -993,7 +1124,8 @@ def startup_input_contracts(module, evidence, helper):
         private_json(override, model)
         operation = lifecycle.Lifecycle.__new__(lifecycle.Lifecycle)
         operation.root, operation.path = root, evidence / (case + "-receipt.json")
-        operation.document, operation.state = {}, {"policy": {}}
+        original_protected = "busybox@sha256:" + "c" * 64
+        operation.document, operation.state = {}, {"policy": {"recoverable_storage": {"protected_images": [original_protected]}} if case == "original-policy-real-compose" else {}}
         operation.complete = lambda: None
         files = [root / "compose.yaml", override]
         operation.binding = {"project": "task00546-input-fixture", "working_directory": str(root), "env_files": [],
@@ -1020,18 +1152,19 @@ def startup_input_contracts(module, evidence, helper):
         effects = []
         if not negative:
             storage = module.Storage.__new__(module.Storage)
-            identity = reference.split("@", 1)[1]
+            selected_reference = original_protected if case == "original-policy-real-compose" else reference
+            identity = selected_reference.split("@", 1)[1]
             storage.safe, storage.retention, storage.limit = root, 1, 8
             storage.selection = {"cache_ids": [], "image_ids": [identity]}
             storage.protected_inputs, storage.engine_identity = protected, {"id": "controlled"}
             storage.engine = lambda: storage.engine_identity
             storage.builder_identity = lambda: {"name": "controlled"}
             storage.usage = lambda: []
-            storage.image_census = lambda: [{"id": identity, "created": 1, "digests": [reference], "tags": []}]
+            storage.image_census = lambda: [{"id": identity, "created": 1, "digests": [selected_reference], "tags": []}]
             storage.attempt, storage.save = {"results": []}, lambda: None
             storage.image = lambda item, row: (effects.append(item["id"]), row.update(status="removed"))
             storage.reclaim()
-            passed = reason is None and node in protected and reference in protected and not effects and any(str(override) in argv for argv in observed)
+            passed = reason is None and node in protected and reference in protected and selected_reference in protected and not effects and any(str(override) in argv for argv in observed)
             if case == "digest-runtime":
                 storage.protected_inputs = []
                 storage.reclaim()
@@ -1040,6 +1173,52 @@ def startup_input_contracts(module, evidence, helper):
         else:
             passed = reason is not None and not protected
         rows.append({"case": case, "passed": passed, "protected_inputs": protected, "hold": reason, "effects": effects})
+    original = "busybox@sha256:" + "c" * 64
+    caller = "alpine@sha256:" + "d" * 64
+    for case in ("original-policy", "caller-only", "policy-and-caller", "policy-malformed", "policy-entry-malformed", "policy-bound-exceeded", "combined-bound-exceeded", "deduplicated-bound"):
+        operation = lifecycle.Lifecycle.__new__(lifecycle.Lifecycle)
+        operation.root, operation.path = root, evidence / (case + "-receipt.json")
+        values = [original] if case != "caller-only" else []
+        if case == "policy-malformed":
+            values = original
+        elif case == "policy-entry-malformed":
+            values = [None]
+        elif case == "policy-bound-exceeded":
+            values = ["protected:" + str(index) for index in range(65)]
+        elif case in ("combined-bound-exceeded", "deduplicated-bound"):
+            values = ["protected:" + str(index) for index in range(64)]
+        policy = {"protected_images": values, "cache_ids": [], "image_ids": [original.split("@", 1)[1], caller.split("@", 1)[1]]}
+        operation.state, operation.document = {"policy": {"recoverable_storage": policy}}, {}
+        operation.complete = lambda: None
+        operation.binding = {"project": "task00546-policy-fixture", "working_directory": str(root), "env_files": [], "config_files": []}
+        captured, effects, reason = [], [], None
+        def admitted(storage, admit=True):
+            captured.extend(storage.protected_inputs)
+            storage.engine_identity = {"id": "controlled"}
+            storage.engine = lambda: storage.engine_identity
+            storage.builder_identity = lambda: {"name": "controlled"}
+            storage.usage = lambda: []
+            storage.image_census = lambda: [{"id": ref.split("@", 1)[1], "created": 1, "tags": [], "digests": [ref]} for ref in (original, caller)]
+            storage.save = lambda: None
+            storage.image = lambda item, result: (effects.append(item["id"]), result.update(status="removed"))
+            storage.reclaim()
+            return {"admitted": True, "complete": storage.attempt["complete"]}
+        inputs = [caller] if case in ("caller-only", "policy-and-caller") else []
+        model_inputs = values if case == "deduplicated-bound" else (["current-runtime:tag"] if case == "combined-bound-exceeded" else [])
+        with patch.dict(os.environ, {"FIGHT_STORAGE_RECEIPT": str(operation.path)}), \
+             patch.object(lifecycle, "query", lambda *args: {}), patch.object(lifecycle, "storage_inputs", lambda *args: model_inputs), \
+             patch.object(lifecycle.Storage, "run", admitted):
+            try:
+                operation.storage_admit(inputs)
+            except (module.Hold, lifecycle.Hold, TypeError, ValueError):
+                reason = "invalid or oversized protections refused before effects"
+        negative = case in ("policy-malformed", "policy-entry-malformed", "policy-bound-exceeded", "combined-bound-exceeded")
+        expected = [original.split("@", 1)[1]] if case == "caller-only" else ([caller.split("@", 1)[1]] if case == "original-policy" else [])
+        if case == "deduplicated-bound":
+            expected = [original.split("@", 1)[1], caller.split("@", 1)[1]]
+        rows.append({"case": case, "passed": (reason is not None and not captured and not effects) if negative else
+                     reason is None and effects == expected and policy["protected_images"] == values,
+                     "hold": reason, "protected_inputs": captured, "intercepted_effects": effects})
     shim = evidence / "shim"; shim.mkdir()
     (shim / "python3").write_text("#!" + sys.executable + "\nimport sys\nsys.exit(79 if 'storage-admit' in sys.argv and any(v.endswith('/lifecycle.py') for v in sys.argv) else 80)\n")
     (shim / "python3").chmod(0o700)

@@ -69,7 +69,14 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00546 current integration:** [standing Land readiness](tasks/00546-TASK.md#integration-and-standing-land-readiness--2026-10-31)
+**TASK-00546 current repair cycle 2:** [R3/R4/R5 repair](tasks/00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31)
+restores shared storage-effect prerequisites, original protected-image policy and truthful cache-inventory outcomes.
+Focused owning checks pass; the new final gate and current-source readiness observation remain pending.
+SAME runtime/receipt/history and existing legacy holds are protected. Renewed independent Review/nonvisual QA
+follow the committed Work handoff; no acceptance, retirement or publication. Allowance: 5 effective / 2 consumed /
+3 remaining. Canonical ignored Work handoff owns current proof and exact dispositions.
+
+**TASK-00546 integration — historical checkpoint:** [standing Land readiness](tasks/00546-TASK.md#integration-and-standing-land-readiness--2026-10-31)
 combines accepted TASK-00547's lifecycle with recoverable storage and executable preservation/capability checks.
 Original runtime/receipt/history are reused; the final combined-source 24-phase gate passed
 (`20261031T023423Z-15117`). External preservation and bounded real cleanup/resume are qualified; original

@@ -240,14 +240,19 @@ The supported automatic candidates need **no historical TASK ownership**:
   or unsupported remote/additional build contexts refuse before reclamation; no empty-input fallback exists.
   `bin/client` protects its selected runtime/build images, including newly pulled inputs. Protection is applied
   before candidate selection; a downloadable image is not disposable while needed by the current operation.
-  Current/stopped container consumers remain additional independent holds.
+  Original `protected_images` exclusions remain in force: SAME-binding admission combines them with current
+  caller/model/build inputs, validates every entry and refuses an oversized effective set rather than dropping
+  protections. Current/stopped container consumers remain additional independent holds.
 
 Every pass appends `storage_attempts` in the SAME companion, recording engine/worker, selection, raw observations,
 content proofs, effect intent/argv/exits, postconditions, host measurements and per-effect held/removed/absent results.
 `--storage-reclaim` uses the same operation without admission. A cleanup plan can opt into `recoverable_storage`
 with the same policy keys (`retention_seconds`, `reserve_bytes`, `allocation_bytes`, `max_candidates`, `builder`,
 optional narrower `cache_ids`/`image_ids` and `protected_images`). It executes independently of held containers or
-volumes; partial success never completes an aggregate with holds. Legacy exact cache entries are not silently
+volumes, but inherits the plan's common exact-subject, original-worker and protected-file checks at dispatch
+and immediately before storage effects. Ordinary pre-build admission uses its separate authority, without a
+publication prerequisite. Unavailable owning cache inventory leaves explicitly selected identities held/unknown;
+only successful complete inventory can establish absence. Partial success never completes an aggregate with holds. Legacy exact cache entries are not silently
 upgraded, and old attempts/plans are immutable. Recover a linked explicit policy rather than rewriting old holds.
 
 `check-lifecycle.py --storage-contracts --evidence ABSOLUTE_NEW_DIRECTORY` challenges controlled reserve,

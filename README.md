@@ -28,6 +28,13 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00546](planning/tasks/00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31) is in bounded Work repair for
+Review2 R3/R4/R5: shared plan prerequisites at storage effects, original image-policy preservation and truthful
+cache absence under unavailable inventory. Focused owning checks pass; the new final gate and current-source
+readiness observation are pending. Existing runtime/receipt/history and all legacy holds remain protected.
+Renewed independent Review/nonvisual QA are pending; no acceptance, retirement or publication is claimed.
+
+The following integration checkpoint is historical, not current repair verification.
 [TASK-00546](planning/tasks/00546-TASK.md#integration-and-standing-land-readiness--2026-10-31) is integrating
 accepted TASK-00547's single lifecycle with recoverable-storage policy and executable upstream Land readiness.
 The original verification runtime is reused through its SAME receipt, not recreated. The one final combined-source
