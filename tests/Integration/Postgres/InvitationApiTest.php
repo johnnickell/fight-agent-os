@@ -11,24 +11,30 @@ use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
 use App\Adapter\Persistence\RefreshSessionRecords;
+use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
 use App\Application\Invitation\ReadInvitationStatus;
+use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\InvitationRatePolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryInvocation;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryOutcome;
 use Fight\AccessControl\Application\AccessControl\CredentialDelivery\Service\CredentialDeliveryProvider;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ManagedPolicy\Command\ReconcileManagedPolicy;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
+use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
+use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
@@ -44,7 +50,10 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Slim\App;
+use Slim\Factory\AppFactory;
+use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use Tests\Support\AccessClock;
 use Tests\Support\AccessTokens;
 use Tooling\OpenApi\Document;
 
@@ -60,6 +69,7 @@ final class InvitationApiTest extends TestCase
     private User $actor;
     private RefreshSession $session;
     private string $token;
+    private AccessClock $clock;
     /** @var array<string, string|false> */
     private array $environment = [];
     private int $constructions = 0;
@@ -89,15 +99,41 @@ final class InvitationApiTest extends TestCase
             'TRUNCATE users, roles, permissions, audit_evidence, invitation_rate_limits CASCADE'
         );
         $tokens = new AccessTokens();
-        $tokens->clock->time = new DateTimeImmutable();
+        $this->clock = $tokens->clock;
+        $this->clock->time = new DateTimeImmutable('2026-10-20T12:00:00Z');
         $now = $tokens->clock->now()->modify('-1 minute');
         putenv('DATABASE_URL='.$url);
         putenv('APP_ACCESS_TOKEN_CONFIG='.json_encode($tokens->configuration, JSON_THROW_ON_ERROR));
         putenv('APP_CREDENTIAL_DELIVERY_KEY='.bin2hex(random_bytes(32)));
-        $this->app = require dirname(__DIR__, 3).'/bootstrap/app.php';
-        $container = $this->app->getContainer();
+        $container = require dirname(__DIR__, 3).'/config/services.php';
         self::assertInstanceOf(Container::class, $container);
         $this->container = $container;
+        // Keep JWT, current authority, admission and delivery on one clock before services resolve.
+        $container->set(Clock::class, fn(): Clock => $this->clock);
+        $container->set(AccessJwt::class, static fn(): AccessJwt => $tokens->jwt);
+        $container->set(AuthenticateAccessToken::class, fn(Container $c): AuthenticateAccessToken =>
+            new AuthenticateAccessToken(
+                $tokens->jwt,
+                $c->get(UserRepository::class),
+                $c->get(RefreshSessionRepository::class),
+                $this->clock
+            ));
+        $container->set(AuthoritativePrincipalResolver::class, fn(Container $c): AuthoritativePrincipalResolver =>
+            new AuthoritativePrincipalResolver(
+                $c->get(UserRepository::class),
+                $c->get(RefreshSessionRepository::class),
+                $c->get(RoleRepository::class),
+                $c->get(PermissionRepository::class),
+                $this->clock
+            ));
+        AppFactory::setContainer($container);
+        AppFactory::setResponseFactory(new ResponseFactory());
+        /** @var App<Container> $app */
+        $app = AppFactory::create();
+        $container->set(App::class, static fn(): App => $app);
+        require dirname(__DIR__, 3).'/config/routes.php';
+        require dirname(__DIR__, 3).'/config/middleware.php';
+        $this->app = $app;
         $container->get(CommandBus::class)->execute(new ReconcileManagedPolicy(InstallationManagedPolicy::create()));
         $this->actor = User::invite(UserId::generate(), EmailAddress::fromString('actor@example.test'), $now);
         $this->actor->activate(
@@ -481,7 +517,7 @@ final class InvitationApiTest extends TestCase
     }
 
     /**
-     * Returns controlled atomic retry metadata and keeps status query/body input undeclared
+     * Proves same-window refusal and exact rollover without invitation effects from status or rejected input
      */
     public function testThrottleAndStatusInput(): void
     {
@@ -493,15 +529,39 @@ final class InvitationApiTest extends TestCase
                 new InvitationRatePolicy(60, 1, 1)
             ));
         $data = $this->assertResponse($this->issue(['email' => 'new@example.test', 'mode' => 'ordinary']), 201)['data'];
-        $response = $this->issue(['email' => 'other@example.test', 'mode' => 'ordinary']);
-        $this->assertResponse($response, 429);
-        self::assertGreaterThanOrEqual(1, (int) $response->getHeaderLine('Retry-After'));
-        self::assertLessThanOrEqual(60, (int) $response->getHeaderLine('Retry-After'));
+        $effects = $this->invitationEffects();
+        $this->assertThrottled($this->issue(['email' => 'other@example.test', 'mode' => 'ordinary']), 60);
         $path = '/api/v1/invitations/'.$data['user_id'];
         $this->assertResponse($this->request('GET', $path.'?user_id=private-marker'), 400, false);
         $this->assertResponse($this->request('GET', $path, '{}', 'application/json'), 400, false);
         $this->assertResponse($this->request('GET', $path), 200, false);
-        $this->assertResponse($this->request('GET', $path), 429, false);
+        $this->assertThrottled($this->request('GET', $path), 60, false);
+        self::assertSame($effects, $this->invitationEffects());
+
+        $this->clock->time = $this->clock->now()->modify('+59 seconds');
+        $this->assertThrottled($this->issue(['email' => 'other@example.test', 'mode' => 'ordinary']), 1);
+        $this->assertThrottled($this->request('GET', $path), 1, false);
+        self::assertSame($effects, $this->invitationEffects());
+
+        // The same signed token and persisted session are still valid at this one-minute boundary.
+        $this->clock->time = $this->clock->now()->modify('+1 second');
+        $next = $this->assertResponse(
+            $this->issue(['email' => 'other@example.test', 'mode' => 'ordinary']),
+            201
+        )['data'];
+        self::assertSame($data['delivery'], $this->assertResponse($this->request('GET', $path), 200, false)['data']);
+        self::assertSame($this->clock->now()->modify('+7 days')->getTimestamp(), (new DateTimeImmutable(
+            (string) $this->connection->fetchOne('SELECT expires_at FROM activation_grants WHERE user_id = ?', [
+                $next['user_id']
+            ])
+        ))->getTimestamp());
+        self::assertSame(3, (int) $this->connection->fetchOne('SELECT count(*) FROM users'));
+        self::assertSame(2, (int) $this->connection->fetchOne('SELECT count(*) FROM activation_grants'));
+        self::assertSame(2, $this->providerCalls);
+        $effects = $this->invitationEffects();
+        $this->assertThrottled($this->issue(['email' => 'third@example.test', 'mode' => 'ordinary']), 60);
+        $this->assertThrottled($this->request('GET', $path), 60, false);
+        self::assertSame($effects, $this->invitationEffects());
     }
 
     /**
@@ -534,7 +594,8 @@ final class InvitationApiTest extends TestCase
                     'operation' => 'issue',
                     'actor'     => $this->actor->getId()->toString(),
                     'session'   => $this->session->getId()->toString(),
-                    'version'   => $this->actor->getAuthenticationVersion()
+                    'version'   => $this->actor->getAuthenticationVersion(),
+                    'now'       => $this->clock->now()->format(DATE_ATOM)
                 ], JSON_THROW_ON_ERROR)."\n");
                 fflush($pipes[0]);
             }
@@ -570,6 +631,32 @@ final class InvitationApiTest extends TestCase
                 self::assertSame(0, proc_close($process));
             }
         }
+    }
+
+    /**
+     * Checks exact bounded retry metadata through the real HTTP response contract
+     */
+    private function assertThrottled(ResponseInterface $response, int $seconds, bool $issue = true): void
+    {
+        $this->assertResponse($response, 429, $issue);
+        self::assertSame((string) $seconds, $response->getHeaderLine('Retry-After'));
+        self::assertGreaterThanOrEqual(1, (int) $response->getHeaderLine('Retry-After'));
+        self::assertLessThanOrEqual(60, (int) $response->getHeaderLine('Retry-After'));
+    }
+
+    /**
+     * Captures persisted invitation, assignment, audit and provider effects for refusal comparisons
+     *
+     * @return array<string, mixed>
+     */
+    private function invitationEffects(): array
+    {
+        $effects = ['provider_calls' => $this->providerCalls];
+        foreach (['users', 'activation_grants', 'user_role_assignments', 'audit_evidence'] as $table) {
+            $effects[$table] = $this->connection->fetchAllAssociative('SELECT * FROM '.$table.' ORDER BY 1, 2');
+        }
+
+        return $effects;
     }
 
     /**

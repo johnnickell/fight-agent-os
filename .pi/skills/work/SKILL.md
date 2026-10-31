@@ -32,6 +32,14 @@ revalidate each finding, and preserve its ID. INCOMPLETE routes to prerequisite/
 code edits. After acceptance, apply [QA applicability](../../../docs/engineering/QA.md#applicability): changed
 behavior without applicable QA routes to `qa` before ordinary `land`, including non-UI work.
 
+Before any task runtime setup, follow the target's [local resource lifecycle](../../../docs/engineering/RESOURCE_LIFECYCLE.md):
+persist original intent through its owning `bin/runtime`, keep one private canonical receipt outside the candidate,
+and validate that same binding at Work entry/resume. Reuse it for repairs; incomplete capture stops dependent
+allocation. Record original disposal authority, private/evidence classifications and finite creator/observer
+lifetimes before creators disappear. Before handoff, run `bin/runtime validate --stage work --handoff` with the
+original `--attempt` binding as documented there; inspect actual external preservation/capability proof and every affected hold.
+Carry the SAME locator/proof/receipt forward, not a Markdown reconstruction or a recurring cleanup-approval question.
+
 3. **Implement the accepted behavior.** Follow the TASK's dependencies and applicable local rules; design clear
 interfaces for human maintainers. Add meaningful behavior tests at the narrowest useful boundary. For each test,
 know the contract, plausible defect and independently derived expectation; use the [test guidance](../../../docs/engineering/QUALITY.md#tests-that-protect-contracts)

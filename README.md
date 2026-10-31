@@ -28,6 +28,15 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00546](planning/tasks/00546-TASK.md#integration-and-standing-land-readiness--2026-10-31) is integrating
+accepted TASK-00547's single lifecycle with recoverable-storage policy and executable upstream Land readiness.
+The original verification runtime is reused through its SAME receipt, not recreated. The one final combined-source
+24-phase gate passed (`20261031T023423Z-15117`); independent Review/QA remain pending. Executable readiness
+verified external preservation while exposing original service-capability and deny-delete ACL holds before
+publication. Current proof and exact affected resource holds are in canonical ignored
+`.runs/tasks/TASK-00546/runs/work-handoff.md`. No acceptance, publication or universal cleanup guarantee is claimed.
+
+The following Repair 1 checkpoint is historical, not the current Work continuation.
 [TASK-00546](planning/tasks/00546-TASK.md#repair-cycle-1--r1r2-2026-10-29) is in bounded Work repair for
 Review R1/R2: trusted local Docker socket aliases and effective Compose startup/build image protection.
 Focused owning regressions pass, but the final changed-source gate failed in the unchanged activation rate-boundary
@@ -162,7 +171,10 @@ requires separate operator selection on the qualified runtime; it is not Jev scr
 
 ## Development
 
-Docker Compose is required. This is an application with committed Composer lockfiles:
+Docker Compose is required. Local TASK execution first binds original intent and one isolated runtime through the
+[local resource lifecycle](docs/engineering/RESOURCE_LIFECYCLE.md); the owning wrappers capture creation and reuse
+that receipt through independent stages and Land. The ordinary non-TASK setup below remains available without
+claiming lifecycle capture. This is an application with committed Composer lockfiles:
 
 ```sh
 export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
@@ -281,7 +293,9 @@ managed assignment is available through the separate invitation API.
 ./bin/planning-check --write  # Refresh planning views
 ./bin/planning-check          # Validate planning
 ./bin/build                   # Complete gate: backend coverage + frontend/catalog in running web service
-# Retire only a positively disposable runtime using its original private Work receipt:
+# Bound temporary runtime: original runtime_authority, SAME generated plan/executor:
+./bin/down
+# Historical runtime-only plans retain their exact original receipt:
 ./bin/down --receipt /absolute/disposable-runtime-receipt.json
 ```
 
@@ -300,8 +314,10 @@ qualification remains explicitly deferred until the independent real-mail prereq
 Expensive local wrappers first run [bounded storage admission](.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546).
 Export its host-shell settings when the default 20 GiB reserve plus 4 GiB allocation allowance is unsuitable;
 unknown measurements or insufficient space refuse allocation, never trigger a global prune. `./bin/up --build-only`
-is the guarded initial image setup. Unknown/durable volumes remain protected; `bin/down` requires the same
-helper's original disposable-runtime receipt rather than an unqualified Compose teardown.
+is the guarded initial image setup. Unknown/durable volumes remain protected; `bin/down` uses original disposal authority and the SAME generated
+lifecycle plan/executor rather than unqualified Compose teardown. Stage handoffs run
+[executable readiness](docs/engineering/RESOURCE_LIFECYCLE.md#standing-cleanup-readiness): actual external
+source/private/report preservation, capability checks and precise holds, without another routine disposal prompt.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots

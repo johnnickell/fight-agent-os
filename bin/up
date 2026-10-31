@@ -14,22 +14,9 @@ case "$#:${1:-}" in
     1:--build-only) build_only=yes ;;
     *) echo 'Usage: ./bin/up [--build-only]' >&2; exit 2 ;;
 esac
-# Resolve the same effective Compose selection (including local overrides) before
-# reclamation. Config failure must not become an empty protection list.
-if [ "$build_only" = yes ]; then
-    images=$(python3 scripts/compose_storage_inputs.py --build-only)
-else
-    images=$(python3 scripts/compose_storage_inputs.py)
-fi
-set -- python3 .pi/skills/land/scripts/cleanup.py --storage-admit
-if [ -n "${FIGHT_STORAGE_RECEIPT:-}" ]; then set -- "$@" --receipt "$FIGHT_STORAGE_RECEIPT"; fi
-set -f
-for image in $images; do
-    set -- "$@" --protect-image "$image"
-done
-set +f
-"$@"
-if [ "$build_only" = yes ]; then exec docker compose build web; fi
+# Admission and allocation use the SAME effective lifecycle configuration/receipt.
+./bin/runtime storage-admit
+if [ "$build_only" = yes ]; then exec ./bin/runtime docker compose build web; fi
 if [ ! -f vendor/autoload.php ]; then
     echo "Dependencies are not installed. Run: ./bin/composer install --no-interaction --prefer-dist --no-progress" >&2
     exit 1
@@ -40,24 +27,24 @@ fi
 python3 scripts/local_https.py startup
 
 # Prepare only ignored writable cache/report mounts before Compose starts the service.
-mkdir -p .runs/cache/client/dependency-cache .runs/cache/client/vite-temp var \
+./bin/runtime paths .runs/cache/client/dependency-cache .runs/cache/client/vite-temp var \
     client/node_modules/.cache client/node_modules/.vite-temp
 
-if ! docker compose --profile https up --detach --build --wait --wait-timeout 120 web https; then
+if ! ./bin/runtime docker compose --profile https up --detach --build --wait --wait-timeout 120 web https; then
     echo "Stack startup/readiness failed; services may be partially running. Inspect docker compose --profile https ps, correct the failure, then rerun ./bin/up." >&2
     exit 1
 fi
 
 # Validate and reload leaf/configuration changes on an already-running gateway.
-if ! docker compose --profile https exec -T https nginx -t ||
-   ! docker compose --profile https exec -T https nginx -s reload; then
+if ! ./bin/runtime docker compose --profile https exec -T https nginx -t ||
+   ! ./bin/runtime docker compose --profile https exec -T https nginx -s reload; then
     echo "HTTPS gateway validation/reload failed; services may be partially running. Correct the gateway configuration and rerun ./bin/up." >&2
     exit 1
 fi
 
 # Compose --wait alone only proves these services are running, not serving PHP/TLS.
 # Discover the loopback mapping while retaining the canonical TLS name and HTTP authority.
-address=$(docker compose --profile https port https 8443)
+address=$(./bin/runtime docker compose --profile https port https 8443)
 port=${address##*:}
 case "$address" in
     127.0.0.1:*) ;;
@@ -70,5 +57,5 @@ if ! curl --fail --silent --show-error --retry 10 --retry-delay 1 --retry-all-er
     echo "Verified HTTPS readiness failed; services may be partially running. Check local trust, application keys/assets and gateway logs (build missing assets with ./bin/client build). Run ./bin/https setup only if enrollment/leaves need repair, then rerun ./bin/up." >&2
     exit 1
 fi
-docker compose port web 8080
+./bin/runtime docker compose port web 8080
 echo "https://localhost:18443"

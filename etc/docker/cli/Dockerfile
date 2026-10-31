@@ -16,9 +16,13 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
         libgbm1 libxcb1 libxkbcommon0 libasound2 libpango-1.0-0 libcairo2 \
         fonts-liberation fonts-noto-color-emoji \
     && docker-php-ext-install pdo_pgsql \
-    && pecl install xdebug-3.5.0 \
+    && curl --fail --silent --show-error --location https://xdebug.org/files/xdebug-3.5.0.tgz --output /tmp/xdebug.tgz \
+    && echo 'f6daf55a5c7adadb07dd2af25ff78b1cc9b1c58d6cc442a463eba015b678aabf  /tmp/xdebug.tgz' | sha256sum --check --strict \
+    && mkdir /tmp/xdebug \
+    && tar --extract --gzip --file /tmp/xdebug.tgz --directory /tmp/xdebug --strip-components=1 \
+    && (cd /tmp/xdebug && phpize && ./configure --enable-xdebug && make -j"$(nproc)" && make install) \
     && docker-php-ext-enable xdebug \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /tmp/xdebug /tmp/xdebug.tgz /var/lib/apt/lists/*
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 COPY etc/docker/php/development.ini /usr/local/etc/php/conf.d/zz-development.ini
 WORKDIR /app

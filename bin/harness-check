@@ -4,7 +4,7 @@ set -eu
 cd "$(dirname "$0")/.."
 
 # Run owned Harness behavior tests without installing Node or peers into the application image.
-exec docker run --rm --pull=never --network=none --read-only \
+exec ./bin/runtime docker run --rm --pull=never --network=none --read-only \
   --user 1000:1000 --cap-drop=ALL --security-opt=no-new-privileges:true \
   --pids-limit=64 --memory=256m --cpus=1 --tmpfs /tmp:rw,noexec,nosuid,size=16m \
   --mount "type=bind,source=$(pwd)/harness/pi,target=/app,readonly" --workdir /app \

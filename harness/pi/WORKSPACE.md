@@ -528,8 +528,33 @@ visibility, never the command result/control. Closing panes or shutting down obs
 Actual native TUI session lifecycle supplies session ID/file and canonical primary checkout. It asynchronously
 starts a separate passive observation daemon, not an agent executor. Only native context IPC initializes that
 daemon and promotes a pending real session-file witness. No discoverable descriptor exists until Pi actually
-persists the file; no prompt, custom setup entry or fabricated file forces persistence. Session/path/inode
+persists the file; no prompt, custom setup entry or fabricated file forces persistence. Session/path/file-lifetime
 replacement cannot silently rebind a generation. RPC resume starts no native bootstrap.
+
+The version-2 session-file witness is canonical path, lossless decimal device/inode and native creation time in
+nanoseconds. Same-file append, metadata updates and later same-file resume retain it; mutable transcript contents,
+mtime and ctime are not identity. macOS uses the open file's native `st_birthtimespec` through Node bigint stats.
+Linux requires Python 3 and libc `statx` with an explicit returned `STATX_BTIME` mask on that same inherited open
+file descriptor. There is no Linux ctime fallback: Node/libuv can substitute ctime when native birthtime is
+unavailable. Missing capability, malformed/zero/whole-second creation time, nonregular files, changed paths or
+unavailable metadata refuse observation/admission. Other platforms are unsupported for this witness. Pending
+not-yet-persisted files may promote once, but cannot admit children without a valid lifetime witness.
+
+Each inspection closes its one temporary descriptor in `finally`; Linux's isolated metadata-only helper has a
+500 ms deadline and 4 KiB output cap, with no retained handle, content read, token, sidecar or lifetime registry.
+The descriptor pins the inspected inode until the current canonical path has been checked. The witness survives
+JSON/IPC, signed responses, descriptors, workspace bindings and resume without number precision loss. Legacy
+path/device/inode-only witnesses are incompatible and refused, never inferred or upgraded from a candidate;
+explicitly reopen from the intended native session to establish fresh custody after an owned package update.
+This source change does not update an installed package automatically.
+
+Creation timestamps distinguish the demonstrated recycled-inode lifetimes, not every possible filesystem history.
+Timestamp resolution/clock aliasing, restored creation metadata or a filesystem returning the identical
+path/device/inode/birthtime for distinct lifetimes cannot be distinguished by this witness. Whole-second-only
+values are conservatively unsupported, not evidence of uniqueness at finer resolutions. Qualified local APFS and
+Linux filesystems are evidence, not a guarantee for other mounts or a same-user adversary. Such ambiguous or
+unsupported environments must not be represented as verified lifetime protection; no absolute replacement
+protection, native-origin attestation or OS isolation is claimed.
 
 Native registration closes at supported `session_shutdown` (new/resume/fork/reload/quit), not the
 cancellable `session_before_switch`/`session_before_fork` proposals. Cancellation or target-validation failure
@@ -566,7 +591,7 @@ Runtime native routes, monitor bootstrap witnesses, short sockets and session de
 under ignored `var/terminal/{native,monitors,s,children}/`. Short socket names permit cross-worktree access without
 changing any agent's cwd. The workspace obtains actual Pi `get_state` identity/file and inspects only that
 session's bounded descriptor directory. Admission retains current owner-only endpoint inode, fixed observation
-process/start/generation, fresh Ed25519 nonce reply, matching actual session-file inode and immutable attempt
+process/start/generation, fresh Ed25519 nonce reply, matching version-2 native session-file lifetime and immutable attempt
 identity/sequence. Signing keys stay in daemon memory. Stale/replaced/malformed/cross-session/key-substituted and
 late replies are refused. Preferences cannot create membership. No `.runs/` ledger, transcript or request is
 read for runtime discovery; attempt paths are display labels only.

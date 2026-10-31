@@ -64,6 +64,19 @@ warranted by current evidence; do not rebuild accepted implementation. Continue 
 on resumed or repeated invocation for the same delivery, including after QA failure. A fresh process, directory
 or command does not reset the counter. An exhausted allowance needs an explicit human continuation grant.
 
+For targets with `bin/runtime`, apply the target's [local resource lifecycle](../../../docs/engineering/RESOURCE_LIFECYCLE.md).
+Work initializes original allocation intent before setup. Carry the SAME receipt and locator in every request;
+validate before dispatch and after each child's handoff, before advancement. Pending/missing required evidence
+holds the stage; do not create a second runtime, reset history or infer completeness from the child exit.
+Record actual stage/model/monitor identities; controlled helper probes are not independent role journeys.
+Require the child's `validate --stage ACTUAL_STAGE --handoff` readiness observation and inspect its immutable
+external preservation/capability proof, exact original worker references and affected holds before calling the
+handoff ready. Carry original disposal authority into Land, not another permission question or prose inventory.
+Missing capability/proof holds the affected effects; it never suppresses independent eligible cleanup. Initial
+technical acceptance precedes independent QA; actual publication/Land effects bind only at their proper stage.
+For the safe-checkout post-worker exception below, add `--cleanup-receipt "$receipt"` to the stage entrypoint;
+only the original-worker cleanup caller may act on that existing plan.
+
 ## Resolve phase models
 
 Resolve the model map before dispatch; the coordinator's model is **not** a child default. For each role,

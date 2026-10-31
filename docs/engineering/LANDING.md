@@ -381,6 +381,23 @@ external preservation, effect intent and fresh postconditions are recorded separ
 never authorizes protection changes or generic runtime setup. This helper is not universal shell enforcement or
 OS isolation; unrestricted agents can bypass it, and arbitrary external races cannot be atomically fenced.
 
+### Standing authority and upstream readiness
+
+Original recorded authority to dispose of positively disposable local test/dev resources carries through Work,
+Review and QA to Land; no recurring human or per-effect prompt is required. Recoverable unused images/cache
+use the separately approved recoverability policy without historical task ownership. Unknown/durable/shared
+data, unique work, conflicting consumers and protected host/private/report state remain outside that authority.
+
+For lifecycle-enabled targets, require the [upstream readiness operation](RESOURCE_LIFECYCLE.md#standing-cleanup-readiness),
+not a prose-only checklist. Each creating stage records exact identities/generations/config/env/creating mounts,
+dependencies and private/generated-artifact classifications before creators disappear. Its handoff runs actual
+preservation/capability checks and carries the SAME receipt, immutable external proof and original worker records.
+Land refreshes readiness on the current closeout source before publication, binds actual acceptance/QA/publication
+and original Land monitor/Pi exits at the proper stage, generates the plan, executes eligible effects and verifies
+outcomes. Build finishes the supported SAME-receipt post-worker continuation without another routine approval.
+A missing proof/capability is a precise affected hold, not permission to strip metadata, guess exclusions or skip
+independent eligible effects. Controlled qualification is not independent Review/QA or actual delivery evidence.
+
 ### Completion ownership
 
 Safe cleanup is a required effect of authorized Land, not an optional follow-up after publication. Remove the

@@ -16,6 +16,15 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 ### Current human decision
 
+[TASK-00546](00546-TASK.md#integration-and-standing-land-readiness--2026-10-31) is in owner-directed Work
+completion after accepted TASK-00547 integration: one lifecycle/receipt, recoverable storage and executable
+upstream Land readiness. The final combined-source 24-phase gate passed (`20261031T023423Z-15117`), with
+qualified real fixture retirement/resume and external preservation. Original capability/ACL and historical
+resource holds remain explicit; readiness is not an all-clean claim. Independent Review/QA remain pending.
+SAME canonical Work handoff/companion own current proof and exact resource holds. Allowance remains **5 effective / 1 consumed / 4 remaining**;
+no other-TASK ledger, self-acceptance or publication is implied.
+
+The following Repair 1 checkpoint is historical, not today's continuation instruction.
 [TASK-00546](00546-TASK.md#repair-cycle-1--r1r2-2026-10-29) is in owning repair cycle 1 for canonical Review
 R1/R2. Endpoint-alias and effective Compose-input regressions pass, but the one final changed-source gate failed
 in `ActivationApiTest::testRateBoundary` (429 expected, 500 received). Work verification is incomplete; coordinator
@@ -51,7 +60,6 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -483,6 +491,7 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 | 1 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 | 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | done | — | [PR #166](https://github.com/johnnickell/fight-agent-os/pull/166) |
 | 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | done | — | [PR #181](https://github.com/johnnickell/fight-agent-os/pull/181) |
+| 1 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | — (standalone bug) | done | — | [PR #185](https://github.com/johnnickell/fight-agent-os/pull/185) |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
@@ -493,6 +502,7 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 | 2 | [TASK-00517](00517-TASK.md) | Represent and validate current delivery handoffs offline | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | done | — | [PR #165](https://github.com/johnnickell/fight-agent-os/pull/165) |
 | 2 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | done | — | [PR #169](https://github.com/johnnickell/fight-agent-os/pull/169) |
 | 2 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | [TICKET-00120 — Align the nine active projects with current delivery handoffs](../tickets/00120-TICKET.md) | done | — | [PR #175](https://github.com/johnnickell/fight-agent-os/pull/175) |
+| 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | done | — | [PR #184](https://github.com/johnnickell/fight-agent-os/pull/184) |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |

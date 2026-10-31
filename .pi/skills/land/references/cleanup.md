@@ -5,6 +5,46 @@ own policy. Run `scripts/cleanup.py` beside the owning Land skill from the subje
 never from the removal candidate. Build's post-worker continuation uses
 `../../build/scripts/cleanup-continuation.py` instead. Both execute the same operation; neither publishes.
 
+## Creation-to-retirement binding
+
+For targets with `bin/runtime`, first read the target's [local resource lifecycle](../../../../docs/engineering/RESOURCE_LIFECYCLE.md).
+It owns original capture, same-receipt stage validation/recovery and mechanical plan generation. Land supplies actual
+delivery/worker facts only; it must not reconstruct ownership from Markdown. The generated plan uses this SAME
+schema/executor. `consumer_policy: fresh` with `consumers: null` defers the conclusion to the executor's existing
+live consumer checks; a known nonempty consumer list never qualifies. Per-resource `runtime` binds original
+creator generations (including explicit profiles), rather than applying the newest runtime to older resources.
+Compose one-offs additionally carry immutable original dispatch/returned-ID/configuration proof; stopped standalone
+one-offs may retire their creator without claiming or removing its reused network. Unsupported running workloads
+remain held. No publication, preservation or fresh consumer guard is waived.
+
+A lifecycle `return-to-verification --plan-sha256 HASH` is the explicit return from a finished unpublished,
+non-destructive held/retained preview to supervised SAME-runtime verification. Read its
+[supported/rejected states](../../../../docs/engineering/RESOURCE_LIFECYCLE.md#return-from-an-unpublished-preview-to-verification)
+before use. It preserves exact original receipt bytes and an immutable versioned transition; the old plan is
+ineligible for preview/apply under the SAME persistent lock. No allocation/removal authority is added. Actual
+publication and fresh qualified current-source `plan --refresh` are required to leave that state; the new plan
+retains the original plan, attempts, protected records, uncertainty and transition/snapshot link. The explicit
+`--failed-setup-run RUN_ID` mode additionally supports an exact ready OPEN published candidate after its actual
+current-head hosted setup failure and skipped gate, with completed strictly no-effect held/retained attempts.
+It preserves the same guards/freeze and all original history; read the lifecycle's
+[published setup-failure contract](../../../../docs/engineering/RESOURCE_LIFECYCLE.md#return-a-published-candidate-after-hosted-setup-failure)
+before use. Fresh independent acceptance/QA, repaired publication and linked replan remain necessary. Effects,
+interruption, merged/closed/changed identity or unknown outcomes never gain return authority.
+
+An erroneous completed legacy append to an already suspended published return is **not** a retry/reset case.
+Normal entry must hold. Explicitly authorized recovery uses only the lifecycle's
+[bounded audited successor](../../../../docs/engineering/RESOURCE_LIFECYCLE.md#recover-a-completed-legacy-no-effect-append-during-suspension),
+which qualifies the exact original source/result/read-only-command path and current identity/protected evidence.
+It preserves every actual attempt verbatim, including the legacy attempt's missing plan-hash field. The old
+plan stays ineligible; later accepted repaired publication and explicit linked Land replan retain the incident.
+Never run an older helper, hand-edit a transition or replace the main receipt to bypass suspension.
+
+A lifecycle `plan --refresh` archives the old immutable plan/hash and links the new hash inside the SAME receipt;
+legacy linked-companion recovery below remains for historical receipts without this versioned lifecycle. Do not
+rewrite old attempts or relabel eligible unknowns retained. Direct single-manifest image roots may omit platform
+in their descriptor; the helper corroborates the separate engine platform with exact `inspect --platform`, retaining
+the original descriptor unchanged. Unknown/incomplete graphs still hold.
+
 ## Inputs and result
 
 Extend the existing private JSON Work/Land handoff or receipt with `cleanup` below. Do not create a resource
@@ -143,11 +183,12 @@ Do not print raw configuration or container environments to obtain these hashes.
 
 ### Recoverable storage and allocation admission (TASK-00546)
 
-`cleanup.py --storage-admit` performs one automatic bounded recovery pass before allocating expensive work.
-Local `bin/up` (including `--build-only`), `bin/build`, `bin/client` and `bin/composer` call it. Set
-`FIGHT_STORAGE_RECEIPT` to the existing private Work companion to retain those observations there; otherwise
-local runtime state is `var/storage.json`, never an application dependency on `.runs/`. The persistent receipt
-lock serializes operations using that receipt. It is not a global reservation or protection against external races.
+Local `bin/up` (including `--build-only`), `bin/build`, `bin/client` and `bin/composer` call
+`bin/runtime storage-admit`: one bounded recovery pass before expensive allocation. A bound TASK uses its SAME
+lifecycle receipt/lock and exact effective Compose/build inputs, rejecting a competing `FIGHT_STORAGE_RECEIPT`;
+raw `cleanup.py --storage-admit` cannot bypass that binding or a suspended plan. Non-TASK use may select an
+existing private companion with `FIGHT_STORAGE_RECEIPT`; otherwise state stays in `var/storage.json`. No
+application runtime depends on `.runs/`. The persistent receipt lock is not a global reservation or race fence.
 
 Export host-shell settings (Compose `.env` alone does not export them):
 
@@ -167,6 +208,8 @@ space refuses allocation with a finite owner action. The trusted local CLI socke
 `/var/run -> /run`; the helper resolves only this endpoint, requires an actual socket and rechecks alias/socket
 identity, CLI selection and same-engine API identity across observations. Unassociated, denied or changed endpoints
 hold. Report/source/provenance paths retain strict canonical, no-symlink validation.
+Unavailable builder visibility holds cache effects without suppressing independently eligible images. Missing
+physical measurement still refuses allocation; it is not a reason to skip separately qualified recovery effects.
 Docker logical usage, physical host availability and the
 engine's cache-size report are separate; no logical-size sum or before/after host delta is called reclaimed bytes.
 A qualified reserve can admit work despite unrelated reclamation holds, but aggregate cleanup remains incomplete.
@@ -377,7 +420,13 @@ present, with identical bytes/modes/owners/ACLs/flags; no metadata is stripped t
 Validate exclusions before inventory: they must name nonempty relative paths beneath the candidate, not the
 candidate itself or a parent. A symlink at or beneath an explicitly approved disposable exclusion is recorded
 using its own metadata and link target, without following it, copying it or weakening source-stability checks.
-Nonexcluded symlinks, special files, foreign-owned and flag-protected artifacts still hold. Every file remains
+Nonexcluded symlinks, unknown special files, foreign-owned and flag-protected artifacts still hold.
+The lifecycle can originally classify an exact generated IPC/link while its creator is observable; the generated
+plan carries its no-follow metadata and exact disposable exclusion in `worktree.temporary_artifacts`. Socket/FIFO
+metadata includes device/inode/change time; Darwin xattrs use bounded native no-follow reads, not unsupported CLI
+output interpreted as empty. These artifacts are never copied or followed, and changed metadata holds. Original
+creator records survive; fresh host consumer checks still hold active users. This is not a general special-file
+exclusion, retrospective classification or permission to unlink a protected artifact. Every file remains
 in the stability inventory, including excluded dependency trees; exclusions do not waive ACL/ownership checks.
 On macOS, native no-follow `find -xattr`/`find -acl` observations before and after each inventory identify paths
 needing detailed metadata reads, avoiding per-file subprocesses for absent metadata. An unavailable or changing

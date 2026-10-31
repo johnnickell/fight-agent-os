@@ -1,11 +1,11 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(dirname "$0")/.."
-python3 .pi/skills/land/scripts/cleanup.py --storage-admit ${FIGHT_STORAGE_RECEIPT:+--receipt "$FIGHT_STORAGE_RECEIPT"}
-mkdir -p .runs/cache/client/dependency-cache .runs/cache/client/vite-temp var \
+./bin/runtime storage-admit
+./bin/runtime paths .runs/cache/client/dependency-cache .runs/cache/client/vite-temp var \
     client/node_modules/.cache client/node_modules/.vite-temp
 # Only the explicit maintenance service mounts source writable.
-exec docker compose run --rm --user "$(id -u):$(id -g)" \
+exec ./bin/runtime docker compose run --rm --user "$(id -u):$(id -g)" \
     -e COMPOSER_ROOT_VERSION=dev-develop \
     -e COMPOSER_HOME=/app/.runs/cache/composer \
     -e COMPOSER_CACHE_DIR=/app/.runs/cache/composer/cache composer composer "$@"

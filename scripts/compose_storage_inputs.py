@@ -51,14 +51,18 @@ def resolve(build_only):
     result = subprocess.run(command, capture_output=True, timeout=30)
     if result.returncode or len(result.stdout) > 8 * 1024 * 1024:
         raise Unavailable()
-    model = json.loads(result.stdout)
+    return inputs(json.loads(result.stdout), Path.cwd())
+
+
+def inputs(model, root):
+    """Resolve the owning effective model, not ambient Compose defaults"""
     services = model["services"]
     if not isinstance(services, dict) or not services:
         raise Unavailable()
     images = []
     # Keep the repository's fixed build inputs protected as well as selected overrides.
     for path in ("etc/docker/cli/Dockerfile", "etc/docker/fpm/Dockerfile"):
-        images.extend(dockerfile_inputs(Path(path).read_text(), {}))
+        images.extend(dockerfile_inputs((root / path).read_text(), {}))
     for name, service in services.items():
         if service.get("image"):
             images.append(service["image"])

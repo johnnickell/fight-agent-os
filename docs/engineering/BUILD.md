@@ -5,6 +5,14 @@ then one complete final run for changed implementation. Apply [gate evidence reu
 across later roles, commits and administrative-only updates instead of automatically repeating the suite.
 A pass is not independent technical review, behavioral QA, merge, release or deployment approval.
 
+## TASK runtime binding
+
+Before local TASK setup, follow the [local resource lifecycle](RESOURCE_LIFECYCLE.md) and initialize one private
+original-intent receipt through `bin/runtime`. Existing owning wrappers then capture allocations and creator mounts.
+Later Work/Review/QA/repair stages validate and reuse that exact runtime, not another default stack. Missing/pending
+creation evidence holds advancement. Non-TASK/CI callers without a lifecycle locator retain their ordinary setup;
+this does not claim those external allocations were captured. The gate itself never initializes or replaces a runtime.
+
 ## Explicit setup
 
 Docker Compose, locked Composer dependencies, the pinned frontend installation and private metadata exports must
@@ -34,8 +42,13 @@ and local Dockerfile FROM inputs from its effective Compose model (including sel
 fixed repository build inputs. Missing/unsupported configuration or unresolved build inputs refuse admission
 before reclamation. The trusted local Docker socket accepts stable aliases such as Linux `/var/run -> /run`,
 without relaxing report/source/provenance path validation or same-engine/socket identity checks.
-A passing admission is not a cleanup-complete or application-gate verdict. `FIGHT_STORAGE_RECEIPT` can bind the existing private Work companion;
-otherwise admission state stays under ignored `var/`. No application runtime depends on `.runs/`.
+A passing admission is not a cleanup-complete or application-gate verdict. Bound TASKs use `bin/runtime
+storage-admit` and the SAME original lifecycle receipt; a competing `FIGHT_STORAGE_RECEIPT` refuses before effects.
+Non-TASK use may select an existing private companion; otherwise state stays in ignored `var/`. No application
+runtime depends on `.runs/`. Before declaring a stage handoff ready, run the lifecycle's executable
+[readiness check](RESOURCE_LIFECYCLE.md#standing-cleanup-readiness), preserving source/private reports externally
+and surfacing affected cleanup capabilities upstream. Actual acceptance, publication and worker-exit binding
+remain at their proper later stages, not circular prerequisites for the initial technical candidate.
 
 `./bin/up` prepares ignored cache mounts and builds/starts the complete HTTP/HTTPS stack explicitly, preserving
 database data. Use it again after environment or image/configuration changes so both PHP runtimes agree.
@@ -51,6 +64,11 @@ The CLI image includes Node 24.22.1/npm 11.19.1 from the same digest as `bin/cli
 its pinned Playwright 1.61.0 image, Debian browser libraries/fonts, PHP and Xdebug 3.5.0. Browser binaries are copied
 at image setup, not downloaded at runtime. The PHP image is larger; the focused frontend wrapper retains its
 separate Node/browser environments and requires `./bin/client storybook-setup` before focused browser checks.
+Both PHP Dockerfiles compile the same pinned Xdebug source archive from `https://xdebug.org/files/`,
+checking its SHA-256 against the publisher's [historical release checksum](https://xdebug.org/download/historical)
+before extraction. This avoids PECL's release-metadata lookup, which failed during TASK-00539's hosted setup;
+HTTP, checksum and compilation failures still fail setup. When deliberately changing Xdebug, update both
+Dockerfiles' version and publisher-verified checksum together and qualify CLI coverage and FPM loading.
 No Docker CLI or daemon socket is added to PHP. The October security candidate uses a human-authorized
 catalog-only `skipLibCheck` exception; see [runtime security qualification](SECURITY_RUNTIME_UPDATES.md).
 Application declaration validation and source strictness remain enabled. Passing focused checks does not
@@ -64,16 +82,17 @@ A command-line `--volume ...:/app:rw` is not a substitute: Compose can retain th
 Set `FIGHT_AGENT_OS_USER` to that same `UID:GID` before clean setup so the web service
 can write host-owned ignored caches/reports on Linux without DAC-bypass capabilities. Keep this setting in the
 shell environment for subsequent Compose commands, including `./bin/build`; it is part of service identity.
-CI records it for both setup and later steps. Unset preserves the existing default-root service identity for
-prepared environments; it does not make root-with-dropped-capabilities able to write another Linux user's
+Unset preserves the existing default-root service identity for prepared local environments; it does not make
+root-with-dropped-capabilities able to write another Linux user's
 `0755` directories. Do not switch identities over existing private/root-owned caches without explicitly
 reconciling their ownership; setup never recursively changes historical reports or permissions. Ordinary web
 execution still mounts source, locks and dependencies read-only. Host-side edits remain visible during development.
 
 ## One PHP-owned phase graph
 
-The host wrapper checks the running `web` service and its Compose configuration identity, then delegates with
-`docker compose exec -T web php scripts/build.php`. PHP runs these named phases, in order:
+The local host wrapper checks the running `web` service and its Compose configuration identity, then delegates
+with `docker compose exec -T web php scripts/build.php`. Hosted CI invokes `php scripts/build.php` directly
+on the runner after explicit native setup. Both entries use the same PHP-owned phases, in order:
 
 1. Composer version and strict manifest/lock validation, with network access disabled for Composer.
 2. Authoritative `./bin/planning-check`, without `--write`.
@@ -122,7 +141,11 @@ or reset. Normal backend completion/failure after a successful reset cleans the 
 PostgreSQL iteration therefore needs `./bin/database test-reset` after coverage cleanup.
 
 Frontend/Pi processes receive a minimal environment without application/database/provider secrets, an isolated HOME,
-offline npm and telemetry disabled. The service retains its ordinary Compose network for PostgreSQL and local browser
+offline npm and telemetry disabled. Native setup may explicitly select `FIGHT_BUILD_TOOL_PATH` (the qualified
+Node/npm directories plus system tools) and `PLAYWRIGHT_BROWSERS_PATH` (the installed browser directory).
+Only these path values cross into the sanitized environment; the ambient runner PATH, HOME and credentials do not.
+Unset values retain local defaults `/usr/local/bin:/usr/bin:/bin` and `/ms-playwright`.
+The local service retains its ordinary Compose network for PostgreSQL and local browser
 servers: it is **not a hostile-code sandbox or an OS-enforced network-none frontend container**. Checks use installed
 local resources, not registry/provider calls; browser captures reject observed external requests. The focused
 frontend wrapper still supplies network-none containers. Managed execution isolation remains TASK-00138's separate
@@ -151,15 +174,22 @@ Do not delete another TASK's evidence. No gate checks test the gate, tools, conf
 
 Warnings are preserved, not suppressed. PHP/tool/test warning failures remain mandatory; existing disclosed
 Sass/Bootstrap deprecations and browser-only Storybook warnings are not silently reclassified as errors or hidden.
-Report them with counts, actual coverage gaps and unavailable verification. Hosted CI uses explicit setup followed
-by this same `./bin/build`; hosted evidence is optional unless an accepted requirement makes it mandatory.
+Report them with counts, actual coverage gaps and unavailable verification. Hosted evidence is optional unless
+an accepted requirement makes it mandatory; a local container pass is not native hosted proof.
 
-The [hosted workflow](../../.github/workflows/build.yml) is also an explicit `bin/up` caller: it builds live
-browser assets and supplies the canonical localhost origin plus a short-lived localhost leaf signed by a
-job-private ephemeral CA. Only the job's host curl selects that CA through `CURL_CA_BUNDLE`; it is not installed
-into host/browser trust stores. This verifies the real TLS chain and hostname without enrolling machine trust,
-and is not evidence of interactive browser enrollment or production readiness. CA signing material is deleted
-after leaf issuance. The always-run cleanup targets the run/attempt-specific Compose project, including HTTPS
-services and disposable database volumes, then deletes its private `.env` and `var/https` even after failure.
-These inputs are outside the gate artifact allowlist. Never reuse this teardown against a developer project or
-upload private setup/TLS files. A local replay qualifies caller behavior, not a successful hosted run.
+## Runner-native CI
+
+The [hosted workflow](../../.github/workflows/build.yml) installs PHP 8.5/extensions/Xdebug and Composer 2,
+selects Node and npm from `client/package.json`, and runs the existing locked installation commands.
+`node scripts/dependencies.mjs record` owns the install receipt; the gate owns its subsequent validation.
+The installed Playwright CLI provisions Chromium and its Ubuntu dependencies into a job-private browser path.
+Explicit setup builds live client assets and exports private OpenAPI/validation metadata through their owning
+JS/PHP commands. Acceptance never installs or exports.
+
+Ubuntu 24.04's native PostgreSQL service supplies a dedicated non-superuser `agent_os_test` role/database over
+allowlisted loopback TCP. Only the guarded backend phase resets/migrates/cleans that test schema. Product tests
+own their ephemeral application keys in `tests/bootstrap.php`; CI creates no `.env`, application keys, TLS/CA,
+nginx/FPM, Docker images/services or developer stack. The sole gate step is **`php scripts/build.php`**, not a
+second phase graph or PHPUnit-only substitute. Artifact retention remains an explicit JSON/log/report allowlist,
+excluding private tool HOME, application configuration and credentials. The hosted VM owns disposal of its native
+prerequisites. Local developer Docker wrappers, TLS setup and lifecycle accounting remain unchanged.

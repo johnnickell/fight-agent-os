@@ -69,7 +69,15 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00546 repair cycle 1:** [R1/R2 owning repair](tasks/00546-TASK.md#repair-cycle-1--r1r2-2026-10-29)
+**TASK-00546 current integration:** [standing Land readiness](tasks/00546-TASK.md#integration-and-standing-land-readiness--2026-10-31)
+combines accepted TASK-00547's lifecycle with recoverable storage and executable preservation/capability checks.
+Original runtime/receipt/history are reused; the final combined-source 24-phase gate passed
+(`20261031T023423Z-15117`). External preservation and bounded real cleanup/resume are qualified; original
+capability/ACL and historical resource holds remain explicit. Independent Review/QA remain pending.
+Canonical ignored Work handoff owns current proof/affected holds;
+allowance stays 5 effective / 1 consumed / 4 remaining, without another routine disposal-approval step.
+
+**TASK-00546 repair cycle 1 — historical checkpoint:** [R1/R2 owning repair](tasks/00546-TASK.md#repair-cycle-1--r1r2-2026-10-29)
 passes focused endpoint-alias/effective-Compose-input regressions, but its one final changed-source gate failed in
 `ActivationApiTest::testRateBoundary` (429 expected, 500 received). Work verification is incomplete; coordinator
 intake owns the out-of-scope gate failure. Renewed independent Review and nonvisual QA remain pending. Scope/order/dependencies and

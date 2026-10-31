@@ -662,7 +662,7 @@ def visibility_contracts(module, evidence, helper):
             operation.host_consumers = lambda *args: None
             operation.subject_checks = lambda: None
             operation.save = lambda: None
-            operation.runtime = lambda: ({"project": "fixture", "working_directory": str(safe),
+            operation.runtime = lambda *args: ({"project": "fixture", "working_directory": str(safe),
                 "config_files": [{"path": "/fixture.yaml"}]}, ["docker", "compose"], {"services": {"web": {}}})
             result, reason = {}, None
             try:
@@ -712,6 +712,7 @@ def storage_contracts(module, evidence, helper):
         operation = module.Storage.__new__(module.Storage)
         operation.reserve, operation.allocation = 20, 4
         operation.engine_identity = {"id": "controlled"}
+        operation.engine = lambda: operation.engine_identity
         operation.attempt = {"admitted": False, "complete": False, "results": []}
         operation.save = lambda: None
         observations = []
@@ -820,6 +821,26 @@ def storage_contracts(module, evidence, helper):
     rows.append({"case": "unproven-image-absence", "passed": operation.attempt["results"][0]["status"] == "held",
                  "result": operation.attempt["results"][0], "effects": 0})
     rows.append({"case": "raw-nanosecond-retention", "passed": module.docker_timestamp(cache["LastUsedAt"]).microsecond == 123457})
+    for case in ("builder-unavailable-independent-image", "cache-time-unavailable-independent-image"):
+        operation = module.Storage.__new__(module.Storage)
+        operation.safe, operation.retention, operation.limit = evidence, 1, 8
+        operation.engine_identity = {"id": "controlled"}
+        operation.engine = lambda: operation.engine_identity
+        def builder():
+            if case == "builder-unavailable-independent-image":
+                raise module.Hold("controlled builder visibility unavailable")
+            return {"name": "controlled"}
+        operation.builder_identity = builder
+        operation.usage = lambda: [dict(cache, LastUsedAt="unavailable")]
+        operation.image_census = lambda: [{"id": root, "created": 1, "tags": [], "digests": ["busybox@" + root]}]
+        operation.selection = {"cache_ids": None, "image_ids": None}
+        operation.protected_inputs, operation.attempt = [], {"results": []}
+        operation.save = lambda: None
+        effects = []
+        operation.image = lambda item, result: (effects.append(item["id"]), result.update(status="removed"))
+        operation.reclaim()
+        rows.append({"case": case, "passed": effects == [root] and any(v["kind"] == "cache" and v["status"] == "held" for v in operation.attempt["results"]),
+                     "image_effects": len(effects), "results": operation.attempt["results"]})
     summary = {"helper_sha256": module.digest(helper.read_bytes()), "boundary": "controlled owning admission/cache/image methods; no real effects",
                "pass": all(row["passed"] for row in rows), "rows": rows}
     private_json(evidence / "storage-contracts.json", summary)
@@ -951,79 +972,83 @@ def endpoint_contracts(module, evidence, helper):
 
 
 def startup_input_contracts(module, evidence, helper):
-    """Intercept real bin/up admission and challenge its actual Compose input mapping"""
+    """Challenge SAME-binding admission with real config-only Compose and intercepted effects"""
+    from unittest.mock import patch
+    import lifecycle
     evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
     root = helper.parents[4]
-    shim = evidence / "shim"
-    shim.mkdir()
-    capture = evidence / "argv.json"
-    # Only configuration observations may reach Docker; admission exits before effects.
-    docker = run(["sh", "-c", "command -v docker"], root)
-    (shim / "docker").write_text("#!/bin/sh\ncase \" $* \" in *' config '*) [ \"${PROBE_CONFIG_FAIL:-}\" != yes ] || exit 72; exec " + docker + " \"$@\";; *) exit 80;; esac\n")
-    (shim / "docker").chmod(0o700)
-    (shim / "python3").write_text("#!" + sys.executable + "\nimport json,os,sys\nfrom pathlib import Path\nif any(v.endswith('/cleanup.py') for v in sys.argv[1:]):\n Path(" + repr(str(capture)) + ").write_text(json.dumps(sys.argv[1:]))\n sys.exit(79)\nos.execv(" + repr(sys.executable) + ", [" + repr(sys.executable) + ", *sys.argv[1:]])\n")
-    (shim / "python3").chmod(0o700)
     gateway = "nginx@sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951"
     node = next(line.split()[1] for line in (root / "etc/docker/cli/Dockerfile").read_text().splitlines() if line.startswith("FROM node@"))
     rows = []
-    selected = "docker.io/library/nginx@" + gateway.split("@", 1)[1]
-    dockerfile = evidence / "Dockerfile"
-    dockerfile.write_text("ARG BASE=" + selected + "\nFROM ${BASE} AS input\nFROM input AS final\n")
-    for case in ("digest-runtime", "selected-override", "selected-build", "build-only", "config-failed", "config-unavailable", "build-unavailable"):
+    original_query = lifecycle.query
+    for case in ("digest-runtime", "selected-override", "selected-build", "config-failed", "build-unavailable", "competing-receipt"):
+        reference = "docker.io/library/nginx@" + gateway.split("@", 1)[1] if case == "selected-override" else gateway
         override = evidence / (case + ".json")
-        model = {"services": {"https": {"image": selected if case == "selected-override" else gateway}}}
+        model = {"services": {"https": {"image": reference}}}
         if case in ("selected-build", "build-unavailable"):
-            model["services"]["web"] = {"build": {"dockerfile": str(dockerfile if case == "selected-build" else evidence / "missing-Dockerfile")}}
+            dockerfile = evidence / (case + "-Dockerfile")
+            if case == "selected-build":
+                dockerfile.write_text("ARG BASE=" + gateway + "\nFROM ${BASE} AS input\nFROM input AS final\n")
+            model["services"]["web"] = {"build": {"dockerfile": str(dockerfile)}}
         private_json(override, model)
-        env = dict(os.environ, PATH=str(shim) + os.pathsep + os.environ["PATH"],
-                   COMPOSE_FILE=str(root / "compose.yaml") + os.pathsep + str(override))
-        env.pop("COMPOSE_PATH_SEPARATOR", None)
-        if case == "config-failed":
-            env["PROBE_CONFIG_FAIL"] = "yes"
-        if case == "config-unavailable":
-            env["COMPOSE_FILE"] = str(evidence / "nonexistent.yaml")
-        if capture.exists():
-            capture.unlink()
-        result = subprocess.run([str(root / "bin/up"), *(["--build-only"] if case == "build-only" else [])],
-                                cwd=root, env=env, capture_output=True, timeout=30)
-        (evidence / (case + ".stderr")).write_bytes(result.stderr)
-        argv = json.loads(capture.read_text()) if capture.exists() else []
-        protected = [argv[index + 1] for index, value in enumerate(argv) if value == "--protect-image"]
-        if case in ("config-failed", "config-unavailable", "build-unavailable"):
-            passed = result.returncode not in (0, 79) and not argv
-            effects = []
-        else:
-            reference = selected if case in ("selected-override", "selected-build") else gateway
-            operation = module.Storage.__new__(module.Storage)
-            operation.safe, operation.retention, operation.limit = root, 1, 8
+        operation = lifecycle.Lifecycle.__new__(lifecycle.Lifecycle)
+        operation.root, operation.path = root, evidence / (case + "-receipt.json")
+        operation.document, operation.state = {}, {"policy": {}}
+        operation.complete = lambda: None
+        files = [root / "compose.yaml", override]
+        operation.binding = {"project": "task00546-input-fixture", "working_directory": str(root), "env_files": [],
+                             "config_files": [{"path": str(p), "sha256": module.digest(p.read_bytes())} for p in files]}
+        observed, protected = [], []
+        def query(argv, cwd):
+            observed.append(argv)
+            if case == "config-failed":
+                raise module.Hold("controlled config unavailable")
+            return original_query(argv, cwd)  # Real exact-bound config only, never allocation.
+        def admitted(storage, admit=True):
+            protected.extend(storage.protected_inputs)
+            return {"admitted": True, "complete": False}
+        reason = None
+        # A hostile/irrelevant ambient Compose selection must not replace this binding.
+        env = {"COMPOSE_FILE": str(evidence / "unrelated-missing-config.yaml")}
+        env["FIGHT_STORAGE_RECEIPT"] = str(evidence / "other.json") if case == "competing-receipt" else str(operation.path)
+        with patch.dict(os.environ, env), patch.object(lifecycle, "query", query), patch.object(lifecycle.Storage, "run", admitted):
+            try:
+                operation.storage_admit([])
+            except (module.Hold, lifecycle.Hold, OSError, ValueError, lifecycle.Unavailable):
+                reason = "expected unavailable/conflicting input hold"
+        negative = case in ("config-failed", "build-unavailable", "competing-receipt")
+        effects = []
+        if not negative:
+            storage = module.Storage.__new__(module.Storage)
             identity = reference.split("@", 1)[1]
-            operation.selection = {"cache_ids": [], "image_ids": [identity]}
-            operation.protected_inputs = protected
-            operation.engine_identity = {"id": "controlled"}
-            operation.engine = lambda: operation.engine_identity
-            operation.builder_identity = lambda: {"name": "controlled"}
-            operation.usage = lambda: []
-            operation.image_census = lambda: [{"id": identity, "created": 1, "digests": [reference], "tags": []}]
-            operation.attempt, effects = {"results": []}, []
-            operation.save = lambda: None
-            operation.image = lambda item, row: (effects.append(item["id"]), row.update(status="removed"))
-            operation.reclaim()
-            # build-only does not start https, but fixed Node inputs are still required.
-            passed = result.returncode == 79 and node in protected and (case == "build-only" or reference in protected and not effects)
+            storage.safe, storage.retention, storage.limit = root, 1, 8
+            storage.selection = {"cache_ids": [], "image_ids": [identity]}
+            storage.protected_inputs, storage.engine_identity = protected, {"id": "controlled"}
+            storage.engine = lambda: storage.engine_identity
+            storage.builder_identity = lambda: {"name": "controlled"}
+            storage.usage = lambda: []
+            storage.image_census = lambda: [{"id": identity, "created": 1, "digests": [reference], "tags": []}]
+            storage.attempt, storage.save = {"results": []}, lambda: None
+            storage.image = lambda item, row: (effects.append(item["id"]), row.update(status="removed"))
+            storage.reclaim()
+            passed = reason is None and node in protected and reference in protected and not effects and any(str(override) in argv for argv in observed)
             if case == "digest-runtime":
-                operation.protected_inputs = []
-                operation.attempt = {"results": []}
+                storage.protected_inputs = []
+                storage.reclaim()
+                rows.append({"case": "unprotected-no-consumer-control", "passed": effects == [identity]})
                 effects.clear()
-                operation.reclaim()
-                rows.append({"case": "unprotected-no-consumer-control", "passed": effects == [identity],
-                             "intercepted_image_effects": list(effects)})
-                effects.clear()
-        rows.append({"case": case, "passed": passed, "exit": result.returncode,
-                     "protected_inputs": protected, "intercepted_image_effects": effects})
-    summary = {"helper_sha256": module.digest(helper.read_bytes()), "wrapper_sha256": module.digest((root / "bin/up").read_bytes()),
-               "resolver_sha256": module.digest((root / "scripts/compose_storage_inputs.py").read_bytes()),
-               "checker_sha256": module.digest(Path(__file__).read_bytes()), "rows": rows, "pass": all(row["passed"] for row in rows),
-               "boundary": "Actual bin/up and config-only Docker Compose with selected overrides; admission/effect intercepted; no allocation, registry or removal"}
+        else:
+            passed = reason is not None and not protected
+        rows.append({"case": case, "passed": passed, "protected_inputs": protected, "hold": reason, "effects": effects})
+    shim = evidence / "shim"; shim.mkdir()
+    (shim / "python3").write_text("#!" + sys.executable + "\nimport sys\nsys.exit(79 if 'storage-admit' in sys.argv and any(v.endswith('/lifecycle.py') for v in sys.argv) else 80)\n")
+    (shim / "python3").chmod(0o700)
+    for argv in ([], ["--build-only"]):
+        result = subprocess.run([str(root / "bin/up"), *argv], cwd=root, env=dict(os.environ, PATH=str(shim) + os.pathsep + os.environ["PATH"]), capture_output=True)
+        rows.append({"case": "owning-wrapper-" + ("build-only" if argv else "startup"), "passed": result.returncode == 79, "exit": result.returncode})
+    summary = {"pass": all(v["passed"] for v in rows), "rows": rows,
+               "source": {str(p.relative_to(root)): module.digest(p.read_bytes()) for p in (helper, root / "bin/up", root / "scripts/compose_storage_inputs.py", Path(lifecycle.__file__), Path(__file__))},
+               "boundary": "real config-only Compose and actual wrapper boundary; lifecycle receipt/storage/effects controlled, zero Docker allocation/removal"}
     private_json(evidence / "startup-input-contracts.json", summary)
     print(json.dumps(summary, indent=2))
     return 0 if summary["pass"] else 1

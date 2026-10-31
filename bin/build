@@ -3,18 +3,18 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-if ! docker compose ps --status running --services | grep -Fxq web; then
+if ! ./bin/runtime docker compose ps --status running --services | grep -Fxq web; then
   echo "The Compose web service is not running. Start it with ./bin/up." >&2
   exit 1
 fi
 
-container=$(docker compose ps -q web)
-expected=$(docker compose config --hash web | awk '{print $2}')
-actual=$(docker inspect --format '{{ index .Config.Labels "com.docker.compose.config-hash" }}' "$container")
+container=$(./bin/runtime docker compose ps -q web)
+expected=$(./bin/runtime docker compose config --hash web | awk '{print $2}')
+actual=$(./bin/runtime docker inspect --format '{{ index .Config.Labels "com.docker.compose.config-hash" }}' "$container")
 if [ -z "$expected" ] || [ "$actual" != "$expected" ]; then
   echo "The Compose web configuration is stale. Refresh it explicitly with ./bin/up." >&2
   exit 1
 fi
 
-python3 .pi/skills/land/scripts/cleanup.py --storage-admit ${FIGHT_STORAGE_RECEIPT:+--receipt "$FIGHT_STORAGE_RECEIPT"}
-exec docker compose exec -T web php scripts/build.php
+./bin/runtime storage-admit
+exec ./bin/runtime docker compose exec -T web php scripts/build.php

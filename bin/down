@@ -1,10 +1,13 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(dirname "$0")/.."
+if [ "$#" -eq 0 ] && [ -f var/resource-lifecycle.json ]; then
+    exec ./bin/runtime retire
+fi
 if [ "${1:-}" = --receipt ] && [ "$#" -eq 2 ]; then
     # The same executor validates original creation, disposability, workers, peers,
     # mounts and all stopped consumers; no down -v or anonymous-volume fallback.
     exec python3 .pi/skills/land/scripts/cleanup.py --receipt "$2" --runtime-retire --apply
 fi
-echo 'Shutdown requires ./bin/down --receipt ABSOLUTE_DISPOSABLE_RUNTIME_RECEIPT. Recover original creation/mount/data authority in the existing Work companion; unknown or durable storage stays protected.' >&2
+echo 'Shutdown requires the original lifecycle runtime_authority (./bin/down), or ./bin/down --receipt ABSOLUTE_DISPOSABLE_RUNTIME_RECEIPT for historical plans. Unknown/durable data and active consumers stay protected.' >&2
 exit 1

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { RegisteredChildren } from '../src/workspace/registered-children.mjs';
 import { directory, sessionFileIdentity } from '../src/observation/custody.mjs';
+import { recycledInode } from './helpers/session-file.mjs';
 
 function fixture(t, preferences = false) {
   const cwd = realpathSync(mkdtempSync(join(tmpdir(), 'registered-'))), other = join(cwd, 'other'); mkdirSync(other);
@@ -140,13 +141,13 @@ test('same-session resume restores a pin only after fresh admission; forged pref
   const forged = new RegisteredChildren(f.cwd, () => {}, f.options); t.after(() => forged.close());
   await forged.start(f.parent, f.file); assert.equal(forged.pin, null); assert.notEqual(forged.selected, 'forged'); forged.close();
 });
-test('an actual session file replacement with the same caller ID does not match the native launch lifetime', async t => {
-  const f = fixture(t); const original = sessionFileIdentity(f.file); rmSync(f.file); writeFileSync(f.file, 'replacement');
+for (const recycled of [false, true]) test(`same-ID session replacement refuses the old launch lifetime (${recycled ? 'controlled recycled inode' : 'native stat'})`, async t => {
+  const f = fixture(t); if (recycled) recycledInode(t); const original = sessionFileIdentity(f.file); rmSync(f.file); writeFileSync(f.file, 'replacement');
   f.observe.verify = async () => ({ parent: f.parent, parentFile: original, generation: f.generation, at: 100000, children: f.values() });
   await f.observe.start(f.parent, f.file); assert.equal(f.observe.sources.size, 0); assert.equal(f.observe.verifiedWorktree, null);
 });
-test('same-path session file replacement clears a pin and rejects a late admitted response', async t => {
-  const f = fixture(t); await f.observe.start(f.parent, f.file); f.observe.action('pin');
+for (const recycled of [false, true]) test(`same-path replacement clears a pin and rejects late admission (${recycled ? 'controlled recycled inode' : 'native stat'})`, async t => {
+  const f = fixture(t); if (recycled) recycledInode(t); await f.observe.start(f.parent, f.file); f.observe.action('pin');
   const old = { parent: f.parent, parentFile: sessionFileIdentity(f.file), generation: f.generation, at: 100000, children: f.values() };
   let complete;
   f.observe.verify = () => new Promise(resolve => { complete = resolve; });
@@ -156,6 +157,21 @@ test('same-path session file replacement clears a pin and rejects a late admitte
   assert.equal(f.observe.verifiedWorktree, null); assert.equal(f.observe.pin, null);
   assert.equal(f.observe.sources.size, 0); assert.match(f.observe.view(), /replaced|unavailable/i);
 });
+test('missing session files and legacy/null witnesses cannot admit children', async t => {
+  const f = fixture(t);
+  const actual = sessionFileIdentity(f.file);
+  for (const parentFile of [null, { path: actual.path, dev: Number(actual.dev), ino: Number(actual.ino) }]) {
+    f.observe.verify = async () => ({ parent: f.parent, parentFile, generation: f.generation, at: 100000, children: f.values() });
+    await f.observe.start(f.parent, f.file); await f.observe.refresh();
+    assert.equal(f.observe.sources.size, 0); assert.equal(f.observe.verifiedWorktree, null);
+  }
+  f.observe.close(); rmSync(f.file);
+  const pending = new RegisteredChildren(f.cwd, () => {}, { ...f.options, verify: async () => ({ parent: f.parent, parentFile: null, generation: f.generation, at: 100000, children: f.values() }) });
+  t.after(() => pending.close());
+  await pending.start(f.parent, f.file);
+  assert.equal(pending.sources.size, 0); assert.equal(pending.verifiedWorktree, null);
+});
+
 test('an automatic selection change clears a frozen display and exposes stale heartbeat truthfully', async t => {
   const f = fixture(t), first = f.values()[0]; await f.observe.start(f.parent, f.file);
   f.observe.action('pause');

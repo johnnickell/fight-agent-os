@@ -1,7 +1,7 @@
 // Trusted-local provider-process custody, not independent native-origin attestation or a same-user sandbox.
 import { createHash, randomBytes, verify } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { lstatSync, mkdirSync, opendirSync, readFileSync, realpathSync, unlinkSync } from 'node:fs';
+import { constants, closeSync, fstatSync, lstatSync, mkdirSync, openSync, opendirSync, readFileSync, realpathSync, unlinkSync } from 'node:fs';
 import { createConnection } from 'node:net';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,11 +22,36 @@ export function privateFile(path, socket = false) {
   if (!(socket ? info.isSocket() : info.isFile()) || info.uid !== process.getuid() || info.mode & 0o077 || (!socket && info.size > 8192)) throw new Error('Invalid custody candidate');
   return info;
 }
+const birthScript = fileURLToPath(new URL('./session-file-birth.py', import.meta.url));
+const decimal = value => typeof value === 'string' && /^(0|[1-9][0-9]{0,29})$/.test(value);
+export function validSessionFile(value) {
+  return value !== null && typeof value === 'object' && Object.keys(value).length === 5 && value.version === 2 &&
+    typeof value.path === 'string' && value.path.startsWith('/') && value.path.length <= 8192 && !value.path.includes('\0') &&
+    decimal(value.dev) && decimal(value.ino) && value.ino !== '0' && decimal(value.birthtimeNs) &&
+    BigInt(value.birthtimeNs) > 0n && BigInt(value.birthtimeNs) % 1000000000n !== 0n;
+}
+export function sameSessionFile(a, b) {
+  return validSessionFile(a) && validSessionFile(b) && ['path', 'dev', 'ino', 'birthtimeNs'].every(key => a[key] === b[key]);
+}
 export function sessionFileIdentity(path) {
   if (!path) return null;
-  const canonical = realpathSync(path), info = lstatSync(canonical);
-  if (!info.isFile()) throw new Error('Persistent parent session unavailable');
-  return { path: canonical, dev: info.dev, ino: info.ino };
+  if (!['darwin', 'linux'].includes(process.platform)) throw new Error('Native session file lifetime unsupported');
+  const canonical = realpathSync(path);
+  // Pin this observation to one open inode while inspecting the path; no retained handles or registry.
+  const fd = openSync(canonical, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+  try {
+    const info = fstatSync(fd, { bigint: true });
+    if (!info.isFile()) throw new Error('Persistent parent session unavailable');
+    // Linux's stat fallback may substitute mutable ctime. Require explicit native STATX_BTIME support instead.
+    const birthtimeNs = process.platform === 'linux'
+      ? JSON.parse(execFileSync('python3', ['-I', '-B', birthScript], { stdio: ['ignore', 'pipe', 'ignore', fd], encoding: 'utf8', timeout: 500, maxBuffer: 4096 })).birthtimeNs
+      : info.birthtimeNs?.toString();
+    const witness = { version: 2, path: canonical, dev: info.dev.toString(), ino: info.ino.toString(), birthtimeNs };
+    if (!validSessionFile(witness)) throw new Error('Native session file lifetime unavailable/ambiguous');
+    const current = lstatSync(canonical, { bigint: true });
+    if (!current.isFile() || current.dev !== info.dev || current.ino !== info.ino || realpathSync(path) !== canonical) throw new Error('Native session file replaced during observation');
+    return witness;
+  } finally { closeSync(fd); }
 }
 export function processIdentity(pid) {
   if (!Number.isSafeInteger(pid) || pid < 1) throw new Error('Invalid custodian PID');
@@ -70,7 +95,7 @@ export async function challenge(cwd, session, file, descriptor, { now = Date.now
   signal?.throwIfAborted();
   const root = directory(cwd, session), expected = join(root, `${descriptor.generation}.json`);
   if (file !== expected || descriptor.version !== 1 || descriptor.parent !== session || descriptor.primary !== realpathSync(cwd) ||
-      !/^[a-f0-9-]{36}$/.test(descriptor.generation) || typeof descriptor.publicKey !== 'string' || descriptor.publicKey.length > 256 ||
+      !validSessionFile(descriptor.parentFile) || !/^[a-f0-9-]{36}$/.test(descriptor.generation) || typeof descriptor.publicKey !== 'string' || descriptor.publicKey.length > 256 ||
       !Number.isSafeInteger(descriptor.created) || now() < descriptor.created || now() - descriptor.created > limits.lifetime) throw new Error('Stale or cross-session custody candidate');
   const endpoint = endpointPath(cwd, session, descriptor.generation), info = privateFile(endpoint, true);
   if (info.dev !== descriptor.endpoint.dev || info.ino !== descriptor.endpoint.ino) throw new Error('Custody endpoint replaced');
@@ -112,8 +137,9 @@ export async function challenge(cwd, session, file, descriptor, { now = Date.now
   const current = privateFile(endpoint, true);
   if (current.dev !== info.dev || current.ino !== info.ino || value.nonce !== nonce || value.parent !== session || value.generation !== descriptor.generation ||
       value.primary !== descriptor.primary || value.pid !== descriptor.pid || !descriptor.launcher ||
-      JSON.stringify(value.launcher) !== JSON.stringify(descriptor.launcher) || JSON.stringify(value.parentFile) !== JSON.stringify(descriptor.parentFile) ||
+      JSON.stringify(value.launcher) !== JSON.stringify(descriptor.launcher) || !sameSessionFile(value.parentFile, descriptor.parentFile) ||
       !Number.isSafeInteger(value.at) || Math.abs(now() - value.at) > 5000 || !Array.isArray(value.children) || value.children.length > limits.children) throw new Error('Custody witness changed or expired');
-  if (descriptor.parentFile && JSON.stringify(sessionFileIdentity(descriptor.parentFile.path)) !== JSON.stringify(descriptor.parentFile)) throw new Error('Parent session file replaced');
+  if (!sameSessionFile(sessionFileIdentity(descriptor.parentFile.path), descriptor.parentFile)) throw new Error('Parent session file replaced/unavailable or legacy witness');
+  if (performance.now() - started >= 1000) throw new Error('Custody challenge timeout');
   return value;
 }
