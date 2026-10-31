@@ -46,7 +46,119 @@ def bytes_state(root):
             for p in [root, *root.rglob('*')] if '.git' not in p.relative_to(root).parts}
 
 
-def qualify(evidence):
+def qualify_outcomes(fixtures, evidence):
+    """A completion outcome must outlive every effect, including a stored partial retry"""
+    safe, checkout = fixtures / 'outcomes/safe', fixtures / 'outcomes/task'
+    safe.mkdir(parents=True)
+    git(safe, 'init', '-b', 'develop')
+    (safe / '.gitignore').write_text('.runs/\nvar/\n')
+    (safe / 'checkout-outcome.md').write_text('Committed outcome inside disposable source must be refused\n')
+    git(safe, 'add', '.gitignore', 'checkout-outcome.md')
+    git(safe, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-m', 'Outcome fixture')
+    git(safe, 'worktree', 'add', '-b', 'feature/task-00548-outcomes', str(checkout))
+    outcome = safe / 'outcome.md'
+    outcome.write_text('Original finite fixture cancellation and surviving outcome\n')
+    surviving = outcome.read_bytes()
+    binding = json.loads(call(checkout, 'prepare', '--task', TASK, '--source-only'))
+    record = Path(binding['record'])
+    lock = Path(str(record) + '.lock')
+    oid = git(checkout, 'rev-parse', 'HEAD')
+    aliases = []
+    cases = []
+    try:
+        call(checkout, 'paths', 'var/disposable')
+        temporary = checkout / 'var/disposable/outcome.md'
+        temporary.write_text('Temporary outcome must be refused\n')
+        lock.unlink()  # original fixture owner challenges refusal before lock creation
+        snapshot = bytes_state(safe), bytes_state(checkout)
+        call(safe, 'complete', '--task', TASK, '--outcome', str(checkout / 'checkout-outcome.md'),
+             '--cancel-oid', oid, '--authority', 'Original finite outcome fixture cancellation', expected=1)
+        assert snapshot == (bytes_state(safe), bytes_state(checkout)) and not lock.exists()
+        call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--cancel-oid', oid,
+             '--authority', 'Original finite outcome fixture cancellation')
+        # Original fixture owner creates these aliases, never the real task record.
+        for name, target, symlink in (
+                ('record-hardlink', record, False), ('lock-hardlink', lock, False),
+                ('record-alias', record, True),
+                ('checkout-alias', checkout, True), ('temporary-alias', temporary.parent, True)):
+            alias = safe / name
+            alias.symlink_to(target, target_is_directory=target.is_dir()) if symlink else os.link(target, alias)
+            aliases.append(alias)
+        pending_save = record.with_name(record.name + '.tmp')
+        invalid = [checkout / 'checkout-outcome.md', record, lock, pending_save, temporary,
+                   safe / 'record-hardlink', safe / 'lock-hardlink',
+                   safe / 'record-alias', safe / 'checkout-alias/checkout-outcome.md',
+                   safe / 'temporary-alias/outcome.md']
+        for candidate in invalid:
+            if candidate == pending_save:
+                pending_save.write_text('Atomic bookkeeping is not a surviving outcome\n')
+            snapshot = bytes_state(safe), bytes_state(checkout)
+            print('Reject outcome without effects: ' + str(candidate.relative_to(fixtures)), flush=True)
+            call(safe, 'complete', '--task', TASK, '--outcome', str(candidate), '--cancel-oid', oid,
+                 '--authority', 'Original finite outcome fixture cancellation', expected=1)
+            assert snapshot == (bytes_state(safe), bytes_state(checkout)), 'refusal changed resources or disposition'
+            cases.append(str(candidate.relative_to(fixtures)))
+            pending_save.unlink(missing_ok=True)
+        call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--cancel-oid', oid,
+             '--authority', 'Original finite outcome fixture cancellation')
+        admitted = record.read_bytes()
+        (safe / 'record-hardlink').unlink()
+        os.link(record, safe / 'record-hardlink')
+        # Model previously accepted stored dispositions through fixture setup only.
+        # Finish/retire must revalidate BEFORE their first resource or record effect.
+        for candidate in invalid:
+            if not candidate.is_file():
+                continue
+            doc = json.loads(admitted)
+            doc['outcome'] = str(candidate)
+            record.write_text(json.dumps(doc))
+            try:
+                for action in ('finish', 'retire'):
+                    snapshot = bytes_state(safe), bytes_state(checkout)
+                    call(safe, action, '--task', TASK, *(['--outcome', str(candidate)] if action == 'finish' else []), expected=1)
+                    assert snapshot == (bytes_state(safe), bytes_state(checkout)), 'invalid stored outcome allowed cleanup effects'
+            finally:
+                record.write_bytes(admitted)
+        # A real partial finish removes temporary leaves but preserves private data.
+        private = checkout / 'var/private'
+        private.write_text('Original fixture owner retains this until partial retry is checked\n')
+        held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1)
+        assert 'ignored' in held and not temporary.exists() and record.exists()
+        partial = record.read_bytes()
+        for candidate in (checkout / 'checkout-outcome.md', record, lock):
+            doc = json.loads(partial); doc['outcome'] = str(candidate)
+            record.write_text(json.dumps(doc))
+            try:
+                snapshot = bytes_state(safe), bytes_state(checkout)
+                call(safe, 'finish', '--task', TASK, '--outcome', str(candidate), expected=1)
+                assert snapshot == (bytes_state(safe), bytes_state(checkout)), 'partial retry lost its required outcome'
+            finally:
+                record.write_bytes(partial)
+        private.unlink()
+        assert outcome.read_bytes() == surviving
+        result = {'completion_refusals_without_effects': cases, 'refusal_does_not_create_missing_lock': True,
+                  'stored_disposition_revalidated_before_effects': True,
+                  'partial_retry_revalidated_before_effects': True, 'surviving_safe_checkout_outcome': True}
+    finally:
+        # The ORIGINAL outer fixture owner releases aliases and uses the SAME public
+        # completion/finish path even if an assertion fails. No direct Git fallback.
+        for alias in aliases:
+            alias.unlink(missing_ok=True)
+        record.with_name(record.name + '.tmp').unlink(missing_ok=True)
+        (checkout / 'var/private').unlink(missing_ok=True)
+        if record.exists():
+            call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--cancel-oid', oid,
+                 '--authority', 'Original finite outcome fixture source/ref teardown')
+            call(safe, 'finish', '--task', TASK, '--outcome', str(outcome))
+        assert not checkout.exists() and not record.exists() and not lock.exists()
+        assert not git(safe, 'for-each-ref', '--format=%(refname)', 'refs/heads/feature/task-00548-outcomes')
+        assert outcome.read_bytes() == surviving, 'valid external outcome destroyed by disposal'
+        (evidence / 'outcome-teardown.json').write_text(json.dumps({'checkout_ref_record_lock_absent': True,
+            'safe_outcome_bytes_unchanged': True}) + '\n')
+    return result
+
+
+def qualify(evidence, outcome_only=False):
     global ENV
     evidence.mkdir(parents=True, exist_ok=False)
     fixtures = Path(tempfile.mkdtemp(prefix='fixtures-', dir=evidence))
@@ -75,6 +187,12 @@ def qualify(evidence):
     results = []
     completed = False
     try:
+        results.append(qualify_outcomes(fixtures, evidence))
+        if outcome_only:
+            assert before == observed(), 'Docker identities changed during outcome qualification'
+            completed = True
+            (evidence / 'result.json').write_text(json.dumps({'passed': True, 'outcomes': results}, indent=2) + '\n')
+            return results
         for cycle in (1, 2):
             safe, checkout = fixtures / str(cycle) / 'safe', fixtures / str(cycle) / 'task'
             safe.mkdir(parents=True)
@@ -114,6 +232,19 @@ def qualify(evidence):
                 assert snapshot == (bytes_state(safe), bytes_state(checkout)), 'inspect mutated state'
                 call(checkout, 'docker', 'compose', 'up', '--detach', '--wait', 'postgres_test')
                 first = run(['docker', 'ps', '-aq', '--no-trunc', '--filter', 'label=com.docker.compose.project=' + project]).splitlines()
+                # A pre-repair stored disposition cannot retire even the first real
+                # Docker resource. These bytes are fixture setup, not a caller API.
+                original = record.read_bytes()
+                stored = json.loads(original)
+                stored.update(outcome=str(record), remove_checkout=True)
+                record.write_text(json.dumps(stored))
+                try:
+                    snapshot = bytes_state(safe), bytes_state(checkout), observed()
+                    for action in ('finish', 'retire'):
+                        call(safe, action, '--task', TASK, *(['--outcome', str(record)] if action == 'finish' else []), expected=1)
+                        assert snapshot == (bytes_state(safe), bytes_state(checkout), observed()), 'outcome refusal allowed effects'
+                finally:
+                    record.write_bytes(original)
                 call(checkout, 'docker', 'compose', 'up', '--detach', '--no-recreate', 'postgres_test')
                 assert first == run(['docker', 'ps', '-aq', '--no-trunc', '--filter', 'label=com.docker.compose.project=' + project]).splitlines()
                 call(checkout, 'docker', 'run', '--rm', '--pull=never', '--network=none', 'postgres:17-bookworm', 'sh', '-c', 'exit 7', expected=7)
@@ -247,6 +378,7 @@ def qualify(evidence):
                 run(['python3', ROOT / '.pi/skills/build/scripts/cleanup-continuation.py', '--attempt', attempt,
                      '--receipt', record, '--apply', '--finish'], cwd=safe)
                 assert not checkout.exists() and not record.exists() and not Path(str(record) + '.lock').exists()
+                assert outcome.is_file() and 'Original bounded fixture cancellation' in outcome.read_text()
                 assert not git(safe, 'for-each-ref', '--format=%(refname)', f'refs/heads/feature/task-00548-public{cycle}')
                 # Task monitor fixture evidence is outer-owned, not silently adopted.
                 shutil.rmtree(safe / '.runs/build')
@@ -255,6 +387,8 @@ def qualify(evidence):
                     'read_only_inspect': True, 'active_workers_held': True, 'unknown_volume_unchanged': True,
                     'foreign_stopped_network_and_volume_consumer_unchanged': True,
                     'interrupted_after_native_allocation': cycle == 1, 'locator_before_git_and_private_parent_preserved': True,
+                    'invalid_stored_outcome_refused_before_real_docker_effects': True,
+                    'external_outcome_survives_complete_disposal': True,
                     'docker_retirement_without_wt': True, 'missing_wt_holds_only_git': True,
                     'pre_and_post_remove_hooks_held_without_execution': True,
                     'worktrunk_retained_unmerged_and_branch_only_resume': cycle == 2,
@@ -320,6 +454,7 @@ def qualify(evidence):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--evidence', required=True, type=Path)
+    parser.add_argument('--outcome-only', action='store_true', help='Run the bounded public outcome regression only')
     args = parser.parse_args()
     os.umask(0o077)
-    print(json.dumps(qualify(args.evidence.resolve())))
+    print(json.dumps(qualify(args.evidence.resolve(), args.outcome_only)))

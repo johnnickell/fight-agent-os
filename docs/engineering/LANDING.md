@@ -490,17 +490,22 @@ exact remaining effects to the owning coordinator. After observing worker exit, 
 cleanup from the canonical safe checkout within existing authority, using a cleanup-only Land worker there when
 its role requires delegation. Do not dispatch that continuation from the removal candidate, terminate the active
 coordinator, or return an already-ended worker-cwd hold as a human prerequisite.
-Use `git worktree remove` without force only for a clean, inactive, isolated owned checkout at the qualified
-candidate, after preservation and container retirement. Re-query worktree registration and filesystem absence;
-removal is not the final tool operation because postconditions and branch cleanup still follow. Never switch or
-remove the selected main checkout merely to make its branch eligible. Before branch deletion, prove the exact
-ref is not checked out in **any** worktree and no active session/consumer needs it. Prefer `git branch -d` when
-Git's ancestry/upstream check permits it. If Git refuses only because a proven published-unmerged or squash-merged
-tip is not an ancestor of the safe checkout, the above proof permits exact compare-and-delete with
-`git update-ref -d "$local_ref" "$proven_oid"` (bound full `refs/heads/...` and verified old OID), not blanket
-`branch -D`. Recheck the ref/worktree/ownership immediately beforehand; an OID change or competing activity
-holds deletion. Remove only that owned branch's obsolete configuration if present, never other refs/config.
-Record which proof/tool was used and verify ref absence. Do not delete any remote ref.
+Use the [shared resource procedure](RESOURCE_LIFECYCLE.md#retire-runtime-then-finish-the-task) to record the exact
+publication/cancellation disposition and surviving safe-checkout outcome, then finish from that safe checkout.
+Only Worktrunk removes the qualified isolated checkout/local ref: the owning command uses explicit-target
+`wt remove --foreground --format=json`, closed stdin and no force, reap, approval or hook-skipping options.
+Recheck exact ref/OID, registration, clean source, ignored/private data and consumers before removal; an OID change,
+competing activity or unavailable visibility holds the affected effect. Never switch or remove the selected
+main/current checkout merely to make its branch eligible, or delete a ref checked out in another worktree.
+
+Publication/cancellation proof does not override Worktrunk's integration or hook requirements. Missing/unsupported
+`wt`, configured removal hooks or a retained unmerged branch are specific Git holds, not authority for direct Git
+removal or a compare-and-delete fallback. Verify actual filesystem, registration and exact ref absence as well as
+structured output; exit 0 can mean partial removal. Resume only remaining effects through the same command,
+including Worktrunk branch-only removal after checkout absence. Surviving task-branch local configuration is a
+metadata hold retaining the resource record, including absent-ref retries; the operator owns its exact disposition.
+Do not delete Git configuration or shared Worktrunk caches/state. Record actual tool outcomes and holds separately
+from independently eligible Docker effects. Do not delete any remote ref.
 
 ### Retire task Docker resources
 

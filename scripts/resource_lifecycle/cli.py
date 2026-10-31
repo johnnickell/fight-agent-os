@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from .preparation import locator, paths, prepare
-from .resources import (Hold, Retirement, absolute, atomic, load, locked, process, require, text)
+from .resources import (Hold, Retirement, absolute, atomic, final_outcome, load, locked, process, require, text)
 from .runtime import Runtime, storage_admit
 
 
@@ -32,10 +32,7 @@ def record_path(root, task=None, receipt=None):
 
 
 def complete(path, doc, args):
-    outcome = absolute(args.outcome)
-    require(outcome.is_file() and not outcome.is_symlink(), 'existing final outcome required')
-    require(not any(Path(v['id']) == outcome or Path(v['id']) in outcome.parents for v in doc['temporary']),
-            'final outcome must survive temporary disposal; record it in the existing TASK/PR')
+    outcome = final_outcome(path, doc, args.outcome)
     oid = text(['git', 'rev-parse', doc['ref']], Path(doc['safe']))
     require(re.fullmatch(r'[0-9a-f]{40}', oid), 'exact source commit required')
     if args.cancel_oid:
@@ -141,6 +138,14 @@ def main():
             os.chdir(doc['safe'])
             Retirement(path).run(runtime_only=not bool(doc.get('outcome')))
             return 1 if report['binding_hold'] or doc['pending'] or doc.get('preparing') else 0
+        # Invalid outcomes must not even create a missing lock. Revalidate under
+        # that lock below as well; preflight does not authorize later disposal.
+        if args.action in ('complete', 'finish', 'retire'):
+            doc = load(path)
+            if args.action == 'complete':
+                final_outcome(path, doc, args.outcome)
+            elif doc.get('outcome') or args.action == 'finish':
+                final_outcome(path, doc, doc.get('outcome', ''))
         with locked(path):
             doc = load(path)
             if args.action in ('retire', 'finish'):

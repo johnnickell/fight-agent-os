@@ -63,6 +63,22 @@ def inside(path, root):
     return path == root or root in path.parents
 
 
+def final_outcome(record, doc, value):
+    """Keep the necessary outcome outside every disposable path and bookkeeping alias"""
+    outcome = absolute(value)
+    require(outcome.is_file() and not outcome.is_symlink(), 'existing final outcome required')
+    checkout, safe = Path(doc['checkout']), Path(doc['safe'])
+    targets = [record, Path(str(record) + '.lock'), record.with_name(record.name + '.tmp')]
+    targets.extend(Path(item['id']) for item in doc.get('temporary', []))
+    if checkout != safe:
+        targets.append(checkout)
+    for target in targets:
+        require(not inside(outcome, target) and not inside(outcome, target.resolve()) and
+                not (target.exists() and outcome.samefile(target)),
+                'final outcome must survive checkout, temporary and record/lock disposal; record it in the safe checkout TASK/PR')
+    return outcome
+
+
 def atomic(path, value):
     temp = path.with_name(path.name + '.tmp')
     try:
@@ -262,6 +278,8 @@ class Retirement:
             atomic(self.path, self.document)
 
     def effect(self, kind, item, operation):
+        if self.document.get('outcome'):
+            final_outcome(self.path, self.document, self.document['outcome'])
         result = {'kind': kind, 'id': item['id']}
         try:
             if kind in (*KINDS, 'builder'):
@@ -433,6 +451,10 @@ class Retirement:
 
     def run(self, runtime_only=False, finish=False):
         require(Path.cwd().resolve() == self.root, 'retirement runs from the canonical safe checkout')
+        # Recheck stored dispositions, including partial retries, BEFORE any Docker,
+        # filesystem, Git or record effect. Completion-time admission is not a lease.
+        if self.document.get('outcome') or finish:
+            final_outcome(self.path, self.document, self.document.get('outcome', ''))
         for kind in KINDS:
             for item in self.document['resources'].get(kind, []):
                 self.effect(kind, item, lambda result, k=kind, i=item: self.resource(k, i, result))
@@ -519,6 +541,7 @@ class Retirement:
                 docker_consumers(parent, self.root)
                 parents.append(parent)
                 expected.add(parent)
+            final_outcome(self.path, self.document, self.document['outcome'])
             self.path.unlink()
             lock.unlink(missing_ok=True)
             for parent in parents:

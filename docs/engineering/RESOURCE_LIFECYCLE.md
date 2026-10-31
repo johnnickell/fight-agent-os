@@ -119,7 +119,10 @@ GitHub PR/base/head. Open non-draft publication additionally requires the exact 
 requires positive merge evidence and local intended-base inclusion, never just a missing remote branch. Git disposal
 refreshes that proof. Acceptance, required delivery checks and cancellation authority remain Land/operator-owned
 under [landing standards](LANDING.md#qualify-local-git-cleanup); this command cannot supply independent acceptance.
-The outcome must survive disposal. Unknown/dirty/private data, changed branch/tip, current workers and unavailable
+The outcome must survive disposal: use the nondisposable safe checkout's existing TASK/outcome, never the selected
+disposable checkout, temporary paths or record/lock bookkeeping (including aliases). Completion and each cleanup
+attempt revalidate this before effects, including stored dispositions and partial retries; refusal changes no
+resource or disposition. Unknown/dirty/private data, changed branch/tip, current workers and unavailable
 consumer visibility hold only their affected effects. Never force-remove a worktree/ref or delete a remote ref.
 
 After these project-specific checks, finish invokes `wt remove --foreground --format=json` with the exact target
@@ -164,8 +167,9 @@ commands against finite real Git/Docker fixtures and inspects actual absence/pro
 teardown even on failure; an unresolved original fixture is retained only for its active issue, never replaced
 blindly. Worktrunk receives a fixture-only HOME/config/approvals and repository; Docker retains its original local
 context. Qualify ignored/private protection, missing CLI, hook holds, retained unmerged branches, branch-only resume,
-retained task-branch configuration and absent-ref retries,
-main/current holds and fixture-local cache/log outcomes. Retire only fixture-local state; never clear shared caches.
+retained task-branch configuration and absent-ref retries, invalid checkout/temporary/bookkeeping outcomes and
+aliases without effects, stored-disposition/partial-retry validation, surviving safe-checkout outcomes, main/current
+holds and fixture-local cache/log outcomes. Retire only fixture-local state; never clear shared caches.
 Removed giant qualification matrices have no current callers; behavior-focused command qualification replaces
 their obsolete proof/JSON mechanisms. Native session-lifetime/role tests remain required. These checks
 are infrastructure evidence, not product-suite tests, independent Review/QA or live publication acceptance.
