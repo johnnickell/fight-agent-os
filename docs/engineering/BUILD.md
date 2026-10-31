@@ -20,7 +20,7 @@ already exist. Setup may contact registries; acceptance never installs, updates,
 
 ```sh
 export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
-docker compose build web
+./bin/up --build-only
 ./bin/composer install --no-interaction --prefer-dist --no-progress
 ./bin/client setup
 ./bin/client build
@@ -31,6 +31,24 @@ docker compose build web
 ./bin/validations export
 ./bin/build
 ```
+
+The host entry points run [bounded storage admission](../../.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546)
+before expensive allocation: one recoverable-artifact pass, then fresh host free-space checks. Export the documented
+host-shell reserve/allowance/retention settings; Compose `.env` alone does not configure host wrappers. Defaults
+require 20 GiB reserve plus a 4 GiB allocation allowance. Missing/unsupported observation or insufficient space
+refuses new work with a finite action, never a global prune or logical-size-as-physical-reclaim assumption.
+Current build/runtime image inputs and active/stopped consumers stay protected. `bin/up` obtains runtime images
+and local Dockerfile FROM inputs from its effective Compose model (including selected overrides), retaining the
+fixed repository build inputs. Missing/unsupported configuration or unresolved build inputs refuse admission
+before reclamation. The trusted local Docker socket accepts stable aliases such as Linux `/var/run -> /run`,
+without relaxing report/source/provenance path validation or same-engine/socket identity checks.
+A passing admission is not a cleanup-complete or application-gate verdict. Bound TASKs use `bin/runtime
+storage-admit` and the SAME original lifecycle receipt; a competing `FIGHT_STORAGE_RECEIPT` refuses before effects.
+Non-TASK use may select an existing private companion; otherwise state stays in ignored `var/`. No application
+runtime depends on `.runs/`. Before declaring a stage handoff ready, run the lifecycle's executable
+[readiness check](RESOURCE_LIFECYCLE.md#standing-cleanup-readiness), preserving source/private reports externally
+and surfacing affected cleanup capabilities upstream. Actual acceptance, publication and worker-exit binding
+remain at their proper later stages, not circular prerequisites for the initial technical candidate.
 
 `./bin/up` prepares ignored cache mounts and builds/starts the complete HTTP/HTTPS stack explicitly, preserving
 database data. Use it again after environment or image/configuration changes so both PHP runtimes agree.

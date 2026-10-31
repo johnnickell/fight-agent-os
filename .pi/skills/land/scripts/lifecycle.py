@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import signal
+import shutil
 import stat
 import subprocess
 import sys
@@ -18,13 +19,15 @@ import time
 import uuid
 
 sys.dont_write_bytecode = True
-from cleanup import (Hold, absolute, container_identity, digest, file_record,
+from cleanup import (Cleanup, Storage, Hold, absolute, artifact_inventory, exclusion_paths, container_identity, digest, file_record,
                      fingerprint, image_root_graph, inside, network_identity, require, verify_plan_history, volume_identity,
                      LEGACY_NO_EFFECT_OPERATION, qualify_legacy_append, verification_snapshot)
 
 LABEL = "io.fight.lifecycle.operation"
 KINDS = ("containers", "networks", "volumes", "images", "caches")
 SAFE_CWD = None  # One CLI invocation; never an asynchronous observer in the candidate
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts"))
+from compose_storage_inputs import Unavailable, inputs as storage_inputs
 
 
 def now():
@@ -203,6 +206,8 @@ class Lifecycle:
             require(kind == "compose-command", "verification return permits supervised reuse only; allocation remains frozen")
         if kind in ("run", "standalone-run"):
             require(len(self.state["resources"]["containers"]) < self.state["policy"]["budget"]["containers"], "container evidence budget exhausted before allocation")
+        require(not self.state.get("legacy_reuse_only") or kind == "compose-command",
+                "historical adoption permits supervised reuse only; no new allocation or fabricated original intent")
         budget = self.state["policy"]["budget"]
         require(len(self.state["operations"]) < budget["operations"], "finite operation budget exhausted")
         before = inventory(self.root)
@@ -1055,7 +1060,7 @@ class Lifecycle:
             profiles += argv[:2]
             argv = argv[2:]
         action, options = argv[0], argv[1:]
-        if action not in ("up", "create", "run"):
+        if action not in ("up", "create", "run", "build"):
             require(action in ("config", "ps", "port", "logs", "exec", "top", "version", "images"),
                     "unsupported allocation/retirement command; use qualified lifecycle capability, never generic teardown/build/pull")
             return self.compose_command(argv, profiles)
@@ -1082,8 +1087,8 @@ class Lifecycle:
                 else:
                     raise Hold("unsupported Compose startup option/service; no implicit effects")
                 index += 1
-            services = self.service_closure(model, services, dependencies="--no-deps" not in options)
-        if "--build" in options:
+            services = self.service_closure(model, services, dependencies=action != "build" and "--no-deps" not in options)
+        if "--build" in options or action == "build":
             require(action != "run" and "--no-build" not in options, "explicit startup --build only; conflicting/oneoff builds unsupported")
             plans = []
             # Preflight the whole enabled closure before the first build, not just
@@ -1108,6 +1113,8 @@ class Lifecycle:
             for plan in plans:
                 self.build_image(plan["options"], prepared=plan)
             options = [v for v in options if v != "--build"]
+            if action == "build":
+                return 0
         op = self.begin(["docker", "compose", *profiles, *argv], action)
         binding = self.generation(op)
         if profiles:
@@ -1679,8 +1686,202 @@ class Lifecycle:
         cleanup["verification_return"] = reference(event)
         self.save()  # Atomic exclusion of stale cleanup and admission of verification on SAME persistent lock.
 
+    def reconcile_legacy_storage(self):
+        """Expose original historical storage identities as holds, never new authority"""
+        require(self.state.get("legacy_reuse_only") and not self.state.get("legacy_storage_reconciled") and
+                not self.document.get("cleanup", {}).get("plan"), "one original historical storage reconciliation only, before plan")
+        prior = self.state["legacy_history"]["receipt"]
+        raw = private(Path(prior["path"]))
+        require(digest(raw) == prior["sha256"], "immutable original Work receipt changed")
+        original = json.loads(raw)
+        entries = list(original["work2"]["created_exported_images"]) + list(original["runtime"]["images"])
+        for reused in original["work2"]["reused_inputs"]:
+            entries.extend({"identity": identity, "creation": {"kind": "reused"}, "references": [reused["reference"]]}
+                           for identity in reused["current_exported_root_ids"])
+        known = {item["identity"] for item in self.state["resources"]["images"]}
+        for item in entries:
+            identity = item["identity"]
+            require(re.fullmatch(r"sha256:[a-f0-9]{64}", identity), "original image identity malformed")
+            if identity in known:
+                continue
+            require(len(known) < self.state["policy"]["budget"]["images"], "original image evidence capacity exhausted")
+            self.state["resources"]["images"].append({"identity": identity, "creation": item["creation"], "ownership": "unknown",
+                "disposition": "hold", "consumers": None, "reason": "original historical image identity/reference capability remains unqualified; no config/root equivalence or replay",
+                "original": item, "observations": [prior], "history": [{"at": now(), "state": "original-storage-evidence-reconciled"}]})
+            known.add(identity)
+        containers = self.state["resources"]["containers"]
+        for item in original["runtime"]["created"]:
+            if item.get("kind") != "container" or any(v["identity"] == item["identity"] for v in containers):
+                continue
+            require(len(containers) < self.state["policy"]["budget"]["containers"], "original creator evidence capacity exhausted")
+            containers.append({"identity": item["identity"], "name": item["name"], "inspection_sha256": item["inspection_sha256"],
+                "creation": {"kind": "unknown"}, "ownership": "unknown", "disposition": "hold", "consumers": None,
+                "reason": "original historical standalone creator remains held; original evidence preserved, no invented Compose/runtime proof",
+                "original": item, "observations": [prior], "history": [{"at": now(), "state": "original-creator-evidence-reconciled"}]})
+        caches = list(original["work2"]["newly_observed_cache_records"]) + list(original["runtime"]["caches"])
+        group = next(v for v in self.state["resources"]["caches"] if v["identity"] == "historical-work-storage")
+        group["members"] = sorted({v["identity"] for v in caches})
+        self.state["legacy_storage_reconciled"] = {"at": now(), "original": prior, "image_count": len(known), "cache_ids": group["members"],
+            "reason": "bounded original evidence projection only; original attempts/retired history/unknowns unchanged, no new allocation or disposal authority"}
+        self.save()
+
+    def retire(self):
+        """Generate and execute temporary-runtime retirement under original authority"""
+        authority = self.state["policy"].get("runtime_authority") or self.state.get("legacy_history", {}).get("authority")
+        require(authority, "original runtime disposal authority missing; preserve unknown/durable data")
+        existing = self.document.get("cleanup", {}).get("plan")
+        if existing:
+            require(existing.get("purpose") == "disposable-runtime", "delivery plan already exists; use its supported continuation, never replace it")
+        else:
+            self.readiness("runtime-retirement")  # Failed preservation holds source/ref, not independent resources.
+            self.plan({"purpose": "disposable-runtime", "oid": text(["git", "rev-parse", "HEAD"], self.root),
+                "publication": None, "protected_files": [], "exited_workers": [],
+                "worktree": {"disposition": "retain", "reason": "runtime-only retirement; required source/private data remain"},
+                "branch": {"disposition": "retain", "reason": "runtime-only retirement never deletes source/ref"}})
+        os.chdir(self.subject["safe_checkout"])
+        return Cleanup(str(self.path), apply=True).run()  # Caller already holds the SAME persistent lock.
+
+    def storage_admit(self, protected):
+        """Share the owning receipt/lock and exact effective inputs with allocation"""
+        self.complete()
+        require(not self.document.get("cleanup", {}).get("plan"), "allocation admission frozen after plan; use supported verification return")
+        requested = os.environ.get("FIGHT_STORAGE_RECEIPT")
+        require(not requested or absolute(requested) == self.path, "bound TASK cannot allocate through a competing storage receipt")
+        model = query([*compose(self.binding), "--profile", "*", "config", "--format", "json"], self.root)
+        policy = dict(self.state["policy"].get("recoverable_storage", {}))
+        policy["protected_images"] = Storage.protected_image_inputs(
+            policy.get("protected_images", []), protected, storage_inputs(model, self.root))
+        storage = Storage(self.path, self.root, document=self.document, policy=policy)
+        result = storage.run()
+        print(json.dumps({"admitted": result["admitted"], "complete": result["complete"], "receipt": str(self.path),
+                          "hold": result.get("hold"), "storage_attempt": len(self.document["storage_attempts"]) - 1}))
+        return 0 if result["admitted"] else 1
+
+    def classify_temporary(self, value, authority, reason, creator_pid):
+        """Record an exact owned generated IPC generation before its creator disappears"""
+        self.complete()
+        require(not self.document.get("cleanup", {}).get("plan"), "artifact classification must precede cleanup plan")
+        path = Path(value)
+        require(path.is_absolute() and absolute(str(path.parent)) == path.parent and inside(path, self.root) and path != self.root,
+                "temporary artifact must be checkout-local with canonical parents")
+        record = file_record(path, allow_ipc=True, allow_symlink=True)
+        require(record["kind"] in ("socket", "fifo", "symlink") and authority and reason, "only positively disposable generated IPC/link; no unknown/private artifact exemption")
+        creator = process_identity(creator_pid, self.root)
+        fields = creator["observation"].split()
+        require(creator["exit"] == 0 and len(fields) >= 3 and fields[2] == str(os.getuid()), "original IPC creator identity/owner unavailable")
+        entries = self.state.setdefault("temporary_artifacts", [])
+        require(len(entries) < 128 and str(path.relative_to(self.root)) not in {v["path"] for v in entries}, "IPC already classified or capacity exhausted")
+        metadata = path.lstat()
+        generation = {"device": metadata.st_dev, "inode": metadata.st_ino, "ctime_ns": metadata.st_ctime_ns}
+        require(file_record(path, allow_ipc=True, allow_symlink=True) == record, "generated artifact changed during original classification")
+        entries.append({"path": str(path.relative_to(self.root)), "authority": authority, "reason": reason,
+                        "record": record, "generation": generation, "creator": creator, "at": now(), "lifetime": "creator must exit; fresh host consumer check still required before removal"})
+        self.state["private_paths"].append({"path": str(path), "disposition": "disposable", "authority": authority, "reason": reason})
+        self.save()
+
+    def readiness(self, stage):
+        """Exercise preservation before publication, using the SAME cleanup copier"""
+        suspended = self.document.get("cleanup", {}).get("verification_return")
+        if suspended:
+            self.verification_return()  # Read-only preservation adds no allocation/removal authority.
+        records = self.state.setdefault("readiness", [])
+        require(len(records) < 128, "finite readiness history exhausted")
+        entry = {"version": 1, "stage": stage, "at": now(), "source": source(self.root),
+                 "implementation": {"lifecycle_sha256": digest(Path(__file__).read_bytes()),
+                                    "cleanup_sha256": digest(Path(__file__).with_name("cleanup.py").read_bytes())},
+                 "subject": self.subject, "ready": False, "checks": [], "deferred": [
+                     "fresh consumers, final independent acceptance/QA/publication and original Land worker exits bind at Land",
+                     "external races are rechecked per effect, not universally fenced"]}
+        records.append(entry)
+        self.save()
+        try:
+            self.validate(stage, persist=False)
+            entry["resource_checks"] = []
+            probe = Cleanup.__new__(Cleanup)
+            probe.safe, probe.attempt = Path(self.subject["safe_checkout"]), entry
+            current = inventory(self.root)
+            for item in self.state["resources"]["containers"]:
+                observed_container = next((v for v in current["containers"] if v["Id"] == item["identity"]), None)
+                if observed_container is None or item["disposition"] != "remove":
+                    continue
+                result = {"identity": item["identity"], "kind": "container", "status": "held", "inspection_sha256": item["inspection_sha256"]}
+                entry["resource_checks"].append(result)
+                prior = next((old for record in reversed(records[:-1]) for old in record.get("resource_checks", [])
+                              if old["identity"] == item["identity"] and old["status"] == "held" and
+                              "docker exec exit 127" in old.get("reason", "")), None)
+                if prior:
+                    # A conservative missing-capability HOLD never grants an effect.
+                    # Reuse it for this unchanged original generation, rather than
+                    # repeatedly probing a known unavailable interpreter.
+                    result.update(reason=prior["reason"], evidence="inherited exact-ID missing-capability hold; immutable generation freshly validated")
+                    continue
+                try:
+                    checked = dict(item)
+                    if observed_container["State"]["Running"]:
+                        checked["processes_sha256"] = digest(observe(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.root).stdout)
+                    probe.service_visibility(checked, observed_container)
+                    if not suspended and checked.get("processes_sha256") != item.get("processes_sha256"):
+                        item["history"].append({"at": now(), "state": "qualified-process-observation", "previous": item.get("processes_sha256"),
+                                                "current": checked["processes_sha256"]})
+                        item["processes_sha256"] = checked["processes_sha256"]
+                    result.update(status="qualified", reason="actual owning descriptor/peer capability (or stopped original creator)")
+                except (Hold, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+                    result["reason"] = str(error) if isinstance(error, Hold) else type(error).__name__
+            for tool in ("git", "docker", "lsof"):
+                require(shutil.which(tool), "required cleanup capability unavailable: " + tool)
+            exclusions = []
+            for path in self.state["private_paths"]:
+                target = Path(path["path"])
+                if path["disposition"] == "disposable":
+                    require(target.is_absolute() and absolute(str(target.parent)) == target.parent,
+                            "disposable artifact parents must remain canonical; never follow a generated link")
+                else:
+                    target = absolute(str(target))
+                require(inside(target, self.root) and target != self.root, "private path outside candidate or candidate root")
+                require(path["disposition"] in ("preserve", "disposable"), "unknown private-path disposition")
+                if path["disposition"] == "disposable":
+                    require(path.get("authority") and path.get("reason"), "original generated-artifact disposal authority missing")
+                    exclusions.append({"path": str(target.relative_to(self.root)), "disposable": True, "reason": path["reason"]})
+            excluded = exclusion_paths(exclusions)
+            # Complete metadata observation rejects unknown symlinks/sockets/ACLs,
+            # rather than discovering their unsupported loss after publication.
+            observed = artifact_inventory(self.root, excluded, self.state.get("temporary_artifacts", []))
+            protected = [name for name, record in observed.items() if any(" deny " in (" " + acl + " ") for acl in record["acl"]) or
+                         record["kind"] == "directory" and record["mode"] & 0o300 != 0o300]
+            entry["protection_holds"] = protected
+            preservation = Cleanup.__new__(Cleanup)
+            preservation.path, preservation.document = self.path, self.document
+            preservation.safe = Path(self.subject["safe_checkout"])
+            preservation.store = self.path.parent
+            preservation.attempt = entry
+            destination = self.path.parent / ("readiness-" + uuid.uuid4().hex)
+            preservation.preserve(self.root, {"exclusions": exclusions, "preserve_to": str(destination),
+                "temporary_artifacts": self.state.get("temporary_artifacts", [])}, include_source=True)
+            # Git objects live in the external common directory, independently of
+            # checkout/ref removal. Verify the exact original source object now.
+            observe(["git", "cat-file", "-e", entry["source"]["revision"] + "^{commit}"], self.root)
+            entry["checks"] = ["original capture and current identities", "required command capabilities",
+                               "complete no-follow artifact/metadata inventory", "actual external copy and full metadata verification",
+                               "source commit retained in external Git common directory"]
+            entry["exclusions"] = exclusions
+            entry["ready"] = not protected and all(v["status"] == "qualified" for v in entry["resource_checks"])
+            if protected:
+                entry["hold"] = "source retirement protection hold at " + ", ".join(protected[:16]) + "; metadata preserved unchanged; no stripping protections"
+            elif not entry["ready"]:
+                entry["hold"] = "affected service cleanup capabilities/consumers held; inspect resource_checks; independent effects remain eligible"
+        except (Hold, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+            entry["hold"] = str(error) if isinstance(error, Hold) else type(error).__name__
+        self.save()
+        proof = self.path.parent / ("readiness-proof-" + uuid.uuid4().hex + ".json")
+        atomic(proof, entry, exclusive=True)
+        entry["proof"] = reference(proof)
+        self.save()
+        print(json.dumps({"ready": entry["ready"], "hold": entry.get("hold"), "proof": entry["proof"]}))
+        return entry["ready"]
+
     def validate(self, stage, attempt=None, persist=True):
         self.complete()
+        require(reference(Path(self.state["original_spec"]["path"])) == self.state["original_spec"], "original spec changed/missing; preserve authority history")
         require(len(self.state["stages"]) < 128, "finite stage-observation budget exhausted")
         pid, seen = os.getpid(), set()
         for _ in range(8):
@@ -1700,8 +1901,20 @@ class Lifecycle:
             require(inside(attempt, Path(self.subject["safe_checkout"]) / ".runs/build" / self.subject["task"]), "wrong original monitor attempt scope")
             process_file = attempt / "process.json"
             processes = json.loads(private(process_file))
-            self.state.setdefault("monitor_attempts", []).append({"stage": stage, "attempt": str(attempt), "original_process_record": reference(process_file),
-                "identities": [process_identity(processes[key], self.root) for key in ("monitor_pid", "pi_pid")], "disposition": "protected; no termination authority"})
+            monitors = self.state.setdefault("monitor_attempts", [])
+            if not any(value["attempt"] == str(attempt) for value in monitors):
+                monitors.append({"stage": stage, "attempt": str(attempt), "original_process_record": reference(process_file),
+                    "session_id": os.environ.get("PI_SESSION_ID"),
+                    "identities": [process_identity(processes[key], self.root) for key in ("monitor_pid", "pi_pid")], "disposition": "protected; no termination authority"})
+        for monitor in self.state.get("monitor_attempts", []):
+            process_file = Path(monitor["attempt"]) / "process.json"
+            require(reference(process_file) == monitor["original_process_record"], "original monitor/Pi identity record changed")
+            if monitor.get("session_id") and monitor["session_id"] != os.environ.get("PI_SESSION_ID"):
+                original = json.loads(private(process_file))
+                require(all((Path(monitor["attempt"]) / name).is_file() for name in ("pi-exit-code", "exit-code")),
+                        "prior original stage exits unavailable; hold advancement")
+                require(all(process_identity(original[key], self.root)["visibility"] == "absent" for key in ("monitor_pid", "pi_pid")),
+                        "prior original monitor/Pi live, reused or unavailable; hold advancement")
         for op in self.state["operations"]:
             require(reference(Path(op["intent"]["path"])) == op["intent"], "original intent unavailable")
             for entry in op.get("builder_observations", []) + op.get("build_inputs", []):
@@ -1769,6 +1982,15 @@ class Lifecycle:
                     pr["headRefName"] == self.subject["ref"].removeprefix("refs/heads/") and pr["headRefOid"] == delivery["oid"] and
                     pr["headRepository"]["name"] == name and pr["headRepositoryOwner"]["login"] == owner and
                     pr["mergedAt"] is None and pr["mergeCommit"] is None, "fresh PR/current-source provenance mismatch")
+        if self.state.get("readiness_required"):
+            ready = self.state.get("readiness", [])
+            require(ready and ready[-1]["source"] == source(self.root),
+                    "current cleanup readiness observation required before plan; run runtime readiness")
+            proof = json.loads(private(Path(ready[-1]["proof"]["path"])))
+            require(digest(private(Path(ready[-1]["proof"]["path"]))) == ready[-1]["proof"]["sha256"], "readiness proof changed")
+            checker = Cleanup.__new__(Cleanup)
+            if "preservation" in proof:
+                checker.verify_preservation(proof["preservation"])
         if old_plan and not refresh:
             require(old_plan["oid"] == delivery["oid"] and old_plan["publication"] == delivery["publication"], "delivery changed; explicitly refresh while preserving original plan/attempts")
             return
@@ -1779,6 +2001,17 @@ class Lifecycle:
         if "original_land_attempt" in delivery:
             plan["original_land_attempt"] = delivery["original_land_attempt"]
         plan["runtime"] = self.binding
+        if delivery.get("purpose") is not None:
+            authority = self.state["policy"].get("runtime_authority") or self.state.get("legacy_history", {}).get("authority")
+            require(delivery["purpose"] == "disposable-runtime" and authority and
+                    all(delivery.get(kind, {}).get("disposition") == "retain" for kind in ("worktree", "branch")),
+                    "temporary-runtime plan requires original disposal authority and retained source/ref")
+            plan["purpose"] = "disposable-runtime"
+            plan["runtime"] = dict(self.binding, disposable_authority=authority)
+        if "recoverable_storage" in self.state["policy"]:
+            plan["recoverable_storage"] = self.state["policy"]["recoverable_storage"]
+        if self.state.get("readiness_required"):
+            plan["readiness"] = ready[-1]["proof"]
         candidate = Path(self.subject["checkout"])
         safe = Path(self.subject["safe_checkout"])
         for kind, identity in (("worktree", str(candidate)), ("branch", self.subject["ref"])):
@@ -1788,14 +2021,24 @@ class Lifecycle:
             require(candidate != safe or disposition == "retain", "canonical checkout/ref must remain protected")
             plan[kind] = {"identity": identity, "ownership": "proven", "consumers": None, "consumer_policy": "fresh",
                           "disposition": disposition, "reason": options.get("reason", "recorded task-owned candidate; fresh qualification required")}
+        if self.state.get("readiness_required") and not ready[-1]["ready"]:
+            for kind in ("worktree", "branch"):
+                if plan[kind]["disposition"] == "remove":
+                    plan[kind].update(disposition="hold", reason="upstream preservation/readiness incomplete: " + ready[-1].get("hold", "missing proof"))
+        plan["worktree"]["temporary_artifacts"] = self.state.get("temporary_artifacts", [])
         plan["worktree"].update(inode=self.subject.get("checkout_inode", candidate.stat().st_ino),
             preserve_to=delivery.get("worktree", {}).get("preserve_to", str(self.path.parent / ("preserved-" + candidate.name))),
-            exclusions=delivery.get("worktree", {}).get("exclusions", []))
+            exclusions=delivery.get("worktree", {}).get("exclusions", ready[-1].get("exclusions", []) if self.state.get("readiness_required") else []))
         plan.update({kind: json.loads(json.dumps(self.state["resources"][kind])) for kind in KINDS})
         for kind in KINDS:
             for item in plan[kind]:
                 if item["disposition"] == "remove" and item.get("consumers") in (None, []):
                     item.update(consumers=None, consumer_policy="fresh")
+        if self.state.get("readiness_required"):
+            held = {v["identity"]: v["reason"] for v in ready[-1].get("resource_checks", []) if v["status"] == "held"}
+            for item in plan["containers"]:
+                if item["identity"] in held and item["disposition"] == "remove":
+                    item.update(disposition="hold", reason="upstream cleanup capability: " + held[item["identity"]])
         pending = [op for op in self.state["operations"] if op["status"] != "recorded"]
         plan["pending_operations"] = [{"identity": op["id"], "kind": op["kind"], "intent": op["intent"],
                                        "project": op["runtime"]["project"], "reason": "original allocation outcome/evidence incomplete; reconcile only this operation"} for op in pending]
@@ -1803,10 +2046,25 @@ class Lifecycle:
         creators = {v["identity"]: v for v in plan["containers"]}
         for kind in ("containers", "networks", "volumes", "images"):
             for item in plan[kind]:
-                runtime = item.get("runtime", creators.get(item.get("creation", {}).get("container"), {}).get("runtime", {}))
-                associated = runtime.get("project") in pending_projects or (kind == "images" and any(reference.startswith(project + "-") for project in pending_projects for reference in item.get("references", [])))
-                if associated and item["disposition"] == "remove":
-                    item.update(disposition="hold", reason="dependent original allocation pending; reconcile and refresh this versioned plan")
+                # Historical creation markers are evidence, not creator mappings.
+                # Resolve fallback lazily and never replace an explicit runtime.
+                runtime = item.get("runtime")
+                if "runtime" not in item:
+                    creation = item.get("creation")
+                    creator = creation.get("container") if isinstance(creation, dict) else None
+                    runtime = creators.get(creator, {}).get("runtime") if isinstance(creator, str) else None
+                project = runtime.get("project") if isinstance(runtime, dict) else None
+                project = project if isinstance(project, str) and project else None
+                references = item.get("references")
+                known_references = (isinstance(references, list) and bool(references) and
+                                    all(isinstance(value, str) and value for value in references))
+                associated = project in pending_projects or (kind == "images" and isinstance(references, list) and
+                    any(isinstance(reference, str) and reference.startswith(pending_project + "-")
+                        for pending_project in pending_projects for reference in references))
+                unresolved = (project is None and kind != "images") or (kind == "images" and not known_references)
+                if pending and (associated or unresolved) and item["disposition"] == "remove":
+                    item.update(disposition="hold", reason=("dependent original allocation pending" if associated else
+                                "pending allocation association unavailable") + "; reconcile and refresh this versioned plan")
         if returned:
             # New independent owners may replace canonical reports; explicit current
             # delivery records replace those paths, never the immutable old records.
@@ -1816,8 +2074,15 @@ class Lifecycle:
                 require(file_record(Path(entry["path"])) == entry["record"], "fresh protected-file binding missing/changed")
         for entry in self.state["protected_files"]:
             require(file_record(Path(entry["path"])) == entry["record"], "protected original changed")
-            if entry not in plan["protected_files"]:
-                plan["protected_files"].append(entry)
+            protected = entry
+            if self.state.get("readiness_required") and ready[-1]["ready"] and inside(Path(entry["path"]), candidate):
+                copies = [v for v in proof["preservation"]["files"] if v["old"] == entry["path"] and v["record"] == entry["record"]]
+                require(len(copies) == 1, "protected source has no exact external preservation proof")
+                copied = copies[0]
+                protected = {"path": copied["new"], "record": copied["destination_record"]}
+                plan.setdefault("protected_source_files", []).append(dict(entry, preserved=protected))
+            if protected not in plan["protected_files"]:
+                plan["protected_files"].append(protected)
         cleanup = self.document.setdefault("cleanup", {"version": 1})
         if old_plan:
             old_hash = fingerprint(old_plan)
@@ -1833,7 +2098,95 @@ class Lifecycle:
         self.save()
 
 
-def initialize(root, task, receipt, spec_path):
+def adopt_work_receipt(root, receipt, proposed, expected):
+    """Bind the historical owning Work final_setup schema without inventing intent"""
+    raw = private(receipt)
+    require(digest(raw) == expected, "historical receipt bytes changed")
+    original = json.loads(raw)
+    state = proposed["lifecycle"]
+    subject, binding = state["subject"], state["runtime"]
+    require("lifecycle" not in original and not original.get("cleanup", {}).get("plan") and
+            all(original[key] == subject[key] for key in ("task", "checkout", "safe_checkout", "ref")),
+            "historical subject changed or already bound; reuse SAME receipt")
+    setup = original["work2"]["final_setup"]
+    require(setup["project"] == binding["project"] and setup["resolved_sha256"] == binding["resolved_sha256"] and
+            all([{k: v[k] for k in ("path", "sha256")} for v in setup[old]] == binding[new]
+                for old, new in (("private_config_files", "config_files"), ("env_files", "env_files"))),
+            "historical runtime/configuration inputs changed; no retrospective rebind")
+    intent_ref = {key: setup["original_intent"][key] for key in ("path", "sha256")}
+    intent_raw = private(absolute(intent_ref["path"]))
+    require(digest(intent_raw) == intent_ref["sha256"], "original creation intent changed")
+    intent = json.loads(intent_raw)
+    require(intent["project"] == binding["project"] and intent["authority"] and
+            re.fullmatch(r"[a-f0-9]{40}", intent["source_head"]), "original authority/source unavailable")
+    observe(["git", "merge-base", "--is-ancestor", intent["source_head"], "HEAD"], root)
+    before = inventory(root)
+    snapshot = receipt.parent / ("legacy-work-" + expected + ".json")
+    if snapshot.exists():
+        require(private(snapshot) == raw, "original legacy snapshot differs")
+    else:
+        atomic(snapshot, raw, exclusive=True)
+    state["legacy_reuse_only"] = True
+    state["legacy_history"] = {"receipt": reference(snapshot), "original_intent": intent_ref,
+        "authority": intent["authority"], "original_budget": intent["budget"],
+        "reason": "original creation, exits, retired generations and holds remain immutable; no new allocation through adoption"}
+    creation = {"kind": "created", "intent": intent_ref["path"], "intent_sha256": intent_ref["sha256"],
+                "source_revision": intent["source_head"], "basis": "original Work evidence; not newly created or retroactive intent"}
+    def base(item):
+        return dict(item, creation=dict(creation), consumers=None, consumer_policy="fresh", ownership="proven",
+                    operation="historical-work", history=[{"at": now(), "state": "original-work-adoption", "receipt": reference(snapshot)}])
+    for recorded in setup["current_containers"]:
+        current = next((v for v in before["containers"] if v["Id"] == recorded["identity"]), None)
+        require(current is not None and current["Name"] == recorded["name"] and
+                container_identity(current) == recorded["inspection_sha256"] and current["Mounts"] == recorded["mounts"],
+                "original creator/configuration/mount identity changed")
+        labels = current["Config"]["Labels"]
+        require(labels["com.docker.compose.project"] == binding["project"] and
+                labels["com.docker.compose.project.working_dir"] == str(root) and labels.get("com.docker.compose.oneoff") == "False",
+                "historical creator is not the original normal Compose service")
+        item = base({"identity": current["Id"], "name": current["Name"], "service": labels["com.docker.compose.service"],
+                     "inspection_sha256": container_identity(current), "runtime": binding,
+                     "processes_sha256": digest(observe(["docker", "top", current["Id"], "-eo", "pid,ppid,args"], root).stdout) if current["State"]["Running"] else None,
+                     "data": "disposable", "authority": intent["authority"], "disposition": "remove",
+                     "reason": "original disposable Work intent and unchanged original creator/mount proof; fresh guards required",
+                     "bind_data": {v["Source"]: "preserve" for v in current["Mounts"] if v["Type"] == "bind" and v.get("RW")},
+                     "dependencies": [v["Name"] for v in current["Mounts"] if v["Type"] == "volume"]})
+        state["resources"]["containers"].append(item)
+    known = {v["identity"] for v in state["resources"]["containers"]}
+    require(not any((v["Config"].get("Labels") or {}).get("com.docker.compose.project") == binding["project"] and v["Id"] not in known
+                    for v in before["containers"]), "uninstrumented historical project consumer")
+    for recorded in setup["networks"]:
+        current = next(v for v in before["networks"] if v["Id"] == recorded["identity"])
+        require(current["Name"] == recorded["name"] and current["Created"] == recorded["created"] and
+                network_identity(current) == recorded["inspection_sha256"], "original network identity changed")
+        state["resources"]["networks"].append(base({"identity": current["Id"], "name": current["Name"], "created": current["Created"],
+            "inspection_sha256": network_identity(current), "key": current["Labels"]["com.docker.compose.network"], "runtime": binding,
+            "disposition": "remove", "reason": "original Work network allocation; exact empty-consumer guards remain"}))
+    for recorded in setup["volumes"]:
+        current = next(v for v in before["volumes"] if v["Name"] == recorded["identity"])
+        require(volume_identity(current) == recorded["inspection_sha256"] and recorded["creation"]["created_absent"] is True,
+                "original volume identity/absence proof changed")
+        creators = recorded["creation"]["creator_mounts"]
+        require(len(creators) == 1 and creators[0]["container"] in known, "original creating-container mount proof missing")
+        creator = creators[0]
+        original_mounts = original["runtime"]["creator_mount_provenance"][creator["container"]]
+        require(isinstance(original_mounts, list) and any(v["Type"] == "volume" and v["Name"] == current["Name"] and
+                v["Destination"] == creator["destination"] for v in original_mounts), "original retained mount contradicts volume")
+        item = base({"identity": current["Name"], "inspection_sha256": volume_identity(current), "data": "disposable",
+            "authority": intent["authority"], "disposition": "remove", "reason": "original disposable Work data/absence/creator proof",
+            "dependencies": [creator["container"]]})
+        item["creation"].update(creator)
+        state["resources"]["volumes"].append(item)
+    # Keep historical storage uncertainty as an affected hold; no ownership upgrade,
+    # fabricated empty inventory, retirement replay or transfer of foreign resources.
+    state["resources"]["caches"].append({"identity": "historical-work-storage", "disposition": "hold", "ownership": "unknown",
+        "consumers": None, "creation": {"kind": "unknown"}, "observations": [reference(snapshot)], "history": [],
+        "reason": "historical images/cache/standalone fixture remain in immutable original Work receipt; no automatic association-based retirement"})
+    original["lifecycle"] = state
+    return original
+
+
+def initialize(root, task, receipt, spec_path, legacy_sha256=None):
     require(re.fullmatch(r"TASK-\d{5}", task), "invalid task")
     require(not (root / "var/resource-lifecycle.json").exists(), "runtime already bound; reuse/reconcile original receipt")
     spec = json.loads(private(absolute(spec_path)))
@@ -1850,6 +2203,8 @@ def initialize(root, task, receipt, spec_path):
         require(isinstance(spec[key], list) and len(spec[key]) <= 8, "explicit ordered config/env files required")
         binding[key] = [{"path": str(absolute(path)), "sha256": digest(Path(path).read_bytes())} for path in spec[key]]
     require(binding["config_files"], "explicit configuration required")
+    if spec.get("profiles"):
+        binding["profiles"] = spec["profiles"]
     model = resolved(binding)
     binding["resolved_sha256"] = fingerprint(model)
     policy = spec["policy"]
@@ -1866,17 +2221,22 @@ def initialize(root, task, receipt, spec_path):
                "source": source(root)}
     document = {"lifecycle": {"version": 1, "subject": subject, "runtime": binding, "policy": policy,
                  "original_spec": reference(Path(spec_path)), "operations": [], "stages": [],
-                 "resources": {kind: [] for kind in KINDS}, "protected_files": [
+                 "resources": {kind: [] for kind in KINDS}, "readiness_required": True, "protected_files": [
                      {"path": str(absolute(path)), "record": file_record(Path(path))} for path in spec["protected_files"]],
                  "private_paths": spec["private_paths"], "processes": [],
                  "binding_intent": {"path": str(root / "var/resource-lifecycle.json"), "mode": "0600", "data": "private runtime locator", "disposition": "preserve"},
                  "observers": {"state": "none created by this owning interface; command subprocesses are synchronously supervised from the safe checkout"},
                  "cache_policy": {"state": "no-build-requested", "reason": "image reuse/pulls grant no cache/layer ownership; any build adds explicit builder observations and association holds"}}}
+    if legacy_sha256 is not None:
+        document = adopt_work_receipt(root, receipt, document, legacy_sha256)
     # Receipt intent precedes the first runtime directory/binding allocation. If that
     # write fails, retry ONLY this original initialization, never a second receipt.
     with Path(str(receipt) + ".lock").open("a") as handle:
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        if receipt.exists():
+        if legacy_sha256 is not None:
+            require(digest(private(receipt)) == legacy_sha256, "original Work receipt changed before adoption lock")
+            atomic(receipt, document)
+        elif receipt.exists():
             original = json.loads(private(receipt))
             state = original["lifecycle"]
             require(state["version"] == 1 and state["subject"] == subject and state["runtime"] == binding and
@@ -1899,10 +2259,23 @@ def main():
     init.add_argument("--task", required=True)
     init.add_argument("--receipt", required=True)
     init.add_argument("--spec", required=True)
+    init.add_argument("--adopt-work-receipt-sha256", help="Explicit historical Work final_setup schema; original proof retained, reuse only, no allocation")
+    admission = sub.add_parser("storage-admit")
+    admission.add_argument("--protect-image", action="append", default=[])
+    sub.add_parser("reconcile-legacy-storage", help="Project exact original Work image/cache identities as holds; never upgrade ownership or replay retirement")
+    sub.add_parser("retire", help="Same generated plan/executor; original temporary-runtime authority required, source/ref retained")
+    readiness = sub.add_parser("readiness")
+    readiness.add_argument("--stage", required=True)
+    artifact = sub.add_parser("classify-temporary", aliases=["classify-ipc"])
+    artifact.add_argument("--path", required=True)
+    artifact.add_argument("--authority", required=True)
+    artifact.add_argument("--reason", required=True)
+    artifact.add_argument("--creator-pid", type=int, required=True)
     docker = sub.add_parser("docker")
     docker.add_argument("argv", nargs=argparse.REMAINDER)
     validate = sub.add_parser("validate")
     validate.add_argument("--stage", required=True)
+    validate.add_argument("--handoff", action="store_true", help="Exercise upstream cleanup/preservation readiness before returning a stage")
     validate.add_argument("--attempt", help="Existing original stage monitor attempt; records protected reuse, never creation or exit authority")
     qualify_image = sub.add_parser("qualify-image")
     qualify_image.add_argument("--identity", required=True)
@@ -1933,13 +2306,24 @@ def main():
         root = absolute(args.root)
         SAFE_CWD = absolute(text(["git", "worktree", "list", "--porcelain"], root).splitlines()[0].split(" ", 1)[1])
         if args.action == "init":
-            initialize(root, args.task, absolute(args.receipt), str(absolute(args.spec)))
+            initialize(root, args.task, absolute(args.receipt), str(absolute(args.spec)), args.adopt_work_receipt_sha256)
             return 0
         locator = root / "var/resource-lifecycle.json"
         if not locator.exists():
             # Existing non-TASK/CI use is not silently enrolled or claimed as captured.
             branch = observe(["git", "symbolic-ref", "--quiet", "--short", "HEAD"], root, codes=(0, 1)).stdout.decode().strip()
-            require(args.action in ("docker", "paths") and not re.match(r"feature/task-\d{5}-", branch), "TASK runtime requires original lifecycle init before owning commands")
+            require(args.action in ("docker", "paths", "storage-admit") and not re.match(r"feature/task-\d{5}-", branch), "TASK runtime requires original lifecycle init before owning commands")
+            if args.action == "storage-admit":
+                from compose_storage_inputs import resolve
+                receipt = absolute(os.environ.get("FIGHT_STORAGE_RECEIPT", str(root / "var/storage.json")))
+                receipt.parent.mkdir(parents=True, exist_ok=True)
+                protected = sorted(set(args.protect_image + resolve(False)))
+                with Path(str(receipt) + ".lock").open("a") as lock:
+                    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    storage = Storage(receipt, root, policy={"protected_images": protected})
+                    require("lifecycle" not in storage.document, "bound lifecycle must be used from its original selected checkout")
+                    result = storage.run()
+                return 0 if result["admitted"] else 1
             if args.action == "paths":
                 for path in args.paths:
                     Path(path).mkdir(parents=True, exist_ok=True)
@@ -1952,7 +2336,19 @@ def main():
         with lifecycle.locked():
             if lifecycle.document.get("cleanup", {}).get("verification_return") and args.action != "recover-verification":
                 lifecycle.verification_return()
-                require(args.action in ("validate", "docker", "plan", "image-name"), "verification return cannot rebind/recover/mutate allocation; retain original holds")
+                require(args.action in ("validate", "readiness", "docker", "plan", "image-name"), "verification return cannot rebind/recover/mutate allocation; retain original holds")
+            if args.action == "reconcile-legacy-storage":
+                lifecycle.reconcile_legacy_storage()
+                return 0
+            if args.action == "retire":
+                return lifecycle.retire()
+            if args.action == "storage-admit":
+                return lifecycle.storage_admit(args.protect_image)
+            if args.action == "readiness":
+                return 0 if lifecycle.readiness(args.stage) else 1
+            if args.action in ("classify-temporary", "classify-ipc"):
+                lifecycle.classify_temporary(args.path, args.authority, args.reason, args.creator_pid)
+                return 0
             if args.action == "docker":
                 require(args.argv, "missing Docker command")
                 if args.argv[0] == "inspect" or args.argv[:2] in (["image", "inspect"], ["image", "ls"], ["network", "inspect"], ["network", "ls"], ["volume", "inspect"], ["volume", "ls"]):
@@ -1973,6 +2369,8 @@ def main():
                 return 0
             if args.action == "validate":
                 lifecycle.validate(args.stage, args.attempt)
+                if args.handoff:
+                    return 0 if lifecycle.readiness(args.stage) else 1
             elif args.action == "qualify-image":
                 lifecycle.qualify_image(args.identity)
             elif args.action == "paths":
@@ -1993,7 +2391,7 @@ def main():
                 lifecycle.plan(json.loads(private(absolute(args.delivery))), args.refresh)
         print(json.dumps({"task": lifecycle.subject["task"], "operation": args.action, "recorded": True}))
         return 0
-    except (Hold, OSError, ValueError, KeyError, TypeError, StopIteration, subprocess.SubprocessError) as error:
+    except (Hold, Unavailable, OSError, ValueError, KeyError, TypeError, StopIteration, subprocess.SubprocessError) as error:
         print(json.dumps({"complete": False, "hold": str(error) if isinstance(error, Hold) else type(error).__name__,
                           "recovery": "inspect original exact-operation receipt; no duplicate allocation or destructive fallback"}), file=sys.stderr)
         return 1

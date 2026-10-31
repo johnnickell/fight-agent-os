@@ -21,7 +21,7 @@ def main():
     out = Path(args.evidence).resolve()
     out.mkdir(parents=True, mode=0o700, exist_ok=False)
     source = Path(__file__).resolve().parents[4]
-    names = ("bin/runtime", ".pi/skills/land/scripts/lifecycle.py", ".pi/skills/land/scripts/cleanup.py")
+    names = ("bin/runtime", ".pi/skills/land/scripts/lifecycle.py", ".pi/skills/land/scripts/cleanup.py", "scripts/compose_storage_inputs.py")
     m.atomic(out / "original-intent.json", {
         "purpose": "Actual unbound Git named/detached/merge and unavailable/malformed runtime-path observations",
         "authority": "One finite local Git fixture; retain all source/refs/evidence; no Docker or hosting",

@@ -57,8 +57,12 @@ already-open PR uses the same current-subject checks and does not imply merge ap
 
 4. **Clean and hand off.** Recheck source records and authored current handoffs separately from generated views.
 For lifecycle-enabled targets, follow the [local resource lifecycle](../../../docs/engineering/RESOURCE_LIFECYCLE.md):
-validate the SAME stage binding, supply actual delivery/worker facts, and mechanically generate the existing helper
-plan with `bin/runtime plan`. Do not hand-author ownership from prose. Preserve immutable plans/attempts on explicit
+validate the SAME stage binding and inspect upstream readiness. Run `bin/runtime readiness --stage land` after
+current closeout to verify required external source/private/report preservation and expose affected capability
+holds before publication/removal. Supply actual acceptance/publication/original-worker facts at their proper
+stage, then mechanically generate the existing helper plan with `bin/runtime plan`. Do not hand-author ownership
+from prose or ask again for disposal already authorized at creation. Execute independent eligible effects even
+when another resource is held; retain unknown/durable/shared data, unique work and real protections. Preserve immutable plans/attempts on explicit
 refresh; incomplete allocation holds dependent effects while independent eligible resources may still qualify.
 Read [the executable cleanup contract](references/cleanup.md) and apply the policy-owned
 [cleanup procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff) through `scripts/cleanup.py` only.

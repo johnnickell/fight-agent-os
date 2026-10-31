@@ -13,8 +13,11 @@ port=''
 source_mode=readonly
 build_mode=readonly
 verify_install=yes
+storage_checked=no
 case "${1:-}" in
     setup)
+        ./bin/runtime storage-admit --protect-image "$image"
+        storage_checked=yes
         ./bin/runtime docker pull "$image"
         network=bridge; source_mode=''; verify_install=no
         set -- sh -c 'npm ci --ignore-scripts --no-fund --no-audit && node scripts/dependencies.mjs record' ;;
@@ -22,6 +25,8 @@ case "${1:-}" in
     audit) network=bridge; set -- npm audit ;;
     versions) set -- sh -c 'node --version; npm --version; npm ls --depth=0' ;;
     storybook-setup)
+        ./bin/runtime storage-admit --protect-image "$image" --protect-image "$browser_base" --protect-image "$browser_image"
+        storage_checked=yes
         ./bin/runtime docker pull "$image"
         ./bin/runtime docker pull "$browser_base"
         exec ./bin/runtime docker build --pull=false --build-arg "NODE_IMAGE=$image" \
@@ -45,6 +50,9 @@ case "${1:-}" in
     *) echo 'Usage: ./bin/client {setup|lock|versions|typecheck|lint|lint-fix|format-check|format|test|coverage|build|build-check|check|audit|storybook-setup|storybook-build|storybook-dev|storybook-test|storybook-capture}' >&2; exit 2 ;;
 esac
 
+if [ "$storage_checked" = no ]; then
+    ./bin/runtime storage-admit --protect-image "$image"
+fi
 ./bin/runtime paths var/client/build var/client/check .runs/build/reports/client .runs/cache/client
 if [ "$verify_install" = yes ]; then
     if [ ! -f client/node_modules/.fight-install.json ]; then

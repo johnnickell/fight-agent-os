@@ -181,6 +181,144 @@ Compose hash/working/configuration paths, and never starts setup. Environment ch
 model hold it. Implicit Compose env-file loading is disabled; only enumerated env-file arguments are used.
 Do not print raw configuration or container environments to obtain these hashes.
 
+### Recoverable storage and allocation admission (TASK-00546)
+
+Local `bin/up` (including `--build-only`), `bin/build`, `bin/client` and `bin/composer` call
+`bin/runtime storage-admit`: one bounded recovery pass before expensive allocation. A bound TASK uses its SAME
+lifecycle receipt/lock and exact effective Compose/build inputs, rejecting a competing `FIGHT_STORAGE_RECEIPT`;
+raw `cleanup.py --storage-admit` cannot bypass that binding or a suspended plan. Non-TASK use may select an
+existing private companion with `FIGHT_STORAGE_RECEIPT`; otherwise state stays in `var/storage.json`. No
+application runtime depends on `.runs/`. The persistent receipt lock is not a global reservation or race fence.
+
+Export host-shell settings (Compose `.env` alone does not export them):
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `FIGHT_STORAGE_RETENTION_SECONDS` | `604800` | Minimum cache last-use age; 1–315360000 seconds |
+| `FIGHT_STORAGE_RESERVE_BYTES` | `21474836480` | Host free bytes to leave after the admitted allocation |
+| `FIGHT_STORAGE_ALLOCATION_BYTES` | `4294967296` | Bounded allocation allowance; increase for larger builds |
+| `FIGHT_STORAGE_MAX_CANDIDATES` | `8` | Maximum candidates per invocation, 1–32; no retry loop |
+| `FIGHT_STORAGE_BUILDER` | current builder | Explicit same-engine Docker-driver builder when needed |
+
+Reserve/allocation must be positive integers, at most `2^60`. Admission requires freshly observed free space
+**at least reserve + allocation** on both source and Docker backing filesystems. Linux uses the local engine's
+DockerRootDir; the qualified macOS topology uses Docker Desktop's default Docker.raw with a live open-file
+observation. Remote/custom/unknown backing topology, unavailable observations, changed engine or insufficient
+space refuses allocation with a finite owner action. The trusted local CLI socket may use an alias such as Linux
+`/var/run -> /run`; the helper resolves only this endpoint, requires an actual socket and rechecks alias/socket
+identity, CLI selection and same-engine API identity across observations. Unassociated, denied or changed endpoints
+hold. Report/source/provenance paths retain strict canonical, no-symlink validation.
+Unavailable builder visibility holds cache effects without suppressing independently eligible images. Missing
+physical measurement still refuses allocation; it is not a reason to skip separately qualified recovery effects.
+Docker logical usage, physical host availability and the
+engine's cache-size report are separate; no logical-size sum or before/after host delta is called reclaimed bytes.
+A qualified reserve can admit work despite unrelated reclamation holds, but aggregate cleanup remains incomplete.
+
+The supported automatic candidates need **no historical TASK ownership**:
+
+- **Cache:** raw SAME-engine `/system/df` ID/creation/last-use/type/usage observations must agree with the single
+  Docker-driver Buildx worker and exact-ID `du`. Only unused immutable `regular` records externally backed by
+  retained image content qualify. BuildKit's external-image reference checker establishes that relationship;
+  the full retained image root/reference/child census must remain unchanged before and after each effect.
+  This is content retained by the image store, not an assertion that arbitrary cache flags certify source recovery.
+  Private, mutable, source and `exec.cachemount` records remain protected, including potentially unique work.
+  Normal filtered `buildx prune --all` is bounded by an anchored exact ID AND shared/immutable/regular selectors
+  AND engine-side `until`. `--all` merely admits shared records to those conjunctive checks. No unfiltered prune,
+  force flag, eviction of active refs or approximate age parsing is used. The engine rechecks refs and retention
+  under its cache lock. Raw RFC3339 nanoseconds are conservatively rounded up for Python 3.9 observation.
+- **Images:** only immutable digest-only references with an unused current/stopped platform census qualify.
+  Public Docker Hub root/child manifests **and every config/layer blob** are streamed and hash/size verified
+  before normal exact-root removal (128 objects / 256 MiB / 60 seconds, plus bounded network timeout).
+  Mutable tags, unique/unreferenced work, other registries, unavailable content, ambiguous consumer visibility
+  and changed references hold. All other local image roots/references must remain unchanged afterward.
+  Explicit image-selector resume reports absence only with prior SAME-receipt exact-root/content observation
+  plus explicit exact inspect/all-image not-found. Unproven config/index aliases hold, never imply completion.
+- Callers declare current inputs with repeated `--protect-image REFERENCE_OR_ROOT`. Before admission, `bin/up`
+  resolves the same effective Compose configuration used by startup/build, including selected local overrides.
+  It protects runtime images, effective local Dockerfile FROM inputs (including global ARG/build-argument
+  substitution), and the fixed repository build inputs. Failed/unavailable config, unresolved FROM expressions
+  or unsupported remote/additional build contexts refuse before reclamation; no empty-input fallback exists.
+  `bin/client` protects its selected runtime/build images, including newly pulled inputs. Protection is applied
+  before candidate selection; a downloadable image is not disposable while needed by the current operation.
+  Original `protected_images` exclusions remain in force: SAME-binding admission combines them with current
+  caller/model/build inputs, validates every entry and refuses an oversized effective set rather than dropping
+  protections. Current/stopped container consumers remain additional independent holds.
+
+Every pass appends `storage_attempts` in the SAME companion, recording engine/worker, selection, raw observations,
+content proofs, effect intent/argv/exits, postconditions, host measurements and per-effect held/removed/absent results.
+`--storage-reclaim` uses the same operation without admission. A cleanup plan can opt into `recoverable_storage`
+with the same policy keys (`retention_seconds`, `reserve_bytes`, `allocation_bytes`, `max_candidates`, `builder`,
+optional narrower `cache_ids`/`image_ids` and `protected_images`). It executes independently of held containers or
+volumes, but inherits the plan's common exact-subject, original-worker and protected-file checks at dispatch
+and immediately before storage effects. Ordinary pre-build admission uses its separate authority, without a
+publication prerequisite. Unavailable owning cache inventory leaves explicitly selected identities held/unknown;
+only successful complete inventory can establish absence. Partial success never completes an aggregate with holds. Legacy exact cache entries are not silently
+upgraded, and old attempts/plans are immutable. Recover a linked explicit policy rather than rewriting old holds.
+
+`check-lifecycle.py --storage-contracts --evidence ABSOLUTE_NEW_DIRECTORY` challenges controlled reserve,
+retention, denial, stale identity, unique work, protected inputs and active/stopped consumers with zero real effects.
+Real Docker/helper/caller receipts remain required for real-runtime claims. No installed/fleet claim follows.
+`check-lifecycle.py --endpoint-contracts --evidence ABSOLUTE_NEW_DIRECTORY` uses a real owned Unix metadata
+server with controlled CLI observations to qualify aliases and reject denied/unassociated/changed endpoints.
+`--startup-input-contracts` uses actual `bin/up` and config-only Compose resolution, intercepting admission and
+retirement to challenge digest-only inputs, selected overrides/build inputs and unavailable configuration.
+Neither mode allocates Docker resources, performs reclamation or establishes hosted/installed/fleet acceptance.
+
+### Disposable runtime caller
+
+`./bin/down --receipt ABSOLUTE_RECEIPT` invokes this SAME helper with `--runtime-retire --apply`. There is no
+unqualified Compose teardown or `down -v` fallback. Missing original proof holds; do not create a replacement
+registry or relabel durable storage disposable. Extend the existing private companion **before** allocation with
+original intent/authority and capture exact returned IDs, immutable config, all mounts/volumes and creation identities
+while creators exist. Use the ordinary runtime/container/volume schemas above.
+
+For pre-publication disposable-runtime retirement, the plan additionally has `purpose: disposable-runtime`,
+`runtime.disposable_authority` corroborated by that original intent, and retained worktree/ref dispositions.
+This removes only the publication prerequisite for temporary runtime data: TASK/repository/source identity,
+original creation, runtime hashes, protected files, exited workers, visibility/peer checks, mount preservation,
+all current/stopped consumers and exact postconditions still apply. It cannot retire source/ref, durable/shared/
+unknown data or bypass a service hold. It does not confer Land publication/acceptance authority.
+Failure/cancellation and interruption use this same receipt/operation; reconcile actual state before a finite
+resume, never recreate a missing creator. Long-lived/default development databases remain retained unless
+positively qualified as newly created disposable data. One-shot `--rm` tool containers retain Docker's normal
+anonymous-volume lifecycle; their original intent and actual mounts still belong in the owning handoff.
+
+New Compose qualification can use `check-lifecycle.py --task TASK-00546 --caller runtime --fixture-image EXACT_ID`
+with the documented cases, plus `completed` (actual exit 0). An image override adds one explicitly declared
+anonymous volume; the default PostgreSQL image retains image-declared anonymous-volume qualification.
+`--caller build --original-land-attempt ABSOLUTE_EXITED_ATTEMPT` qualifies the actual Build continuation caller
+using the same operation and actual monitor exit evidence, with controlled hosting clearly separate from delivery.
+Historical standalone/image-root modes retain their original TASK-00542 identity; do not repurpose those allocations.
+
+### Service visibility prerequisite (TASK-00546)
+
+The executor now requires complete live worker cwd/executable/root, descriptor/fdinfo and socket-table
+visibility before qualifying or stopping a running service, and rechecks it immediately before the effect.
+It corroborates the visible worker count against stable before/after engine process censuses and compares
+worker birth, descriptors and namespace socket observations within each attempt. Original process evidence
+is rechecked after each probe as well. Any unavailable,
+denied, incomplete, changed or unsupported observation holds that container; matching process hashes or zero
+DB sessions are not substitutes. Stopped-state resume still requires immutable identity and all original
+creation, mount, data, host-consumer and publication checks.
+
+This finite capability invokes an already installed `python3` in the existing container identity. It never
+installs tooling, selects another user or adds capabilities. Shared host/container PID or network namespaces,
+raw/unsupported sockets and **all connected TCP/UDP/Unix peers** currently hold: this implementation does not
+yet positively resolve internal connected peers. Missing Python/procfs visibility also holds. It does not
+retry protected old workloads. Existing standalone process/network/DB-session checks remain additional guards.
+
+Run the zero-effect controlled executor matrix with
+`python3 scripts/check-lifecycle.py --visibility-contracts --evidence ABSOLUTE_NEW_TASK_RUN_DIRECTORY`.
+It covers missing/denied/incomplete/unsupported/changed observations, hidden/changing worker census,
+unresolved peers, stale identity, preview/apply and stopped/interrupted resume. Its external observations/effects are replaced; it is not a
+real-runtime, installed-caller or fleet pass. Ordinary lifecycle fixture modes retain their existing resource
+allocation behavior and historical TASK-00542 identity; do not use them as TASK-00546 allocation recipes.
+
+This guard is additional to the bounded recoverable-storage operation above. Unknown/private cache content is
+not reconstructible merely because of a description or image name. The retained Work1 exploratory draft remains
+withdrawn historical evidence, not a supported API or a deletion recipe. Acceptance, installed-caller and fleet
+claims still require their own actual evidence; no version equality gate or protection-changing workaround exists.
+
 ### Standalone creation capability
 
 For independently owned `docker run` resources, select **`runtime.kind: standalone`**, not an optional Compose
@@ -287,7 +425,13 @@ present, with identical bytes/modes/owners/ACLs/flags; no metadata is stripped t
 Validate exclusions before inventory: they must name nonempty relative paths beneath the candidate, not the
 candidate itself or a parent. A symlink at or beneath an explicitly approved disposable exclusion is recorded
 using its own metadata and link target, without following it, copying it or weakening source-stability checks.
-Nonexcluded symlinks, special files, foreign-owned and flag-protected artifacts still hold. Every file remains
+Nonexcluded symlinks, unknown special files, foreign-owned and flag-protected artifacts still hold.
+The lifecycle can originally classify an exact generated IPC/link while its creator is observable; the generated
+plan carries its no-follow metadata and exact disposable exclusion in `worktree.temporary_artifacts`. Socket/FIFO
+metadata includes device/inode/change time; Darwin xattrs use bounded native no-follow reads, not unsupported CLI
+output interpreted as empty. These artifacts are never copied or followed, and changed metadata holds. Original
+creator records survive; fresh host consumer checks still hold active users. This is not a general special-file
+exclusion, retrospective classification or permission to unlink a protected artifact. Every file remains
 in the stability inventory, including excluded dependency trees; exclusions do not waive ACL/ownership checks.
 On macOS, native no-follow `find -xattr`/`find -acl` observations before and after each inventory identify paths
 needing detailed metadata reads, avoiding per-file subprocesses for absent metadata. An unavailable or changing

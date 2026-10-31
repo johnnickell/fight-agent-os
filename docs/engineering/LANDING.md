@@ -381,12 +381,33 @@ external preservation, effect intent and fresh postconditions are recorded separ
 never authorizes protection changes or generic runtime setup. This helper is not universal shell enforcement or
 OS isolation; unrestricted agents can bypass it, and arbitrary external races cannot be atomically fenced.
 
+### Standing authority and upstream readiness
+
+Original recorded authority to dispose of positively disposable local test/dev resources carries through Work,
+Review and QA to Land; no recurring human or per-effect prompt is required. Recoverable unused images/cache
+use the separately approved recoverability policy without historical task ownership. Unknown/durable/shared
+data, unique work, conflicting consumers and protected host/private/report state remain outside that authority.
+
+For lifecycle-enabled targets, require the [upstream readiness operation](RESOURCE_LIFECYCLE.md#standing-cleanup-readiness),
+not a prose-only checklist. Each creating stage records exact identities/generations/config/env/creating mounts,
+dependencies and private/generated-artifact classifications before creators disappear. Its handoff runs actual
+preservation/capability checks and carries the SAME receipt, immutable external proof and original worker records.
+Land refreshes readiness on the current closeout source before publication, binds actual acceptance/QA/publication
+and original Land monitor/Pi exits at the proper stage, generates the plan, executes eligible effects and verifies
+outcomes. Build finishes the supported SAME-receipt post-worker continuation without another routine approval.
+A missing proof/capability is a precise affected hold, not permission to strip metadata, guess exclusions or skip
+independent eligible effects. Controlled qualification is not independent Review/QA or actual delivery evidence.
+
 ### Completion ownership
 
 Safe cleanup is a required effect of authorized Land, not an optional follow-up after publication. Remove the
 eligible isolated worktree, local feature branch, disposable test containers, unused task-owned networks and
 qualified task-created named/anonymous disposable volumes. Account separately for created versus reused/shared
 images and caches; unsupported exact retirement is a finite hold, never an implicit leak exemption.
+TASK-00546 additionally permits bounded unused positively downloadable/recoverable image/cache reclamation
+without historical TASK ownership through the SAME operation's documented storage policy. Qualify actual engine,
+worker, retained backing/content, protected inputs, retention and consumers first. This exception never extends
+to unique work, volumes, host/source/private data, unfiltered prune or a protection-changing fallback.
 Publication does not require merge first. A resource that fails qualification stays in place with an explicit
 hold; successful publication with cleanup held is **not complete Land**. Do not request another cleanup prompt
 for effects already within Land authority. Never delete the main checkout or a current/active branch, terminate
@@ -507,7 +528,9 @@ disposable task containers without force; preserve creating-container volume/mou
 Then qualify each explicitly authorized task-created disposable volume separately: reobserve its exact identity
 and all current consumers, including stopped containers, immediately before normal removal and verify actual
 absence. Missing provenance, recreated identity, unknown/durable/shared data or inspection/permission failure
-holds it. Never use blanket `rm -v`, `down -v` or prune. A shared container/mount or active task session
+holds it. Never use blanket `rm -v`, `down -v` or unqualified/unfiltered prune. The bounded recoverable-storage
+capability is separately qualified by the [owning operation](../../.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546),
+not a fallback after a volume/service hold. A shared container/mount or active task session
 holds the affected container and dependent worktree. Inspect network endpoints again **after** container removal;
 remove an inventoried network by exact ID only when it is task-owned, non-external/non-shared and has zero
 endpoints. A foreign/shared endpoint, unknown dependency, label/config mismatch or inspection failure holds the

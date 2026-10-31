@@ -27,7 +27,11 @@ For a target with `bin/runtime`, apply its [local resource lifecycle](../../../d
 at actual Review entry and handoff: validate Work's SAME private receipt/locator and runtime, recording this stage.
 Do not allocate a competing stack or reconstruct ownership. Use owning wrappers for any authorized additions;
 pending/mismatched required creation evidence is Unverified, not an inferred pass. Lifecycle observations are
-private task execution evidence, not source repair or permission to retire resources.
+private task execution evidence, not source repair or permission to retire resources. Record original authority,
+exact creators/mounts and generated-artifact/private classifications for authorized additions before losing creators.
+Before returning, run `bin/runtime validate --stage review --attempt "$attempt" --handoff`; inspect the SAME
+receipt's external preservation/capability proof and precise holds. Do not hand Land an inventory reconstructed
+from prose or request another approval for disposal already authorized at creation.
 
 2. **Challenge acceptance in two passes.** Establish the [local gate and any explicit hosted requirement](../../../docs/engineering/REVIEW.md#local-gate-and-optional-hosted-checks); missing optional CI is not a blocker. Inspect the actual diff and map every TASK criterion to the stable Spec IDs in [review standards](../../../docs/engineering/REVIEW.md); check scope, outcomes, validation/authorization, effects, failures and evidence. Separately apply the Standards IDs to ownership, placement, transport scope, naming, meaningful tests and delivery. For each ID record Pass/Fail/Unverified/N/A, exact evidence and limitations; justify N/A and leave missing required proof Unverified. A single independent reviewer can perform both named passes, but builder self-checks cannot approve the work. [Qualify the existing gate receipt](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse) against actual source, runtime and provenance; run fresh focused checks for evidence gaps, not a second complete suite merely for independence. A substantive change or invalid receipt needs a complete final gate. Distinguish new results from reused receipts and disclose warnings, skips and limits. A rebase is judged on its effective new-base diff, not rejected solely for changed commit IDs.
 

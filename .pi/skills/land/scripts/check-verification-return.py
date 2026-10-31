@@ -133,6 +133,7 @@ def main():
                     "protected_files": [], "original_land_attempt": str(attempt), "exited_workers": [{"pid": 2000000001}, {"pid": 2000000002}]}
         base.save()  # Fixture-only simulated original monitor binding, before plan generation
         with base.locked():
+            assert base.readiness("controlled-pre-plan")
             base.plan(deepcopy(delivery))
         base_oid = delivery["oid"]
         failed_run.update(head_sha=base_oid, pull_requests=[{"number": 1, "head": {"ref": "feature/task-00547-verification", "sha": base_oid,
@@ -261,7 +262,9 @@ def main():
                 except m.Hold: checks["wrong_live_pr_held"] = True
                 else: checks["wrong_live_pr_held"] = False
                 hosting["wrong_pr"] = False
-                with obj.locked(): obj.plan(qualified, refresh=True)
+                with obj.locked():
+                    assert obj.readiness("controlled-repaired-pre-plan")
+                    obj.plan(qualified, refresh=True)
                 if args.published_setup_failure: delivery["oid"] = base_oid
                 updated = json.loads(path.read_text())["cleanup"]
                 checks["regenerated_link"] = "verification_return" not in updated and updated["plan_history"][-1]["verification_return"] == ref and updated["plan_history"][-1]["plan"] == value["cleanup"]["plan"] and updated["plan_history"][-1]["next_plan_sha256"] == updated["plan_sha256"]

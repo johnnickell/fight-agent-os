@@ -34,6 +34,10 @@ at actual QA entry and handoff. Validate and reuse Work's SAME private receipt/l
 wrappers to capture QA's authorized additions/replacements there. Missing/pending identity evidence is a concrete
 INCOMPLETE prerequisite, never permission for another setup stack or retrospective ownership. Retain original
 attempts and exact resource-specific holds for repair/Land; recording private runtime evidence is not source repair.
+Capture original disposal authority, exact generations/creating mounts, private/evidence classification and finite
+observer lifetimes before losing creators. Before returning, run `bin/runtime validate --stage qa --handoff`
+with the original `--attempt` binding; inspect external preservation/capability proof in the SAME receipt. Prefer external probe/
+report locations; no handwritten Land reconstruction or recurring approval for already-authorized disposable data.
 
 2. **Choose scenarios and environment.** Apply [applicability](../../../docs/engineering/QA.md#applicability);
    no UI does not mean no QA. Choose a proportionate set of [adversarial scenarios](../../../docs/engineering/QA.md#adversarial-scenarios)

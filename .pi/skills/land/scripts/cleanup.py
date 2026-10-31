@@ -3,7 +3,7 @@
 
 import argparse
 import ctypes
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import fcntl
 import hashlib
 import http.client
@@ -17,7 +17,10 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 from urllib.parse import quote
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 
 COMMANDS = None
@@ -40,10 +43,11 @@ def fingerprint(value):
     return digest(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
 
 
-def command(args, cwd, codes=(0,), timeout=15):
+def command(args, cwd, codes=(0,), timeout=15, confirmation=None):
     """Capture privately; never replay provider, configuration or environment output."""
     try:
-        result = subprocess.run(args, cwd=cwd, stdin=subprocess.DEVNULL,
+        result = subprocess.run(args, cwd=cwd, input=confirmation,
+                                stdin=subprocess.DEVNULL if confirmation is None else None,
                                 capture_output=True, timeout=timeout,
                                 env=dict(os.environ, GIT_NO_REPLACE_OBJECTS="1", GIT_NO_LAZY_FETCH="1",
                                          COMPOSE_DISABLE_ENV_FILE="1", COMPOSE_ENV_FILES=""))
@@ -67,6 +71,20 @@ def text(args, cwd, **kwargs):
 
 def json_command(args, cwd):
     return json.loads(text(args, cwd))
+
+
+def docker_timestamp(value):
+    """Normalize raw RFC3339 nanoseconds conservatively on Python 3.9"""
+    require(isinstance(value, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})", value),
+            "raw Docker timestamp unavailable/malformed")
+    value = value.replace("Z", "+00:00")
+    fractional = re.search(r"\.(\d+)", value)
+    rounded = False
+    if fractional:
+        digits = fractional[1]
+        rounded = len(digits) > 6 and any(char != "0" for char in digits[6:])
+        value = value[:fractional.start()] + "." + digits[:6].ljust(6, "0") + value[fractional.end():]
+    return datetime.fromisoformat(value) + timedelta(microseconds=1 if rounded else 0)
 
 
 def inside(path, root):
@@ -164,20 +182,52 @@ def require_no_image_consumers(safe, current):
 
 def local_image_metadata(safe, routes):
     """Read bounded metadata from the positively associated local CLI engine."""
-    context = json_command(["docker", "context", "inspect"], safe)
-    require(len(context) == 1, "local image graph context ambiguous")
-    endpoint = os.environ.get("DOCKER_HOST") if not os.environ.get("DOCKER_CONTEXT") else None
-    endpoint = endpoint or context[0]["Endpoints"]["docker"]["Host"]
-    require(endpoint.startswith("unix:///"), "image graph capability requires an explicit local Unix engine")
-    path = absolute(endpoint.removeprefix("unix://"))
-    require(stat.S_ISSOCK(path.stat().st_mode), "local image graph endpoint unavailable")
+    def selected_endpoint():
+        context = json_command(["docker", "context", "inspect"], safe)
+        require(len(context) == 1, "local image graph context ambiguous")
+        host = os.environ.get("DOCKER_HOST") if not os.environ.get("DOCKER_CONTEXT") else None
+        host = host or context[0]["Endpoints"]["docker"]["Host"]
+        require(isinstance(host, str) and host.startswith("unix:///") and
+                not any(ord(char) < 33 or ord(char) == 127 for char in host),
+                "image graph capability requires an explicit local Unix engine")
+        return host
+
+    endpoint = selected_endpoint()
+    supplied = Path(endpoint.removeprefix("unix://"))
+
+    def binding():
+        # Only trusted CLI socket spellings may resolve aliases (e.g. Linux /var/run).
+        # Provenance/report/source paths still use the unchanged strict absolute().
+        try:
+            path = supplied.resolve(strict=True)
+            metadata = path.lstat()
+            require(stat.S_ISSOCK(metadata.st_mode), "local image graph endpoint is not a socket")
+            links = []
+            for part in (*reversed(supplied.parents), supplied):
+                observed = part.lstat()
+                if stat.S_ISLNK(observed.st_mode):
+                    links.append((str(part), observed.st_dev, observed.st_ino, observed.st_ctime_ns,
+                                  os.readlink(part)))
+            return path, (metadata.st_dev, metadata.st_ino, metadata.st_mode,
+                          metadata.st_uid, metadata.st_gid, metadata.st_ctime_ns), links
+        except (OSError, RuntimeError, ValueError):
+            raise Hold("local image graph socket binding unavailable/changed; retain unchanged") from None
+
+    initial = binding()
+    path = initial[0]
+
+    def stable():
+        require(selected_endpoint() == endpoint and binding() == initial,
+                "local CLI endpoint/socket identity changed during observation")
 
     def get(route):
+        stable()
         connection = http.client.HTTPConnection("localhost", timeout=15)
         try:
             connection.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             connection.sock.settimeout(15)
             connection.sock.connect(str(path))
+            stable()
             connection.request("GET", route)
             response = connection.getresponse()
             raw = response.read(32 * 1024 * 1024 + 1)
@@ -197,6 +247,7 @@ def local_image_metadata(safe, routes):
     require(get("/info")["ID"] == engine["ID"] and
             json_command(["docker", "info", "--format", "{{json .}}"], safe)["ID"] == engine["ID"],
             "CLI/API engine association changed during observation")
+    stable()
     return values
 
 
@@ -279,16 +330,44 @@ def open_processes(raw):
     return processes
 
 
-def file_record(path, allow_symlink=False, metadata=None):
+def ipc_xattrs(path):
+    """Read complete Darwin IPC metadata through bounded native no-follow APIs"""
+    library = ctypes.CDLL("/usr/lib/libSystem.B.dylib", use_errno=True)
+    listing, reading = library.listxattr, library.getxattr
+    listing.argtypes = [ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_int]
+    listing.restype = ctypes.c_ssize_t
+    reading.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_uint32, ctypes.c_int]
+    reading.restype = ctypes.c_ssize_t
+    encoded = os.fsencode(path)
+    size = listing(encoded, None, 0, 1)  # XATTR_NOFOLLOW
+    require(0 <= size <= 1024 * 1024, "native IPC attribute listing unavailable/oversized")
+    names = ctypes.create_string_buffer(size)
+    require(listing(encoded, names, size, 1) == size, "native IPC attribute names changed/unavailable")
+    attributes = {}
+    for name in names.raw.split(b"\0"):
+        if not name:
+            continue
+        count = reading(encoded, name, None, 0, 0, 1)
+        require(0 <= count <= 1024 * 1024, "native IPC attribute unavailable/oversized")
+        value = ctypes.create_string_buffer(count)
+        require(reading(encoded, name, value, count, 0, 1) == count, "native IPC attribute changed/unavailable")
+        attributes[os.fsdecode(name)] = digest(value.raw)
+    return attributes
+
+
+def file_record(path, allow_symlink=False, metadata=None, allow_ipc=False):
     before = path.lstat()
     link = stat.S_ISLNK(before.st_mode)
-    require(stat.S_ISREG(before.st_mode) or stat.S_ISDIR(before.st_mode) or (allow_symlink and link),
+    ipc = stat.S_ISSOCK(before.st_mode) or stat.S_ISFIFO(before.st_mode)
+    require(stat.S_ISREG(before.st_mode) or stat.S_ISDIR(before.st_mode) or (allow_symlink and link) or (allow_ipc and ipc),
             "special file or symlink in preservation inventory; owner must resolve")
     require(before.st_uid == os.getuid(), "artifact ownership unresolved")
     require(not getattr(before, "st_flags", 0), "protected artifact flags; retain unchanged")
     attrs = {}
     if metadata is None or metadata[0]:
-        if hasattr(os, "listxattr"):
+        if ipc and sys.platform == "darwin":
+            attrs = ipc_xattrs(path)
+        elif hasattr(os, "listxattr"):
             attrs = {name: digest(os.getxattr(path, name, follow_symlinks=not link))
                      for name in os.listxattr(path, follow_symlinks=not link)}
         else:
@@ -299,9 +378,11 @@ def file_record(path, allow_symlink=False, metadata=None):
     if sys.platform == "darwin" and (metadata is None or metadata[1]):
         listing = command(["ls", "-ldeP", str(path)], path.parent).stdout.decode().splitlines()
         acl = [line.strip() for line in listing[1:]]
-    result = {"kind": "symlink" if link else "directory" if stat.S_ISDIR(before.st_mode) else "file",
+    result = {"kind": "socket" if stat.S_ISSOCK(before.st_mode) else "fifo" if stat.S_ISFIFO(before.st_mode) else "symlink" if link else "directory" if stat.S_ISDIR(before.st_mode) else "file",
               "mode": stat.S_IMODE(before.st_mode), "uid": before.st_uid, "gid": before.st_gid,
               "xattrs": attrs, "flags": getattr(before, "st_flags", 0), "acl": acl}
+    if ipc:
+        result["identity"] = {"device": before.st_dev, "inode": before.st_ino, "ctime_ns": before.st_ctime_ns}
     if link:
         result["target"] = os.readlink(path)
     elif stat.S_ISREG(before.st_mode):
@@ -351,12 +432,24 @@ def metadata_paths(root):
     return tuple(result)
 
 
-def artifact_inventory(root, exclusions=()):
+def artifact_inventory(root, exclusions=(), temporary=()):
     """Inventory all bytes/metadata; only approved disposable symlinks are recorded without following."""
     metadata = metadata_paths(root)
+    classified = {entry["path"]: entry for entry in temporary}
+    require(len(classified) == len(temporary), "duplicate temporary-artifact classification")
+    for name, entry in classified.items():
+        require(Path(name) in exclusions and entry["authority"] and entry["reason"] and entry["creator"] and
+                entry["record"]["kind"] in ("socket", "fifo", "symlink"), "temporary IPC/link requires exact original disposition/creator proof")
     def record(path, disposable=False):
         flags = tuple(path in paths for paths in metadata) if metadata is not None else None
-        return file_record(path, allow_symlink=disposable, metadata=flags)
+        entry = classified.get(str(path.relative_to(root)))
+        current = file_record(path, allow_symlink=disposable, metadata=flags, allow_ipc=entry is not None)
+        if entry is not None:
+            observed_metadata = path.lstat()
+            generation = {"device": observed_metadata.st_dev, "inode": observed_metadata.st_ino, "ctime_ns": observed_metadata.st_ctime_ns}
+            require(current == entry["record"] and generation == entry["generation"],
+                    "temporary IPC/link generation/metadata changed; retain artifact")
+        return current
     result = {".": record(root)}
     def unavailable(error):
         raise error
@@ -370,6 +463,403 @@ def artifact_inventory(root, exclusions=()):
             result[str(relative)] = record(path, any(inside(relative, excluded) for excluded in exclusions))
     require(metadata_paths(root) == metadata, "artifact metadata index changed while inspected")
     return result
+
+
+class Storage:
+    """Admit bounded allocation and reclaim independently recoverable Docker artifacts
+
+    Cache retirement uses the Docker driver's external-image reference checker, not
+    inferred task ownership. Private/mutable/source/cache-mount records never qualify.
+    """
+
+    def __init__(self, receipt, root, document=None, policy=None, subject_check=None):
+        self.path = absolute(str(receipt))
+        self.safe = absolute(str(root))
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if self.path.exists():
+            require(self.path.stat().st_uid == os.getuid() and
+                    stat.S_IMODE(self.path.stat().st_mode) == 0o600, "storage receipt must be owned/private")
+        self.document = document if document is not None else (json.loads(self.path.read_text()) if self.path.exists() else {})
+        policy = policy or {}
+        def setting(key, default, minimum, maximum):
+            value = policy.get(key, os.environ.get("FIGHT_STORAGE_" + key.upper(), default))
+            require(str(value).isdigit() and minimum <= int(value) <= maximum, "invalid bounded storage setting: " + key)
+            return int(value)
+        self.reserve = setting("reserve_bytes", 20 * 1024 ** 3, 1, 2 ** 60)
+        self.allocation = setting("allocation_bytes", 4 * 1024 ** 3, 1, 2 ** 60)
+        self.retention = setting("retention_seconds", 604800, 1, 315360000)
+        self.limit = setting("max_candidates", 8, 1, 32)
+        self.builder = policy.get("builder", os.environ.get("FIGHT_STORAGE_BUILDER", ""))
+        self.protected_inputs = self.protected_image_inputs(policy.get("protected_images", []))
+        # Only plan-dispatched recovery inherits delivery/runtime subject checks.
+        # Ordinary pre-build admission retains its separately scoped authority.
+        self.subject_check = subject_check
+        self.selection = {kind: policy.get(kind) for kind in ("cache_ids", "image_ids")}
+        require(all(value is None or isinstance(value, list) and len(value) <= 32 and
+                    all(isinstance(identifier, str) and re.fullmatch(r"[a-z0-9]{12,64}" if kind == "cache_ids" else
+                        r"sha256:[a-f0-9]{64}", identifier) for identifier in value) and
+                    len(value) == len(set(value)) for kind, value in self.selection.items()), "invalid bounded storage selection")
+        self.attempt = {"time": datetime.now(timezone.utc).isoformat(), "operation_sha256": digest(Path(__file__).read_bytes()),
+                        "source": str(self.safe), "reserve_bytes": self.reserve, "allocation_bytes": self.allocation,
+                        "retention_seconds": self.retention, "max_candidates": self.limit, "selection": self.selection, "protected_inputs": self.protected_inputs,
+                        "results": [], "complete": False, "admitted": False, "physical_reclaimed_bytes": None}
+        self.document.setdefault("storage_attempts", []).append(self.attempt)
+
+    @staticmethod
+    def protected_image_inputs(*groups):
+        for values in groups:
+            require(isinstance(values, list) and len(values) <= 64 and
+                    all(isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:/@-]{0,511}", value)
+                        for value in values), "invalid protected build/runtime image inputs")
+        combined = sorted({value for values in groups for value in values})
+        require(len(combined) <= 64, "combined protected build/runtime image inputs exceed bound")
+        return combined
+
+    def check_subject(self):
+        if getattr(self, "subject_check", None) is not None:
+            self.subject_check()
+
+    def save(self):
+        descriptor, temporary = tempfile.mkstemp(prefix=".storage-", dir=self.path.parent)
+        try:
+            with os.fdopen(descriptor, "w") as output:
+                json.dump(self.document, output, indent=2)
+                output.write("\n")
+                output.flush()
+                os.fsync(output.fileno())
+            os.replace(temporary, self.path)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+
+    def engine(self):
+        info = json_command(["docker", "info", "--format", "{{json .}}"], self.safe)
+        context = json_command(["docker", "context", "inspect"], self.safe)
+        require(len(context) == 1 and info.get("ID"), "engine/context identity unavailable")
+        endpoint = os.environ.get("DOCKER_HOST") if not os.environ.get("DOCKER_CONTEXT") else None
+        endpoint = endpoint or context[0]["Endpoints"]["docker"]["Host"]
+        require(endpoint.startswith("unix:///"), "storage admission requires a local Unix engine")
+        # Cross-check the CLI against that exact socket; never measure a remote host as local.
+        observed, = local_image_metadata(self.safe, ["/info"])
+        require(observed["ID"] == info["ID"], "storage engine association changed")
+        return {"id": info["ID"], "endpoint": endpoint, "root": info["DockerRootDir"], "os": info["OperatingSystem"]}
+
+    def host_space(self):
+        engine = self.engine()
+        require(not hasattr(self, "engine_identity") or engine == self.engine_identity, "storage engine changed")
+        self.engine_identity = engine
+        if sys.platform == "darwin":
+            backing = Path.home() / "Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw"
+            require(engine["os"] == "Docker Desktop" and "docker" in engine["endpoint"].lower(),
+                    "unqualified local VM backing store")
+            handles = text(["lsof", "-Fn", str(backing)], self.safe).splitlines()
+            require("n" + str(backing) in handles, "active Desktop backing-file observation unavailable; allocation refused")
+        elif sys.platform.startswith("linux"):
+            backing = Path(engine["root"])
+        else:
+            raise Hold("host storage observation unsupported; allocation refused")
+        # Override must identify the actual locally managed engine backing store, not a
+        # guessed writable filesystem. Unknown Desktop/custom topologies hold for setup.
+        require(backing.exists() and not backing.is_symlink(), "engine backing filesystem unavailable; allocation refused")
+        rows = []
+        for path in (self.safe, backing):
+            device = path.stat().st_dev
+            space = os.statvfs(path)
+            require(space.f_bavail >= 0 and space.f_frsize > 0, "host free-space measurement unavailable")
+            rows.append({"path": str(path), "device": device, "free_bytes": space.f_bavail * space.f_frsize})
+        return rows
+
+    def builder_identity(self):
+        rows = [json.loads(line) for line in text(["docker", "buildx", "ls", "--format", "{{json .}}"], self.safe).splitlines()]
+        candidates = [row for row in rows if row["Name"] == self.builder] if self.builder else [row for row in rows if row["Current"]]
+        # Buildx may print the same node twice for its platform groups.
+        unique = {fingerprint(row): row for row in candidates}
+        require(len(unique) == 1, "owning builder ambiguous/unavailable")
+        row = next(iter(unique.values()))
+        require(row["Driver"] == "docker" and len(row["Nodes"]) == 1 and
+                row["Nodes"][0]["Endpoint"] == json_command(["docker", "context", "inspect"], self.safe)[0]["Name"] and
+                not os.environ.get("DOCKER_HOST"), "cache retirement requires the same local Docker-driver worker")
+        node = row["Nodes"][0]
+        require(node["Status"] == "running" and node["IDs"], "cache worker identity unavailable")
+        return {"name": row["Name"], "workers": sorted(node["IDs"]), "endpoint": node["Endpoint"]}
+
+    def usage(self):
+        current, = local_image_metadata(self.safe, ["/system/df"])
+        require(isinstance(current.get("BuildCache"), list) and len(current["BuildCache"]) <= 16384,
+                "raw cache inventory unavailable/oversized")
+        require(len({row["ID"] for row in current["BuildCache"]}) == len(current["BuildCache"]), "duplicate raw cache identity")
+        self.attempt["docker_logical_usage_sha256"] = fingerprint(current)
+        return current["BuildCache"]
+
+    def image_census(self):
+        # Keep the immutable root/reference/child census, not usage counters or sizes.
+        return sorted([{"id": row["Id"], "created": row["Created"], "tags": sorted(row.get("RepoTags") or []),
+                        "digests": sorted(row.get("RepoDigests") or []), "descriptor": row.get("Descriptor"),
+                        "children": sorted([{"id": child["ID"], "descriptor": child["Descriptor"],
+                                             "available": child["Available"], "kind": child["Kind"]}
+                                            for child in row.get("Manifests", [])], key=lambda child: child["id"])}
+                       for row in local_image_graphs(self.safe)], key=lambda row: row["id"])
+
+    def cache_filters(self, identifier):
+        require(re.fullmatch(r"[a-z0-9]{12,64}", identifier), "invalid exact cache identity")
+        # Buildx converts id= to a regexp. Anchor it; boolean fields expose an empty
+        # string only when present. Regex ^$ tests presence, unlike shared=true.
+        return ["--filter", "id=^" + identifier + "$", "--filter", "shared~=^$",
+                "--filter", "immutable~=^$", "--filter", "type=regular"]
+
+    def cache(self, original, result):
+        builder = self.builder_identity()
+        require(builder == self.builder_snapshot, "builder worker changed")
+        identifier = original["ID"]
+        latest = next((row for row in self.usage() if row["ID"] == identifier), None)
+        if latest is None:
+            result.update(status="absent", reason="exact cache absent from successful raw engine inventory")
+            return
+        require(latest == original and original["InUse"] is False and original["Shared"] is True and
+                original["Type"] == "regular", "cache changed/in-use/private/unique; preserve")
+        last = docker_timestamp(original["LastUsedAt"])
+        require(last.tzinfo is not None and (datetime.now(timezone.utc) - last).total_seconds() >= self.retention,
+                "cache is inside retention window")
+        filters = self.cache_filters(identifier)
+        observed = [json.loads(line) for line in text(["docker", "buildx", "du", "--builder", builder["name"],
+                    *filters, "--format", "json"], self.safe).splitlines()]
+        require(len(observed) == 1 and observed[0]["ID"] == identifier and observed[0]["Shared"] is True and
+                observed[0]["Mutable"] is False and observed[0]["Reclaimable"] is True and observed[0]["Type"] == "regular",
+                "raw engine/builder recoverability observations disagree")
+        protected = self.image_census()
+        require(protected and protected == self.protected_images, "retained image backing changed/unavailable")
+        result.update(recovery_basis="same-engine external-image reference checker plus retained image-root census; no private cache",
+                      observation=original, builder=builder, protected_images_sha256=fingerprint(protected))
+        self.save()
+        require(self.engine() == self.engine_identity and self.builder_identity() == builder,
+                "engine/builder changed before cache effect")
+        require(self.image_census() == protected, "image backing changed before cache effect")
+        self.check_subject()
+        result.update(status="pending", reason="exact bounded filtered cache retirement intent")
+        self.save()
+        # --all admits shared records to the candidate check; exact-ID + shared +
+        # immutable + regular remain conjunctive engine filters. The engine rechecks
+        # active refs and last-use under its cache lock. No unfiltered prune or force.
+        command(["docker", "buildx", "prune", "--builder", builder["name"], "--all", *filters,
+                 "--filter", "until=" + str(self.retention) + "s"], self.safe, timeout=60, confirmation=b"y\n")
+        require(self.engine() == self.engine_identity and self.image_census() == protected,
+                "protected image census changed after cache effect")
+        remaining = next((row for row in self.usage() if row["ID"] == identifier), None)
+        result.update(status="removed" if remaining is None else "held",
+                      reason="exact cache absent; backing image roots retained" if remaining is None else
+                             "engine retained cache (new use/retention/reference); no retry")
+
+    def downloadable(self, current):
+        """Verify every immutable manifest/blob through the public Docker Hub API
+
+        No local credentials, registry mutation, mutable tag assertion or manifest-only
+        availability claim. Bounded streamed content hashes are retained, not tokens.
+        """
+        references = sorted(set((current.get("RepoDigests") or []) + (current.get("RepoTags") or [])))
+        require(references and len(references) <= 8 and all("@" in value for value in references),
+                "mutable/unreferenced image may contain unique work; preserve")
+        repositories = set()
+        for value in references:
+            repository, identity = value.rsplit("@", 1)
+            require(identity == current["Id"], "image reference does not bind exact root")
+            repository = repository.removeprefix("docker.io/")
+            require("." not in repository.split("/")[0] and re.fullmatch(r"[a-z0-9_/-]+", repository),
+                    "registry recoverability capability unavailable; preserve")
+            repositories.add(repository if "/" in repository else "library/" + repository)
+        require(len(repositories) == 1, "multiple remote repositories require separate qualification")
+        repository = repositories.pop()
+        token_url = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:" + repository + ":pull"
+        with urlopen(token_url, timeout=15) as response:
+            token = json.loads(response.read(65537))["token"]
+        require(isinstance(token, str) and len(token) <= 65536, "public registry token unavailable")
+        budget, records, seen = 256 * 1024 * 1024, [], set()
+        deadline = time.monotonic() + 60
+        def fetch(identity, media, size=None):
+            nonlocal budget
+            require(re.fullmatch(r"sha256:[a-f0-9]{64}", identity), "unsupported remote content digest")
+            if identity in seen:
+                return
+            require(len(seen) < 128 and time.monotonic() < deadline, "remote graph exceeds bounded qualification")
+            seen.add(identity)
+            manifest = "manifest" in media or "index" in media or "list" in media
+            route = "manifests/" if manifest else "blobs/"
+            request = Request("https://registry-1.docker.io/v2/" + repository + "/" + route + identity,
+                              headers={"Authorization": "Bearer " + token, "Accept": media})
+            hashed, length, chunks = hashlib.sha256(), 0, []
+            with urlopen(request, timeout=15) as response:
+                while True:
+                    require(time.monotonic() < deadline, "remote content qualification deadline reached; preserve image")
+                    chunk = response.read(min(1024 * 1024, budget + 1))
+                    if not chunk:
+                        break
+                    budget -= len(chunk)
+                    require(budget >= 0, "remote graph exceeds byte qualification budget")
+                    hashed.update(chunk)
+                    length += len(chunk)
+                    if manifest:
+                        require(length <= 1024 * 1024, "remote manifest oversized")
+                        chunks.append(chunk)
+            require("sha256:" + hashed.hexdigest() == identity and (size is None or length == size),
+                    "remote immutable content hash/size mismatch")
+            records.append({"digest": identity, "bytes": length})
+            if manifest:
+                value = json.loads(b"".join(chunks))
+                children = value.get("manifests", []) if "manifests" in value else [value["config"], *value["layers"]]
+                require(isinstance(children, list) and len(children) <= 64, "remote graph unsupported")
+                for child in children:
+                    fetch(child["digest"], child["mediaType"], child["size"])
+        descriptor = current.get("Descriptor")
+        require(descriptor and descriptor["digest"] == current["Id"], "legacy image remote identity unresolved")
+        fetch(current["Id"], descriptor["mediaType"], descriptor["size"])
+        return {"repository": repository, "root": current["Id"], "verified_content": records}
+
+    def image_consumers(self, current):
+        roots = local_image_graphs(self.safe)
+        matches = [row for row in roots if row["Id"] == current["Id"]]
+        require(len(matches) == 1 and matches[0].get("Manifests"), "image platform graph unavailable")
+        manifests = {child["ID"] for child in matches[0]["Manifests"]}
+        require(all(re.fullmatch(r"sha256:[a-f0-9]{64}", value) for value in manifests), "invalid image child identity")
+        for consumer in docker_inventory(self.safe):
+            require(consumer["Image"] != current["Id"], "image has current/stopped consumer")
+            descriptor = consumer.get("ImageManifestDescriptor")
+            require(descriptor and re.fullmatch(r"sha256:[a-f0-9]{64}", descriptor.get("digest", "")),
+                    "image consumer platform visibility unavailable")
+            require(descriptor["digest"] not in manifests | {current["Id"]}, "image has current/stopped platform consumer")
+
+    def image(self, original, result):
+        current = inspect_image(self.safe, original["id"])
+        require(current is not None, "image changed/absent before qualification")
+        created = docker_timestamp(current["Created"])
+        require((datetime.now(timezone.utc) - created).total_seconds() >= self.retention, "image inside retention window")
+        self.image_consumers(current)
+        recovery = self.downloadable(current)
+        result.update(recovery=recovery, inspection_sha256=fingerprint(current))
+        self.save()
+        before = self.image_census()
+        require(original in before and self.engine() == self.engine_identity, "image/engine changed before effect")
+        self.image_consumers(current)
+        require(fingerprint(inspect_image(self.safe, original["id"])) == fingerprint(current), "image identity/references changed")
+        self.check_subject()
+        result.update(status="pending", reason="verified downloadable exact image retirement intent")
+        self.save()
+        command(["docker", "image", "rm", current["Id"]], self.safe, timeout=60)
+        require(inspect_image(self.safe, current["Id"]) is None and self.engine() == self.engine_identity,
+                "image removal postcondition failed")
+        require(self.image_census() == [row for row in before if row["id"] != current["Id"]],
+                "other image roots/references changed; aggregate incomplete")
+        result.update(status="removed", reason="exact image absent; full immutable remote content verified; no layer ownership claim")
+
+    def reclaim(self):
+        caches = []
+        cache_inventory_complete = False
+        self.builder_snapshot = None
+        try:
+            self.builder_snapshot = self.builder_identity()
+            self.attempt["builder"] = self.builder_snapshot
+            caches = self.usage()
+            cache_inventory_complete = True
+        except (Hold, OSError, ValueError, KeyError, TypeError) as error:
+            # Builder visibility is not an image-retirement dependency. Retain the
+            # precise cache hold while independently qualifying image effects.
+            self.attempt["results"].append({"kind": "cache", "identity": "builder-inventory", "status": "held",
+                "reason": str(error) if isinstance(error, Hold) else type(error).__name__, "commands": []})
+        self.attempt["cache_inventory_complete"] = cache_inventory_complete
+        self.protected_images = self.image_census()
+        require(self.engine() == self.engine_identity, "engine changed during storage inventory")
+        # Cache first: its recoverability depends on preserving ALL image roots.
+        now = datetime.now(timezone.utc)
+        candidates = []
+        for row in caches:
+            if row.get("Type") != "regular" or row.get("Shared") is not True or row.get("InUse") is not False:
+                continue
+            try:
+                if self.selection["cache_ids"] is not None or (now - docker_timestamp(row["LastUsedAt"])).total_seconds() >= self.retention:
+                    candidates.append(("cache", row))
+            except (Hold, KeyError, TypeError, ValueError) as error:
+                self.attempt["results"].append({"kind": "cache", "identity": row["ID"], "status": "held", "commands": [],
+                    "reason": str(error) if isinstance(error, Hold) else type(error).__name__})
+        candidates += [("image", row) for row in self.protected_images if row["digests"] and not
+                       any("@" not in reference for reference in row["tags"]) and
+                       isinstance(row["created"], int) and now.timestamp() - row["created"] >= self.retention]
+        protected_ids = {value.rsplit("@", 1)[-1] for value in self.protected_inputs if "@" in value or value.startswith("sha256:")}
+        protected_ids.update(row["id"] for row in self.protected_images if set(self.protected_inputs) &
+                             set(row.get("tags", []) + row.get("digests", [])))
+        candidates = [(kind, row) for kind, row in candidates if kind != "image" or row["id"] not in protected_ids]
+        self.attempt["protected_input_ids"] = sorted(protected_ids)
+        candidates = [(kind, row) for kind, row in candidates if self.selection[kind + "_ids"] is None or
+                      (row["ID"] if kind == "cache" else row["id"]) in self.selection[kind + "_ids"]]
+        self.attempt["candidate_count"] = len(candidates)
+        self.attempt["budget_exhausted"] = len(candidates) > self.limit
+        self.attempt["protected_cache_count"] = len(caches) - sum(kind == "cache" for kind, _ in candidates) if cache_inventory_complete else None
+        self.attempt["excluded_storage_policy"] = "private, mutable, source and cache-mount records; unique/unproven or mutable-tagged images; all volumes/host data remain untouched"
+        for kind, item in candidates[:self.limit]:
+            identifier = item["ID"] if kind == "cache" else item["id"]
+            result = {"kind": kind, "identity": identifier, "status": "held", "commands": [],
+                      "ownership": "historical task ownership not required for positively recoverable artifacts"}
+            self.attempt["results"].append(result)
+            global COMMANDS
+            COMMANDS = result["commands"]
+            try:
+                self.check_subject()
+                getattr(self, kind)(item, result)
+            except (Hold, OSError, ValueError, KeyError, TypeError) as error:
+                result.update(status="held", reason=str(error) if isinstance(error, Hold) else type(error).__name__)
+            finally:
+                COMMANDS = None
+                self.save()
+        for kind, observed in (("cache", {row["ID"] for row in caches}),
+                               ("image", {row["id"] for row in self.protected_images})):
+            for identifier in self.selection[kind + "_ids"] or []:
+                if identifier not in observed:
+                    result = {"kind": kind, "identity": identifier, "status": "absent", "commands": [],
+                              "reason": "exact identity absent from successful same-engine inventory; no effect replayed"}
+                    if kind == "cache" and not cache_inventory_complete:
+                        result.update(status="held", reason="owning cache inventory unavailable; exact selected identity unobserved, not absent")
+                    if kind == "image":
+                        COMMANDS = result["commands"]
+                        try:
+                            require(any(entry.get("identity") == identifier and
+                                        entry.get("recovery", {}).get("root") == identifier and entry.get("inspection_sha256")
+                                        for attempt in self.document.get("storage_attempts", [])[:-1]
+                                        for entry in attempt["results"]),
+                                    "absent/unresolvable image lacks prior exact-root recovery proof; config/index ambiguity held")
+                            require(inspect_image(self.safe, identifier) is None,
+                                    "image census contradicts exact inspection; absence held")
+                        except (Hold, OSError, ValueError, KeyError, TypeError) as error:
+                            result.update(status="held", reason=str(error) if isinstance(error, Hold) else type(error).__name__)
+                        finally:
+                            COMMANDS = None
+                    self.attempt["results"].append(result)
+        self.attempt["complete"] = not self.attempt["budget_exhausted"] and all(
+            row["status"] in ("removed", "absent") for row in self.attempt["results"])
+
+    def run(self, admit=True):
+        self.save()
+        try:
+            self.check_subject()
+            self.engine_identity = self.engine()
+            self.attempt["engine"] = self.engine_identity
+            measured = True
+            for phase in ("host_before",):
+                try:
+                    self.attempt[phase] = self.host_space()
+                except (Hold, OSError, ValueError, KeyError, TypeError) as error:
+                    measured = False
+                    self.attempt[phase] = {"hold": str(error) if isinstance(error, Hold) else type(error).__name__}
+            self.reclaim()
+            try:
+                self.attempt["host_after"] = self.host_space()
+            except (Hold, OSError, ValueError, KeyError, TypeError) as error:
+                measured = False
+                self.attempt["host_after"] = {"hold": str(error) if isinstance(error, Hold) else type(error).__name__}
+            self.attempt["admitted"] = admit and measured and all(row["free_bytes"] >= self.reserve + self.allocation
+                                                                 for row in self.attempt["host_after"])
+            if admit and not self.attempt["admitted"]:
+                self.attempt["hold"] = "reserve plus bounded allocation unavailable after one reclaim pass; stop allocation; owner frees known disposable storage or provisions capacity"
+        except (Hold, OSError, ValueError, KeyError, TypeError) as error:
+            self.attempt.update(admitted=False, complete=False, hold=str(error) if isinstance(error, Hold) else type(error).__name__)
+        self.save()
+        return self.attempt
 
 
 # Qualified legacy operation, not a version gate or permission to execute old code.
@@ -624,15 +1114,38 @@ class Cleanup:
         for report in self.plan["protected_files"]:
             path = absolute(report["path"])
             require(file_record(path) == report["record"], "protected report/private evidence changed")
+        for original in self.plan.get("protected_source_files", []):
+            path = absolute(original["path"])
+            require(inside(path, candidate) and original["preserved"] in self.plan["protected_files"],
+                    "protected source/external binding changed")
+            require(not candidate.exists() or file_record(path) == original["record"], "protected source changed before removal")
         disposition = self.plan["worktree"]["disposition"]
         require(disposition in ("remove", "retain", "hold"), "unknown worktree disposition")
         if disposition == "remove":
             require(not any(inside(absolute(report["path"]), candidate) for report in self.plan["protected_files"]),
                     "canonical report inside deletion candidate")
+        if self.plan.get("readiness"):
+            reference = self.plan["readiness"]
+            raw = self.retained_evidence(reference)
+            readiness = json.loads(raw)
+            require(readiness["subject"]["task"] == self.subject and readiness["subject"]["checkout"] == str(candidate),
+                    "cleanup readiness subject changed")
+            if "preservation" in readiness:
+                self.verify_preservation(readiness["preservation"])
+            if readiness["ready"] is not True:
+                require(self.plan["worktree"]["disposition"] != "remove" and self.plan["branch"]["disposition"] != "remove",
+                        "incomplete preservation cannot retire source/ref")
         for worker in self.plan["exited_workers"]:
             # PID reuse is not an exit observation. A live PID always holds, even after reuse.
             observed = command(["ps", "-p", str(worker["pid"]), "-o", "lstart="], self.safe, codes=(0, 1))
             require(observed.returncode == 1 and not observed.stdout.strip(), "original worker PID still live or reused; coordinator must observe exit")
+        if self.plan.get("purpose") == "disposable-runtime":
+            require(self.plan["worktree"]["disposition"] == "retain" and self.plan["branch"]["disposition"] == "retain" and
+                    self.plan["runtime"]["ownership"] == "proven" and self.plan["runtime"]["disposable_authority"],
+                    "runtime-only authority cannot retire source/ref or unqualified data")
+            command(["git", "cat-file", "-e", self.plan["oid"] + "^{commit}"], self.safe)
+            self.attempt["runtime_authority_observed_at"] = datetime.now(timezone.utc).isoformat()
+            return
         publication = self.plan["publication"]
         fields = "url,state,mergedAt,mergeCommit,baseRefName,headRefName,headRefOid,headRepository,headRepositoryOwner"
         raw = command(["gh", "pr", "view", publication["url"], "--repo", publication["repository"], "--json", fields], self.safe)
@@ -925,6 +1438,129 @@ class Cleanup:
                     "source": str(source), "candidate_target": exposed,
                     "configuration_sha256": container_identity(item), "process_paths_sha256": digest(observed.stdout)})
 
+    def service_visibility(self, item, current):
+        """Observe complete worker descriptors and connections without changing execution identity"""
+        require(not current["State"].get("Restarting") and not current["State"].get("Paused"),
+                "service restarting/paused; descriptor visibility held")
+        if not current["State"]["Running"]:
+            # A stopped container has no workers, but immutable identity and all mount/consumer
+            # protections still apply. Never convert an inspection error into stopped state.
+            return
+        host = current["HostConfig"]
+        network = host.get("NetworkMode", "")
+        require(host.get("PidMode", "") in ("", "private") and isinstance(network, str) and
+                network != "host" and not network.startswith("container:"),
+                "shared/host worker namespace outside service visibility capability")
+        def engine_workers():
+            raw = command(["docker", "top", item["identity"], "-eo", "pid,ppid"], self.safe).stdout
+            lines = [line.split() for line in raw.decode().splitlines()]
+            require(lines and lines[0] == ["PID", "PPID"] and 1 <= len(lines) - 1 <= 256 and
+                    all(len(line) == 2 and all(value.isdecimal() for value in line) for line in lines[1:]) and
+                    len({line[0] for line in lines[1:]}) == len(lines) - 1,
+                    "complete engine worker census unavailable")
+            return sorted(tuple(line) for line in lines[1:])
+        census = engine_workers()
+        # Python is a capability, not an installation or version prerequisite. Do not retry as
+        # another user or add ptrace/DAC capabilities when procfs denies any worker descriptor.
+        probe = r'''
+import hashlib, json, os, pathlib, re
+root = pathlib.Path('/proc')
+me = os.getpid()
+def workers():
+    return sorted(int(p.name) for p in root.iterdir() if p.name.isdigit() and int(p.name) != me)
+def observe(pid):
+    p = root / str(pid)
+    birth = (p / 'stat').read_text().rsplit(')', 1)[1].split()[19]
+    links = {name: os.readlink(p / name) for name in ('cwd', 'exe', 'root')}
+    fd = p / 'fd'
+    names = sorted(os.listdir(fd))
+    if len(names) > 4096:
+        raise RuntimeError('descriptor budget exceeded')
+    descriptors = []
+    for name in names:
+        target = os.readlink(fd / name)
+        info = (p / 'fdinfo' / name).read_text()
+        descriptors.append([name, target, info])
+    if sorted(os.listdir(fd)) != names:
+        raise RuntimeError('descriptor set changed')
+    return [pid, birth, links, descriptors]
+before = workers()
+if not 1 <= len(before) <= 256:
+    raise RuntimeError('worker census unavailable/oversized')
+first = [observe(pid) for pid in before]
+# All network namespaces visible from these workers must be the service namespace.
+network = os.readlink(root / str(me) / 'ns/net')
+for pid in before:
+    if os.readlink(root / str(pid) / 'ns/net') != network:
+        raise RuntimeError('worker network namespace unresolved')
+# A connected peer needs positive ownership, not inference from endpoint names. This
+# finite capability accepts no connected sockets; internal/unknown peers HOLD alike.
+tables = {}
+for name in ('tcp', 'tcp6', 'udp', 'udp6'):
+    tables[name] = (root / 'net' / name).read_text()
+    rows = tables[name].splitlines()
+    if not rows or 'rem_address' not in rows[0] and 'remote_address' not in rows[0]:
+        raise RuntimeError('socket table unavailable')
+    for line in rows[1:]:
+        fields = line.split()
+        if len(fields) < 10 or fields[3] != '0A' and fields[2].split(':')[1] != '0000':
+            raise RuntimeError('connected network peer unresolved')
+tables['unix'] = (root / 'net/unix').read_text()
+rows = tables['unix'].splitlines()
+if not rows or 'Inode' not in rows[0]:
+    raise RuntimeError('Unix socket table unavailable')
+owned_sockets = {re.fullmatch(r'socket:\[(\d+)\]', d[1]).group(1)
+                 for worker in first for d in worker[3] if re.fullmatch(r'socket:\[(\d+)\]', d[1])}
+table = set()
+for line in rows[1:]:
+    fields = line.split()
+    if len(fields) < 7:
+        raise RuntimeError('Unix socket table incomplete')
+    table.add(fields[6])
+    if fields[5] != '01':
+        raise RuntimeError('connected Unix peer ownership unresolved')
+# TCP sockets do not appear in the Unix table. Require every socket descriptor to
+# occur in a successfully read namespace socket table, including listening sockets.
+for name in ('tcp', 'tcp6', 'udp', 'udp6', 'raw', 'raw6'):
+    if name not in tables:
+        tables[name] = (root / 'net' / name).read_text()
+    rows = tables[name].splitlines()
+    if not rows or len(rows) > 8192 or name.startswith('raw') and len(rows) > 1:
+        raise RuntimeError('socket table incomplete/unsupported/oversized')
+    for line in rows[1:]:
+        fields = line.split()
+        if len(fields) < 10:
+            raise RuntimeError('socket table malformed')
+        table.add(fields[9])
+if not owned_sockets <= table:
+    raise RuntimeError('unsupported socket descriptor')
+second = [observe(pid) for pid in before]
+if workers() != before or first != second or any(
+        (root / 'net' / name).read_text() != value for name, value in tables.items()):
+    raise RuntimeError('worker/descriptor/peer observations changed')
+print(json.dumps({'complete': True, 'workers': len(before), 'sha256': hashlib.sha256(
+    json.dumps([first, tables], sort_keys=True).encode()).hexdigest(), 'connected_peers': 0}))
+'''
+        try:
+            observed = command(["docker", "exec", item["identity"], "python3", "-B", "-c", probe], self.safe)
+        except Hold as error:
+            raise Hold("service worker descriptor/peer inspection unavailable; " + str(error)) from None
+        require(not observed.stderr.strip(), "service descriptor/peer visibility incomplete")
+        visibility = json.loads(observed.stdout)
+        require(visibility.get("complete") is True and visibility.get("workers") == len(census) and
+                visibility.get("connected_peers") == 0 and
+                re.fullmatch(r"[a-f0-9]{64}", visibility.get("sha256", "")),
+                "service descriptor/peer visibility unavailable or unsupported")
+        require(engine_workers() == census, "engine worker census changed during descriptor inspection")
+        processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
+        require(digest(processes) == item["processes_sha256"], "service process evidence changed before effect")
+        visibility["engine_workers_sha256"] = fingerprint(census)
+        observations = self.attempt.setdefault("service_visibility", [])
+        previous = [value for value in observations if value["container"] == item["identity"]]
+        require(not previous or previous[-1] == {"container": item["identity"], **visibility},
+                "service worker/descriptor/peer observations changed before effect")
+        observations.append({"container": item["identity"], **visibility})
+
     def container(self, item, result):
         # Reconcile absence before reading runtime inputs that checkout retirement
         # may have deleted. A present resource still needs every runtime check.
@@ -957,6 +1593,7 @@ class Cleanup:
         if current["State"]["Running"]:
             processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
             require(digest(processes) == item["processes_sha256"], "container processes changed/unknown consumers")
+        self.service_visibility(item, current)
         require(item["data"] == "disposable", "durable or unresolved data disposition")
         self.capture_mounts(item, current, model)
         candidate = absolute(self.plan["worktree"]["identity"])
@@ -972,6 +1609,7 @@ class Cleanup:
         require(container_identity(latest) == item["inspection_sha256"], "container changed before effect")
         if binding.get("kind", "compose") == "standalone":
             self.standalone_container(item, latest)
+        self.service_visibility(item, latest)
         if not self.apply:
             result.update(status="qualified", reason="preview only")
             return
@@ -987,6 +1625,7 @@ class Cleanup:
         else:
             self.runtime(item)
         require(container_identity(latest) == item["inspection_sha256"] and not latest["State"]["Running"], "container changed/restarted after stop")
+        self.service_visibility(item, latest)
         self.host_consumers(candidate)
         command(["docker", "rm", item["identity"]], self.safe)
         require(not any(value["Id"] == item["identity"] or value["Name"] == item["name"] for value in docker_inventory(self.safe)), "container removal postcondition failed/recreated")
@@ -1518,9 +2157,9 @@ class Cleanup:
                     file_record(Path(entry["new"])) == entry.get("destination_record", entry["record"])
                     for entry in files), "external preservation copy changed or unavailable")
 
-    def preserve(self, candidate, item):
+    def preserve(self, candidate, item, include_source=False):
         excluded = exclusion_paths(item["exclusions"])
-        before = artifact_inventory(candidate, excluded)
+        before = artifact_inventory(candidate, excluded, item.get("temporary_artifacts", []))
         def excluded_path(name):
             return any(inside(Path(name), path) for path in excluded)
         # Git's untracked listing can omit nested Git-shaped evidence. Select from the
@@ -1528,7 +2167,7 @@ class Cleanup:
         # approved exclusions. Preserve directory metadata, including tracked-file parents.
         tracked = set(command(["git", "ls-files", "--cached", "-z"], candidate).stdout.decode().split("\0"))
         retained = {name: record for name, record in before.items() if name != "." and not excluded_path(name) and
-                    (record["kind"] == "directory" or name not in tracked)}
+                    (include_source or record["kind"] == "directory" or name not in tracked)}
         destination = absolute(item["preserve_to"])
         require(inside(destination, self.store) and not inside(destination, candidate), "preservation destination must be canonical task-owned runs")
         destination.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -1569,7 +2208,7 @@ class Cleanup:
                         shutil.copy2(source, target, follow_symlinks=False)
                 copied = preserved_record(record, target)
             manifest.append({"old": str(source), "new": str(target), "record": record, "destination_record": copied})
-        require(artifact_inventory(candidate, excluded) == before, "source inventory changed during preservation")
+        require(artifact_inventory(candidate, excluded, item.get("temporary_artifacts", [])) == before, "source inventory changed during preservation")
         self.attempt["preservation"] = {"source": str(candidate), "destination": str(destination),
                                         "exclusions": item["exclusions"], "files": manifest,
                                         "source_inventory_sha256": fingerprint(before),
@@ -1599,7 +2238,7 @@ class Cleanup:
         require(not text(["git", "status", "--porcelain", "--untracked-files=all"], candidate), "tracked/untracked changes; preserve unpublished work")
         self.consumers(candidate)
         excluded = exclusion_paths(item["exclusions"])
-        inventory = artifact_inventory(candidate, excluded)
+        inventory = artifact_inventory(candidate, excluded, item.get("temporary_artifacts", []))
         require(not any(" deny " in (" " + acl + " ") for record in inventory.values() for acl in record["acl"]),
                 "filesystem deny ACL/protection present; permission hold; no removal or protection changes")
         require(all(record["mode"] & 0o300 == 0o300 for record in inventory.values() if record["kind"] == "directory"),
@@ -1611,7 +2250,7 @@ class Cleanup:
         self.subject_checks()
         self.local_tip()
         self.consumers(candidate)
-        require(artifact_inventory(candidate, excluded) == before, "source changed immediately before removal")
+        require(artifact_inventory(candidate, excluded, item.get("temporary_artifacts", [])) == before, "source changed immediately before removal")
         self.verify_preservation(self.attempt["preservation"])
         result.update(status="pending", reason="preservation verified; qualified normal Git removal; reobserve outcome")
         self.save()
@@ -1697,6 +2336,14 @@ class Cleanup:
             self.effect("image", item, self.image)
         for item in self.plan["caches"]:
             self.effect("cache", item, self.cache)
+        if self.plan.get("recoverable_storage") is not None and self.apply:
+            storage = Storage(self.path, self.safe, document=self.document, policy=self.plan["recoverable_storage"],
+                              subject_check=self.subject_checks)
+            observation = storage.run(admit=False)
+            self.results.append({"kind": "recoverable-storage", "identity": self.subject,
+                                 "status": ("removed" if any(row["status"] == "removed" for row in observation["results"]) else "absent") if observation["complete"] else "held",
+                                 "reason": observation.get("hold", "inspect independent storage per-effect results"),
+                                 "storage_attempt": len(self.document["storage_attempts"]) - 1})
         for pending in self.plan.get("pending_operations", []):
             self.results.append({"kind": "allocation", "identity": pending["identity"], "status": "held", "reason": pending["reason"]})
         self.effect("worktree", self.plan["worktree"], self.checkout)
@@ -1717,15 +2364,39 @@ class Cleanup:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--receipt", required=True, help="Existing private exact-subject JSON handoff/receipt")
+    parser.add_argument("--receipt", help="Private exact-subject handoff, or storage admission receipt (default var/storage.json)")
     parser.add_argument("--apply", action="store_true", help="Execute qualified effects; default is observation only")
+    parser.add_argument("--runtime-retire", action="store_true", help="Retire only an explicitly disposable runtime receipt; retain source/ref")
+    parser.add_argument("--protect-image", action="append", default=[], help="Current caller input reference/root; excluded from image reclamation")
+    storage_mode = parser.add_mutually_exclusive_group()
+    storage_mode.add_argument("--storage-admit", action="store_true", help="One automatic bounded recoverable-artifact pass; refuse insufficient/unavailable reserve")
+    storage_mode.add_argument("--storage-reclaim", action="store_true", help="Same bounded storage operation without allocation admission")
     args = parser.parse_args()
     os.umask(0o077)
+    if not args.receipt:
+        if not (args.storage_admit or args.storage_reclaim):
+            parser.error("--receipt is required for exact-subject cleanup")
+        args.receipt = str(Path.cwd() / "var/storage.json")
     try:
+        absolute(args.receipt).parent.mkdir(parents=True, exist_ok=True)
+        if args.runtime_retire:
+            require(not (args.storage_admit or args.storage_reclaim), "runtime retirement is not storage admission")
+            plan = json.loads(absolute(args.receipt).read_text())["cleanup"]["plan"]
+            require(plan.get("purpose") == "disposable-runtime" and plan["worktree"]["disposition"] == "retain" and
+                    plan["branch"]["disposition"] == "retain", "runtime retirement needs explicit original disposable authority; source/ref retained")
+            os.chdir(absolute(plan["safe_checkout"]))
         # Separate persistent lock inode survives atomic receipt replacement; never delete it.
         lock = absolute(args.receipt + ".lock")
         with lock.open("a") as handle:
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            if args.storage_admit or args.storage_reclaim:
+                require(not (Path.cwd() / "var/resource-lifecycle.json").exists(),
+                        "bound TASK storage admission uses bin/runtime and its SAME receipt/configuration")
+                storage = Storage(args.receipt, Path.cwd(), policy={"protected_images": args.protect_image})
+                require("lifecycle" not in storage.document, "bound lifecycle storage cannot bypass original locator/plan guards")
+                observation = storage.run(admit=args.storage_admit)
+                print(json.dumps({key: value for key, value in observation.items() if key != "results"}, indent=2))
+                return 0 if (observation["admitted"] if args.storage_admit else observation["complete"]) else 1
             return Cleanup(args.receipt, args.apply).run()
     except (Hold, OSError, ValueError, KeyError, TypeError) as error:
         reason = str(error) if isinstance(error, Hold) else type(error).__name__

@@ -28,6 +28,55 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00546](planning/tasks/00546-TASK.md#accepted-repair-closeout-checkpoint--2026-10-31) has independent
+Review ACCEPT and affected nonvisual QA PASS on repaired candidate `369664f`. Publication and cleanup were
+pending at this checkpoint; actual results and holds are in the canonical ignored TASK Land handoff and
+[PR #186](https://github.com/johnnickell/fight-agent-os/pull/186). Acceptance is not complete cleanup or merge.
+
+The following acceptance checkpoint is historical, not acceptance of LAND-01's repair.
+[TASK-00546](planning/tasks/00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current delivery results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
+
+The following repair checkpoint is historical, not current acceptance.
+[TASK-00546](planning/tasks/00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31) is in bounded Work repair for
+Review2 R3/R4/R5: shared plan prerequisites at storage effects, original image-policy preservation and truthful
+cache absence under unavailable inventory. Focused owning checks and the new 24-phase final gate pass
+(`20261031T034831Z-22913`). Gate PASS is not upstream READY: the canonical Work handoff owns current-source
+observation status, external proof and precise legacy holds. Existing runtime/receipt/history remain protected.
+Renewed independent Review/nonvisual QA are pending; no acceptance, retirement or publication is claimed.
+
+The following integration checkpoint is historical, not current repair verification.
+[TASK-00546](planning/tasks/00546-TASK.md#integration-and-standing-land-readiness--2026-10-31) is integrating
+accepted TASK-00547's single lifecycle with recoverable-storage policy and executable upstream Land readiness.
+The original verification runtime is reused through its SAME receipt, not recreated. The one final combined-source
+24-phase gate passed (`20261031T023423Z-15117`); independent Review/QA remain pending. Executable readiness
+verified external preservation while exposing original service-capability and deny-delete ACL holds before
+publication. Current proof and exact affected resource holds are in canonical ignored
+`.runs/tasks/TASK-00546/runs/work-handoff.md`. No acceptance, publication or universal cleanup guarantee is claimed.
+
+The following Repair 1 checkpoint is historical, not the current Work continuation.
+[TASK-00546](planning/tasks/00546-TASK.md#repair-cycle-1--r1r2-2026-10-29) is in bounded Work repair for
+Review R1/R2: trusted local Docker socket aliases and effective Compose startup/build image protection.
+Focused owning regressions pass, but the final changed-source gate failed in the unchanged activation rate-boundary
+test (expected 429, received 500); Work verification is incomplete. Coordinator intake owns that out-of-scope
+failure; independent renewed Review/nonvisual QA remain pending. The retained verification runtime and current
+Work handoff remain available; no acceptance or publication is claimed.
+
+The following Work2 checkpoint is historical, not current review readiness.
+[TASK-00546](planning/tasks/00546-TASK.md#work2-implementation-checkpoint--2026-10-29) implements bounded
+recoverable-storage reclamation, configurable retention/reserve admission and same-helper disposable-runtime
+retirement. Real Docker cache/image effects, worker visibility and runtime/Build caller qualification are recorded
+in its canonical Work handoff. The frozen-source 24-phase `./bin/build` passed with an exact input/artifact
+bridge; independent Review/QA are next. No acceptance, publication, fleet or physical-reclaim claim follows.
+
+The following Work1 checkpoint is preserved history, not current Work readiness.
+[TASK-00546](planning/tasks/00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) is in progress but
+incomplete. Its partial executor repair holds unavailable/changed worker visibility and unresolved connected
+peers. The 15-case controlled matrix and one fresh real worker probe passed their bounded checks, not full
+helper/caller or application acceptance. Cache-to-source recoverability qualification is held; automatic
+reclamation, retention/reserve admission and lifecycle/caller work remain unfinished. The unqualified storage
+draft was withdrawn. No final application gate, cleanup, independent acceptance or physical reclaim is claimed.
+TASK-00542's acceptance, limits and delivery evidence remain separate; prior checkpoints below are historical.
+
 [TASK-00542's repaired H](planning/tasks/00542-TASK.md#accepted-h-closeout-checkpoint--2026-10-29) has independent
 Review11 ACCEPT and QA12 PASS (42 fresh observations / 12 groups plus twenty explicit accumulated rows);
 R10 is resolved. Done records implementation acceptance, not completed delivery. Repaired publication/checks
@@ -261,7 +310,10 @@ managed assignment is available through the separate invitation API.
 ./bin/planning-check --write  # Refresh planning views
 ./bin/planning-check          # Validate planning
 ./bin/build                   # Complete gate: backend coverage + frontend/catalog in running web service
-./bin/down                    # Stop the development service
+# Bound temporary runtime: original runtime_authority, SAME generated plan/executor:
+./bin/down
+# Historical runtime-only plans retain their exact original receipt:
+./bin/down --receipt /absolute/disposable-runtime-receipt.json
 ```
 
 Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
@@ -275,6 +327,14 @@ both initialization and direct spec reads. `.env.example` starts with `["local"]
 it. Independent strict APP_DEBUG supports only closed sanitized diagnostics and refuses true in prod/production.
 No public spec, long-lived Swagger credential or production-mail exception is supplied. Full production startup
 qualification remains explicitly deferred until the independent real-mail prerequisite exists.
+
+Expensive local wrappers first run [bounded storage admission](.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546).
+Export its host-shell settings when the default 20 GiB reserve plus 4 GiB allocation allowance is unsuitable;
+unknown measurements or insufficient space refuse allocation, never trigger a global prune. `./bin/up --build-only`
+is the guarded initial image setup. Unknown/durable volumes remain protected; `bin/down` uses original disposal authority and the SAME generated
+lifecycle plan/executor rather than unqualified Compose teardown. Stage handoffs run
+[executable readiness](docs/engineering/RESOURCE_LIFECYCLE.md#standing-cleanup-readiness): actual external
+source/private/report preservation, capability checks and precise holds, without another routine disposal prompt.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots

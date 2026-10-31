@@ -8,6 +8,15 @@ for tool in docker python3 openssl curl; do
         exit 1
     }
 done
+build_only=no
+case "$#:${1:-}" in
+    0:) ;;
+    1:--build-only) build_only=yes ;;
+    *) echo 'Usage: ./bin/up [--build-only]' >&2; exit 2 ;;
+esac
+# Admission and allocation use the SAME effective lifecycle configuration/receipt.
+./bin/runtime storage-admit
+if [ "$build_only" = yes ]; then exec ./bin/runtime docker compose build web; fi
 if [ ! -f vendor/autoload.php ]; then
     echo "Dependencies are not installed. Run: ./bin/composer install --no-interaction --prefer-dist --no-progress" >&2
     exit 1

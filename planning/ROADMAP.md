@@ -69,6 +69,54 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**TASK-00546 accepted repair checkpoint:** [TASK-00546](tasks/00546-TASK.md#accepted-repair-closeout-checkpoint--2026-10-31)
+has independent Review ACCEPT and affected nonvisual QA PASS on candidate `369664f`. Publication and cleanup
+were pending at this checkpoint; actual results and holds are in the canonical ignored TASK Land handoff and
+[PR #186](https://github.com/johnnickell/fight-agent-os/pull/186). Human merge remains separate.
+
+**TASK-00546 accepted implementation checkpoint — historical:** [TASK-00546](tasks/00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
+
+**TASK-00546 repair cycle 2 — historical checkpoint:** [R3/R4/R5 repair](tasks/00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31)
+restores shared storage-effect prerequisites, original protected-image policy and truthful cache-inventory outcomes.
+Focused owning checks and the new 24-phase final gate pass (`20261031T034831Z-22913`). Gate PASS is not
+upstream READY: canonical Work handoff owns current-source observation status, external proof and affected holds.
+SAME runtime/receipt/history and existing legacy holds are protected. Renewed independent Review/nonvisual QA
+follow the committed Work handoff; no acceptance, retirement or publication. Allowance: 5 effective / 2 consumed /
+3 remaining. Canonical ignored Work handoff owns current proof and exact dispositions.
+
+**TASK-00546 integration — historical checkpoint:** [standing Land readiness](tasks/00546-TASK.md#integration-and-standing-land-readiness--2026-10-31)
+combines accepted TASK-00547's lifecycle with recoverable storage and executable preservation/capability checks.
+Original runtime/receipt/history are reused; the final combined-source 24-phase gate passed
+(`20261031T023423Z-15117`). External preservation and bounded real cleanup/resume are qualified; original
+capability/ACL and historical resource holds remain explicit. Independent Review/QA remain pending.
+Canonical ignored Work handoff owns current proof/affected holds;
+allowance stays 5 effective / 1 consumed / 4 remaining, without another routine disposal-approval step.
+
+**TASK-00546 repair cycle 1 — historical checkpoint:** [R1/R2 owning repair](tasks/00546-TASK.md#repair-cycle-1--r1r2-2026-10-29)
+passes focused endpoint-alias/effective-Compose-input regressions, but its one final changed-source gate failed in
+`ActivationApiTest::testRateBoundary` (429 expected, 500 received). Work verification is incomplete; coordinator
+intake owns the out-of-scope gate failure. Renewed independent Review and nonvisual QA remain pending. Scope/order/dependencies and
+predecessor protections are unchanged; shared allowance is 5 effective / 1 consumed / 4 remaining. Canonical
+ignored Work handoff/resource companion retain current evidence. No independent acceptance or publication.
+
+**TASK-00546 Work2 historical checkpoint — not current review readiness:**
+[TASK-00546](tasks/00546-TASK.md#work2-implementation-checkpoint--2026-10-29) implements bounded recoverable
+storage, host reserve/retention admission and same-helper disposable-runtime retirement. Focused direct
+helper/runtime/Build-caller evidence is retained; the frozen-source 24-phase local gate passed with a complete
+source/input/artifact bridge. Independent Review/QA are next from the committed Work handoff. Scope/order/dependencies and prior TASK limits are unchanged. No acceptance, publication,
+fleet or physical-reclaim claim. Current evidence is canonical ignored `.runs/tasks/TASK-00546/runs/work-handoff.md`.
+
+**TASK-00546 Work1 historical checkpoint — not current Work readiness:**
+[TASK-00546](tasks/00546-TASK.md#current-work-checkpoint--incomplete-2026-10-29) has a partial executor visibility
+repair with a 15-case controlled matrix and a bounded fresh worker probe, not full implementation acceptance.
+Cache-to-source recoverability remains uncorroborated; the unqualified reclamation/admission draft was withdrawn.
+Automatic reclamation, executable retention/reserve and lifecycle/caller work remain unfinished. Build owns
+prerequisite recovery/Work continuation via canonical ignored `.runs/tasks/TASK-00546/runs/work-handoff.md`;
+no final gate or independent stages have run. Historical ownership is still not required for positively
+recoverable artifacts; scope and protections are unchanged. TASK-00545's accepted source is integrated and its
+ownership hold is resolved. TASK-00543 depends on TASK-00546; TASK-00544 follows transitively. TASK-00542's
+limits/evidence remain separate. No cleanup or physical-reclaim claim. The following closeouts are historical.
+
 **TASK-00545 acceptance checkpoint — 2026-10-29:** [TASK-00545](tasks/00545-TASK.md#accepted-implementation-checkpoint--2026-10-29)
 received independent Review ACCEPT and scoped nonvisual QA PASS for candidate `946949e9240b3b16db7bde7425d93da3589b0fb8`.
 Publication and eligible cleanup are pending at this checkpoint; actual results and finite actions are in

@@ -28,8 +28,11 @@ def save(path, value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence", required=True)
+    parser.add_argument("--task", default="TASK-00547", help="Owning fixture TASK; no existing project resources are adopted")
     parser.add_argument("--repair-boundaries", action="store_true", help="Also qualify cold dependency builds, standalone/Compose budgets, attach signal, live original CLI and reused exec timeout")
     args = parser.parse_args()
+    assert len(args.task) == 10 and args.task.startswith("TASK-") and args.task[5:].isdigit(), "invalid fixture TASK"
+    task, namespace = args.task, args.task.lower().replace("-", "")
     os.umask(0o077)
     evidence = Path(args.evidence).resolve()
     evidence.mkdir(mode=0o700, parents=True, exist_ok=False)
@@ -87,9 +90,9 @@ def main():
     assert len(base_references) == 1 and "@sha256:" in base_references[0]
     base_reference = base_references[0]
     builder = run(["docker", "context", "show"], source)
-    files = ["bin/runtime", "bin/exec", ".pi/skills/land/scripts/lifecycle.py", ".pi/skills/land/scripts/cleanup.py"]
+    files = ["bin/runtime", "bin/exec", ".pi/skills/land/scripts/lifecycle.py", ".pi/skills/land/scripts/cleanup.py", "scripts/compose_storage_inputs.py"]
     hashes = {name: hashlib.sha256((source / name).read_bytes()).hexdigest() for name in files}
-    save(evidence / "original-intent.json", {"version": 1, "task": "TASK-00547", "source_files": hashes,
+    save(evidence / "original-intent.json", {"version": 1, "task": task, "source_files": hashes,
          "qualification_script_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
          "source_revision": run([real_git, "rev-parse", "HEAD"], source),
          "authority": "John's bounded disposable Work qualification only; controlled hosting is NOT publication",
@@ -112,13 +115,13 @@ def main():
         shutil.copy2(source / name, target)
     (safe / ".gitignore").write_text("var/\n.runs/\n")
     run([real_git, "init", "--initial-branch=develop"], safe)
-    run([real_git, "config", "user.name", "TASK-00547 fixture"], safe)
-    run([real_git, "config", "user.email", "task00547@example.invalid"], safe)
-    origin = "git@github.com:task00547/lifecycle-fixture.git"
+    run([real_git, "config", "user.name", task + " fixture"], safe)
+    run([real_git, "config", "user.email", namespace + "@example.invalid"], safe)
+    origin = "git@github.com:" + namespace + "/lifecycle-fixture.git"
     run([real_git, "remote", "add", "origin", origin], safe)
     run([real_git, "add", "."], safe)
-    run([real_git, "commit", "-m", "TASK-00547 controlled owning-tool fixture"], safe)
-    store = safe / ".runs/tasks/TASK-00547/runs"
+    run([real_git, "commit", "-m", task + " controlled owning-tool fixture"], safe)
+    store = safe / ".runs/tasks" / task / "runs"
     store.mkdir(parents=True)
     sentinel = store / "protected.txt"
     sentinel.write_text("independent protected evidence\n")
@@ -126,9 +129,9 @@ def main():
     subjects = {}
     for name in (("a", "b", "c", "d") if args.repair_boundaries else ("a", "b")):
         checkout = evidence / ("checkout-" + name)
-        branch = "feature/task-00547-fixture-" + name
+        branch = "feature/" + task.lower() + "-fixture-" + name
         run([real_git, "worktree", "add", "-b", branch, checkout, "develop"], safe)
-        project = "task00547-fixture-" + evidence.name.lower().replace("_", "-")[-16:] + "-" + name
+        project = namespace + "-fixture-" + evidence.name.lower().replace("_", "-")[-16:] + "-" + name
         subjects[name] = {"root": checkout, "project": project, "branch": branch, "receipt": store / (name + ".json")}
 
     def prepare(name, foreign=None):
@@ -151,7 +154,7 @@ def main():
         save(config, model)
         spec = store / (name + "-spec.json")
         save(spec, {"project": subject["project"], "config_files": [str(config)], "env_files": [],
-                    "policy": {"services": {"web": {"data": "disposable", "authority": "original bounded disposable TASK-00547 fixture; shared external storage is excluded"}},
+                    "policy": {"services": {"web": {"data": "disposable", "authority": "original bounded disposable " + task + " fixture; shared external storage is excluded"}},
                                "cancel_authority": "only exact original bounded fixture oneoffs may be cancelled",
                                "oneoff_authority": "bounded disposable stopped fixture oneoffs",
                                "builder": builder,
@@ -170,7 +173,7 @@ def main():
             # Still before initialization/allocation: this is original intent, not
             # an upgrade to a receipt or existing resource's authority.
             spec.write_text(json.dumps(original, indent=2))
-        initialize = ["./bin/runtime", "init", "--task", "TASK-00547", "--receipt", subject["receipt"], "--spec", spec]
+        initialize = ["./bin/runtime", "init", "--task", task, "--receipt", subject["receipt"], "--spec", spec]
         if name == "b":
             runtime = subject["root"] / "var"
             runtime.mkdir(mode=0o500)
@@ -438,17 +441,18 @@ def main():
     oid = run([real_git, "rev-parse", "HEAD"], safe)
     prs = {}
     for number, (name, subject) in enumerate(subjects.items(), 1):
-        url = "https://github.com/task00547/lifecycle-fixture/pull/" + str(number)
+        url = "https://github.com/" + namespace + "/lifecycle-fixture/pull/" + str(number)
         prs[url] = {"url": url, "state": "OPEN", "mergedAt": None, "mergeCommit": None, "baseRefName": "develop",
                     "headRefName": subject["branch"], "headRefOid": oid,
-                    "headRepository": {"name": "lifecycle-fixture"}, "headRepositoryOwner": {"login": "task00547"}}
+                    "headRepository": {"name": "lifecycle-fixture"}, "headRepositoryOwner": {"login": namespace}}
         delivery = store / (name + "-delivery.json")
         save(delivery, {"qualification": "controlled hosting only; NOT actual publication or independent acceptance",
-             "oid": oid, "publication": {"url": url, "repository": "task00547/lifecycle-fixture", "number": number,
+             "oid": oid, "publication": {"url": url, "repository": namespace + "/lifecycle-fixture", "number": number,
                  "base": "develop", "base_ref": "refs/heads/develop", "delivery_verified": True, "merge_oid": None, "merged_at": None},
              "exited_workers": [], "protected_files": [],
              "worktree": {"identity": str(subject["root"]), "disposition": "retain", "ownership": "proven", "consumers": [], "reason": "intentional retained direct-qualification source/evidence"},
              "branch": {"identity": "refs/heads/" + subject["branch"], "disposition": "retain", "ownership": "proven", "consumers": [], "reason": "intentional qualification replay evidence"}})
+        run(["./bin/runtime", "readiness", "--stage", "controlled-pre-plan"], subject["root"], expected=1 if name == "d" else 0)
         run(["./bin/runtime", "plan", "--delivery", delivery], subject["root"])
     save(control / "prs.json", prs)
     (control / "gh").write_text("#!/usr/bin/env python3\nimport json,sys\nfrom pathlib import Path\np=json.loads((Path(__file__).parent/'prs.json').read_text());assert sys.argv[1:3]==['pr','view'];print(json.dumps(p[sys.argv[3]]))\n")

@@ -20,11 +20,18 @@ Resolve the canonical safe checkout from `git worktree list --porcelain`. Create
 - `policy.budget`: integer `operations`, `seconds` (per command), `containers`, `networks`, `volumes`, `images`,
   `caches`. Maximums are 128 operations, 1,800 seconds and 32 of each resource kind; select smaller real budgets.
   Historical/replaced resources still consume evidence capacity. Do not reset a receipt or allowance to continue.
+- `policy.runtime_authority` records already-approved temporary-runtime disposal without publication, retaining
+  source/ref/private settings. `bin/down` then mechanically generates and executes the SAME runtime-only plan;
+  it never calls generic Compose teardown or discards unknown/durable data. A delivery plan is never replaced.
 - `policy.oneoff_authority` for standalone disposable workloads; `policy.cancel_authority` only when stopping
   the exact original one-off is authorized. Builds additionally require `policy.image_authority` and `policy.builder`,
   naming an already-running same-context local Docker builder. The helper never bootstraps a builder.
-- `private_paths`: `{path, disposition: preserve, reason}` entries for expected generated/runtime/cache directories.
-  Classify private settings, credentials and evidence explicitly; do not exclude them as reproducible caches.
+- `policy.recoverable_storage`: `{}` selects the approved bounded recoverable-image/cache policy for Land;
+  optional narrower selectors/settings use the cleanup contract. It does not grant disposable database authority.
+- `private_paths`: `{path, disposition: preserve, reason}` for settings, keys, reports and runtime evidence.
+  Only positively reproducible caches/dependencies may use `disposition: disposable`, with nonempty original
+  `authority` and `reason`. These produce mechanical preservation exclusions, never guessed exclusions at Land.
+  Keep probes/reports outside removable checkouts where practical; private data is never a cache by association.
 - `protected_files`: exact file paths, or an evidenced empty list. The helper captures full file records.
 
 Run the selected target's owning commands:
@@ -69,6 +76,63 @@ volume/driver mounts and unsupported allocation options are rejected, not forwar
 still consumes the original bound. Noncreation Compose commands also use recorded finite supervision with
 ordinary streamed output. Enrolled `exec` requires an explicit noninteractive `-T` target/command; detached
 execution is unsupported.
+
+## Standing cleanup readiness
+
+Existing task allocation authority includes later retirement of positively disposable local test/dev resources;
+Land does not ask again for each eligible effect. Original creation/data authority, exact creator generations,
+configuration/env-file digests, creating mounts and dependencies must be captured by the owning commands before
+creators disappear. Unknown/shared/durable data, unique work, protected files and active consumers stay held.
+This standing policy does not clear historical foreign holds or authorize global prune, protection changes,
+unrelated shutdown, publication or independent self-acceptance.
+
+Classify owned generated IPC or temporary links **while the actual creator is still observable**, before losing
+its identity. Retain the link itself, not its target; never unlink an unclassified artifact merely to clear a hold:
+
+```sh
+./bin/runtime classify-temporary --path "$artifact" --creator-pid "$original_creator_pid" \
+  --authority "$original_disposal_authority" --reason "$temporary_artifact_purpose"
+./bin/runtime validate --stage work --attempt "$attempt" --handoff
+```
+
+`--handoff` runs the executable `readiness --stage work` operation. Review and QA use their own actual stage.
+It checks original receipt/spec/creator completeness, current identities, command capabilities and the SAME
+executor's descriptor/peer capability. It inventories all source/private metadata and actually copies required
+source/settings/keys/reports outside the candidate through the SAME cleanup copier, then independently verifies
+full records and the completeness manifest. Explicit generated IPC/link generations are no-follow exclusions;
+unknown special files, changed generations, ACLs/flags, missing metadata capabilities or conflicting copies hold,
+without stripping protections or pretending they were copied. Darwin IPC xattrs use bounded native no-follow
+reads because the CLI can reject sockets despite available metadata. Original worker references and finite
+creator lifetimes survive; current workers are not required to exit before returning their own handoff.
+
+Inspect `lifecycle.readiness` and its immutable external proof, including every `resource_checks` hold. Exit 0
+is upstream readiness for this source/input snapshot, not Review/QA, publication, final consumer eligibility or a
+universal cleanup guarantee. Missing service capability is surfaced before publication, not repaired by changing
+users/capabilities or stopping consumers. A failed readiness observation still permits a mechanically generated
+**incomplete** plan: affected resources/source/ref hold while independent eligible effects remain executable.
+After source/artifact changes, capture a fresh readiness proof; keep every earlier observation/copy unchanged.
+Land refreshes it after current acceptance/QA and closeout, then binds actual publication and original Land
+monitor/Pi exits through the existing plan/continuation. Technical candidate acceptance precedes independent QA;
+actual Land effects occur later, never as a circular prerequisite for initial Review.
+
+Bound TASK wrappers run `bin/runtime storage-admit` under the SAME receipt lock, using that exact effective
+Compose model and local build inputs, not ambient Compose overrides or another `FIGHT_STORAGE_RECEIPT`.
+Unbound non-TASK wrappers retain their ordinary path. Storage-specific measurement/builder failures refuse
+allocation or hold affected effects, without skipping independently eligible recoverable artifacts.
+
+### Historical Work receipt adoption
+
+For an existing owning Work companion with the supported `work2.final_setup` schema, initialization may use
+`--adopt-work-receipt-sha256 "$original_receipt_hash"` with the SAME receipt and exact current private spec.
+It retains the original bytes externally, corroborates original intent/authority/source and current original
+IDs/configuration/mounts, and records a **reuse-only** binding. No stack, key, replacement intent or new allocation
+is created. Original budget/retired generations/cache/image/standalone uncertainty remain in the immutable
+history; historical storage holds are not silently upgraded. Run `./bin/runtime reconcile-legacy-storage` once
+after this supported adoption: it mechanically projects original image IDs, exact cache-member IDs and the old
+standalone creator as holds, retaining the immutable original receipt and all retired history. It allocates
+nothing, never assumes config/root equivalence and never manufactures an empty inventory. Changed/missing
+evidence holds adoption/reconciliation. Other
+historical formats keep their existing resource-specific evidence holds; never hand-reconstruct new authority.
 
 ## Stage intake and recovery
 
@@ -233,6 +297,9 @@ python3 "$land_skill_dir/scripts/cleanup.py" --receipt "$receipt"
 python3 "$land_skill_dir/scripts/cleanup.py" --receipt "$receipt" --apply
 ```
 
+Before generating a plan, run `./bin/runtime readiness --stage land` on the current source and inspect its
+external preservation proof and affected holds. Supply only actual acceptance/publication/worker/report facts;
+source/private exclusions and protected-copy mappings are mechanically derived from original classifications.
 Plan generation copies original identities, creator bindings, authority, dependencies and holds mechanically.
 Fresh consumer checks are deferred, not replaced by asserted empty lists. Pending operations hold their dependent
 resources/source/ref; unrelated independently eligible effects still run. Preview records qualification but exits
@@ -249,6 +316,14 @@ Refresh explicitly afterward. Legacy receipts without lifecycle capture still us
 bounded historical adoption/evidence holds, not this original-creation path.
 
 ## Direct qualification
+
+Run `python3 .pi/skills/land/scripts/check-readiness.py --evidence "$new_evidence_directory"` within bounded
+TASK fixture authority for real oneoff creation, named/anonymous mount capture, stage handoff, unknown-artifact
+refusals, live-creator IPC/link classification, actual external preservation, generated plan, preview, original
+finite worker exits and SAME-receipt Build continuation/apply/absent resume. Inspect all streams/results.
+Hosting and worker-role fixtures are controlled, not genuine independent roles or actual publication. Failed
+fixtures retain their original receipts and precise holds; never create a replacement receipt to reset bounds.
+
 
 Run `python3 .pi/skills/land/scripts/check-runtime-paths.py --evidence "$new_evidence_directory"` for actual local
 Git named/detached/PR-merge path admission and malformed/unavailable observation checks. It retains one local
@@ -279,7 +354,7 @@ capacity and SAME-operation recovery regression checks. It uses actual dispatche
 methods with substituted Docker observations and finite host children; it performs no Docker pull, registry
 access or image acquisition. Inspect `result.json`; this is owning-tool evidence, not independent QA.
 
-Run `python3 .pi/skills/land/scripts/check-creation.py --evidence "$new_evidence_directory"` only within bounded
+Run `python3 .pi/skills/land/scripts/check-creation.py --task "$task_id" --evidence "$new_evidence_directory"` only within bounded
 TASK fixture authority. It records original intent, allocates two independent fixture Git worktrees, uses the
 already-present PostgreSQL image without pulling, and builds one metadata-only scratch image on the already-running
 local builder. It exercises wrapper creation, short-lived mounts, shared data, concurrent worktrees, nonzero workload,

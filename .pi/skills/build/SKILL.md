@@ -69,6 +69,11 @@ Work initializes original allocation intent before setup. Carry the SAME receipt
 validate before dispatch and after each child's handoff, before advancement. Pending/missing required evidence
 holds the stage; do not create a second runtime, reset history or infer completeness from the child exit.
 Record actual stage/model/monitor identities; controlled helper probes are not independent role journeys.
+Require the child's `validate --stage ACTUAL_STAGE --handoff` readiness observation and inspect its immutable
+external preservation/capability proof, exact original worker references and affected holds before calling the
+handoff ready. Carry original disposal authority into Land, not another permission question or prose inventory.
+Missing capability/proof holds the affected effects; it never suppresses independent eligible cleanup. Initial
+technical acceptance precedes independent QA; actual publication/Land effects bind only at their proper stage.
 For the safe-checkout post-worker exception below, add `--cleanup-receipt "$receipt"` to the stage entrypoint;
 only the original-worker cleanup caller may act on that existing plan.
 
@@ -287,7 +292,10 @@ review/QA provenance, required checks and accessible applicable captures, plus L
 handoffs and verified eligible Git/container/network/named-and-anonymous-volume cleanup under the
 [owning procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff). Created versus used/shared
 images and caches require explicit size/dependency/retention accounting; unavailable exact retirement holds
-that resource, never a prune fallback or silent leak exemption. No tracked awaiting-merge queue or routine
+that resource, never an unqualified prune fallback or silent leak exemption. The SAME helper's
+[bounded recoverable-storage policy](../land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546)
+can independently reclaim positively recoverable image/cache without historical ownership; it never clears
+service/volume holds or weakens unique-work, consumer, retention or reserve protections. No tracked awaiting-merge queue or routine
 post-merge Board maintenance is created; human merge and remote-head retention remain separate.
 Inspect its durable inventory/postconditions; publication with cleanup held is not complete Land/Build.
 If the remaining hold is the Land worker's own cwd/session, observe that worker's actual exit, then dispatch a

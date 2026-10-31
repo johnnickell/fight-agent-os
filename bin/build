@@ -16,4 +16,5 @@ if [ -z "$expected" ] || [ "$actual" != "$expected" ]; then
   exit 1
 fi
 
+./bin/runtime storage-admit
 exec ./bin/runtime docker compose exec -T web php scripts/build.php
