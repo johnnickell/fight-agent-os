@@ -69,13 +69,10 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00546 repair cycle 3 — current:** [LAND-01 repair](tasks/00546-TASK.md#repair-cycle-3--land-01-2026-10-31)
-reopens the actual published-state plan crash on original string creation evidence. Regression-first local repair
-passes 32 whole-plan cases and adjacent owning checks. The single new 24-phase gate passed
-(`20261031T060343Z-30852`), not READY; canonical Work handoff owns the supported final-source observation/current
-proof and exact holds. SAME receipt/runtime, original holds, accepted-A history and PR #186 draft remain
-protected. Renewed independent Review and affected QA are next after the committed Work handoff; no Work
-publication or cleanup.
+**TASK-00546 accepted repair checkpoint:** [TASK-00546](tasks/00546-TASK.md#accepted-repair-closeout-checkpoint--2026-10-31)
+has independent Review ACCEPT and affected nonvisual QA PASS on candidate `369664f`. Publication and cleanup
+were pending at this checkpoint; actual results and holds are in the canonical ignored TASK Land handoff and
+[PR #186](https://github.com/johnnickell/fight-agent-os/pull/186). Human merge remains separate.
 
 **TASK-00546 accepted implementation checkpoint — historical:** [TASK-00546](tasks/00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
 

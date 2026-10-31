@@ -16,13 +16,11 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 ### Current human decision
 
-[TASK-00546](00546-TASK.md#repair-cycle-3--land-01-2026-10-31) is reopened for bounded Work repair of
-LAND-01's actual plan-generation failure on original string evidence. The SAME planner's regression-first
-repair passes 32 whole-plan cases and adjacent owning checks. Its single new 24-phase gate passed
-(`20261031T060343Z-30852`), not a READY claim. Canonical Work handoff owns the supported final-source observation,
-current proof and precise holds. Renewed independent Review/affected QA follow the committed handoff. Preserve
-PR #186 draft, original receipt/runtime/holds and historical acceptance. Allowance: **5 effective / 3 consumed /
-2 remaining**.
+[TASK-00546](00546-TASK.md#accepted-repair-closeout-checkpoint--2026-10-31) has independent Review ACCEPT
+and affected nonvisual QA PASS on repaired candidate `369664f`. Publication and cleanup were pending at this
+checkpoint; actual results and holds are in the canonical ignored TASK Land handoff and
+[PR #186](https://github.com/johnnickell/fight-agent-os/pull/186). Human merge is separate. Allowance remains
+**5 effective / 3 consumed / 2 remaining**.
 
 The following acceptance checkpoint is historical, not acceptance of the LAND-01 repair.
 [TASK-00546](00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
@@ -75,12 +73,13 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | — (standalone bug) | in-progress | — | [PR #186](https://github.com/johnnickell/fight-agent-os/pull/186) |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -103,7 +102,6 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | [TASK-00546](00546-TASK.md) | — |
 | 1 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | — (standalone bug) | ready-for-agent | [TASK-00543](00543-TASK.md) | — |
 | 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md), [TASK-00498](00498-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
@@ -512,6 +510,7 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 | 1 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 | 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | done | — | [PR #166](https://github.com/johnnickell/fight-agent-os/pull/166) |
 | 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | done | — | [PR #181](https://github.com/johnnickell/fight-agent-os/pull/181) |
+| 1 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | — (standalone bug) | done | — | [PR #186](https://github.com/johnnickell/fight-agent-os/pull/186) |
 | 1 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | — (standalone bug) | done | — | [PR #185](https://github.com/johnnickell/fight-agent-os/pull/185) |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
