@@ -36,7 +36,6 @@ def complete(path, doc, args):
     require(outcome.is_file() and not outcome.is_symlink(), 'existing final outcome required')
     require(not any(Path(v['id']) == outcome or Path(v['id']) in outcome.parents for v in doc['temporary']),
             'final outcome must survive temporary disposal; record it in the existing TASK/PR')
-    root = Path(doc['checkout'])
     oid = text(['git', 'rev-parse', doc['ref']], Path(doc['safe']))
     require(re.fullmatch(r'[0-9a-f]{40}', oid), 'exact source commit required')
     if args.cancel_oid:
@@ -50,7 +49,8 @@ def complete(path, doc, args):
         doc.update(published_oid=oid, remote_ref=args.remote_ref, pr=args.pr)
         doc.pop('discard_oid', None)
         doc.pop('discard_authority', None)
-    doc.update(oid=oid, outcome=str(outcome), remove_checkout=root != Path(doc['safe']))
+    # Main/current source is a reported Git hold, not silently complete retirement.
+    doc.update(oid=oid, outcome=str(outcome), remove_checkout=True)
     atomic(path, doc)
 
 

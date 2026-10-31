@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Retire exact owned resources with native Git/Docker; never prune or force."""
+"""Retire exact owned resources with Worktrunk/Docker; never prune or force."""
 from contextlib import contextmanager
 import fcntl
 import hashlib
@@ -360,8 +360,16 @@ class Retirement:
         if not discarded:
             from .publication import published
             published(doc, doc['oid'], doc.get('remote_ref'), doc.get('pr'))
-        ref = text(['git', 'show-ref', '--verify', '--hash', doc['ref']], self.root, codes=(0, 1))
+        registrations = text(['git', 'worktree', 'list', '--porcelain'], self.root)
+        require(registrations.splitlines()[0] == 'worktree ' + str(self.root), 'canonical main checkout identity changed')
+        safe_ref = text(['git', 'symbolic-ref', 'HEAD'], self.root)
+        require(safe_ref != doc['ref'], 'selected main/current branch is never disposable')
+        ref = text(['git', 'rev-parse', '--verify', '--quiet', doc['ref']], self.root, codes=(0, 1))
+        configuration = ['git', 'config', '--local', '--name-only', '--get-regexp',
+                         r'^branch\.' + re.escape(doc['ref'].removeprefix('refs/heads/')) + r'\.']
         if not ref and not candidate.exists():
+            result['branch_config_remaining'] = bool(text(configuration, self.root, codes=(0, 1)))
+            require(not result['branch_config_remaining'], 'Worktrunk left branch-local configuration; operator owns exact Git metadata disposition, no custom deletion fallback')
             registrations = text(['git', 'worktree', 'list', '--porcelain'], self.root)
             require('worktree ' + str(candidate) + '\n' not in registrations and 'branch ' + doc['ref'] not in registrations,
                     'missing source still has a worktree registration')
@@ -369,6 +377,10 @@ class Retirement:
             return
         require(ref == doc['oid'], 'local ref contains unqualified work')
         if candidate.exists():
+            expected = 'worktree ' + str(candidate) + '\nHEAD ' + doc['oid'] + '\nbranch ' + doc['ref'] + '\n'
+            require(expected in registrations + '\n', 'exact worktree registration changed')
+            require(text(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], candidate) ==
+                    text(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], self.root), 'checkout belongs to another repository')
             require(text(['git', 'rev-parse', 'HEAD'], candidate) == doc['oid'], 'checkout changed')
             require(text(['git', 'symbolic-ref', 'HEAD'], candidate) == doc['ref'], 'checkout branch identity changed')
             require(not text(['git', 'status', '--porcelain', '--untracked-files=all'], candidate), 'unique/dirty source')
@@ -378,15 +390,46 @@ class Retirement:
             if doc.get('engine'):
                 require(engine(self.root) == doc['engine'], 'original Docker bind inventory unavailable')
             docker_consumers(candidate, self.root)
-            if self.apply:
-                command(['git', 'worktree', 'remove', str(candidate)], self.root, effect=True)
-                require(not candidate.exists(), 'worktree still present')
+        else:
+            require('worktree ' + str(candidate) + '\n' not in registrations and
+                    'branch ' + doc['ref'] + '\n' not in registrations + '\n', 'missing source still has a worktree registration')
+        wt = shutil.which('wt')
+        require(wt, 'Worktrunk CLI (wt) unavailable on PATH; Git removal held, Docker retirement remains independent')
+        if not self.apply:
+            result.update(status='eligible', reason='subject to Worktrunk hook/capability checks at finish')
+            return
+        # Hooks are arbitrary shell and post-hooks may detach. Do not approve, skip,
+        # expose personal templates or promise their completion in an unattended finish.
+        for directory in (self.root, candidate) if candidate.exists() else (self.root,):
+            for phase in ('pre-remove', 'post-remove'):
+                hooks = query([wt, 'hook', 'show', phase, '--format=json'], directory)
+                require(isinstance(hooks, list), 'Worktrunk hook query contract unavailable')
+                require(not hooks, 'Worktrunk ' + phase + ' hooks configured; operator must resolve attended hook execution/approval before Git retirement')
+        require(text(['git', 'rev-parse', '--verify', '--quiet', doc['ref']], self.root) == doc['oid'], 'local ref changed before Worktrunk removal')
+        # Always name the target, never default to current or request directory switching.
+        # Worktrunk owns BOTH worktree and branch effects, including branch-only resume.
+        target = str(candidate) if candidate.exists() else doc['ref'].removeprefix('refs/heads/')
+        native = subprocess.run([wt, 'remove', '--foreground', '--format=json', target], cwd=self.root,
+                                stdin=subprocess.DEVNULL, capture_output=True, timeout=60)
+        result['worktree_absent'] = not candidate.exists()
+        result['ref_absent'] = not text(['git', 'rev-parse', '--verify', '--quiet', doc['ref']], self.root, codes=(0, 1))
+        result['branch_config_remaining'] = bool(text(configuration, self.root, codes=(0, 1)))
+        require(text(['git', 'symbolic-ref', 'HEAD'], self.root) == safe_ref, 'safe checkout branch changed during Worktrunk removal')
+        require(native.returncode == 0, 'Worktrunk removal failed (exit ' + str(native.returncode) + '); observe partial effects, operator must resolve CLI/hook requirements')
+        outcomes = json.loads(native.stdout)
+        require(isinstance(outcomes, list) and len(outcomes) == 1 and isinstance(outcomes[0], dict), 'Worktrunk removal JSON contract unavailable; inspect actual postconditions')
+        outcome = outcomes[0]
+        result['branch_outcome'] = outcome.get('branch_outcome')
+        require(outcome.get('branch') == doc['ref'].removeprefix('refs/heads/') and
+                ((outcome.get('kind') == 'worktree' and outcome.get('path') == str(candidate)) or
+                 (outcome.get('kind') == 'branch_only' and not outcome.get('detached_worktree'))), 'Worktrunk returned a different target/outcome')
+        require(outcome.get('branch_outcome') == 'deleted', 'Worktrunk retained branch: ' + str(outcome.get('branch_outcome')) + '; no forced/custom Git fallback')
         registrations = text(['git', 'worktree', 'list', '--porcelain'], self.root)
-        if self.apply:
-            require('branch ' + doc['ref'] not in registrations, 'branch remains checked out')
-            command(['git', 'update-ref', '-d', doc['ref'], doc['oid']], self.root, effect=True)
-            require(not text(['git', 'for-each-ref', '--format=%(refname)', doc['ref']], self.root), 'local ref still present')
-        result['status'] = 'removed' if self.apply else 'eligible'
+        require(result['worktree_absent'] and result['ref_absent'] and
+                'worktree ' + str(candidate) + '\n' not in registrations and
+                'branch ' + doc['ref'] + '\n' not in registrations + '\n', 'Worktrunk removal postconditions incomplete')
+        require(not result['branch_config_remaining'], 'Worktrunk left branch-local configuration; operator owns exact Git metadata disposition, no custom deletion fallback')
+        result['status'] = 'removed'
 
     def run(self, runtime_only=False, finish=False):
         require(Path.cwd().resolve() == self.root, 'retirement runs from the canonical safe checkout')

@@ -9,16 +9,18 @@ import shutil
 import shlex
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parent.parent
 CLI = ROOT / 'bin/runtime'
 TASK = 'TASK-00548'
+ENV = None
 
 
 def run(argv, cwd=ROOT, expected=0, env=None):
-    result = subprocess.run([str(v) for v in argv], cwd=cwd, env=env, capture_output=True, timeout=120)
+    result = subprocess.run([str(v) for v in argv], cwd=cwd, env=ENV if env is None else env, stdin=subprocess.DEVNULL, capture_output=True, timeout=120)
     if result.returncode != expected:
         raise RuntimeError(f'{argv[:4]}: exit {result.returncode}, expected {expected}; ' + result.stderr.decode()[-1500:])
     return result.stdout.decode()
@@ -45,9 +47,31 @@ def bytes_state(root):
 
 
 def qualify(evidence):
+    global ENV
     evidence.mkdir(parents=True, exist_ok=False)
     fixtures = Path(tempfile.mkdtemp(prefix='fixtures-', dir=evidence))
     before = observed()
+    # Only Worktrunk receives a private HOME/config. Docker keeps the original
+    # local engine/context; no personal Worktrunk hooks, approvals or Git state.
+    tools = fixtures / 'tools'; tools.mkdir()
+    home = fixtures / 'home'; home.mkdir()
+    config = home / 'config.toml'; config.write_text('')
+    wt = shutil.which('wt')
+    assert wt, 'Worktrunk is required for this owning Git-removal qualification'
+    isolated = {'PATH': os.environ['PATH'], 'HOME': str(home), 'XDG_CONFIG_HOME': str(home / '.config'),
+                'XDG_CACHE_HOME': str(home / '.cache'), 'XDG_DATA_HOME': str(home / '.local/share'),
+                'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': '/dev/null'}
+    shim = tools / 'wt'
+    shim.write_text('#!' + sys.executable + '\nimport os,sys\nos.execve(' + repr(wt) + ',[' + repr(wt) +
+                   ',"--config",' + repr(str(config)) + ',*sys.argv[1:]],' + repr(isolated) + ')\n')
+    shim.chmod(0o700)
+    ENV = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
+           'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': '/dev/null'}
+    no_wt = fixtures / 'no-wt'; no_wt.mkdir()
+    for name in ('python3', 'docker'):
+        (no_wt / name).symlink_to(shutil.which(name))
+    no_wt_env = {**ENV, 'PATH': str(no_wt) + ':/usr/bin:/bin:/usr/sbin:/sbin'}
+    assert not shutil.which('wt', path=no_wt_env['PATH'])
     results = []
     completed = False
     try:
@@ -64,6 +88,8 @@ def qualify(evidence):
             assert (safe / 'var/developer-wrapper').is_dir()
             (safe / 'var/developer-wrapper').rmdir(); (safe / 'var').rmdir()
             git(safe, 'worktree', 'add', '-b', f'feature/task-00548-public{cycle}', str(checkout))
+            if cycle == 1:
+                git(safe, 'branch', '--set-upstream-to=develop', f'feature/task-00548-public{cycle}')
             # A pre-existing private parent/content is never implicitly disposable.
             (checkout / 'var').mkdir()
             sentinel = checkout / 'var/keep-private'
@@ -131,7 +157,7 @@ def qualify(evidence):
                         ' open(' + repr(str(marker)) + ',"w").close();time.sleep(3)\n' +
                         'sys.exit(code)\n')
                     shim.chmod(0o700)
-                    env = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH']}
+                    env = {**ENV, 'PATH': str(tools) + os.pathsep + ENV['PATH']}
                     command = [str(CLI), '--checkout', str(checkout), 'docker', 'run', '--rm', '--pull=never', '--network=none', 'postgres:17-bookworm', 'true']
                     child = subprocess.Popen(command, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     try:
@@ -149,7 +175,7 @@ def qualify(evidence):
                         if child.poll() is None:
                             child.terminate(); child.wait(timeout=10)
                 # A private-source hold cannot suppress independent container effects.
-                held = call(safe, 'retire', '--task', TASK, expected=1)
+                held = call(safe, 'retire', '--task', TASK, expected=1, env=no_wt_env)
                 assert foreign in held and 'unknown/shared/durable' in held
                 assert not run(['docker', 'ps', '-aq', '--filter', 'label=com.docker.compose.project=' + project]).strip()
                 assert sentinel.read_bytes() == sentinel_bytes
@@ -184,6 +210,35 @@ def qualify(evidence):
                 assert sentinel.parent.exists() and not (sentinel.parent / 'resource-lifecycle.json').exists()
                 assert not (checkout / 'var/new-output').exists() and not (checkout / '.runs').exists()
                 sentinel.unlink()  # original fixture's private-data owner releases its sentinel
+                held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1, env=no_wt_env)
+                assert 'Worktrunk CLI (wt) unavailable' in held and checkout.exists()
+                # Configured hooks are held, never skipped, approved or launched.
+                hook_config = safe / '.config/wt.toml'; hook_config.parent.mkdir()
+                for phase in ('pre-remove', 'post-remove'):
+                    hook_config.write_text(phase + ' = "echo must-not-run > hook-marker"\n')
+                    held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1)
+                    assert phase + ' hooks configured' in held and checkout.exists()
+                    assert not (safe / 'hook-marker').exists() and not (checkout / 'hook-marker').exists()
+                hook_config.unlink(); hook_config.parent.rmdir()
+                if cycle == 2:
+                    held = json.loads(call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1))
+                    effect = next(v for v in held['results'] if v['kind'] == 'git')
+                    assert effect['branch_outcome'] == 'retained_unmerged' and effect['worktree_absent'] and not effect['ref_absent']
+                    assert not checkout.exists() and record.exists()
+                    # Original finite fixture owner integrates its exact commit;
+                    # Worktrunk, not custom Git deletion, owns branch-only resume.
+                    git(safe, 'merge', '--ff-only', f'feature/task-00548-public{cycle}')
+                if cycle == 1:
+                    # Worktrunk can delete a ref but retain its task-specific local
+                    # configuration. Preserve the obligation across absent-ref retries.
+                    for _ in range(2):
+                        held = json.loads(call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1))
+                        effect = next(v for v in held['results'] if v['kind'] == 'git')
+                        assert effect['branch_config_remaining'] and 'branch-local configuration' in effect['reason']
+                        assert not checkout.exists() and record.exists()
+                    # Only the ORIGINAL OUTER fixture owner resolves its own exact
+                    # fixture metadata. Production lifecycle never edits Git config.
+                    git(safe, 'config', '--local', '--remove-section', f'branch.feature/task-00548-public{cycle}')
                 # Exercise the actual post-worker caller from its safe checkout.
                 (safe / 'bin').mkdir()
                 wrapper = safe / 'bin/runtime'
@@ -200,6 +255,10 @@ def qualify(evidence):
                     'read_only_inspect': True, 'active_workers_held': True, 'unknown_volume_unchanged': True,
                     'foreign_stopped_network_and_volume_consumer_unchanged': True,
                     'interrupted_after_native_allocation': cycle == 1, 'locator_before_git_and_private_parent_preserved': True,
+                    'docker_retirement_without_wt': True, 'missing_wt_holds_only_git': True,
+                    'pre_and_post_remove_hooks_held_without_execution': True,
+                    'worktrunk_retained_unmerged_and_branch_only_resume': cycle == 2,
+                    'retained_branch_config_holds_record_across_absent_ref_retries': cycle == 1,
                     'owned_runtime_source_ref_output_record_lock_remaining': 0})
             finally:
                 for child in workers:
@@ -220,7 +279,7 @@ def qualify(evidence):
         git(safe, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-m', 'Git-only fixture')
         tools = fixtures / 'no-docker'; tools.mkdir()
         shim = tools / 'docker'; shim.write_text('#!/bin/sh\nexit 69\n'); shim.chmod(0o700)
-        env = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH']}
+        env = {**ENV, 'PATH': str(tools) + os.pathsep + ENV['PATH']}
         binding = json.loads(call(safe, 'prepare', '--task', TASK, '--source-only', env=env))
         snapshot = bytes_state(safe)
         call(safe, 'inspect', '--task', TASK, env=env)
@@ -231,12 +290,19 @@ def qualify(evidence):
              '--authority', 'Original finite main-checkout fixture teardown')
         held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), env=env, expected=1)
         assert 'owning command failed' in held and 'temporary' in held
-        call(safe, 'finish', '--task', TASK, '--outcome', str(outcome))
+        held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1)
+        assert 'main checkout is never disposable' in held
         assert safe.exists() and git(safe, 'rev-parse', 'HEAD') == oid, 'main checkout/ref removed'
-        assert not Path(binding['record']).exists() and not (safe / 'var').exists()
+        assert Path(binding['record']).exists() and not (safe / 'var').exists(), 'main Git hold lost its record'
+        # The original outer fixture owner retires this protected main repo only
+        # during bounded whole-fixture teardown, never through task Git cleanup.
         results.append({'source_only_prepare_inspect_without_docker': True, 'bind_inventory_hold_specific': True,
                         'main_checkout_and_ref_preserved': True})
         assert before == observed(), 'Docker identity sets changed; investigate residue/concurrent activity'
+        states = {}
+        for directory in fixtures.glob('*/safe/.git/wt'):
+            states[str(directory.relative_to(fixtures))] = sorted(str(p.relative_to(directory)) for p in directory.rglob('*') if p.is_file())
+        (evidence / 'fixture-worktrunk-state.json').write_text(json.dumps(states, indent=2) + '\n')
         completed = True
         (evidence / 'result.json').write_text(json.dumps({'passed': True, 'cycles': results,
             'limits': 'Real public-command owning qualification, controlled cancellation/worker identities; not independent Review/QA or live PR proof'}, indent=2) + '\n')
@@ -244,6 +310,7 @@ def qualify(evidence):
         remaining = {k: sorted(v - before[k]) for k, v in observed().items()}
         if completed and not any(remaining.values()):
             shutil.rmtree(fixtures)
+            (evidence / 'teardown.json').write_text(json.dumps({'fixture_absent': not fixtures.exists(), 'docker_identity_sets_restored': True}) + '\n')
         else:
             (evidence / 'incomplete.json').write_text(json.dumps({'remaining': remaining, 'original_fixture': str(fixtures),
                 'action': 'resolve original finite fixture before another run; failed evidence retained'}, indent=2) + '\n')

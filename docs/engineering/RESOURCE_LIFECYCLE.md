@@ -6,6 +6,12 @@ share normal callable operations; no role owns another role's internals. There i
 source copy, permanent local archive, migration engine or global cleaner. These trusted local tools are not an OS
 sandbox. Native CI still calls `php scripts/build.php` directly.
 
+[Worktrunk](https://worktrunk.dev/) (`wt` on machine PATH) owns Git worktree/local-branch removal, not Docker
+creation or retirement. Only that Git path requires its CLI; ordinary Pi, runtime preparation and independent
+Docker retirement do not. No Worktrunk Pi plugin, Rust/Homebrew CI dependency or automatic installation is needed.
+Herdr remains conditional on the [optional Pi workspace](../../harness/pi/README.md#native-herdr-workspace), not the
+ordinary workflow. Shared preview ingress remains Nginx; this lifecycle adds no preview proxy or routing.
+
 ## Prepare once, before allocation
 
 Verify target origin/branch/base and use the operator-selected checkout. Do not create another worktree or use a
@@ -116,6 +122,27 @@ under [landing standards](LANDING.md#qualify-local-git-cleanup); this command ca
 The outcome must survive disposal. Unknown/dirty/private data, changed branch/tip, current workers and unavailable
 consumer visibility hold only their affected effects. Never force-remove a worktree/ref or delete a remote ref.
 
+After these project-specific checks, finish invokes `wt remove --foreground --format=json` with the exact target
+from the safe checkout, closed stdin and no force, reap, approval or hook-skipping options. It verifies JSON **and**
+actual path/ref/registration absence. Worktrunk can remove a clean worktree but retain its unmerged branch with exit
+0; that is a partial Git hold, not success. Retry observes the surviving exact ref and delegates branch-only removal
+to Worktrunk. Cancellation/publication authority does not override Worktrunk integration checks; the operator owns
+any genuine integration decision. There is no custom Git deletion fallback or implicit checkout/branch switch.
+The selected primary checkout/current branch remains a reported hold, including its resource record, not a claim
+of complete Git retirement. Missing/unsupported `wt` holds Git only; eligible Docker effects still run first.
+Worktrunk may also leave the deleted branch's local Git configuration. That is a specific metadata hold retaining
+the record, including on retries after ref absence; the operator owns its exact disposition. This command neither
+edits Git configuration nor treats ref deletion as proof that all branch metadata is retired.
+
+Automatic finish holds when pre-remove or post-remove hooks are configured in either relevant checkout, including
+already approved/user hooks: arbitrary shell and detached post-hooks cannot be qualified by this command. The
+operator owns attended hook execution/approval and its outcomes; the tool never displays personal hook templates,
+approves commands or silently skips hooks. Resolve that precise hold before retrying the remaining Git effect.
+Worktrunk itself deletes ignored files by default, so the project's ignored/private-content guard is mandatory.
+Its repository-shared `<git-common-dir>/wt/` caches/logs and Worktrunk history/default-branch hints in local Git
+config are not task-owned output. These differ from the exact task branch configuration hold above. Foreground hook-free
+qualification left integration caches, not removal logs; do not clear shared state or claim universal zero residue.
+
 Finish retires owned locator/output **before** ignored-file/worktree eligibility, then eligible isolated checkout/ref,
 and finally the record/lock and empty newly created parents. Pre-existing parent contents survive. Filesystem,
 Git and Docker are separate effects: partial failure is recorded, not transactional rollback or exactly-once
@@ -135,6 +162,10 @@ bounded restore proof permits restoring a probe's protection.
 Run `python3 scripts/check_resource_lifecycle.py --evidence /absolute/new/task-run`. It exercises public owning
 commands against finite real Git/Docker fixtures and inspects actual absence/protected state. Fixtures have bounded
 teardown even on failure; an unresolved original fixture is retained only for its active issue, never replaced
-blindly. Removed giant qualification matrices have no current callers; behavior-focused command qualification
-replaces their obsolete proof/JSON mechanisms. Native session-lifetime/role tests remain required. These checks
+blindly. Worktrunk receives a fixture-only HOME/config/approvals and repository; Docker retains its original local
+context. Qualify ignored/private protection, missing CLI, hook holds, retained unmerged branches, branch-only resume,
+retained task-branch configuration and absent-ref retries,
+main/current holds and fixture-local cache/log outcomes. Retire only fixture-local state; never clear shared caches.
+Removed giant qualification matrices have no current callers; behavior-focused command qualification replaces
+their obsolete proof/JSON mechanisms. Native session-lifetime/role tests remain required. These checks
 are infrastructure evidence, not product-suite tests, independent Review/QA or live publication acceptance.

@@ -188,8 +188,10 @@ requires separate operator selection on the qualified runtime; it is not Jev scr
 
 ## Development
 
-Docker Compose is required. Local TASK execution uses one isolated runtime and small resource record through
-[Local task resources](docs/engineering/RESOURCE_LIFECYCLE.md), reused across independent stages and repairs.
+Docker Compose is required for application development. [Worktrunk](https://worktrunk.dev/) (`wt` on PATH)
+is required only for the Git worktree/local-branch removal path in `bin/runtime finish`; it is not a prerequisite
+for ordinary Pi or independent Docker retirement. Local TASK execution uses one isolated runtime and small resource
+record through [Local task resources](docs/engineering/RESOURCE_LIFECYCLE.md), reused across independent stages and repairs.
 Routine task-owned cleanup is already authorized; temporary task output is not a permanent archive. The ordinary
 non-TASK setup below remains available without claiming task ownership. This is an application with committed Composer lockfiles:
 
