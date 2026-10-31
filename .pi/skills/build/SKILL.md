@@ -83,6 +83,8 @@ Never arbitrarily signal a reused/unknown PID or assume remote effects stopped w
 Match TASK/branch/base/head/status, independence, findings and limitations before advancement. Never select an
 older PASS over newer failure. [Qualify gate reuse](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse):
 one final full gate for changed implementation, independent focused probes, no repeat for role/commit/metadata.
+Run `./bin/build` normally for automatic receipt validation and reuse; use `--force` for deliberate fresh
+execution. Report the original receipt separately from fresh evidence.
 
 Default **five shared repair cycles** across Review and QA; explicit positive allowance may be up to ten.
 Consume before an Engineer repair; initial implementation is not a repair. New processes/QA failures/resumed

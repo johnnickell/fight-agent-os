@@ -23,9 +23,10 @@ target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_S
    Use [quality guidance](../../../docs/engineering/QUALITY.md) as needed and
    [Writing for Agents](../writing-for-agents/SKILL.md) for instruction changes. Keep affected current docs accurate.
 5. Run focused checks during iteration, planning refresh/check if changed, `git diff --check` and **one final full
-   target gate** on frozen implementation. Record exact subjects, counts, warnings, failures and incomplete
-   criteria. Later roles [qualify reuse](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse), not repeat a
-   passing suite for a role/commit/metadata change. Work cannot supply independent Review or QA.
+   target gate** on frozen implementation. Run `./bin/build` normally for automatic reuse; use `--force` for
+   deliberate fresh execution. Record exact subjects, counts, warnings, failures and incomplete criteria. Later
+   roles [report gate reuse](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse) accurately instead of
+   repeating a passing suite for a role/commit/metadata change. Work cannot supply independent Review or QA.
 6. Record implementation/results in the TASK and a readable ignored handoff: branch/head, changed paths,
    fresh/reused evidence, resource-record locator, removed/remaining counts, precise holds and next action.
    Preserve evidence still needed by independent roles. Stage only owned paths, inspect the staged diff, commit

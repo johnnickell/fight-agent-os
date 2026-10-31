@@ -24,7 +24,9 @@ Include required release scenarios and return to that coordinator; TASK routing 
    disposable settings/credentials/terminals need no repeated permission. No global installation or shared stop.
 3. **Exercise actual behavior.** Use the real browser/API/CLI/PTY/library/worker interface, not source-only claims
    or replayed logs. [Qualify gate reuse](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse) while still
-   running independent focused probes. Disposable probes, aliases, endpoints and sessions have finite `finally`
+   running independent focused probes. Run `./bin/build` normally for automatic reuse; use `--force` for
+   deliberate fresh execution and distinguish reused receipts from fresh evidence. Disposable probes, aliases,
+   endpoints and sessions have finite `finally`
    teardown; keep necessary evidence outside disposable source only while roles need it. For visual work follow
    the standards and [terminal capture procedure](../../../docs/engineering/TERMINAL_CAPTURE.md), preflight the
    bridge and inspect every comparable Before/After image. Missing required images remain a limitation/prerequisite,

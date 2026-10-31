@@ -21,7 +21,9 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
 3. **Close out and publish only when authorized.** Reconcile applicable current TASK/parent/docs/handoffs;
    generated Board changes only here unless separate authored planning is approved. Refresh/check planning,
    inspect exact administrative diff and whitespace. [Reuse qualified gate evidence](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse)
-   rather than repeating it for metadata. Substantive changes need renewed verification/independence. Commit only
+   rather than repeating it for metadata. Run `./bin/build` normally for automatic reuse; use `--force` for
+   deliberate fresh execution and distinguish reused receipts from fresh evidence. Substantive changes need
+   renewed verification/independence. Commit only
    owned files, non-force push, create/update the exact PR using its template and `TASK-NNNNN — <title>`. Verify
    current base/head/remote OID, required checks and audience-accessible applicable captures. Follow the standards'
    upload/partial-publication recovery; missing required proof keeps delivery incomplete. No approval or merge.

@@ -25,7 +25,9 @@ and canonical version path. Never guess a TASK from recent history or use TASK r
    limits. Challenge removed coverage and new tests' independently derived expectations; qualify infrastructure
    with owning tools, not product tests of tooling. Independent review cannot be replaced by builder self-checks.
 4. **Verify and judge.** [Qualify existing gate evidence](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse)
-   against actual source/inputs/runtime and warnings. Run fresh focused checks for gaps, not a second full suite
+   against actual source/inputs/runtime and warnings. Run `./bin/build` normally for automatic reuse; use `--force`
+   for deliberate fresh execution and distinguish reused receipts from fresh evidence. Run fresh focused
+   checks for gaps, not a second full suite
    for independence or changed OIDs alone. Missing optional CI is not a blocker. Required hosted-only gaps route
    to their authorized evidence owner, not manufactured code edits. Give reproducible findings stable IDs,
    severity, criterion, expected/actual result and correction. `accept` requires sufficient evidence for all

@@ -314,8 +314,8 @@ under [automatic parent completion](../../planning/CONVENTIONS.md#automatic-pare
 `./bin/planning-check --write` and include the parent statuses and generated views in the same commit. No separate
 parent review, approval or closeout handoff is required.
 
-Apply [gate evidence reuse](EXECUTION.md#gate-evidence-reuse) before initial publication: inspect actual source,
-runtime inputs and provenance, reuse the qualifying complete receipt and run focused checks for affected contracts.
+Run `./bin/build` normally before initial publication; it validates automatic reuse. Apply
+[gate evidence reuse](EXECUTION.md#gate-evidence-reuse) to reporting and administrative-only closeout; run focused checks for affected contracts.
 A substantive implementation/input change needs one complete final gate, not another run for each publication step.
 Run `./bin/planning-check` and `git diff --check` for owned metadata changes. Stage only owned planning or reconciliation files; inspect the staged diff and commit them if needed. Push the feature branch without force; create or update its PR against `develop`. For a TASK PR, set and verify the title `TASK-NNNNN — <TASK title>` (the body template cannot set a title), and use the editable [PR body template](../../.github/pull_request_template.md) for scope, behavior, verification, warnings, evidence, and outstanding review/merge status. Remove placeholder text and avoid implying a check passed if it was not run. Preserve an existing PR's identity when updating it; do not rename an unrelated or historical branch merely to match the new convention. Record the actual PR URL in the TASK and refresh generated views. Inspect the exact administrative diff, validate planning, whitespace and applicable live delivery provenance before committing/pushing PR metadata; reuse the qualified implementation receipt without relabeling it final-head execution. If a result changes, correct the evidence and rerun the affected checks. Avoid repeating gates for an unchanged tree merely to accumulate receipts.
 
