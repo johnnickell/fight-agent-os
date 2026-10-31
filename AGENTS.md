@@ -44,6 +44,12 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - Land closes accepted TASKs and applicable current Board/Roadmap/README/docs during delivery, validates the exact live PR and completes eligible owned local Git/Docker/storage cleanup. No persistent delivery markers/queue or routine post-merge planning maintenance; historical acceptance/publication remain evidence. Planning checks/refresh stay offline
 - Before task publication, record completed implementation and verification; keep formal review and merge status separate
 - Ask for checkout/worktree choice before implementation unless already provided. Use `feature/*` from `develop`
+- Prefer the simplest native-tool workflow; delete unnecessary machinery instead of adding compatibility/proof/recovery layers
+- Reuse one task runtime and small resource record across roles. Routine owned cleanup is standing authority:
+  completed, failed or cancelled tasks must not accumulate temporary worktrees, runtimes, fixtures, logs, sessions
+  or cleanup archives. Keep evidence only while needed and record final outcomes in the existing TASK/PR. Preserve
+  unique work, active consumers, unknown/shared/durable data and genuine protections; a narrow hold cannot block
+  independent effects
 - Preserve source projects and unrelated local work. Commit and publish only within the authorized scope
 - Keep application-generated files and local runtime state under ignored `var/`; application runtime must never depend on `.runs/`
 - Keep all execution scratch under ignored `.runs/` subfolders. Never put worktrees directly in `.runs/`

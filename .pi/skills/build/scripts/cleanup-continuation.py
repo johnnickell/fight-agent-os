@@ -1,57 +1,49 @@
 #!/usr/bin/env python3
-"""Observe an original Land monitor's exit, then run only exact-receipt cleanup."""
-
+"""After original Land exits, call the public lifecycle from its safe checkout"""
 import argparse
 import json
 from pathlib import Path
 import subprocess
 import sys
 
-sys.dont_write_bytecode = True
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "land" / "scripts"))
-from cleanup import Hold, absolute, command, require
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--attempt", required=True, help="Original completed run-stage.py attempt, never a new publication")
-    parser.add_argument("--receipt", required=True)
-    parser.add_argument("--apply", action="store_true")
+    parser.add_argument('--attempt', required=True)
+    parser.add_argument('--receipt', required=True)
+    parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--finish', action='store_true')
     args = parser.parse_args()
     try:
-        attempt = absolute(args.attempt)
-        receipt = absolute(args.receipt)
-        document = json.loads(receipt.read_text())
-        plan = document["cleanup"]["plan"]
-        require(all(isinstance(plan.get(kind), list) for kind in
-                    ("containers", "networks", "volumes", "images", "caches")),
-                "creation/storage inventory missing; recover it without recreating removed workloads")
-        binding = plan.get("runtime", {})
-        require(binding.get("kind", "compose") in ("compose", "standalone"), "unknown runtime capability; recover exact subject binding")
-        if binding.get("kind") == "standalone":
-            require(isinstance(binding.get("creation_record"), dict) and binding.get("resolved_sha256"),
-                    "standalone allocation capability missing; recover original proof, never invent Compose binding")
-        require(Path.cwd().resolve() == absolute(plan["safe_checkout"]), "continuation must run from canonical safe checkout")
-        require(absolute(plan["original_land_attempt"]) == attempt, "wrong original Land attempt")
-        require(attempt.is_dir() and (attempt / "dispatch.lock").is_dir(), "original monitor evidence missing")
-        for name in ("exit-code", "pi-exit-code"):
-            require((attempt / name).read_text().strip().lstrip("-").isdigit(), "original worker exit not recorded")
-        processes = json.loads((attempt / "process.json").read_text())
-        require({entry["pid"] for entry in plan["exited_workers"]} == {processes["monitor_pid"], processes["pi_pid"]}, "original worker identity not bound in receipt")
-        for pid in (processes["monitor_pid"], processes["pi_pid"]):
-            result = command(["ps", "-p", str(pid), "-o", "lstart="], Path.cwd(), codes=(0, 1))
-            require(result.returncode == 1 and not result.stdout.strip(), "original worker still live or PID reused; preserve it")
-        # Reuse the owning operation's lock and atomic receipt handling. No push, PR,
-        # setup, source edit, or alternate destructive operation exists in this caller.
-        helper = Path(__file__).resolve().parents[2] / "land" / "scripts" / "cleanup.py"
-        invocation = [sys.executable, str(helper), "--receipt", str(receipt)]
-        if args.apply:
-            invocation.append("--apply")
-        return subprocess.run(invocation, check=False).returncode
-    except (Hold, OSError, ValueError, KeyError, TypeError):
-        print(json.dumps({"complete": False, "hold": "original attempt/exit/subject unavailable or still active; inspect exact receipt and monitor evidence"}))
+        path, attempt = Path(args.receipt), Path(args.attempt)
+        if not all(p.is_absolute() and p == p.resolve() for p in (path, attempt)):
+            raise ValueError('canonical original paths required')
+        doc = json.loads(path.read_bytes())
+        root = Path(doc['safe'])
+        if Path.cwd().resolve() != root or doc.get('land_attempt') != str(attempt):
+            raise ValueError('wrong safe checkout/original Land attempt')
+        if not (attempt / 'dispatch.lock').is_dir():
+            raise ValueError('original monitor missing')
+        for name in ('exit-code', 'pi-exit-code'):
+            if not (attempt / name).read_text().strip().lstrip('-').isdigit():
+                raise ValueError('original exit unavailable')
+        original = json.loads((attempt / 'process.json').read_bytes())
+        for pid in (original['monitor_pid'], original['pi_pid']):
+            if not any(v['pid'] == pid and v['birth'] for v in doc['workers']):
+                raise ValueError('original worker not bound')
+            observed = subprocess.run(['ps', '-p', str(pid), '-o', 'lstart='], capture_output=True, timeout=15)
+            if observed.returncode != 1 or observed.stdout.strip() or observed.stderr.strip():
+                raise ValueError('original worker live/reused or visibility unavailable')
+        action = 'inspect' if not args.apply else ('finish' if args.finish else 'retire')
+        argv = [str(root / 'bin/runtime'), action, '--task', doc['task'], '--receipt', str(path)]
+        if action == 'finish':
+            argv += ['--outcome', doc['outcome']]
+        # No source repair, publication, second runtime or internal state manipulation.
+        return subprocess.run(argv, cwd=root, timeout=1800).returncode
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+        print(json.dumps({'complete': False, 'hold': str(error)}), file=sys.stderr)
         return 1
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

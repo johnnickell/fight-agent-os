@@ -1,6 +1,7 @@
 /vendor/
 /.idea/
 /var/
+/graphify-out/
 /.env
 /.runs/
 /node_modules/

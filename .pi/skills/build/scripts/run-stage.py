@@ -28,22 +28,21 @@ def main():
             if (args.role != 'land' or not supplied.is_absolute() or supplied != receipt or store not in receipt.parents or
                     not receipt.is_file() or receipt.stat().st_uid != os.getuid() or receipt.stat().st_mode & 0o777 != 0o600):
                 raise ValueError('invalid cleanup-only receipt')
-            plan = json.loads(receipt.read_text())['cleanup']['plan']
-            if plan['task'] != args.task or plan['safe_checkout'] != str(root) or not plan.get('original_land_attempt') or not plan.get('exited_workers'):
+            record = json.loads(receipt.read_text())
+            if record.get('version') != 2 or record['task'] != args.task or record['safe'] != str(root) or not record.get('land_attempt'):
                 raise ValueError('wrong original cleanup-only subject')
         elif runtime.is_file():
             binding = root / 'var/resource-lifecycle.json'
             if binding.exists():
                 if json.loads(binding.read_text()).get('task') != args.task:
                     raise ValueError('lifecycle task mismatch')
-                # Before dispatch, not after spawning a competing independent stage.
-                checked = subprocess.run([str(runtime), 'validate', '--stage', 'build-intake-' + str(args.role)],
+                # Read-only intake: reuse Work's runtime; no new proof/stage archive.
+                checked = subprocess.run([str(runtime), 'inspect', '--task', str(args.task)],
                                          cwd=root, timeout=120, check=False)
                 if checked.returncode:
                     return checked.returncode
-            elif args.role not in ('work', 'engineer'):
-                print('Work lifecycle binding missing; hold advancement before dispatch', file=sys.stderr)
-                return 1
+            # Source-only inspection needs no invented runtime. Actual TASK Docker
+            # wrappers still refuse unbound allocation; reports own missing gate evidence.
         package = (Path(args.harness_package) if args.harness_package else
                    Path(__file__).resolve().parents[4] / 'harness/pi').resolve(strict=True)
         monitor = (package / 'src/observation/run-stage.py').resolve(strict=True)
