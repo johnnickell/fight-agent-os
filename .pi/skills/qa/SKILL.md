@@ -29,6 +29,12 @@ release QA ends with the actual version's release resume command.
    Disclose contributions: the implementer cannot independently pass its own work. Resolve the canonical base
    worktree through Git metadata, allocate a new ignored QA run and publish an initial INCOMPLETE report before
    runtime work so interruption cannot leave an older PASS looking current.
+For a target with `bin/runtime`, apply its [local resource lifecycle](../../../docs/engineering/RESOURCE_LIFECYCLE.md)
+at actual QA entry and handoff. Validate and reuse Work's SAME private receipt/locator and runtime; use owning
+wrappers to capture QA's authorized additions/replacements there. Missing/pending identity evidence is a concrete
+INCOMPLETE prerequisite, never permission for another setup stack or retrospective ownership. Retain original
+attempts and exact resource-specific holds for repair/Land; recording private runtime evidence is not source repair.
+
 2. **Choose scenarios and environment.** Apply [applicability](../../../docs/engineering/QA.md#applicability);
    no UI does not mean no QA. Choose a proportionate set of [adversarial scenarios](../../../docs/engineering/QA.md#adversarial-scenarios)
    against the changed contract: intended use plus likely or high-impact failures. Establish independent expected

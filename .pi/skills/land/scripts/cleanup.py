@@ -233,15 +233,23 @@ def image_root_graph(safe, current, rows=None):
                 "missing/unknown child descriptor; root retirement held")
         if child["Kind"] == "image":
             platform = child["ImageData"]["Platform"]
-            require(platform == descriptor.get("platform") and platform["os"] != "unknown" and
+            direct_manifest = (descriptor.get("platform") is None and len(children) == 1 and
+                child["ID"] == current["Id"] and descriptor == current["Descriptor"] and
+                current["Descriptor"]["mediaType"] in ("application/vnd.oci.image.manifest.v1+json",
+                                                       "application/vnd.docker.distribution.manifest.v2+json"))
+            require((platform == descriptor.get("platform") or direct_manifest) and platform["os"] != "unknown" and
                     platform["architecture"] != "unknown", "image child platform ambiguous")
             selector = "/".join(platform[key] for key in ("os", "architecture", "variant") if platform.get(key))
             observed = json_command(["docker", "image", "inspect", "--platform", selector, current["Id"]], safe)
             require(len(observed) == 1 and observed[0]["Id"] == child["ID"] and
                     observed[0]["Descriptor"] == descriptor and observed[0]["Os"] == platform["os"] and
                     observed[0]["Architecture"] == platform["architecture"], "immutable root/platform mapping changed")
-            images.append({"descriptor": descriptor, "config_sha256": fingerprint(observed[0]["Config"]),
-                           "rootfs_sha256": fingerprint(observed[0]["RootFS"])})
+            entry = {"descriptor": descriptor, "config_sha256": fingerprint(observed[0]["Config"]),
+                     "rootfs_sha256": fingerprint(observed[0]["RootFS"])}
+            if direct_manifest:
+                require(observed[0].get("Variant", "") == platform.get("variant", ""), "direct manifest variant contradicts exact platform inspection")
+                entry["platform"] = platform  # Corroborated separately; never synthesize a descriptor field.
+            images.append(entry)
         else:
             require(child["Kind"] == "attestation" and child["AttestationData"]["For"] in
                     {value["ID"] for value in children if value["Kind"] == "image"} and
@@ -364,10 +372,158 @@ def artifact_inventory(root, exclusions=()):
     return result
 
 
+# Qualified legacy operation, not a version gate or permission to execute old code.
+LEGACY_NO_EFFECT_OPERATION = "05b3758fb220514dd8e656de9fdb101546770394bb1c0a4b7fdbf1187a87ae2c"
+
+
+def qualify_legacy_append(plan, attempt, source_bytes, image_outputs):
+    """Corroborate the one supported legacy early-hold path, without executing it."""
+    require(digest(source_bytes) == LEGACY_NO_EFFECT_OPERATION and
+            set(attempt) == {"time", "apply", "operation_sha256", "results", "complete"} and
+            attempt["operation_sha256"] == LEGACY_NO_EFFECT_OPERATION and attempt["apply"] is True and
+            attempt["complete"] is False, "unqualified legacy source/attempt; recovery held")
+    require(datetime.fromisoformat(attempt["time"]).tzinfo is not None, "legacy attempt time unavailable")
+    require(not plan["caches"] and set(image_outputs) == {v["identity"] for v in plan["images"]},
+            "legacy cache/image coverage unsupported")
+    expected = []
+    for kind, items in (("container", plan["containers"]), ("volume", plan["volumes"]),
+                        ("network", plan["networks"]), ("image", plan["images"]),
+                        ("worktree", [plan["worktree"]]), ("ref", [plan["branch"]])):
+        for item in items:
+            result = {"kind": kind, "identity": item["identity"], "status": "held", "commands": [],
+                      "recovery": "resource owner resolves the named prerequisite, then resume this receipt once"}
+            if item["disposition"] == "retain":
+                require(kind == "image" and item["reason"] and item["creation"]["kind"] == "reused",
+                        "legacy retention path unsupported")
+                raw = image_outputs[item["identity"]]
+                images = json.loads(raw)
+                require(len(images) == 1 and images[0]["Id"] == item["identity"] and
+                        fingerprint(images[0]) == item["inspection_sha256"], "legacy image identity changed")
+                result.update(status="retained", reason=item["reason"], creation=item["creation"],
+                              storage={"size_bytes": images[0]["Size"], "physical_reclaimed_bytes": None},
+                              commands=[{"argv": ["docker", "image", "inspect", item["identity"]], "exit": 0,
+                                         "stdout_sha256": digest(raw), "stderr_sha256": digest(b"")}])
+            else:
+                require(item["disposition"] == "hold" or
+                        (item["disposition"] == "remove" and (item["ownership"] != "proven" or item["consumers"] != [])),
+                        "legacy attempt could reach an effect; recovery held")
+                result["reason"] = item["reason"] if item["disposition"] == "hold" else "ownership or consumers unresolved/active"
+            expected.append(result)
+    expected.append({"kind": "final-verification", "identity": plan["task"], "status": "failed",
+                     "reason": "protected report/private evidence changed"})
+    require(attempt["results"] == expected, "legacy result/read-only-command coverage changed/unknown")
+
+
+def verification_snapshot(reference, plan):
+    """Read an immutable return and its exact snapshot, including the bounded successor."""
+    def retained(entry):
+        path = absolute(entry["path"])
+        require(set(entry) == {"path", "sha256"} and
+                inside(path, Path(plan["safe_checkout"]) / ".runs/tasks" / plan["task"] / "runs") and
+                not inside(path, absolute(plan["worktree"]["identity"])) and path.is_file() and not path.is_symlink() and
+                path.stat().st_uid == os.getuid() and stat.S_IMODE(path.stat().st_mode) == 0o600,
+                "verification history must remain private and external")
+        raw = path.read_bytes()
+        require(digest(raw) == entry["sha256"], "immutable verification history changed")
+        return raw
+
+    event = json.loads(retained(reference))
+    require(event["version"] in (1, 2) and event["kind"] == "return-to-verification" and
+            event["plan_sha256"] == fingerprint(plan) and
+            all(event["subject"][key] == plan[key] for key in ("task", "origin", "ref", "safe_checkout", "git_common_dir")),
+            "verification history subject/link changed")
+    original = json.loads(retained(event["original_receipt"]))
+    require(original["cleanup"]["plan"] == plan and original["lifecycle"]["subject"] == event["subject"],
+            "verification snapshot subject/plan changed")
+    if event["version"] == 2:
+        require(set(event) == {"version", "kind", "at", "subject", "source", "plan_sha256", "original_receipt",
+                              "predecessor", "legacy_source", "image_observations", "protected_history", "workers",
+                              "original_monitor", "exit_records", "publication_observations", "authority", "identity_observation"},
+                "unknown verification recovery state")
+        predecessor = json.loads(retained(event["predecessor"]))
+        require(predecessor["version"] == 1 and "published_setup_failure" in predecessor["publication_observations"] and
+                original["cleanup"]["verification_return"] == event["predecessor"], "unsupported recovery predecessor")
+        _, previous = verification_snapshot(event["predecessor"], plan)
+        old, current = previous["cleanup"], original["cleanup"]
+        mutable = {"operations", "stages", "resources", "processes", "monitor_attempts"}
+        require({k: v for k, v in original["lifecycle"].items() if k not in mutable} ==
+                {k: v for k, v in previous["lifecycle"].items() if k not in mutable} and
+                all(original["lifecycle"][key][:len(previous["lifecycle"][key])] == previous["lifecycle"][key]
+                    for key in ("operations", "stages", "processes", "monitor_attempts")), "original recovery private state/history changed")
+        require({k: v for k, v in current.items() if k not in ("attempts", "verification_return")} ==
+                {k: v for k, v in old.items() if k != "attempts"} and
+                len(current["attempts"]) == len(old["attempts"]) + 1 and current["attempts"][:-1] == old["attempts"],
+                "recovery must preserve all original cleanup fields and append exactly one attempt")
+        require(event["publication_observations"] == predecessor["publication_observations"] and
+                event["original_monitor"] == predecessor["original_monitor"] and event["exit_records"] == predecessor["exit_records"],
+                "original return/worker/hosting evidence changed")
+        require(datetime.fromisoformat(current["attempts"][-1]["time"]) > datetime.fromisoformat(predecessor["at"]),
+                "legacy append predates suspension")
+        require(set(event["legacy_source"]) == {"revision", "record"} and
+                re.fullmatch(r"[a-f0-9]{40}", event["legacy_source"]["revision"]), "legacy Git source unavailable")
+        qualify_legacy_append(plan, current["attempts"][-1], retained(event["legacy_source"]["record"]),
+                              {key: retained(value) for key, value in event["image_observations"].items()})
+        observation = event["identity_observation"]
+        require(set(observation) == {"baseline_intent", "current"} and
+                original["lifecycle"]["operations"][-1]["intent"] == observation["baseline_intent"], "original census linkage changed")
+        intent = json.loads(retained(observation["baseline_intent"]))
+        inventory = json.loads(retained(observation["current"]))
+        require(intent["kind"] == "compose-command" and intent["subject"] == event["subject"] and
+                intent["runtime"] == original["lifecycle"]["runtime"] and
+                datetime.fromisoformat(intent["at"]) < datetime.fromisoformat(current["attempts"][-1]["time"]),
+                "pre-incident census subject/time changed")
+        for kind, key, identity in (("containers", "Id", container_identity), ("networks", "Id", network_identity),
+                                    ("volumes", "Name", volume_identity)):
+            known = {v["identity"]: v for v in original["lifecycle"]["resources"][kind]}
+            require({v[key] for v in inventory[kind]} & set(known) == set(intent["before"][kind]) & set(known) and
+                    all(identity(value) == known[value[key]]["inspection_sha256"] for value in inventory[kind] if value[key] in known),
+                    "recovery census identity/presence changed")
+        replacements = event["protected_history"]
+        changed = {entry["path"]: entry for entry in replacements}
+        require(len(changed) == len(replacements) and changed and set(changed) <= {
+            str(Path(plan["safe_checkout"]) / ".runs" / directory / plan["task"] / name)
+            for directory, name in (("reviews", "review.md"), ("qa", "qa.md"))}, "only canonical report succession supported")
+        for report in replacements:
+            original_report = next(v for v in plan["protected_files"] if v["path"] == report["path"])
+            require(set(report) == {"path", "original", "current_record"} and
+                    file_record(absolute(report["original"]["path"])) == original_report["record"] and
+                    digest(retained(report["original"])) == original_report["record"]["sha256"] and
+                    report["current_record"] != original_report["record"], "original protected report not preserved")
+    return event, original
+
+
+def verify_plan_history(cleanup):
+    """Verify the immutable plan chain without creating an execution attempt."""
+    plan_hash = fingerprint(cleanup["plan"])
+    require(cleanup.get("plan_sha256") == plan_hash, "original immutable plan hash missing/changed")
+    history = cleanup.get("plan_history", [])
+    require(isinstance(history, list) and len(history) <= 128 and
+            all(fingerprint(entry["plan"]) == entry["plan_sha256"] for entry in history),
+            "historical immutable plan changed")
+    require(all(entry["next_plan_sha256"] == (history[index + 1]["plan_sha256"] if index + 1 < len(history) else plan_hash)
+                for index, entry in enumerate(history)), "plan revision linkage changed")
+    for entry in history:
+        if "verification_return" not in entry:
+            continue
+        plan = entry["plan"]
+
+        _, original = verification_snapshot(entry["verification_return"], plan)
+        require(cleanup["attempts"][:len(original["cleanup"]["attempts"])] == original["cleanup"]["attempts"],
+                "original verification plan/attempts changed")
+    if cleanup.get("verification_return"):
+        _, original = verification_snapshot(cleanup["verification_return"], cleanup["plan"])
+        require({k: v for k, v in cleanup.items() if k != "verification_return"} ==
+                {k: v for k, v in original["cleanup"].items() if k != "verification_return"},
+                "suspended plan/history/attempts changed")
+    return plan_hash
+
+
 class Cleanup:
     def __init__(self, receipt, apply=False):
         self.path = absolute(receipt)
         self.document = json.loads(self.path.read_text())
+        require(not self.document["cleanup"].get("verification_return"),
+                "plan suspended for verification; Land must explicitly generate a fresh qualified plan")
         self.plan = self.document["cleanup"]["plan"]
         self.state = self.document["cleanup"].setdefault("attempts", [])
         self.apply = apply
@@ -391,10 +547,17 @@ class Cleanup:
         self.plan_hash = fingerprint(self.plan)
         previous = self.document["cleanup"].get("plan_sha256")
         require(previous is None or previous == self.plan_hash, "plan changed; reconcile explicitly in a new receipt linked to prior results")
+        history = self.document["cleanup"].get("plan_history", [])
+        if any("verification_return" in entry for entry in history):
+            verify_plan_history(self.document["cleanup"])
+        require(len(history) <= 128 and all(fingerprint(entry["plan"]) == entry["plan_sha256"] for entry in history), "historical immutable plan changed")
+        if history:
+            require(all(entry["next_plan_sha256"] == (history[index + 1]["plan_sha256"] if index + 1 < len(history) else self.plan_hash)
+                        for index, entry in enumerate(history)), "plan revision linkage changed")
         self.document["cleanup"]["plan_sha256"] = self.plan_hash
         self.results = []
         self.attempt = {"time": datetime.now(timezone.utc).isoformat(), "apply": apply,
-                        "operation_sha256": digest(Path(__file__).read_bytes()),
+                        "operation_sha256": digest(Path(__file__).read_bytes()), "plan_sha256": self.plan_hash,
                         "results": self.results, "complete": False}
         self.state.append(self.attempt)
 
@@ -428,14 +591,24 @@ class Cleanup:
                 result.update(status="retained", reason=item["reason"])
             else:
                 require(item["disposition"] == "remove", item["reason"])
-                require(item["ownership"] == "proven" and item["consumers"] == [],
-                        "ownership or consumers unresolved/active")
+                require(item["ownership"] == "proven" and
+                        (item["consumers"] == [] or (item.get("consumer_policy") == "fresh" and item["consumers"] is None)),
+                        "ownership or known consumers unresolved/active")
+                # Generated lifecycle candidates defer the no-consumer conclusion, not
+                # the check: each operation below must qualify live visibility before effects.
                 self.subject_checks()
                 operation(item, result)
         except Hold as error:
             result.update(status="held", reason=str(error))
         except (OSError, ValueError, KeyError, TypeError) as error:
             result.update(status="held", reason=f"{type(error).__name__}: inspection/preservation unavailable; retain unchanged")
+        lifecycle = self.document.get("lifecycle")
+        if lifecycle is not None and kind in ("container", "network", "volume", "image", "cache"):
+            for resource in lifecycle["resources"][kind + "s"]:
+                if resource["identity"] == item["identity"]:
+                    resource["history"].append({"at": self.attempt["time"], "state": result["status"],
+                                                "plan_sha256": self.plan_hash, "attempt": len(self.state),
+                                                "reason": result.get("reason")})
         self.save()
         COMMANDS = None
 
@@ -484,11 +657,14 @@ class Cleanup:
             require(remote == f"{self.plan['oid']}\t{self.plan['ref']}", "published ref missing or changed")
         self.attempt["publication_observed_at"] = datetime.now(timezone.utc).isoformat()
 
-    def runtime(self):
-        binding = self.plan["runtime"]
+    def runtime(self, item=None):
+        binding = (item or {}).get("runtime", self.plan["runtime"])
         require(binding["ownership"] == "proven", "runtime binding ownership unresolved")
         cwd = absolute(binding["working_directory"])
         args = ["docker", "compose", "--project-name", binding["project"], "--project-directory", str(cwd)]
+        for profile in binding.get("profiles", []):
+            require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", profile), "invalid explicit runtime profile")
+            args += ["--profile", profile]
         for entry in binding["env_files"]:
             path = absolute(entry["path"])
             require(digest(path.read_bytes()) == entry["sha256"], "runtime env-file changed/missing")
@@ -512,9 +688,9 @@ class Cleanup:
                 "standalone evidence missing/changed; preserve original and recover proof")
         return raw
 
-    def standalone(self):
+    def standalone(self, item=None):
         """Qualify an explicit creation capability, never a Compose-validation bypass."""
-        binding = self.plan["runtime"]
+        binding = (item or {}).get("runtime", self.plan["runtime"])
         require(binding["kind"] == "standalone" and binding["ownership"] == "proven",
                 "standalone capability ownership unresolved")
         record = json.loads(self.retained_evidence(binding["creation_record"]))
@@ -549,7 +725,7 @@ class Cleanup:
         return record
 
     def standalone_container(self, item, current):
-        record = self.standalone()
+        record = self.standalone(item)
         proof = record["containers"][item["identity"]]
         require(proof["name"] == current["Name"] == item["name"] and
                 proof["image"] == current["Image"] and
@@ -558,13 +734,18 @@ class Cleanup:
                 "standalone container creation/configuration/mount identity changed")
         require(not any(key.startswith("com.docker.compose.") for key in (current["Config"].get("Labels") or {})),
                 "Compose-labelled resource requires the Compose capability")
+        stopped_oneoff = proof["workload"]["kind"] == "oneoff" and not current["State"]["Running"]
+        allowed_networks = set(record["networks"]) | {value["name"] for value in record["networks"].values()}
+        if stopped_oneoff:
+            allowed_networks.add("none")
         require(not current["HostConfig"].get("PortBindings") and
                 current["NetworkSettings"]["Networks"] and
-                current["HostConfig"]["NetworkMode"] in
-                set(record["networks"]) | {value["name"] for value in record["networks"].values()} and
+                current["HostConfig"]["NetworkMode"] in allowed_networks and
                 not current["HostConfig"].get("Privileged") and not current["HostConfig"].get("AutoRemove"),
                 "standalone published/host/privileged/auto-removing runtime outside qualified capability")
         for name, attached in current["NetworkSettings"]["Networks"].items():
+            if stopped_oneoff and name == "none" and current["HostConfig"]["NetworkMode"] == "none":
+                continue  # No network allocation or endpoint; never admit host networking.
             identifier = attached.get("NetworkID")
             # Docker drops NetworkID for stopped endpoints; resolve the recorded exact name instead.
             matches = [key for key, value in record["networks"].items() if value["name"] == name]
@@ -573,9 +754,12 @@ class Cleanup:
             network = json_command(["docker", "network", "inspect", matches[0]], self.safe)[0]
             require(network_identity(network) == record["networks"][matches[0]]["inspection_sha256"],
                     "standalone network configuration changed")
+            if stopped_oneoff and record["networks"][matches[0]].get("creation") == "reused":
+                continue  # Retire only the stopped creator, never its shared network or peers.
             eligible = {entry["identity"]: entry for entry in self.plan["containers"]
                         if entry["disposition"] == "remove" and entry["ownership"] == "proven" and
-                        entry["data"] == "disposable" and entry["consumers"] == []}
+                        entry["data"] == "disposable" and (entry["consumers"] == [] or
+                        (entry.get("consumer_policy") == "fresh" and entry["consumers"] is None))}
             peers = {entry["Id"] for entry in docker_inventory(self.safe)
                      if name in entry["NetworkSettings"]["Networks"]}
             require(peers <= set(eligible) & set(record["containers"]) and
@@ -606,7 +790,7 @@ class Cleanup:
             else:
                 raise Hold("standalone workload consumer-inspection capability unavailable")
         else:
-            require(workload["kind"] in ("idle", "postgres", "mysql") and not current["State"].get("Restarting"),
+            require(workload["kind"] in ("idle", "postgres", "mysql", "oneoff") and not current["State"].get("Restarting"),
                     "stopped standalone workload identity unresolved")
         # Reuse the SAME named/anonymous provenance implementation. Declarations must come from
         # original allocation evidence, never inferred from names or invented Compose labels.
@@ -751,10 +935,11 @@ class Cleanup:
             result.update(status="absent", reason="exact ID and recorded name absent on successful full inventory")
             return
         self.creation_evidence(item)
-        if self.plan["runtime"].get("kind", "compose") == "standalone":
+        binding = item.get("runtime", self.plan["runtime"])
+        if binding.get("kind", "compose") == "standalone":
             model = self.standalone_container(item, current)
         else:
-            binding, args, model = self.runtime()
+            binding, args, model = self.runtime(item)
             require(container_identity(current) == item["inspection_sha256"], "container identity/configuration/mounts changed")
             labels = current["Config"]["Labels"]
             service = item["service"]
@@ -764,7 +949,11 @@ class Cleanup:
                     labels.get("com.docker.compose.project.working_dir") == binding["working_directory"] and
                     labels.get("com.docker.compose.project.config_files") == ",".join(entry["path"] for entry in binding["config_files"]), "Compose/resource binding mismatch")
             expected = text([*args, "config", "--hash", service], binding["working_directory"]).split()
-            require(len(expected) == 2 and labels.get("com.docker.compose.config-hash") == expected[1], "current Compose service hash contradicts container")
+            require(len(expected) == 2, "current Compose service hash unavailable")
+            if labels.get("com.docker.compose.oneoff") == "True":
+                self.compose_oneoff(item, current, binding)
+            else:
+                require(labels.get("com.docker.compose.config-hash") == expected[1], "current Compose service hash contradicts container")
         if current["State"]["Running"]:
             processes = command(["docker", "top", item["identity"], "-eo", "pid,ppid,args"], self.safe).stdout
             require(digest(processes) == item["processes_sha256"], "container processes changed/unknown consumers")
@@ -781,7 +970,7 @@ class Cleanup:
         # Re-read exact immutable identity immediately before normal stop/removal.
         latest = json_command(["docker", "inspect", item["identity"]], self.safe)[0]
         require(container_identity(latest) == item["inspection_sha256"], "container changed before effect")
-        if self.plan["runtime"].get("kind", "compose") == "standalone":
+        if binding.get("kind", "compose") == "standalone":
             self.standalone_container(item, latest)
         if not self.apply:
             result.update(status="qualified", reason="preview only")
@@ -793,15 +982,49 @@ class Cleanup:
         # Stop is an effect too; an interruption resumes from current stopped state.
         self.subject_checks()
         latest = json_command(["docker", "inspect", item["identity"]], self.safe)[0]
-        if self.plan["runtime"].get("kind", "compose") == "standalone":
+        if binding.get("kind", "compose") == "standalone":
             self.standalone_container(item, latest)
         else:
-            self.runtime()
+            self.runtime(item)
         require(container_identity(latest) == item["inspection_sha256"] and not latest["State"]["Running"], "container changed/restarted after stop")
         self.host_consumers(candidate)
         command(["docker", "rm", item["identity"]], self.safe)
         require(not any(value["Id"] == item["identity"] or value["Name"] == item["name"] for value in docker_inventory(self.safe)), "container removal postcondition failed/recreated")
         result.update(status="removed", reason="exact container ID/name absence verified; mount provenance retained for separate volume qualification")
+
+    def compose_oneoff(self, item, current, binding):
+        """Bind CLI-overridden one-offs to original intent, returned ID and full creator configuration."""
+        require(isinstance(item.get("oneoff_proof"), dict), "one-off original command/configuration capability missing; preserve creator")
+        proof = json.loads(self.retained_evidence(item["oneoff_proof"]))
+        intent = json.loads(self.retained_evidence(proof["original_intent"]))
+        returned = json.loads(self.retained_evidence(proof["original_return"])) if proof.get("original_return") else None
+        dispatch = json.loads(self.retained_evidence(proof["original_dispatch"])) if proof.get("original_dispatch") else None
+        observation = json.loads(self.retained_evidence(proof["original_observation"]))
+        originals = [v for v in observation["containers"] if v["Id"] == item["identity"]]
+        require(proof["version"] == 1 and proof["task"] == self.subject and proof["origin"] == self.plan["origin"] and
+                proof["container"] == item["identity"] and proof["operation"] == intent["id"] == observation["operation"] and
+                proof["runtime_sha256"] == binding["resolved_sha256"], "one-off original subject/operation/runtime mismatch")
+        require(intent["subject"]["task"] == self.subject and intent["subject"]["origin"] == self.plan["origin"] and intent["kind"] == "run" and
+                item["service"] in intent["argv"] and item["identity"] not in intent["before"]["containers"],
+                "one-off exact original allocating command unavailable")
+        if returned is not None:
+            require(returned["operation"] == intent["id"] and returned["exit"] == 0 and
+                    item["identity"] in re.findall(r"\b[a-f0-9]{64}\b", returned["stdout"]),
+                    "one-off original returned ID missing/contradictory")
+        else:
+            require(proof["mode"] == "dispatch-reconciliation" and dispatch is not None and
+                    dispatch["operation"] == intent["id"] and dispatch["intent"] == proof["original_intent"] and
+                    dispatch["subject"]["task"] == self.subject and dispatch["subject"]["origin"] == self.plan["origin"] and
+                    fingerprint(dispatch["runtime"]) == fingerprint(binding) and item["service"] in dispatch["argv"] and
+                    datetime.fromisoformat(re.sub(r"(\.\d{6})\d+(?=\+)", r"\1", current["Created"].replace("Z", "+00:00"))) >= datetime.fromisoformat(dispatch["at"]),
+                    "one-off pending command lacks original durable dispatch/configuration proof; hold, never repeat allocation")
+        require(len(originals) == 1 and container_identity(originals[0]) == item["inspection_sha256"] == container_identity(current) and
+                originals[0]["Config"]["Labels"].get("io.fight.lifecycle.operation") == intent["id"] and
+                originals[0]["Config"]["Labels"].get("com.docker.compose.config-hash") == current["Config"]["Labels"].get("com.docker.compose.config-hash"),
+                "one-off original creator/configuration hash changed")
+        policy = intent["policy"]["services"][item["service"]]
+        require(policy["data"] == item["data"] == "disposable" and policy["authority"] == item["authority"],
+                "one-off original data/discard authority mismatch")
 
     def creation_evidence(self, item):
         creation = item["creation"]
@@ -882,6 +1105,7 @@ class Cleanup:
 
     def capture_mounts(self, item, current, model):
         """Persist exact creating-container observations before any stop/removal effect."""
+        binding = item.get("runtime", self.plan["runtime"])
         mounts = [{key: mount.get(key) for key in ("Type", "Name", "Source", "Destination", "RW")}
                   for mount in current["Mounts"]]
         volumes = {entry["identity"]: entry for entry in self.plan["volumes"]}
@@ -905,7 +1129,7 @@ class Cleanup:
             require(volume_identity(observed) == volume["inspection_sha256"], "volume identity changed before provenance capture")
             configured = [value for value in model["services"][item["service"]].get("volumes", [])
                           if value["target"] == mount["Destination"]]
-            if self.plan["runtime"].get("kind", "compose") == "standalone":
+            if binding.get("kind", "compose") == "standalone":
                 require(configured and configured[0]["type"] == "volume" and
                         configured[0].get("allocated_name") == mount["Name"] and
                         configured[0].get("created_absent") is True,
@@ -920,7 +1144,7 @@ class Cleanup:
                         "anonymous mount declaration unresolved")
         observation = {"container": current["Id"], "container_identity": container_identity(current),
                        "image": current["Image"], "mounts": mounts,
-                       "runtime_sha256": self.plan["runtime"]["resolved_sha256"]}
+                       "runtime_sha256": binding["resolved_sha256"]}
         provenance = self.document["cleanup"].setdefault("mount_provenance", {})
         require(current["Id"] not in provenance or provenance[current["Id"]] == observation,
                 "creating workload provenance changed; retain original evidence")
@@ -953,7 +1177,7 @@ class Cleanup:
         require(provenance, "creating-container mount provenance unavailable; recover original evidence")
         creator = next((entry for entry in self.plan["containers"] if entry["identity"] == provenance["container"]), None)
         require(creator and creator["inspection_sha256"] == provenance["container_identity"] and
-                provenance["runtime_sha256"] == self.plan["runtime"]["resolved_sha256"] and
+                provenance["runtime_sha256"] == creator.get("runtime", self.plan["runtime"])["resolved_sha256"] and
                 any(mount["Type"] == "volume" and mount["Name"] == item["identity"] and
                     mount["Destination"] == item["creation"]["destination"] for mount in provenance["mounts"]),
                 "storage provenance does not match the original creating workload")
@@ -1234,17 +1458,17 @@ class Cleanup:
             result.update(status="absent", reason="exact network ID/name absent on successful inventory")
             return
         self.creation_evidence(item)
-        standalone = self.plan["runtime"].get("kind", "compose") == "standalone"
+        standalone = item.get("runtime", self.plan["runtime"]).get("kind", "compose") == "standalone"
         network = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
         if standalone:
-            proof = self.standalone()["networks"][item["identity"]]
+            proof = self.standalone(item)["networks"][item["identity"]]
             require(proof["name"] == network["Name"] == item["name"] and
                     proof["created"] == network["Created"] == item["created"] and
                     proof["inspection_sha256"] == network_identity(network), "standalone network allocation/configuration changed")
             require(not any(key.startswith("com.docker.compose.") for key in (network.get("Labels") or {})),
                     "Compose-labelled network requires Compose capability")
         else:
-            binding, _, model = self.runtime()
+            binding, _, model = self.runtime(item)
             configuration = model["networks"][item["key"]]
             require(not configuration.get("external", False) and configuration["name"] == item["name"] == network["Name"], "external/shared/network identity mismatch")
             require(network["Labels"].get("com.docker.compose.project") == binding["project"] and
@@ -1263,7 +1487,7 @@ class Cleanup:
         self.subject_checks()
         latest = json_command(["docker", "network", "inspect", item["identity"]], self.safe)[0]
         if standalone:
-            require(network_identity(latest) == self.standalone()["networks"][item["identity"]]["inspection_sha256"],
+            require(network_identity(latest) == self.standalone(item)["networks"][item["identity"]]["inspection_sha256"],
                     "standalone network changed immediately before effect")
         require(latest["Id"] == item["identity"] and latest["Created"] == item["created"] and not latest["Containers"],
                 "network identity/endpoints changed before effect")
@@ -1356,6 +1580,7 @@ class Cleanup:
 
     def checkout(self, item, result):
         candidate = absolute(item["identity"])
+        require(not self.plan.get("pending_operations"), "unresolved original allocation holds source retirement; reconcile and explicitly refresh the plan")
         require(candidate != self.safe and not inside(self.safe, candidate), "main/safe checkout held")
         require(not inside(self.path, candidate), "receipt inside candidate")
         trees = worktrees(self.safe)
@@ -1405,6 +1630,7 @@ class Cleanup:
                 "owned branch configuration postcondition failed")
 
     def branch(self, item, result):
+        require(not self.plan.get("pending_operations"), "unresolved original allocation holds ref retirement")
         require(item["identity"] == self.plan["ref"], "branch not bound to subject")
         current = text(["git", "for-each-ref", "--format=%(objectname)", item["identity"]], self.safe)
         if not current:
@@ -1471,6 +1697,8 @@ class Cleanup:
             self.effect("image", item, self.image)
         for item in self.plan["caches"]:
             self.effect("cache", item, self.cache)
+        for pending in self.plan.get("pending_operations", []):
+            self.results.append({"kind": "allocation", "identity": pending["identity"], "status": "held", "reason": pending["reason"]})
         self.effect("worktree", self.plan["worktree"], self.checkout)
         self.effect("ref", self.plan["branch"], self.branch)
         try:

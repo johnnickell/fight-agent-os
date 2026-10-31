@@ -34,7 +34,7 @@ case "${1:-}" in
   status)
     python3 scripts/local_https.py check
     openssl x509 -in "$certs/localhost.pem" -noout -subject -dates
-    docker compose --profile https ps https https_php
+    ./bin/runtime docker compose --profile https ps https https_php
     curl --fail --silent --show-error --connect-timeout 5 --max-time 15 \
       --output /dev/null "$origin/"
     curl --fail --silent --show-error --connect-timeout 5 --max-time 15 \
@@ -42,8 +42,8 @@ case "${1:-}" in
     echo "HTTPS root and CSRF bootstrap verified with the curl client's trust store: $origin"
     ;;
   down|remove)
-    docker compose --profile https stop https https_php
-    docker compose --profile https rm --force https https_php
+    ./bin/runtime docker compose --profile https stop https https_php
+    ./bin/runtime docker compose --profile https rm --force https https_php
     if [ "$1" = "remove" ]; then
       rm -f "$certs/localhost.pem" "$certs/localhost-key.pem"
       echo "Removed local leaf files. Preserved .env, databases and shared mkcert CA trust."

@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, randomUUID, sign } from 'node:crypto';
+import fs from 'node:fs';
+import { recycledInode } from './helpers/session-file.mjs';
 import { chmodSync, lstatSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { dirname, join, relative } from 'node:path';
@@ -14,6 +16,8 @@ async function fixture(t, respond) {
   const root = directory(cwd, parent); privateDirectory(root);
   const endpoint = endpointPath(cwd, parent, generation), path = join(root, `${generation}.json`);
   privateDirectory(dirname(endpoint));
+  const sessionFile = join(cwd, 'session'); writeFileSync(sessionFile, 'actual file boundary fixture');
+  const parentFile = sessionFileIdentity(sessionFile);
   const { privateKey, publicKey } = generateKeyPairSync('ed25519'); const at = Date.now();
   let alter = value => value;
   const sockets = new Set();
@@ -25,7 +29,7 @@ async function fixture(t, respond) {
       buffer += chunk;
       if (!buffer.includes('\n')) return;
       const request = JSON.parse(buffer.split('\n')[0]);
-      const value = alter({ nonce: request.nonce, parent, parentFile: null, primary: cwd, generation, pid: process.pid, launcher: descriptor.launcher, at, children: [] });
+      const value = alter({ nonce: request.nonce, parent, parentFile, primary: cwd, generation, pid: process.pid, launcher: descriptor.launcher, at, children: [] });
       const body = JSON.stringify(value);
       socket.end(JSON.stringify({ body, signature: sign(null, Buffer.from(body), privateKey).toString('base64') }) + '\n');
     });
@@ -33,19 +37,32 @@ async function fixture(t, respond) {
   const socketPath = endpoint.length < 100 ? endpoint : relative(process.cwd(), endpoint);
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(socketPath, resolve); });
   chmodSync(endpoint, 0o600); const info = lstatSync(endpoint);
-  const descriptor = { version: 1, parent, parentFile: null, primary: cwd, generation, pid: process.pid, created: at,
+  const descriptor = { version: 1, parent, parentFile, primary: cwd, generation, pid: process.pid, created: at,
     launcher: { pid: 1234, entry: '/qualified/native/pi', process: 'native bootstrap tested separately' },
     process: `qualified-start node ${custodianScript} ${generation}`, publicKey: publicKey.export({ type: 'spki', format: 'pem' }), endpoint: { dev: info.dev, ino: info.ino } };
   writeFileSync(path, JSON.stringify(descriptor), { mode: 0o600 });
   t.after(async () => { for (const socket of sockets) socket.destroy(); await new Promise(resolve => server.close(resolve)); rmSync(cwd, { force: true, recursive: true }); });
   const options = { now: () => at, inspectProcess: () => descriptor.process };
-  return { cwd, parent, generation, path, endpoint, descriptor, options, alter: fn => { alter = fn; }, read: () => challenge(cwd, parent, path, descriptor, options) };
+  return { cwd, parent, generation, path, endpoint, sessionFile, descriptor, options, alter: fn => { alter = fn; }, read: () => challenge(cwd, parent, path, descriptor, options) };
 }
 
 test('a fresh signed challenge binds the actual parent, generation, endpoint inode and passive observation daemon', async t => {
   const f = await fixture(t); const value = await f.read(); assert.equal(value.parent, f.parent); assert.equal(value.generation, f.generation);
   assert.equal(candidates(f.cwd, f.parent).length, 1); assert.deepEqual(value.children, []);
 });
+test('persisted descriptors keep append continuity but reject recycled-inode replacement and legacy custody', async t => {
+  recycledInode(t); const f = await fixture(t);
+  const descriptor = JSON.parse(readFileSync(f.path, 'utf8'));
+  fs.appendFileSync(f.sessionFile, '\nnormal progress');
+  assert.equal((await challenge(f.cwd, f.parent, f.path, descriptor, f.options)).parent, f.parent);
+  const { path, dev, ino } = descriptor.parentFile;
+  for (const parentFile of [null, { path, dev: Number(dev), ino: Number(ino) }]) {
+    await assert.rejects(challenge(f.cwd, f.parent, f.path, { ...descriptor, parentFile }, f.options));
+  }
+  rmSync(f.sessionFile); writeFileSync(f.sessionFile, 'replacement');
+  await assert.rejects(challenge(f.cwd, f.parent, f.path, descriptor, f.options), /replaced|unavailable/);
+});
+
 test('a slow-trickle custody response has an absolute one-second deadline, not an activity timeout', async t => {
   let closed;
   const peerClosed = new Promise(resolve => { closed = resolve; });
@@ -214,6 +231,20 @@ test('installed package admits its own fixed monitor without a provider checkout
   const options = { inspect: value => value === pid ? witness.process : native.process,
     births: [{ pid, parent: 9000, bornUs: native.wallUs + 50000 }, { pid: 9000, parent: native.pid, bornUs: native.wallUs + 30000 }, { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000 }], registrations: () => `worktree ${cwd}\0` };
   assert.deepEqual(monitorWitness({ type: 'monitor', pid, token, worktree: cwd }, native, options).identity, witness.identity);
+});
+
+test('recycled device/inode cannot reuse a session witness, while append and serialized resume retain it', t => {
+  const cwd = realpathSync(mkdtempSync('/tmp/fc-recycle-')); t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const path = join(cwd, 'session'); writeFileSync(path, 'original');
+  // Control only recycled identity evidence, not creation time or session content identity.
+  recycledInode(t);
+  const first = sessionFileIdentity(path);
+  fs.appendFileSync(path, '\nordinary native progress');
+  assert.deepEqual(sessionFileIdentity(path), JSON.parse(JSON.stringify(first)), 'same-file append/resume keeps admission');
+  rmSync(path); writeFileSync(path, 'replacement');
+  const replacement = sessionFileIdentity(path);
+  assert.equal(replacement.dev, first.dev); assert.equal(replacement.ino, first.ino);
+  assert.notDeepEqual(replacement, first, 'recycled dev/ino must not collide across file lifetimes');
 });
 
 test('session file identity includes native file lifetime, not just its caller-selectable ID', t => {

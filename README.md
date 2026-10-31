@@ -139,7 +139,10 @@ requires separate operator selection on the qualified runtime; it is not Jev scr
 
 ## Development
 
-Docker Compose is required. This is an application with committed Composer lockfiles:
+Docker Compose is required. Local TASK execution first binds original intent and one isolated runtime through the
+[local resource lifecycle](docs/engineering/RESOURCE_LIFECYCLE.md); the owning wrappers capture creation and reuse
+that receipt through independent stages and Land. The ordinary non-TASK setup below remains available without
+claiming lifecycle capture. This is an application with committed Composer lockfiles:
 
 ```sh
 export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"

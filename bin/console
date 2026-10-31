@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 set -eu
 cd "$(dirname "$0")/.."
-exec docker compose exec -T web php scripts/console.php "$@"
+exec ./bin/runtime docker compose exec -T web php scripts/console.php "$@"

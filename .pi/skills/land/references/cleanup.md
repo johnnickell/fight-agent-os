@@ -5,6 +5,46 @@ own policy. Run `scripts/cleanup.py` beside the owning Land skill from the subje
 never from the removal candidate. Build's post-worker continuation uses
 `../../build/scripts/cleanup-continuation.py` instead. Both execute the same operation; neither publishes.
 
+## Creation-to-retirement binding
+
+For targets with `bin/runtime`, first read the target's [local resource lifecycle](../../../../docs/engineering/RESOURCE_LIFECYCLE.md).
+It owns original capture, same-receipt stage validation/recovery and mechanical plan generation. Land supplies actual
+delivery/worker facts only; it must not reconstruct ownership from Markdown. The generated plan uses this SAME
+schema/executor. `consumer_policy: fresh` with `consumers: null` defers the conclusion to the executor's existing
+live consumer checks; a known nonempty consumer list never qualifies. Per-resource `runtime` binds original
+creator generations (including explicit profiles), rather than applying the newest runtime to older resources.
+Compose one-offs additionally carry immutable original dispatch/returned-ID/configuration proof; stopped standalone
+one-offs may retire their creator without claiming or removing its reused network. Unsupported running workloads
+remain held. No publication, preservation or fresh consumer guard is waived.
+
+A lifecycle `return-to-verification --plan-sha256 HASH` is the explicit return from a finished unpublished,
+non-destructive held/retained preview to supervised SAME-runtime verification. Read its
+[supported/rejected states](../../../../docs/engineering/RESOURCE_LIFECYCLE.md#return-from-an-unpublished-preview-to-verification)
+before use. It preserves exact original receipt bytes and an immutable versioned transition; the old plan is
+ineligible for preview/apply under the SAME persistent lock. No allocation/removal authority is added. Actual
+publication and fresh qualified current-source `plan --refresh` are required to leave that state; the new plan
+retains the original plan, attempts, protected records, uncertainty and transition/snapshot link. The explicit
+`--failed-setup-run RUN_ID` mode additionally supports an exact ready OPEN published candidate after its actual
+current-head hosted setup failure and skipped gate, with completed strictly no-effect held/retained attempts.
+It preserves the same guards/freeze and all original history; read the lifecycle's
+[published setup-failure contract](../../../../docs/engineering/RESOURCE_LIFECYCLE.md#return-a-published-candidate-after-hosted-setup-failure)
+before use. Fresh independent acceptance/QA, repaired publication and linked replan remain necessary. Effects,
+interruption, merged/closed/changed identity or unknown outcomes never gain return authority.
+
+An erroneous completed legacy append to an already suspended published return is **not** a retry/reset case.
+Normal entry must hold. Explicitly authorized recovery uses only the lifecycle's
+[bounded audited successor](../../../../docs/engineering/RESOURCE_LIFECYCLE.md#recover-a-completed-legacy-no-effect-append-during-suspension),
+which qualifies the exact original source/result/read-only-command path and current identity/protected evidence.
+It preserves every actual attempt verbatim, including the legacy attempt's missing plan-hash field. The old
+plan stays ineligible; later accepted repaired publication and explicit linked Land replan retain the incident.
+Never run an older helper, hand-edit a transition or replace the main receipt to bypass suspension.
+
+A lifecycle `plan --refresh` archives the old immutable plan/hash and links the new hash inside the SAME receipt;
+legacy linked-companion recovery below remains for historical receipts without this versioned lifecycle. Do not
+rewrite old attempts or relabel eligible unknowns retained. Direct single-manifest image roots may omit platform
+in their descriptor; the helper corroborates the separate engine platform with exact `inspect --platform`, retaining
+the original descriptor unchanged. Unknown/incomplete graphs still hold.
+
 ## Inputs and result
 
 Extend the existing private JSON Work/Land handoff or receipt with `cleanup` below. Do not create a resource
