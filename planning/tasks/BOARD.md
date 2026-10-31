@@ -18,8 +18,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 [TASK-00546](00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31) is in bounded Work repair for Review2 R3/R4/R5.
 Shared plan guards, original protected-image policy and failed-inventory cache reporting have regression-first
-repairs and passing focused owning checks. The new final gate and current-source readiness observation are
-pending. SAME runtime/receipt and original capability/ACL/history holds remain protected. Independent renewed
+repairs and passing focused owning checks. The new final gate passed all 24 phases (`20261031T034831Z-22913`).
+Gate PASS is not upstream READY; canonical Work handoff owns current-source observation/proof and exact holds.
+SAME runtime/receipt and original capability/ACL/history holds remain protected. Independent renewed
 Review and nonvisual QA are next after the committed handoff; no acceptance or publication. Allowance is
 **5 effective / 2 consumed / 3 remaining**. Canonical ignored Work handoff owns exact proof/resource dispositions.
 
