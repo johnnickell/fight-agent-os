@@ -188,10 +188,10 @@ requires separate operator selection on the qualified runtime; it is not Jev scr
 
 ## Development
 
-Docker Compose is required. Local TASK execution first binds original intent and one isolated runtime through the
-[local resource lifecycle](docs/engineering/RESOURCE_LIFECYCLE.md); the owning wrappers capture creation and reuse
-that receipt through independent stages and Land. The ordinary non-TASK setup below remains available without
-claiming lifecycle capture. This is an application with committed Composer lockfiles:
+Docker Compose is required. Local TASK execution uses one isolated runtime and small resource record through
+[Local task resources](docs/engineering/RESOURCE_LIFECYCLE.md), reused across independent stages and repairs.
+Routine task-owned cleanup is already authorized; temporary task output is not a permanent archive. The ordinary
+non-TASK setup below remains available without claiming task ownership. This is an application with committed Composer lockfiles:
 
 ```sh
 export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
@@ -310,10 +310,10 @@ managed assignment is available through the separate invitation API.
 ./bin/planning-check --write  # Refresh planning views
 ./bin/planning-check          # Validate planning
 ./bin/build                   # Complete gate: backend coverage + frontend/catalog in running web service
-# Bound temporary runtime: original runtime_authority, SAME generated plan/executor:
+# Bound temporary runtime: exact native cleanup, without discarding unknown/durable data:
 ./bin/down
-# Historical runtime-only plans retain their exact original receipt:
-./bin/down --receipt /absolute/disposable-runtime-receipt.json
+# The same path from the canonical safe checkout:
+./bin/down --receipt /absolute/task-resources.json
 ```
 
 Export the attribute-owned [representative OpenAPI contract](docs/api/README.md) with `./bin/openapi export`,
@@ -328,13 +328,14 @@ it. Independent strict APP_DEBUG supports only closed sanitized diagnostics and 
 No public spec, long-lived Swagger credential or production-mail exception is supplied. Full production startup
 qualification remains explicitly deferred until the independent real-mail prerequisite exists.
 
-Expensive local wrappers first run [bounded storage admission](.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546).
-Export its host-shell settings when the default 20 GiB reserve plus 4 GiB allocation allowance is unsuitable;
-unknown measurements or insufficient space refuse allocation, never trigger a global prune. `./bin/up --build-only`
-is the guarded initial image setup. Unknown/durable volumes remain protected; `bin/down` uses original disposal authority and the SAME generated
-lifecycle plan/executor rather than unqualified Compose teardown. Stage handoffs run
-[executable readiness](docs/engineering/RESOURCE_LIFECYCLE.md#standing-cleanup-readiness): actual external
-source/private/report preservation, capability checks and precise holds, without another routine disposal prompt.
+Expensive local wrappers check host free space (20 GiB reserve plus 4 GiB allowance by default) and daemon
+availability; insufficient space refuses allocation, never triggers global prune. Configure host-shell
+`FIGHT_STORAGE_RESERVE_BYTES` / `FIGHT_STORAGE_ALLOCATION_BYTES` when needed. `./bin/up --build-only` is explicit
+image setup. Task builds use one disposable native builder/cache; shared/unknown storage remains protected.
+`bin/down` uses the same [exact-resource cleanup](docs/engineering/RESOURCE_LIFECYCLE.md) as Land. Containers
+retire independently of unrelated source protections, without `-v`; unknown/durable volumes remain. Keep needed
+role evidence outside disposable source, then remove temporary data after outcomes reach the existing TASK/PR.
+No per-stage full-source copies or mandatory local archives.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots

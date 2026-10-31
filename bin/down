@@ -2,12 +2,14 @@
 set -eu
 cd "$(dirname "$0")/.."
 if [ "$#" -eq 0 ] && [ -f var/resource-lifecycle.json ]; then
-    exec ./bin/runtime retire
+    task=$(python3 -c 'import json; print(json.load(open("var/resource-lifecycle.json"))["task"])')
+    exec ./bin/runtime retire --task "$task"
 fi
 if [ "${1:-}" = --receipt ] && [ "$#" -eq 2 ]; then
     # The same executor validates original creation, disposability, workers, peers,
     # mounts and all stopped consumers; no down -v or anonymous-volume fallback.
-    exec python3 .pi/skills/land/scripts/cleanup.py --receipt "$2" --runtime-retire --apply
+    task=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["task"])' "$2")
+    exec ./bin/runtime retire --task "$task" --receipt "$2"
 fi
-echo 'Shutdown requires the original lifecycle runtime_authority (./bin/down), or ./bin/down --receipt ABSOLUTE_DISPOSABLE_RUNTIME_RECEIPT for historical plans. Unknown/durable data and active consumers stay protected.' >&2
+echo 'Use ./bin/down for the bound task or ./bin/down --receipt ABSOLUTE_TASK_RESOURCE_RECORD. Unknown/durable data and active consumers stay protected; old receipts are read-only evidence.' >&2
 exit 1

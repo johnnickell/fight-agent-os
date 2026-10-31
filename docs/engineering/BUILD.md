@@ -7,10 +7,10 @@ A pass is not independent technical review, behavioral QA, merge, release or dep
 
 ## TASK runtime binding
 
-Before local TASK setup, follow the [local resource lifecycle](RESOURCE_LIFECYCLE.md) and initialize one private
-original-intent receipt through `bin/runtime`. Existing owning wrappers then capture allocations and creator mounts.
+Before local TASK setup, follow the [local resource lifecycle](RESOURCE_LIFECYCLE.md) and call `bin/runtime prepare`
+for the selected checkout. The command owns its private resource record and reviewed isolated configuration. Existing owning wrappers capture native identities and creator mounts.
 Later Work/Review/QA/repair stages validate and reuse that exact runtime, not another default stack. Missing/pending
-creation evidence holds advancement. Non-TASK/CI callers without a lifecycle locator retain their ordinary setup;
+identity holds affected advancement. Non-TASK/CI callers without a lifecycle locator retain their ordinary setup;
 this does not claim those external allocations were captured. The gate itself never initializes or replaces a runtime.
 
 ## Explicit setup
@@ -32,23 +32,13 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/build
 ```
 
-The host entry points run [bounded storage admission](../../.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546)
-before expensive allocation: one recoverable-artifact pass, then fresh host free-space checks. Export the documented
-host-shell reserve/allowance/retention settings; Compose `.env` alone does not configure host wrappers. Defaults
-require 20 GiB reserve plus a 4 GiB allocation allowance. Missing/unsupported observation or insufficient space
-refuses new work with a finite action, never a global prune or logical-size-as-physical-reclaim assumption.
-Current build/runtime image inputs and active/stopped consumers stay protected. `bin/up` obtains runtime images
-and local Dockerfile FROM inputs from its effective Compose model (including selected overrides), retaining the
-fixed repository build inputs. Missing/unsupported configuration or unresolved build inputs refuse admission
-before reclamation. The trusted local Docker socket accepts stable aliases such as Linux `/var/run -> /run`,
-without relaxing report/source/provenance path validation or same-engine/socket identity checks.
-A passing admission is not a cleanup-complete or application-gate verdict. Bound TASKs use `bin/runtime
-storage-admit` and the SAME original lifecycle receipt; a competing `FIGHT_STORAGE_RECEIPT` refuses before effects.
-Non-TASK use may select an existing private companion; otherwise state stays in ignored `var/`. No application
-runtime depends on `.runs/`. Before declaring a stage handoff ready, run the lifecycle's executable
-[readiness check](RESOURCE_LIFECYCLE.md#standing-cleanup-readiness), preserving source/private reports externally
-and surfacing affected cleanup capabilities upstream. Actual acceptance, publication and worker-exit binding
-remain at their proper later stages, not circular prerequisites for the initial technical candidate.
+Host wrappers check free space (20 GiB reserve plus 4 GiB allowance by default) and Docker availability before
+expensive allocation. `FIGHT_STORAGE_RESERVE_BYTES` and `FIGHT_STORAGE_ALLOCATION_BYTES` are host-shell settings,
+not Compose `.env` policy. Insufficient/unavailable observation refuses allocation, never prunes shared storage.
+Task builds use one dedicated native builder/cache, retired through the same exact-resource cleanup. Shared bases,
+unknown caches and durable volumes remain protected. Follow the [shared resource procedure](RESOURCE_LIFECYCLE.md)
+for identity, actual effects, failure/resume and finite temporary-output lifetime. No per-stage source copies or
+readiness proof archives. Independent acceptance, actual publication and worker exits remain separate facts.
 
 `./bin/up` prepares ignored cache mounts and builds/starts the complete HTTP/HTTPS stack explicitly, preserving
 database data. Use it again after environment or image/configuration changes so both PHP runtimes agree.
@@ -167,8 +157,8 @@ These diagnostics must remain free of secrets; host readability is not permissio
 Coverage/count/exclusion details remain in `.runs/build/reports/backend/` and
 `.runs/build/reports/client/coverage/`. Generated production-check assets live in `var/client/check/production/`,
 never replacing live `var/client/build/`; catalog output and captures stay under `.runs/build/reports/client/`.
-Disposable tool caches live under `.runs/cache/`. Retain active/required evidence; explicitly archive completed,
-inactive runs with a reversible manifest and repaired current locators rather than accumulating loose output.
+Disposable tool caches live under `.runs/cache/`. Retain active/required evidence only while its consumers need
+it; record final outcomes in existing TASK/PR and retire task-owned temporary output through the shared procedure.
 Application-generated JSON and TLS state live under `var/`, never `.runs/`.
 Do not delete another TASK's evidence. No gate checks test the gate, tools, configuration or seeded violations.
 

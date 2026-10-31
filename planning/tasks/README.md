@@ -550,4 +550,5 @@
 | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | done | — |
 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | done | — |
 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | done | — |
+| [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | in-progress | — |
 <!-- /planning:records -->
