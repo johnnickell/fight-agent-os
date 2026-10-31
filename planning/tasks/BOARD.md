@@ -73,7 +73,7 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 

@@ -309,7 +309,8 @@ managed assignment is available through the separate invitation API.
 ./bin/backend-tests        # Reset guarded test DB, run all backend suites once with coverage
 ./bin/planning-check --write  # Refresh planning views
 ./bin/planning-check          # Validate planning
-./bin/build                   # Complete gate: backend coverage + frontend/catalog in running web service
+./bin/build                   # Complete gate; automatically reuses an unchanged verified success
+./bin/build --force           # Run every phase even when a reusable success exists
 # Bound temporary runtime: original runtime_authority, SAME generated plan/executor:
 ./bin/down
 # Historical runtime-only plans retain their exact original receipt:

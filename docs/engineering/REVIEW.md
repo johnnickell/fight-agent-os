@@ -55,8 +55,8 @@ Check server authority, secret handling, success/rejection/failure, persistence/
 
 The mandatory verification gate is the target repository's canonical local command, normally `./bin/build`.
 A successful local gate plus sufficient acceptance evidence can support independent acceptance without a hosted
-run. Apply [gate evidence reuse](EXECUTION.md#gate-evidence-reuse): independently inspect the receipt, actual
-input/runtime changes and provenance, then reuse a qualifying pass. Independence requires a separate judgment,
+run. Run `./bin/build` normally; the command validates automatic reuse. Apply
+[gate evidence reuse](EXECUTION.md#gate-evidence-reuse) when reporting the original receipt and its limits. Independence requires a separate judgment,
 not another complete suite. Missing or invalid evidence remains Unverified until recovered or freshly verified. Hosted CI is required only when an accepted repository policy or TASK explicitly designates it as an
 acceptance gate. Cite that requirement before treating a missing hosted run as `Unverified` or blocking acceptance.
 A workflow file, repository visibility, previous CI usage, or the ability to query GitHub does not create a gate.

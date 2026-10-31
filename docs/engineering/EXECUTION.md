@@ -51,9 +51,10 @@ own repaired behavior independently passed. Mechanical changes may reuse evidenc
 
 ## Verification and evidence
 
-Use focused owning checks while iterating. Run the target's complete local gate (`./bin/build` here) once on
-the finished, frozen implementation, then apply [gate evidence reuse](#gate-evidence-reuse) across later roles
-and administrative updates. Hosted CI is optional unless explicitly required by the target's accepted
+Use focused owning checks while iterating. Run `./bin/build` on the finished implementation and normally
+across later roles. The command automatically validates and reuses an unchanged successful build; use
+`./bin/build --force` when fresh phase execution is explicitly required. Apply [gate evidence reuse](#gate-evidence-reuse)
+when reporting results or assessing administrative-only changes. Hosted CI is optional unless explicitly required by the target's accepted
 repository/TASK policy; follow the [verification policy](REVIEW.md#local-gate-and-optional-hosted-checks).
 Do not create a publication prerequisite from a workflow file or repository visibility alone. Also inspect the final diff and status and run `git diff --check`. Refresh generated planning views before their read-only checks when the TASK authorizes planning edits.
 
@@ -61,23 +62,17 @@ Evidence names the approved scope, changed files, commands, fresh exit results, 
 
 ### Gate evidence reuse
 
-Before running a complete gate, inspect the existing receipt and the actual intervening changes. Work, Review,
-QA, Build and Land reuse a qualifying pass rather than rerunning the suite for a new role, changed commit OID,
-commit operation, PR locator or completion metadata. Reuse is evidence assessment, not a cache or acceptance verdict.
+Run `./bin/build` normally. It owns automatic reuse; agents do not calculate hashes, select an old green run,
+or manually compare installed tool versions. A cache hit exits successfully and names the original receipt,
+without claiming new phase execution. `./bin/build --force` bypasses reuse. Native CI uses the same behavior
+through `php scripts/build.php [--force]`; fresh runners normally have no reusable local receipt.
 
-- Bind the receipt to its repository, exact tested head/tree or before/after source snapshots, index, unignored
-  file contents and executable modes. Verify command, complete phase exits, source stability, owning reports and
-  retained artifact digests. Missing, failed, interrupted or contradictory evidence is not a pass; never fall
-  back to an older green report after a relevant failure.
-- Compare actual source and inputs, not Git status alone: implementation, tests, executable instructions,
-  requirements, tool/runtime configuration, manifests/locks, installed dependency receipts, image/tool versions,
-  environment identity (without disclosing secrets), database isolation and required modes. Check for live
-  writers, replaced installs, runtime drift and interacting base changes. Unknown identity holds reuse until
-  resolved. Keep a concise provenance bridge and evidence locators in the existing ignored handoff/report.
-- Substantive changes invalidate affected evidence. Run focused owning checks during repair, then one complete
-  final gate for the changed implementation. An advancing base needs its actual interaction assessment; an
-  unchanged patch is not proof of unchanged inputs. Independent review and affected behavioral QA remain
-  required for substantive changes; unaffected scenario evidence may remain applicable with provenance.
+The [build contract](BUILD.md#automatic-build-reuse) defines fingerprint inputs and artifact validation. Missing,
+failed, interrupted, changed or unreadable evidence triggers a full gate. Unknown fingerprint identity disables
+caching and is reported. Relevant inputs changing during a qualified run fail it. Do not replace dependencies,
+edit source or reset the test database underneath a running gate. Independent Review and behavioral QA still
+own their judgments and focused scenarios. A build cache hit does not supply those verdicts.
+
 - Administrative-only changes are truthful completion/review/PR/status metadata and their generated planning
   views, not requirements, executable instructions, code, dependencies or tool configuration. Inspect the exact
   diff and provenance, run planning validation and `git diff --check`, and perform applicable targeted live
@@ -89,8 +84,8 @@ commit operation, PR locator or completion metadata. Reuse is evidence assessmen
 
 Each role records what it checked freshly, what it reused, why it remains applicable and what is unverified.
 Review owns its independent verdict; QA must still exercise the changed behavior with appropriate adversarial
-probes. Neither role repeats the complete suite merely to establish independence. A receipt with unknown inputs
-requires input recovery or a fresh gate after setup, not an inferred pass or speculative implementation edits.
+probes. Neither role repeats the complete suite merely to establish independence. The command reports whether phases ran or a receipt was reused; retain its original subject, warnings and
+evidence location. Missing prerequisites require explicit setup, not an inferred pass.
 
 ## Handoff
 

@@ -2,6 +2,10 @@
 set -eu
 
 cd "$(dirname "$0")/.."
+case "$#:${1:-}" in
+    0:|1:--force) ;;
+    *) echo 'Usage: ./bin/build [--force]' >&2; exit 2 ;;
+esac
 
 if ! ./bin/runtime docker compose ps --status running --services | grep -Fxq web; then
   echo "The Compose web service is not running. Start it with ./bin/up." >&2
@@ -17,4 +21,6 @@ if [ -z "$expected" ] || [ "$actual" != "$expected" ]; then
 fi
 
 ./bin/runtime storage-admit
-exec ./bin/runtime docker compose exec -T web php scripts/build.php
+image=$(./bin/runtime docker inspect --format '{{.Image}}' "$container")
+runtime_id=$(printf '%s\n%s\n%s\n' "$container" "$image" "$actual" | python3 -c 'import hashlib, sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')
+exec ./bin/runtime docker compose exec -T -e "FIGHT_BUILD_RUNTIME_ID=$runtime_id" web php scripts/build.php "$@"

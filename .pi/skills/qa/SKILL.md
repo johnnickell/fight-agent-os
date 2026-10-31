@@ -56,8 +56,7 @@ report locations; no handwritten Land reconstruction or recurring approval for a
 3. **Exercise and capture.** Use the real implementation through the selected interface, including actual API
    requests, browser interaction or a PTY for interactive terminals. If needed, use bounded [disposable probes](../../../docs/engineering/QA.md#disposable-probes)
    in the ignored run directory; retain reproducible scripts and results, without patching source/tests.
-   [Qualify gate evidence reuse](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse) rather than rerunning
-   the complete suite; independent adversarial scenarios remain required. Record fresh versus reused checks,
+   Run `./bin/build` normally for automatic reuse and [report the original receipt](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse); independent adversarial scenarios remain required. Record fresh versus reused checks,
    steps, inputs, expected/observed results and evidence per scenario. For instruction scenarios, label
    walkthroughs and their limits rather than claiming live execution. Follow [visual evidence guidance](../../../docs/engineering/QA.md#visual-evidence)
    for readable, comparable baseline/result captures of affected states; inspect every final image before citing it.

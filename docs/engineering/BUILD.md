@@ -1,9 +1,49 @@
 # Canonical application gate
 
 `./bin/build` is the sole complete local acceptance command. Use focused owning wrappers during iteration,
-then one complete final run for changed implementation. Apply [gate evidence reuse](EXECUTION.md#gate-evidence-reuse)
-across later roles, commits and administrative-only updates instead of automatically repeating the suite.
+then run the command normally on the finished implementation and across later roles. It automatically
+reuses a qualifying success. Use `./bin/build --force` for deliberate fresh execution. See
+[gate evidence reuse](EXECUTION.md#gate-evidence-reuse) for reporting and administrative-only changes.
 A pass is not independent technical review, behavioral QA, merge, release or deployment approval.
+
+## Automatic build reuse
+
+`./bin/build` and native `php scripts/build.php` accept `--force`. With no option, the gate checks the latest
+`var/build.json` and reuses its existing `.runs/build/<run>/receipt.json` only when all inputs and evidence match.
+The small JSON file stores the input fingerprint, exit code and original receipt/evidence digests. It is an
+ignored cache pointer, not another acceptance report. Old receipts without these fields require a fresh run.
+
+The fingerprint covers sorted project paths, file bytes, permissions and symlink targets plus their resolved
+contents, including `vendor/` and `client/node_modules/`. It excludes `.git/`, `.runs/`, `var/`, IDE state,
+`.DS_Store`, legacy `client/dist/` and `public/build/`, and the two disposable frontend cache mounts
+(`client/node_modules/.cache/` and `.vite-temp/`). Current generated OpenAPI, validation and live client-build
+inputs under `var/` are fingerprinted explicitly. Missing inputs, unreadable or special files and cyclic links
+disable caching; they are never silently omitted. Content changes to documentation and planning also miss the
+cache; commit/index bookkeeping alone does not. Administrative-only evidence assessment remains available under
+[execution standards](EXECUTION.md#gate-evidence-reuse).
+
+Runtime identity includes PHP and extensions/INI settings and files, PHP/Composer/Git/Python/Node/npm executable
+contents and versions, the npm installation, Chromium/headless installation, OS/kernel/package metadata and the
+inherited environment as a single digest without persisting environment values. Local entry additionally binds
+the running container, immutable image and Compose configuration. A guarded read-only PostgreSQL probe verifies
+connected identity, server version/incarnation, settings and database/role attributes on every invocation. A hit
+also requires the empty owned public schema left by backend cleanup. Intentional schema resets during a fresh
+gate are not runtime drift; rows are not cached inputs. This cache does not certify
+arbitrary external services or concurrent writers; explicit fresh requirements use `--force`.
+
+The existing exclusive gate lock covers checking, invalidation, execution and publication. Before any real run,
+the old cache pointer is removed so failures and interruptions cannot revive an older success. A successful run
+must have matching before/after source snapshots and input fingerprints. Only after its receipt is complete is
+the new pointer atomically published. Input identity that cannot be established disables caching and emits a
+warning while the normal full gate still runs. Identity becoming unknown or changed during a qualified run fails
+that run. `--force` follows the same receipt, stability and publication rules.
+
+A hit verifies the original successful receipt, every recorded phase exit, retained snapshots/logs, the complete
+report tree and required generated application/check outputs. Missing or altered evidence causes a miss. It
+rechecks inputs before returning success, prints the original receipt and keeps its warnings in the original
+logs. It creates no new phase results and grants no independent review, QA, merge or deployment verdict. Removing
+`.runs/build` or `var/build.json` simply loses reuse. Keep the selected original evidence while it is consumed.
+CI does not restore local success pointers or share acceptance between environments.
 
 ## TASK runtime binding
 

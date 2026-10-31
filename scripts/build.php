@@ -4,8 +4,16 @@ declare(strict_types=1);
 
 use Composer\InstalledVersions;
 use Symfony\Component\Process\Process;
+use Tooling\Build\BuildCache;
 
 require dirname(__DIR__).'/vendor/autoload.php';
+require __DIR__.'/BuildCache.php';
+
+if (array_slice($argv ?? [], 1) !== [] && array_slice($argv ?? [], 1) !== ['--force']) {
+    fwrite(STDERR, "Usage: php scripts/build.php [--force]\n");
+    exit(2);
+}
+$force = ($argv[1] ?? null) === '--force';
 
 $root = dirname(__DIR__);
 $directory = $root.'/.runs/build';
@@ -21,6 +29,31 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
     fwrite(STDERR, "Another canonical gate is running; wait for it to finish.\n");
     exit(1);
 }
+$started = microtime(true);
+$cache = new BuildCache($root);
+$fingerprint = null;
+try {
+    fwrite(STDOUT, "Checking build inputs and runtime...\n");
+    $fingerprint = $cache->fingerprint();
+    $reused = $force ? null : $cache->reusable($fingerprint);
+    if ($reused !== null && $fingerprint === $cache->fingerprint()) {
+        fwrite(STDOUT, sprintf(
+            "Reusing successful build in %.2fs. Original receipt: %s\n",
+            microtime(true) - $started,
+            $reused
+        ));
+        fwrite(STDOUT, "Original logs, warnings and reports remain with that receipt. No phases rerun.\n");
+        flock($lock, LOCK_UN);
+        fclose($lock);
+        exit(0);
+    }
+} catch (Throwable) {
+    $fingerprint = null;
+    fwrite(STDERR, "Build cache unavailable: input/runtime identity is incomplete; running the full gate.\n");
+}
+// A failure or interruption from here must never revive an earlier success.
+$cache->invalidate();
+fwrite(STDOUT, $force ? "Forced full build.\n" : "No reusable success; running the full build.\n");
 $run = $directory.'/'.gmdate('Ymd\THis\Z').'-'.getmypid();
 if (!mkdir($run, 0755) || !chmod($run, 0755) || !mkdir($run.'/home', 0700)) {
     throw new RuntimeException('Cannot create the build execution directory.');
@@ -35,16 +68,16 @@ $writeEvidence = static function (string $path, array $data): void {
         throw new RuntimeException('Cannot retain host-readable build evidence.');
     }
 };
-$started = microtime(true);
 $receipt = [
-    'schema_version' => 1,
-    'result'         => 'incomplete',
-    'php'            => PHP_VERSION,
-    'xdebug'         => phpversion('xdebug'),
-    'packages'       => [],
-    'phases'         => [],
-    'reports'        => ['.runs/build/reports/backend/', '.runs/build/reports/client/'],
-    'limits'         => 'Local acceptance, not independent review, QA, merge or deployment'
+    'schema_version'    => 2,
+    'input_fingerprint' => $fingerprint,
+    'result'            => 'incomplete',
+    'php'               => PHP_VERSION,
+    'xdebug'            => phpversion('xdebug'),
+    'packages'          => [],
+    'phases'            => [],
+    'reports'           => ['.runs/build/reports/backend/', '.runs/build/reports/client/'],
+    'limits'            => 'Local acceptance, not independent review, QA, merge or deployment'
 ];
 foreach (InstalledVersions::getInstalledPackages() as $package) {
     $receipt['packages'][$package] = InstalledVersions::getPrettyVersion($package);
@@ -186,18 +219,7 @@ try {
 
     // Frontend/Pi tools receive no application, database, provider or host credential environment.
     // Explicit runner setup may select tool/browser paths without inheriting its ambient PATH or HOME.
-    $frontendEnvironment = array_fill_keys(array_keys(getenv()), false);
-    $frontendEnvironment = array_replace($frontendEnvironment, [
-        'PATH'                        => getenv('FIGHT_BUILD_TOOL_PATH') ?: '/usr/local/bin:/usr/bin:/bin',
-        'HOME'                        => $run.'/home',
-        'CI'                          => '1',
-        'TZ'                          => 'UTC',
-        'STORYBOOK_DISABLE_TELEMETRY' => '1',
-        'PLAYWRIGHT_BROWSERS_PATH'    => getenv('PLAYWRIGHT_BROWSERS_PATH') ?: '/ms-playwright',
-        'npm_config_cache'            => $root.'/.runs/cache/client/npm',
-        'npm_config_update_notifier'  => 'false',
-        'npm_config_offline'          => 'true'
-    ]);
+    $frontendEnvironment = $cache->frontendEnvironment($run.'/home');
     $frontendSteps = [
         'Installed frontend lock/runtime' => ['node', 'scripts/dependencies.mjs'],
         'Frontend Node version'           => ['node', '--version'],
@@ -270,8 +292,32 @@ try {
             $receipt['result'] = 'fail';
             $exitCode = 1;
         }
+        $afterFingerprint = null;
+        if ($fingerprint !== null) {
+            try {
+                $afterFingerprint = $cache->fingerprint();
+            } catch (Throwable) {
+                // Known inputs becoming unknown during execution cannot be certified.
+            }
+        }
+        $receipt['inputs_unchanged'] = $fingerprint !== null && $fingerprint === $afterFingerprint;
+        if ($fingerprint !== null && !$receipt['inputs_unchanged']) {
+            fwrite(STDERR, "Build failed: installed files or runtime changed during the gate.\n");
+            $receipt['result'] = 'fail';
+            $exitCode = 1;
+        }
+        $receipt['exit'] = $exitCode;
         $receipt['seconds'] = round(microtime(true) - $started, 3);
         $writeEvidence($run.'/receipt.json', $receipt);
+        if ($exitCode === 0 && $receipt['inputs_unchanged']) {
+            try {
+                $cache->publish($fingerprint, $run);
+            } catch (Throwable) {
+                $receipt['cache_warning'] = 'Cache publication unavailable; the next build will run in full';
+                fwrite(STDERR, $receipt['cache_warning']."\n");
+                $writeEvidence($run.'/receipt.json', $receipt);
+            }
+        }
     } catch (Throwable) {
         fwrite(STDERR, "Build evidence is incomplete.\n");
         $exitCode = 1;
