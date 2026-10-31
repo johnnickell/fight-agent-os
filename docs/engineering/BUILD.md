@@ -27,12 +27,14 @@ contents and versions, the npm installation, Chromium/headless installation, OS/
 inherited environment as a single digest without persisting environment values. Local entry additionally binds
 the running container, immutable image and Compose configuration. A guarded read-only PostgreSQL probe verifies
 connected identity, server version/incarnation, settings and database/role attributes on every invocation. A hit
-also requires the empty owned public schema left by backend cleanup. Intentional schema resets during a fresh
+also requires the empty owned public schema left by backend cleanup, including no namespaced objects, explicit
+schema privileges, comments or security labels. Intentional schema resets during a fresh
 gate are not runtime drift; rows are not cached inputs. This cache does not certify
 arbitrary external services or concurrent writers; explicit fresh requirements use `--force`.
 
 The existing exclusive gate lock covers checking, invalidation, execution and publication. Before any real run,
-the old cache pointer is removed so failures and interruptions cannot revive an older success. A successful run
+the old cache pointer is removed so failures and interruptions cannot revive an older success. A forced attempt
+removes it immediately after acquiring the lock, before fingerprinting starts. A successful run
 must have matching before/after source snapshots and input fingerprints. Only after its receipt is complete is
 the new pointer atomically published. Input identity that cannot be established disables caching and emits a
 warning while the normal full gate still runs. Identity becoming unknown or changed during a qualified run fails

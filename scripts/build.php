@@ -32,6 +32,10 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
 $started = microtime(true);
 $cache = new BuildCache($root);
 $fingerprint = null;
+// A deliberate fresh attempt retires prior success before interruptible fingerprint work.
+if ($force) {
+    $cache->invalidate();
+}
 try {
     fwrite(STDOUT, "Checking build inputs and runtime...\n");
     $fingerprint = $cache->fingerprint();

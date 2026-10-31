@@ -59,9 +59,24 @@ SQL
 } elseif ($action === 'reuse-check') {
     $clean = $connection->fetchOne(
         <<<'SQL'
-SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'public' AND nspowner =
-    (SELECT oid FROM pg_roles WHERE rolname = current_user))
-AND NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'public')
+SELECT EXISTS (
+    SELECT 1 FROM pg_namespace n
+    WHERE n.nspname = 'public'
+        AND n.nspowner = (SELECT oid FROM pg_roles WHERE rolname = current_user)
+        AND n.nspacl IS NULL
+        AND NOT EXISTS (
+            SELECT 1 FROM pg_depend d
+            WHERE d.refclassid = 'pg_namespace'::regclass AND d.refobjid = n.oid
+        )
+        AND NOT EXISTS (
+            SELECT 1 FROM pg_description d
+            WHERE d.classoid = 'pg_namespace'::regclass AND d.objoid = n.oid
+        )
+        AND NOT EXISTS (
+            SELECT 1 FROM pg_seclabel s
+            WHERE s.classoid = 'pg_namespace'::regclass AND s.objoid = n.oid
+        )
+)
 SQL
     );
     if (!$clean) {
