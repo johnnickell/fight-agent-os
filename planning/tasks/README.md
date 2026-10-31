@@ -550,7 +550,7 @@
 | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | done | — |
 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | done | — |
 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | done | — |
-| [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | in-progress | — |
+| [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | done | — |
 | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | ready-for-agent | [TICKET-00126](../tickets/00126-TICKET.md) |
 | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | ready-for-agent | [TICKET-00127](../tickets/00127-TICKET.md) |
 | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | ready-for-agent | [TICKET-00128](../tickets/00128-TICKET.md) |

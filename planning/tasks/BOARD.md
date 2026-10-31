@@ -73,12 +73,13 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | — (standalone chore) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -102,7 +103,6 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00543](00543-TASK.md) | Prepare and reuse exact worktree-owned testing runtimes in local Work and Build | — (standalone chore) | ready-for-agent | [TASK-00548](00548-TASK.md) | — |
 | 1 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | — (standalone bug) | ready-for-agent | [TASK-00543](00543-TASK.md) | — |
 | 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md), [TASK-00498](00498-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
@@ -515,6 +515,7 @@ independent acceptance, cleanup or publication is claimed; policy approval is no
 | 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | done | — | [PR #181](https://github.com/johnnickell/fight-agent-os/pull/181) |
 | 1 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | — (standalone bug) | done | — | [PR #186](https://github.com/johnnickell/fight-agent-os/pull/186) |
 | 1 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | — (standalone bug) | done | — | [PR #185](https://github.com/johnnickell/fight-agent-os/pull/185) |
+| 1 | [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | — (standalone chore) | done | — | — |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
