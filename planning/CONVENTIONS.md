@@ -144,8 +144,10 @@ separately; done does not grant approval for those actions.
 Land records independently accepted implementation and required verification in the TASK, closes eligible
 parents and reconciles applicable current Board/Roadmap/README/docs before its final publication. The PR URL
 is historical publication metadata, not a persistent merge queue or proof of current hosting state. Keep exact
-live PR/default/base/head/OID and required delivery checks in Land's durable ignored receipt and actual PR.
-Human merge remains separate; no routine post-merge Board or marker retirement is required.
+live PR/default/base/head/OID and required delivery checks in Land's active ignored handoff and actual PR.
+After necessary outcomes reach the existing TASK/PR, use the [shared resource procedure](../docs/engineering/RESOURCE_LIFECYCLE.md)
+to retire eligible temporary execution material; no permanent local source/archive requirement. Human merge
+remains separate; no routine post-merge Board or marker retirement is required.
 
 `./bin/planning-check` and `--write` are offline only. They validate source records and generated views; the
 writing mode additionally rolls up eligible parents. Neither performs hosting lookup, delivery reconciliation

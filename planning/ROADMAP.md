@@ -69,6 +69,14 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**TASK-00548 accepted implementation checkpoint:** [accepted simplification](tasks/00548-TASK.md#accepted-implementation-checkpoint--2026-10-31)
+has independent Review ACCEPT and nonvisual QA PASS on `a7e062a` plus the exact owner-authorized ignore,
+committed as `15bf30f`; the complete 24-phase gate is qualified reused evidence. Publication and eligible cleanup
+are pending at this checkpoint; exact PR/delivery/cleanup results are in canonical ignored
+`.runs/tasks/TASK-00548/runs/land/receipt.md` and the TASK PR. Main/current source/ref, private legacy history and
+unknown/shared resources remain held. Acceptance is not completed cleanup or human merge; earlier checkpoints
+retain their history. TASK-00543/00544 remain unstarted; generated Board eligibility owns execution selection.
+
 **TASK-00546 accepted repair checkpoint:** [TASK-00546](tasks/00546-TASK.md#accepted-repair-closeout-checkpoint--2026-10-31)
 has independent Review ACCEPT and affected nonvisual QA PASS on candidate `369664f`. Publication and cleanup
 were pending at this checkpoint; actual results and holds are in the canonical ignored TASK Land handoff and

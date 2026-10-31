@@ -373,30 +373,19 @@ separate explicitly requested operation. Return per-subject removed/retained/hel
 
 ### Executable local operation
 
-Local Land and Build's post-worker cleanup-only continuation execute the
-[exact-subject cleanup operation](../../.pi/skills/land/references/cleanup.md), using the existing private handoff/
-receipt. This section remains policy authority; the operation's schema, conservative capability holds and finite
-resume procedure live beside its callers. Normal callers have no ad hoc destructive fallback. Qualification,
-external preservation, effect intent and fresh postconditions are recorded separately from publication. A hold
-never authorizes protection changes or generic runtime setup. This helper is not universal shell enforcement or
-OS isolation; unrestricted agents can bypass it, and arbitrary external races cannot be atomically fenced.
+Land and Build's original-worker continuation use the single [resource procedure](RESOURCE_LIFECYCLE.md) and
+small task record. Native Git/Docker effects and actual postconditions are separate from publication. No parallel
+cleaner, mandatory source archive or legacy-history migration. A hold does not authorize force/protection changes;
+these helpers are not shell enforcement or OS isolation.
 
 ### Standing authority and upstream readiness
 
-Original recorded authority to dispose of positively disposable local test/dev resources carries through Work,
-Review and QA to Land; no recurring human or per-effect prompt is required. Recoverable unused images/cache
-use the separately approved recoverability policy without historical task ownership. Unknown/durable/shared
-data, unique work, conflicting consumers and protected host/private/report state remain outside that authority.
-
-For lifecycle-enabled targets, require the [upstream readiness operation](RESOURCE_LIFECYCLE.md#standing-cleanup-readiness),
-not a prose-only checklist. Each creating stage records exact identities/generations/config/env/creating mounts,
-dependencies and private/generated-artifact classifications before creators disappear. Its handoff runs actual
-preservation/capability checks and carries the SAME receipt, immutable external proof and original worker records.
-Land refreshes readiness on the current closeout source before publication, binds actual acceptance/QA/publication
-and original Land monitor/Pi exits at the proper stage, generates the plan, executes eligible effects and verifies
-outcomes. Build finishes the supported SAME-receipt post-worker continuation without another routine approval.
-A missing proof/capability is a precise affected hold, not permission to strip metadata, guess exclusions or skip
-independent eligible effects. Controlled qualification is not independent Review/QA or actual delivery evidence.
+Ordinary task-owned disposal is standing authority across roles, failure and cancellation; do not ask again.
+Work records exact native identities/mounts and disposable versus unknown/shared/durable data before creators
+vanish; all roles reuse that runtime/record. Inspect current consumers and precise holds, not per-stage proof
+archives or full-source copies. Keep active-role evidence until necessary outcomes reach existing TASK/PR, then
+retire temporary material. Independent effects proceed beside narrow holds. Controlled probes are not independent
+acceptance or publication. Native session-lifetime and independent-role admission remain unchanged.
 
 ### Completion ownership
 
@@ -404,10 +393,9 @@ Safe cleanup is a required effect of authorized Land, not an optional follow-up 
 eligible isolated worktree, local feature branch, disposable test containers, unused task-owned networks and
 qualified task-created named/anonymous disposable volumes. Account separately for created versus reused/shared
 images and caches; unsupported exact retirement is a finite hold, never an implicit leak exemption.
-TASK-00546 additionally permits bounded unused positively downloadable/recoverable image/cache reclamation
-without historical TASK ownership through the SAME operation's documented storage policy. Qualify actual engine,
-worker, retained backing/content, protected inputs, retention and consumers first. This exception never extends
-to unique work, volumes, host/source/private data, unfiltered prune or a protection-changing fallback.
+TASK-00548 replaces the old shared recoverable-storage machinery for new work with dedicated native task
+builders/cache and exact owned-image cleanup. Unknown/shared historical caches and bases remain protected;
+TASK-00546's original resources/evidence are excluded, not migrated or reclaimed by this change.
 Publication does not require merge first. A resource that fails qualification stays in place with an explicit
 hold; successful publication with cleanup held is **not complete Land**. Do not request another cleanup prompt
 for effects already within Land authority. Never delete the main checkout or a current/active branch, terminate
@@ -416,18 +404,16 @@ an unrequested session, delete a remote branch, prune globally, stop a shared st
 ### Inventory and preserve
 
 Preview candidates before publication; carry the inventory in the existing Work → Build → Land handoff and
-durable TASK receipt, not a new registry. Re-observe it immediately before each destructive effect. Bind each
+small TASK resource record while active, not a new registry or permanent archive. Re-observe immediately before each effect. Bind each
 entry to the target repository/TASK and record exact identity, ownership evidence, dependencies, intended
 remove/retain/hold disposition and reason, command/result and postcondition:
 
 - Selected and canonical safe checkouts, Git common directory, registered worktree paths, local full branch ref,
   local OID, accepted/published candidate and bridge, remote URL/ref/OID, exact PR identity/state/merge evidence.
-- Runtime kind: qualified Compose project, absolute configuration/override/env-file **locators** and working
-  directory, or the explicit standalone creation capability with immutable original allocation/source proof.
-  Carry wrapper invocation, container IDs/configuration fingerprints/labels, mounts and dependencies;
-  network IDs/configuration fingerprints/labels and every attached endpoint's ownership. Never invent Compose
-  labels/configuration for standalone subjects; valid historical adoption uses a linked immutable plan or a
-  precise evidence hold under the executable contract, without requiring a retired source worktree.
+- Runtime kind, exact Compose project/config/env locators or actual standalone creator, native IDs/configuration
+  fingerprints and creating mounts. Use genuine original evidence for historical resources; never invent missing
+  fields/labels or require old command-session schemas. No general migration engine or linked-plan ceremony.
+  Keep source deletion eligibility separate from independent container disposal.
   Capture exact creating-container mounts and storage identity/provenance before removing the creating
   container, and retain that observation outside removal candidates. For named/image-declared anonymous
   volumes, distinguish task-created, merely used and shared storage, size observation, explicit disposability
@@ -444,14 +430,12 @@ remove/retain/hold disposition and reason, command/result and postcondition:
   unknown or unavailable; missing inventory is not proof of absence. Active coordinators and child sessions
   retain their checkout/branch/mount dependencies; ask their owner for an authorized later retirement, not kill.
 
-Before retiring a checkout, inspect tracked status plus untracked **and ignored** files; clean Git status alone
-misses evidence and keys. Preserve required artifacts outside that checkout at the canonical base's ignored
-TASK run/report locations or the target's bound equivalents. Follow [scratch retention](SCRATCH.md): record
-old/new recoverable locators, ownership, exclusions and digests, verify the copy and consumers, preserve report
-bytes and private file permissions. A locator inside the deleted checkout is not retention. Unknown ownership,
-unrecoverable evidence, private state without an authorized destination, or a live mount holds the checkout.
-Durable volumes/databases/credentials remain retained by default; volume deletion needs separate explicit
-proven-disposable authorization. Never use `down -v` to make the inventory empty.
+Before checkout removal inspect tracked, untracked **and ignored** data. Move genuine needed private/durable
+material to its appropriate owner and verify bytes/permissions; keep active-role reports outside disposable
+source. After outcomes reach existing TASK/PR, dispose owned temporary artifacts instead of automatically
+archiving or copying the entire source tree. Unknown/private data or a live mount holds checkout removal only.
+Original disposable-volume authority already covers routine disposal; unknown/durable data stays protected.
+Never use `down -v` or strip protections to make counts pass.
 
 ### Qualify live consumers
 
@@ -464,13 +448,14 @@ nor is their read-only mode alone permission to delete. Qualify them from a sepa
    file-sharing/virtualization service using local runtime/process evidence, not a similar name or old PID.
 2. Successfully inspect **all** containers, including stopped ones, for source mounts into the candidate and
    parent mounts exposing it, plus host sessions/process cwd, write-capable descriptors and known non-Docker
-   consumers. Retire qualified task containers first. An explicit candidate mount/session/writer, incomplete
+   consumers. Retire qualified task containers first, independently of source LINK/ACL/copy eligibility. An explicit candidate mount/session/writer, incomplete
    visibility or unknown consumer holds the affected checkout. A parent-only shared repository mount is not by
    itself a task dependency: inspect that container's configured source, processes/cwd and actual candidate use;
    positively establish unrelated use or hold it. Never stop a shared stack to clear general path exposure,
    infer absence from an inspection error, or kill an unknown consumer to proceed.
-3. Preserve required ignored/private state outside the checkout with modes and manifests. Compare source
-   digests/status before and after copying and immediately before removal; changes or unverifiable files hold.
+3. Preserve genuine needed private/durable data outside the checkout, verifying bytes/permissions. Keep required
+   role evidence while active; after its outcome is recorded, dispose owned temporary output instead of copying
+   the whole source tree. Unknown data or changed source holds checkout deletion only.
 4. When only positively qualified read-only file-sharing handles remain, record that evidence and proceed with
    normal non-force Git cleanup. Handles need not reach zero; do not demand VM shutdown to clear file-sharing
    cache descriptors. Any new actual dependency or removal failure stops the affected effect without force.
@@ -505,17 +490,22 @@ exact remaining effects to the owning coordinator. After observing worker exit, 
 cleanup from the canonical safe checkout within existing authority, using a cleanup-only Land worker there when
 its role requires delegation. Do not dispatch that continuation from the removal candidate, terminate the active
 coordinator, or return an already-ended worker-cwd hold as a human prerequisite.
-Use `git worktree remove` without force only for a clean, inactive, isolated owned checkout at the qualified
-candidate, after preservation and container retirement. Re-query worktree registration and filesystem absence;
-removal is not the final tool operation because postconditions and branch cleanup still follow. Never switch or
-remove the selected main checkout merely to make its branch eligible. Before branch deletion, prove the exact
-ref is not checked out in **any** worktree and no active session/consumer needs it. Prefer `git branch -d` when
-Git's ancestry/upstream check permits it. If Git refuses only because a proven published-unmerged or squash-merged
-tip is not an ancestor of the safe checkout, the above proof permits exact compare-and-delete with
-`git update-ref -d "$local_ref" "$proven_oid"` (bound full `refs/heads/...` and verified old OID), not blanket
-`branch -D`. Recheck the ref/worktree/ownership immediately beforehand; an OID change or competing activity
-holds deletion. Remove only that owned branch's obsolete configuration if present, never other refs/config.
-Record which proof/tool was used and verify ref absence. Do not delete any remote ref.
+Use the [shared resource procedure](RESOURCE_LIFECYCLE.md#retire-runtime-then-finish-the-task) to record the exact
+publication/cancellation disposition and surviving safe-checkout outcome, then finish from that safe checkout.
+Only Worktrunk removes the qualified isolated checkout/local ref: the owning command uses explicit-target
+`wt remove --foreground --format=json`, closed stdin and no force, reap, approval or hook-skipping options.
+Recheck exact ref/OID, registration, clean source, ignored/private data and consumers before removal; an OID change,
+competing activity or unavailable visibility holds the affected effect. Never switch or remove the selected
+main/current checkout merely to make its branch eligible, or delete a ref checked out in another worktree.
+
+Publication/cancellation proof does not override Worktrunk's integration or hook requirements. Missing/unsupported
+`wt`, configured removal hooks or a retained unmerged branch are specific Git holds, not authority for direct Git
+removal or a compare-and-delete fallback. Verify actual filesystem, registration and exact ref absence as well as
+structured output; exit 0 can mean partial removal. Resume only remaining effects through the same command,
+including Worktrunk branch-only removal after checkout absence. Surviving task-branch local configuration is a
+metadata hold retaining the resource record, including absent-ref retries; the operator owns its exact disposition.
+Do not delete Git configuration or shared Worktrunk caches/state. Record actual tool outcomes and holds separately
+from independently eligible Docker effects. Do not delete any remote ref.
 
 ### Retire task Docker resources
 
@@ -529,8 +519,7 @@ Then qualify each explicitly authorized task-created disposable volume separatel
 and all current consumers, including stopped containers, immediately before normal removal and verify actual
 absence. Missing provenance, recreated identity, unknown/durable/shared data or inspection/permission failure
 holds it. Never use blanket `rm -v`, `down -v` or unqualified/unfiltered prune. The bounded recoverable-storage
-capability is separately qualified by the [owning operation](../../.pi/skills/land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546),
-not a fallback after a volume/service hold. A shared container/mount or active task session
+path is the [same task cleanup](RESOURCE_LIFECYCLE.md), not a fallback after a volume/service hold. A shared container/mount or active task session
 holds the affected container and dependent worktree. Inspect network endpoints again **after** container removal;
 remove an inventoried network by exact ID only when it is task-owned, non-external/non-shared and has zero
 endpoints. A foreign/shared endpoint, unknown dependency, label/config mismatch or inspection failure holds the
@@ -539,7 +528,7 @@ Retain shared runtime and durable data explicitly, with their recovery locators 
 
 ### Verify results and resume
 
-Keep the durable receipt outside every removal candidate and update it after each effect. Record removed,
+Keep the small active resource record outside removal candidates and update it after each effect. Record removed,
 retained-by-policy, held and failed entries separately, including exact exits/errors and remaining dependencies.
 Permission failures are holds, not permission to use force, sudo, broad pruning or an alternate owner. Re-query
 `git worktree list --porcelain`, the exact ref with `git for-each-ref`, `docker ps -a --no-trunc` and
@@ -554,8 +543,9 @@ On interruption/resume, inspect the existing receipt and current Git/Docker/PR s
 operations, and attempt only remaining authorized effects whose prerequisites now pass. Already-absent owned
 resources are recorded as such, not deleted again. Never repeat publication, create a duplicate PR, recreate a
 removed worktree, rewrite independent reports or make another metadata commit solely to record cleanup success.
-If a hold is unchanged, return its exact resource, reason, recovery owner/action and receipt locator; do not
-poll or retry indefinitely. Later disposition belongs in ignored evidence/PR body, not a final-head commit loop.
+If a hold is unchanged, return its exact resource, reason, recovery owner/action and record locator; do not
+poll or retry indefinitely. After necessary outcomes reach existing TASK/PR, retire eligible temporary evidence
+and cleanup's own record/lock/files too. No mandatory local archive or final-head cleanup-certification loop.
 
 Return the actual PR/delivery state, review/QA provenance and bridge, target-specific current-handoff inventory,
 checks/warnings, before/after cleanup results and precise holds. The next human action must distinguish PR

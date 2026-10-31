@@ -24,7 +24,7 @@ on `.runs/`; runtime export directories reject symlinks.
 
 | Directory | Owner and contents |
 |---|---|
-| `archive/<batch>/` | Retired execution evidence with reversible old/new manifest and file digests |
+| `archive/<batch>/` | Historical explicitly requested archives; not an automatic task-completion destination |
 | `build/` | Gate runs, task build coordination, `reports/backend/`, `reports/client/` and temporary test fixtures under `tmp/` |
 | `cache/<tool>/` | Disposable Composer/npm/Vite/Storybook caches and local tool state; not application runtime input |
 | `handoffs/<scope>/` | Cross-task/package handoffs plus necessary attachments; bulk retained build output belongs with its run/archive |
@@ -40,17 +40,17 @@ folders, a separate `land/` category, or a new tool-named top-level directory. A
 it has a real consumer. The base worktree owns canonical Review/QA locations; Engineer may read its TASK's
 reports but only their independent owners publish them.
 
-Retain active build runs, locks and evidence still required by current consumers. Explicitly archive completed,
-inactive runs, including failures, rather than treating a passing receipt or terminal TASK status alone as
-proof that a process/resource is retired. Preserve registered worktrees, running mounts, credentials and
-independent report bytes. A local archive is neither a portable backup nor publication.
+Retain active build runs/locks and evidence still required by current independent roles or an active issue.
+After necessary outcomes reach the existing TASK/PR, retire task-owned temporary logs, sessions, fixtures, generated
+source copies and cleanup's own files, including failed/cancelled runs no longer needed. Do not automatically
+archive them or create permanent source copies. Preserve existing historical evidence explicitly excluded by the
+TASK, credentials, unique work, active consumers and shared/unknown/durable data. Status alone is not proof.
 
-For an authorized Land cleanup, apply the [owning inventory/preservation and cleanup procedure](LANDING.md#cleanup-and-handoff).
-Retain its receipt and verified required evidence outside the disposable checkout before removing it. Record
-resource IDs, old/new locators/digests, results and exact holds in existing TASK handoffs, not a new registry.
-Ignored evidence, private runtime/data and active session mounts require inspection even when Git is clean;
-terminal TASK status alone never permits disposal. Later cleanup results stay in ignored evidence, not another
-tracked commit merely to certify successful deletion.
+Use the one [resource procedure](RESOURCE_LIFECYCLE.md) on success, failure and cancellation, with exact native
+identities and a small task resource record outside disposable source. Independent role owners publish their own
+reports; keep those bytes while still needed, then retain the necessary verdict/outcome in existing TASK/PR rather
+than a mandatory local archive. Genuine preservation needs a verified specific destination, not full-source-copy
+ceremony. Narrow holds do not block independent effects. No tracked cleanup-certification commit loop.
 
 ## Relocation and verification
 

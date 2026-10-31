@@ -1,325 +1,108 @@
 ---
 name: build
-description: Coordinate one approved TASK through Engineer work, fresh independent review, QA and automatic land to an open PR with applicable screenshots; accept an unambiguous TICKET input.
+description: Coordinate one approved TASK through fresh Engineer, independent Review, QA and authorized Land; accept an unambiguous TICKET input.
 disable-model-invocation: true
 ---
 
 # Build
 
-Act as Team Lead for one TASK in the target project, using the role responsibilities in
-[Team roles](../../../docs/engineering/TEAM.md). Delegate implementation,
-independent technical review, behavioral QA and publication to their respective roles. Coordinate and inspect
-evidence; do not implement or issue an independent verdict yourself. Fresh Pi processes separate conversation
-context, not OS permissions or credentials. Managed PHP authority, durable execution and browser attachment
-remain separately planned. No subagent extension or global installation is needed with the qualified Pi 1.2.0 CLI.
+Act as Team Lead, not implementer or independent acceptor. Resolve
+[project context](../../../docs/engineering/PROJECT_CONTEXT.md), target instructions/TASK/parents/Board and
+[execution rules](../../../docs/engineering/EXECUTION.md). Follow the
+[portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md). Fresh Pi contexts are not OS isolation.
 
-Use `/skill:build TASK-NNNNN` or `/skill:build TICKET-NNNNN`. Optional instructions may specify checkout, models
-and a positive revision allowance up to ten. The default is **five shared revision cycles** across technical
-review and QA. Invocation explicitly delegates work, review, QA and `land`, including owned commits, non-force
-push, PR creation/update and suitable capture uploads. Continue these stages without another approval prompt.
-Ask only for missing decisions or authority beyond that scope. Never merge, approve the PR, force-push, release,
-deploy or continue to another TASK. A question about planning does not invoke this workflow.
+## Bound one delivery
 
-## Resolve and record
+`/skill:build TASK-NNNNN` delegates Work, independent Review, applicable QA and Land, including owned commits,
+non-force publication and suitable capture uploads. Do not ask again for these effects or ordinary task-owned
+cleanup. Never approve/merge/force-push/release/deploy or continue to another TASK. Respect narrower invocation
+authority. A TICKET selects only its sole unambiguous eligible TASK; otherwise ask, without decomposing it.
 
-1. Resolve [target project context](../../../docs/engineering/PROJECT_CONTEXT.md) before reading planning or
-   dispatching a child. Read the supplied record, parent, Board and planning conventions from that target,
-   applying its documented bindings. Provider-relative links supply shared instructions, not a target checkout.
-   A TICKET input selects its sole eligible TASK only
-   when no other child is active or ambiguously owned. Inspect live/archived children and state the selected ID.
-   With zero or multiple candidates, ask for the missing prerequisite/choice; do not decompose, choose by lowest
-   number or build the entire TICKET. Check approved scope, readiness and integration of blockers on the base.
-2. Follow [execution standards](../../../docs/engineering/EXECUTION.md). Reuse the operator's selected checkout;
-   otherwise ask main checkout versus isolated worktree before implementation. Verify repository/remote, branch,
-   ancestry, ownership and existing work. Never switch, stage or publish unrelated changes. A shared branch
-   containing unrelated unaccepted commits needs branch/ownership resolution before dispatch, not a broad push.
-   Search existing PRs by branch and then uniquely evidenced TASK ownership; ambiguity holds.
-3. Resolve the canonical base worktree through Git common-dir/worktree metadata. For enrolled and unenrolled
-   coordinators alike, use ordinary authorized shell/Git/checks and this provider-owned monitor. Enrollment is not
-   a recurring execution grant; the existing Build authorization and shared revision ledger remain binding.
-   Use `umask 077`, an ignored run beneath `<base>/.runs/build/<TASK-ID>/` and an exclusive `mkdir` lock at its
-   `active` child. Record coordinator session, checkout, branch and run path. Inspect an existing lock's ownership
-   before continuation; release only your lock after proving children stopped. These are local coordination,
-   not managed Workflow claims.
-   An enrolled repository's registered worktrees inherit access; never enroll a child checkout separately or
-   copy provider instructions to work around a denial. Pass the resolved TASK and selected checkout through
-   the monitor's trusted stage environment. The shared [access contract](../../../harness/pi/FILE_SCREENING_PROFILE.md#installed-skill-effects)
-   limits Build to coordination outputs and retains each child's independent role effects.
-   If checking `file_screening_status`, use `workflow.skill`, `effect`, task and checkout to identify the
-   coordinator. Build correctly reports `phase: qa` with `workflow.skill: build` and `effect: coordination`;
-   the phase describes workflow role, not a QA-worker assignment. Do not hold or request a relaunch
-   solely because it says `qa`. If an older status omits `workflow`, that phase alone cannot establish a mismatch.
-4. Keep a private ledger containing the resolved project context, original authorization, TASK/base/head, resolved role models, effective/consumed/remaining
-   cycles, stage session IDs, canonical reports, decisions, PR identity and incomplete effects. Carry the existing
-   Work/Land handoff's exact [resource inventory](../../../docs/engineering/LANDING.md#inventory-and-preserve)
-   through each stage: checkout/ref/candidate, task Compose/container/network identities, processes/sessions,
-   evidence/data and ownership/dependencies. Reconcile additions and dispositions in those handoffs/ledger,
-   not a new registry. Keep active coordinator/session resources explicitly held; never terminate them to tidy.
-   Check installed `pi --version` and `pi --help` for the options below. Missing Pi, authentication, project trust or required tools
-   is a prerequisite hold. Use existing provider authentication without printing credentials; do not change
-   global settings, install extensions or auto-trust unfamiliar project resources.
+Verify cwd/origin/branch/base/status, blockers, existing PR and unrelated changes. Reuse the operator's selected
+checkout; ask main versus worktree only when missing. Keep source in that selected checkout. Resolve canonical
+base through Git; canonical Review/QA reports there remain authoritative. Read existing reports/ledger before
+choosing a stage; resume current evidence, never reset repair usage or rebuild an accepted unchanged candidate.
 
-Before first dispatch, inspect existing canonical Review/QA and any earlier build ledger. Resume from the phase
-warranted by current evidence; do not rebuild accepted implementation. Continue the original consumed allowance
-on resumed or repeated invocation for the same delivery, including after QA failure. A fresh process, directory
-or command does not reset the counter. An exhausted allowance needs an explicit human continuation grant.
+Use a private `.runs/build/<TASK-ID>/<run>/` and exclusive `active` directory. Inspect existing ownership before
+resume; release only your lock after children stop. One concise ledger holds authorization, project/subject,
+checkout/base/head, pinned models, stage/attempt/report/PR locators, shared repairs and incomplete effects.
+Keep active coordinator/session protected. No duplicate resource registry or permanent local source archive.
+Use the **one shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md)**: Work prepares one
+runtime/record, all roles reuse it. Validate identity before dispatch; inspect actual handoffs, not per-stage
+proof trees. Missing identity holds affected advancement, not independent eligible cleanup.
 
-For targets with `bin/runtime`, apply the target's [local resource lifecycle](../../../docs/engineering/RESOURCE_LIFECYCLE.md).
-Work initializes original allocation intent before setup. Carry the SAME receipt and locator in every request;
-validate before dispatch and after each child's handoff, before advancement. Pending/missing required evidence
-holds the stage; do not create a second runtime, reset history or infer completeness from the child exit.
-Record actual stage/model/monitor identities; controlled helper probes are not independent role journeys.
-Require the child's `validate --stage ACTUAL_STAGE --handoff` readiness observation and inspect its immutable
-external preservation/capability proof, exact original worker references and affected holds before calling the
-handoff ready. Carry original disposal authority into Land, not another permission question or prose inventory.
-Missing capability/proof holds the affected effects; it never suppresses independent eligible cleanup. Initial
-technical acceptance precedes independent QA; actual publication/Land effects bind only at their proper stage.
-For the safe-checkout post-worker exception below, add `--cleanup-receipt "$receipt"` to the stage entrypoint;
-only the original-worker cleanup caller may act on that existing plan.
+## Pin models, then launch fresh roles
 
-## Resolve phase models
+Explicit invocation choices override target bindings, then local defaults: retain configured provider; for
+`openai-codex`, Team Lead Sol/medium, Engineer and Review Sol/high, QA and Land Terra/high. Resolve the newest
+available stable numeric model in that requested family from installed Pi metadata; explicit exact IDs stay
+exact. Verify thinking support. No fallback/escalation/provider change or mid-delivery refresh. Pin the resolved
+provider/model/thinking per role for repairs/resume; an explicit human change preserves prior history. Record
+configured identity separately from unavailable provider attestation. Check installed `pi --version`, `--help`
+and `--list-models`; versions are evidence, not equality gates. No global install/settings/trust changes.
 
-Resolve the model map before dispatch; the coordinator's model is **not** a child default. For each role,
-apply explicit invocation choices first, then role settings in the target's documented project binding, then
-these local defaults, resolving each field in that order. Resolve provider from the invocation role choice,
-then the target-bound role choice, otherwise retain the configured provider. Never switch providers to obtain a default model. These defaults apply to
-`openai-codex`; another provider needs an explicit or target-bound role map before dispatch.
+Launch **one child at a time** using the existing provider-owned `scripts/run-stage.py`. Resolve its absolute path
+beside this skill, never from an unrelated target. A separately trusted installed Harness may be selected with
+`--harness-package`; missing support holds the affected route, never loads a second package or bypasses admission.
+Read installed Pi [CLI/skills documentation](../../../harness/pi/README.md) as needed before integration changes.
+Native session-file birthtime, ancestry/custody and independent role admission remain unchanged. Observation is
+human-only/best-effort; missing visibility never authorizes relaunch or executor substitution.
 
-| Role | Default model family | Thinking | Verified available ID on 2026-10-13 |
-|---|---|---|---|
-| Team Lead | Sol | medium | `gpt-6.1-sol` |
-| Software Engineer, including repairs | Sol | high | `gpt-6.1-sol` |
-| Senior Engineer review | Sol | high | `gpt-6.1-sol` |
-| QA Engineer | Terra | high | `gpt-5.6-terra` |
-| Release Manager land | Terra | high | `gpt-5.6-terra` |
+Create a fresh private attempt with `request.md`. Include role, TASK, verified checkout/base/head, absolute owning
+skill/context/instruction paths, permitted effects, relevant evidence, pinned model/thinking, remaining repair
+allowance and expected canonical report/handoff. Pass the original attempt so each child explicitly registers
+its live consumer through the shared resource procedure before using the runtime. Do not copy Engineer dialogue into independent requests or
+suggest verdicts. Tell each child to verify target identity, read instructions, perform only its role and stop.
+No `--continue`, `--resume`, `--session`, `--fork`, parent transcript or reused session directory.
 
-Team Lead is a recommendation when starting a coordinator, not a command to replace an active session.
-Astra is an explicit override, never an automatic fallback or escalation after failure. Model choice does not
-weaken stage responsibilities, independence, evidence gates or the shared repair allowance.
-
-For a fresh delivery, inspect `pi --list-models` and the installed provider's model metadata without sending a
-TASK prompt. For each default family choose its newest available stable numeric version (compare version
-components, not strings); exclude previews, dated snapshots and fuzzy/rolling aliases. The table records a
-qualification snapshot, not invented future IDs or permission to assume API availability equals Pi access.
-Explicit exact model pins remain exact. Verify the requested thinking level against provider metadata; missing
-models, unsupported thinking, ambiguous versions or unresolved configuration hold that phase with a specific
-prerequisite. Do not silently substitute a family, provider or reasoning level.
-
-Record the requested family/override, configuration source, resolved provider, exact model ID and thinking for
-each role in the ledger before any child starts. Pin these choices for repairs and resumed invocations; do not
-refresh to a newly released model mid-delivery. An explicit model-change request may amend subsequent attempts
-at a reconciled stage boundary, preserving prior identities, evidence and consumed cycles. A legacy ledger with
-only inherited coordinator settings must resolve and record its role map before the next child; never interrupt
-an active child merely to apply new defaults. Include the resolved selection in each child request and forbid
-the child from changing it. Record provider-reported identity separately; if unavailable, say so rather than
-presenting requested/configured identity or catalog availability as provider execution proof.
-
-## Dispatch fresh roles
-
-Launch one child at a time from the TASK checkout. Allocate a fresh attempt with `mktemp -d` under the private
-run directory, then write `request.md` before launching, using ordinary authorized shell in either profile.
-Never pass `--continue`, `--resume`, `--session`, `--fork`, the parent transcript or its session file. Each empty
-session directory supplies fresh context; Review and QA must have no prior implementation contributions.
-Repairs receive current findings through exact prior-role handoffs, not the Engineer conversation.
-
-Write and read back the stage request under the shared [readability rules](../../../docs/engineering/HANDOFFS.md#readable-handoff-text)
-before dispatch, including when adapting an earlier handoff. Use the existing authorization and verified current
-Git identity. Include role, TASK, exact checkout/base/head,
-absolute owning provider skill path, absolute project-context path, target instruction/binding paths, permitted
-effects, relevant evidence paths, original authorization, remaining repair allowance and expected handoff.
-Tell the child to verify the target Git identity and read the context, target instructions and binding before
-that skill and its nested references. Apply target substitutions throughout, execute only its stage, publish
-the required report, then stop without delegating other roles or invoking `build`. Do not copy Engineer dialogue
-into reviewer prompts or suggest a verdict. Explicitly carry delegated land and capture-publication authority
-into the Release Manager prompt.
-For QA, carry the [terminal capture scope](../../../docs/engineering/QA.md#terminal-capture-authority), resolved
-provider [capture procedure](../../../docs/engineering/TERMINAL_CAPTURE.md), owned evidence directory and any
-known Peekaboo bridge prerequisites into the request. Creating, exercising, capturing and closing dedicated QA
-terminals needs no new per-image confirmation. Preserve target restrictions and host enforcement; an unavailable
-bridge is a prerequisite to resolve, not a request for the operator to manually take every screenshot.
-
-Use the bundled [stage monitor](scripts/run-stage.py) (Python 3.9+) to launch Pi in JSON mode. Resolve its absolute
-path beside the **owning provider skill**, even when the TASK checkout belongs to another project; do not assume
-the target contains this script. Qualify the installed Pi's JSON events, `agent_settled`, native extension context and notification-only lifecycle
-APIs; tested versions are evidence, never equality gates.
-Missing support holds the affected path, not permission to hide progress or bypass existing protections.
-This provider entry delegates to the package-owned monitor. By default it selects the provider's `harness/pi`;
-when native Pi uses a separately installed trusted package, pass `--harness-package /absolute/trusted/package`
-to select that same package for the monitor, screening preflight and passive association. Inspect the installed
-resource identity first; do not load a second package, copy a target skill, or update a global installation as a
-side effect. A package without the monitor needs an explicit owned update before dispatch. A bounded
-`Child observation unavailable (reason)` diagnostic changes visibility only; never relaunch a child to repair it.
-For an explicitly enrolled [file-screening profile](../../../harness/pi/FILE_SCREENING_PROFILE.md), the monitor
-preflights the target through its owning provider package, explicitly loads that package in the child and binds
-its actual identity under the shared monthly cap. It relays safe screening diagnostics promptly, not raw stderr.
-Use the ordinary native `/skill:build TASK-NNNNN` entrypoint from the owning provider (or explicitly load that
-provider skill when a target has a different/missing binding). Standing project enrollment plus existing Build
-and task/role authority permits normal shell operations, including checks and owned Git/handoffs. No replacement
-executor, `/screened-build`, stage/report tool or recurring per-child grant is required. Pin models and preserve
-consumed revision counters in the existing coordinator ledger, including any older candidate grant history;
-never start at zero merely because the transport changed.
-
-Native Agent bash and user bash use ordinary Pi execution without Jev screening or command confirmations.
-Jev setup, credentials and budgets are not prerequisites for Build. Optional enrolled file/search tools retain
-their own checks. If an older coordinator reports a command approval hold, fully restart Pi with the updated
-provider before resuming the same ledger and model pins; `/reload` can retain old JavaScript modules.
-Shell source reads can bypass relevance screening and same-user shell can access operator state: this interim
-profile is not universal admission enforcement or a sandbox. The installed [shared rule](../../../harness/pi/FILE_SCREENING_RULE.md)
-strongly prefers Jev for unfamiliar discovery while allowing ordinary direct project reads and portable
-instructions. Native writes and edits also remain unmodified; role responsibilities still limit
-Reviewer/QA outputs to their task-owned `.runs` evidence. Use canonical
-`work`, `review`, `qa` and `land` phase values for `--role`. The monitor's own process launch and descendants inside scripts are not recursively
-intercepted; preflighted children independently load the reviewed profile and bind their actual identities.
-
-Roles write their ordinary canonical reports under their owning skills. Coordinator intake must verify actual
-TASK/branch/base/head/status, independence, evidence and verdict before advancement, preserve prior reports, and
-hold malformed/wrong-subject/stale evidence. No host stamp or successful shell result makes a report current
-or independently accepted. The same shell example below is usable by enrolled coordinators within existing authority.
-
-**Ordinary launch, passive visibility:** use the existing provider monitor invocation below through Pi's
-independently selected executor. The unshipped `fight-stage JSON` bash interception and `/fight-stage` command
-were rejected and removed; fully restart Pi to unload the old extension runtime before continuing the same
-ledger/session. There is no replacement execution tool or per-child observation flag. Do not translate an
-executor refusal into a local launch, activate disabled bash, bypass a custom shell, or change settings/environment
-to obtain observation. Native/RPC workflow authority remains unchanged.
-
-When the owning Harness supplies passive `native-observation-extension.ts` and the updated monitor, actual native
-session lifecycle plus the fixed monitor's private bootstrap, exact live native ancestry/lifetime and registered
-worktree establish automatic observation within the accepted trusted-local-process boundary. Monitor progress
-uses a separate best-effort nonblocking channel; observation cannot launch/cancel a child, change a command/result,
-retry execution or block it on a reader. Same-user malicious bootstrap impersonation remains outside protection
-(R1, not repaired). Unsupported executors without a qualifying local monitor association remain explicitly
-unavailable; never guess membership, manually relaunch an existing child, or silently substitute another executor.
-Report exact missing capability/coverage. See [association and limits](../../../harness/pi/WORKSPACE.md#automatic-session-following-and-worktree-test-bindings-task-00502-candidate).
-
-Populate the quoted variables from the ledger: `attempt` is fresh and already contains `request.md`,
-`task_checkout` is the selected checkout, `task_id`/`role` identify the stage, and model fields are exact pins.
-Set `stage_timeout_seconds` to the stage's bounded runtime. Ambient coordinator model settings cannot supply
-missing pins. The monitor exports the pinned settings only to its child. Do not redirect its stdout: that is the
-user-visible progress stream. It owns child launch, private capture and exit recording; do not wrap it in a pipeline
-that can hide its exit status or launch another Pi process beside it.
-
-```bash
-(
-  umask 077
-  cd "$task_checkout" || exit 1
-  python3 -u "$build_skill_dir/scripts/run-stage.py" \
-    --attempt "$attempt" --task "$task_id" --role "$role" \
-    --provider "$stage_provider" --model "$stage_model" --thinking "$stage_thinking" \
-    --timeout "$stage_timeout_seconds"
-)
+```sh
+cd "$task_checkout"
+python3 -u "$build_skill_dir/scripts/run-stage.py" \
+  --attempt "$attempt" --task "$task_id" --role "$role" \
+  --provider "$stage_provider" --model "$stage_model" --thinking "$stage_thinking" \
+  --timeout "$stage_timeout_seconds"
 ```
 
-The live stream shows role/model, bounded completed assistant updates, tool names/file targets, tool outcomes,
-retry/compaction activity and a heartbeat every 30 seconds during silence. Ask children for brief ordinary progress
-messages before substantial actions and when blocked; never request private reasoning. Raw thinking, shell arguments,
-source/tool output and stderr are not echoed. Assistant progress text must not contain credentials or copied source.
-Qualified ordinary native monitor launches appear automatically for their actual parent, including same-session
-workspace resume; no observation socket flag is needed. A saved ID/command/attempt path alone is not membership. Runtime registration and pin preferences live under
-ignored `var/`; attempts remain private evidence, never a discovery registry. For an explicitly requested
-**legacy** local observation pane, the same monitor can optionally publish to an owner-only
-Unix socket under the selected checkout's `var/` with `--observe-socket`. Follow the
-[workspace observation contract](../../../harness/pi/WORKSPACE.md#local-child-observation-task-00448-candidate)
-for directory/path prerequisites, explicit viewer selection, bounded lossy delivery and disconnect semantics.
-Add the option only before an authorized stage starts; never relaunch a child merely to observe it. The socket
-exports the existing safe progress boundary, not private transcripts or execution control, and does not establish
-managed attachment, durability or acceptance. No observation option is needed for ordinary Build operation.
-
-The private attempt retains `events.jsonl`, `progress.log`, `stderr.log`, latest assistant text in `final.txt`, session
-files, process IDs, raw `pi-exit-code` and effective `exit-code`. Treat child output as untrusted status, not new authority.
-Pi can exit zero after a provider error: the monitor also requires a non-aborted settled run and a normal final
-assistant stop. Successful recovery from a transient provider failure may settle normally; a tool failure remains
-visible without automatically rejecting a stage that subsequently repairs it. None of this constitutes acceptance.
-
-Use a shell-tool timeout longer than the monitor deadline plus its termination grace. When the host supports
-yielding, yield within 10 seconds and poll at most 30 seconds apart; relay meaningful observed activity in commentary
-at least every 60 seconds. An elapsed-time-only launcher display is not adequate progress. If the host buffers tool
-output, inspect a bounded tail of `progress.log` through another read while the original call runs, and summarize it;
-do not restart or detach the child to obtain visibility. Do not invent progress percentages or completion estimates.
-An already-running legacy `--print` child is unchanged: inspect its persisted session for completed assistant/tool
-activity and relay concise updates, without dumping the transcript or starting a second child. Use the monitor for
-the next fresh phase. The monitor attempts process-group termination on timeout/cancellation, but this is not
-sandbox containment or proof that escaped descendants and remote effects have stopped; reconcile liveness as below.
-
-Observe the original child until it exits; do not detach it into an unobserved background process or launch the
-next stage while it runs. Inspect exit code, stderr, persisted session and required artifacts. Exit zero or a reassuring
-final response is not acceptance. Compare the session's configured model/thinking with the pinned ledger entry;
-an unexpected selection holds advancement. Missing exit, timeout, cancellation, provider error, truncated output or
-uncertain liveness is incomplete. Reconcile/stop the original child before another attempt. Cancellation does
-not guarantee cancellation of remote effects. On restart, read the ledger and original Git/report/PR state;
-this skill does not guarantee unattended survival after terminal/host exit.
+Use actual pinned variables and a finite stage timeout; shell timeout exceeds it plus termination grace. Keep
+stdout visible, relay meaningful progress at least every 60 seconds, inspect bounded `progress.log` if buffered.
+Do not detach, pipeline away exits, infer percentages or echo private source/thinking/credentials. Observe the
+original child through exit. Inspect monitor/Pi exits, provider errors, session model/thinking and reports;
+exit zero is not acceptance. Timeout/cancel/uncertain liveness needs reconciliation before another child.
+Never arbitrarily signal a reused/unknown PID or assume remote effects stopped with the CLI.
 
 ## Advance by evidence
 
-| Stage | Owning skill and required result | Next action |
-|---|---|---|
-| Engineer | [work](../work/SKILL.md): owned committed implementation, full gate receipt, scope, head and limitations | Confirm identity; dispatch fresh Review |
-| Senior Engineer | [review](../review/SKILL.md): canonical independent report with separate Standards and Spec passes | `accept` to QA; confirmed blockers to repair; missing evidence to its owner |
-| QA Engineer | [qa](../qa/SKILL.md): current canonical PASS or justified criterion-specific N/A, scenarios and inspected applicable captures | Satisfied QA to land; FAIL defects to Engineer; INCOMPLETE to prerequisite recovery |
-| Release Manager | [land](../land/SKILL.md): eligibility, final checks, non-force publication, verified PR/capture access, reconciled current handoffs and required bounded cleanup with postconditions/holds | Inspect delivery and resources; after worker exit finish eligible cleanup from the safe checkout before human handoff |
+- Engineer: committed implementation and truthful gate/resource handoff → fresh independent Review.
+- Review: current canonical ACCEPT with Standards/Spec passes → applicable independent QA. Findings → bounded
+  Engineer repair; evidence-only gaps → their owner, not speculative source edits.
+- QA: current canonical PASS or justified criterion-specific N/A → authorized Land. FAIL → Engineer;
+  INCOMPLETE → exact prerequisite. No UI does not mean no QA. For UI/TUI carry the owning capture procedure,
+  terminal authority and bridge prerequisites; inspect comparable real captures, never fabricate missing images.
+- Land: verify actual exact ready PR, required checks/capture access/current closeout, then eligible cleanup.
 
-Read canonical `<base>/.runs/reviews/<TASK-ID>/review.md` and `<base>/.runs/qa/<TASK-ID>/qa.md`, including subject,
-independence, current verdict/disposition, evidence and limitations. Never prefer an older PASS over a newer
-failure. Retain per-attempt copies/digests. Compare actual Git/source/runtime identity before advancement and apply
-[gate evidence reuse](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse): run `./bin/build` normally for automatic reuse; one complete final gate for
-the finished implementation, focused iteration and independent role probes, no suite repeat merely for a new
-role or administrative metadata. Preserve the exact receipt subject and fresh-versus-reused distinction;
-material repairs, changed requirements or stale subjects require fresh applicable evidence. Use the existing
-[landing provenance bridge](../../../docs/engineering/LANDING.md) for proven mechanical changes. Only explicitly
-required hosted proof can use land's authorized draft path; a draft awaiting proof is not final delivery.
+Match TASK/branch/base/head/status, independence, findings and limitations before advancement. Never select an
+older PASS over newer failure. [Qualify gate reuse](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse):
+one final full gate for changed implementation, independent focused probes, no repeat for role/commit/metadata.
+Run `./bin/build` normally for automatic receipt validation and reuse; use `--force` for deliberate fresh
+execution. Report the original receipt separately from fresh evidence.
 
-One repair cycle is one Engineer attempt addressing the current confirmed blocking set, then fresh Review and
-affected QA. Record consumption before repair dispatch; initial implementation is not a repair. Technical and
-QA findings share the counter: **QA FAIL never resets it**. Non-blocking preferences and missing evidence do not
-authorize speculative edits. After the effective allowance is consumed (five by default), allow that cycle's
-Review/QA and publication if it passes; remaining blockers require a human decision. Do not increase limits
-automatically. Evidence recovery consumes
-no repair cycle, but repeated unchanged failures are a prerequisite hold, not unlimited retries. Explicit larger
-allowances must be within the ceiling and recorded before use.
+Default **five shared repair cycles** across Review and QA; explicit positive allowance may be up to ten.
+Consume before an Engineer repair; initial implementation is not a repair. New processes/QA failures/resumed
+invocations never reset it. After the last cycle allow its Review/QA/Land if passing; remaining blockers need a
+human decision. Evidence recovery consumes no repair, but unchanged holds are not unlimited retries.
 
-For UI/TUI changes require comparable inspected Before/After captures through real interaction under
-[QA standards](../../../docs/engineering/QA.md). Release Manager uploads sanitized captures using
-[landing standards](../../../docs/engineering/LANDING.md), verifies references/audience access and reconciles
-partial uploads or uncertain PR creation before retrying. Local paths alone are not PR evidence. If terminal
-image capture is unavailable, retain real transcripts and report the image limitation; do not fabricate images
-or silently waive requested captures. Non-visual work uses appropriate behavioral evidence, not decorative
-screenshots. Missing required/requested proof holds delivery rather than weakening QA.
+## Finish the effects
 
-## Hand off
+Inspect native Git/Docker absence and protected/shared state, not a cleanup invocation or passing mechanism.
+Record necessary outcomes in the existing TASK/PR, then retire eligible temporary runtimes, worktrees/refs,
+fixtures/logs/sessions and cleanup's own files through the shared procedure. Do not retain them automatically.
+If original Land itself was the consumer, observe both original exits/PID absence and continue from canonical
+safe checkout using `scripts/cleanup-continuation.py --attempt ORIGINAL --receipt SAME --apply --finish`.
+Use a fresh cleanup-only Land worker when required, same pinned model/ledger, with `--cleanup-receipt` at stage
+entry. No publication, new runtime or tracked edits in that continuation. Preserve active coordinator and real
+holds; never stop shared services/VMs or bypass protections. Independent effects proceed beside narrow holds.
 
-Success requires a verified open, ready PR against the correct base, exact published remote head, current
-review/QA provenance, required checks and accessible applicable captures, plus Land's reconciled source/current
-handoffs and verified eligible Git/container/network/named-and-anonymous-volume cleanup under the
-[owning procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff). Created versus used/shared
-images and caches require explicit size/dependency/retention accounting; unavailable exact retirement holds
-that resource, never an unqualified prune fallback or silent leak exemption. The SAME helper's
-[bounded recoverable-storage policy](../land/references/cleanup.md#recoverable-storage-and-allocation-admission-task-00546)
-can independently reclaim positively recoverable image/cache without historical ownership; it never clears
-service/volume holds or weakens unique-work, consumer, retention or reserve protections. No tracked awaiting-merge queue or routine
-post-merge Board maintenance is created; human merge and remote-head retention remain separate.
-Inspect its durable inventory/postconditions; publication with cleanup held is not complete Land/Build.
-If the remaining hold is the Land worker's own cwd/session, observe that worker's actual exit, then dispatch a
-fresh **cleanup-only** Land continuation from the verified canonical safe checkout, not the disposable TASK
-checkout. Use the same monitor, pinned Land model and ledger; this is the cleanup-only exception to the normal
-TASK-checkout dispatch location. The request must bind the original target checkout/ref/head, exact receipt,
-existing cleanup authority and excluded resources, and forbid publication, tracked edits and corrective PRs.
-Preserve the active coordinator and other sessions; never switch/remove their checkout. Apply the owning
-[cleanup-only intake and consumer qualification](../../../docs/engineering/LANDING.md#cleanup-only-intake),
-including current observation of read-only VM file-sharing handles rather than requiring shared VM shutdown.
-Read the owning Land [executable cleanup contract](../land/references/cleanup.md). The original worker binds
-its monitor attempt and both PIDs in the existing exact-subject JSON receipt before its first cleanup attempt.
-The continuation must use `scripts/cleanup-continuation.py` beside this Build skill with that original `--attempt`,
-exact `--receipt` and `--apply`; it observes both original exits/PID absence and calls Land's bounded operation.
-There is no alternative ad hoc destructive cleanup path. Missing runtime binding, inspection, ownership or
-preservation holds resources and protections; never use generic setup, force or protection-changing recovery.
-Inspect the continuation's exits and independently reobserve Git/Docker and external preservation postconditions;
-reconcile receipt claims with actual state, including recreated resources. Do not hand the human an already-resolved worker-cwd hold or request another
-cleanup grant already delegated. Real remaining dependencies/failures retain precise finite recovery actions;
-unchanged holds are not an unlimited retry loop. Cleanup creates no repair cycle or publication retry.
-Return the actual PR URL and publication state even on a cleanup hold, retained resources/recovery action,
-concise verification/limitations and revision usage. End with `Next: Review and merge <actual PR URL> on GitHub` under
-[handoff rules](../../../docs/engineering/HANDOFFS.md), then stop after this TASK.
-
-If incomplete, retain useful resources and record phase, subject, remaining cycles and exact recovery action.
-Report the actual prerequisite or human decision. A child's suggested next skill is not a reason to stop when
-its evidence is complete and `build` already delegated that continuation.
+Return actual PR/publication state, fresh/reused verification, warnings, removed/remaining counts, finite holds
+and shared repair usage. Follow [handoff rules](../../../docs/engineering/HANDOFFS.md); success ends with the
+actual human PR review/merge URL. Incomplete work names its real prerequisite. Stop after this TASK, not at a
+child's next-skill recommendation when Build already authorized and evidenced the next stage.

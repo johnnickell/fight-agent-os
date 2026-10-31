@@ -58,6 +58,18 @@ to the main model, not Jev; optional text relevance screening remains available.
 See [images and screenshots](FILE_SCREENING_PROFILE.md#images-and-screenshots) for supported forms and retained
 native format and output handling.
 
+## Prerequisites
+
+Install only what the selected path needs; ordinary Pi sessions do not require Worktrunk or Herdr.
+Nothing here installs tools, extensions or global settings automatically.
+
+| Path | Prerequisites | Detailed instructions |
+|---|---|---|
+| Baseline Pi + Fight Harness | Supported Pi and its required Node runtime (currently Node 22.19 or newer). Qualify required APIs, not an exact Pi version. | [Pi setup](https://pi.dev), [Harness installation](#install) |
+| Fight workflow Git worktree/local-branch lifecycle | [Worktrunk](https://worktrunk.dev/) (`wt` on PATH) for removal, in addition to the workflow's Git requirements. Not needed for ordinary Pi or independent Docker retirement. | [Local task resources](../../docs/engineering/RESOURCE_LIFECYCLE.md) |
+| Optional native workspace | Herdr and its supported interactive pane/CLI context; the one-command entry also needs Node with `process.execve`. Not needed for ordinary Pi or Build. | [Native Herdr workspace](#native-herdr-workspace), [capability prerequisites](WORKSPACE.md#native-pi-in-herdr-task-00510-candidate), [explicit launcher installation](#install-the-global-workspace-command) |
+| Application runtime / verified Docker logs | Local Docker with Compose for application development; workspace logs inspect existing verified local Docker sources and never provision them. Docker is not required for ordinary Pi. | [Application setup](../../README.md#development), [workspace log controls](WORKSPACE.md#verified-logs-in-herdr-task-00512-candidate) |
+
 ## Native Herdr workspace
 
 After the [explicit executable installation](#install-the-global-workspace-command), run `fight-workspace` in

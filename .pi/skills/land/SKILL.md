@@ -1,87 +1,43 @@
 ---
 name: land
-description: Publish an accepted TASK, obtain required hosted evidence, resume an ended handoff, or finish explicitly requested ownership-proven local cleanup without republishing.
+description: Publish an accepted TASK, obtain required hosted evidence, resume an ended handoff, or finish ownership-proven local cleanup without republishing.
 ---
 
 # Land
 
-In a participating harness session, follow the installed portable [project-access and discovery rule](../../../harness/pi/FILE_SCREENING_RULE.md).
-Strongly prefer Jev before unfamiliar discovery; read known targets and core instructions directly. Respect the
-operator-selected role, actual file-access denials and any independently selected deterministic tool policy.
-Native shell requires no Jev command assessment or confirmation. Targets need no copy of this rule.
+Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target rules and
+[landing standards](../../../docs/engineering/LANDING.md). Follow the
+[portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md). This is one subject, not a fleet sweep.
 
-Read [landing standards](../../../docs/engineering/LANDING.md). The standards own reconciliation proof, publication and cleanup boundaries; this skill executes them for one TASK.
-Land owns accepted TASK and applicable current Board/Roadmap/README/docs closeout in this delivery,
-not a persistent awaiting-merge queue or later routine post-merge maintenance. Preserve historical facts and
-canonical reports. Require [exact live PR evidence](../../../docs/engineering/HANDOFFS.md#live-delivery-handoff-evaluation)
-during publication/resume, separately from offline planning; unavailable identity or required proof holds
-affected effects. Exceptional ended states enter recovery only on explicit Land resume for that TASK/PR.
-Never set tracked delivery markers, infer merge, delete the remote head of an open PR or weaken cleanup holds.
+1. **Choose the route.** Explicit `cleanup-only` enters
+   [cleanup intake](../../../docs/engineering/LANDING.md#cleanup-only-intake), never publication. An ended PR
+   enters [ended-handoff recovery](../../../docs/engineering/LANDING.md#resume-an-ended-delivery-handoff).
+   Missing explicitly required hosted acceptance proof uses the authorized draft-evidence path, not invented
+   acceptance or implementation edits. Otherwise require current independent Review ACCEPT and applicable QA
+   PASS/criterion-specific N/A. A current FAIL/INCOMPLETE cannot be replaced by an older pass.
+2. **Bind the subject.** Verify target origin/live default/policy/base, exact checkout/ref/OIDs, canonical reports,
+   independence and actual live PR. An advancing base needs a proven mechanical bridge or fresh Work/Review/QA;
+   never rewrite acceptance or a published branch. Preserve unrelated work and historical evidence.
+3. **Close out and publish only when authorized.** Reconcile applicable current TASK/parent/docs/handoffs;
+   generated Board changes only here unless separate authored planning is approved. Refresh/check planning,
+   inspect exact administrative diff and whitespace. [Reuse qualified gate evidence](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse)
+   rather than repeating it for metadata. Run `./bin/build` normally for automatic reuse; use `--force` for
+   deliberate fresh execution and distinguish reused receipts from fresh evidence. Substantive changes need
+   renewed verification/independence. Commit only
+   owned files, non-force push, create/update the exact PR using its template and `TASK-NNNNN — <title>`. Verify
+   current base/head/remote OID, required checks and audience-accessible applicable captures. Follow the standards'
+   upload/partial-publication recovery; missing required proof keeps delivery incomplete. No approval or merge.
+4. **Retire and inspect.** Follow the one shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md).
+   Routine owned cleanup is already authorized, on completion/failure/cancellation too. Reuse the existing record,
+   preview then execute independent eligible native effects. Unknown/private/durable/shared data, unique work,
+   active consumers and genuine protections stay held specifically; never force, prune, strip protections or stop
+   a shared VM. No mandatory source copies or permanent local task archive. Preserve active-role evidence until
+   necessary outcomes reach existing TASK/PR. If this worker holds the checkout/runtime, bind the original Land
+   attempt and let Build's existing caller finish from the safe checkout **after actual exits**; do not ask again.
+5. **Report and stop.** Return actual publication state separately from removed/absent/held/failed resource counts,
+   exact remaining identities/reasons, fresh/reused evidence and finite next action. Verify postconditions yourself;
+   a helper exit, successful PR or technical acceptance is not complete cleanup. No tracked cleanup-result loop,
+   persistent delivery queue, routine post-merge maintenance, remote-ref deletion, archive, release or deployment.
 
-For `/skill:land TASK-NNNNN cleanup-only` or an explicit request to clean this repository's merged TASK resources,
-enter [cleanup-only intake](../../../docs/engineering/LANDING.md#cleanup-only-intake) first, respecting named
-exclusions. Inventory registered checkouts and orphan task Docker stacks independently and prove each subject's
-live merge/publication identity and ownership. Read [the executable cleanup contract](references/cleanup.md),
-extend the existing exact-subject receipt, and run the bounded operation from the canonical safe checkout.
-For Build's post-worker continuation use its caller specified there. No ad hoc destructive shell alternative is
-part of this path. A hold preserves resources and protections; do not bypass it. Never fall through to publication
-or corrective-PR creation; return actual per-subject results and holds.
-
-For an explicit resume concerning a merged or closed-unmerged original PR, enter [ended-handoff recovery](../../../docs/engineering/LANDING.md#resume-an-ended-delivery-handoff) before the ordinary publication steps below. Verify the exact subject and live state, recover only an authorized owned correction checkout/branch, and inspect any existing correction before retry. Reuse the normal synchronization inventory; preserve historical acceptance and canonical reports. Unverified state, missing authority or ambiguous publication produces a precise hold. Already-consistent unchanged state produces a read-only receipt, not another commit. An ended original PR is never the correction's publication target. Return the correction's actual pending action or no-op result, then stop; do not fall through to normal publication of the ended branch.
-
-1. **Qualify.** Read the TASK, parent, Board and canonical `.runs/reviews/<TASK-ID>/review.md`. Check independence, verdict, criterion coverage, findings and limitations, reviewed base/head, branch and status. [Bind the live target default](../../../docs/engineering/LANDING.md#bind-the-publication-target) against local policy and the existing subject PR before using any base. Inspect that bound base, remote feature branch, PR, checkout and unrelated changes. Confirm credentials and cleanup ownership before mutation.
-Only an explicit hosted acceptance requirement activates initial [draft publication](../../../docs/engineering/LANDING.md#draft-publication-to-obtain-hosted-evidence); a workflow file or missing optional run does not. If that proof is the only unresolved requirement, use the draft path and stop with an evidence handoff, incomplete TASK, preserved review and retained worktree. For an already-pushed administrative closeout after acceptance, whether final-head delivery proof is pending or available, instead resume [final delivery verification](../../../docs/engineering/LANDING.md#verify-and-publish) under the canonical report's accepted-candidate provenance; do not repeat initial draft intake or toggle completion status. Ordinary steps below require independent `accept`.
-
-2. **Reconcile if needed.** An advancing base does not invalidate acceptance by itself. On an unpublished clean branch, rebase onto the bound target base when requested; on a published branch use a non-rewriting integration or stop if the user requires a rebase. Regenerate generated planning views from source records, resolve overlap explicitly, compare old reviewed change with new effective diff (`git range-diff` plus inspection), and check interacting base changes. Record old/new OIDs, resolutions and fresh verification as a provenance bridge. Continue under the existing independent review only if the integration is mechanical and behavior is unchanged; otherwise stop for `work` and fresh independent `review`. Never rewrite the review report to claim the new OIDs were reviewed.
-3. **Publish.** Assess [QA applicability](../../../docs/engineering/QA.md#applicability) against the reviewed scope;
-missing assessment or required evidence routes to `qa`, including non-UI behavior. Verify any criterion-specific
-N/A in the technical handoff or canonical QA report. Read `<base-worktree>/.runs/qa/<TASK-ID>/qa.md` when present or required/requested, and verify its subject, independence,
-scenario coverage, artifact digests and freshness under [QA standards](../../../docs/engineering/QA.md).
-FAIL routes to `work`; INCOMPLETE or missing required/requested QA routes to the [qa skill](../qa/SKILL.md)
-or its named prerequisite, retaining resources. Never prefer an older PASS over the current report.
-Before closeout/publication commits, execute [current subject handoff synchronization](../../../docs/engineering/LANDING.md#synchronize-current-subject-handoffs): inventory applicable authored current Board/Roadmap/README handoffs and their source records for this exact TASK, distinguish history, and resolve evidence/authority holds before factual corrections. Reconcile current actions alongside parent rollups and generated views; preserve canonical reports and historical checkpoints. Keep the inventory and stage-specific pending/result locators in the durable ignored receipt. The draft-evidence path must not move its fixed candidate with tracked handoff edits. Substantive instruction or acceptance changes are not administrative closeout.
-For UI/TUI changes require post-review QA evidence
-and include the template's Before/After table; non-visual work may omit the image table but retains behavioral
-QA results and useful request/output/state evidence. For required hosted checks, establish the [acceptance-candidate and closeout contract](../../../docs/engineering/LANDING.md#acceptance-candidate-and-administrative-closeout) before recording completion; unresolved literal-final-head acceptance scope needs the requirement owner's decision. Record accepted review and finding dispositions in the TASK. When closing the TASK, run the [automatic parent completion](../../../planning/CONVENTIONS.md#automatic-parent-completion) rollup and include the resulting TICKET/EPIC statuses and generated views in the same commit; do not hand off a separate parent closeout. Then run `./bin/build` normally for automatic reuse and follow [gate evidence reporting](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse); run focused checks for affected contracts. A substantive change needs one complete final gate; administrative closeout alone needs planning/diff/provenance checks. Stage only owned files and inspect any commit. Push without force, recheck the live default/policy/PR binding and create/update the PR against that bound base with a verified `TASK-NNNNN — <TASK title>` title and a truthful body based on the repository PR template; do not assume the body template controls the title. Record its URL, reconcile applicable current handoffs to the evidenced stage under the same procedure, and refresh planning views. Inspect the exact metadata diff and run `./bin/planning-check`, `git diff --check` and applicable live provenance checks before the PR-metadata commit and final non-force push; reuse the qualified gate receipt, preserving its actual subject. Recheck live default/policy/PR binding and confirm the open PR's bound base, head and remote OID. Land verifies the administrative-only closeout diff and any required final-head delivery checks under the landing standards. Retain draft status and resources while required proof is missing; record successful delivery provenance in the ignored receipt and PR body, then mark the PR ready. Administrative closeout alone requires no additional independent review or canonical review update.
-Publish sanitized image/video captures within existing publication authority using `gh pr create --attach` for a
-new PR or `gh pr edit <PR-URL> --attach` for an existing PR; check both commands' `--help` for support first.
-Repeat `--attach` for each file. Reference those same file paths in the Before/After table supplied via `--body-file`
-so gh rewrites them to uploaded asset URLs rather than merely appending captures. Use descriptive image alt text
-in the body, or `--attach './capture.png#Description'` for an appended image; videos do not accept alt text.
-On partial upload failure, gh may create/update the PR and print its URL despite a nonzero exit. Inspect that PR
-and its body, preserve successful uploads and retry only missing captures with `gh pr edit`; never blindly repeat
-creation. Verify the resulting references and access for the intended PR audience. Local paths are not PR evidence.
-If attachment support, upload or access is unavailable, report publication pending with an exact handoff and retain
-resources; do not claim complete landing. Keep canonical reports/captures outside disposable worktrees. QA of an
-already-open PR uses the same current-subject checks and does not imply merge approval.
-
-4. **Clean and hand off.** Recheck source records and authored current handoffs separately from generated views.
-For lifecycle-enabled targets, follow the [local resource lifecycle](../../../docs/engineering/RESOURCE_LIFECYCLE.md):
-validate the SAME stage binding and inspect upstream readiness. Run `bin/runtime readiness --stage land` after
-current closeout to verify required external source/private/report preservation and expose affected capability
-holds before publication/removal. Supply actual acceptance/publication/original-worker facts at their proper
-stage, then mechanically generate the existing helper plan with `bin/runtime plan`. Do not hand-author ownership
-from prose or ask again for disposal already authorized at creation. Execute independent eligible effects even
-when another resource is held; retain unknown/durable/shared data, unique work and real protections. Preserve immutable plans/attempts on explicit
-refresh; incomplete allocation holds dependent effects while independent eligible resources may still qualify.
-Read [the executable cleanup contract](references/cleanup.md) and apply the policy-owned
-[cleanup procedure](../../../docs/engineering/LANDING.md#cleanup-and-handoff) through `scripts/cleanup.py` only.
-Carry the existing exact-subject Git/runtime/process/data inventory into its private receipt; bind current
-publication/merge proof, protected report hashes and either exact qualified Compose/config/override/env-file
-locators or the explicit standalone creation capability and retained immutable allocation proof described in the
-cleanup contract. Preserve Compose safeguards; historical standalone adoption uses a linked plan, never invented
-Compose labels or retrospective intent. Missing or contradictory runtime binding is a hold, never generic setup. Preview, inspect each disposition,
-then apply from the canonical safe checkout. No alternative ad hoc removal path is part of normal Land.
-Independently verify actual postconditions and external preservation manifests; helper exit alone is not intake.
-If this worker holds the candidate, record its original monitor attempt/PIDs and return the same receipt to Build
-for its post-exit caller. Do not change protections, kill a consumer, force removal or stop shared runtime to clear
-a hold. Return publication separately from removed/absent/retained/held/failed cleanup, precise finite recovery,
-review/QA provenance and checks. Any cleanup hold leaves Land incomplete; never repeat publication or commit
-cleanup results solely to move the final head.
-
-A conflict that changes implementation, failed required check, inaccessible remote, or ambiguous cleanup blocks successful landing. Landing never approves, merges, force-pushes, deletes the remote branch, archives or deploys.
-
-Finish with an explicit `Next:` under the [handoff rules](../../../docs/engineering/HANDOFFS.md). Ended-handoff recovery names the actual correction PR/human decision, missing authority/proof, or no remaining subject action; it never repeats merge of the ended original PR. Successful
-publication points to human review/merge of the actual PR. Missing initial acceptance evidence routes to `review`
-once available; final delivery verification after acceptance resumes through `land`. Name the required proof
-and actual repair, QA or prerequisite route for blockers.
+Use [readable handoffs](../../../docs/engineering/HANDOFFS.md). Finish with the actual human PR review/merge URL,
+cleanup prerequisite, or owning Work/Review/QA route. Never recommend merging an already-ended original PR.
