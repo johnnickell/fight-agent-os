@@ -28,6 +28,9 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00546](planning/tasks/00546-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent Review ACCEPT and nonvisual QA PASS on candidate `6c47704`. Publication and cleanup were pending at this checkpoint; current delivery results are in the canonical ignored TASK Land handoff. Human review/merge remains separate.
+
+The following repair checkpoint is historical, not current acceptance.
 [TASK-00546](planning/tasks/00546-TASK.md#repair-cycle-2--r3r4r5-2026-10-31) is in bounded Work repair for
 Review2 R3/R4/R5: shared plan prerequisites at storage effects, original image-policy preservation and truthful
 cache absence under unavailable inventory. Focused owning checks and the new 24-phase final gate pass
