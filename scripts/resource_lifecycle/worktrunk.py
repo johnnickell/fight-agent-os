@@ -48,6 +48,23 @@ def remove(root, selector, expected_oid, delivery=None):
     present = str(checkout) in [value['path'] for value in registrations(safe)]
     require(present == checkout.exists(), 'Source path/registration mismatch; inspect partial effects')
 
+    def complete():
+        remaining = text(['git', 'for-each-ref', '--format=%(refname)', ref], safe) if ref else ''
+        require(not checkout.exists() and not remaining and
+                str(checkout) not in [value['path'] for value in registrations(safe)],
+                'Worktrunk retained source/ref/registration; inspect actual outcome, never force')
+        # Also resume here after native removal succeeded but final down was interrupted.
+        # There is no surviving source/ref to qualify or publish again.
+        run([safe / 'bin/down', '--worktree', selector], safe)
+        state = safe / 'var/worktrees' / project
+        require(not state.is_symlink(), 'Runtime state alias refused')
+        if state.exists():
+            shutil.rmtree(state)
+        return 0
+
+    if not present and (not ref or not text(['git', 'for-each-ref', '--format=%(refname)', ref], safe)):
+        return complete()
+
     def source_state():
         if present:
             current = next((value for value in registrations(safe) if value['path'] == str(checkout)), None)
@@ -85,14 +102,4 @@ def remove(root, selector, expected_oid, delivery=None):
         result = subprocess.run(['wt', 'remove', '--foreground', '--format=json', '--yes', target],
                                 cwd=safe, stdin=subprocess.DEVNULL, text=True, timeout=120)
         require(result.returncode == 0, 'Worktrunk removal failed; inspect partial effects without force')
-    remaining = text(['git', 'for-each-ref', '--format=%(refname)', ref], safe) if ref else ''
-    require(not checkout.exists() and not remaining and
-            str(checkout) not in [value['path'] for value in registrations(safe)],
-            'Worktrunk retained source/ref/registration; inspect actual outcome, never force')
-    # Qualify harmless post-source teardown through the surviving minimal locator.
-    run([safe / 'bin/down', '--worktree', selector], safe)
-    state = safe / 'var/worktrees' / project
-    require(not state.is_symlink(), 'Runtime state alias refused')
-    if state.exists():
-        shutil.rmtree(state)
-    return 0
+    return complete()
