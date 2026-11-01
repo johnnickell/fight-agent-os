@@ -6,13 +6,14 @@ and pinned nginxproxy/docker-gen 0.15.0, both by registry digest. It uses the up
 with a bounded repository-owned template, not the general nginx-proxy template's HTTP-upstream defaults.
 This is local development infrastructure, not production deployment or a hostile-code sandbox.
 
-**Implementation checkpoint: qualification is incomplete.** The optional existing-Herd topology below was
-explicitly approved by John on 2026-11-01. Actual-name leaves, Docker high-port publication and verified supplier
-to app TLS now have direct evidence, including temporary main integration/restoration and two full registered
-worktree stacks. This is NOT qualification of the canonical browser path through Herd: its root-owned master
-requires a privileged full configuration test and graceful reload, blocked in the agent session. The TASK and
-canonical Work handoff own exact current evidence, warnings and remaining criteria. Neither service health nor
-this document establishes browser readiness or independent acceptance.
+**Work qualification checkpoint: independent Review/QA pending.** John completed the full test/graceful reload
+for the approved three-name Herd topology on 2026-11-01. Canonical default-trust curl and host Chrome qualified
+two full registered task stacks, available auth flows and both verified proxy hops, including untrusted-upstream
+rejection/recovery. Main root/CSRF/UI transport and temporary integration/direct restoration were exercised without
+migrating its inherited unprepared database; no main auth success is claimed. Default independent low-port runtime
+cannot be exercised while protected Herd owns 80/443; its native model is qualified, not its live listeners.
+The TASK and canonical Work handoff own exact subjects, warnings and platform/browser limits. Neither service
+health nor this document supplies independent acceptance.
 
 ## Ownership and boundaries
 
@@ -148,7 +149,9 @@ reconfigures main's gateway and removes its shared route; it is not an additiona
 retains database storage. There is one native project per registered checkout, reused across roles.
 
 Main's explicit override is `var/local-ingress/main/ingress.yaml`; task overrides, settings and outputs remain
-in `var/worktrees/<project>/`. Only the gateway receives opt-in metadata `FIGHT_LOCAL_INGRESS=1`, one exact
+in `var/worktrees/<project>/`. Each shared gateway mounts only its dedicated `gateway/` configuration directory,
+exact-name certificates and compiled assets read-only. Directory mounting keeps atomic config refreshes visible;
+the parent state directory (including private task settings) is never mounted into the gateway. Only the gateway receives opt-in metadata `FIGHT_LOCAL_INGRESS=1`, one exact
 `VIRTUAL_HOST`, `VIRTUAL_PROTO=https` and `VIRTUAL_PORT=8443`. docker-gen renders only running matching gateways
 on the named ingress network with existing leaves. Invalid names, duplicate opted-in names and missing leaves
 produce no route, never wildcard/default routing. Container start/stop/die events regenerate routes and signal

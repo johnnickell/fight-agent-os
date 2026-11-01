@@ -228,10 +228,11 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 
 For explicit shared `<name>.localhost` HTTPS, see [shared ingress operations](docs/engineering/LOCAL_INGRESS.md).
 TASK-00553's supplier includes optional existing-Herd coexistence with verified high-port upstream TLS;
-independent ingress remains the default. Actual-name leaves and supplier/full-stack transport were exercised,
-but the canonical Herd browser path is blocked on a privileged full Nginx test/graceful reload. Qualification
-and independent acceptance remain incomplete. Ordinary main startup stays direct localhost TLS, independent
-of that supplier.
+independent ingress remains the default. The approved three-name Herd configuration is loaded. Work qualified
+canonical HTTPS, both verified proxy hops and available auth flows on two full disposable task stacks; main
+root/CSRF/UI transport was exercised without changing its inherited unprepared database. Independent Review/QA
+remain pending. Default independent low-port runtime and other platforms/browsers remain unverified here.
+Ordinary main startup stays direct localhost TLS, independent of that supplier.
 
 The application root runs at http://localhost:18087 (authentication still requires the trusted HTTPS origin). Build the browser foundation with
 `./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
