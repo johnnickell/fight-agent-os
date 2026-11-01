@@ -54,7 +54,8 @@ Follow the [explicit Compose lifecycle](RESOURCE_LIFECYCLE.md): `bin/up` selects
 use that checkout's project; main never infers task mode from a feature branch or stale locator. Later roles
 reuse the same native project/source/settings, not another setup stack. No resource receipt, PID or worker
 registration gates the command. The gate itself never initializes or replaces a runtime. TASK-00553 remains
-the real shared HTTPS prerequisite, not a capability delivered by consumer scaffolding.
+the real task/shared-topology HTTPS prerequisite, not a capability delivered by consumer scaffolding; ordinary
+main startup uses its existing direct localhost TLS setup without shared ingress.
 
 ## Explicit setup
 
@@ -84,10 +85,13 @@ by the same task teardown. Follow the [shared resource procedure](RESOURCE_LIFEC
 selection, actual effects and finite temporary-output lifetime. No per-stage source copies or
 readiness proof archives. Independent acceptance, actual publication and worker exits remain separate facts.
 
-`./bin/up` prepares ignored cache mounts and builds/starts the full declared application stack, preserving
-main database data. The shared-ingress transition is incomplete until TASK-00553 is delivered; missing supplier
-or actual-name TLS leaves produce a clear prerequisite, never a readiness claim. Use up again after environment
-or image/configuration changes. It never installs dependencies, starts shared ingress or enrolls trust.
+`./bin/up` prepares ignored cache mounts and builds/starts the full declared main application stack, preserving
+main database data. Its explicit `.env`/localhost certificate preflight and verified root/CSRF readiness remain
+independent of shared ingress; normal URL is `https://localhost:18443`. Main loads no generated proxy override.
+`./bin/up --worktree SELECTOR` instead requires TASK-00553's shared ingress and actual-name TLS leaves, reporting
+that missing prerequisite without a fallback or readiness claim. Shared-topology acceptance remains incomplete.
+Use up again after environment or image/configuration changes. It never installs dependencies, starts shared
+ingress or enrolls trust.
 Never silently refresh a service inside acceptance.
 Before reinstalling frontend dependencies in an already-running project, stop only `web`
 (`docker compose stop web`), then run setup and `./bin/up`; npm ci replaces nested cache-mount directories.

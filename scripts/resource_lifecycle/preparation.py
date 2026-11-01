@@ -69,9 +69,6 @@ def compose(safe, checkout, project, isolated=False):
             args += ['--file', str(state / 'ingress.yaml')]
     else:
         args += ['--env-file', str(checkout / '.env') if (checkout / '.env').exists() else '/dev/null']
-        gateway = safe / 'var/main-ingress.yaml'
-        if gateway.exists():
-            args += ['--file', str(gateway)]
     return args
 
 
@@ -152,13 +149,13 @@ def prepare(safe, checkout, project, entry):
     return args
 
 
-def ingress(safe, checkout, project, isolated):
+def ingress(safe, checkout, project):
     """Consume TASK-00553's supplier; never provision shared ingress or trust here"""
     network = 'fight-local-ingress'
     available = text(['docker', 'network', 'ls', '--filter', 'name=^' + network + '$', '--format', '{{.Name}}'], safe)
     require(available == network, 'TASK-00553 prerequisite unavailable: separately operated shared HTTPS ingress/network ' + network)
-    host = (project if isolated else 'fight-agent-os') + '.localhost'
-    state = safe / 'var/worktrees' / project if isolated else safe / 'var/https/ingress'
+    host = project + '.localhost'
+    state = safe / 'var/worktrees' / project
     certs = checkout / 'var/https/certs'
     # Supplier extends the existing explicit TASK-00145 setup flow for actual names.
     require(all((certs / name).is_file() for name in ('localhost.pem', 'localhost-key.pem')),
@@ -181,6 +178,6 @@ def ingress(safe, checkout, project, isolated):
     settings['web']['environment'] = origin
     settings['https_php'] = {'environment': origin}
     config = override(settings) + 'networks:\n  ingress: {external: true, name: fight-local-ingress}\n'
-    target = state / 'ingress.yaml' if isolated else safe / 'var/main-ingress.yaml'
+    target = state / 'ingress.yaml'
     write_private(target, config)
     return target, 'https://' + host

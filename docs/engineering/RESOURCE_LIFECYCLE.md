@@ -35,9 +35,10 @@ definition; shared infrastructure belongs in separate projects.
 ## Configuration and readiness
 
 Compose files, project and env files are selected explicitly, independent of ambient `COMPOSE_FILE`, project
-names or auto-loaded overrides. The main base is `compose.yaml`; only a main-owned ingress override can supplement
-it. Worktree overrides/settings live in canonical ignored `var/worktrees/<project>/`. Source mounts/build
-contexts point to the registered checkout; output is separate per project and execution evidence stays under
+names or auto-loaded overrides. Ordinary main uses only `compose.yaml` and its explicit `.env`; it never loads
+`var/main-ingress.yaml` or generated task overrides. Worktree overrides/settings live in canonical ignored
+`var/worktrees/<project>/`. Source mounts/build contexts point to the registered checkout; output is separate
+per project and execution evidence stays under
 `.runs/compose/<project>/`. Application boot never depends on execution evidence under `.runs/`.
 
 Full startup enables declared application TLS and mail services, not the Composer maintenance job. Current
@@ -47,19 +48,26 @@ future installation services are not fabricated. Expensive wrappers check host s
 `FIGHT_STORAGE_ALLOCATION_BYTES` explicitly. Existing service CPU/memory/PID limits remain in Compose. No new
 aggregate quota/ownership system or global prune is introduced.
 
-[TASK-00553](../../planning/tasks/00553-TASK.md) is the real, currently undelivered shared HTTPS supplier. The
-consumer seam expects separately operated `fight-local-ingress`, one public Nginx plus nonpublic docker-gen,
-and actual-name certificates through TASK-00145's explicit setup flow. Only each application's TLS gateway
-joins ingress, using HTTPS upstream on 8443; inherited task publishing is stripped and private services remain
-private. Main's intended canonical origin is `https://fight-agent-os.localhost`; worktree origins use
-`https://<project>.localhost`. No custom DNS, trust enrollment or shared infrastructure startup is implicit.
+Ordinary main startup reuses [local HTTPS](LOCAL_HTTPS.md)'s explicit `.env`, independent keys and existing
+localhost leaf/key preflight. It starts the full declared stack, validates/reloads Nginx and verifies root/CSRF
+readiness at **https://localhost:18443** before printing that URL. It does not call shared ingress, change trust,
+generate certificates, migrate data or select a proxy based on stale configuration. Main down retains persistent
+data. The earlier TASK-00543 main-up failure was a regression, not an acceptable supplier prerequisite.
+
+[TASK-00553](../../planning/tasks/00553-TASK.md) is the currently undelivered shared HTTPS supplier for
+`bin/up --worktree SELECTOR` and future shared-topology integration, NOT ordinary main operation. The task
+consumer expects separately operated `fight-local-ingress`, one public Nginx plus nonpublic docker-gen, and
+actual-name certificates through TASK-00145's explicit setup flow. Only each application's TLS gateway joins
+ingress, using HTTPS upstream on 8443; inherited task publishing is stripped and private services remain private.
+Intended shared origins are `https://fight-agent-os.localhost` and `https://<project>.localhost`. No custom DNS,
+trust enrollment or shared infrastructure startup is implicit; future main integration must be explicit and
+preserve ordinary direct startup.
 
 The application gateway owns direct TLS authority and canonical FastCGI Host/scheme/port; arbitrary forwarded
 headers stay stripped. The supplier must qualify end-to-end TLS, exact origin, secure cookies, available auth
-flows and route removal. Config scaffolding is NOT delivery. `bin/up` fails clearly without the supplier and
-prints a usable URL only after actual verified HTTPS root/CSRF readiness. Do not claim browser-ready from
-Compose health alone. The inherited explicitly configured localhost listener may remain running during this
-incomplete transition; do not stop/reconfigure it merely to claim the prerequisite is supplied.
+flows and route removal. Config scaffolding is NOT delivery. Task up fails clearly without the supplier, never
+falls back to main, and prints a usable URL only after verified HTTPS root/CSRF readiness. Task down and repeated
+teardown work without ingress. Do not claim browser-ready from Compose health alone.
 
 ## Retire runtime, then finish the task
 

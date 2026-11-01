@@ -202,12 +202,16 @@ owns eligible Git worktree/local-branch removal, not Docker lifecycle or ordinar
 `bin/down --worktree SELECTOR` operate a registered checkout's disposable isolated stack. No TASK receipt,
 worker/PID or stale feature-branch gate. Worktrunk/Land use the same Docker-first teardown.
 
-**TASK-00543 amendment is incomplete:** direct isolated Compose qualification is available, but
-[TASK-00553](planning/tasks/00553-TASK.md) must deliver shared local HTTPS ingress before full main/worktree
-browser readiness can be accepted. Intended origins are `https://fight-agent-os.localhost` and distinct
-`https://fight-wt-<checkout-hash>.localhost` names. Startup reports that missing prerequisite; consumer scaffolding
-does not deliver ingress. Existing localhost setup/running-stack guidance below describes the inherited transport,
-not proof of the new supplier. Trust/certificates remain explicit. This application has committed Composer lockfiles:
+Ordinary `bin/up` uses the main checkout's direct TLS stack at **https://localhost:18443**, with the explicit
+`.env`/certificate prerequisites below. It does not require shared ingress or load generated task/main proxy
+overrides. TASK-00543's earlier main-startup failure was a regression, now repaired, not deferred browser testing.
+
+**TASK-00543 shared-topology acceptance is incomplete:** `bin/up --worktree SELECTOR` requires
+[TASK-00553](planning/tasks/00553-TASK.md)'s separately operated shared HTTPS ingress and actual-name certificates;
+it reports missing prerequisites without starting substitute services or printing a ready URL. Intended shared
+origins are `https://fight-agent-os.localhost` and distinct `https://fight-wt-<checkout-hash>.localhost` names.
+Consumer scaffolding does not deliver that supplier. This does not block ordinary main startup. Trust/certificates
+remain explicit. This application has committed Composer lockfiles:
 
 ```sh
 export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"

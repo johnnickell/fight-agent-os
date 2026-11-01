@@ -6,6 +6,13 @@ The ordinary `./bin/up` development stack includes HTTPS at **https://localhost:
 [TASK-00145](../../planning/tasks/00145-TASK.md) owns this transport slice;
 [TASK-00063](../../planning/tasks/00063-TASK.md) retains integrated security and production runtime policy.
 
+Ordinary main `bin/up` remains this direct localhost stack, independent of shared ingress. It explicitly selects
+`compose.yaml` and `.env`, ignores ambient `COMPOSE_FILE` and stale generated main/task proxy overrides, and never
+auto-selects a proxy. TASK-00543's earlier failure without ingress was a regression, now repaired.
+`bin/up --worktree SELECTOR` is different: it requires [TASK-00553](../../planning/tasks/00553-TASK.md)'s separately
+operated shared ingress and actual-name certificates, and fails clearly until those exist. That missing supplier
+gates task/shared-topology acceptance, not main startup. Task down remains available without ingress.
+
 ## Enroll and start
 
 Requirements: Docker Compose, host Python 3/OpenSSL/curl, and **mkcert v1.4.4**. The local gateway pins

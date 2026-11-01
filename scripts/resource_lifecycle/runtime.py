@@ -57,10 +57,17 @@ def up(root, selector=None, build_only=False):
     if build_only:
         return subprocess.run([*args, '--profile', 'https', 'build'], cwd=checkout,
                               env=environment(isolated)).returncode
+    if isolated:
+        # Task startup requires the external supplier; never fall back to main.
+        _, url = ingress(safe, checkout, project)
+        args = compose(safe, checkout, project, True)
+    else:
+        # Ordinary main uses only its existing explicit localhost TLS setup.
+        # Reuse its owning preflight; never enroll trust or select proxy overrides.
+        run(['python3', str(checkout / 'scripts/local_https.py'), 'startup'], checkout,
+            env=environment())
+        url = 'https://localhost:18443'
     require((checkout / 'vendor/autoload.php').is_file(), 'Install locked dependencies explicitly before startup')
-    # This is a real external prerequisite, never a lifecycle receipt/PID gate.
-    ingress(safe, checkout, project, isolated)
-    args = compose(safe, checkout, project, isolated)
     for value in ('var', '.runs/cache/client/dependency-cache', '.runs/cache/client/vite-temp'):
         (checkout / value).mkdir(parents=True, exist_ok=True)
     # All declared application profiles, not the Composer maintenance job. No
@@ -69,14 +76,19 @@ def up(root, selector=None, build_only=False):
          '--wait', '--wait-timeout', '120'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-t'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-s', 'reload'], checkout, env=environment(isolated))
-    host = (project if isolated else 'fight-agent-os') + '.localhost'
-    url = 'https://' + host
+    if isolated:
+        connection = ['--resolve', project + '.localhost:443:127.0.0.1']
+    else:
+        address = run([*args, '--profile', 'https', 'port', 'https', '8443'], checkout,
+                      capture=True, env=environment())
+        require(address.startswith('127.0.0.1:'), 'HTTPS requires a loopback port mapping')
+        connection = ['--connect-to', 'localhost:18443:127.0.0.1:' + address.rsplit(':', 1)[1]]
     # Verified actual browser entry plus direct-TLS bootstrap; no -k, forwarded
     # authority or config-only readiness. Do not retain nonce/cookie contents.
     for path in ('/', '/api/v1/auth/csrf'):
         run(['curl', '--fail', '--silent', '--show-error', '--retry', '5', '--retry-all-errors',
              '--connect-timeout', '3', '--max-time', '10', '--retry-max-time', '60',
-             '--resolve', host + ':443:127.0.0.1', '--output', '/dev/null', url + path], checkout)
+             *connection, '--output', '/dev/null', url + path], checkout)
     print(url)
     return 0
 
