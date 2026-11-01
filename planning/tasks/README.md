@@ -555,4 +555,6 @@
 | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | ready-for-agent | [TICKET-00127](../tickets/00127-TICKET.md) |
 | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | ready-for-agent | [TICKET-00128](../tickets/00128-TICKET.md) |
 | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | done | — |
+| [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | in-progress | [TICKET-00129](../tickets/00129-TICKET.md) |
+| [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | ready-for-agent | — |
 <!-- /planning:records -->

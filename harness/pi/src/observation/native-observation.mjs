@@ -43,11 +43,20 @@ export class NativeObservation {
     const child = fork(custodianScript, [generation], { cwd: this.primary, detached: true,
       env: childEnvironment(process.env), stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
     this.child = child;
+    child.on('message', message => { if (message?.type === 'ready') this.ready = true; });
     child.on('error', () => this.close());
     // The daemon is an observation reader, never an executor or child custodian.
     child.send({ type: 'initialize', primary: this.primary, parent: this.parent, parentFile: this.parentFile,
       pendingParentFile: this.pendingParentFile, generation,
       native: { pid: process.pid, entry, process: stdout.trim(), mode: 'tui', started: this.started, wallUs: this.wallUs } }, () => {});
+  }
+  observeSubagent(message) {
+    this.pendingSubagents ??= new Set();
+    if (this.closed || !this.ready || !this.parentFile || !this.child?.connected ||
+        this.pendingSubagents.has(message.id) || this.pendingSubagents.size >= 8) return;
+    this.pendingSubagents.add(message.id);
+    try { this.child.send(message, () => { this.pendingSubagents.delete(message.id); }); }
+    catch { this.pendingSubagents.delete(message.id); }
   }
   close() {
     if (this.closed) return; this.closed = true;

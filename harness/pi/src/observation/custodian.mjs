@@ -29,6 +29,25 @@ export function bindParentFile(pendingPath, witness) {
       !sameSessionFile(sessionFileIdentity(pendingPath), witness)) throw new Error('Native session file witness refused');
   return witness;
 }
+// This route is accepted only from the native parent's inherited IPC channel, never a socket client.
+export function admitSubagent(message, { parent, generation, children, order, now = Date.now(),
+  registrations = worktree => execFileSync('git', ['-C', worktree, 'worktree', 'list', '--porcelain', '-z'], { encoding: 'utf8', timeout: 1000, maxBuffer: 1024 * 1024 }) }) {
+  if (message?.parent !== parent || !/^[a-f0-9-]{36}$/.test(message.id) ||
+      !identityKeys.every(key => typeof message.identity?.[key] === 'string' && message.identity[key].length > 0 &&
+        message.identity[key].length <= 1100 && clean(message.identity[key]) === message.identity[key])) throw new Error('Invalid subagent observation');
+  let child = children.get(message.id);
+  if (!child) {
+    if (children.size >= limits.children) throw new Error('Observation capacity reached');
+    const worktree = realpathSync(message.identity.worktree);
+    if (worktree !== message.identity.worktree || !registrations(worktree).split('\0').includes(`worktree ${worktree}`)) throw new Error('Unregistered subagent worktree');
+    child = { id: message.id, parent, generation, started: now, order, identity: message.identity,
+      state: 'starting', lifecycle: 'starting', exitCode: null, heartbeatSeconds: 2,
+      sequence: 0, receivedAt: now, history: [], units: 0, omitted: 0, gaps: 0, source: 'pi-subagents' };
+  } else if (child.source !== 'pi-subagents' || JSON.stringify(child.identity) !== JSON.stringify(message.identity)) throw new Error('Subagent identity changed');
+  applyProgress(child, message);
+  children.set(message.id, child);
+  return child;
+}
 // Exact ancestry is launch evidence, not PID/cwd proximity. Bootstrap witnesses alone cannot
 // confer membership: require the fixed live provider monitor below this exact live native process.
 export function monitorWitness(message, native, { inspect = processIdentity, births,
@@ -130,7 +149,16 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
   });
   process.on('disconnect', () => { attached = false; remove(routePath, routeFile); });
   process.on('message', message => {
-    if (!attached || message.type !== 'bind-session') return;
+    if (!attached) return;
+    if (message?.type === 'subagent-progress') {
+      try {
+        if (pendingParentFile !== undefined || !sameSessionFile(sessionFileIdentity(parentFile.path), parentFile)) return;
+        for (const [id, child] of children) if (child.source === 'pi-subagents' && Date.now() - child.receivedAt > limits.retention) children.delete(id);
+        admitSubagent(message, { parent, generation, children, order: ++sequence });
+      } catch { /* Failed observation never affects an SDK session or relaxes monitor admission. */ }
+      return;
+    }
+    if (message?.type !== 'bind-session') return;
     try { parentFile = bindParentFile(pendingParentFile, message.parentFile); pendingParentFile = undefined; if (descriptor) descriptor.parentFile = parentFile; publish(); }
     catch { cleanup(1); }
   });
