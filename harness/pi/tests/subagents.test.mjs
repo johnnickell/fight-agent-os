@@ -141,6 +141,95 @@ test('custodian admits registered worktree progress and rejects identity changes
   assert.throws(() => admitSubagent({ ...message, id: randomUUID() }, { ...options, registrations: () => '' }), /Unregistered/);
 });
 
+for (const resume of [false, true]) test(`terminal history admits more than eight sequential ${resume ? 'same-session resumes' : 'Agent sessions'}`, () => {
+  const parent = randomUUID(), generation = randomUUID(), children = new Map(), records = new Map();
+  let order = 0;
+  const observer = new SubagentObserver(parent, message => admitSubagent(message, { parent, generation, children, order: ++order }),
+    { registry: () => ({ getRecord: id => records.get(id) }) });
+  const id = randomUUID(); let previous;
+  try {
+    for (let i = 0; i < 12; i++) {
+      const attempt = resume ? id : randomUUID();
+      let record = records.get(attempt);
+      if (!record) {
+        record = { id: attempt, rootSessionId: parent, type: 'explore', status: 'running', startedAt: i,
+          session: { sessionManager: { getCwd: () => process.cwd() }, subscribe: () => () => {}, messages: [] } };
+        records.set(attempt, record); observer.started({ id: attempt });
+      } else {
+        observer.resuming(attempt); record.startedAt = i; record.status = 'running'; observer.tick();
+      }
+      record.status = 'completed'; record.session.messages = [{ role: 'assistant', content: [{ type: 'text', text: `FINAL_${i}` }] }];
+      observer.tick();
+      const latest = [...children.values()].find(child => child.identity.attempt === attempt && child.history.at(-1) === `FINAL_${i}`);
+      assert.ok(latest, `sequential attempt ${i + 1} must be visible`);
+      assert.notEqual(latest.id, previous); previous = latest.id;
+      assert.equal(latest.lifecycle, 'completed'); assert.equal(observer.runs.size, 0);
+      assert.ok(children.size <= 8);
+    }
+  } finally { observer.close(); }
+});
+
+test('history pressure preserves selected/pinned terminal entries and never retires active or monitor children', () => {
+  const f = fixture(); f.observer.started({ id: f.id });
+  const generation = randomUUID(), children = new Map(), base = f.messages[0];
+  const options = { parent: f.parent, generation, children, order: 1, registrations: cwd => `worktree ${cwd}\0` };
+  for (let i = 0; i < 8; i++) admitSubagent({ ...base, id: randomUUID() }, { ...options, order: i + 1 });
+  const ids = [...children.keys()];
+  const selected = children.get(ids[0]), pinned = children.get(ids[1]), disposable = children.get(ids[2]);
+  for (const child of [selected, pinned, disposable]) admitSubagent({ ...base, id: child.id, sequence: 2,
+    lifecycle: 'completed', upstreamStatus: 'completed' }, options);
+  const retained = [selected, pinned].map(child => `${generation}:${child.id}`);
+  const beforeInvalid = [...children.keys()];
+  assert.throws(() => admitSubagent({ ...base, id: randomUUID(), sequence: 0 }, { ...options, retained }), /Invalid monitor progress/);
+  assert.throws(() => admitSubagent({ ...base, id: randomUUID() }, { ...options, retained, registrations: () => '' }), /Unregistered/);
+  assert.deepEqual([...children.keys()], beforeInvalid, 'invalid admissions cannot evict real history');
+  // A terminal monitor still belongs to its separate socket lifecycle, not SDK history retirement.
+  children.get(ids[3]).source = undefined; children.get(ids[3]).lifecycle = 'completed';
+  admitSubagent({ ...base, id: randomUUID() }, { ...options, retained });
+  assert.ok(children.has(selected.id)); assert.ok(children.has(pinned.id)); assert.ok(!children.has(disposable.id));
+  const before = [...children.keys()];
+  assert.throws(() => admitSubagent({ ...base, id: randomUUID() }, { ...options, retained }), /Observation capacity reached/);
+  assert.deepEqual([...children.keys()], before);
+  f.observer.close();
+});
+
+test('custodian refusal reaches a finite human diagnostic and detaches only the refused SDK reader', () => {
+  const f = fixture(), native = Object.create(NativeObservation.prototype);
+  Object.assign(native, { refused: message => f.observer.refused(message) });
+  f.observer.started({ id: f.id }); const displayId = f.messages[0].id;
+  native.receive({ type: 'subagent-refused', id: displayId, reason: 'observation-capacity-eight' });
+  assert.equal(f.unsubscribed(), 1); assert.equal(f.observer.runs.size, 0);
+  assert.match(f.observer.inspect().notice, /observation-capacity-eight/);
+  assert.equal(f.record.status, 'running', 'refusal never cancels execution');
+  // A fast terminal frame can finish sampling before the daemon replies: still report its refusal.
+  native.receive({ type: 'subagent-refused', id: displayId, reason: 'observation-capacity-eight' });
+  assert.match(f.observer.inspect().notice, /observation-capacity-eight/);
+  f.observer.close();
+});
+
+test('native readiness queue overflow reports refusal without cancelling or displacing queued work', () => {
+  const native = Object.create(NativeObservation.prototype), refused = [];
+  Object.assign(native, { ready: false, refused: message => refused.push(message) });
+  for (let i = 0; i < 8; i++) native.observeSubagent({ id: randomUUID() });
+  const before = [...native.queuedSubagents.keys()], id = randomUUID(); native.observeSubagent({ id });
+  assert.deepEqual([...native.queuedSubagents.keys()], before);
+  assert.deepEqual(refused, [{ id, reason: 'observation-capacity-eight' }]);
+  native.close();
+});
+
+test('eight concurrent SDK observations still refuse a ninth without evicting live work', () => {
+  const parent = randomUUID(), records = new Map();
+  const observer = new SubagentObserver(parent, () => {}, { registry: () => ({ getRecord: id => records.get(id) }) });
+  try {
+    for (let i = 0; i < 9; i++) {
+      const id = randomUUID(); records.set(id, { rootSessionId: parent, status: 'running',
+        session: { sessionManager: { getCwd: () => process.cwd() }, subscribe: () => () => {} } }); observer.started({ id });
+    }
+    assert.equal(observer.runs.size, 8); assert.ok([...observer.runs.values()].every(run => run.session));
+    assert.match(observer.inspect().notice, /observation-capacity-eight/);
+  } finally { observer.close(); }
+});
+
 test('native transport bounds outstanding messages per child without starving concurrent children', () => {
   const callbacks = [], sent = [];
   const native = Object.create(NativeObservation.prototype);

@@ -8,8 +8,8 @@ import { childEnvironment } from '../workspace/rpc.mjs';
 
 // Observation resources only. There is deliberately no execute, launch or cancel method.
 export class NativeObservation {
-  constructor(context, { started = Number(process.hrtime.bigint() / 1000000n), wallUs = Date.now() * 1000 } = {}) {
-    this.started = started; this.wallUs = wallUs;
+  constructor(context, { started = Number(process.hrtime.bigint() / 1000000n), wallUs = Date.now() * 1000, refused = () => {} } = {}) {
+    this.started = started; this.wallUs = wallUs; this.refused = refused;
     this.primary = context.cwd; this.parent = context.sessionManager.getSessionId();
     this.sessionFile = context.sessionManager.getSessionFile(); this.closed = false;
     this.parentFile = null;
@@ -43,17 +43,24 @@ export class NativeObservation {
     const child = fork(custodianScript, [generation], { cwd: this.primary, detached: true,
       env: childEnvironment(process.env), stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
     this.child = child;
-    child.on('message', message => { if (message?.type === 'ready') { this.ready = true; this.flushSubagents(); } });
+    child.on('message', message => this.receive(message));
     child.on('error', () => this.close());
     // The daemon is an observation reader, never an executor or child custodian.
     child.send({ type: 'initialize', primary: this.primary, parent: this.parent, parentFile: this.parentFile,
       pendingParentFile: this.pendingParentFile, generation,
       native: { pid: process.pid, entry, process: stdout.trim(), mode: 'tui', started: this.started, wallUs: this.wallUs } }, () => {});
   }
+  receive(message) {
+    if (this.closed) return;
+    if (message?.type === 'ready') { this.ready = true; this.flushSubagents(); }
+    else if (message?.type === 'subagent-refused') this.refused(message);
+  }
   observeSubagent(message) {
     if (this.closed) return;
     this.queuedSubagents ??= new Map();
-    if (!this.queuedSubagents.has(message.id) && this.queuedSubagents.size >= 8) return;
+    if (!this.queuedSubagents.has(message.id) && this.queuedSubagents.size >= 8) {
+      this.refused({ id: message.id, reason: 'observation-capacity-eight' }); return;
+    }
     this.queuedSubagents.set(message.id, message);
     this.flushSubagents();
   }

@@ -45,7 +45,8 @@ export default function installNativeObservation(pi: ExtensionAPI) {
       try {
         if (start && ctx.mode === 'tui') {
           currentContext = ctx;
-          const resource = observation = new NativeObservation(ctx, { started, wallUs });
+          const resource = observation = new NativeObservation(ctx, { started, wallUs,
+            refused: message => subagents?.refused(message) });
           subagents = new SubagentObserver(ctx.sessionManager.getSessionId(), message => {
             try { resource.syncSessionFile(ctx); resource.observeSubagent(message); } catch { subagents?.close(); }
           }, { changed: present });

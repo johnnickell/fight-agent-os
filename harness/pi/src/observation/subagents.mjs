@@ -30,6 +30,12 @@ export class SubagentObserver {
       active: this.runs.size, closed: this.closed, notice: this.notice };
   }
   diagnose(reason) { this.notice = reason; this.changed(); }
+  refused(message) {
+    if (this.closed || !/^[a-f0-9-]{36}$/.test(message?.id) ||
+        !['observation-capacity-eight', 'subagent-admission-refused'].includes(message.reason)) return;
+    for (const [id, run] of this.runs) if (run.id === message.id) this.remove(id);
+    this.diagnose(`${message.reason}: display unavailable; SDK agent execution unchanged`);
+  }
   resuming(id) {
     if (this.closed || typeof id !== 'string' || this.runs.has(id)) return;
     // Foreground resume emits no upstream started event. Tool input is ONLY a lookup candidate:

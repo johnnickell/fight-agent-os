@@ -35,14 +35,13 @@ export function bindParentFile(pendingPath, witness) {
   return witness;
 }
 // This route is accepted only from the native parent's inherited IPC channel, never a socket client.
-export function admitSubagent(message, { parent, generation, children, order, now = Date.now(),
+export function admitSubagent(message, { parent, generation, children, order, retained = [], now = Date.now(),
   registrations = worktree => execFileSync('git', ['-C', worktree, 'worktree', 'list', '--porcelain', '-z'], { encoding: 'utf8', timeout: 1000, maxBuffer: 1024 * 1024 }) }) {
   if (message?.parent !== parent || !/^[a-f0-9-]{36}$/.test(message.id) ||
       !identityKeys.every(key => typeof message.identity?.[key] === 'string' && message.identity[key].length > 0 &&
         message.identity[key].length <= 1100 && clean(message.identity[key]) === message.identity[key])) throw new Error('Invalid subagent observation');
   let child = children.get(message.id);
   if (!child) {
-    if (children.size >= limits.children) throw new Error('Observation capacity reached');
     const worktree = realpathSync(message.identity.worktree);
     if (worktree !== message.identity.worktree || !registrations(worktree).split('\0').includes(`worktree ${worktree}`)) throw new Error('Unregistered subagent worktree');
     child = { id: message.id, parent, generation, started: now, order, identity: message.identity,
@@ -50,6 +49,14 @@ export function admitSubagent(message, { parent, generation, children, order, no
       sequence: 0, receivedAt: now, history: [], units: 0, omitted: 0, gaps: 0, source: 'pi-subagents' };
   } else if (child.source !== 'pi-subagents' || JSON.stringify(child.identity) !== JSON.stringify(message.identity)) throw new Error('Subagent identity changed');
   applyProgress(child, message);
+  if (!children.has(message.id) && children.size >= limits.children) {
+    // Reuse the reader's existing preference: history pressure must not steal its selection/pin.
+    // Only terminal SDK history is replaceable; live SDK work and monitor custody are untouched.
+    const oldest = [...children.values()].filter(item => item.source === 'pi-subagents' && terminalStates.has(item.lifecycle) &&
+      !retained.includes(`${item.generation}:${item.id}`)).sort((a, b) => a.order - b.order)[0];
+    if (!oldest) throw new Error('Observation capacity reached');
+    children.delete(oldest.id);
+  }
   children.set(message.id, child);
   return child;
 }
@@ -160,10 +167,19 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
     if (!attached) return;
     if (message?.type === 'subagent-progress') {
       try {
-        if (pendingParentFile !== undefined || !sameSessionFile(sessionFileIdentity(parentFile.path), parentFile)) return;
-        for (const [id, child] of children) if (child.source === 'pi-subagents' && Date.now() - child.receivedAt > limits.retention) children.delete(id);
-        admitSubagent(message, { parent, generation, children, order: ++sequence });
-      } catch { /* Failed observation never affects an SDK session or relaxes monitor admission. */ }
+        if (pendingParentFile !== undefined || !sameSessionFile(sessionFileIdentity(parentFile.path), parentFile)) throw new Error('Native custody unavailable');
+        let retained = [];
+        try {
+          const path = join(root, 'preference.json'); privateFile(path);
+          const preference = JSON.parse(readFileSync(path, 'utf8')); retained = [preference.selected, preference.pin];
+        } catch { /* A preference grants no custody; absent/invalid choices retain nothing. */ }
+        admitSubagent(message, { parent, generation, children, order: ++sequence, retained });
+      } catch (error) {
+        // Fixed diagnostics only, never SDK/session data or execution control. Even a fast final
+        // sample needs a refusal reply: send completion is not daemon admission.
+        if (process.connected) process.send({ type: 'subagent-refused', id: message.id,
+          reason: error.message === 'Observation capacity reached' ? 'observation-capacity-eight' : 'subagent-admission-refused' }, () => {});
+      }
       return;
     }
     if (message?.type !== 'bind-session') return;

@@ -66,7 +66,15 @@ attachment. This is an activity view, not lossless history. Same-sample tool act
 transport coalescing preserves terminal frames through readiness/backpressure and bounded shutdown flushing.
 
 The signed existing custody/Herdr reader retains selection/pin/pause, history bounds and verified log context.
-Completed SDK attempts remain selectable so final output is readable. SDK statuses (`completed`, `steered`,
+Completed SDK attempts remain selectable so final output is readable. An unchanged refresh preserves an
+eligible completed selection and its paused display. Unpinned completion still yields to live work; a pin keeps
+its chosen attempt, and lost custody never retains log authority.
+
+The daemon shares its eight child slots with existing monitors. Under admission pressure it retires the oldest
+terminal SDK attempt, excluding the current selection and pin from the reader's existing preference. Live SDK
+work and monitor entries are never retired by this policy; history remains bounded without a second registry.
+If no eligible history can retire, inherited IPC returns a fixed refusal diagnostic to `/fight-subagents` and
+detaches only that display reader. SDK execution is unchanged. SDK statuses (`completed`, `steered`,
 `aborted`, `stopped`, `error`) are shown as upstream/SDK outcomes, **not fabricated process exits or acceptance**.
 The native process-monitor route keeps its distinct real exit-code vocabulary.
 
@@ -91,6 +99,20 @@ The complete direct host Harness run passed **657/657**, zero skips, using a can
 in evidence. The full `./bin/build` is held before phases by this branch's legacy task-preparation wrapper;
 canonical worktree startup additionally requires the separately operated TASK-00553 shared ingress. No borrowed
 stack, fabricated receipt, shared-service startup or silent unfinished-branch merge is a solution.
+
+### Repair cycle 1 — Engineer evidence, acceptance still held
+
+Review R1/R2 were reproduced before repair. New direct owning regressions cover twelve sequential distinct
+sessions and twelve same-session resumes, protected terminal history, real active capacity, downstream refusal
+and repeated completed-selection/pause refresh. Fresh private native Pi/Herdr qualification on repaired executable
+bytes shows ten sequential Agent attempts with eight retained entries, older completed selection/pause surviving
+refresh, and foreground then background resume reusing the same actual SDK session. A pin survives history
+pressure. This is Engineer evidence, not independent Review/QA; genuine capacity refusal is controlled-boundary
+evidence, not a live eight-agent claim (the supported upstream profile retains maxConcurrent 4).
+
+Canonical ignored `repair-1/` and the Work handoff own current counts, inspected captures, source identity,
+cleanup and warnings. The mandatory full gate still has no success receipt. The older Engineer-3 evidence above
+remains historical qualification with its original final-guard/capture limits; it is not fresh repaired-source QA.
 
 ## Caller/removal inventory
 

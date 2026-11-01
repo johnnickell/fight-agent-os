@@ -48,14 +48,16 @@ export class RegisteredChildren {
     return item?.verified && ['starting', 'connected'].includes(item.state) && activeStates.has(item.lifecycle) &&
       this.now() - item.receivedAt <= Math.max(5000, item.heartbeatSeconds * 3000);
   }
+  completed(item) { return item?.verified && item.source === 'pi-subagents' && ['completed', 'failed'].includes(item.lifecycle); }
   recompute() {
     const previous = this.selected;
     if (this.pin && this.sources.has(this.pin)) this.selected = this.pin;
     else if (!this.active(this.sources.get(this.selected))) {
       this.selected = [...this.sources.values()].filter(item => this.active(item)).sort((a, b) =>
         b.started - a.started || (a.generation === b.generation ? b.order - a.order : 0) || a.id.localeCompare(b.id)).map(sourceKey)[0] ??
-        [...this.sources.values()].filter(item => item.verified && item.source === 'pi-subagents' && ['completed', 'failed'].includes(item.lifecycle))
-          .sort((a, b) => b.started - a.started || b.order - a.order).map(sourceKey)[0] ?? null;
+        (this.completed(this.sources.get(this.selected)) ? this.selected :
+          [...this.sources.values()].filter(item => this.completed(item))
+            .sort((a, b) => b.started - a.started || b.order - a.order).map(sourceKey)[0]) ?? null;
     }
     if (previous !== this.selected) { this.paused = false; this.frozen = null; }
   }
@@ -126,7 +128,7 @@ export class RegisteredChildren {
     } else if (type === 'reconnect') { this.open = true; void this.refresh(); }
     else if (type === 'pin') { this.pin = this.pin === null ? this.selected : null; this.recompute(); }
     else if (type === 'next' || type === 'previous') {
-      const eligible = [...this.sources.entries()].filter(([key, item]) => this.active(item) || key === this.pin || item.verified && item.source === 'pi-subagents' && ['completed', 'failed'].includes(item.lifecycle)).map(([key]) => key).sort();
+      const eligible = [...this.sources.entries()].filter(([key, item]) => this.active(item) || key === this.pin || this.completed(item)).map(([key]) => key).sort();
       if (eligible.length) {
         const current = eligible.indexOf(this.selected), delta = type === 'next' ? 1 : -1;
         this.selected = eligible[(current + delta + eligible.length) % eligible.length];
