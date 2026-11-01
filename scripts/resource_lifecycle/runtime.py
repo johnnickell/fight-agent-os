@@ -47,7 +47,7 @@ def command(root, argv, selector=None):
     return subprocess.run(['docker', *argv], cwd=checkout, env=environment(isolated)).returncode
 
 
-def up(root, selector=None, build_only=False):
+def up(root, selector=None, build_only=False, shared=False):
     safe, checkout, project, entry = resolve(root, selector)
     isolated = selector is not None
     storage_admit(checkout)
@@ -57,10 +57,10 @@ def up(root, selector=None, build_only=False):
     if build_only:
         return subprocess.run([*args, '--profile', 'https', 'build'], cwd=checkout,
                               env=environment(isolated)).returncode
-    if isolated:
-        # Task startup requires the external supplier; never fall back to main.
-        _, url = ingress(safe, checkout, project)
-        args = compose(safe, checkout, project, True)
+    if isolated or shared:
+        # Participation is explicit for main and mandatory for worktrees. No fallback.
+        _, url = ingress(safe, checkout, project, isolated)
+        args = compose(safe, checkout, project, isolated, shared)
     else:
         # Ordinary main uses only its existing explicit localhost TLS setup.
         # Reuse its owning preflight; never enroll trust or select proxy overrides.
@@ -76,8 +76,8 @@ def up(root, selector=None, build_only=False):
          '--wait', '--wait-timeout', '120'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-t'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-s', 'reload'], checkout, env=environment(isolated))
-    if isolated:
-        connection = ['--resolve', project + '.localhost:443:127.0.0.1']
+    if isolated or shared:
+        connection = ['--resolve', url.removeprefix('https://') + ':443:127.0.0.1']
     else:
         address = run([*args, '--profile', 'https', 'port', 'https', '8443'], checkout,
                       capture=True, env=environment())

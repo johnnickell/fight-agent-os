@@ -39,7 +39,9 @@ names or auto-loaded overrides. Ordinary main uses only `compose.yaml` and its e
 `var/main-ingress.yaml` or generated task overrides. Worktree overrides/settings live in canonical ignored
 `var/worktrees/<project>/`. Source mounts/build contexts point to the registered checkout; output is separate
 per project and execution evidence stays under
-`.runs/compose/<project>/`. Application boot never depends on execution evidence under `.runs/`.
+`.runs/compose/<project>/`. Tooling mounts the native Git common directory read-only at its actual absolute
+path so registered-worktree `.git` locators work inside the container; no metadata copy or write mount is added.
+Application boot never depends on execution evidence under `.runs/`.
 
 Full startup enables declared application TLS and mail services, not the Composer maintenance job. Current
 application services are web tooling/HTTP, TLS gateway, FPM, development/test PostgreSQL and private Mailpit;
@@ -54,14 +56,14 @@ readiness at **https://localhost:18443** before printing that URL. It does not c
 generate certificates, migrate data or select a proxy based on stale configuration. Main down retains persistent
 data. The earlier TASK-00543 main-up failure was a regression, not an acceptable supplier prerequisite.
 
-[TASK-00553](../../planning/tasks/00553-TASK.md) is the currently undelivered shared HTTPS supplier for
-`bin/up --worktree SELECTOR` and future shared-topology integration, NOT ordinary main operation. The task
-consumer expects separately operated `fight-local-ingress`, one public Nginx plus nonpublic docker-gen, and
-actual-name certificates through TASK-00145's explicit setup flow. Only each application's TLS gateway joins
-ingress, using HTTPS upstream on 8443; inherited task publishing is stripped and private services remain private.
-Intended shared origins are `https://fight-agent-os.localhost` and `https://<project>.localhost`. No custom DNS,
-trust enrollment or shared infrastructure startup is implicit; future main integration must be explicit and
-preserve ordinary direct startup.
+[TASK-00553](../../planning/tasks/00553-TASK.md)'s shared supplier is implemented but live qualification and
+independent acceptance remain incomplete. Follow [shared local HTTPS operations](LOCAL_INGRESS.md) for explicit
+`bin/ingress setup/up/down/status/remove` and human actual-name certificate setup through `bin/https`.
+`bin/up --worktree SELECTOR` requires that separately operated supplier. `bin/up --shared-ingress` explicitly
+opts main into the same topology; ordinary main up never does. Only each application's TLS gateway joins
+`fight-local-ingress`, using verified HTTPS upstream on 8443; inherited publishing is stripped and private
+services remain private. Shared origins are `https://fight-agent-os.localhost` and `https://<project>.localhost`.
+No custom DNS, trust enrollment, leaf generation or shared infrastructure startup is implicit.
 
 The application gateway owns direct TLS authority and canonical FastCGI Host/scheme/port; arbitrary forwarded
 headers stay stripped. The supplier must qualify end-to-end TLS, exact origin, secure cookies, available auth

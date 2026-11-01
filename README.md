@@ -226,6 +226,10 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/database migrate
 ```
 
+For explicit shared `<name>.localhost` HTTPS, see [shared ingress operations](docs/engineering/LOCAL_INGRESS.md).
+TASK-00553's supplier implementation is pending human TLS/listener preparation, live full-stack qualification
+and independent acceptance. Ordinary main startup remains direct localhost TLS, independent of that supplier.
+
 The application root runs at http://localhost:18087 (authentication still requires the trusted HTTPS origin). Build the browser foundation with
 `./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open
 `/app`; see [client commands and boundaries](client/README.md).

@@ -1,0 +1,43 @@
+{{/* Only one opted-in running TLS gateway per safe exact name. No wildcard/default routing. */}}
+{{ range $host, $containers := groupBy (where $ "Env.FIGHT_LOCAL_INGRESS" "1") "Env.VIRTUAL_HOST" }}
+{{ if and (regexMatch "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.localhost$" $host) (eq (len $containers) 1) }}
+{{ $gateway := index $containers 0 }}
+{{ if and $gateway.State.Running (eq $gateway.Env.VIRTUAL_PROTO "https") (eq $gateway.Env.VIRTUAL_PORT "8443") (exists (printf "/etc/nginx/certs/%s/localhost.pem" $host)) (exists (printf "/etc/nginx/certs/%s/localhost-key.pem" $host)) (exists "/etc/nginx/certs/rootCA.pem") }}
+{{ range $network := $gateway.Networks }}
+{{ if and (eq $network.Name "fight-local-ingress") $network.IP }}
+server {
+    listen 80;
+    server_name {{ $host }};
+    if ($http_host != "{{ $host }}") { return 421; }
+    return 308 https://{{ $host }}$request_uri;
+}
+server {
+    listen 443 ssl;
+    server_name {{ $host }};
+    ssl_certificate /etc/nginx/certs/{{ $host }}/localhost.pem;
+    ssl_certificate_key /etc/nginx/certs/{{ $host }}/localhost-key.pem;
+    if ($http_host != "{{ $host }}") { return 421; }
+    if ($ssl_server_name != "{{ $host }}") { return 421; }
+    location / {
+        proxy_pass https://{{ $network.IP }}:8443;
+        proxy_ssl_server_name on;
+        proxy_ssl_name {{ $host }};
+        proxy_ssl_verify on;
+        proxy_ssl_verify_depth 2;
+        proxy_ssl_trusted_certificate /etc/nginx/certs/rootCA.pem;
+        proxy_set_header Host {{ $host }};
+        proxy_set_header Forwarded "";
+        proxy_set_header X-Forwarded-Proto "";
+        proxy_set_header X-Forwarded-Host "";
+        proxy_set_header X-Forwarded-Port "";
+        proxy_set_header X-Forwarded-For "";
+        proxy_connect_timeout 3s;
+        proxy_read_timeout 30s;
+        proxy_redirect off;
+    }
+}
+{{ end }}
+{{ end }}
+{{ end }}
+{{ end }}
+{{ end }}

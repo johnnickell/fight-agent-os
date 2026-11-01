@@ -59,7 +59,7 @@ def environment(isolated=False):
     return env
 
 
-def compose(safe, checkout, project, isolated=False):
+def compose(safe, checkout, project, isolated=False, shared=False):
     args = ['docker', 'compose', '--project-directory', str(checkout), '--project-name', project,
             '--file', str(checkout / 'compose.yaml')]
     if isolated:
@@ -69,6 +69,8 @@ def compose(safe, checkout, project, isolated=False):
             args += ['--file', str(state / 'ingress.yaml')]
     else:
         args += ['--env-file', str(checkout / '.env') if (checkout / '.env').exists() else '/dev/null']
+        if shared:
+            args += ['--file', str(safe / 'var/local-ingress/main/ingress.yaml')]
     return args
 
 
@@ -131,6 +133,11 @@ def prepare(safe, checkout, project, entry):
               {'type': 'bind', 'source': str(evidence), 'target': '/app/.runs'},
               {'type': 'bind', 'source': str(evidence / 'cache/client/dependency-cache'), 'target': '/app/client/node_modules/.cache'},
               {'type': 'bind', 'source': str(evidence / 'cache/client/vite-temp'), 'target': '/app/client/node_modules/.vite-temp'}]
+    # A registered worktree's .git file contains an absolute common-dir locator.
+    # Tooling must read that SAME native metadata; never copy it or expose writes.
+    git_common = Path(text(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], checkout))
+    mounts.append({'type': 'bind', 'source': str(git_common), 'target': str(git_common),
+                   'read_only': True, 'bind': {'create_host_path': False}})
     services = {'web': {'image': project + '-web', 'volumes': mounts},
                 'composer': {'image': project + '-web', 'volumes': mounts},
                 'https_php': {'image': project + '-https_php', 'volumes': mounts[:1]},
@@ -149,28 +156,20 @@ def prepare(safe, checkout, project, entry):
     return args
 
 
-def ingress(safe, checkout, project):
-    """Consume TASK-00553's supplier; never provision shared ingress or trust here"""
-    network = 'fight-local-ingress'
-    available = text(['docker', 'network', 'ls', '--filter', 'name=^' + network + '$', '--format', '{{.Name}}'], safe)
-    require(available == network, 'TASK-00553 prerequisite unavailable: separately operated shared HTTPS ingress/network ' + network)
-    host = project + '.localhost'
-    state = safe / 'var/worktrees' / project
-    certs = checkout / 'var/https/certs'
-    # Supplier extends the existing explicit TASK-00145 setup flow for actual names.
-    require(all((certs / name).is_file() for name in ('localhost.pem', 'localhost-key.pem')),
-            'TASK-00553 actual-name certificates missing; run its explicit TASK-00145 certificate setup flow')
-    require('does match certificate' in text(['openssl', 'x509', '-in', str(certs / 'localhost.pem'),
-                                             '-checkhost', host, '-noout'], safe),
-            'TLS leaf does not cover the actual canonical hostname; use explicit certificate setup')
-    text(['openssl', 'x509', '-in', str(certs / 'localhost.pem'), '-checkend', '86400', '-noout'], safe)
-    require(text(['openssl', 'x509', '-in', str(certs / 'localhost.pem'), '-pubkey', '-noout'], safe) ==
-            text(['openssl', 'pkey', '-in', str(certs / 'localhost-key.pem'), '-passin', 'pass:', '-pubout'], safe),
-            'TLS leaf/key mismatch; use explicit certificate setup')
+def ingress(safe, checkout, project, isolated=True):
+    """Consume the explicit supplier; never provision ingress, certificates or trust"""
+    from local_ingress import check_leaf, ready
+    ready(safe)
+    host = project + '.localhost' if isolated else 'fight-agent-os.localhost'
+    state = safe / ('var/worktrees/' + project if isolated else 'var/local-ingress/main')
+    certs = check_leaf(safe, host)
     write_private(state / 'gateway.conf', gateway(checkout, host))
-    settings = {'https': {'environment': {'VIRTUAL_HOST': host, 'VIRTUAL_PORT': '8443', 'VIRTUAL_PROTO': 'https'},
+    settings = {'https': {'environment': {'FIGHT_LOCAL_INGRESS': '1', 'VIRTUAL_HOST': host,
+                                         'VIRTUAL_PORT': '8443', 'VIRTUAL_PROTO': 'https'},
                   'networks': ['default', 'ingress'], 'volumes': [
                       {'type': 'bind', 'source': str(state / 'gateway.conf'), 'target': '/etc/nginx/conf.d/default.conf',
+                       'read_only': True, 'bind': {'create_host_path': False}},
+                      {'type': 'bind', 'source': str(certs), 'target': '/etc/nginx/certs',
                        'read_only': True, 'bind': {'create_host_path': False}}]}, 'web': {}, 'mailcatcher': {}}
     origin = {'APP_BROWSER_ORIGIN': 'https://' + host, 'APP_ACTIVATION_ORIGIN': 'https://' + host,
               'APP_PASSWORD_RESET_ORIGIN': 'https://' + host, 'APP_AUTH_TRANSPORT': 'direct',
