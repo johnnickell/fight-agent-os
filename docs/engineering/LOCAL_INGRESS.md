@@ -6,7 +6,8 @@ and pinned nginxproxy/docker-gen 0.15.0, both by registry digest. It uses the up
 with a bounded repository-owned template, not the general nginx-proxy template's HTTP-upstream defaults.
 This is local development infrastructure, not production deployment or a hostile-code sandbox.
 
-**Work qualification checkpoint: independent Review/QA pending.** John completed the full test/graceful reload
+**Accepted candidate checkpoint:** independent Review ACCEPT and QA PASS bind TASK-00553's recorded candidate;
+publication and cleanup remain separate. John completed the full test/graceful reload
 for the approved three-name Herd topology on 2026-11-01. Canonical default-trust curl and host Chrome qualified
 two full registered task stacks, available auth flows and both verified proxy hops, including untrusted-upstream
 rejection/recovery. Main root/CSRF/UI transport and temporary integration/direct restoration were exercised without
