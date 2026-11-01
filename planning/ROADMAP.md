@@ -217,7 +217,7 @@ checkout. Its updated scope records the eight-project inventory, authorized isol
 without extra TASKs, and complete removal of delivery-marker bookkeeping. Acceptance/integration remain
 pending and later TASKs are unstarted.
 TASK-00540 stays done with its existing reports/delivery provenance unchanged. TASK-00539 moves to `order: 2`;
-all other orders/active ownership remain unchanged. Use the [Board](tasks/BOARD.md#current-human-priority--2026-10-27)
+all other orders/active ownership remain unchanged. Use the [Board](tasks/BOARD.md)
 for actual eligibility. Secondary fixes must follow each owning project's instructions and verified default;
 John retains every merge. Local skills do not deliver
 managed TASK-00140 or browser execution authority.
