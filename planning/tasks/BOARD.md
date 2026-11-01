@@ -317,6 +317,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | [TICKET-00125 — Promote and recover an explicitly approved release](../tickets/00125-TICKET.md) | ready-for-agent | [TASK-00532](00532-TASK.md), [TASK-00530](00530-TASK.md), [TASK-00362](00362-TASK.md), [TASK-00365](00365-TASK.md), [TASK-00367](00367-TASK.md) | — |
 | — | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | [TICKET-00127 — Review material architecture changes with diagrams in pull requests](../tickets/00127-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
 | — | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | [TICKET-00128 — Show feature architecture on demand in Pi](../tickets/00128-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
+| — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | ready-for-agent | [TASK-00543](00543-TASK.md) | — |
 
 ## Needs Info
 
