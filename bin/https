@@ -2,6 +2,12 @@
 set -eu
 
 cd "$(dirname "$0")/.."
+# Actual-name leaves are a separate, explicit human operation. No implicit trust enrollment.
+if [ "${2:-}" = "--ingress" ]; then
+    action=$1
+    shift 2
+    exec python3 -B scripts/local_ingress.py certificate --certificate-action "$action" "$@"
+fi
 certs=var/https/certs
 origin=https://localhost:18443
 
@@ -51,7 +57,7 @@ case "${1:-}" in
     fi
     ;;
   *)
-    echo "Usage: ./bin/https {setup|status|down|remove}" >&2
+    echo "Usage: ./bin/https {setup|status|down|remove} | {setup|status|remove} --ingress [--worktree SELECTOR]" >&2
     exit 2
     ;;
 esac

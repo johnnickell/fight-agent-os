@@ -1,6 +1,6 @@
 """Qualify the exact live GitHub publication before local source/ref disposal"""
 import re
-from .resources import command, query, require, text
+from .resources import run, query, require, text
 
 
 def published(doc, oid, remote_ref, pr):
@@ -20,5 +20,5 @@ def published(doc, oid, remote_ref, pr):
                 'published source unavailable or changed')
     else:
         require(proof['state'] == 'MERGED' and proof['mergedAt'] and proof['mergeCommit']['oid'], 'PR not delivered; preserve local source')
-        command(['git', 'merge-base', '--is-ancestor', proof['mergeCommit']['oid'], 'refs/remotes/origin/' + proof['baseRefName']], root)
+        run(['git', 'merge-base', '--is-ancestor', proof['mergeCommit']['oid'], 'refs/remotes/origin/' + proof['baseRefName']], root)
     return proof

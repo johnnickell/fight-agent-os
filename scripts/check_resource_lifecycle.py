@@ -1,460 +1,140 @@
 #!/usr/bin/env python3
-"""Finite public-command qualification with real disposable Git/Docker fixtures"""
+"""Direct native qualification of disposable Compose projects (not product tests).
+
+Requires the existing main web image; never starts/stops main or shared ingress.
+Full HTTPS/auth acceptance still requires independently delivered TASK-00553.
+"""
 import argparse
-import hashlib
+from contextlib import nullcontext
 import json
-import os
-from pathlib import Path
 import shutil
-import shlex
-import signal
+from pathlib import Path
 import subprocess
 import sys
 import tempfile
-import time
+
+sys.dont_write_bytecode = True
+from resource_lifecycle.preparation import identity
+from resource_lifecycle.worktrunk import remove
+from resource_lifecycle.resources import Hold
 
 ROOT = Path(__file__).resolve().parent.parent
 CLI = ROOT / 'bin/runtime'
-TASK = 'TASK-00548'
-ENV = None
 
 
-def run(argv, cwd=ROOT, expected=0, env=None):
-    result = subprocess.run([str(v) for v in argv], cwd=cwd, env=ENV if env is None else env, stdin=subprocess.DEVNULL, capture_output=True, timeout=120)
-    if result.returncode != expected:
-        raise RuntimeError(f'{argv[:4]}: exit {result.returncode}, expected {expected}; ' + result.stderr.decode()[-1500:])
-    return result.stdout.decode()
-
-
-def call(checkout, action, *argv, expected=0, env=None):
-    return run([CLI, '--checkout', checkout, action, *argv], expected=expected, env=env)
-
-
-def git(root, *argv):
-    return run(['git', *argv], root).strip()
-
-
-def observed():
-    return {kind: set(run(['docker', *args]).splitlines()) for kind, args in {
-        'containers': ['ps', '-aq', '--no-trunc'], 'volumes': ['volume', 'ls', '-q'],
-        'networks': ['network', 'ls', '-q', '--no-trunc'], 'images': ['image', 'ls', '-q', '--no-trunc']}.items()}
-
-
-def bytes_state(root):
-    return {str(p.relative_to(root)): (p.lstat().st_ino, p.lstat().st_mode, p.lstat().st_mtime_ns,
-            hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else None)
-            for p in [root, *root.rglob('*')] if '.git' not in p.relative_to(root).parts}
-
-
-def qualify_outcomes(fixtures, evidence):
-    """A completion outcome must outlive every effect, including a stored partial retry"""
-    safe, checkout = fixtures / 'outcomes/safe', fixtures / 'outcomes/task'
-    safe.mkdir(parents=True)
-    git(safe, 'init', '-b', 'develop')
-    (safe / '.gitignore').write_text('.runs/\nvar/\n')
-    (safe / 'checkout-outcome.md').write_text('Committed outcome inside disposable source must be refused\n')
-    git(safe, 'add', '.gitignore', 'checkout-outcome.md')
-    git(safe, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-m', 'Outcome fixture')
-    git(safe, 'worktree', 'add', '-b', 'feature/task-00548-outcomes', str(checkout))
-    outcome = safe / 'outcome.md'
-    outcome.write_text('Original finite fixture cancellation and surviving outcome\n')
-    surviving = outcome.read_bytes()
-    binding = json.loads(call(checkout, 'prepare', '--task', TASK, '--source-only'))
-    record = Path(binding['record'])
-    lock = Path(str(record) + '.lock')
-    oid = git(checkout, 'rev-parse', 'HEAD')
-    aliases = []
-    cases = []
-    try:
-        call(checkout, 'paths', 'var/disposable')
-        temporary = checkout / 'var/disposable/outcome.md'
-        temporary.write_text('Temporary outcome must be refused\n')
-        lock.unlink()  # original fixture owner challenges refusal before lock creation
-        snapshot = bytes_state(safe), bytes_state(checkout)
-        call(safe, 'complete', '--task', TASK, '--outcome', str(checkout / 'checkout-outcome.md'),
-             '--cancel-oid', oid, '--authority', 'Original finite outcome fixture cancellation', expected=1)
-        assert snapshot == (bytes_state(safe), bytes_state(checkout)) and not lock.exists()
-        call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--cancel-oid', oid,
-             '--authority', 'Original finite outcome fixture cancellation')
-        # Original fixture owner creates these aliases, never the real task record.
-        for name, target, symlink in (
-                ('record-hardlink', record, False), ('lock-hardlink', lock, False),
-                ('record-alias', record, True),
-                ('checkout-alias', checkout, True), ('temporary-alias', temporary.parent, True)):
-            alias = safe / name
-            alias.symlink_to(target, target_is_directory=target.is_dir()) if symlink else os.link(target, alias)
-            aliases.append(alias)
-        pending_save = record.with_name(record.name + '.tmp')
-        invalid = [checkout / 'checkout-outcome.md', record, lock, pending_save, temporary,
-                   safe / 'record-hardlink', safe / 'lock-hardlink',
-                   safe / 'record-alias', safe / 'checkout-alias/checkout-outcome.md',
-                   safe / 'temporary-alias/outcome.md']
-        for candidate in invalid:
-            if candidate == pending_save:
-                pending_save.write_text('Atomic bookkeeping is not a surviving outcome\n')
-            snapshot = bytes_state(safe), bytes_state(checkout)
-            print('Reject outcome without effects: ' + str(candidate.relative_to(fixtures)), flush=True)
-            call(safe, 'complete', '--task', TASK, '--outcome', str(candidate), '--cancel-oid', oid,
-                 '--authority', 'Original finite outcome fixture cancellation', expected=1)
-            assert snapshot == (bytes_state(safe), bytes_state(checkout)), 'refusal changed resources or disposition'
-            cases.append(str(candidate.relative_to(fixtures)))
-            pending_save.unlink(missing_ok=True)
-        call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--cancel-oid', oid,
-             '--authority', 'Original finite outcome fixture cancellation')
-        admitted = record.read_bytes()
-        (safe / 'record-hardlink').unlink()
-        os.link(record, safe / 'record-hardlink')
-        # Model previously accepted stored dispositions through fixture setup only.
-        # Finish/retire must revalidate BEFORE their first resource or record effect.
-        for candidate in invalid:
-            if not candidate.is_file():
-                continue
-            doc = json.loads(admitted)
-            doc['outcome'] = str(candidate)
-            record.write_text(json.dumps(doc))
-            try:
-                for action in ('finish', 'retire'):
-                    snapshot = bytes_state(safe), bytes_state(checkout)
-                    call(safe, action, '--task', TASK, *(['--outcome', str(candidate)] if action == 'finish' else []), expected=1)
-                    assert snapshot == (bytes_state(safe), bytes_state(checkout)), 'invalid stored outcome allowed cleanup effects'
-            finally:
-                record.write_bytes(admitted)
-        # A real partial finish removes temporary leaves but preserves private data.
-        private = checkout / 'var/private'
-        private.write_text('Original fixture owner retains this until partial retry is checked\n')
-        held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1)
-        assert 'ignored' in held and not temporary.exists() and record.exists()
-        partial = record.read_bytes()
-        for candidate in (checkout / 'checkout-outcome.md', record, lock):
-            doc = json.loads(partial); doc['outcome'] = str(candidate)
-            record.write_text(json.dumps(doc))
-            try:
-                snapshot = bytes_state(safe), bytes_state(checkout)
-                call(safe, 'finish', '--task', TASK, '--outcome', str(candidate), expected=1)
-                assert snapshot == (bytes_state(safe), bytes_state(checkout)), 'partial retry lost its required outcome'
-            finally:
-                record.write_bytes(partial)
-        private.unlink()
-        assert outcome.read_bytes() == surviving
-        result = {'completion_refusals_without_effects': cases, 'refusal_does_not_create_missing_lock': True,
-                  'stored_disposition_revalidated_before_effects': True,
-                  'partial_retry_revalidated_before_effects': True, 'surviving_safe_checkout_outcome': True}
-    finally:
-        # The ORIGINAL outer fixture owner releases aliases and uses the SAME public
-        # completion/finish path even if an assertion fails. No direct Git fallback.
-        for alias in aliases:
-            alias.unlink(missing_ok=True)
-        record.with_name(record.name + '.tmp').unlink(missing_ok=True)
-        (checkout / 'var/private').unlink(missing_ok=True)
-        if record.exists():
-            call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--cancel-oid', oid,
-                 '--authority', 'Original finite outcome fixture source/ref teardown')
-            call(safe, 'finish', '--task', TASK, '--outcome', str(outcome))
-        assert not checkout.exists() and not record.exists() and not lock.exists()
-        assert not git(safe, 'for-each-ref', '--format=%(refname)', 'refs/heads/feature/task-00548-outcomes')
-        assert outcome.read_bytes() == surviving, 'valid external outcome destroyed by disposal'
-        (evidence / 'outcome-teardown.json').write_text(json.dumps({'checkout_ref_record_lock_absent': True,
-            'safe_outcome_bytes_unchanged': True}) + '\n')
+def call(argv, cwd=ROOT, capture=True, check=True):
+    result = subprocess.run([str(v) for v in argv], cwd=cwd, capture_output=capture, text=True, timeout=180)
+    if check and result.returncode:
+        raise RuntimeError('Command failed: ' + ' '.join(str(v) for v in argv[:4]) + '\n' + result.stderr)
     return result
 
 
-def qualify(evidence, outcome_only=False):
-    global ENV
+def docker(*args):
+    return call(['docker', *args]).stdout.strip()
+
+
+def scoped(checkout, *args):
+    return call([CLI, '--worktree', checkout, 'docker', 'compose', *args]).stdout.strip()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--evidence', required=True)
+    args = parser.parse_args()
+    evidence = Path(args.evidence).resolve()
+    require_scratch = ROOT / '.runs'
+    if require_scratch not in evidence.parents:
+        raise ValueError('Evidence must remain in ignored .runs')
     evidence.mkdir(parents=True, exist_ok=False)
-    fixtures = Path(tempfile.mkdtemp(prefix='fixtures-', dir=evidence))
-    before = observed()
-    # Only Worktrunk receives a private HOME/config. Docker keeps the original
-    # local engine/context; no personal Worktrunk hooks, approvals or Git state.
-    tools = fixtures / 'tools'; tools.mkdir()
-    home = fixtures / 'home'; home.mkdir()
-    config = home / 'config.toml'; config.write_text('')
-    wt = shutil.which('wt')
-    assert wt, 'Worktrunk is required for this owning Git-removal qualification'
-    isolated = {'PATH': os.environ['PATH'], 'HOME': str(home), 'XDG_CONFIG_HOME': str(home / '.config'),
-                'XDG_CACHE_HOME': str(home / '.cache'), 'XDG_DATA_HOME': str(home / '.local/share'),
-                'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': '/dev/null'}
-    shim = tools / 'wt'
-    shim.write_text('#!' + sys.executable + '\nimport os,sys\nos.execve(' + repr(wt) + ',[' + repr(wt) +
-                   ',"--config",' + repr(str(config)) + ',*sys.argv[1:]],' + repr(isolated) + ')\n')
-    shim.chmod(0o700)
-    ENV = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH'],
-           'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': '/dev/null'}
-    no_wt = fixtures / 'no-wt'; no_wt.mkdir()
-    for name in ('python3', 'docker'):
-        (no_wt / name).symlink_to(shutil.which(name))
-    no_wt_env = {**ENV, 'PATH': str(no_wt) + ':/usr/bin:/bin:/usr/sbin:/sbin'}
-    assert not shutil.which('wt', path=no_wt_env['PATH'])
-    results = []
-    completed = False
+    before = docker('ps', '-aq', '--no-trunc').splitlines()
+    main_image = docker('image', 'inspect', '--format', '{{.Id}}', 'fight-agent-os-web')
+    rows, fixtures = [], []
+    # Already integrated fixture tips let native Worktrunk delete their refs
+    # without force; canonical runtime code still owns every operation below.
+    fixture_oid = call(['git', 'rev-parse', 'develop']).stdout.strip()
+    base = ROOT / '.runs/worktrees'
+    base.mkdir(parents=True, exist_ok=True)
     try:
-        results.append(qualify_outcomes(fixtures, evidence))
-        if outcome_only:
-            assert before == observed(), 'Docker identities changed during outcome qualification'
-            completed = True
-            (evidence / 'result.json').write_text(json.dumps({'passed': True, 'outcomes': results}, indent=2) + '\n')
-            return results
-        for cycle in (1, 2):
-            safe, checkout = fixtures / str(cycle) / 'safe', fixtures / str(cycle) / 'task'
-            safe.mkdir(parents=True)
-            git(safe, 'init', '-b', 'develop')
-            (safe / '.gitignore').write_text('.runs/\nvar/\n')
-            shutil.copyfile(ROOT / 'compose.yaml', safe / 'compose.yaml')
-            git(safe, 'add', '.gitignore', 'compose.yaml')
-            git(safe, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-m', 'Finite owning fixture')
-            call(safe, 'docker', 'version', '--format', '{{.Client.Version}}')  # non-TASK passthrough
-            call(safe, 'paths', 'var/developer-wrapper')
-            assert (safe / 'var/developer-wrapper').is_dir()
-            (safe / 'var/developer-wrapper').rmdir(); (safe / 'var').rmdir()
-            git(safe, 'worktree', 'add', '-b', f'feature/task-00548-public{cycle}', str(checkout))
-            if cycle == 1:
-                git(safe, 'branch', '--set-upstream-to=develop', f'feature/task-00548-public{cycle}')
-            # A pre-existing private parent/content is never implicitly disposable.
-            (checkout / 'var').mkdir()
-            sentinel = checkout / 'var/keep-private'
-            sentinel.write_text('fixture-owned private sentinel; lifecycle must preserve\n')
-            sentinel_bytes = sentinel.read_bytes()
-            outcome = safe / 'outcome.md'
-            outcome.write_text('Original bounded fixture cancellation and source/ref teardown authorized; not a real publication\n')
-            preparation = json.loads(call(checkout, 'prepare', '--task', TASK))
-            record = Path(preparation['record'])
-            project = preparation['project']
-            original = record.read_bytes()
-            assert json.loads(call(checkout, 'prepare', '--task', TASK)) == preparation
-            assert record.read_bytes() == original, 'repeat prepare changed binding'
-            workers = []
-            foreign = project + '-unknown'
-            foreign_snapshot = None
-            foreign_container = None
-            try:
-                # Inspection must preserve bytes, mtime, modes, directory set and lock inode.
-                snapshot = bytes_state(safe), bytes_state(checkout)
-                call(safe, 'inspect', '--task', TASK)
-                assert snapshot == (bytes_state(safe), bytes_state(checkout)), 'inspect mutated state'
-                call(checkout, 'docker', 'compose', 'up', '--detach', '--wait', 'postgres_test')
-                first = run(['docker', 'ps', '-aq', '--no-trunc', '--filter', 'label=com.docker.compose.project=' + project]).splitlines()
-                # A pre-repair stored disposition cannot retire even the first real
-                # Docker resource. These bytes are fixture setup, not a caller API.
-                original = record.read_bytes()
-                stored = json.loads(original)
-                stored.update(outcome=str(record), remove_checkout=True)
-                record.write_text(json.dumps(stored))
-                try:
-                    snapshot = bytes_state(safe), bytes_state(checkout), observed()
-                    for action in ('finish', 'retire'):
-                        call(safe, action, '--task', TASK, *(['--outcome', str(record)] if action == 'finish' else []), expected=1)
-                        assert snapshot == (bytes_state(safe), bytes_state(checkout), observed()), 'outcome refusal allowed effects'
-                finally:
-                    record.write_bytes(original)
-                call(checkout, 'docker', 'compose', 'up', '--detach', '--no-recreate', 'postgres_test')
-                assert first == run(['docker', 'ps', '-aq', '--no-trunc', '--filter', 'label=com.docker.compose.project=' + project]).splitlines()
-                call(checkout, 'docker', 'run', '--rm', '--pull=never', '--network=none', 'postgres:17-bookworm', 'sh', '-c', 'exit 7', expected=7)
-                assert first == run(['docker', 'ps', '-aq', '--no-trunc', '--filter', 'label=com.docker.compose.project=' + project]).splitlines()
-                run(['docker', 'volume', 'create', foreign])
-                foreign_snapshot = run(['docker', 'volume', 'inspect', foreign])
-                call(checkout, 'docker', 'run', '--rm', '--pull=never', '--network=none', '--mount',
-                     'type=volume,source=' + foreign + ',target=/unknown', 'postgres:17-bookworm', 'true')
-                network = run(['docker', 'network', 'ls', '-q', '--no-trunc', '--filter', 'label=com.docker.compose.project=' + project]).strip()
-                foreign_container = run(['docker', 'create', '--name', project + '-external', '--network', network,
-                    '--mount', 'type=volume,source=' + foreign + ',target=/unknown', '--tmpfs', '/var/lib/postgresql/data',
-                    'postgres:17-bookworm', 'true']).strip()
-                external_snapshot = run(['docker', 'inspect', foreign_container])
-                (evidence / f'outer-creator-{cycle}.json').write_text(external_snapshot)
-                # Worker registration is an explicit mutation; controlled live PIDs
-                # exercise consumers, not native Pi/session admission or independent QA.
-                attempt = safe / '.runs/build' / TASK / 'fixture-worker'
-                (attempt / 'dispatch.lock').mkdir(parents=True)
-                workers = [subprocess.Popen(['sleep', '120']) for _ in range(2)]
-                (attempt / 'process.json').write_text(json.dumps(dict(zip(('monitor_pid', 'pi_pid'), [p.pid for p in workers]))))
-                call(safe, 'register-worker', '--task', TASK, '--stage', 'land', '--attempt', str(attempt))
-                held = call(safe, 'retire', '--task', TASK, expected=1)
-                assert 'worker live' in held
-                assert first == run(['docker', 'ps', '-aq', '--no-trunc', '--filter', 'label=com.docker.compose.project=' + project]).splitlines()
-                exits = []
-                for child in workers:
-                    child.terminate(); exits.append(child.wait(timeout=10))
-                for name, code in zip(('exit-code', 'pi-exit-code'), exits):
-                    (attempt / name).write_text(str(code) + '\n')
-                workers = []
-                # External allocation succeeds, then the public wrapper dies before
-                # completion recording. Only this fixture's exact wrapper is killed.
-                if cycle == 1:
-                    tools = safe / '.runs/tools'; tools.mkdir()
-                    marker = tools / 'allocated'
-                    real_docker = shutil.which('docker')
-                    shim = tools / 'docker'
-                    shim.write_text('#!/usr/bin/env python3\nimport os,subprocess,sys,time\n' +
-                        'code=subprocess.call([' + repr(real_docker) + ',*sys.argv[1:]])\n' +
-                        'if sys.argv[1:2]==["create"] and code==0:\n' +
-                        ' open(' + repr(str(marker)) + ',"w").close();time.sleep(3)\n' +
-                        'sys.exit(code)\n')
-                    shim.chmod(0o700)
-                    env = {**ENV, 'PATH': str(tools) + os.pathsep + ENV['PATH']}
-                    command = [str(CLI), '--checkout', str(checkout), 'docker', 'run', '--rm', '--pull=never', '--network=none', 'postgres:17-bookworm', 'true']
-                    child = subprocess.Popen(command, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    try:
-                        deadline = time.monotonic() + 30
-                        while not marker.exists() and time.monotonic() < deadline:
-                            assert child.poll() is None, 'fixture wrapper ended before interruption'
-                            time.sleep(.05)
-                        assert marker.exists()
-                        child.send_signal(signal.SIGKILL); child.wait(timeout=10)
-                        assert json.loads(record.read_bytes())['pending'], 'lost allocation identity'
-                        time.sleep(4)
-                        # ps may retain an orphan zombie briefly; do not guess it dead.
-                        call(checkout, 'reconcile', '--task', TASK)
-                    finally:
-                        if child.poll() is None:
-                            child.terminate(); child.wait(timeout=10)
-                # A private-source hold cannot suppress independent container effects.
-                held = call(safe, 'retire', '--task', TASK, expected=1, env=no_wt_env)
-                assert foreign in held and 'unknown/shared/durable' in held
-                assert not run(['docker', 'ps', '-aq', '--filter', 'label=com.docker.compose.project=' + project]).strip()
-                assert sentinel.read_bytes() == sentinel_bytes
-                assert run(['docker', 'volume', 'inspect', foreign]) == foreign_snapshot
-                assert run(['docker', 'inspect', foreign_container]) == external_snapshot
-                assert network in held and 'consumer' in held, 'foreign network consumer not held'
-                run(['docker', 'rm', foreign_container])  # original outer creator, no force
-                foreign_container = None
-                run(['docker', 'volume', 'rm', foreign])  # original OUTER fixture owner only
-                foreign_snapshot = None
-                call(checkout, 'paths', 'var/new-output/deep', '.runs/new-logs')
-                (checkout / 'var/new-output/deep/log.txt').write_text('finite fixture output\n')
-                oid = git(checkout, 'rev-parse', 'HEAD')
-                call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1)
-                assert (checkout / 'var/resource-lifecycle.json').exists(), 'outcome path alone authorized disposal'
-                before_completion = record.read_bytes()
-                call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--published-oid', oid,
-                     '--remote-ref', f'refs/heads/feature/task-00548-public{cycle}', '--pr', 'https://github.com/foreign/foreign/pull/1', expected=1)
-                assert record.read_bytes() == before_completion, 'missing publication proof changed disposition'
-                call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--cancel-oid', oid,
-                     '--authority', 'Original finite fixture source/ref cancellation teardown')
-                if cycle == 2:
-                    (checkout / '.gitignore').write_text('.runs/\nvar/\n# unique original fixture work\n')
-                    git(checkout, 'add', '.gitignore')
-                    git(checkout, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-m', 'Unique fixture work')
-                    held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1)
-                    assert 'unqualified work' in held and checkout.exists()
-                    call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--cancel-oid', git(checkout, 'rev-parse', 'HEAD'),
-                         '--authority', 'Original bounded fixture owner explicitly cancels this exact new fixture commit')
-                held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1)
-                assert 'ignored' in held and sentinel.read_bytes() == sentinel_bytes
-                assert sentinel.parent.exists() and not (sentinel.parent / 'resource-lifecycle.json').exists()
-                assert not (checkout / 'var/new-output').exists() and not (checkout / '.runs').exists()
-                sentinel.unlink()  # original fixture's private-data owner releases its sentinel
-                held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1, env=no_wt_env)
-                assert 'Worktrunk CLI (wt) unavailable' in held and checkout.exists()
-                # Configured hooks are held, never skipped, approved or launched.
-                hook_config = safe / '.config/wt.toml'; hook_config.parent.mkdir()
-                for phase in ('pre-remove', 'post-remove'):
-                    hook_config.write_text(phase + ' = "echo must-not-run > hook-marker"\n')
-                    held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1)
-                    assert phase + ' hooks configured' in held and checkout.exists()
-                    assert not (safe / 'hook-marker').exists() and not (checkout / 'hook-marker').exists()
-                hook_config.unlink(); hook_config.parent.rmdir()
-                if cycle == 2:
-                    held = json.loads(call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1))
-                    effect = next(v for v in held['results'] if v['kind'] == 'git')
-                    assert effect['branch_outcome'] == 'retained_unmerged' and effect['worktree_absent'] and not effect['ref_absent']
-                    assert not checkout.exists() and record.exists()
-                    # Original finite fixture owner integrates its exact commit;
-                    # Worktrunk, not custom Git deletion, owns branch-only resume.
-                    git(safe, 'merge', '--ff-only', f'feature/task-00548-public{cycle}')
-                if cycle == 1:
-                    # Worktrunk can delete a ref but retain its task-specific local
-                    # configuration. Preserve the obligation across absent-ref retries.
-                    for _ in range(2):
-                        held = json.loads(call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1))
-                        effect = next(v for v in held['results'] if v['kind'] == 'git')
-                        assert effect['branch_config_remaining'] and 'branch-local configuration' in effect['reason']
-                        assert not checkout.exists() and record.exists()
-                    # Only the ORIGINAL OUTER fixture owner resolves its own exact
-                    # fixture metadata. Production lifecycle never edits Git config.
-                    git(safe, 'config', '--local', '--remove-section', f'branch.feature/task-00548-public{cycle}')
-                # Exercise the actual post-worker caller from its safe checkout.
-                (safe / 'bin').mkdir()
-                wrapper = safe / 'bin/runtime'
-                wrapper.write_text('#!/bin/sh\nexec ' + shlex.quote(str(CLI)) + ' --checkout ' + shlex.quote(str(safe)) + ' "$@"\n')
-                wrapper.chmod(0o700)
-                run(['python3', ROOT / '.pi/skills/build/scripts/cleanup-continuation.py', '--attempt', attempt,
-                     '--receipt', record, '--apply', '--finish'], cwd=safe)
-                assert not checkout.exists() and not record.exists() and not Path(str(record) + '.lock').exists()
-                assert outcome.is_file() and 'Original bounded fixture cancellation' in outcome.read_text()
-                assert not git(safe, 'for-each-ref', '--format=%(refname)', f'refs/heads/feature/task-00548-public{cycle}')
-                # Task monitor fixture evidence is outer-owned, not silently adopted.
-                shutil.rmtree(safe / '.runs/build')
-                shutil.rmtree(safe / '.runs/tools', ignore_errors=True)
-                results.append({'cycle': cycle, 'repeat_prepare_and_repair_reused': True, 'workload_exit': 7,
-                    'read_only_inspect': True, 'active_workers_held': True, 'unknown_volume_unchanged': True,
-                    'foreign_stopped_network_and_volume_consumer_unchanged': True,
-                    'interrupted_after_native_allocation': cycle == 1, 'locator_before_git_and_private_parent_preserved': True,
-                    'invalid_stored_outcome_refused_before_real_docker_effects': True,
-                    'external_outcome_survives_complete_disposal': True,
-                    'docker_retirement_without_wt': True, 'missing_wt_holds_only_git': True,
-                    'pre_and_post_remove_hooks_held_without_execution': True,
-                    'worktrunk_retained_unmerged_and_branch_only_resume': cycle == 2,
-                    'retained_branch_config_holds_record_across_absent_ref_retries': cycle == 1,
-                    'owned_runtime_source_ref_output_record_lock_remaining': 0})
-            finally:
-                for child in workers:
-                    child.terminate(); child.wait(timeout=10)
-                if record.exists():
-                    call(safe, 'retire', '--task', TASK, expected=1 if foreign_snapshot else 0)
-                if foreign_container:
-                    run(['docker', 'rm', foreign_container])
-                if foreign_snapshot:
-                    assert run(['docker', 'volume', 'inspect', foreign]) == foreign_snapshot
-                    run(['docker', 'volume', 'rm', foreign])
-        # Git-only prepare/inspect work with unavailable Docker. A filesystem
-        # deletion still needs bind visibility, so that specific effect must hold.
-        safe = fixtures / 'git-only'; safe.mkdir()
-        git(safe, 'init', '-b', 'feature/task-00548-source-only')
-        (safe / '.gitignore').write_text('.runs/\nvar/\n')
-        git(safe, 'add', '.gitignore')
-        git(safe, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-m', 'Git-only fixture')
-        tools = fixtures / 'no-docker'; tools.mkdir()
-        shim = tools / 'docker'; shim.write_text('#!/bin/sh\nexit 69\n'); shim.chmod(0o700)
-        env = {**ENV, 'PATH': str(tools) + os.pathsep + ENV['PATH']}
-        binding = json.loads(call(safe, 'prepare', '--task', TASK, '--source-only', env=env))
-        snapshot = bytes_state(safe)
-        call(safe, 'inspect', '--task', TASK, env=env)
-        assert snapshot == bytes_state(safe)
-        outcome = safe / 'outcome.md'; outcome.write_text('Original bounded Git-only fixture cancellation outcome\n')
-        oid = git(safe, 'rev-parse', 'HEAD')
-        call(safe, 'complete', '--task', TASK, '--outcome', str(outcome), '--cancel-oid', oid,
-             '--authority', 'Original finite main-checkout fixture teardown')
-        held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), env=env, expected=1)
-        assert 'owning command failed' in held and 'temporary' in held
-        held = call(safe, 'finish', '--task', TASK, '--outcome', str(outcome), expected=1)
-        assert 'main checkout is never disposable' in held
-        assert safe.exists() and git(safe, 'rev-parse', 'HEAD') == oid, 'main checkout/ref removed'
-        assert Path(binding['record']).exists() and not (safe / 'var').exists(), 'main Git hold lost its record'
-        # The original outer fixture owner retires this protected main repo only
-        # during bounded whole-fixture teardown, never through task Git cleanup.
-        results.append({'source_only_prepare_inspect_without_docker': True, 'bind_inventory_hold_specific': True,
-                        'main_checkout_and_ref_preserved': True})
-        assert before == observed(), 'Docker identity sets changed; investigate residue/concurrent activity'
-        states = {}
-        for directory in fixtures.glob('*/safe/.git/wt'):
-            states[str(directory.relative_to(fixtures))] = sorted(str(p.relative_to(directory)) for p in directory.rglob('*') if p.is_file())
-        (evidence / 'fixture-worktrunk-state.json').write_text(json.dumps(states, indent=2) + '\n')
-        completed = True
-        (evidence / 'result.json').write_text(json.dumps({'passed': True, 'cycles': results,
-            'limits': 'Real public-command owning qualification, controlled cancellation/worker identities; not independent Review/QA or live PR proof'}, indent=2) + '\n')
+        with nullcontext(tempfile.mkdtemp(prefix='task00543-compose-', dir=base)) as directory:
+            for name in ('a', 'b'):
+                checkout = Path(directory) / name
+                branch = 'feature/task-00543-qualification-' + Path(directory).name.rsplit('-', 1)[1] + '-' + name
+                call(['git', 'worktree', 'add', '-b', branch, checkout, fixture_oid])
+                project = identity(ROOT, checkout)
+                fixtures.append((checkout, project))
+                # Real wrapper config resolution, no legacy prepare/receipt/registration.
+                scoped(checkout, 'config', '--quiet')
+                docker('tag', main_image, project + '-web')
+                model = json.loads(scoped(checkout, '--profile', '*', 'config', '--format', 'json'))
+                assert all(not v.get('ports') for v in model['services'].values())
+                assert model['services']['web']['volumes'][0]['source'] == str(checkout)
+                assert model['volumes']['postgres_data']['name'] == project + '_postgres_data'
+                scoped(checkout, 'up', '--detach', '--no-build', '--wait', '--wait-timeout', '60', 'web', 'mailcatcher')
+                sql = "CREATE TABLE fixture (value text); INSERT INTO fixture VALUES ('" + name + "');"
+                scoped(checkout, 'exec', '-T', 'postgres', 'psql', '-U', 'agent_os', '-d', 'agent_os', '-c', sql)
+                scoped(checkout, 'exec', '-T', 'web', 'sh', '-c', 'printf ' + name + ' > /app/var/fixture')
+                rows.append({'project': project, 'checkout': str(checkout), 'started': True})
+            ambiguous = call([ROOT / 'bin/down', '--worktree', 'task-00543'], check=False)
+            assert ambiguous.returncode == 1 and 'Ambiguous' in ambiguous.stderr
+            # Same TASK is never enough to choose one of these actual checkouts.
+            for checkout, project in fixtures:
+                value = scoped(checkout, 'exec', '-T', 'postgres', 'psql', '-U', 'agent_os', '-d', 'agent_os', '-Atc', 'SELECT value FROM fixture')
+                marker = scoped(checkout, 'exec', '-T', 'web', 'cat', '/app/var/fixture')
+                assert value == marker == checkout.name
+            a, b = fixtures
+            orphan = docker('run', '--detach', '--name', a[1] + '-orphan',
+                            '--label', 'com.docker.compose.project=' + a[1],
+                            '--label', 'com.docker.compose.service=orphan',
+                            '--mount', 'type=volume,target=/fixture', main_image, 'sleep', '300')
+            anonymous = json.loads(docker('inspect', orphan))[0]['Mounts'][0]['Name']
+            call([ROOT / 'bin/down', '--worktree', a[0]])
+            assert not docker('volume', 'ls', '-q', '--filter', 'name=^' + anonymous + '$')
+            assert not docker('ps', '-aq', '--filter', 'label=com.docker.compose.project=' + a[1])
+            assert not docker('volume', 'ls', '-q', '--filter', 'label=com.docker.compose.project=' + a[1])
+            assert not docker('network', 'ls', '-q', '--filter', 'label=com.docker.compose.project=' + a[1])
+            assert scoped(b[0], 'exec', '-T', 'web', 'cat', '/app/var/fixture') == 'b'
+            call([ROOT / 'bin/down', '--worktree', a[0]])
+            # A second complete lifecycle reuses the stable checkout identity and
+            # starts with fresh disposable DB/storage, not a branch/receipt gate.
+            scoped(a[0], 'config', '--quiet')
+            docker('tag', main_image, a[1] + '-web')
+            scoped(a[0], 'up', '--detach', '--no-build', '--wait', '--wait-timeout', '60', 'web')
+            assert scoped(a[0], 'exec', '-T', 'postgres', 'psql', '-U', 'agent_os', '-d', 'agent_os', '-Atc',
+                          "SELECT count(*) FROM pg_tables WHERE tablename='fixture'") == '0'
+            call([ROOT / 'bin/down', '--worktree', a[0]])
+            rows.append({'two_projects_concurrent': True, 'distinct_data_and_source_mounts': True,
+                         'two_successive_lifecycles': True, 'repeated_down': True,
+                         'same_task_ambiguity_refused': True, 'anonymous_orphan_volume_removed': True})
     finally:
-        remaining = {k: sorted(v - before[k]) for k, v in observed().items()}
-        if completed and not any(remaining.values()):
-            shutil.rmtree(fixtures)
-            (evidence / 'teardown.json').write_text(json.dumps({'fixture_absent': not fixtures.exists(), 'docker_identity_sets_restored': True}) + '\n')
-        else:
-            (evidence / 'incomplete.json').write_text(json.dumps({'remaining': remaining, 'original_fixture': str(fixtures),
-                'action': 'resolve original finite fixture before another run; failed evidence retained'}, indent=2) + '\n')
-    return results
+        cleanup_failures = []
+        for checkout, project in reversed(fixtures):
+            try:
+                # Same guarded Docker-first callable as Land. Fixture ancestry is
+                # checked without inventing PR/publication proof for local probes.
+                remove(ROOT, str(checkout), fixture_oid)
+            except (Hold, OSError, subprocess.SubprocessError) as error:
+                cleanup_failures.append(str(error))
+            repeated = call([ROOT / 'bin/down', '--worktree', checkout], check=False)
+            if repeated.returncode:
+                cleanup_failures.append(repeated.stderr)
+            if not cleanup_failures:
+                # Needed results remain in this run's small report, not runtime
+                # caches, secrets/config locators or permanent fixture archives.
+                for target in (ROOT / 'var/worktrees' / project, ROOT / '.runs/compose' / project):
+                    if target.exists():
+                        assert not target.is_symlink()
+                        shutil.rmtree(target)
+        if 'directory' in locals() and not any(Path(directory).iterdir()):
+            Path(directory).rmdir()
+        after = docker('ps', '-aq', '--no-trunc').splitlines()
+        assert set(before) == set(after), 'Foreign/main container identity changed'
+        rows.append({'main_and_foreign_container_ids_preserved': len(before), 'cleanup_failures': cleanup_failures,
+                     'https_auth': 'UNVERIFIED — TASK-00553 is not delivered'})
+        (evidence / 'result.json').write_text(json.dumps(rows, indent=2) + '\n')
+        if cleanup_failures:
+            raise RuntimeError('Fixture cleanup incomplete; inspect ' + str(evidence))
+    print(json.dumps(rows, indent=2))
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--evidence', required=True, type=Path)
-    parser.add_argument('--outcome-only', action='store_true', help='Run the bounded public outcome regression only')
-    args = parser.parse_args()
-    os.umask(0o077)
-    print(json.dumps(qualify(args.evidence.resolve(), args.outcome_only)))
+    main()

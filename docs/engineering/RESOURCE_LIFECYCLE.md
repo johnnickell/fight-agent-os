@@ -1,175 +1,146 @@
 # Local task resources
 
-One task uses one runtime, one small private resource record and one lock across Work, independent Review, QA,
-repairs and Land. `bin/runtime` calls the neutral `scripts/resource_lifecycle/` capability. Allocation and retirement
-share normal callable operations; no role owns another role's internals. There is no transition ledger, per-stage
-source copy, permanent local archive, migration engine or global cleaner. These trusted local tools are not an OS
-sandbox. Native CI still calls `php scripts/build.php` directly.
+Use native Compose projects, not a second ownership ledger. Main and each registered worktree have explicit,
+independent lifecycles. These trusted operator tools are not an OS sandbox and do not confer application or
+managed Runner authority. Native session custody and independent-role Harness admission remain separate.
 
-[Worktrunk](https://worktrunk.dev/) (`wt` on machine PATH) owns Git worktree/local-branch removal, not Docker
-creation or retirement. Only that Git path requires its CLI; ordinary Pi, runtime preparation and independent
-Docker retirement do not. No Worktrunk Pi plugin, Rust/Homebrew CI dependency or automatic installation is needed.
-Herdr remains conditional on the [optional Pi workspace](../../harness/pi/README.md#native-herdr-workspace), not the
-ordinary workflow. Shared preview ingress remains Nginx; this lifecycle adds no preview proxy or routing.
-
-## Prepare once, before allocation
-
-Verify target origin/branch/base and use the operator-selected checkout. Do not create another worktree or use a
-shared developer database as fallback. Ordinary callers do not author specs, Compose overrides or resource JSON:
+## Explicit commands
 
 ```sh
-./bin/runtime prepare --task TASK-NNNNN --checkout /absolute/selected/checkout
-./bin/runtime inspect --task TASK-NNNNN
-# Existing bin/composer, bin/client, bin/build and focused wrappers remain.
+./bin/up                                 # Main checkout's full declared application stack
+./bin/down                               # Main down; retain normal persistent data
+./bin/up --worktree task-00543            # One registered worktree, disposable isolated stack
+./bin/down --worktree task-00543          # Dispose that stack, volumes and private networks
+# If several checkouts match, use the exact registered path or full branch:
+./bin/down --worktree /absolute/registered/checkout
 ```
 
-Prepare binds the selected `feature/task-NNNNN-*` checkout, creates independent private local/test keys and output
-paths, and combines reviewed `compose.yaml` with `scripts/resource_lifecycle/task.compose.yaml`. Task PostgreSQL
-uses disposable tmpfs, including development-mode data; no existing developer database is selected or imported.
-Web output/cache mounts are task-owned, not the main checkout's private `var/` state. No service starts, image
-pulls/builds, dependency installation, TLS trust enrollment, application migration or export occurs implicitly.
-Use only needed services, for example `./bin/runtime docker compose up --detach --wait web`. Normal non-TASK
-wrappers retain ordinary developer configuration. This task-local profile does not publish HTTP/HTTPS ports;
-`bin/up`'s full public/TLS readiness journey needs a deliberately reviewed serving configuration, not a silent
-fallback to shared defaults. Automatic local serving preparation remains TASK-00543's boundary.
+Git's registered-worktree list resolves selectors; never guess a directory from a TASK ID. Worktrunk operates
+on that same registration. An ambiguous selector fails before effects. Every isolated project always includes
+a deterministic hash of repository/main identity and canonical checkout path, so adding another same-task
+checkout cannot rename an existing project. Branch changes do not change a checkout's project.
 
-The record lives at `<canonical-safe>/.runs/tasks/TASK-NNNNN/runs/runtime/resources.json`, outside disposable
-source. `var/resource-lifecycle.json` is its private locator. Repeated prepare reuses the matching binding or
-returns an exact conflict. `--source-only` prepares Git-only work without Docker prerequisites or fake services;
-it cannot silently turn into a runtime later. Existing current-task v2 bindings reuse their original config,
-project and native identities, without a historical-schema conversion. Old legacy receipts remain read-only
-original evidence; qualify bounded actual effects separately, never invent old captures or recreate fixtures.
+`bin/up` without a selector always means main, even on a feature branch or when legacy `var/resource-lifecycle.json`
+exists. `bin/down` without a selector never disposes task storage. Native tooling wrappers invoked inside a linked
+checkout select that checkout's isolated project; in main they use main. From main, explicit focused operations
+can use `bin/runtime --worktree /absolute/path docker compose ...`. Library projects use their own actual test
+dependency commands rather than inventing this application's stack.
 
-Created locator/files/output leaves carry exact ownership and lifetime identity. Only newly created parents are
-eligible for empty-directory removal; pre-existing parents/contents are never adopted. Wrapper `paths` records
-new disposable output automatically, not entire existing `var/`, dependency installs or shared scratch trees.
-An interrupted preparation retains its original binding with a specific hold, never a second allocation.
+`--build-only` explicitly builds application images without starting services or enrolling TLS. Dependency
+installation, schema migrations, exports and certificate setup remain explicit owning commands. Main retains
+its `.env` and persistent PostgreSQL volume. Worktree settings have independent keys, credentials, exact origin,
+project-local PostgreSQL volume and ignored output, never imported main data. Task storage is disposable by
+definition; shared infrastructure belongs in separate projects.
 
-## Inspect and register consumers
+## Configuration and readiness
 
-`inspect` observes current binding, resources, consumers, pending work and precise holds. It does not create a
-lock, save the record, register a worker, reconcile an interruption or allocate anything. Its exit indicates
-binding/pending readiness, **not** that all previewed cleanup effects are complete. Eligible/held outcomes remain
-visible. Docker inventory errors never mean absence and do not globally prevent Git-only observation.
+Compose files, project and env files are selected explicitly, independent of ambient `COMPOSE_FILE`, project
+names or auto-loaded overrides. Ordinary main uses only `compose.yaml` and its explicit `.env`; it never loads
+`var/main-ingress.yaml` or generated task overrides. Worktree overrides/settings live in canonical ignored
+`var/worktrees/<project>/`. Source mounts/build contexts point to the registered checkout; output is separate
+per project and execution evidence stays under
+`.runs/compose/<project>/`. Tooling mounts the native Git common directory read-only at its actual absolute
+path so registered-worktree `.git` locators work inside the container; no metadata copy or write mount is added.
+Application boot never depends on execution evidence under `.runs/`.
 
-A monitored child registers its actual live monitor/Pi identities once, after its original `process.json` exists:
+Full startup enables declared application TLS and mail services, not the Composer maintenance job. Current
+application services are web tooling/HTTP, TLS gateway, FPM, development/test PostgreSQL and private Mailpit;
+future installation services are not fabricated. Expensive wrappers check host space (20 GiB reserve plus
+4 GiB allowance by default) and daemon availability; configure `FIGHT_STORAGE_RESERVE_BYTES` and
+`FIGHT_STORAGE_ALLOCATION_BYTES` explicitly. Existing service CPU/memory/PID limits remain in Compose. No new
+aggregate quota/ownership system or global prune is introduced.
 
-```sh
-./bin/runtime register-worker --task TASK-NNNNN --stage work --attempt /absolute/original/attempt
-```
+Ordinary main startup reuses [local HTTPS](LOCAL_HTTPS.md)'s explicit `.env`, independent keys and existing
+localhost leaf/key preflight. It starts the full declared stack, validates/reloads Nginx and verifies root/CSRF
+readiness at **https://localhost:18443** before printing that URL. It does not call shared ingress, change trust,
+generate certificates, migrate data or select a proxy based on stale configuration. Main down retains persistent
+data. The earlier TASK-00543 main-up failure was a regression, not an acceptable supplier prerequisite.
 
-Use the actual `work`, `review`, `qa` or `land` stage. Build passes the original attempt; each child registers
-before using the runtime. Land's attempt is retained for the post-exit continuation. Registration is explicit
-mutation, not an option on inspection. Preserve native session-file device/inode/birthtime, ancestry/custody and
-independent-role admission; these resource records do not replace or weaken the native Harness contracts.
+[TASK-00553](../../planning/tasks/00553-TASK.md)'s shared supplier has independent Review and QA acceptance
+on the recorded candidate; publication and cleanup remain separate. Follow [shared local HTTPS operations](LOCAL_INGRESS.md) for explicit
+`bin/ingress setup/up/down/status/remove` and human actual-name certificate setup through `bin/https`.
+`bin/up --worktree SELECTOR` requires that separately operated supplier. `bin/up --shared-ingress` explicitly
+opts main into the same topology; ordinary main up never does. The optional existing-Herd mode in that runbook
+retains standard browser origins while publishing only a selected high supplier HTTPS port; it never makes
+application startup install/reload/stop Herd. Both verified supplier transport and canonical front-door probes
+must pass before a ready URL is printed. Only each application's TLS gateway joins
+`fight-local-ingress`, using verified HTTPS upstream on 8443; inherited publishing is stripped and private
+services remain private. Shared origins are `https://fight-agent-os.localhost` and `https://<project>.localhost`.
+No custom DNS, trust enrollment, leaf generation or shared infrastructure startup is implicit.
 
-Wrappers capture native generations/configuration and original mounts before removing creators. Completed one-offs
-and proven-disposable unused volumes retire immediately through the shared retirement capability. A nonzero
-workload keeps its exit even if cleanup is held, with that separate hold reported. Builds use one task-owned
-native builder/cache. Explicitly install `moby/buildkit:buildx-stable-1` if missing; builders reuse its already-local
-immutable ID, not a fresh shared mutable-tag pull. Host admission checks reserve/allowance and daemon availability,
-never global-prunes. Commands have a finite 1,800-second wait and 16-container admission bound, not a residue quota.
-
-## Failure, cancellation and resume
-
-Inspect the single pending operation and original CLI identity. Do not infer remote execution ended with its CLI,
-signal reused/unknown PIDs, repeat setup or erase an uncertain outcome. After the original CLI ends:
-
-```sh
-./bin/runtime reconcile --task TASK-NNNNN
-```
-
-Reconciliation captures surviving original creators, without allocation or an invented success result. An uncertain
-remote exec remains held until its original affected target ends. Authorized native retirement can stop that exact
-disposable target; then reconcile and reuse the same binding. If CLI identity was never captured, retain that
-specific uncertainty rather than guessing. Keep diagnostics only while an active issue or independent role needs
-them. Never retry an unchanged hold indefinitely or reset consumed repairs.
+The application gateway owns direct TLS authority and canonical FastCGI Host/scheme/port; arbitrary forwarded
+headers stay stripped. The supplier must qualify end-to-end TLS, exact origin, secure cookies, available auth
+flows and route removal. Config scaffolding is NOT delivery. Task up fails clearly without the supplier, never
+falls back to main, and prints a usable URL only after verified HTTPS root/CSRF readiness. Task down and repeated
+teardown work without ingress. Do not claim browser-ready from Compose health alone.
 
 ## Retire runtime, then finish the task
 
-Routine owned disposal is standing authority on success, failure and cancellation. From the canonical safe checkout:
+All roles and Worktrunk use the SAME `bin/down --worktree SELECTOR`. It calls Compose
+`down --volumes --remove-orphans`, then removes remaining native project-labeled resources and task-specific
+image tags, plus a dedicated reserved project builder/backing volume if created. Native removal refuses foreign
+volume/network consumers. It never removes a shared immutable image ID to force task-tag cleanup. Real command
+failures and remaining resources produce nonzero/incomplete results; inventory failure is not absence.
+
+Ordinary builds use Docker's shared builder/cache; downloaded base images and shared build caches are NOT
+task-exclusive. Separate operator maintenance can inspect `docker system df -v` and `docker buildx du`, then use
+an explicitly selected builder's `docker buildx prune --builder NAME` after reviewing shared consumers and cache
+policy. This is never invoked by task down/Land. Do not run machine-wide prune/reset or prune foreign projects.
+
+Task down removes reserved disposable runtime output. Keep active role evidence only while consumed, then retire
+its exact `.runs/compose/<project>/` evidence/cache after outcomes reach the existing TASK/PR. The small
+`locator.json` and secret-free `down.json` survive outside removable source to support interrupted removal and
+harmless repeated teardown. They locate Compose configuration; they are not resource inventories or admission
+receipts. After successful source retirement, delete the exact generated `var/worktrees/<project>/` directory.
+No PID/worker/branch/receipt prerequisite governs explicit disposable Docker teardown. Never signal sessions to
+make down succeed. Old `.runs/.../resources.json` remains historical evidence until its consumers finish, not
+an active lifecycle or compatibility system.
+
+`.config/wt.toml` supplies a pre-remove hook that invokes this same command from the canonical main checkout,
+before source/config disappears. Routine owned cleanup includes unattended execution of this exact reviewed
+project hook; do not manufacture a human-approval hold. Land and qualification fixtures share
+`scripts/resource_lifecycle/worktrunk.py`'s guarded `remove` callable. It invokes public `bin/down` FIRST, then
+qualifies source/ref removal. Immediately before native removal it inventories complete effective pre/post-remove
+hooks in canonical AND target contexts, including accumulated system/user/project sources. Only absent hooks or
+project `pre-remove.runtime` with the exact template
+`{{ primary_worktree_path }}/bin/down --worktree {{ worktree_path }}` are admitted. User hooks (even identical),
+unknown names/phases or changed templates refuse source removal without exposing personal command text.
+The installed Worktrunk must support `--foreground --format=json --yes`; `--yes` supplies consent for that
+invocation only. It never adds/clears saved approvals, changes global/user config, hides hooks or skips them.
+Main/current source, unique/dirty work, needed private ignored data, actual source consumers and filesystem
+protections remain independent holds. A source hold cannot block Docker teardown.
+
+After independent acceptance, final delivery verification and durable outcomes, Land may call:
 
 ```sh
-./bin/runtime retire --task TASK-NNNNN
-# bin/down uses exactly this operation for its bound task (or explicit --receipt).
+./bin/runtime finish --worktree /absolute/checkout --outcome /absolute/surviving/TASK.md \
+  --published-oid FULL_OID --pr https://github.com/OWNER/REPO/pull/NUMBER
 ```
 
-Retire removes independently eligible owned runtime resources, retaining source and evidence needed by later
-roles. It is not final completion/publication. Containers retire without `-v`, independently of source-copy,
-ignored-file, LINK or ACL eligibility. Unknown/durable/shared volumes and images remain specifically held. Volumes
-need original disposable creation and zero current/stopped mounts; networks need original ownership and no
-endpoints/configured consumers. Images need no foreign references or consumers; dedicated builders/cache use
-native `docker buildx rm`, never prune. Active workers hold affected resources. Per-effect Docker identity checks
-apply only where needed; unavailable original bind inventory specifically holds affected filesystem/source
-removal, not unrelated effects. Main/current checkouts, unique work and real user protections remain protected.
+Finish repeats task down, checks the exact live publication/ref and clean source/private data, then delegates
+non-force Git removal to the shared guarded callable's `wt remove --foreground --format=json --yes` with closed
+stdin, after the effective-hook checks above. Known-hook cleanup does not prompt or persist trust; unqualified
+hooks need their owner's separate decision, never blanket consent. Clean owned qualification fixtures use the
+same callable with exact OID/ancestor proof instead of fabricated PR proof. Genuine parent mount use and
+host readers/writers hold source; parent-only exposure and cached read-only Docker file-sharing handles require
+positive native consumer qualification, not shared-service/VM shutdown. Never force/reap, bypass hooks, delete
+refs/config by custom fallback, remove the main checkout or stop shared VMs. Worktrunk may retain an unmerged
+branch or metadata: inspect actual path/registration/ref/config and report partial Git outcomes separately.
+If source is already gone, repeat down through its locator, then let Worktrunk handle the exact surviving branch
+under Land's source/delivery qualification. If source, ref and registration are all absent, the same guarded
+callable completes public down and retires the remaining locator/config without requiring publication again.
+Surviving or changed source/refs still require the existing source/delivery checks. Do not recreate source or
+publish again for cleanup.
 
-After required acceptance/delivery or authorized cancellation outcomes reach the existing TASK/PR, record the
-validated disposition through a typed command, not JSON editing:
-
-```sh
-./bin/runtime complete --task TASK-NNNNN --outcome /absolute/existing/TASK-or-durable-outcome \
-  --published-oid FULL_OID --remote-ref refs/heads/feature/task-NNNNN-slug --pr EXACT_PR_URL
-# For an actually authorized cancellation instead, replace publication options with:
-# --cancel-oid FULL_OID --authority 'Original explicit source/ref cancellation authority'
-./bin/runtime finish --task TASK-NNNNN --outcome /absolute/existing/TASK-or-durable-outcome
-```
-
-An outcome path alone grants no source-disposal authority. Completion checks the exact local tip and live origin-owned
-GitHub PR/base/head. Open non-draft publication additionally requires the exact remote ref; merged publication
-requires positive merge evidence and local intended-base inclusion, never just a missing remote branch. Git disposal
-refreshes that proof. Acceptance, required delivery checks and cancellation authority remain Land/operator-owned
-under [landing standards](LANDING.md#qualify-local-git-cleanup); this command cannot supply independent acceptance.
-The outcome must survive disposal: use the nondisposable safe checkout's existing TASK/outcome, never the selected
-disposable checkout, temporary paths or record/lock bookkeeping (including aliases). Completion and each cleanup
-attempt revalidate this before effects, including stored dispositions and partial retries; refusal changes no
-resource or disposition. Unknown/dirty/private data, changed branch/tip, current workers and unavailable
-consumer visibility hold only their affected effects. Never force-remove a worktree/ref or delete a remote ref.
-
-After these project-specific checks, finish invokes `wt remove --foreground --format=json` with the exact target
-from the safe checkout, closed stdin and no force, reap, approval or hook-skipping options. It verifies JSON **and**
-actual path/ref/registration absence. Worktrunk can remove a clean worktree but retain its unmerged branch with exit
-0; that is a partial Git hold, not success. Retry observes the surviving exact ref and delegates branch-only removal
-to Worktrunk. Cancellation/publication authority does not override Worktrunk integration checks; the operator owns
-any genuine integration decision. There is no custom Git deletion fallback or implicit checkout/branch switch.
-The selected primary checkout/current branch remains a reported hold, including its resource record, not a claim
-of complete Git retirement. Missing/unsupported `wt` holds Git only; eligible Docker effects still run first.
-Worktrunk may also leave the deleted branch's local Git configuration. That is a specific metadata hold retaining
-the record, including on retries after ref absence; the operator owns its exact disposition. This command neither
-edits Git configuration nor treats ref deletion as proof that all branch metadata is retired.
-
-Automatic finish holds when pre-remove or post-remove hooks are configured in either relevant checkout, including
-already approved/user hooks: arbitrary shell and detached post-hooks cannot be qualified by this command. The
-operator owns attended hook execution/approval and its outcomes; the tool never displays personal hook templates,
-approves commands or silently skips hooks. Resolve that precise hold before retrying the remaining Git effect.
-Worktrunk itself deletes ignored files by default, so the project's ignored/private-content guard is mandatory.
-Its repository-shared `<git-common-dir>/wt/` caches/logs and Worktrunk history/default-branch hints in local Git
-config are not task-owned output. These differ from the exact task branch configuration hold above. Foreground hook-free
-qualification left integration caches, not removal logs; do not clear shared state or claim universal zero residue.
-
-Finish retires owned locator/output **before** ignored-file/worktree eligibility, then eligible isolated checkout/ref,
-and finally the record/lock and empty newly created parents. Pre-existing parent contents survive. Filesystem,
-Git and Docker are separate effects: partial failure is recorded, not transactional rollback or exactly-once
-cleanup. Actual postconditions, not an exit alone, determine removed/absent/held/failed counts. No routine local
-archive or cleanup-certification commit loop. Temporary role evidence created outside wrapper-owned paths stays
-its original creator's teardown obligation; keep it while consumed, then retire it under the same ownership rules.
-Do not bulk-classify pre-existing evidence, private trees or another task's history to make counts pass.
-
-If original Land is itself a consumer, Build observes its original monitor/Pi exits and PID absence, then calls
-`scripts/cleanup-continuation.py --attempt ORIGINAL --receipt SAME --apply --finish` beside the Build skill from
-the safe checkout. It reuses the public commands, never republishes or changes source. Keep active coordinator
-and independent consumers protected. No shared-service/VM shutdown or ACL/flag stripping; only genuine original
-bounded restore proof permits restoring a probe's protection.
+If Land's own session consumes source, Build observes its real exit before source retirement from the safe
+checkout. Docker down itself does not need that exit. There is no post-worker receipt/PID cleanup helper. The
+existing Build ledger/handoff carries remaining effects and native locators, not another resource record.
 
 ## Direct qualification
 
-Run `python3 scripts/check_resource_lifecycle.py --evidence /absolute/new/task-run`. It exercises public owning
-commands against finite real Git/Docker fixtures and inspects actual absence/protected state. Fixtures have bounded
-teardown even on failure; an unresolved original fixture is retained only for its active issue, never replaced
-blindly. Worktrunk receives a fixture-only HOME/config/approvals and repository; Docker retains its original local
-context. Qualify ignored/private protection, missing CLI, hook holds, retained unmerged branches, branch-only resume,
-retained task-branch configuration and absent-ref retries, invalid checkout/temporary/bookkeeping outcomes and
-aliases without effects, stored-disposition/partial-retry validation, surviving safe-checkout outcomes, main/current
-holds and fixture-local cache/log outcomes. Retire only fixture-local state; never clear shared caches.
-Removed giant qualification matrices have no current callers; behavior-focused command qualification replaces
-their obsolete proof/JSON mechanisms. Native session-lifetime/role tests remain required. These checks
-are infrastructure evidence, not product-suite tests, independent Review/QA or live publication acceptance.
+`python3 -B scripts/check_resource_lifecycle.py --evidence .runs/tasks/TASK-00543/runs/NEW_RUN` exercises real
+registered same-task fixture worktrees/branches, Compose, PostgreSQL, isolated output, repeated teardown and the
+SAME guarded native Worktrunk removal used by Land. Fixture tips start at integrated `develop` so native branch
+removal needs no force. It requires the existing declared main web image tag and preserves main/foreign services. It does NOT
+supply full-stack HTTPS/auth/route acceptance before TASK-00553. Record all limits, actual postconditions and
+cleanup failures. Validate infrastructure directly, not with product tests of wrappers, Docker or quality tools.
