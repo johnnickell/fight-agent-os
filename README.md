@@ -200,7 +200,9 @@ owns eligible Git worktree/local-branch removal, not Docker lifecycle or ordinar
 [explicit main/worktree commands](docs/engineering/RESOURCE_LIFECYCLE.md), reusing one native project across roles:
 `bin/up` / `bin/down` operate main and retain its persistent data; `bin/up --worktree SELECTOR` /
 `bin/down --worktree SELECTOR` operate a registered checkout's disposable isolated stack. No TASK receipt,
-worker/PID or stale feature-branch gate. Worktrunk/Land use the same Docker-first teardown.
+worker/PID or stale feature-branch gate. Worktrunk/Land use the same Docker-first teardown and guarded native
+removal. The exact reviewed repository down hook runs unattended after effective-hook inspection, without
+persistent trust; unknown/user/changed hooks retain source, not Docker resources.
 
 Ordinary `bin/up` uses the main checkout's direct TLS stack at **https://localhost:18443**, with the explicit
 `.env`/certificate prerequisites below. It does not require shared ingress or load generated task/main proxy

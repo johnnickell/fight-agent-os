@@ -49,7 +49,8 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
   completed, failed or cancelled tasks must not accumulate temporary worktrees, runtimes, fixtures, logs, sessions
   or cleanup archives. Keep evidence only while needed and record final outcomes in the existing TASK/PR. Preserve
   unique work, active consumers, unknown/shared/durable data and genuine protections; a narrow hold cannot block
-  independent effects
+  independent effects. The shared guarded Worktrunk remover handles the exact reviewed repository down hook
+  unattended; do not request routine user approval or persist trust. Unknown/user/changed hooks hold source only
 - Preserve source projects and unrelated local work. Commit and publish only within the authorized scope
 - Keep application-generated files and local runtime state under ignored `var/`; application runtime must never depend on `.runs/`
 - Keep all execution scratch under ignored `.runs/` subfolders. Never put worktrees directly in `.runs/`

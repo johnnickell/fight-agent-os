@@ -98,7 +98,10 @@ Inspect native Git/Docker absence and protected/shared state, not a cleanup invo
 Record necessary outcomes in the existing TASK/PR, then retire eligible temporary runtimes, worktrees/refs,
 fixtures/logs/sessions and cleanup's own files through the shared procedure. Do not retain them automatically.
 All Docker retirement uses `bin/down --worktree SELECTOR`, including Worktrunk's pre-remove hook; Docker
-precedes source/config deletion and needs no worker/PID receipt. If original Land itself consumes source,
+precedes source/config deletion and needs no worker/PID receipt. The same guarded native remover qualifies
+canonical/target effective hooks and removes owned fixtures/worktrees unattended for the exact reviewed project
+down hook, without persistent approval. Unknown/user/changed hooks hold source only, not Docker teardown;
+do not return a routine known-hook approval request to the operator. If original Land itself consumes source,
 observe its actual exit, then continue source-qualified Worktrunk cleanup from the canonical safe checkout.
 Use a fresh cleanup-only Land worker when required, with the same pinned model/ledger and ordinary trusted
 stage entry. No publication, new runtime or tracked edits in that continuation. Preserve active coordinator,

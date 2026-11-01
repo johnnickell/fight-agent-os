@@ -15,6 +15,8 @@ import tempfile
 
 sys.dont_write_bytecode = True
 from resource_lifecycle.preparation import identity
+from resource_lifecycle.worktrunk import remove
+from resource_lifecycle.resources import Hold
 
 ROOT = Path(__file__).resolve().parent.parent
 CLI = ROOT / 'bin/runtime'
@@ -45,8 +47,11 @@ def main():
         raise ValueError('Evidence must remain in ignored .runs')
     evidence.mkdir(parents=True, exist_ok=False)
     before = docker('ps', '-aq', '--no-trunc').splitlines()
-    main_image = docker('inspect', '--format', '{{.Image}}', 'fight-agent-os-web-1')
+    main_image = docker('image', 'inspect', '--format', '{{.Id}}', 'fight-agent-os-web')
     rows, fixtures = [], []
+    # Already integrated fixture tips let native Worktrunk delete their refs
+    # without force; canonical runtime code still owns every operation below.
+    fixture_oid = call(['git', 'rev-parse', 'develop']).stdout.strip()
     base = ROOT / '.runs/worktrees'
     base.mkdir(parents=True, exist_ok=True)
     try:
@@ -54,7 +59,7 @@ def main():
             for name in ('a', 'b'):
                 checkout = Path(directory) / name
                 branch = 'feature/task-00543-qualification-' + Path(directory).name.rsplit('-', 1)[1] + '-' + name
-                call(['git', 'worktree', 'add', '-b', branch, checkout, 'HEAD'])
+                call(['git', 'worktree', 'add', '-b', branch, checkout, fixture_oid])
                 project = identity(ROOT, checkout)
                 fixtures.append((checkout, project))
                 # Real wrapper config resolution, no legacy prepare/receipt/registration.
@@ -103,18 +108,12 @@ def main():
     finally:
         cleanup_failures = []
         for checkout, project in reversed(fixtures):
-            # Use exact locator even if a failed fixture context removed source.
-            result = call([ROOT / 'bin/down', '--worktree', checkout], check=False)
-            if result.returncode:
-                cleanup_failures.append(result.stderr)
-            if checkout.exists():
-                # Fixture-only branches have no unique commits/private data.
-                # Docker always precedes native Worktrunk source/ref removal.
-                native = call(['wt', 'remove', '--foreground', '--format=json', checkout], cwd=checkout, check=False)
-                if native.returncode:
-                    cleanup_failures.append(native.stderr)
-                if checkout.exists() or str(checkout) in call(['git', 'worktree', 'list', '--porcelain']).stdout:
-                    cleanup_failures.append('Worktrunk retained fixture source/registration: ' + str(checkout))
+            try:
+                # Same guarded Docker-first callable as Land. Fixture ancestry is
+                # checked without inventing PR/publication proof for local probes.
+                remove(ROOT, str(checkout), fixture_oid)
+            except (Hold, OSError, subprocess.SubprocessError) as error:
+                cleanup_failures.append(str(error))
             repeated = call([ROOT / 'bin/down', '--worktree', checkout], check=False)
             if repeated.returncode:
                 cleanup_failures.append(repeated.stderr)

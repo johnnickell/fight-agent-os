@@ -92,10 +92,18 @@ make down succeed. Old `.runs/.../resources.json` remains historical evidence un
 an active lifecycle or compatibility system.
 
 `.config/wt.toml` supplies a pre-remove hook that invokes this same command from the canonical main checkout,
-before source/config disappears. Approve that hook explicitly through Worktrunk, never automatically with
-`--yes`; declining/skipping project hooks does not supply Docker teardown. Land invokes down itself FIRST, then
-qualifies source/ref removal. Main/current source, unique/dirty work, needed private ignored data, actual source
-consumers and filesystem protections remain independent holds. A source hold cannot block Docker teardown.
+before source/config disappears. Routine owned cleanup includes unattended execution of this exact reviewed
+project hook; do not manufacture a human-approval hold. Land and qualification fixtures share
+`scripts/resource_lifecycle/worktrunk.py`'s guarded `remove` callable. It invokes public `bin/down` FIRST, then
+qualifies source/ref removal. Immediately before native removal it inventories complete effective pre/post-remove
+hooks in canonical AND target contexts, including accumulated system/user/project sources. Only absent hooks or
+project `pre-remove.runtime` with the exact template
+`{{ primary_worktree_path }}/bin/down --worktree {{ worktree_path }}` are admitted. User hooks (even identical),
+unknown names/phases or changed templates refuse source removal without exposing personal command text.
+The installed Worktrunk must support `--foreground --format=json --yes`; `--yes` supplies consent for that
+invocation only. It never adds/clears saved approvals, changes global/user config, hides hooks or skips them.
+Main/current source, unique/dirty work, needed private ignored data, actual source consumers and filesystem
+protections remain independent holds. A source hold cannot block Docker teardown.
 
 After independent acceptance, final delivery verification and durable outcomes, Land may call:
 
@@ -105,8 +113,12 @@ After independent acceptance, final delivery verification and durable outcomes, 
 ```
 
 Finish repeats task down, checks the exact live publication/ref and clean source/private data, then delegates
-non-force Git removal to `wt remove --foreground --format=json` with closed stdin. Only the known project down
-hook is admitted unattended; other configured hooks need attended execution. Never approve/skip hooks, delete
+non-force Git removal to the shared guarded callable's `wt remove --foreground --format=json --yes` with closed
+stdin, after the effective-hook checks above. Known-hook cleanup does not prompt or persist trust; unqualified
+hooks need their owner's separate decision, never blanket consent. Clean owned qualification fixtures use the
+same callable with exact OID/ancestor proof instead of fabricated PR proof. Genuine parent mount use and
+host readers/writers hold source; parent-only exposure and cached read-only Docker file-sharing handles require
+positive native consumer qualification, not shared-service/VM shutdown. Never force/reap, bypass hooks, delete
 refs/config by custom fallback, remove the main checkout or stop shared VMs. Worktrunk may retain an unmerged
 branch or metadata: inspect actual path/registration/ref/config and report partial Git outcomes separately.
 If source is already gone, repeat down through its locator, then let Worktrunk handle the exact surviving branch
@@ -119,7 +131,8 @@ existing Build ledger/handoff carries remaining effects and native locators, not
 ## Direct qualification
 
 `python3 -B scripts/check_resource_lifecycle.py --evidence .runs/tasks/TASK-00543/runs/NEW_RUN` exercises real
-registered same-task fixture worktrees/branches, Compose, PostgreSQL, isolated output, repeated teardown and native
-Worktrunk removal. It requires an existing main web image and preserves main/foreign services. It does NOT
+registered same-task fixture worktrees/branches, Compose, PostgreSQL, isolated output, repeated teardown and the
+SAME guarded native Worktrunk removal used by Land. Fixture tips start at integrated `develop` so native branch
+removal needs no force. It requires the existing declared main web image tag and preserves main/foreign services. It does NOT
 supply full-stack HTTPS/auth/route acceptance before TASK-00553. Record all limits, actual postconditions and
 cleanup failures. Validate infrastructure directly, not with product tests of wrappers, Docker or quality tools.
