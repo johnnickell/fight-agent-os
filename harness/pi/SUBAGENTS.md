@@ -27,11 +27,40 @@ window, one-second sampling and bounded text; this is activity observation, not 
   adaptation before SDK completion can be presented as a distinct upstream status.
 - Full local build and independent Review/visual QA. Mock-session checks do not supply terminal acceptance.
 
+## Installed diagnostic — not integration acceptance
+
+The 2026-11-01 continuation privately installed upstream `0.22.1`, npm source
+`fc089c4b7ab0f1185453b2e53027997c1f637e38`, with installed Pi `1.4.0` (tested identity, not a Pi pin).
+Pi loaded upstream's workflow CLI flag. A native PTY startup with the packed Fight package produced a real
+upstream RPC-start record without `rootSessionId`; the bridge refuses that route. The deliberately
+credential-free profile then reported `Provider is not configured: openai-codex`. This is startup/unavailability
+evidence only, not successful foreground/background/resume execution or an actual Herdr upper-right capture.
+The operator's configured provider was not diagnosed as unavailable by this private-profile result.
+
+Upstream `src/index.ts`'s `session_shutdown` handler aborts agents and disposes child sessions, including on
+Pi reload. Closing Fight observation alone is passive; do not promise that upstream agents survive reloading
+the entire extension runtime. Supported role packaging, early/final-output correctness, stable record identity,
+all launch-route ownership and truthful SDK outcome labels still need implementation/qualification. Upstream's
+`spawnTopLevel` strips caller-supplied root identity; supplying a guessed root is not a remedy.
+
+The full local gate is blocked before phases by unavailable TASK-00553 shared ingress and the selected branch's
+older resource wrapper. No global rollout, supplier startup, legacy ledger or unfinished-branch merge was made.
+Exact commands, captures and cleanup are in TASK-00554's canonical ignored Work handoff.
+
 ## Removal inventory
 
-The native observation extension, custodian, registered-child selection and renderer are reused. No second pane
-renderer or session engine was added. `run-stage.py` and its ancestry helpers still serve Work/Review/QA/Land;
-their migration is not part of this first bridge and TASK-00544 continues to depend on that route. They are not
-dead code. Recheck callers after integration and remove any actually superseded paths and obsolete tests/docs.
+No executable replacement/deletion occurred in the continuation. Replacement verification has not passed;
+retaining a candidate temporarily does not establish that every existing module is live.
+
+| Path | Surviving caller or disposition |
+|---|---|
+| `src/native-observation-extension.ts`, `src/observation/native-observation.mjs`, `custodian.mjs`, `custody.mjs` | Package manifest loads the native extension; it starts passive custody. Both SDK bridge and separate Build monitor reuse it |
+| `src/observation/subagents.mjs` | Native extension's initial upstream bridge; owning `tests/subagents.test.mjs`; not a second execution engine |
+| `src/observation/run-stage.py`, `automatic_observation.py`, `observation.py`, process/file birth helpers | `.pi/skills/build/scripts/run-stage.py` delegates to the selected package monitor. Work/Review/QA/Land and TASK-00544 still depend on this distinct descendant-process route; retain it |
+| `src/workspace/registered-children.mjs`, `src/herdr/activity.mjs` | Live Herdr activity companion and verified log-selection metadata; reused rather than replaced |
+| `src/workspace/concurrent-children.mjs`, `child-observation.mjs` | Only their owning tests reference these explicit-socket readers in the current source search; no production caller found. Removal candidates, not justified live-monitor dependencies; retire with obsolete tests/docs after replacement verification |
+
+Recheck callers on the eventual replacement candidate. Do not delete the separate Build route to meet a deletion
+count, or add a compatibility/session engine to keep an obsolete reader alive.
 
 MCP client options are deferred in [TASK-00555](../../planning/tasks/00555-TASK.md).
