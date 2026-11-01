@@ -6,7 +6,7 @@ import shutil
 import subprocess
 
 from .preparation import compose, environment, ingress, output_path, prepare, resolve
-from .resources import Hold, native_ids, query, registrations, require, run, text
+from .resources import Hold, native_ids, require, run, text
 
 
 def storage_admit(root):
@@ -104,13 +104,16 @@ def down(root, selector=None):
         return 0
     state = safe / 'var/worktrees' / project
     cleanup = state / 'down.json'
+    from .resources import write_private
+    require(not state.is_symlink(), 'Runtime state alias refused')
+    if not (state / 'locator.json').exists():
+        write_private(state / 'locator.json', json.dumps({**entry, 'project': project}) + '\n')
     if not cleanup.exists():
         # No prior startup: native project identity is deterministic. An empty
         # Compose model still removes labeled orphans; label sweep covers volumes.
         config = '{"services": {}}'
         require(not state.is_symlink(), 'Runtime state alias refused')
         state.mkdir(parents=True, exist_ok=True, mode=0o700)
-        from .resources import write_private
         write_private(cleanup, config)
     args = ['docker', 'compose', '--project-name', project, '--project-directory', str(safe),
             '--env-file', '/dev/null', '--file', str(cleanup), 'down', '--volumes', '--remove-orphans']
@@ -175,42 +178,13 @@ def down(root, selector=None):
 
 def finish(root, selector, outcome, published_oid, pr):
     """Docker first, then guarded Worktrunk source/ref removal after Land verification"""
-    safe, checkout, project, entry = resolve(root, selector)
-    require(root == safe, 'Run source removal from canonical safe checkout')
-    if down(root, selector):
-        return 1
-    require(checkout != safe, 'Main/current checkout is never disposable; Docker teardown completed')
-    require(Path(outcome).is_file() and checkout not in Path(outcome).resolve().parents,
-            'Record final outcome outside disposable source before Git removal')
-    ref = 'refs/heads/' + entry['branch']
-    oid = text(['git', 'rev-parse', ref], safe)
-    require(oid == published_oid, 'Exact published source OID required; unique work retained')
-    from .publication import published
-    published({'safe': str(safe), 'ref': ref}, oid, ref, pr)
-    require(not text(['git', 'status', '--porcelain', '--untracked-files=all'], checkout), 'Dirty/unique source retained')
-    require(not text(['git', 'ls-files', '--others', '--ignored', '--exclude-standard'], checkout),
-            'Ignored/private output remains; dispose known temporary output explicitly after consumers end')
-    from .source import check
-    check(checkout, safe)
-    # Worktrunk owns hooks/integration/non-force removal. Attended user hooks may
-    # invoke the SAME down command; no arbitrary hook approval or bypass here.
-    for directory in (safe, checkout):
-        for phase in ('pre-remove', 'post-remove'):
-            hooks = query(['wt', 'hook', 'show', phase, '--format=json'], directory)
-            require(all(v.get('source') == 'project' and v.get('name') == 'runtime' and
-                        v.get('template') == '{{ primary_worktree_path }}/bin/down --worktree {{ worktree_path }}'
-                        for v in hooks),
-                    'Other Worktrunk hooks require attended execution; Docker teardown already completed')
-    # Do not infer source safety from Docker teardown. Actual cwd/open-file and
-    # filesystem checks remain required under Land before this non-force command.
-    require(text(['git', 'rev-parse', ref], safe) == oid, 'Source ref changed before removal')
-    result = subprocess.run(['wt', 'remove', '--foreground', '--format=json', str(checkout)], cwd=safe,
-                            stdin=subprocess.DEVNULL, text=True, timeout=120)
-    require(result.returncode == 0, 'Worktrunk removal failed; inspect partial effects without force')
-    remaining = text(['git', 'for-each-ref', '--format=%(refname)', ref], safe)
-    require(not checkout.exists() and not remaining and
-            str(checkout) not in [v['path'] for v in registrations(safe)],
-            'Worktrunk retained source/ref/registration; inspect actual outcome, never force')
-    # Only generated locator/config is ours. No archive or dependency/source copy.
-    shutil.rmtree(safe / 'var/worktrees' / project)
-    return 0
+    from .worktrunk import remove
+
+    def delivery(safe, checkout, ref):
+        require(Path(outcome).is_file() and checkout not in Path(outcome).resolve().parents,
+                'Record final outcome outside disposable source before Git removal')
+        require(ref, 'Delivered branch removal requires an exact published ref')
+        from .publication import published
+        published({'safe': str(safe), 'ref': ref}, published_oid, ref, pr)
+
+    return remove(root, selector, published_oid, delivery)

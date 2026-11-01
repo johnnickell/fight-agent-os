@@ -18,7 +18,9 @@ target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_S
 3. Follow the **explicit [Compose resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md)**.
    `bin/up`/`bin/down` select main; `--worktree SELECTOR` selects a registered disposable project. Reuse that
    project across roles/repairs. No resource receipt, branch/PID or worker-registration gate. Keep active-role
-   evidence, not permanent source copies; source/Git holds cannot suppress explicit Docker teardown.
+   evidence, not permanent source copies; source/Git holds cannot suppress explicit Docker teardown. Use the
+   shared guarded Worktrunk remover for owned fixtures too: the exact repository down hook runs unattended
+   after effective-hook inspection, without persistent approval. Unknown/user/changed hooks retain source only.
 4. Implement only accepted behavior. Reproduce confirmed bugs with a failing owning regression before repair.
    Test owned product behavior; qualify infrastructure with its own tools, not application tests of tooling.
    Use [quality guidance](../../../docs/engineering/QUALITY.md) as needed and

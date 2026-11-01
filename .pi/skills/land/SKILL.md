@@ -31,7 +31,11 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    Routine owned cleanup is already authorized. Invoke `bin/down --worktree SELECTOR` FIRST: task DB/storage
    is disposable; native Compose/Docker metadata governs teardown without worker/PID/receipt gates. Preserve
    main data and foreign/shared projects. Then separately qualify source/ref/private data, consumers and genuine
-   filesystem protections before Worktrunk removal. Never force, prune, strip protections or stop a shared VM.
+   filesystem protections before Worktrunk removal. Use the shared guarded native remover: it rechecks effective
+   canonical/target hooks and uses per-invocation noninteractive consent only for absent hooks or the exact
+   reviewed repository down hook. Do not ask the user for that routine cleanup; unknown/user/changed hooks
+   refuse source removal without blocking Docker teardown. Never persist approvals, bypass hooks, force, prune,
+   strip protections or stop a shared VM.
    No mandatory source copies or permanent local archive. Keep active-role evidence until outcomes reach TASK/PR.
    If this worker consumes source, Build continues source removal from the safe checkout after actual exits;
    that source hold cannot block explicit Docker teardown. No second cleanup helper or resource ledger.

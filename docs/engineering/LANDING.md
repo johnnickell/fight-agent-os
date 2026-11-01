@@ -485,7 +485,12 @@ Record exact publication/cancellation disposition in the existing TASK/PR and ha
 Use the [shared resource procedure](RESOURCE_LIFECYCLE.md#retire-runtime-then-finish-the-task): task down first,
 then source-qualified Worktrunk removal from the safe checkout. There is no resource `complete` receipt.
 Only Worktrunk removes the qualified isolated checkout/local ref: the owning command uses explicit-target
-`wt remove --foreground --format=json`, closed stdin and no force, reap, approval or hook-skipping options.
+`wt remove --foreground --format=json --yes` with closed stdin ONLY through the shared guarded remover.
+Immediately before the effect it inspects complete effective pre/post-remove hooks in canonical AND target
+contexts, including system/user/project sources. Only absent hooks or the exact reviewed project
+`pre-remove.runtime` down template are admitted; unqualified/user/changed hooks refuse source removal.
+Per-invocation `--yes` is qualified not to persist approval. Never add/clear saved approvals, alter global trust,
+hide real hooks, force, reap or skip hooks.
 Recheck exact ref/OID, registration, clean source, ignored/private data and consumers before removal; an OID change,
 competing activity or unavailable visibility holds the affected effect. Never switch or remove the selected
 main/current checkout merely to make its branch eligible, or delete a ref checked out in another worktree.
@@ -493,7 +498,11 @@ main/current checkout merely to make its branch eligible, or delete a ref checke
 Publication/cancellation proof does not override Worktrunk's integration or hook requirements. Missing/unsupported
 `wt`, additional unqualified removal hooks or a retained unmerged branch are specific Git holds, not authority
 for direct Git removal or a compare-and-delete fallback. The known project pre-remove hook calls the SAME down
-command; approve it explicitly in Worktrunk, never automatically. Declining hooks is not Docker teardown. Verify actual filesystem, registration and exact ref absence as well as
+command and runs unattended under standing owned-cleanup authority after those checks; do not ask the operator
+for routine known-hook approval. Unexpected hooks require a separate owner decision, not blanket approval.
+Declining hooks is not Docker teardown. Clean qualification fixtures use the same guarded callable with exact
+OID/ancestor proof, not fabricated publication proof; actual delivery retains all publication guards above.
+Verify actual filesystem, registration and exact ref absence as well as
 structured output; exit 0 can mean partial removal. Resume only remaining effects through the same command,
 including Worktrunk branch-only removal after checkout absence. Surviving task-branch local configuration is a
 metadata hold recorded in the existing handoff, including absent-ref retries; the operator owns its exact disposition.
