@@ -94,6 +94,15 @@ See [native setup and recovery](WORKSPACE.md#native-pi-in-herdr-task-00510-candi
 [log controls](WORKSPACE.md#verified-logs-in-herdr-task-00512-candidate) and
 [actual-file session migration](WORKSPACE.md#native-entry-and-existing-rpc-sessions).
 
+## Optional upstream subagents
+
+The [supported upstream profile](SUBAGENTS.md) ships subordinate Fight agents and passively follows their
+actual Agent-tool sessions in the existing Herdr activity pane. Upstream owns execution; Fight retains native
+custody, workflow independence and Compose/worktree ownership. Explicit profile selection disables upstream
+worktrees/workflows/scheduling. `/fight-subagents` reports capabilities and finite refusals; rootless RPC routes
+are not admitted. Reader closure is passive, but upstream's whole-runtime shutdown/reload aborts its agents.
+Private installed/native qualification exists; TASK-00554's full gate and independent acceptance remain pending.
+
 ## Install
 
 From the repository root, install for every Pi session:

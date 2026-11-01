@@ -65,6 +65,17 @@ test('pin survives completion/disconnection with verified context; unpin returns
   assert.match(f.observe.view(), /PINNED/); assert.match(f.observe.view(), /exit 0; not acceptance/);
   f.observe.action('pin'); assert.equal(f.observe.selected, null); assert.equal(f.observe.verifiedWorktree, null); assert.match(f.observe.view(), /IDLE/);
 });
+test('SDK completion remains readable/selectable without inventing a process exit', async t => {
+  const f = fixture(t), first = f.child({ source: 'pi-subagents', upstreamStatus: 'running' });
+  f.set([first]); await f.observe.start(f.parent, f.file);
+  f.set([{ ...first, sequence: 2, lifecycle: 'completed', upstreamStatus: 'steered', history: ['FINAL'] }]);
+  await f.observe.refresh();
+  assert.notEqual(f.observe.selected, null); assert.match(f.observe.view(), /upstream steered/);
+  assert.match(f.observe.view(), /FINAL/); assert.doesNotMatch(f.observe.view(), /exit 0/);
+  f.set([{ ...first, sequence: 3, lifecycle: 'completed', upstreamStatus: 'completed', exitCode: 0 }]);
+  await f.observe.refresh(); assert.equal(f.observe.sources.size, 0);
+});
+
 test('heartbeat expiry, lost/replaced custody and regressed sequences cannot retain log authority or infer completion', async t => {
   const f = fixture(t); await f.observe.start(f.parent, f.file); f.advance(7000); f.observe.recompute(); assert.equal(f.observe.selected, null);
   f.set([{ ...f.values()[0], sequence: 2, receivedAt: 107000 }]); await f.observe.refresh(); f.observe.action('pin');

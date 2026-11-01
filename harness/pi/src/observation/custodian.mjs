@@ -13,13 +13,18 @@ const script = fileURLToPath(import.meta.url);
 const monitor = fileURLToPath(new URL('./run-stage.py', import.meta.url));
 const identityKeys = ['task', 'role', 'provider', 'model', 'thinking', 'worktree', 'attempt'];
 const terminalStates = new Set(['completed', 'failed']);
+const sdkStatuses = new Set(['running', 'completed', 'steered', 'aborted', 'stopped', 'error']);
 
 export function applyProgress(registration, event) {
   if (terminalStates.has(registration.lifecycle) || !['starting', 'running', 'settled-awaiting-exit', 'completed', 'failed'].includes(event.lifecycle) ||
       typeof event.text !== 'string' || [...event.text].length > 600 || !Number.isSafeInteger(event.sequence) || event.sequence <= registration.sequence ||
-      (terminalStates.has(event.lifecycle) ? !Number.isInteger(event.exitCode) || event.exitCode < 0 || event.exitCode > 255 || (event.lifecycle === 'completed') !== (event.exitCode === 0) : event.exitCode !== null)) throw new Error('Invalid monitor progress');
+      (registration.source === 'pi-subagents'
+        ? event.exitCode !== null || !sdkStatuses.has(event.upstreamStatus) ||
+          event.lifecycle !== (event.upstreamStatus === 'running' ? 'running' : ['completed', 'steered'].includes(event.upstreamStatus) ? 'completed' : 'failed')
+        : (terminalStates.has(event.lifecycle) ? !Number.isInteger(event.exitCode) || event.exitCode < 0 || event.exitCode > 255 || (event.lifecycle === 'completed') !== (event.exitCode === 0) : event.exitCode !== null))) throw new Error('Invalid monitor progress');
   registration.gaps = Math.min(Number.MAX_SAFE_INTEGER, (registration.gaps ?? 0) + event.sequence - registration.sequence - 1);
   registration.sequence = event.sequence; registration.lifecycle = event.lifecycle; registration.exitCode = event.exitCode;
+  if (registration.source === 'pi-subagents') registration.upstreamStatus = event.upstreamStatus;
   registration.receivedAt = Date.now(); registration.state = 'connected';
   const text = clean(event.text).replace(/\n/g, ' '); registration.history.push(text); registration.units += text.length;
   while (registration.history.length > limits.records || registration.units > limits.units) { registration.units -= registration.history.shift().length; registration.omitted++; }
@@ -147,7 +152,10 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
     writeFileSync(routePath, JSON.stringify({ primary, parent, generation, native, pid: process.pid, process: descriptor.process, created, endpoint: descriptor.endpoint }), { flag: 'wx', mode: 0o600 });
     routeFile = lstatSync(routePath); if (process.connected) process.send({ type: 'ready' }, () => {});
   });
-  process.on('disconnect', () => { attached = false; remove(routePath, routeFile); });
+  process.on('disconnect', () => {
+    attached = false; remove(routePath, routeFile);
+    for (const child of children.values()) if (child.source === 'pi-subagents') child.state = 'disconnected';
+  });
   process.on('message', message => {
     if (!attached) return;
     if (message?.type === 'subagent-progress') {

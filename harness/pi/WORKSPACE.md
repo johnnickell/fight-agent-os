@@ -809,8 +809,10 @@ read private runtime code or fork Pi. Installed examples previously denied acces
 
 Run `node --test harness/pi/tests/workspace.test.mjs` for owned layout, focus, editor, Unicode, paste, dialog,
 transport and lifecycle checks; `./bin/harness-check` and the canonical `./bin/build` Harness phase run them
-with the other selected Harness tests. `node --test harness/pi/tests/child-observation.test.mjs` covers the
-owned child subscription/generation/buffer and lifecycle behavior; the full gate includes both files. Controlled peers
+with the other selected Harness tests. The obsolete explicit-socket reader and its tests were retired in
+TASK-00554 after installed upstream/native qualification. `node --test harness/pi/tests/subagents.test.mjs`
+covers the passive SDK bridge; `registered-children.test.mjs` and `custody.test.mjs` cover shared native
+admission and reader controls. See [supported upstream routes](SUBAGENTS.md). Controlled peers
 are explicitly **not** real-Pi integration proof. For acceptance, run the actual entry point in a PTY, inspect
 active Harness identity, exercise a real authorized conversation and file/command boundaries, test narrow/resize,
 scrolling, dialog cancellation, normal/error exit and capture real terminal images. Existing held-state images

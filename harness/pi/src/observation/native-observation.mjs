@@ -31,7 +31,7 @@ export class NativeObservation {
     }
     if (witness.path !== this.pendingParentFile) throw new Error('Native session file replaced');
     this.parentFile = witness; this.pendingParentFile = undefined;
-    if (this.child?.connected) this.child.send({ type: 'bind-session', parentFile: witness }, () => {});
+    if (this.child?.connected) this.child.send({ type: 'bind-session', parentFile: witness }, () => { this.flushSubagents(); });
   }
   async start() {
     if (this.closed || this.child || !this.sessionFile) return;
@@ -43,7 +43,7 @@ export class NativeObservation {
     const child = fork(custodianScript, [generation], { cwd: this.primary, detached: true,
       env: childEnvironment(process.env), stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
     this.child = child;
-    child.on('message', message => { if (message?.type === 'ready') this.ready = true; });
+    child.on('message', message => { if (message?.type === 'ready') { this.ready = true; this.flushSubagents(); } });
     child.on('error', () => this.close());
     // The daemon is an observation reader, never an executor or child custodian.
     child.send({ type: 'initialize', primary: this.primary, parent: this.parent, parentFile: this.parentFile,
@@ -51,15 +51,34 @@ export class NativeObservation {
       native: { pid: process.pid, entry, process: stdout.trim(), mode: 'tui', started: this.started, wallUs: this.wallUs } }, () => {});
   }
   observeSubagent(message) {
+    if (this.closed) return;
+    this.queuedSubagents ??= new Map();
+    if (!this.queuedSubagents.has(message.id) && this.queuedSubagents.size >= 8) return;
+    this.queuedSubagents.set(message.id, message);
+    this.flushSubagents();
+  }
+  flushSubagents() {
+    if (this.closed || !this.ready || !this.parentFile || !this.child?.connected) return;
     this.pendingSubagents ??= new Set();
-    if (this.closed || !this.ready || !this.parentFile || !this.child?.connected ||
-        this.pendingSubagents.has(message.id) || this.pendingSubagents.size >= 8) return;
-    this.pendingSubagents.add(message.id);
-    try { this.child.send(message, () => { this.pendingSubagents.delete(message.id); }); }
-    catch { this.pendingSubagents.delete(message.id); }
+    for (const [id, message] of this.queuedSubagents ?? []) {
+      if (this.pendingSubagents.size >= 8) break;
+      if (this.pendingSubagents.has(id)) continue;
+      this.queuedSubagents.delete(id); this.pendingSubagents.add(id);
+      try { this.child.send(message, () => { this.pendingSubagents.delete(id); this.flushSubagents(); }); }
+      catch { this.pendingSubagents.delete(id); }
+    }
   }
   close() {
-    if (this.closed) return; this.closed = true;
+    if (this.closed) return;
+    this.closed = true;
+    // At most eight coalesced frames. Preserve IPC ordering even if an earlier send's callback
+    // has not fired; disconnect drains Node's queued messages, never waits on agent execution.
+    if (this.ready && this.parentFile && this.child?.connected) {
+      for (const message of this.queuedSubagents?.values() ?? []) {
+        try { this.child.send(message, () => {}); } catch { /* Transport unavailable, not an SDK failure. */ }
+      }
+    }
+    this.queuedSubagents?.clear();
     if (this.child?.connected) this.child.disconnect();
     this.child?.unref();
   }

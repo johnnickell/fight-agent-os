@@ -64,7 +64,7 @@ export class HerdrActivity {
     if (this.details) return children.view();
     const ordinal = [...children.sources.keys()].indexOf(children.selected) + 1;
     const status = item ? `${children.pin ? 'PINNED' : 'FOLLOW'} ${ordinal}/${children.sources.size} ${basename(item.identity.attempt)}` : 'IDLE — no eligible active child';
-    const lifecycle = item ? `${item.lifecycle}${item.exitCode === null ? '' : ` exit ${item.exitCode} (not acceptance)`} · ${item.verified ? (children.active(item) ? item.state : 'unknown/inactive liveness') : 'CUSTODY LOST'}` : 'Unregistered/unsupported children unavailable';
+    const lifecycle = item ? `${item.source === 'pi-subagents' ? `SDK ${item.upstreamStatus} (not acceptance)` : `${item.lifecycle}${item.exitCode === null ? '' : ` exit ${item.exitCode} (not acceptance)`}`} · ${item.verified ? (children.active(item) ? item.state : 'unknown/inactive liveness') : 'CUSTODY LOST'}` : 'Unregistered/unsupported children unavailable';
     return [`CHILD ACTIVITY${children.paused ? ` · PAUSED +${Math.max(0, (item?.sequence ?? 0) - children.pausedSequence)}` : ' — human only'}`, `${children.open ? '' : 'READERS CLOSED · '}${status}`, lifecycle,
       item ? `${item.identity.role} ${item.identity.task}` : 'No execution controls',
       `[ ] choose · f pin · p pause · c readers · r rediscover · i details`,
