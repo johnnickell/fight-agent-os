@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Explicit shared local HTTPS operations; never enroll trust or operate applications."""
 import argparse
+import errno
 import json
 import os
 from pathlib import Path
@@ -225,16 +226,16 @@ def operate(safe, action, bind_ports=False):
     if action == 'up':
         require(bind_ports, 'Explicit listener operation required: ./bin/ingress up --bind-ports')
         validate_configuration(safe)
-        # Check native listeners too; own running listeners are retained on refresh.
+        # Probe live TCP listeners, not teardown TIME_WAIT; Compose owns the actual bind.
+        # Own running listeners are retained on refresh.
         running = text(['docker', 'ps', '-q', '--filter', 'label=com.docker.compose.project=' + PROJECT], safe)
         if not running:
             front, https_port = listener_options(safe)
             for port in ((80, https_port) if front == 'independent' else (https_port,)):
-                with socket.socket() as listener:
-                    try:
-                        listener.bind(('127.0.0.1', port))
-                    except OSError:
-                        raise Hold('Port ' + str(port) + ' unavailable; operator must resolve it without foreign teardown')
+                with socket.socket() as probe:
+                    probe.settimeout(1)
+                    require(probe.connect_ex(('127.0.0.1', port)) == errno.ECONNREFUSED,
+                            'Port ' + str(port) + ' unavailable; operator must resolve it without foreign teardown')
         require(owned(safe), 'Ingress network missing; run explicit setup')
         # Check every installed leaf before listener mutation, including expiry/key/CA.
         for leaf in sorted((state(safe) / 'certs').glob('*.localhost')):

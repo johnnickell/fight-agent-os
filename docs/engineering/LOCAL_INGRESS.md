@@ -198,6 +198,13 @@ consumers explicitly if removal is desired. Leaf removal refuses a matching atta
 the shared public root and machine trust. Network removal retains configuration and leaves for explicit recovery
 with setup/up; it does not delete private TLS material implicitly.
 
+After `bin/ingress down`, recover immediately with `bin/ingress up --bind-ports`; no socket-expiry wait is
+required. When the supplier is absent, preflight checks for live loopback TCP listeners rather than treating
+teardown TIME_WAIT sockets as occupied ports. This opens/closes a TCP connection without sending application
+data. A listener or uncertain result refuses startup without foreign teardown; Docker remains authoritative for
+the actual bind and reports any subsequent publication failure. No port reservation or race-free admission is
+claimed. Partial-service recovery uses the same explicit up command.
+
 No prune, foreign teardown, global installation/reset, privileged port configuration, CA deletion or trust
 unenrollment is performed. Explicit `mkcert -uninstall` is a separate **global** human operation affecting all
 consumers; review them first. Keep required evidence only while consumed by the active workflow. Actual cleanup
