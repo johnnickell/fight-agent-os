@@ -6,12 +6,13 @@ and pinned nginxproxy/docker-gen 0.15.0, both by registry digest. It uses the up
 with a bounded repository-owned template, not the general nginx-proxy template's HTTP-upstream defaults.
 This is local development infrastructure, not production deployment or a hostile-code sandbox.
 
-**Implementation checkpoint: qualification is incomplete.** Native Compose, empty-route Nginx validation,
-Docker API/template rendering, missing-prerequisite refusal and no-listener lifecycle have been exercised.
-Actual-name leaf generation, listener startup, main plus two full worktrees, encrypted live upstreams,
-authentication, browser trust, route removal, occupied ports and partial-start recovery still require the
-explicit human operations below and subsequent direct qualification. The final TASK records gate results.
-Neither service health nor this document establishes browser readiness or independent acceptance.
+**Implementation checkpoint: qualification is incomplete.** The optional existing-Herd topology below was
+explicitly approved by John on 2026-11-01. Actual-name leaves, Docker high-port publication and verified supplier
+to app TLS now have direct evidence, including temporary main integration/restoration and two full registered
+worktree stacks. This is NOT qualification of the canonical browser path through Herd: its root-owned master
+requires a privileged full configuration test and graceful reload, blocked in the agent session. The TASK and
+canonical Work handoff own exact current evidence, warnings and remaining criteria. Neither service health nor
+this document establishes browser readiness or independent acceptance.
 
 ## Ownership and boundaries
 
@@ -25,7 +26,8 @@ and no published ports. Read-only mounting does **not** make the Docker API read
 container environments and signal containers, and a compromise can exercise daemon authority. Only trusted local
 operators may run it. Public Nginx has no socket and mounts generated routes and leaves read-only. Both services
 have bounded CPU/memory/PIDs, read-only roots, temporary writable paths and bounded failure restarts. Nginx retains
-only CHOWN/SETUID/SETGID capabilities for its native worker/temp-directory setup; it binds loopback 80/443 only.
+only CHOWN/SETUID/SETGID capabilities for its native worker/temp-directory setup. Default independent mode
+publishes loopback 80/443. Optional Herd mode publishes only one explicitly selected high loopback HTTPS port.
 Remote/TCP Docker endpoints and foreign reserved network/project ownership are refused, never adopted or stopped.
 
 ## Explicit human preparation
@@ -49,7 +51,7 @@ select an already installed capable executable in the invoking shell, for exampl
 `export FIGHT_INGRESS_OPENSSL=/opt/homebrew/opt/openssl@3/bin/openssl` on the qualified macOS host; use the actual
 path on your host. Preserve that selection for ingress certificate status, application startup and ingress up.
 No automatic installation, PATH rewrite or equality-version gate is performed. OpenSSL 3.6.3 was capability-checked;
-actual-name certificate operations remain unexecuted in this checkpoint.
+actual-name leaves were subsequently generated with the existing trusted CA on the qualified host.
 
 The existing [TASK-00145 direct TLS flow](LOCAL_HTTPS.md) remains unchanged. The ingress extension reuses
 mkcert/OpenSSL, but does not invoke `mkcert -install`, rewrite `.env`, copy main keys or generate wildcards.
@@ -63,6 +65,69 @@ preflight. Leaf generation and enrollment are explicit human operations, not sta
 (or `./bin/runtime --worktree SELECTOR inspect` from main). Git registration resolves selectors; branch changes
 never rename a checkout project. On clients without `.localhost` resolution, stop and diagnose; do not edit hosts
 or silently switch origins. curl probes use exact `--resolve` mappings to loopback without changing DNS.
+
+## Optional existing-Herd coexistence
+
+Use this ONLY when an already operated Herd owns 80/443 and the operator explicitly selects coexistence.
+Independent ingress above remains the default; Herd is not a global platform dependency. Canonical browser
+origins do not change or gain a high port:
+
+`browser https://<exact Fight name>.localhost:443 → Herd → verified HTTPS 127.0.0.1:18444 → pinned supplier → verified HTTPS app gateway:8443`
+
+Do not stop/move Herd, change its global TLD/loopback/stubs, add aliases/DNS/hosts rules or use stock
+`herd proxy --secure`: its configured TLD and unverified TLS/normalized Host template do not satisfy this contract.
+Do not repeat alternate low-loopback-IP publication after a Docker wildcard-bind conflict. Existing `.test`
+sites, default servers, trust and other projects stay owned by their operators.
+
+1. Inspect native port/project ownership and effective site includes/server names. Refuse target-name or file
+   conflicts. Select a free high port, then explicitly prepare and start the SAME shared supplier:
+
+   ```sh
+   ./bin/ingress setup --front-door herd --https-port 18444
+   # Explicitly generate the actual main/registered-worktree leaves as above, reusing existing trust.
+   ./bin/ingress up --bind-ports
+   ./bin/ingress herd-config
+   ```
+
+   Only HTTPS is published by the supplier in this mode. Herd owns exact-name HTTP redirects; a second supplier
+   host HTTP listener is unnecessary. The chosen mode/port live in the native Compose configuration, not another
+   resource registry. To return to independent mode, stop the supplier explicitly, retire its Herd adapter, then
+   `./bin/ingress setup` and `./bin/ingress up --bind-ports` after freeing the standard listeners legitimately.
+
+2. `herd-config` only renders canonical `var/local-ingress/herd.conf`. It enumerates Git-registered checkout
+   names with valid installed exact-only DNS-SAN leaves (no wildcard/alias SANs). It never reads application
+   environments or installs/reloads Herd. Inspect the result, then exclusively create ONE owned site file
+   `~/Library/Application Support/Herd/config/valet/Nginx/fight-local-ingress.conf` in Herd's existing HTTP-scope
+   include directory. Never overwrite an unrelated file or edit global config. `cp -n` followed by `cmp` can
+   install/verify the new file; inspect ownership first. Record its path, owner marker and digest in the handoff.
+   The adapter references only supplier-owned leaf/key/public-CA and header configuration paths under `var/`.
+
+3. Validate the FULL existing Herd configuration using the installed Herd Nginx binary and actual `-c` path.
+   If root-owned files or privileged test binds require sudo, the human runs it in their own terminal. Never
+   request a password in an agent. Only after a successful full test, gracefully signal the verified existing
+   master with HUP (or native Nginx reload using its verified prefix/pid path); never restart/stop the service.
+   On the qualified macOS installation the binary is `/Applications/Herd.app/Contents/Resources/nginx-arm64`
+   and config is `$HOME/Library/Application Support/Herd/config/nginx/nginx.conf`. Run the test from canonical
+   `var/local-ingress/` so any native diagnostic pid file stays out of source. A scoped high-listener syntax
+   diagnostic is NOT a successful full service test or reload. Record full-test/reload state, not just file creation.
+
+4. Verify safe read-only existing `.test` requests before/after, then canonical Fight root/CSRF, exact original
+   Host/SNI (including `:443` aliases), Origin, cookies/auth and default browser trust. Startup/status probe BOTH
+   the verified high-port supplier transport (connect-to retains canonical SNI/Host) and standard browser entry.
+   A failed Herd entry produces no ready URL even when the supplier/app are healthy. Use no insecure TLS fallback.
+   The scoped include has no wildcard/default server: unknown names cannot reach Fight; unrelated Herd name
+   handling stays unchanged. Every Fight server rejects mismatched SNI/raw Host before proxying. Proxy access
+   and URL-bearing error logs are disabled. A closed browser/API header list strips all forwarding/original
+   authority/client-verification assertions while retaining auth, cookie, Origin/CSRF and application denial inputs.
+
+New exact names or leaf renewal require explicit `herd-config`, ownership/digest-checked replacement of this
+SAME owned include, full test and graceful reload. There is no sync daemon/host manager. Gateway addition/removal
+still updates the supplier automatically; a retired gateway cannot be reached through a stale host include.
+Before deleting a referenced leaf, remove its owned host block/include and gracefully reload, then use certificate
+removal. If privilege blocks reload, retain the referenced valid leaves and report the finite hold. To remove the
+adapter completely, verify its recorded owner/content, unlink ONLY that exact owned include, full-test and
+HUP the same verified master. Do not delete shared trust, other site configs or the running Herd service.
+Supplier/application down never operates Herd. Keep leaves/header paths while a live or pending include needs them.
 
 ## Start applications, not infrastructure
 
@@ -90,9 +155,12 @@ produce no route, never wildcard/default routing. Container start/stop/die event
 only the shared Nginx. Automatic discovery is not application orchestration.
 
 The proxy verifies its HTTPS upstream against the public root CA with exact-name SNI verification enabled.
-Both public SNI and the Host authority must match the canonical name exactly (no explicit `:443` alias).
-The app gateway independently checks Host and owns canonical HTTPS/443 FastCGI metadata. Forwarded headers
-are stripped at both hops, never used as authority. Known-name HTTP only redirects to the exact HTTPS origin;
+Both public SNI and the original Host authority must match the canonical name exactly (no explicit `:443`
+alias). Only origin-form request targets are admitted; absolute-form authorities are rejected before Nginx
+normalization can erase their port/case spelling.
+The app gateway independently checks Host and owns canonical HTTPS/443 FastCGI metadata. Forwarding/original-authority and client-verification assertions
+are stripped at proxy boundaries, never used as authority. Browser/API headers are explicitly allowlisted;
+unsupported extension headers are not forwarded. The gateway also strips forwarding metadata. Known-name HTTP only redirects to the exact HTTPS origin;
 it does not serve authentication. Unknown HTTP authorities return 421; unknown TLS names reject the handshake.
 No persistent localhost HSTS is added. Request/access logs are disabled; proxy error logs that can contain
 credential-bearing URLs are disabled. Use native service/config validation and bounded status instead.

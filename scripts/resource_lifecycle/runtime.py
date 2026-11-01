@@ -77,7 +77,10 @@ def up(root, selector=None, build_only=False, shared=False):
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-t'], checkout, env=environment(isolated))
     run([*args, '--profile', 'https', 'exec', '-T', 'https', 'nginx', '-s', 'reload'], checkout, env=environment(isolated))
     if isolated or shared:
-        connection = ['--resolve', url.removeprefix('https://') + ':443:127.0.0.1']
+        from local_ingress import live
+        live(safe, url.removeprefix('https://'), retry=True)
+        print(url)
+        return 0
     else:
         address = run([*args, '--profile', 'https', 'port', 'https', '8443'], checkout,
                       capture=True, env=environment())

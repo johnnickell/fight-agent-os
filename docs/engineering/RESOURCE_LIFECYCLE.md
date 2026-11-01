@@ -60,7 +60,10 @@ data. The earlier TASK-00543 main-up failure was a regression, not an acceptable
 independent acceptance remain incomplete. Follow [shared local HTTPS operations](LOCAL_INGRESS.md) for explicit
 `bin/ingress setup/up/down/status/remove` and human actual-name certificate setup through `bin/https`.
 `bin/up --worktree SELECTOR` requires that separately operated supplier. `bin/up --shared-ingress` explicitly
-opts main into the same topology; ordinary main up never does. Only each application's TLS gateway joins
+opts main into the same topology; ordinary main up never does. The optional existing-Herd mode in that runbook
+retains standard browser origins while publishing only a selected high supplier HTTPS port; it never makes
+application startup install/reload/stop Herd. Both verified supplier transport and canonical front-door probes
+must pass before a ready URL is printed. Only each application's TLS gateway joins
 `fight-local-ingress`, using verified HTTPS upstream on 8443; inherited publishing is stripped and private
 services remain private. Shared origins are `https://fight-agent-os.localhost` and `https://<project>.localhost`.
 No custom DNS, trust enrollment, leaf generation or shared infrastructure startup is implicit.

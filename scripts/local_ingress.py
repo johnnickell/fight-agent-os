@@ -9,8 +9,8 @@ import socket
 import subprocess
 import sys
 
-from resource_lifecycle.preparation import environment, resolve
-from resource_lifecycle.resources import Hold, query, require, run, text, write_private
+from resource_lifecycle.preparation import environment, identity, resolve
+from resource_lifecycle.resources import Hold, query, registrations, require, run, text, write_private
 
 PROJECT = NETWORK = 'fight-local-ingress'
 OWNER = 'io.fight.ingress.owner'
@@ -55,6 +55,9 @@ def check_leaf(safe, host):
         require(path.is_file() and not path.is_symlink() and path.stat().st_size,
                 'Missing regular actual-name leaf/key/CA; human: ./bin/https setup --ingress [--worktree SELECTOR]')
     openssl = openssl_tool()
+    san = text([openssl, 'x509', '-in', cert, '-noout', '-ext', 'subjectAltName'], safe)
+    require(san.splitlines()[1:] and ''.join(san.splitlines()[1:]).strip() == 'DNS:' + host,
+            'Leaf must contain only the exact actual-name DNS SAN, not wildcards or aliases')
     require('does match certificate' in text([openssl, 'x509', '-in', cert, '-checkhost', host, '-noout'], safe),
             'Leaf does not cover the exact canonical hostname')
     text([openssl, 'x509', '-in', cert, '-checkend', '86400', '-noout'], safe)
@@ -82,8 +85,21 @@ def owned(safe):
     return bool(networks)
 
 
-def configuration(safe):
+def listener_options(safe):
+    path = state(safe) / 'compose.json'
+    model = json.loads(path.read_text()) if path.exists() else {}
+    front = model.get('x-fight-front-door', 'independent')
+    port = model.get('x-fight-https-port', 443)
+    require(front in ('independent', 'herd') and type(port) is int and
+            ((front == 'independent' and port == 443) or (front == 'herd' and 1024 <= port <= 65535)),
+            'Invalid explicit ingress listener selection')
+    return front, port
+
+
+def configuration(safe, front=None, port=None):
     path = state(safe)
+    if front is None:
+        front, port = listener_options(safe)
     context = query(['docker', 'context', 'inspect'], safe)[0]['Endpoints']['docker']['Host']
     require(context.startswith('unix://'), 'Only an explicit local Unix Docker socket is supported')
     socket_path = Path(context.removeprefix('unix://'))
@@ -96,12 +112,13 @@ def configuration(safe):
     limits = {'read_only': True, 'tmpfs': ['/tmp:rw,nosuid,noexec,size=32m'], 'cap_drop': ['ALL'],
               'security_opt': ['no-new-privileges:true'], 'mem_limit': '128m', 'cpus': 0.5,
               'pids_limit': 64, 'restart': 'on-failure:3', 'labels': {OWNER: str(safe)}}
-    model = {'x-fight-owner': str(safe), 'services': {
+    model = {'x-fight-owner': str(safe), 'x-fight-front-door': front, 'x-fight-https-port': port, 'services': {
         'nginx': {**limits, 'image': NGINX, 'user': '0:0', 'cap_add': ['CHOWN', 'SETUID', 'SETGID'],
             'entrypoint': ['nginx'], 'command': ['-g', 'daemon off;'],
-            'ports': ['127.0.0.1:80:80', '127.0.0.1:443:443'],
+            'ports': (['127.0.0.1:80:80'] if front == 'independent' else []) + ['127.0.0.1:' + str(port) + ':443'],
             'networks': ['ingress'], 'volumes': [mount(path / 'nginx.conf', '/etc/nginx/nginx.conf'),
-                mount(path / 'routes', '/etc/nginx/routes'), mount(path / 'certs', '/etc/nginx/certs')],
+                mount(path / 'routes', '/etc/nginx/routes'), mount(path / 'certs', '/etc/nginx/certs'),
+                mount(path / 'proxy-headers.conf', '/etc/nginx/proxy-headers.conf')],
             'healthcheck': {'test': ['CMD', 'nginx', '-t'], 'interval': '3s', 'timeout': '3s', 'retries': 10}},
         'docker-gen': {**limits, 'image': GENERATOR, 'network_mode': 'none',
             'command': ['-endpoint', 'unix:///tmp/docker.sock', '-watch', '-wait', '500ms:2s',
@@ -120,24 +137,26 @@ def validate_configuration(safe):
             'Run explicit ./bin/ingress setup first')
     require(json.loads((path / 'compose.json').read_text()) == configuration(safe),
             'Unknown/changed ingress configuration or Docker context; inspect privately, then explicitly setup')
-    for name in ('nginx.conf', 'routes.tmpl'):
+    for name in ('nginx.conf', 'routes.tmpl', 'proxy-headers.conf'):
         require((path / name).is_file() and not (path / name).is_symlink() and
                 (path / name).read_bytes() == (ROOT / 'etc/docker/ingress' / name).read_bytes(),
                 'Ingress source/configuration changed; run explicit setup and up before app startup')
 
 
-def setup(safe):
+def setup(safe, front='independent', port=443):
     path = state(safe)
     require(not (path / 'compose.json').exists() or
             json.loads((path / 'compose.json').read_text()).get('x-fight-owner') == str(safe),
             'Unknown ingress configuration; inspect it before setup')
     network_exists = owned(safe)
-    model = configuration(safe)
+    require((front == 'independent' and port == 443) or (front == 'herd' and 1024 <= port <= 65535),
+            'Independent ingress uses 443; Herd mode requires an explicit high HTTPS port')
+    model = configuration(safe, front, port)
     for name in ('routes', 'certs'):
         target = path / name
         require(target.resolve() == target, 'Aliased ingress directory refused')
         target.mkdir(parents=True, exist_ok=True, mode=0o700)
-    for name in ('nginx.conf', 'routes.tmpl'):
+    for name in ('nginx.conf', 'routes.tmpl', 'proxy-headers.conf'):
         write_private(path / name, (ROOT / 'etc/docker/ingress' / name).read_text())
     if not (path / 'routes/routes.conf').exists():
         write_private(path / 'routes/routes.conf', '# No application gateways enrolled\n')
@@ -162,23 +181,55 @@ def ready(safe):
     text([*compose(safe), 'exec', '-T', 'nginx', 'nginx', '-t'], safe)
 
 
-def live(safe, host):
+def herd_config(safe):
+    """Render one scoped host include; installation/reload remain explicit operator effects"""
+    validate_configuration(safe)
+    front, port = listener_options(safe)
+    require(front == 'herd', 'Select explicit setup --front-door herd --https-port PORT first')
+    hosts = ['fight-agent-os.localhost'] + [identity(safe, Path(entry['path'])) + '.localhost'
+                                           for entry in registrations(safe)[1:]]
+    blocks = ['# Fight-only local ingress; owner: ' + str(safe) + '\n# Explicitly regenerate after leaf/name changes; never edit global Herd configuration.\n']
+    template = (ROOT / 'etc/docker/ingress/herd.conf.tmpl').read_text()
+    for host in sorted(hosts):
+        if not certificates(safe, host).exists():
+            continue
+        check_leaf(safe, host)
+        # Quote native paths, never interpret operator path bytes as Nginx directives.
+        require(not any(c in str(state(safe)) for c in '\\"\n\r$'), 'Unsupported Nginx configuration path')
+        blocks.append(template.replace('@HOST@', host).replace('@STATE@', str(state(safe))).replace('@PORT@', str(port)))
+    require(len(blocks) > 1, 'No registered actual-name leaves; generate them explicitly first')
+    target = state(safe) / 'herd.conf'
+    write_private(target, '\n'.join(blocks))
+    print(str(target))
+    print('Rendered only. Inspect conflicts, install one owned site include, syntax-check the FULL Herd configuration, then gracefully reload.')
+
+
+def live(safe, host, retry=False):
     check_leaf(safe, host)
-    for suffix in ('/', '/api/v1/auth/csrf'):
-        text(['curl', '--fail', '--silent', '--show-error', '--connect-timeout', '3', '--max-time', '10',
-              '--resolve', host + ':443:127.0.0.1', '--output', '/dev/null', 'https://' + host + suffix], safe)
+    front, port = listener_options(safe)
+    connections = [['--resolve', host + ':443:127.0.0.1']]
+    if front == 'herd':
+        # Qualify both exact-name verified supplier transport and the canonical browser front door.
+        # connect-to changes transport only, never TLS SNI, Host or browser origin.
+        connections.insert(0, ['--connect-to', host + ':443:127.0.0.1:' + str(port)])
+    retries = ['--retry', '5', '--retry-all-errors', '--retry-max-time', '60'] if retry else []
+    for connection in connections:
+        for suffix in ('/', '/api/v1/auth/csrf'):
+            text(['curl', '--noproxy', '*', '--fail', '--silent', '--show-error', '--connect-timeout', '3', '--max-time', '10',
+                  *retries, *connection, '--output', '/dev/null', 'https://' + host + suffix], safe)
 
 
 def operate(safe, action, bind_ports=False):
     require((state(safe) / 'compose.json').is_file(), 'Run explicit ./bin/ingress setup first')
     owned(safe)
     if action == 'up':
-        require(bind_ports, 'Human operation required: ./bin/ingress up --bind-ports (loopback 80/443)')
+        require(bind_ports, 'Explicit listener operation required: ./bin/ingress up --bind-ports')
         validate_configuration(safe)
         # Check native listeners too; own running listeners are retained on refresh.
         running = text(['docker', 'ps', '-q', '--filter', 'label=com.docker.compose.project=' + PROJECT], safe)
         if not running:
-            for port in (80, 443):
+            front, https_port = listener_options(safe)
+            for port in ((80, https_port) if front == 'independent' else (https_port,)):
                 with socket.socket() as listener:
                     try:
                         listener.bind(('127.0.0.1', port))
@@ -251,6 +302,8 @@ def certificate_operation(root, action, selector):
             leaf = directory / name
             require(not leaf.is_symlink(), 'Aliased certificate refused')
             leaf.unlink(missing_ok=True)
+        if directory.exists() and not any(directory.iterdir()):
+            directory.rmdir()
         print('Removed only ' + host + ' leaf/key; shared CA and trust preserved.')
     else:
         raise Hold('Ingress certificates support setup, status and remove; operate services with bin/ingress')
@@ -259,8 +312,10 @@ def certificate_operation(root, action, selector):
 def main():
     os.umask(0o077)
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['setup', 'up', 'down', 'status', 'remove', 'certificate'])
+    parser.add_argument('action', choices=['setup', 'up', 'down', 'status', 'remove', 'certificate', 'herd-config'])
     parser.add_argument('--bind-ports', action='store_true')
+    parser.add_argument('--front-door', choices=['independent', 'herd'], default='independent', help='setup only; Herd is optional')
+    parser.add_argument('--https-port', type=int, help='setup only; explicit loopback high port in Herd mode')
     parser.add_argument('--certificate-action', choices=['setup', 'status', 'remove'])
     parser.add_argument('--worktree')
     args = parser.parse_args()
@@ -271,8 +326,11 @@ def main():
         require(not args.worktree, 'Ingress is shared, not a worktree service')
         safe, _, _, _ = resolve(ROOT)
         if args.action == 'setup':
-            setup(safe)
+            setup(safe, args.front_door, args.https_port if args.https_port is not None else 443)
+        elif args.action == 'herd-config':
+            herd_config(safe)
         else:
+            require(args.front_door == 'independent' and args.https_port is None, 'Listener selection belongs to setup only')
             operate(safe, args.action, args.bind_ports)
     return 0
 

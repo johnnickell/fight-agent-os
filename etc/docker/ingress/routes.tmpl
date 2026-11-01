@@ -8,6 +8,7 @@
 server {
     listen 80;
     server_name {{ $host }};
+    if ($request !~ "^[^ ]+ /") { return 421; }
     if ($http_host != "{{ $host }}") { return 421; }
     return 308 https://{{ $host }}$request_uri;
 }
@@ -16,6 +17,7 @@ server {
     server_name {{ $host }};
     ssl_certificate /etc/nginx/certs/{{ $host }}/localhost.pem;
     ssl_certificate_key /etc/nginx/certs/{{ $host }}/localhost-key.pem;
+    if ($request !~ "^[^ ]+ /") { return 421; }
     if ($http_host != "{{ $host }}") { return 421; }
     if ($ssl_server_name != "{{ $host }}") { return 421; }
     location / {
@@ -26,11 +28,7 @@ server {
         proxy_ssl_verify_depth 2;
         proxy_ssl_trusted_certificate /etc/nginx/certs/rootCA.pem;
         proxy_set_header Host {{ $host }};
-        proxy_set_header Forwarded "";
-        proxy_set_header X-Forwarded-Proto "";
-        proxy_set_header X-Forwarded-Host "";
-        proxy_set_header X-Forwarded-Port "";
-        proxy_set_header X-Forwarded-For "";
+        include /etc/nginx/proxy-headers.conf;
         proxy_connect_timeout 3s;
         proxy_read_timeout 30s;
         proxy_redirect off;
