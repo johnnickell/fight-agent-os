@@ -69,6 +69,11 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**TASK-00553 accepted supplier checkpoint:** independent Review and QA accept the candidate recorded in
+[TASK-00553](tasks/00553-TASK.md#accepted-implementation-checkpoint--2026-11-01). Publication and cleanup
+are separate; actual outcomes are in `.runs/tasks/TASK-00553/runs/land/receipt.md` and its PR. TASK-00543
+is in progress, not accepted; older references below to it being unstarted are historical checkpoints.
+
 **TASK-00548 accepted implementation checkpoint:** [accepted simplification](tasks/00548-TASK.md#accepted-implementation-checkpoint--2026-10-31)
 has independent Review ACCEPT and nonvisual QA PASS on `a7e062a` plus the exact owner-authorized ignore,
 committed as `15bf30f`; the complete 24-phase gate is qualified reused evidence. Publication and eligible cleanup

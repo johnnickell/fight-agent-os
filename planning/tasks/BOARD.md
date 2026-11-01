@@ -19,13 +19,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00543](00543-TASK.md) | Manage local task resources from preparation through verified cleanup | — (standalone chore) | in-progress | [TASK-00553](00553-TASK.md) | — |
+| 1 | [TASK-00543](00543-TASK.md) | Manage local task resources from preparation through verified cleanup | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -60,7 +59,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 64 | [TASK-00064](00064-TASK.md) | Prove integrated authorization throttling and secret safety | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00063](00063-TASK.md) | — |
 | 65 | [TASK-00065](00065-TASK.md) | Prove the integrated accessibility and responsive baseline | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00063](00063-TASK.md) | — |
 | 66 | [TASK-00066](00066-TASK.md) | Prove critical browser continuity and close the foundation gate | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00064](00064-TASK.md), [TASK-00065](00065-TASK.md) | — |
-| 69 | [TASK-00072](00072-TASK.md) | Establish the installation-owned Planning runtime | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00066](00066-TASK.md), [TASK-00553](00553-TASK.md) | — |
+| 69 | [TASK-00072](00072-TASK.md) | Establish the installation-owned Planning runtime | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00066](00066-TASK.md) | — |
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00072](00072-TASK.md) | — |
 | 71 | [TASK-00074](00074-TASK.md) | Expose authorized installation capabilities and diagnostics | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00073](00073-TASK.md) | — |
 | 72 | [TASK-00075](00075-TASK.md) | Deliver the guided Planning installation journey | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00074](00074-TASK.md) | — |
@@ -318,6 +317,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | [TICKET-00125 — Promote and recover an explicitly approved release](../tickets/00125-TICKET.md) | ready-for-agent | [TASK-00532](00532-TASK.md), [TASK-00530](00530-TASK.md), [TASK-00362](00362-TASK.md), [TASK-00365](00365-TASK.md), [TASK-00367](00367-TASK.md) | — |
 | — | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | [TICKET-00127 — Review material architecture changes with diagrams in pull requests](../tickets/00127-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
 | — | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | [TICKET-00128 — Show feature architecture on demand in Pi](../tickets/00128-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
+| — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | ready-for-agent | [TASK-00543](00543-TASK.md) | — |
 
 ## Needs Info
 
@@ -462,6 +462,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | — (standalone bug) | done | — | [PR #186](https://github.com/johnnickell/fight-agent-os/pull/186) |
 | 1 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | — (standalone bug) | done | — | [PR #185](https://github.com/johnnickell/fight-agent-os/pull/185) |
 | 1 | [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | — (standalone chore) | done | — | [PR #189](https://github.com/johnnickell/fight-agent-os/pull/189) |
+| 1 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | done | — | [PR #190](https://github.com/johnnickell/fight-agent-os/pull/190) |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |

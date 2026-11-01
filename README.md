@@ -212,7 +212,7 @@ overrides. TASK-00543's earlier main-startup failure was a regression, now repai
 [TASK-00553](planning/tasks/00553-TASK.md)'s separately operated shared HTTPS ingress and actual-name certificates;
 it reports missing prerequisites without starting substitute services or printing a ready URL. Intended shared
 origins are `https://fight-agent-os.localhost` and distinct `https://fight-wt-<checkout-hash>.localhost` names.
-Consumer scaffolding does not deliver that supplier. This does not block ordinary main startup. Trust/certificates
+The supplier is independently accepted; TASK-00543's consumer acceptance remains separate. This does not block ordinary main startup. Trust/certificates
 remain explicit. This application has committed Composer lockfiles:
 
 ```sh
@@ -225,6 +225,15 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 ./bin/up
 ./bin/database migrate
 ```
+
+For explicit shared `<name>.localhost` HTTPS, see [shared ingress operations](docs/engineering/LOCAL_INGRESS.md).
+TASK-00553's supplier includes optional existing-Herd coexistence with verified high-port upstream TLS;
+independent ingress remains the default. The approved three-name Herd configuration is loaded. Work qualified
+canonical HTTPS, both verified proxy hops and available auth flows on two full disposable task stacks; main
+root/CSRF/UI transport was exercised without changing its inherited unprepared database. Independent Review ACCEPT and QA PASS bind the accepted TASK-00553 candidate; publication and cleanup are
+pending at this checkpoint, with actual results in `.runs/tasks/TASK-00553/runs/land/receipt.md` and the TASK PR.
+Default independent low-port runtime and other platforms/browsers remain unverified here.
+Ordinary main startup stays direct localhost TLS, independent of that supplier.
 
 The application root runs at http://localhost:18087 (authentication still requires the trusted HTTPS origin). Build the browser foundation with
 `./bin/client setup`, `./bin/client storybook-setup`, `./bin/client check`, then `./bin/client build` and open

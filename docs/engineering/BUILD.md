@@ -91,7 +91,8 @@ independent of shared ingress; normal URL is `https://localhost:18443`. Main loa
 `./bin/up --worktree SELECTOR` instead requires TASK-00553's shared ingress and actual-name TLS leaves, reporting
 that missing prerequisite without a fallback or readiness claim. Shared-topology acceptance remains incomplete.
 Use up again after environment or image/configuration changes. It never installs dependencies, starts shared
-ingress or enrolls trust.
+ingress or enrolls trust. [Shared ingress operations](LOCAL_INGRESS.md) now provides the explicit supplier
+commands and main opt-in; its live TLS/full-stack qualification and independent acceptance remain incomplete.
 Never silently refresh a service inside acceptance.
 Before reinstalling frontend dependencies in an already-running project, stop only `web`
 (`docker compose stop web`), then run setup and `./bin/up`; npm ci replaces nested cache-mount directories.

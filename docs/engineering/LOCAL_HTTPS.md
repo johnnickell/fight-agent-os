@@ -10,8 +10,11 @@ Ordinary main `bin/up` remains this direct localhost stack, independent of share
 `compose.yaml` and `.env`, ignores ambient `COMPOSE_FILE` and stale generated main/task proxy overrides, and never
 auto-selects a proxy. TASK-00543's earlier failure without ingress was a regression, now repaired.
 `bin/up --worktree SELECTOR` is different: it requires [TASK-00553](../../planning/tasks/00553-TASK.md)'s separately
-operated shared ingress and actual-name certificates, and fails clearly until those exist. That missing supplier
-gates task/shared-topology acceptance, not main startup. Task down remains available without ingress.
+operated shared ingress and actual-name certificates, and fails clearly until those exist. See
+[shared ingress operations](LOCAL_INGRESS.md) for `bin/ingress`, explicit `bin/up --shared-ingress` main opt-in
+and human `bin/https setup --ingress [--worktree SELECTOR]` actual-name leaves. That extension never enrolls
+trust or changes `.env`; the direct flow below is unchanged. Live shared-topology qualification is incomplete,
+not a main-startup dependency. Task down remains available without ingress.
 
 ## Enroll and start
 

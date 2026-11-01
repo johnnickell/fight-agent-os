@@ -555,5 +555,6 @@
 | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | ready-for-agent | [TICKET-00127](../tickets/00127-TICKET.md) |
 | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | ready-for-agent | [TICKET-00128](../tickets/00128-TICKET.md) |
 | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | done | — |
-| [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | ready-for-agent | [TICKET-00023](../tickets/00023-TICKET.md) |
+| [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | done | [TICKET-00023](../tickets/00023-TICKET.md) |
+| [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | ready-for-agent | — |
 <!-- /planning:records -->
