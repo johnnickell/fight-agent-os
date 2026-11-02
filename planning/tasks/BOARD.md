@@ -459,7 +459,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00516](00516-TASK.md) | Resume Land to reconcile ended merge handoffs | [TICKET-00118 — Reconcile current delivery handoffs through Land](../tickets/00118-TICKET.md) | done | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 | 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | done | — | [PR #166](https://github.com/johnnickell/fight-agent-os/pull/166) |
 | 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | done | — | [PR #181](https://github.com/johnnickell/fight-agent-os/pull/181) |
-| 1 | [TASK-00543](00543-TASK.md) | Manage local task resources from preparation through verified cleanup | — (standalone chore) | done | — | — |
+| 1 | [TASK-00543](00543-TASK.md) | Manage local task resources from preparation through verified cleanup | — (standalone chore) | done | — | [PR #192](https://github.com/johnnickell/fight-agent-os/pull/192) |
 | 1 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | — (standalone bug) | done | — | [PR #186](https://github.com/johnnickell/fight-agent-os/pull/186) |
 | 1 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | — (standalone bug) | done | — | [PR #185](https://github.com/johnnickell/fight-agent-os/pull/185) |
 | 1 | [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | — (standalone chore) | done | — | [PR #189](https://github.com/johnnickell/fight-agent-os/pull/189) |
