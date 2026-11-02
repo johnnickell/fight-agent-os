@@ -9,12 +9,17 @@ import subprocess
 import sys
 
 
-def configured_harness():
-    """Select a single Harness from the native Pi package inventory"""
+def native_pi(*arguments):
+    """Inspect native Pi startup without provider requests or interactive input"""
     env = dict(os.environ, NO_COLOR='1')
     env.pop('FORCE_COLOR', None)
-    result = subprocess.run(['pi', 'list'], stdin=subprocess.DEVNULL,
-                            capture_output=True, text=True, timeout=15, env=env)
+    return subprocess.run(['pi', *arguments], stdin=subprocess.DEVNULL,
+                          capture_output=True, text=True, timeout=15, env=env)
+
+
+def configured_harness():
+    """Select a single Harness from the native Pi package inventory"""
+    result = native_pi('list')
     if result.returncode or result.stderr.strip():
         raise ValueError('Pi package inventory unavailable; inspect pi list from this checkout')
     output = result.stdout.strip()
@@ -82,6 +87,12 @@ def main():
         monitor = (package / 'src/observation/run-stage.py').resolve(strict=True)
         if monitor.parent != package / 'src/observation':
             raise ValueError('monitor outside package')
+        # Package inventory omits direct and auto-discovered extensions. Exercise native
+        # registration with the same package injection used by enrolled screening.
+        # Pi can exit zero despite registration conflicts, so diagnostics also hold.
+        registration = native_pi('--offline', '-e', str(package), '--help')
+        if registration.returncode or registration.stderr.strip():
+            raise ValueError('Native Harness registration unavailable or conflicting; inspect native Pi extension settings')
         # The package owns the fixed live process identity. No target skill, route or
         # witness supplies a provider path, and exec preserves ordinary ancestry.
         forwarded = list(sys.argv[1:])

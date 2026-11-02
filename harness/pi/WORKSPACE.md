@@ -69,7 +69,9 @@ now delegates to `src/observation/run-stage.py` inside the selected trusted Harn
 custodian qualify each other's fixed package-owned paths, not source-provider or target-checkout siblings.
 The provider entry automatically selects the single unfiltered Harness reported by native `pi list` in the
 current checkout, or its own checkout package when none is configured. An explicit `--harness-package` must
-match any configured Harness; conflicting copies, filtered resources or unavailable inventory hold startup.
+match any configured Harness. Offline native registration with the selected package also checks direct and
+auto-discovered extensions before monitor dispatch. Conflicting registrations (even with Pi exit zero),
+filtered packages or unavailable inventory hold startup; inspect native extension settings without disabling discovery.
 The selection also owns screening preflight. No target skill copy, manual socket or per-child registration is
 needed. The package must include the monitor; an older copy requires
 an explicit owned update, never an automatic global mutation. Different package identities remain unavailable.

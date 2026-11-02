@@ -35,8 +35,8 @@ with tempfile.TemporaryDirectory(dir=scratch) as directory:
     alias.symlink_to(packages[0], target_is_directory=True)
     cases = []
 
-    def check(name, configured, expected=None, error=None, explicit=None):
-        (agent / 'settings.json').write_text(json.dumps({'packages': configured}))
+    def check(name, configured, expected=None, error=None, explicit=None, extensions=None):
+        (agent / 'settings.json').write_text(json.dumps({'packages': configured, 'extensions': extensions or []}))
         command = [sys.executable, str(launcher), '--help']
         if explicit is not None:
             command.extend(['--harness-package', str(explicit)])
@@ -67,6 +67,19 @@ with tempfile.TemporaryDirectory(dir=scratch) as directory:
     check('wrong explicit package', [], explicit=unrelated, error='Selected package is not the Fight Harness')
     (first / 'src/observation/run-stage.py').unlink()
     check('configured monitor missing does not fall back', [str(first)], error='No child started')
+    # Native resources can load a complete Harness without any packages inventory entry.
+    installed = root / 'direct harness'
+    shutil.copytree(provider / 'harness/pi', installed, ignore=shutil.ignore_patterns('node_modules', 'tests'))
+    resources = json.loads((installed / 'package.json').read_text())['pi']['extensions']
+    check('direct Harness resources hold before monitor dispatch', [],
+          extensions=[str(installed / resource) for resource in resources],
+          error='Native Harness registration unavailable or conflicting')
+    (agent / 'extensions').mkdir()
+    discovered = agent / 'extensions/harness'
+    discovered.symlink_to(installed, target_is_directory=True)
+    check('auto-discovered Harness holds before monitor dispatch', [],
+          error='Native Harness registration unavailable or conflicting')
+    discovered.unlink()
     # Unsupported inventory must never be interpreted as an empty configuration.
     binaries = root / 'bin'
     binaries.mkdir()

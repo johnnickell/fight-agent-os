@@ -45,7 +45,9 @@ and `--list-models`; versions are evidence, not equality gates. No global instal
 Launch **one child at a time** using the existing provider-owned `scripts/run-stage.py`. Resolve its absolute path
 beside this skill, never from an unrelated target. The launcher uses native `pi list` from the selected task
 checkout to detect the configured Harness package automatically. One unfiltered Harness selects its resolved
-package directory; no configured Harness uses the trusted provider checkout's `harness/pi`. Multiple distinct
+package directory; when no Harness package is configured, the launcher selects the trusted provider checkout's
+`harness/pi`. Before monitor dispatch, offline native registration checks that the selected package can coexist
+with direct and auto-discovered extensions; registration diagnostics hold even when Pi exits successfully. Multiple distinct
 Harness copies, filtered Harness resources, an unreadable/unsupported inventory or unavailable monitor support
 hold before dispatch. Inspect `pi list` and report the prerequisite; do not install/remove packages, change
 settings/trust or disable extension discovery to bypass it. No user-specific installation path is required.
