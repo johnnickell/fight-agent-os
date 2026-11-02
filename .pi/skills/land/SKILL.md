@@ -35,7 +35,12 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    canonical/target hooks and uses per-invocation noninteractive consent only for absent hooks or the exact
    reviewed repository down hook. Do not ask the user for that routine cleanup; unknown/user/changed hooks
    refuse source removal without blocking Docker teardown. Never persist approvals, bypass hooks, force, prune,
-   strip protections or stop a shared VM.
+   strip protections or stop a shared VM. An exact structured `retained_unmerged` outcome with absent source/
+   registration/runtime, unchanged ref and no registered owner permits generated config retirement. Report
+   the local ref intentionally retained pending integration separately; do not call eligible closeout failed,
+   claim all refs deleted, retain secrets until merge or retry unchanged cleanup. Unknown/raced/checked-out/
+   failed outcomes remain holds. After config retirement, repeats use only the original absolute path, never
+   branch-based redirection or fabricated publication.
    No mandatory source copies or permanent local archive. Keep active-role evidence until outcomes reach TASK/PR.
    If this worker consumes source, Build continues source removal from the safe checkout after actual exits;
    that source hold cannot block explicit Docker teardown. No second cleanup helper or resource ledger.

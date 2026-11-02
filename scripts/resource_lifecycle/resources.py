@@ -14,9 +14,9 @@ def require(condition, message):
         raise Hold(message)
 
 
-def run(argv, cwd, capture=False, env=None, timeout=1800):
+def run(argv, cwd, capture=False, env=None, timeout=1800, input=None):
     result = subprocess.run([str(v) for v in argv], cwd=cwd, env=env, timeout=timeout,
-                            capture_output=capture, text=True)
+                            capture_output=capture, text=True, input=input)
     if result.returncode:
         # Captured Compose errors can contain resolved private settings. Native
         # streamed operations keep their actual diagnostics; never dump config.

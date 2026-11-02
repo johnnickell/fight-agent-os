@@ -45,8 +45,13 @@ def resolve(root, selector=None, removed=False):
         if candidates:
             entry = candidates[0]
             return safe, Path(entry['path']), entry['project'], entry
-        # No locator or native project: a repeated cleanup is already complete.
-        return safe, None, None, None
+        # Without a locator, only the exact original path can identify a project.
+        # Never redirect a retired selector by branch or infer Docker absence.
+        require(Path(selector).is_absolute(), 'No registered worktree/locator; use the exact original absolute path')
+        checkout = Path(selector)
+        # Preserve the original lexical identity even if source was recreated as
+        # an alias. Down disposes that project before reporting the source hold.
+        return safe, checkout, identity(safe, checkout), None
     raise Hold('No matching registered worktree: ' + selector)
 
 

@@ -106,6 +106,11 @@ observe its actual exit, then continue source-qualified Worktrunk cleanup from t
 Use a fresh cleanup-only Land worker when required, with the same pinned model/ledger and ordinary trusted
 stage entry. No publication, new runtime or tracked edits in that continuation. Preserve active coordinator,
 unique source and real protections; never stop shared services/VMs. Report Docker and source holds separately.
+For the shared remover's qualified `retained_unmerged` outcome, verify eligible source/runtime/registration/
+config retirement and report the exact unchanged local ref intentionally retained pending integration. Do not
+demand unchanged retries or merge before config retirement, claim all refs deleted or create a delivery queue.
+Other native outcomes/holds stay incomplete. Locator-free repeats use the original absolute path only; they
+must not rediscover a branch, redirect to a reattached worktree or fabricate publication.
 
 Return actual PR/publication state, fresh/reused verification, warnings, removed/remaining counts, finite holds
 and shared repair usage. Follow [handoff rules](../../../docs/engineering/HANDOFFS.md); success ends with the

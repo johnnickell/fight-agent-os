@@ -561,4 +561,5 @@
 | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | ready-for-agent | — |
 | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | done | — |
 | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | done | — |
+| [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | done | — |
 <!-- /planning:records -->

@@ -102,16 +102,13 @@ def down(root, selector=None):
         # Compose down without -v retains main's normal declared persistent data.
         return subprocess.run([*compose(safe, checkout, project), '--profile', '*', 'down', '--remove-orphans'],
                               cwd=safe, env=environment()).returncode
-    if project is None:
-        print(json.dumps({'complete': True, 'already_absent': True}))
-        return 0
     state = safe / 'var/worktrees' / project
     cleanup = state / 'down.json'
     from .resources import write_private
     require(not state.is_symlink(), 'Runtime state alias refused')
-    if not (state / 'locator.json').exists():
+    if entry is not None and not (state / 'locator.json').exists():
         write_private(state / 'locator.json', json.dumps({**entry, 'project': project}) + '\n')
-    if not cleanup.exists():
+    if entry is not None and not cleanup.exists():
         # No prior startup: native project identity is deterministic. An empty
         # Compose model still removes labeled orphans; label sweep covers volumes.
         config = '{"services": {}}'
@@ -119,20 +116,24 @@ def down(root, selector=None):
         state.mkdir(parents=True, exist_ok=True, mode=0o700)
         write_private(cleanup, config)
     args = ['docker', 'compose', '--project-name', project, '--project-directory', str(safe),
-            '--env-file', '/dev/null', '--file', str(cleanup), 'down', '--volumes', '--remove-orphans']
+            '--env-file', '/dev/null', '--file', str(cleanup) if entry is not None else '-',
+            'down', '--volumes', '--remove-orphans']
     failures = []
     removed = {'containers': 0, 'volumes': 0, 'networks': 0, 'image_tags': 0, 'builders': 0}
 
-    def effect(argv):
+    def effect(argv, input=None):
         try:
-            run(argv, safe, env=environment())
+            run(argv, safe, env=environment(), input=input)
             return True
         except (Hold, OSError, subprocess.SubprocessError) as error:
             failures.append(str(error))
             return False
 
     before = {kind: native_ids(safe, kind, project) for kind in ('containers', 'volumes', 'networks')}
-    effect(args)
+    # A retired exact path has no locator/config. Use an ephemeral stdin model,
+    # but still inventory/dispose its deterministic native project; never recreate
+    # source or persist a replacement locator merely to report a repeat.
+    effect(args, input='{"services": {}}' if entry is None else None)
     # Exact reserved project builder only; ordinary builds use the shared native
     # builder and do not claim its downloaded images/cache as task-exclusive.
     builders = text(['docker', 'buildx', 'ls', '--format', '{{.Name}}'], safe).splitlines()
@@ -172,10 +173,12 @@ def down(root, selector=None):
         # This reserved directory holds only disposable task runtime storage.
         require(not (state / 'output').is_symlink(), 'Task output alias refused')
         shutil.rmtree(state / 'output')
-    # Locator/config survives while source is registered, enabling harmless
-    # repeats and post-worktree-removal recovery. No source/output deletion here.
+    # Source/ref qualification, not runtime-only down, retires configuration.
+    # No locator is evidence of neither source nor Docker absence.
+    if entry is None and (checkout != checkout.resolve() or checkout.exists() or checkout.is_symlink()):
+        failures.append('Unregistered/recreated/aliased original source path retained; Docker teardown attempted')
     print(json.dumps({'project': project, 'complete': not failures, 'removed': removed, 'failures': failures,
-                      'locator': str(state / 'locator.json')}))
+                      'locator': str(state / 'locator.json') if entry is not None else None}))
     return 1 if failures else 0
 
 

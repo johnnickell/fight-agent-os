@@ -91,9 +91,11 @@ policy. This is never invoked by task down/Land. Do not run machine-wide prune/r
 
 Task down removes reserved disposable runtime output. Keep active role evidence only while consumed, then retire
 its exact `.runs/compose/<project>/` evidence/cache after outcomes reach the existing TASK/PR. The small
-`locator.json` and secret-free `down.json` survive outside removable source to support interrupted removal and
-harmless repeated teardown. They locate Compose configuration; they are not resource inventories or admission
-receipts. After successful source retirement, delete the exact generated `var/worktrees/<project>/` directory.
+`locator.json` and secret-free `down.json` survive outside removable source while source remains registered or
+removal is incomplete. They locate Compose configuration, not resource inventories or admission receipts.
+After qualified source/registration/runtime retirement, the shared remover deletes the exact generated
+`var/worktrees/<project>/` directory, including secret settings—even when Worktrunk intentionally retains the
+exact unchanged unmerged local ref. No configuration is kept merely to wait for human merge.
 No PID/worker/branch/receipt prerequisite governs explicit disposable Docker teardown. Never signal sessions to
 make down succeed. Old `.runs/.../resources.json` remains historical evidence until its consumers finish, not
 an active lifecycle or compatibility system.
@@ -126,16 +128,27 @@ hooks need their owner's separate decision, never blanket consent. Clean owned q
 same callable with exact OID/ancestor proof instead of fabricated PR proof. Genuine parent mount use and
 host readers/writers hold source; parent-only exposure and cached read-only Docker file-sharing handles require
 positive native consumer qualification, not shared-service/VM shutdown. Never force/reap, bypass hooks, delete
-refs/config by custom fallback, remove the main checkout or stop shared VMs. Worktrunk may retain an unmerged
-branch or metadata: inspect actual path/registration/ref/config and report partial Git outcomes separately.
-If source is already gone, repeat down through its locator, then let Worktrunk handle the exact surviving branch
-under Land's source/delivery qualification. An explicitly owned fixture with absent source/registration can
+refs/config by custom fallback, remove the main checkout or stop shared VMs. The remover accepts only an exact
+structured foreground `deleted` or `retained_unmerged` result plus native postconditions. For the latter, source
+and registration must be absent, the ref must still equal the expected OID and no registered owner may hold it,
+including a missing physical owner. Report eligible runtime/source/registration/config retirement separately
+from the intentionally retained ref pending integration; this is not a generic failure, a claim of ref deletion
+or a reason to retry unchanged cleanup. Other kinds, unknown/checked-out/raced/failed outcomes and metadata
+holds remain incomplete. Worktrunk retains non-force ref policy ownership; the user's ordinary post-merge
+branch cleanup remains separate.
+If source is already gone but configuration remains, repeat down through its locator, then let Worktrunk handle
+the exact surviving branch under Land's source/delivery qualification. An explicitly owned fixture with absent source/registration can
 instead resume with its exact unchanged expected ref OID and canonical HEAD ancestry proof, just like a present
 fixture; no fabricated delivery callback is needed. Effective hooks and native non-force policy still apply.
 If source, ref and registration are all absent, the same guarded
 callable completes public down and retires the remaining locator/config without requiring publication again.
-Surviving or changed source/refs still require the existing source/delivery checks. Do not recreate source or
-publish again for cleanup.
+After configuration retirement, repeat public down/finish with the **exact original absolute path**. Successful
+native inventory still checks/disposes that path's deterministic Docker project without writing replacement
+configuration. Only an absent original path/registration is already completed; no branch discovery/deletion or
+publication is inferred. Unknown short/branch selectors refuse without a locator. Changed/recreated source,
+reattached refs and unavailable inventories retain their existing source/delivery guards; an unregistered
+recreated original path is held after Docker teardown. Never redirect the original path to another worktree
+by surviving ref, recreate source or publish again for cleanup.
 
 If Land's own session consumes source, Build observes its real exit before source retirement from the safe
 checkout. Docker down itself does not need that exit. There is no post-worker receipt/PID cleanup helper. The
