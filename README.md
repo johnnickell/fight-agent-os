@@ -376,3 +376,5 @@ Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees
 
 See [architecture](ARCHITECTURE.md), [roadmap](planning/ROADMAP.md), and [scaffold origin](docs/ORIGIN.md).
 The inherited starter retains its [MIT license](LICENSE).
+
+See [local Docker, worktree and build-cache operations](docs/engineering/LOCAL_TOOLING.md) for explicit main/worktree selection, guarded teardown and fresh versus reused gate evidence.

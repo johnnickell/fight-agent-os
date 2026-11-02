@@ -14,6 +14,10 @@ This routing path does not require reading README, architecture, full project co
 For execution or substantive planning changes, load the applicable guidance below. The read-only routing
 path above takes precedence over broad orientation reads; it does not waive engineering or delivery rules.
 
+For Docker preparation/teardown, isolated worktrees, guarded source removal and build-cache evidence, follow
+[local tooling](docs/engineering/LOCAL_TOOLING.md). Use normal `./bin/build` for fresh planning and qualified
+application reuse; use `--force` for deliberate fresh application execution.
+
 Read [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md), and [planning/CONVENTIONS.md](planning/CONVENTIONS.md).
 Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 [planning/FOUNDATION.md](planning/FOUNDATION.md) for the starting scope and unfinished integrations.
