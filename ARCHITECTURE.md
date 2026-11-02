@@ -36,8 +36,8 @@ a current human merge action. Other capability states are unchanged.
   and directory HTTP Actions, referenced package `GetRoleById` reads through injected QueryBus, and complete
   safe View/HTTP mapping in Responders without fetching there. The redundant consumer read services are removed.
   Volatile in-directory detail remains; no mutation or self-service expansion. The owner's boundary correction
-  awaits renewed independent Review/QA; prior acceptance is historical. Current Work evidence is
-  `.runs/tasks/TASK-00118/runs/repair-1-work-handoff.md`;
+  has independent Review/QA acceptance on `c2227fa`; publication and final checks were pending at closeout.
+  Current delivery results: `.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200);
   canonical login at `/app/login` reuses package authentication, browser guards,
   schema/Formik and memory/cookie seams, also pending independent acceptance; rotating cookie-only refresh and current-session logout now have HTTP/client services and login-success UI pending independent Review/QA; TASK-00048 adds bounded memory-only multi-tab continuity/restoration at `/app/login`, pending independent Review/QA; TASK-00049 connects one strict typed client `/me` service and the existing cache to login/restoration, pending independent Review/QA; the protected frame now uses that same sole graph, with truthful future landing seams and explicit unavailable-product copy
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)

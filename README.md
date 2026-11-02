@@ -259,9 +259,9 @@ The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) a
 (TASK-00059 implementation; independent Review/QA pending). TASK-00118 adds a safe read-only
 `GET /api/v1/users/{userId}` and fresh detail entry within that directory, with exact authoritative `READ_USERS`
 enforced in the HTTP Actions, public package user/role queries and safe Responder presentation. No target data
-is stored in browser history. The owner's HTTP-boundary correction is in Work repair; renewed independent
-Review/QA are pending. Earlier acceptance/publication evidence is historical, not acceptance of this repair;
-current Work evidence is `.runs/tasks/TASK-00118/runs/repair-1-work-handoff.md`.
+is stored in browser history. The owner's HTTP-boundary correction has independent Review and QA acceptance on `c2227fa`.
+Publication and final delivery checks were pending at closeout; current results are in
+`.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200).
 Invitation controls link only to registered,
 truthfully unavailable journeys; no invitation or lifecycle mutation UI is added.
 Guarded custom Role create/rename/remove APIs now carry exact displayed revisions and atomic safe audit, pending
