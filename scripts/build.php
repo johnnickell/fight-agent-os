@@ -36,17 +36,65 @@ $fingerprint = null;
 if ($force) {
     $cache->invalidate();
 }
+$timings = [];
+$timed = static function (string $name, callable $operation) use (&$timings): mixed {
+    $start = microtime(true);
+    try {
+        return $operation();
+    } finally {
+        $timings[$name] = round(microtime(true) - $start, 3);
+        fwrite(STDOUT, sprintf("%s: %.2fs\n", $name, $timings[$name]));
+    }
+};
+// Planning is fresh on every invocation, including application-cache hits. A
+// planning failure must not turn a previously verified application into a pass.
+try {
+    $planningBefore = $cache->tree($root.'/planning');
+    $planning = new Process(['./bin/planning-check'], $root);
+    $planning->setTimeout(null);
+    $planningExit = $timed('Planning validation', static fn (): int => $planning->run(
+        static function (string $type, string $output): void {
+            fwrite($type === Process::ERR ? STDERR : STDOUT, $output);
+        }
+    ));
+    if ($planningExit !== 0 || $planningBefore !== $cache->tree($root.'/planning')) {
+        fwrite(STDERR, "Build failed: planning is invalid or changed during validation. No application phases run.\n");
+        exit(1);
+    }
+} catch (Throwable) {
+    fwrite(STDERR, "Build failed: planning validation could not be completed. No application phases run.\n");
+    exit(1);
+}
+$missReason = $force ? 'Explicit --force requested' : 'No successful cache pointer';
 try {
     fwrite(STDOUT, "Checking build inputs and runtime...\n");
-    $fingerprint = $cache->fingerprint();
-    $reused = $force ? null : $cache->reusable($fingerprint);
-    if ($reused !== null && $fingerprint === $cache->fingerprint()) {
+    $fingerprint = $timed('Input fingerprint', static fn (): string => $cache->fingerprint());
+    $reused = $force ? null : $timed(
+        'Receipt/artifact validation',
+        static fn (): ?string => $cache->reusable($fingerprint)
+    );
+    if (!$force) {
+        $missReason = $cache->missReason();
+    }
+    if ($reused !== null) {
+        $stable = $fingerprint === $timed('Input stability recheck', static fn (): string => $cache->fingerprint());
+        if ($planningBefore !== $cache->tree($root.'/planning')) {
+            fwrite(STDERR, "Build failed: planning changed after validation. Run the build again.\n");
+            exit(1);
+        }
+        if (!$stable) {
+            $reused = null;
+            $missReason = 'Inputs changed during cache verification';
+        }
+    }
+    if ($reused !== null) {
         fwrite(STDOUT, sprintf(
             "Reusing successful build in %.2fs. Original receipt: %s\n",
             microtime(true) - $started,
             $reused
         ));
-        fwrite(STDOUT, "Original logs, warnings and reports remain with that receipt. No phases rerun.\n");
+        fwrite(STDOUT, "Planning was validated freshly. Application phases reused.\n");
+        fwrite(STDOUT, "Original warnings remain with that receipt.\n");
         flock($lock, LOCK_UN);
         fclose($lock);
         exit(0);
@@ -57,6 +105,8 @@ try {
 }
 // A failure or interruption from here must never revive an earlier success.
 $cache->invalidate();
+$missReason = $fingerprint === null ? 'Input/runtime fingerprint unavailable' : $missReason;
+fwrite(STDOUT, 'Build cache miss: '.$missReason.".\n");
 fwrite(STDOUT, $force ? "Forced full build.\n" : "No reusable success; running the full build.\n");
 $run = $directory.'/'.gmdate('Ymd\THis\Z').'-'.getmypid();
 if (!mkdir($run, 0755) || !chmod($run, 0755) || !mkdir($run.'/home', 0700)) {
@@ -79,10 +129,22 @@ $receipt = [
     'php'               => PHP_VERSION,
     'xdebug'            => phpversion('xdebug'),
     'packages'          => [],
-    'phases'            => [],
+    'phases'            => [[
+        'name'    => 'Planning (read-only)',
+        'command' => ['./bin/planning-check'],
+        'exit'    => 0,
+        'seconds' => $timings['Planning validation']
+    ]],
+    'cache_miss_reason' => $missReason,
     'reports'           => ['.runs/build/reports/backend/', '.runs/build/reports/client/'],
     'limits'            => 'Local acceptance, not independent review, QA, merge or deployment'
 ];
+if (
+    file_put_contents($run.'/01.log', $planning->getOutput().$planning->getErrorOutput()) === false ||
+    !chmod($run.'/01.log', 0644)
+) {
+    throw new RuntimeException('Cannot retain fresh planning validation.');
+}
 foreach (InstalledVersions::getInstalledPackages() as $package) {
     $receipt['packages'][$package] = InstalledVersions::getPrettyVersion($package);
 }
@@ -130,6 +192,7 @@ $execute = static function (
             'exit'    => $exit,
             'seconds' => round(microtime(true) - $start, 3)
         ];
+        fwrite(STDOUT, sprintf("Phase finished: %s in %.2fs (exit %d)\n", $name, microtime(true) - $start, $exit));
 
         return $exit;
     } finally {
@@ -196,7 +259,6 @@ try {
     $steps = [
         'Composer version'       => ['composer', '--version', '--no-interaction'],
         'Composer manifest/lock' => ['composer', 'validate', '--strict', '--no-interaction'],
-        'Planning (read-only)'   => ['./bin/planning-check'],
         'PHP syntax/namespaces'  => ['php', 'scripts/php_syntax.php'],
         'PHP style'              => ['php', 'vendor/bin/phpcs', '-s'],
         'PHP types'              => ['php', 'vendor/bin/phpstan', 'analyse', '--no-progress', '--memory-limit=512M'],
@@ -298,18 +360,24 @@ try {
         $afterFingerprint = null;
         if ($fingerprint !== null) {
             try {
-                $afterFingerprint = $cache->fingerprint();
+                $afterFingerprint = $timed('Final input fingerprint', static fn (): string => $cache->fingerprint());
             } catch (Throwable) {
                 // Known inputs becoming unknown during execution cannot be certified.
             }
         }
         $receipt['inputs_unchanged'] = $fingerprint !== null && $fingerprint === $afterFingerprint;
+        if ($planningBefore !== $cache->tree($root.'/planning')) {
+            fwrite(STDERR, "Build failed: planning changed after validation.\n");
+            $receipt['result'] = 'fail';
+            $exitCode = 1;
+        }
         if ($fingerprint !== null && !$receipt['inputs_unchanged']) {
             fwrite(STDERR, "Build failed: installed files or runtime changed during the gate.\n");
             $receipt['result'] = 'fail';
             $exitCode = 1;
         }
         $receipt['exit'] = $exitCode;
+        $receipt['cache_timings'] = $timings;
         $receipt['seconds'] = round(microtime(true) - $started, 3);
         $writeEvidence($run.'/receipt.json', $receipt);
         if ($exitCode === 0 && $receipt['inputs_unchanged']) {

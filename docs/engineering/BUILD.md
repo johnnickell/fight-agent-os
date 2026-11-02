@@ -10,7 +10,7 @@ A pass is not independent technical review, behavioral QA, merge, release or dep
 
 `./bin/build` and native `php scripts/build.php` accept `--force`. With no option, the gate checks the latest
 `var/build.json` and reuses its existing `.runs/build/<run>/receipt.json` only when all inputs and evidence match.
-The small JSON file stores the input fingerprint, exit code and original receipt/evidence digests. It is an
+The small JSON file stores the input fingerprint, opaque component digests, exit code and original receipt/evidence digests. It is an
 ignored cache pointer, not another acceptance report. Old receipts without these fields require a fresh run.
 
 The fingerprint covers sorted project paths, file bytes, permissions and symlink targets plus their resolved
@@ -18,9 +18,27 @@ contents, including `vendor/` and `client/node_modules/`. It excludes `.git/`, `
 `.DS_Store`, legacy `client/dist/` and `public/build/`, and the two disposable frontend cache mounts
 (`client/node_modules/.cache/` and `.vite-temp/`). Current generated OpenAPI, validation and live client-build
 inputs under `var/` are fingerprinted explicitly. Missing inputs, unreadable or special files and cyclic links
-disable caching; they are never silently omitted. Content changes to documentation and planning also miss the
-cache; commit/index bookkeeping alone does not. Administrative-only evidence assessment remains available under
-[execution standards](EXECUTION.md#gate-evidence-reuse).
+disable caching; they are never silently omitted. Ordinary Markdown records under `planning/` are excluded from
+the application fingerprint: tasks, tickets, epics, progress notes and generated planning views do not rebuild
+unchanged application inputs. Every invocation first runs a fresh, read-only planning check, including cache hits.
+Invalid planning fails the command before application phases. Planning must remain unchanged during validation
+and the subsequent cache check or full build. A planning-only failure preserves the previous application receipt,
+but never reports the current command as successful; `--force` invalidates it immediately.
+
+Governing planning inputs still invalidate application reuse: `planning/CONVENTIONS.md`, everything under
+`planning/agents/` and `planning/adr/`, `*_TEMPLATE.md`, files named `AGENTS.md`, `CLAUDE.md` or `SKILL.md`,
+all non-Markdown files and all symlinks. Code, dependencies, build tooling, skills, root agent instructions and
+documentation outside `planning/` remain fingerprinted. Commit/index bookkeeping alone does not invalidate reuse.
+Planning validation checks structure and consistency; a changed requirement still needs the appropriate human
+or agent assessment of whether the implementation satisfies it. A cache hit does not accept new requirements.
+Administrative-only evidence assessment remains available under [execution standards](EXECUTION.md#gate-evidence-reuse).
+
+Output names the cache-miss category: missing/old pointer, changed project/dependency/instruction contents,
+generated inputs, runtime/environment, database identity, invalid original receipt, changed retained evidence,
+unclean test database, unstable inputs or explicit force. Digests never persist environment values; reasons expose
+no secret input values. Planning, fingerprinting, evidence validation and stability rechecks report elapsed seconds;
+full builds also report each phase duration. Full receipts retain the miss reason and cache-operation timings.
+An older cache format requires one fresh build.
 
 Runtime identity includes PHP and extensions/INI settings and files, PHP/Composer/Git/Python/Node/npm executable
 contents and versions, the npm installation, Chromium/headless installation, OS/kernel/package metadata and the
@@ -43,7 +61,8 @@ that run. `--force` follows the same receipt, stability and publication rules.
 A hit verifies the original successful receipt, every recorded phase exit, retained snapshots/logs, the complete
 report tree and required generated application/check outputs. Missing or altered evidence causes a miss. It
 rechecks inputs before returning success, prints the original receipt and keeps its warnings in the original
-logs. It creates no new phase results and grants no independent review, QA, merge or deployment verdict. Removing
+logs. It reports fresh planning validation separately from reused application phases, leaves the original receipt
+unchanged and grants no independent review, QA, merge or deployment verdict. Removing
 `.runs/build` or `var/build.json` simply loses reuse. Keep the selected original evidence while it is consumed.
 CI does not restore local success pointers or share acceptance between environments.
 
@@ -134,8 +153,8 @@ The local host wrapper checks the running `web` service and its Compose configur
 with `docker compose exec -T web php scripts/build.php`. Hosted CI invokes `php scripts/build.php` directly
 on the runner after explicit native setup. Both entries use the same PHP-owned phases, in order:
 
-1. Composer version and strict manifest/lock validation, with network access disabled for Composer.
-2. Authoritative `./bin/planning-check`, without `--write`.
+1. Authoritative `./bin/planning-check`, without `--write`, before application cache lookup on every invocation.
+2. On an application cache miss, Composer version and strict manifest/lock validation, with network access disabled for Composer.
 3. PHP syntax/namespace checks, locked Fight Common PHPCS, PHPStan level 7, Deptrac and Rector dry-run.
 4. OpenAPI and public-validation artifact freshness through their owning PHP scripts.
 5. The [backend coverage phase](BACKEND_TESTS.md): guarded PostgreSQL identity/version check, test schema reset,
