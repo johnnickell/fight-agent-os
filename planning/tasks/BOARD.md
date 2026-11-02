@@ -441,7 +441,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 73 | [TASK-00076](00076-TASK.md) | Qualify supported local Planning operation | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-human | [TASK-00075](00075-TASK.md) | — |
 | 101 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-human | [TASK-00103](00103-TASK.md) | — |
 | 111 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-human | [TASK-00104](00104-TASK.md), [TASK-00113](00113-TASK.md) | — |
-| — | [TASK-00508](00508-TASK.md) | Preserve readable prose in agent handoffs | — (standalone chore) | ready-for-human | — | [PR #145](https://github.com/johnnickell/fight-agent-os/pull/145) |
 
 ## Needs Triage
 
@@ -596,6 +595,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00502](00502-TASK.md) | Follow current-session children and their worktree test logs automatically | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #144](https://github.com/johnnickell/fight-agent-os/pull/144) |
 | — | [TASK-00503](00503-TASK.md) | Launch the Pi terminal workspace globally from any project | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #146](https://github.com/johnnickell/fight-agent-os/pull/146) |
 | — | [TASK-00504](00504-TASK.md) | Support release-scoped independent review and QA handoffs | — (standalone chore) | done | — | [PR #142](https://github.com/johnnickell/fight-agent-os/pull/142) |
+| — | [TASK-00508](00508-TASK.md) | Preserve readable prose in agent handoffs | — (standalone chore) | done | — | [PR #145](https://github.com/johnnickell/fight-agent-os/pull/145) |
 | — | [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | — (standalone bug) | done | — | [PR #147](https://github.com/johnnickell/fight-agent-os/pull/147) |
 | — | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #151](https://github.com/johnnickell/fight-agent-os/pull/151) |
 | — | [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #154](https://github.com/johnnickell/fight-agent-os/pull/154) |
