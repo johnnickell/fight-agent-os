@@ -372,7 +372,7 @@ evidence outside disposable source until outcomes reach TASK/PR, then retire it.
 
 Use the current project-owned `./bin/build` gate and [engineering standards](docs/engineering/STANDARDS.md).
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots
-(such as `.runs/worktrees/`, never directly in `.runs/`). Runtime sandboxing remains planned, not implied by the development Compose stack.
+(such as a sibling `.worktrees/` directory, outside `.runs/`). Runtime sandboxing remains planned, not implied by the development Compose stack.
 
 See [architecture](ARCHITECTURE.md), [roadmap](planning/ROADMAP.md), and [scaffold origin](docs/ORIGIN.md).
 The inherited starter retains its [MIT license](LICENSE).
