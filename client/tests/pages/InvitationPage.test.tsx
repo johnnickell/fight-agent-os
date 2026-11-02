@@ -95,6 +95,75 @@ describe('Pending invitation', () => {
     expect(screen.getByText('Retryable delivery failure')).toBeVisible();
     expect(screen.getByText(/request completed/)).toHaveTextContent('not proof of inbox receipt');
   });
+  it.each(
+    (['retry', 'resend', 'correct'] as const).flatMap((operation) =>
+      [false, true].map((sameTarget) => ({ operation, sameTarget }))
+    )
+  )(
+    'exposes explicit current-page recovery after $operation settles across a remount (same target: $sameTarget)',
+    async ({ operation, sameTarget }) => {
+      const original = invitationTarget();
+      const selected = sameTarget ? original : invitationTarget({ email: 'second@example.test' });
+      const fresh = { ...selected, email: 'authoritative@example.test', state: 'active' };
+      const mutation = deferred<Response>();
+      const newRead = deferred<Response>();
+      let reads = 0;
+      const d = await mount(original, undefined, (_url, init) => {
+        if (init.method !== 'GET') return mutation.promise;
+        ++reads;
+        return reads === 1
+          ? Promise.resolve(invitationResponse(original))
+          : reads === 2
+            ? newRead.promise
+            : Promise.resolve(invitationResponse(fresh));
+      });
+      if (operation === 'retry') {
+        fireEvent.click(await screen.findByRole('button', { name: 'Retry delivery' }));
+      } else if (operation === 'resend') {
+        await userEvent.click(await screen.findByRole('button', { name: 'Resend invitation' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Confirm resend' }));
+      } else {
+        await userEvent.click(await screen.findByRole('button', { name: 'Correct email' }));
+        await userEvent.type(screen.getByLabelText('New email (required)'), 'new@example.test');
+        await userEvent.click(screen.getByRole('button', { name: 'Review email correction' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Confirm correction' }));
+      }
+      expect(d.transport).toHaveBeenCalledTimes(2);
+      d.unmount();
+      render(<InvitationPage userId={selected.user_id} cache={d.cache} service={d.service} />);
+      expect(screen.getByText('Reading invitation')).toBeVisible();
+      expect(d.transport).toHaveBeenCalledTimes(3);
+      await act(async () => {
+        mutation.resolve(invitationResponse(original.delivery));
+        await mutation.promise;
+      });
+      await act(async () => {
+        newRead.resolve(invitationResponse(selected));
+        await newRead.promise;
+      });
+      expect(screen.queryByText('Reading invitation')).not.toBeInTheDocument();
+      expect(screen.queryByText(selected.email)).not.toBeInTheDocument();
+      expect(screen.getByText('Invitation status needs reloading')).toBeVisible();
+      expect(screen.queryByText(/request completed/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      const reload = screen.getByRole('button', { name: 'Reload invitation' });
+      expect(reload).toBeEnabled();
+      expect(d.transport).toHaveBeenCalledTimes(3);
+      await userEvent.click(reload);
+      expect(await screen.findByText(fresh.email)).toBeVisible();
+      expect(screen.getByText('Active')).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'Retry delivery' })).not.toBeInTheDocument();
+      expect(d.transport.mock.calls.map(([, init]) => init.method)).toEqual([
+        'GET',
+        operation === 'correct' ? 'PATCH' : 'POST',
+        'GET',
+        'GET'
+      ]);
+      expect(d.transport.mock.calls[2]?.[0]).toBe(`/api/v1/invitations/${selected.user_id}`);
+      expect(d.transport.mock.calls[3]?.[0]).toBe(`/api/v1/invitations/${selected.user_id}`);
+    }
+  );
   it.each(['pending', 'claimed', 'delivered', 'permanent_failure', 'expired', 'invalidated'])(
     'does not offer retry for %s',
     async (status) => {
@@ -165,6 +234,19 @@ describe('Pending invitation', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(trigger).toHaveFocus());
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  it('clears inline correction and returns keyboard focus to its surviving trigger', async () => {
+    const d = await mount();
+    const trigger = await screen.findByRole('button', { name: 'Correct email' });
+    await userEvent.click(trigger);
+    await userEvent.type(screen.getByLabelText('New email (required)'), 'volatile@example.test');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel correction' }));
+    expect(trigger).toHaveFocus();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    await userEvent.click(trigger);
+    expect(screen.getByLabelText('New email (required)')).toHaveValue('');
+    expect(d.transport).toHaveBeenCalledOnce();
   });
 
   it('confirms old/new canonical correction, clears volatile input, and renders only the refetched email', async () => {

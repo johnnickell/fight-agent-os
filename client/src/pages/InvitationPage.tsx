@@ -25,6 +25,7 @@ import type { KeyboardEvent } from 'react';
 
 type View =
   | { kind: 'loading' }
+  | { kind: 'invalidated' }
   | { kind: 'error'; reason: ApiFailureKind }
   | { kind: 'ready'; target: InvitationTarget };
 const deliveryLabels = {
@@ -83,7 +84,7 @@ export default function InvitationPage({
     if (confirm !== null || !focusAfterClose.current) return;
     focusAfterClose.current = false;
     returnFocus.current?.focus({ preventScroll: true });
-  }, [confirm, revision]);
+  }, [confirm, revision, editing]);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(timer);
@@ -110,8 +111,10 @@ export default function InvitationPage({
     void service.load(userId, controller.signal).then((result) => {
       if (request !== generation.current || controller.signal.aborted || !scope.isCurrent()) return;
       if (result.ok) setView({ kind: 'ready', target: result.value });
-      else if (result.error.kind !== 'cancelled')
-        setView({ kind: 'error', reason: result.error.kind });
+      // This page still owns the read, but service-wide work invalidated its result.
+      // Keep the stale result discarded and expose deliberate recovery, not endless loading.
+      else if (result.error.kind === 'cancelled') setView({ kind: 'invalidated' });
+      else setView({ kind: 'error', reason: result.error.kind });
     });
     return () => {
       invalidate();
@@ -191,6 +194,12 @@ export default function InvitationPage({
           kind="loading"
           title="Reading invitation"
           message="Checking current user and delivery state."
+        />
+      ) : view.kind === 'invalidated' ? (
+        <ContentState
+          kind="error"
+          title="Invitation status needs reloading"
+          message="This read was superseded. Reload invitation to read current state; no recovery action was replayed."
         />
       ) : view.kind === 'error' ? (
         <ContentState
@@ -345,14 +354,7 @@ export default function InvitationPage({
                     }}
                   />
                   <Button type="submit">Review email correction</Button>
-                  <Button
-                    onClick={() => {
-                      setEditing(false);
-                      setEmail('');
-                    }}
-                  >
-                    Cancel correction
-                  </Button>
+                  <Button onClick={close}>Cancel correction</Button>
                 </form>
               )}
             </section>

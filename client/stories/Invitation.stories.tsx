@@ -118,7 +118,16 @@ export const CorrectionConfirmation: Story = {
   parameters: { mode: 'dark' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: 'Correct email' }));
+    const trigger = await canvas.findByRole('button', { name: 'Correct email' });
+    await userEvent.click(trigger);
+    await userEvent.type(canvas.getByLabelText('New email (required)'), 'cancelled@example.test');
+    await userEvent.tab();
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: 'Cancel correction' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(trigger).toHaveFocus();
+    await userEvent.click(trigger);
+    await expect(canvas.getByLabelText('New email (required)')).toHaveValue('');
     await userEvent.type(canvas.getByLabelText('New email (required)'), 'corrected@example.test');
     await userEvent.click(canvas.getByRole('button', { name: 'Review email correction' }));
     const dialog = await within(canvasElement.ownerDocument.body).findByRole('dialog', {
