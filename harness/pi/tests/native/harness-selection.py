@@ -1,0 +1,80 @@
+"""Qualify stage package selection with native Pi inventory and disposable operator state
+
+Run from the provider checkout: python3 harness/pi/tests/native/harness-selection.py
+No provider requests, enrollment, operator settings changes or agent sessions.
+"""
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+
+provider = Path.cwd().resolve()
+launcher = provider / '.pi/skills/build/scripts/run-stage.py'
+assert shutil.which('pi'), 'Installed Pi required'
+scratch = provider / '.runs/harness-selection'
+scratch.mkdir(parents=True, exist_ok=True)
+with tempfile.TemporaryDirectory(dir=scratch) as directory:
+    root = Path(directory)
+    home, agent, target = (root / name for name in ('home', 'agent', 'target'))
+    for path in (home, agent, target):
+        path.mkdir()
+    env = dict(os.environ, HOME=str(home), PI_CODING_AGENT_DIR=str(agent), PI_OFFLINE='1',
+               NO_COLOR='1', PYTHONDONTWRITEBYTECODE='1')
+    env.pop('FORCE_COLOR', None)
+    packages = []
+    for name in ('first harness', 'second harness'):
+        package = root / name
+        (package / 'src/observation').mkdir(parents=True)
+        (package / 'package.json').write_text(json.dumps({'name': '@fight/agent-os-pi', 'pi': {'extensions': []}}))
+        (package / 'src/observation/run-stage.py').write_text('print(' + repr(str(package)) + ')\n')
+        packages.append(package)
+    alias = root / 'same-package-alias'
+    alias.symlink_to(packages[0], target_is_directory=True)
+    cases = []
+
+    def check(name, configured, expected=None, error=None, explicit=None):
+        (agent / 'settings.json').write_text(json.dumps({'packages': configured}))
+        command = [sys.executable, str(launcher), '--help']
+        if explicit is not None:
+            command.extend(['--harness-package', str(explicit)])
+        result = subprocess.run(command, cwd=target, env=env, capture_output=True, text=True, timeout=25)
+        if error:
+            assert result.returncode == 1 and error in result.stderr, (name, result.stdout, result.stderr)
+            assert not result.stdout, 'A rejected selection must not run the monitor'
+        else:
+            if result.returncode != 0 or expected not in result.stdout:
+                inventory = subprocess.run(['pi', 'list'], cwd=target, env=env, capture_output=True, text=True)
+                raise AssertionError((name, result.stdout, result.stderr, inventory.returncode, inventory.stdout, inventory.stderr))
+        cases.append(name)
+
+    first, second = packages
+    check('configured package with spaces', [str(first)], expected=str(first))
+    check('explicit matching package', [str(first)], expected=str(first), explicit=first)
+    check('equivalent configured paths', [str(first), str(alias)], expected=str(first))
+    check('explicit equivalent path', [str(first)], expected=str(first), explicit=alias)
+    check('multiple configured copies', [str(first), str(second)], error='Multiple configured Harness')
+    check('explicit mismatch', [str(first)], error='Explicit Harness conflicts', explicit=second)
+    check('filtered Harness', [{'source': str(first), 'extensions': []}], error='Configured Harness is filtered')
+    check('no configured Harness', [], expected='Run one Pi role')
+    check('explicit package without configuration', [], expected=str(second), explicit=second)
+    unrelated = root / 'unrelated'
+    unrelated.mkdir()
+    (unrelated / 'package.json').write_text(json.dumps({'name': 'unrelated', 'pi': {'extensions': []}}))
+    check('unrelated package', [str(unrelated)], expected='Run one Pi role')
+    check('wrong explicit package', [], explicit=unrelated, error='Selected package is not the Fight Harness')
+    (first / 'src/observation/run-stage.py').unlink()
+    check('configured monitor missing does not fall back', [str(first)], error='No child started')
+    # Unsupported inventory must never be interpreted as an empty configuration.
+    binaries = root / 'bin'
+    binaries.mkdir()
+    fake = binaries / 'pi'
+    fake.write_text('#!/bin/sh\nprintf "changed inventory format\\n"\n')
+    fake.chmod(0o700)
+    env['PATH'] = str(binaries) + os.pathsep + env['PATH']
+    check('unsupported inventory', [], error='Unsupported Pi package inventory')
+    fake.write_text('#!/bin/sh\nexit 1\n')
+    check('failed inventory', [], error='Pi package inventory unavailable')
+    print(json.dumps({'result': 'passed', 'cases': cases, 'count': len(cases), 'providerRequests': 0}))
