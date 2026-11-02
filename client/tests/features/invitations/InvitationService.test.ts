@@ -203,6 +203,28 @@ describe('InvitationService', () => {
     expect(invalidated).toHaveBeenCalledOnce();
     expect(fetch).toHaveBeenCalledTimes(2);
   });
+  it('fences relevant reads promptly but preserves foreign-target reads and detached observers', async () => {
+    const target = invitationTarget();
+    const other = invitationTarget({ email: 'other@example.test' });
+    const read = deferred<Response>();
+    const mutation = deferred<Response>();
+    const fetch = vi.fn((_url: string, init: RequestInit) =>
+      init.method === 'GET' ? read.promise : mutation.promise
+    );
+    const d = await setup(fetch);
+    const detached = vi.fn();
+    d.service.subscribe(target.user_id, detached)();
+    const old = d.service.load(target.user_id);
+    const operation = d.service.change(target.user_id, 'retry');
+    expect(await old).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
+    const foreign = d.service.load(other.user_id);
+    mutation.resolve(invitationResponse(target.delivery));
+    await operation;
+    read.resolve(invitationResponse(other));
+    expect(await foreign).toMatchObject({ ok: true, value: { email: other.email } });
+    expect(detached).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
   it('suppresses late reads after logout and abort, and bounds unanswered mutations without replay', async () => {
     vi.useFakeTimers();
     const target = invitationTarget();

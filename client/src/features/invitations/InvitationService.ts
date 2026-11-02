@@ -102,6 +102,20 @@ export class InvitationService {
   #generation = 0;
   #pending = false;
   #blocked = false;
+  readonly #listeners = new Set<(userId: string) => void>();
+
+  /** Observes target invalidation only; never publishes identity or mutation results. */
+  subscribe(userId: string, listener: () => void): () => void {
+    const notify = (changedUserId: string) => {
+      if (changedUserId === userId) listener();
+    };
+    this.#listeners.add(notify);
+    return () => this.#listeners.delete(notify);
+  }
+  #invalidate(userId: string): void {
+    for (const listener of this.#listeners) listener(userId);
+  }
+
   constructor(api: ApiClient, authority: AuthorityCache, lifecycle: InvitationLifecycle) {
     this.#api = api;
     this.#authority = authority;
@@ -120,6 +134,11 @@ export class InvitationService {
     if (!isUserId(userId)) return apiFailure('protocol');
     const generation = ++this.#generation;
     const controller = new AbortController();
+    let invalidated = false;
+    const unsubscribe = this.subscribe(userId, () => {
+      invalidated = true;
+      controller.abort();
+    });
     const abort = () => controller.abort();
     signal?.addEventListener('abort', abort, { once: true });
     scope.signal.addEventListener('abort', abort, { once: true });
@@ -134,9 +153,10 @@ export class InvitationService {
       { access: 'required', signal: controller.signal }
     );
     clearTimeout(timer);
+    unsubscribe();
     signal?.removeEventListener('abort', abort);
     scope.signal.removeEventListener('abort', abort);
-    if (generation !== this.#generation || !scope.isCurrent() || signal?.aborted)
+    if (invalidated || generation !== this.#generation || !scope.isCurrent() || signal?.aborted)
       return apiFailure('cancelled');
     if (controller.signal.aborted) return apiFailure('network');
     this.#denial(result);
@@ -156,26 +176,40 @@ export class InvitationService {
     if (!isUserId(userId) || (operation === 'correct' && !email)) return apiFailure('protocol');
     if (this.#pending) return apiFailure('conflict');
     this.#pending = true;
-    ++this.#generation;
+    this.#invalidate(userId);
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let timedOut = false;
+    const invalidateOutcome = () => {
+      this.#lifecycle.invalidated();
+      this.#invalidate(userId);
+    };
     const result = await Promise.race([
-      this.#api.mutate(
-        operation === 'correct' ? 'PATCH' : 'POST',
-        `/invitations/${userId}/${operation === 'correct' ? 'email' : operation}`,
-        operation === 'correct' ? { email } : null,
-        (value) => {
-          const delivery = decodeDelivery(value);
-          return delivery?.userId === userId ? (true as const) : null;
-        }
-      ),
+      this.#api
+        .mutate(
+          operation === 'correct' ? 'PATCH' : 'POST',
+          `/invitations/${userId}/${operation === 'correct' ? 'email' : operation}`,
+          operation === 'correct' ? { email } : null,
+          (value) => {
+            const delivery = decodeDelivery(value);
+            return delivery?.userId === userId ? (true as const) : null;
+          }
+        )
+        .then((outcome) => {
+          // A local deadline cannot cancel a server mutation. A later transport
+          // completion must also retire any status adopted after that deadline.
+          if (timedOut) invalidateOutcome();
+          return outcome;
+        }),
       new Promise<ApiResult<true>>((resolve) => {
-        timer = setTimeout(() => resolve(apiFailure('network')), 8_000);
+        timer = setTimeout(() => {
+          timedOut = true;
+          resolve(apiFailure('network'));
+        }, 8_000);
       })
     ]);
     clearTimeout(timer);
     this.#pending = false;
-    ++this.#generation;
-    this.#lifecycle.invalidated();
+    invalidateOutcome();
     if (!scope.isCurrent()) return apiFailure('cancelled');
     this.#denial(result);
     return result.ok ? result : apiFailure(result.error.kind, result.error.correlationId);

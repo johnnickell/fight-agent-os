@@ -14,6 +14,22 @@ import {
 
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 
+async function submitRecovery(operation: 'retry' | 'resend' | 'correct') {
+  if (operation === 'retry') {
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry delivery' }));
+  } else if (operation === 'resend') {
+    fireEvent.click(await screen.findByRole('button', { name: 'Resend invitation' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm resend' }));
+  } else {
+    fireEvent.click(await screen.findByRole('button', { name: 'Correct email' }));
+    fireEvent.change(screen.getByLabelText('New email (required)'), {
+      target: { value: 'new@example.test' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Review email correction' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm correction' }));
+  }
+}
+
 const caches: AuthorityCache[] = [];
 async function mount(
   target = invitationTarget(),
@@ -33,6 +49,7 @@ async function mount(
 }
 afterEach(() => {
   caches.splice(0).forEach((cache) => cache.dispose());
+  vi.useRealTimers();
 });
 
 describe('Pending invitation', () => {
@@ -97,11 +114,15 @@ describe('Pending invitation', () => {
   });
   it.each(
     (['retry', 'resend', 'correct'] as const).flatMap((operation) =>
-      [false, true].map((sameTarget) => ({ operation, sameTarget }))
+      [200, 409, 429, 500].flatMap((status) =>
+        [false, true].flatMap((sameTarget) =>
+          [false, true].map((readFirst) => ({ operation, status, sameTarget, readFirst }))
+        )
+      )
     )
   )(
-    'exposes explicit current-page recovery after $operation settles across a remount (same target: $sameTarget)',
-    async ({ operation, sameTarget }) => {
+    'handles remounted $operation outcome $status (same target: $sameTarget, read first: $readFirst)',
+    async ({ operation, status, sameTarget, readFirst }) => {
       const original = invitationTarget();
       const selected = sameTarget ? original : invitationTarget({ email: 'second@example.test' });
       const fresh = { ...selected, email: 'authoritative@example.test', state: 'active' };
@@ -117,31 +138,36 @@ describe('Pending invitation', () => {
             ? newRead.promise
             : Promise.resolve(invitationResponse(fresh));
       });
-      if (operation === 'retry') {
-        fireEvent.click(await screen.findByRole('button', { name: 'Retry delivery' }));
-      } else if (operation === 'resend') {
-        await userEvent.click(await screen.findByRole('button', { name: 'Resend invitation' }));
-        await userEvent.click(screen.getByRole('button', { name: 'Confirm resend' }));
-      } else {
-        await userEvent.click(await screen.findByRole('button', { name: 'Correct email' }));
-        await userEvent.type(screen.getByLabelText('New email (required)'), 'new@example.test');
-        await userEvent.click(screen.getByRole('button', { name: 'Review email correction' }));
-        await userEvent.click(screen.getByRole('button', { name: 'Confirm correction' }));
-      }
+      await submitRecovery(operation);
       expect(d.transport).toHaveBeenCalledTimes(2);
       d.unmount();
       render(<InvitationPage userId={selected.user_id} cache={d.cache} service={d.service} />);
       expect(screen.getByText('Reading invitation')).toBeVisible();
       expect(d.transport).toHaveBeenCalledTimes(3);
+      const finishRead = async () => {
+        await act(async () => {
+          newRead.resolve(invitationResponse(selected));
+          await newRead.promise;
+        });
+      };
+      if (readFirst) {
+        await finishRead();
+        expect(screen.getByText(selected.email)).toBeVisible();
+      }
       await act(async () => {
-        mutation.resolve(invitationResponse(original.delivery));
+        mutation.resolve(invitationResponse(status === 200 ? original.delivery : null, status));
         await mutation.promise;
       });
-      await act(async () => {
-        newRead.resolve(invitationResponse(selected));
-        await newRead.promise;
-      });
+      if (!readFirst) await finishRead();
       expect(screen.queryByText('Reading invitation')).not.toBeInTheDocument();
+      if (!sameTarget) {
+        // A completed operation on A does not retire or refresh B's authoritative data.
+        expect(screen.getByText(selected.email)).toBeVisible();
+        expect(screen.queryByText('Invitation status needs reloading')).not.toBeInTheDocument();
+        expect(d.transport).toHaveBeenCalledTimes(3);
+        expect(d.transport.mock.calls[2]?.[0]).toBe(`/api/v1/invitations/${selected.user_id}`);
+        return;
+      }
       expect(screen.queryByText(selected.email)).not.toBeInTheDocument();
       expect(screen.getByText('Invitation status needs reloading')).toBeVisible();
       expect(screen.queryByText(/request completed/)).not.toBeInTheDocument();
@@ -162,6 +188,224 @@ describe('Pending invitation', () => {
       ]);
       expect(d.transport.mock.calls[2]?.[0]).toBe(`/api/v1/invitations/${selected.user_id}`);
       expect(d.transport.mock.calls[3]?.[0]).toBe(`/api/v1/invitations/${selected.user_id}`);
+    }
+  );
+  it.each(
+    (['retry', 'resend', 'correct'] as const).flatMap((operation) =>
+      [200, 409, 429, 500].map((status) => ({ operation, status }))
+    )
+  )(
+    'reads current status when the old $operation completes before remount ($status)',
+    async ({ operation, status }) => {
+      const original = invitationTarget();
+      const fresh = { ...original, email: 'authoritative@example.test', state: 'active' };
+      const mutation = deferred<Response>();
+      let reads = 0;
+      const d = await mount(original, undefined, (_url, init) =>
+        init.method !== 'GET'
+          ? mutation.promise
+          : Promise.resolve(invitationResponse(++reads === 1 ? original : fresh))
+      );
+      await submitRecovery(operation);
+      d.unmount();
+      await act(async () => {
+        mutation.resolve(invitationResponse(status === 200 ? original.delivery : null, status));
+        await mutation.promise;
+      });
+      render(<InvitationPage userId={original.user_id} cache={d.cache} service={d.service} />);
+      expect(await screen.findByText(fresh.email)).toBeVisible();
+      expect(screen.getByText('Active')).toBeVisible();
+      expect(screen.queryByText('Invitation status needs reloading')).not.toBeInTheDocument();
+      expect(screen.queryByText(/request completed/)).not.toBeInTheDocument();
+      expect(d.transport.mock.calls.map(([, init]) => init.method)).toEqual([
+        'GET',
+        operation === 'correct' ? 'PATCH' : 'POST',
+        'GET'
+      ]);
+      expect(d.transport.mock.calls[2]?.[0]).toBe(`/api/v1/invitations/${original.user_id}`);
+    }
+  );
+  it('retires a recovered ready read if an uncertain timed-out correction later completes', async () => {
+    vi.useFakeTimers();
+    const target = invitationTarget();
+    const mutation = deferred<Response>();
+    const d = await mount(target, undefined, (_url, init) =>
+      init.method === 'GET' ? Promise.resolve(invitationResponse(target)) : mutation.promise
+    );
+    await act(async () => {});
+    d.unmount();
+    const operation = d.service.change(target.user_id, 'correct', 'new@example.test');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8_000);
+      expect(await operation).toMatchObject({ ok: false, error: { kind: 'network' } });
+    });
+    render(<InvitationPage userId={target.user_id} cache={d.cache} service={d.service} />);
+    await act(async () => {});
+    expect(screen.getByText(target.email)).toBeVisible();
+    await act(async () => {
+      mutation.resolve(invitationResponse(target.delivery));
+      await mutation.promise;
+    });
+    expect(screen.queryByText(target.email)).not.toBeInTheDocument();
+    expect(screen.getByText('Invitation status needs reloading')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Reload invitation' })).toBeEnabled();
+    expect(d.transport.mock.calls.map(([, init]) => init.method)).toEqual(['GET', 'PATCH', 'GET']);
+    vi.useRealTimers();
+  });
+  it.each(['editing', 'resend', 'correct'] as const)(
+    'discards stale $0 interaction on relevant completion, handles repeated completions without reads',
+    async (interaction) => {
+      const target = invitationTarget();
+      const mutation = deferred<Response>();
+      const d = await mount(target, undefined, (_url, init) =>
+        init.method === 'GET' ? Promise.resolve(invitationResponse(target)) : mutation.promise
+      );
+      // An operation begun on a previous page survives until after the current interaction opens.
+      d.unmount();
+      const operation = d.service.change(target.user_id, 'retry');
+      render(<InvitationPage userId={target.user_id} cache={d.cache} service={d.service} />);
+      await screen.findByText(target.email);
+      if (interaction === 'resend') {
+        await userEvent.click(screen.getByRole('button', { name: 'Resend invitation' }));
+      } else {
+        await userEvent.click(screen.getByRole('button', { name: 'Correct email' }));
+        await userEvent.type(
+          screen.getByLabelText('New email (required)'),
+          'volatile@example.test'
+        );
+        if (interaction === 'correct')
+          await userEvent.click(screen.getByRole('button', { name: 'Review email correction' }));
+      }
+      await act(async () => {
+        mutation.resolve(invitationResponse(target.delivery));
+        await operation;
+      });
+      expect(screen.getByText('Invitation status needs reloading')).toBeVisible();
+      expect(screen.queryByText(target.email)).not.toBeInTheDocument();
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1 })).toHaveFocus();
+      await act(async () => {
+        await d.service.change(target.user_id, 'resend');
+        await d.service.change(target.user_id, 'correct', 'other@example.test');
+      });
+      expect(screen.getByRole('button', { name: 'Reload invitation' })).toBeEnabled();
+      expect(d.transport.mock.calls.filter(([, init]) => init.method === 'GET')).toHaveLength(2);
+      expect(d.transport.mock.calls.filter(([, init]) => init.method !== 'GET')).toHaveLength(3);
+      await userEvent.click(screen.getByRole('button', { name: 'Reload invitation' }));
+      await screen.findByText(target.email);
+      await userEvent.click(screen.getByRole('button', { name: 'Correct email' }));
+      expect(screen.getByLabelText('New email (required)')).toHaveValue('');
+      expect(d.transport).toHaveBeenCalledTimes(6);
+    }
+  );
+  it('keeps explicit recovery usable after in-place authority retirement during a mutation', async () => {
+    const target = invitationTarget();
+    const mutation = deferred<Response>();
+    const d = await mount(target, undefined, (_url, init) =>
+      init.method === 'GET' ? Promise.resolve(invitationResponse(target)) : mutation.promise
+    );
+    await submitRecovery('correct');
+    await act(() => d.cache.signal('authority-changed'));
+    await act(() => d.cache.load());
+    await screen.findByText(target.email);
+    await act(async () => {
+      mutation.resolve(invitationResponse(target.delivery));
+      await mutation.promise;
+    });
+    expect(screen.getByText('Invitation status needs reloading')).toBeVisible();
+    expect(screen.queryByText(/request completed/)).not.toBeInTheDocument();
+    const reload = screen.getByRole('button', { name: 'Reload invitation' });
+    expect(reload).toBeEnabled();
+    await userEvent.click(reload);
+    expect(await screen.findByText(target.email)).toBeVisible();
+    expect(d.transport.mock.calls.map(([, init]) => init.method)).toEqual([
+      'GET',
+      'PATCH',
+      'GET',
+      'GET'
+    ]);
+  });
+  it('notifies a current read-only consumer even if the submitting authority was retired', async () => {
+    const target = invitationTarget();
+    const mutation = deferred<Response>();
+    const permissions = ['READ_USERS', 'MANAGE_USER_INVITATIONS'];
+    const d = await mount(target, permissions, (_url, init) =>
+      init.method === 'GET' ? Promise.resolve(invitationResponse(target)) : mutation.promise
+    );
+    await submitRecovery('correct');
+    d.unmount();
+    permissions.pop();
+    await act(() => d.cache.signal('authority-changed'));
+    await d.cache.load();
+    render(<InvitationPage userId={target.user_id} cache={d.cache} service={d.service} />);
+    await screen.findByText(target.email);
+    expect(screen.getByText('Read-only invitation')).toBeVisible();
+    await act(async () => {
+      mutation.resolve(invitationResponse(target.delivery));
+      await mutation.promise;
+    });
+    expect(screen.queryByText(target.email)).not.toBeInTheDocument();
+    expect(screen.getByText('Invitation status needs reloading')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Reload invitation' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Correct email' })).not.toBeInTheDocument();
+    expect(d.transport).toHaveBeenCalledTimes(3);
+  });
+  it.each(['retry', 'resend', 'correct'] as const)(
+    'cannot restore retired or unmounted presentation on late %s completion',
+    async (operation) => {
+      const target = invitationTarget();
+      const mutation = deferred<Response>();
+      const d = await mount(target, undefined, (_url, init) =>
+        init.method === 'GET' ? Promise.resolve(invitationResponse(target)) : mutation.promise
+      );
+      await submitRecovery(operation);
+      d.unmount();
+      const current = render(
+        <InvitationPage userId={target.user_id} cache={d.cache} service={d.service} />
+      );
+      await screen.findByText(target.email);
+      await act(() => d.cache.signal('logout'));
+      await act(async () => {
+        mutation.resolve(invitationResponse(target.delivery));
+        await mutation.promise;
+      });
+      expect(screen.queryByText(target.email)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Reload invitation' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(d.transport).toHaveBeenCalledTimes(3);
+      current.unmount();
+      expect(document.body).not.toHaveTextContent('request completed');
+    }
+  );
+  it.each(
+    (['retry', 'resend', 'correct'] as const).flatMap((operation) =>
+      [200, 409, 429, 500].map((status) => ({ operation, status }))
+    )
+  )(
+    'refetches exactly once for the mounted $operation outcome $status',
+    async ({ operation, status }) => {
+      const original = invitationTarget();
+      const fresh = { ...original, email: 'authoritative@example.test', state: 'active' };
+      let reads = 0;
+      const d = await mount(original, undefined, (_url, init) =>
+        Promise.resolve(
+          init.method === 'GET'
+            ? invitationResponse(++reads === 1 ? original : fresh)
+            : invitationResponse(status === 200 ? original.delivery : null, status)
+        )
+      );
+      await submitRecovery(operation);
+      expect(await screen.findByText(fresh.email)).toBeVisible();
+      expect(screen.queryByText(original.email)).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1 })).toHaveFocus();
+      expect(d.transport.mock.calls.map(([, init]) => init.method)).toEqual([
+        'GET',
+        operation === 'correct' ? 'PATCH' : 'POST',
+        'GET'
+      ]);
     }
   );
   it.each(['pending', 'claimed', 'delivered', 'permanent_failure', 'expired', 'invalidated'])(

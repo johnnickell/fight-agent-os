@@ -58,7 +58,7 @@ export default function InvitationPage({
   cache
 }: {
   userId: string;
-  service: Pick<InvitationService, 'load' | 'change' | 'retry'>;
+  service: Pick<InvitationService, 'load' | 'change' | 'retry' | 'subscribe'>;
   cache: AuthorityCache;
 }) {
   const authority = useAuthority(cache);
@@ -104,20 +104,35 @@ export default function InvitationPage({
       setEditing(false);
       setConfirm(null);
       setPending(null);
+      busy.current = false;
       setAnnouncement('');
     };
     if (!allowed || !scope.isCurrent() || !isUserId(userId)) return;
     scope.signal.addEventListener('abort', retire, { once: true });
+    const unsubscribe = service.subscribe(userId, () => {
+      // The submitting page handles its own outcome once below. Other consumers must
+      // retire even an already-adopted GET, without replaying or trusting mutation data.
+      if (!scope.isCurrent() || busy.current) return;
+      ++generation.current;
+      controller.abort();
+      setView({ kind: 'invalidated' });
+      setEmail('');
+      setEditing(false);
+      setConfirm(null);
+      setAnnouncement('');
+      heading.current?.focus({ preventScroll: true });
+    });
     void service.load(userId, controller.signal).then((result) => {
       if (request !== generation.current || controller.signal.aborted || !scope.isCurrent()) return;
       if (result.ok) setView({ kind: 'ready', target: result.value });
-      // This page still owns the read, but service-wide work invalidated its result.
+      // This page still owns the read, but other work superseded its result.
       // Keep the stale result discarded and expose deliberate recovery, not endless loading.
       else if (result.error.kind === 'cancelled') setView({ kind: 'invalidated' });
       else setView({ kind: 'error', reason: result.error.kind });
     });
     return () => {
       invalidate();
+      unsubscribe();
       controller.abort();
       scope.signal.removeEventListener('abort', retire);
     };
@@ -150,8 +165,8 @@ export default function InvitationPage({
       operation,
       operation === 'correct' ? email.trim().toLowerCase() : undefined
     );
-    busy.current = false;
     if (!scope.isCurrent() || request !== generation.current) return;
+    busy.current = false;
     returnFocus.current = heading.current;
     focusAfterClose.current = true;
     setPending(null);
@@ -199,7 +214,7 @@ export default function InvitationPage({
         <ContentState
           kind="error"
           title="Invitation status needs reloading"
-          message="This read was superseded. Reload invitation to read current state; no recovery action was replayed."
+          message="Invitation work may have changed this status. Reload invitation to read current state; no recovery action was replayed."
         />
       ) : view.kind === 'error' ? (
         <ContentState
