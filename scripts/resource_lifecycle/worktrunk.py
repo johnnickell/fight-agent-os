@@ -1,4 +1,5 @@
 """Guard native Worktrunk removal independently of disposable Docker teardown."""
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -36,10 +37,16 @@ def remove(root, selector, expected_oid, delivery=None):
     require(root == safe, 'Run source removal from canonical safe checkout')
     # Always use the public command, also used by the repository pre-remove hook.
     # Source, publication and hook holds cannot suppress independent Docker teardown.
-    run([safe / 'bin/down', '--worktree', selector], safe)
-    if project is None:
-        require(Path(selector).is_absolute() and not Path(selector).exists(),
-                'No registered worktree/locator; verify the exact absent source path')
+    run([safe / 'bin/down', '--worktree', str(checkout)], safe)
+    if entry is None:
+        require(not (safe / 'var/worktrees' / project).exists(),
+                'Unlocated generated configuration remains; inspect exact state, never infer retirement')
+        require(not checkout.exists() and not checkout.is_symlink() and
+                str(checkout) not in [value['path'] for value in registrations(safe)],
+                'No locator; original source path/registration must remain absent')
+        print(json.dumps({'project': project, 'eligible_closeout': True, 'already_absent': True,
+                          'source_absent': True, 'registration_absent': True, 'runtime_absent': True,
+                          'config_absent': True, 'branch_outcome': 'not_observed'}))
         return 0
     require(checkout != safe and checkout != Path.cwd().resolve(),
             'Main/current checkout is never disposable; Docker teardown completed')
@@ -48,21 +55,36 @@ def remove(root, selector, expected_oid, delivery=None):
     present = str(checkout) in [value['path'] for value in registrations(safe)]
     require(present == checkout.exists(), 'Source path/registration mismatch; inspect partial effects')
 
-    def complete():
-        remaining = text(['git', 'for-each-ref', '--format=%(refname)', ref], safe) if ref else ''
-        require(not checkout.exists() and not remaining and
-                str(checkout) not in [value['path'] for value in registrations(safe)],
-                'Worktrunk retained source/ref/registration; inspect actual outcome, never force')
-        # Also resume here after native removal succeeded but final down was interrupted.
-        # There is no surviving source/ref to qualify or publish again.
-        run([safe / 'bin/down', '--worktree', selector], safe)
+    def ref_oid():
+        rows = text(['git', 'for-each-ref', '--format=%(refname) %(objectname)', ref], safe).splitlines() if ref else []
+        return next((row.split()[1] for row in rows if row.split()[0] == ref), '')
+
+    def complete(branch_outcome='already_absent'):
+        def postconditions():
+            entries = registrations(safe)
+            require(not checkout.exists() and not checkout.is_symlink() and
+                    not any(value['path'] == str(checkout) or (branch and value['branch'] == branch)
+                            for value in entries),
+                    'Worktrunk retained/recreated source or registered owner; inspect actual outcome, never force')
+            require(ref_oid() == (expected_oid if branch_outcome == 'retained_unmerged' else ''),
+                    'Worktrunk ref postcondition changed; source/config closeout incomplete')
+
+        postconditions()
+        # Final public down must also succeed; a source/ref hold never substitutes
+        # for Docker absence. Pin the original path, not a reattached branch.
+        run([safe / 'bin/down', '--worktree', str(checkout)], safe)
+        postconditions()
         state = safe / 'var/worktrees' / project
-        require(not state.is_symlink(), 'Runtime state alias refused')
+        require(state.resolve() == state and not state.is_symlink(), 'Runtime state alias refused')
         if state.exists():
             shutil.rmtree(state)
+        print(json.dumps({'project': project, 'eligible_closeout': True, 'source_absent': True,
+                          'registration_absent': True, 'runtime_absent': True, 'config_absent': True,
+                          'ref': ref, 'branch_outcome': branch_outcome,
+                          'retained_oid': expected_oid if branch_outcome == 'retained_unmerged' else None}))
         return 0
 
-    if not present and (not ref or not text(['git', 'for-each-ref', '--format=%(refname)', ref], safe)):
+    if not present and not ref_oid():
         return complete()
 
     def source_state():
@@ -77,7 +99,8 @@ def remove(root, selector, expected_oid, delivery=None):
             require(not text(['git', 'ls-files', '--others', '--ignored', '--exclude-standard'], checkout),
                     'Ignored/private output remains; dispose only known temporary output after consumers end')
         else:
-            require(not checkout.exists() and not any(value['path'] == str(checkout) for value in entries),
+            require(not checkout.exists() and not checkout.is_symlink() and
+                    not any(value['path'] == str(checkout) for value in entries),
                     'Absent source path/registration changed before removal')
             require(not any(value['branch'] == branch for value in entries),
                     'Surviving ref is checked out in a registered worktree; source/ref retained')
@@ -107,8 +130,20 @@ def remove(root, selector, expected_oid, delivery=None):
     # Hook inventory is native work too: revalidate ownership after it, before effect.
     source_state()
     target = str(checkout) if present else branch
-    if target:
-        result = subprocess.run(['wt', 'remove', '--foreground', '--format=json', '--yes', target],
-                                cwd=safe, stdin=subprocess.DEVNULL, text=True, timeout=120)
-        require(result.returncode == 0, 'Worktrunk removal failed; inspect partial effects without force')
-    return complete()
+    require(target, 'No exact native removal target')
+    result = subprocess.run(['wt', 'remove', '--foreground', '--format=json', '--yes', target],
+                            cwd=safe, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, text=True, timeout=120)
+    require(result.returncode == 0, 'Worktrunk removal failed; inspect partial effects without force')
+    # Exit zero alone includes declined/raced/failed native ref effects. Admit
+    # only the exact foreground result and separately prove live postconditions.
+    results = json.loads(result.stdout)
+    require(isinstance(results, list) and len(results) == 1 and isinstance(results[0], dict),
+            'Unknown Worktrunk removal result; inspect partial effects')
+    actual = results[0]
+    require(actual.get('kind') == ('worktree' if present else 'branch_only') and
+            actual.get('branch') == branch and actual.get('branch_checked_out_at', 'unknown') is None and
+            (actual.get('path') == str(checkout) if present else
+             actual.get('detached_worktree', 'unknown') is None and isinstance(actual.get('pruned'), bool)) and
+            actual.get('branch_outcome') in ('deleted', 'retained_unmerged'),
+            'Unqualified Worktrunk removal outcome; inspect actual source/ref/registration, never force')
+    return complete(actual['branch_outcome'])

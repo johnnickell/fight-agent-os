@@ -390,8 +390,11 @@ acceptance or publication. Native session-lifetime and independent-role admissio
 ### Completion ownership
 
 Safe cleanup is a required effect of authorized Land, not an optional follow-up after publication. Remove the
-eligible isolated worktree, local feature branch, disposable test containers, unused task-owned networks and
-qualified task-created named/anonymous disposable volumes. Account separately for created versus reused/shared
+eligible isolated worktree, disposable test containers, unused task-owned networks and qualified task-created
+named/anonymous disposable volumes; let Worktrunk's non-force policy decide local feature-branch deletion.
+An exact qualified `retained_unmerged` outcome completes eligible source/runtime/registration/config retirement
+with the unchanged local ref intentionally retained pending integration, not all refs deleted. It needs neither
+merge first nor repeated unchanged cleanup; the user's ordinary post-merge branch command remains separate. Account separately for created versus reused/shared
 images and caches; unsupported exact retirement is a finite hold, never an implicit leak exemption.
 TASK-00543 replaces the earlier receipt-gated Docker lifecycle with explicit Compose teardown. Remove task
 image tags and a dedicated task builder/backing volume if created. Ordinary shared builders/caches and downloaded
@@ -496,15 +499,22 @@ competing activity or unavailable visibility holds the affected effect. Never sw
 main/current checkout merely to make its branch eligible, or delete a ref checked out in another worktree.
 
 Publication/cancellation proof does not override Worktrunk's integration or hook requirements. Missing/unsupported
-`wt`, additional unqualified removal hooks or a retained unmerged branch are specific Git holds, not authority
-for direct Git removal or a compare-and-delete fallback. The known project pre-remove hook calls the SAME down
+`wt`, additional unqualified removal hooks and unknown/checked-out/raced/failed native outcomes are specific
+holds, not authority for direct Git removal or a compare-and-delete fallback. The shared remover's exact
+`retained_unmerged` result is different: verify original source/registration absence, exact unchanged ref and
+no registered owner, then retire generated configuration after successful Docker down. Report that ref as
+intentionally retained pending integration, not a failed eligible closeout or authority to delete it. The known project pre-remove hook calls the SAME down
 command and runs unattended under standing owned-cleanup authority after those checks; do not ask the operator
 for routine known-hook approval. Unexpected hooks require a separate owner decision, not blanket approval.
 Declining hooks is not Docker teardown. Clean qualification fixtures use the same guarded callable with exact
 OID/ancestor proof, not fabricated publication proof; actual delivery retains all publication guards above.
-Verify actual filesystem, registration and exact ref absence as well as
-structured output; exit 0 can mean partial removal. Resume only remaining effects through the same command,
-including Worktrunk branch-only removal after checkout absence. Surviving task-branch local configuration is a
+Verify actual filesystem, registration, runtime and configuration absence plus the exact deleted-or-retained
+ref disposition as well as structured output; native exit 0 alone can mean incomplete removal. Resume only
+remaining effects through the same command, including Worktrunk branch-only removal while an interrupted
+teardown locator remains. Once configuration is retired, repeat only by original absolute path; absence does
+not rediscover/delete the retained ref, fabricate publication or redirect to a reattached worktree. Unknown
+inventory is not absence. Do not retain secret configuration merely to await merge or require an unchanged
+retry for qualified retained-unmerged closeout. Surviving task-branch local configuration is a
 metadata hold recorded in the existing handoff, including absent-ref retries; the operator owns its exact disposition.
 Do not delete Git configuration or shared Worktrunk caches/state. Record actual tool outcomes and holds separately
 from independently eligible Docker effects. Do not delete any remote ref.

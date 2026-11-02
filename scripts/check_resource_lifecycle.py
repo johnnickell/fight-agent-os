@@ -120,10 +120,13 @@ def main():
             if not cleanup_failures:
                 # Needed results remain in this run's small report, not runtime
                 # caches, secrets/config locators or permanent fixture archives.
-                for target in (ROOT / 'var/worktrees' / project, ROOT / '.runs/compose' / project):
-                    if target.exists():
-                        assert not target.is_symlink()
-                        shutil.rmtree(target)
+                # Configuration retirement belongs to the shared guarded helper,
+                # not a direct fallback that could mask an incomplete outcome.
+                assert not (ROOT / 'var/worktrees' / project).exists(), 'Generated config retirement incomplete'
+                target = ROOT / '.runs/compose' / project
+                if target.exists():
+                    assert not target.is_symlink()
+                    shutil.rmtree(target)
         if 'directory' in locals() and not any(Path(directory).iterdir()):
             Path(directory).rmdir()
         after = docker('ps', '-aq', '--no-trunc').splitlines()

@@ -560,4 +560,5 @@
 | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | ready-for-agent | — |
 | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | ready-for-agent | — |
 | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | in-progress | — |
+| [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | in-progress | — |
 <!-- /planning:records -->

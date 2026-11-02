@@ -69,8 +69,11 @@ containers/networks/volumes/task tags/builders, live source consumers and eviden
 storage is disposable by definition; main/foreign projects and shared images/caches are separate. No second
 resource inventory ledger or Docker worker/PID registration. Land owns
 [required safe cleanup and postcondition verification](LANDING.md#cleanup-and-handoff), not another registry or
-an unconditional branch-retention handoff. Return published/delivery state separately from cleanup: a verified
-PR with a held resource is publication with incomplete cleanup, naming the resource, reason, recovery owner/action
+an unconditional branch-retention handoff. A qualified native `retained_unmerged` result is eligible closeout
+with source/runtime/registration/config gone and the exact unchanged local ref intentionally retained pending
+integration, not all refs deleted or an unchanged cleanup retry. Other holds remain incomplete. Return
+published/delivery state separately from cleanup: a verified PR with a genuinely held resource is publication
+with incomplete cleanup, naming the resource, reason, recovery owner/action
 and durable receipt. Resume only missing effects; never recommend repeating publication to resolve a cleanup hold. Use
 `/skill:land TASK-NNNNN cleanup-only` with the actual TASK ID for local resource retirement, including after
 merge; this enters [cleanup-only intake](LANDING.md#cleanup-only-intake), not ended-handoff corrective publication.

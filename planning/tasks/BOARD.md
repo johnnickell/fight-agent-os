@@ -20,6 +20,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | — | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | — (standalone bug) | in-progress | — | — |
+| — | [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | — (standalone bug) | in-progress | [TASK-00558](00558-TASK.md) | — |
 
 ## Ready Frontier
 
