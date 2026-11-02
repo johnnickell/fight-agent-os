@@ -56,6 +56,9 @@ no Docker worker registration. Preserve native session/custody admission separat
 suggest verdicts. Tell each child to verify target identity, read instructions, perform only its role and stop.
 No `--continue`, `--resume`, `--session`, `--fork`, parent transcript or reused session directory.
 
+Write and read back the request under the shared [readability rules](../../../docs/engineering/HANDOFFS.md#readable-handoff-text)
+before dispatch, including when adapting an earlier or compressed handoff.
+
 ```sh
 cd "$task_checkout"
 python3 -u "$build_skill_dir/scripts/run-stage.py" \
