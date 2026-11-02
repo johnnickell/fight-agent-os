@@ -70,16 +70,40 @@ with tempfile.TemporaryDirectory(dir=scratch) as directory:
     # Native resources can load a complete Harness without any packages inventory entry.
     installed = root / 'direct harness'
     shutil.copytree(provider / 'harness/pi', installed, ignore=shutil.ignore_patterns('node_modules', 'tests'))
+    (installed / 'src/observation/run-stage.py').write_text('print(' + repr(str(installed)) + ')\n')
     resources = json.loads((installed / 'package.json').read_text())['pi']['extensions']
-    check('direct Harness resources hold before monitor dispatch', [],
-          extensions=[str(installed / resource) for resource in resources],
-          error='Native Harness registration unavailable or conflicting')
+    check('complete direct Harness is selected automatically', [],
+          extensions=[str(installed / resource) for resource in resources], expected=str(installed))
     (agent / 'extensions').mkdir()
     discovered = agent / 'extensions/harness'
     discovered.symlink_to(installed, target_is_directory=True)
-    check('auto-discovered Harness holds before monitor dispatch', [],
-          error='Native Harness registration unavailable or conflicting')
+    check('complete auto-discovered Harness is selected automatically', [], expected=str(installed))
+    check('disabled auto-discovered Harness is not re-enabled', [],
+          extensions=['-' + str(discovered / resource) for resource in resources],
+          error='Configured Harness resources are incomplete or disabled')
     discovered.unlink()
+    check('command-only observer from another Harness', [str(second)],
+          extensions=[str(installed / 'src/native-observation-extension.ts')],
+          error='Multiple configured Harness')
+    check('incomplete direct Harness', [],
+          extensions=[str(installed / 'src/native-observation-extension.ts')],
+          error='Configured Harness resources are incomplete or disabled')
+    untrusted = root / 'untrusted harness'
+    (untrusted / 'src/observation').mkdir(parents=True)
+    marker = root / 'untrusted-executed'
+    (untrusted / 'package.json').write_text(json.dumps({
+        'name': '@fight/agent-os-pi', 'pi': {'extensions': ['./index.ts']}}))
+    (untrusted / 'index.ts').write_text("import { writeFileSync } from 'node:fs';\n" +
+                                      'export default function () { writeFileSync(' + json.dumps(str(marker)) + ', "executed"); }\n')
+    (untrusted / 'src/observation/run-stage.py').write_text('print("UNTRUSTED_MONITOR_DISPATCHED")\n')
+    (target / '.pi').mkdir()
+    project_settings = target / '.pi/settings.json'
+    project_settings.write_text(json.dumps({'packages': [os.path.relpath(untrusted, project_settings.parent)]}))
+    check('untrusted project Harness cannot become an explicit extension', [],
+          error='Project Harness configuration is not natively trusted')
+    assert not marker.exists(), 'Conservative inventory must not execute untrusted project code'
+    project_settings.unlink()
+    (target / '.pi').rmdir()
     # Unsupported inventory must never be interpreted as an empty configuration.
     binaries = root / 'bin'
     binaries.mkdir()
@@ -87,7 +111,7 @@ with tempfile.TemporaryDirectory(dir=scratch) as directory:
     fake.write_text('#!/bin/sh\nprintf "changed inventory format\\n"\n')
     fake.chmod(0o700)
     env['PATH'] = str(binaries) + os.pathsep + env['PATH']
-    check('unsupported inventory', [], error='Unsupported Pi package inventory')
+    check('unsupported inventory', [], error='Unsupported Pi resource inventory')
     fake.write_text('#!/bin/sh\nexit 1\n')
-    check('failed inventory', [], error='Pi package inventory unavailable')
+    check('failed inventory', [], error='Pi resource inventory unavailable')
     print(json.dumps({'result': 'passed', 'cases': cases, 'count': len(cases), 'providerRequests': 0}))
