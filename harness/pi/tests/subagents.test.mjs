@@ -171,7 +171,7 @@ for (const resume of [false, true]) test(`terminal history admits more than eigh
   } finally { observer.close(); }
 });
 
-test('history pressure preserves selected/pinned terminal entries and never retires active or monitor children', () => {
+test('history pressure preserves selected/pinned terminal entries and never retires active or connected monitor children', () => {
   const f = fixture(); f.observer.started({ id: f.id });
   const generation = randomUUID(), children = new Map(), base = f.messages[0];
   const options = { parent: f.parent, generation, children, order: 1, registrations: cwd => `worktree ${cwd}\0` };
@@ -185,7 +185,7 @@ test('history pressure preserves selected/pinned terminal entries and never reti
   assert.throws(() => admitSubagent({ ...base, id: randomUUID(), sequence: 0 }, { ...options, retained }), /Invalid monitor progress/);
   assert.throws(() => admitSubagent({ ...base, id: randomUUID() }, { ...options, retained, registrations: () => '' }), /Unregistered/);
   assert.deepEqual([...children.keys()], beforeInvalid, 'invalid admissions cannot evict real history');
-  // A terminal monitor still belongs to its separate socket lifecycle, not SDK history retirement.
+  // A still-connected terminal monitor remains protected until its stream closes.
   children.get(ids[3]).source = undefined; children.get(ids[3]).lifecycle = 'completed';
   admitSubagent({ ...base, id: randomUUID() }, { ...options, retained });
   assert.ok(children.has(selected.id)); assert.ok(children.has(pinned.id)); assert.ok(!children.has(disposable.id));

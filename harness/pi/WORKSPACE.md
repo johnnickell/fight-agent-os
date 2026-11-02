@@ -632,11 +632,22 @@ never selects workflow/role authority. Native exit followed by `fight-terminal -
 canonical parent checkout rediscovers valid still-live custodians without relaunching children. Editable saved
 pin/selection preferences are restored only after fresh membership admission; they cannot create authority.
 
-Each observation daemon holds at most **eight monitor associations**, 128 used bootstrap tokens over its lifetime,
-and **100 entries / 32 Ki UTF-16 units per child**. Monitor-stream
-sequence gaps are reported separately from retained-history eviction; an older custodian without that field
-says unknown rather than inventing zero loss. Completed entries
-can be pruned after ten minutes. Each workspace inspects at most **eight custodians / seventeen directory entries**
+Each observation daemon retains at most **eight admitted children** (monitors and SDK agents combined),
+128 used bootstrap tokens over its lifetime, and **100 entries / 32 Ki UTF-16 units per child**. Monitor EOF
+closes the reader's writable half and marks disconnection, never inferred completion. Once a new child's owning
+route has validated custody/identity, history pressure can retire the oldest unselected/unpinned terminal SDK
+entry or terminal disconnected monitor. A still-connected monitor, nonterminal entry or retained selection/pin
+cannot be evicted for capacity. If none is eligible, admission stays unavailable; neither the eight-child bound
+nor execution changes. Unretained disconnected entries can also be pruned after ten minutes.
+Monitor-stream sequence gaps are reported separately from retained-history eviction; an older custodian
+without that field says unknown rather than inventing zero loss.
+
+The owning [`sequential-observation.py`](tests/native/sequential-observation.py) check runs twelve fixed monitors
+through genuine offline native Pi `!!` execution against an explicitly selected installed-layout package, including
+one nonzero child. Only the monitor's JSON child is controlled. It checks admission, terminal EOF and bounded
+history without provider prompts or retained pane/transcript streams. A pending native file remains pending:
+this check does not qualify signed session-file reader admission, actual Herdr interaction/captures or runtime
+logs, and does not replace those TASK-00544 requirements. Each workspace inspects at most **eight custodians / seventeen directory entries**
 and retains at most **eight children**, preserving its selected/pinned entry under overflow. One refresh is in
 flight per current session; ticks skip while it runs. Each custodian challenge has an absolute **one-second
 elapsed transport deadline** and **2 MiB** response cap; trickling bytes do not extend it. Challenges are
