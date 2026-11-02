@@ -5,9 +5,12 @@ Run from a registered checkout with an unused canonical evidence directory:
 
 PACKAGE is an explicitly selected installed-layout Harness copy. No installation,
 provider prompt, independent role, Herdr pane or application runtime is started.
-Only the monitor's JSON child is controlled, as in installed-observation.py. Native
-!! execution, ancestry, process births and admission are unchanged. This qualifies
-monitor admission, NOT signed session-file/reader, visual or runtime acceptance.
+Only the monitor's JSON child is controlled, as in installed-observation.py. Invoke
+PACKAGE's fixed monitor directly: this fixture tests monitor EOF/history, not provider
+role dispatch or its real native inventory/registration. The controlled executor must
+not impersonate those preflights. Native !! execution, ancestry, process births and
+admission are unchanged. This qualifies monitor admission, NOT independent stages,
+signed session-file/reader, visual or runtime acceptance.
 No transcript, progress history or pane stream is retained or sent to the model.
 """
 import argparse
@@ -107,9 +110,9 @@ try:
     time.sleep(.1)  # Separate actual context/executor births beyond the safety band
     for index in range(12):
         attempt = run / f'attempt-{index}'; attempt.mkdir(); (attempt / 'request.md').write_text('Controlled no-provider child, not an independent role.\n')
-        invocation = ['python3', '-u', '-B', str(root / '.pi/skills/build/scripts/run-stage.py'), '--harness-package', str(package), '--attempt', str(attempt), '--task', 'TASK-00544', '--role', 'work', '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high', '--heartbeat', '1', '--timeout', '10']
+        invocation = ['python3', '-u', '-B', str(package / 'src/observation/run-stage.py'), '--harness-package', str(package), '--attempt', str(attempt), '--task', 'TASK-00544', '--role', 'work', '--provider', 'openai-codex', '--model', 'gpt-6.1-sol', '--thinking', 'high', '--heartbeat', '1', '--timeout', '10']
         os.write(master, ('!!PATH=' + shlex.quote(str(bin_dir)) + ':$PATH ' + shlex.join(invocation) + '\r').encode())
-        until(lambda: (attempt / 'process.json').exists(), 'ordinary stage launch')
+        until(lambda: (attempt / 'process.json').exists(), 'fixed monitor launch')
         deadline, observed = time.monotonic() + 4, None
         while time.monotonic() < deadline:
             observed = next((entry for entry in snapshot(current)['children'] if entry['identity']['attempt'] == str(attempt)), None)

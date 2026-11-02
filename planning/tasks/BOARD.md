@@ -12,9 +12,10 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 
 ### Current assessment handoff
 
-[TASK-00544](00544-TASK.md#scope) is ready for fresh independent Review under John's approved qualification
-deferral, then focused affected QA before ordinary Land/PR. Implementation is recorded, not independently
-accepted; full-workflow/two-application demonstrations remain deferred and unproven. Do not start another repair.
+[TASK-00544](00544-TASK.md#r5-monitor-fixture-seam-repair--2026-11-02) has the coordinator-admitted R5-only
+owning-fixture correction verified and awaits fresh independent Review, then focused affected QA before ordinary Land/PR.
+Shared repairs are 2/5 consumed, 3 remaining. Production repairs are unchanged; implementation is not independently
+accepted. Full-workflow/two-application demonstrations remain deferred and unproven; no further repair is authorized.
 
 ### Work selection
 

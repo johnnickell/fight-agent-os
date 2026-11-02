@@ -650,10 +650,14 @@ without that field says unknown rather than inventing zero loss.
 
 The owning [`sequential-observation.py`](tests/native/sequential-observation.py) check runs twelve fixed monitors
 through genuine offline native Pi `!!` execution against an explicitly selected installed-layout package, including
-one nonzero child. Only the monitor's JSON child is controlled. It checks admission, terminal EOF and bounded
-history without provider prompts or retained pane/transcript streams. A pending native file remains pending:
-this check does not qualify signed session-file reader admission, actual Herdr interaction/captures or runtime
-logs, and does not replace those TASK-00544 requirements. Each workspace inspects at most **eight custodians / seventeen directory entries**
+one nonzero child. It invokes that package's fixed `src/observation/run-stage.py` directly; only its JSON child
+is controlled. This monitor EOF/history fixture does not exercise independent role dispatch or the provider's
+real native inventory/registration preflights. Do not route the controlled `pi` through those preflights or make
+it impersonate inventory. Real stages still use the provider dispatcher above, with all safeguards intact.
+The check covers admission, terminal EOF and bounded history without provider prompts or retained pane/transcript
+streams. A pending native file remains pending: it does not qualify signed session-file reader admission,
+independent stages, actual Herdr interaction/captures or runtime logs. TASK-00544's current
+[scope](../../planning/tasks/00544-TASK.md#scope) owns its explicit demonstration deferrals and remaining acceptance. Each workspace inspects at most **eight custodians / seventeen directory entries**
 and retains at most **eight children**, preserving its selected/pinned entry under overflow. One refresh is in
 flight per current session; ticks skip while it runs. Each custodian challenge has an absolute **one-second
 elapsed transport deadline** and **2 MiB** response cap; trickling bytes do not extend it. Challenges are
