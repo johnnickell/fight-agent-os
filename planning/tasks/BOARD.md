@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | [TICKET-00129 — Adopt upstream Pi subagents with Fight observation](../tickets/00129-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -44,6 +44,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | ready-for-agent | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 | — | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | [TICKET-00126 — Maintain source-verified Python diagrams beside feature documentation](../tickets/00126-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | ready-for-agent | — | — |
 
 ## Waiting
@@ -318,7 +319,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | [TICKET-00125 — Promote and recover an explicitly approved release](../tickets/00125-TICKET.md) | ready-for-agent | [TASK-00532](00532-TASK.md), [TASK-00530](00530-TASK.md), [TASK-00362](00362-TASK.md), [TASK-00365](00365-TASK.md), [TASK-00367](00367-TASK.md) | — |
 | — | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | [TICKET-00127 — Review material architecture changes with diagrams in pull requests](../tickets/00127-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
 | — | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | [TICKET-00128 — Show feature architecture on demand in Pi](../tickets/00128-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
-| — | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | — (standalone chore) | ready-for-agent | [TASK-00554](00554-TASK.md) | — |
 
 ## Needs Info
 
@@ -465,6 +465,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | — (standalone bug) | done | — | [PR #185](https://github.com/johnnickell/fight-agent-os/pull/185) |
 | 1 | [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | — (standalone chore) | done | — | [PR #189](https://github.com/johnnickell/fight-agent-os/pull/189) |
 | 1 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | done | — | [PR #190](https://github.com/johnnickell/fight-agent-os/pull/190) |
+| 1 | [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | [TICKET-00129 — Adopt upstream Pi subagents with Fight observation](../tickets/00129-TICKET.md) | done | — | — |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |

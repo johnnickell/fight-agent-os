@@ -2,7 +2,7 @@
 id: TICKET-00129
 epic: EPIC-00006
 title: Adopt upstream Pi subagents with Fight observation
-status: in-progress
+status: done
 ---
 
 # Adopt upstream Pi subagents with Fight observation
@@ -51,7 +51,7 @@ layers for unused behavior or delete active callers to achieve an arbitrary line
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00554](../tasks/00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | in-progress |
+| [TASK-00554](../tasks/00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | done |
 <!-- /planning:children -->
 
 ## Decisions and progress

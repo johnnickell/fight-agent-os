@@ -101,7 +101,7 @@ actual Agent-tool sessions in the existing Herdr activity pane. Upstream owns ex
 custody, workflow independence and Compose/worktree ownership. Explicit profile selection disables upstream
 worktrees/workflows/scheduling. `/fight-subagents` reports capabilities and finite refusals; rootless RPC routes
 are not admitted. Reader closure is passive, but upstream's whole-runtime shutdown/reload aborts its agents.
-Private installed/native qualification exists; TASK-00554's full gate and independent acceptance remain pending.
+TASK-00554 has a qualified full gate, independent Review ACCEPT and bounded behavioral/visual QA PASS on its accepted candidate; publication remains separate.
 
 ## Install
 

@@ -2,8 +2,8 @@
 
 [TASK-00554](../../planning/tasks/00554-TASK.md) implements a passive bridge to
 [`@tintinweb/pi-subagents`](https://github.com/tintinweb/pi-subagents). Private installed/native qualification
-has run and the full local gate passed during delivered-base recovery. Independent Review/QA remain pending;
-see the TASK's current completion checkpoint. This is not global rollout or acceptance.
+has run and the full local gate passed during delivered-base recovery. Independent Review ACCEPT and bounded
+behavioral/visual QA PASS cover the accepted candidate; see the TASK's completion checkpoint. This is not global rollout or publication.
 
 ## Select the supported profile
 
