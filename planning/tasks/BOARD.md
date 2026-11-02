@@ -26,7 +26,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 1 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | — (standalone bug) | ready-for-agent | — | — |
-| 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | [TICKET-00040 — Preserve context through verified compaction and resume](../tickets/00040-TICKET.md) | ready-for-agent | — | — |
@@ -328,6 +327,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | needs-info | — | — |
 | — | [TASK-00186](00186-TASK.md) | Inspect private memory under scoped oversight | [TICKET-00046 — Keep scoped private Agent memory](../tickets/00046-TICKET.md) | needs-info | [TASK-00185](00185-TASK.md) | — |
 | — | [TASK-00189](00189-TASK.md) | Inspect retained lessons under historical authority | [TICKET-00047 — Share attributed Workflow and TASK learning](../tickets/00047-TICKET.md) | needs-info | [TASK-00188](00188-TASK.md) | — |
 | — | [TASK-00191](00191-TASK.md) | Review and publish guidance at an authorized target | [TICKET-00048 — Review and publish broader memory lessons](../tickets/00048-TICKET.md) | needs-info | [TASK-00190](00190-TASK.md) | — |
