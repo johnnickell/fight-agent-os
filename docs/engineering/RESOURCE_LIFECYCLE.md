@@ -129,7 +129,10 @@ positive native consumer qualification, not shared-service/VM shutdown. Never fo
 refs/config by custom fallback, remove the main checkout or stop shared VMs. Worktrunk may retain an unmerged
 branch or metadata: inspect actual path/registration/ref/config and report partial Git outcomes separately.
 If source is already gone, repeat down through its locator, then let Worktrunk handle the exact surviving branch
-under Land's source/delivery qualification. If source, ref and registration are all absent, the same guarded
+under Land's source/delivery qualification. An explicitly owned fixture with absent source/registration can
+instead resume with its exact unchanged expected ref OID and canonical HEAD ancestry proof, just like a present
+fixture; no fabricated delivery callback is needed. Effective hooks and native non-force policy still apply.
+If source, ref and registration are all absent, the same guarded
 callable completes public down and retires the remaining locator/config without requiring publication again.
 Surviving or changed source/refs still require the existing source/delivery checks. Do not recreate source or
 publish again for cleanup.

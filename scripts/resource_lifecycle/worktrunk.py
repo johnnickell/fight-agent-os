@@ -79,7 +79,8 @@ def remove(root, selector, expected_oid, delivery=None):
             require(text(['git', 'rev-parse', ref], safe) == expected_oid,
                     'Exact source ref/OID changed; unique work retained')
         if not delivery:
-            require(present, 'Absent fixture source with surviving ref requires explicit delivery qualification')
+            # Interrupted native removal may leave only the exact fixture ref.
+            # The same canonical ancestry proof applies with or without source.
             run(['git', 'merge-base', '--is-ancestor', expected_oid, 'HEAD'], safe)
 
     source_state()

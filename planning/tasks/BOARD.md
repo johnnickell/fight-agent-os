@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
