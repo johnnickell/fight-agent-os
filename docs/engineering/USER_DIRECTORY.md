@@ -64,12 +64,9 @@ controls presentation and link activation:
 | Directory | `READ_USERS` | `/app/admin/users` |
 | Invite User | `INVITE_USERS` | `/app/admin/invite` |
 | Invite Super Admin | `INVITE_USERS` **and** `ASSIGN_SUPER_ADMIN` | `/app/admin/invite-super-admin` |
-| Pending row's Invitation status | `MANAGE_USER_INVITATIONS`; target must be pending | `/app/admin/invitations` |
+| Pending row's Invitation status | `READ_USERS`; target must be pending | `/app/admin/invitations/{user_id}` |
 
-Invitation destinations remain **truthful unavailable landing states**. The status link opens the existing
-administration seam, not a target-specific status query: no user ID, email, credential or invented target route
-is placed in the URL/history. TASK-00060 owns the target contract and working status/recovery journey;
-TASK-00061/00062 own ordinary/elevated invitation forms. No invitation API is duplicated and no link sends mail.
+TASK-00060 implements the target status route using a classified UUID path, never email, form input or credentials in URLs/history. READ_USERS-only viewers have read-only status; page changes additionally require MANAGE_USER_INVITATIONS, which grants no read authority (explicit human correction, 2026-11-02). Ordinary/elevated invitation forms remain unavailable under TASK-00061/00062. Recovery invalidates local directory generations; mounted pages refetch and unmounted pages read fresh on return. No invitation API is duplicated and no link sends mail.
 Forbidden controls are absent, not hidden focus targets. Client presentation never replaces server enforcement.
 
 ## Responsive and verification boundaries

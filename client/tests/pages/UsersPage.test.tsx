@@ -44,7 +44,7 @@ describe('UsersPage', () => {
       const status = screen.queryByRole('link', { name: /Invitation status for/ });
       expect(Boolean(ordinary)).toBe(Boolean(mask & 2));
       expect(Boolean(elevated)).toBe(Boolean(mask & 2 && mask & 8));
-      expect(Boolean(status)).toBe(Boolean(mask & 1 && mask & 4));
+      expect(Boolean(status)).toBe(Boolean(mask & 1));
       for (const link of screen.queryAllByRole('link')) {
         const path = link.getAttribute('href') ?? '';
         expect(matchApplicationRoute(path)).toBeDefined();
@@ -103,7 +103,7 @@ describe('UsersPage', () => {
       expect(within(table).getByRole('rowheader', { name: email })).toBeVisible();
     expect(screen.getByRole('status')).toHaveTextContent('2 users');
     expect(screen.queryByText('Users unavailable')).not.toBeInTheDocument();
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /Invitation status for/ })).toHaveLength(2);
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
@@ -117,9 +117,9 @@ describe('UsersPage', () => {
     expect(document.querySelector('script, svg, iframe')).toBeNull();
     expect(
       screen.getByRole('link', {
-        name: 'Invitation status for <script>@example.test (not available yet)'
+        name: 'Invitation status for <script>@example.test'
       })
-    ).toHaveAttribute('href', '/app/admin/invitations');
+    ).toHaveAttribute('href', expect.stringMatching(/^\/app\/admin\/invitations\/[a-f0-9-]+$/));
   });
 
   it('rechecks link activation against expired dispatch authority before the next render', async () => {

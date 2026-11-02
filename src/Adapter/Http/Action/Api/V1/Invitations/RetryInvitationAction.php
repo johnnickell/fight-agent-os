@@ -22,6 +22,7 @@ use Throwable;
  *
  * Maps a verified actor and target to retry of the same invitation generation
  */
+#[RequiresPermission('READ_USERS')]
 #[RequiresPermission('MANAGE_USER_INVITATIONS')]
 final readonly class RetryInvitationAction
 {
@@ -40,7 +41,8 @@ final readonly class RetryInvitationAction
         operationId: 'retryInvitation',
         summary: 'Retry failed invitation delivery using the same generation',
         description: <<<'TEXT'
-            Requires exact current MANAGE_USER_INVITATIONS before target disclosure. No query or body input.
+            Requires exact current READ_USERS and MANAGE_USER_INVITATIONS before target disclosure.
+            No query or body input.
             Only package-defined retryable failed, issued and unexpired work may transition; no replacement grant.
             Actor/action and actor/action/target atomic budgets default to 5 per 60 seconds, with bounded capacity.
             Throttle denial writes no package state. Delivery is at least once, not exactly once or inbox receipt.

@@ -111,7 +111,7 @@ final class InvitationRecoveryTest extends TestCase
     public function testPermissions(int $mask, string $operation): void
     {
         $recovery = $this->recovery($mask);
-        if (($mask & 4) === 0) {
+        if (($mask & 12) !== 12) {
             $this->expectException(PermissionDenied::class);
         }
         $view = match ($operation) {
@@ -134,7 +134,7 @@ final class InvitationRecoveryTest extends TestCase
      */
     public static function permissionMasks(): iterable
     {
-        foreach (range(0, 7) as $mask) {
+        foreach (range(0, 15) as $mask) {
             foreach (['retry', 'resend', 'correct'] as $operation) {
                 yield [$mask, $operation];
             }
@@ -240,11 +240,11 @@ final class InvitationRecoveryTest extends TestCase
     /**
      * Builds a real principal resolver and callback with controlled authoritative references and observed bus effects
      */
-    private function recovery(int $mask = 7): RecoverInvitation
+    private function recovery(int $mask = 15): RecoverInvitation
     {
         $now = new DateTimeImmutable('2026-10-19T12:00:00Z');
         $definitions = [];
-        foreach (['INVITE_USERS', 'ASSIGN_SUPER_ADMIN', 'MANAGE_USER_INVITATIONS'] as $bit => $name) {
+        foreach (['INVITE_USERS', 'ASSIGN_SUPER_ADMIN', 'MANAGE_USER_INVITATIONS', 'READ_USERS'] as $bit => $name) {
             if (($mask & (1 << $bit)) !== 0 && !($name === 'MANAGE_USER_INVITATIONS' && $this->fault === 'no-right')) {
                 $definitions[] = Permission::defineManaged(
                     PermissionId::generate(),

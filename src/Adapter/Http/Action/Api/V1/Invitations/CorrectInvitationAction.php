@@ -25,6 +25,7 @@ use Throwable;
  *
  * Maps checked destination input to atomic pending-invitation correction
  */
+#[RequiresPermission('READ_USERS')]
 #[RequiresPermission('MANAGE_USER_INVITATIONS')]
 final readonly class CorrectInvitationAction
 {
@@ -43,7 +44,7 @@ final readonly class CorrectInvitationAction
         operationId: 'correctInvitation',
         summary: 'Atomically correct a pending invitation address and replace its grant',
         description: <<<'TEXT'
-            Requires exact current MANAGE_USER_INVITATIONS before target disclosure. No query input.
+            Requires exact current READ_USERS and MANAGE_USER_INVITATIONS before target disclosure. No query input.
             Requires a pending-activation user and current issued invitation. Canonicalizes email and rejects
             canonical or reserved email claims. User email, predecessor revocation, fresh purpose-bound seven-day
             grant/delivery and safe actor/target/action audit commit atomically through the package command.

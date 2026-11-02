@@ -20,6 +20,26 @@ function serviceFor(data: unknown) {
 }
 
 describe('UserDirectoryService', () => {
+  it('invalidates mounted readers and rejects an obsolete in-flight page after invitation recovery', async () => {
+    let finish: ((response: Response) => void) | undefined;
+    const { service, cache } = directoryDependencies(
+      () =>
+        new Promise<Response>((resolve) => {
+          finish = resolve;
+        })
+    );
+    cache.dispose();
+    const listener = vi.fn();
+    const detach = service.subscribe(listener);
+    const pending = service.load();
+    service.invalidate();
+    finish?.(directoryResponse(directoryPage()));
+    expect(await pending).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
+    expect(listener).toHaveBeenCalledOnce();
+    detach();
+    service.invalidate();
+    expect(listener).toHaveBeenCalledOnce();
+  });
   it('sends only current Bearer and bounded pagination; maps exact immutable safe fields without persistence', async () => {
     const row = directoryUser({
       email: 'équipe@example.test',

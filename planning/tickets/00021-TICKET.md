@@ -30,7 +30,7 @@ Out of scope for this TICKET: custom roles/permissions (TICKET-00031), active em
 
 Canonical email, target lifecycle, managed role, confirmation, stale version, and delivery-state validations are server-owned. Conflicts and concurrent correction/resend/activation return safe recoverable results rather than overwriting authoritative state. Listings paginate/filter only through explicitly supported safe fields.
 
-`READ_USERS`, `INVITE_USERS`, `MANAGE_USER_INVITATIONS`, and `ASSIGN_SUPER_ADMIN` gate their exact interactions. Possessing `ROLE_SUPER_ADMIN` is not itself an authorization bypass. Audit evidence records actor, target, action, time, result, and safe context without grants/passwords.
+`READ_USERS` is required for user information, invitation status and page viewing; READ_USERS-only operators receive a read-only page. `MANAGE_USER_INVITATIONS` separately authorizes invitation-state mutations and grants no read authority; page changes and data-returning recovery APIs require both. `INVITE_USERS` and `ASSIGN_SUPER_ADMIN` gate their exact issuance interactions. This records the explicit human correction of 2026-11-02. Possessing `ROLE_SUPER_ADMIN` is not itself an authorization bypass. Audit evidence records actor, target, action, time, result, and safe context without grants/passwords.
 
 ## Acceptance and evidence
 
@@ -49,7 +49,7 @@ Canonical email, target lifecycle, managed role, confirmation, stale version, an
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00059](../tasks/00059-TASK.md) | Deliver the permission-controlled user directory | done |
-| [TASK-00060](../tasks/00060-TASK.md) | Deliver pending-invitation status and recovery | needs-info |
+| [TASK-00060](../tasks/00060-TASK.md) | Deliver pending-invitation status and recovery | in-progress |
 | [TASK-00061](../tasks/00061-TASK.md) | Deliver the ordinary web invitation journey | ready-for-agent |
 | [TASK-00062](../tasks/00062-TASK.md) | Deliver the confirmed elevated invitation journey | ready-for-agent |
 <!-- /planning:children -->

@@ -11,6 +11,8 @@ use Fight\AccessControl\Application\AccessControl\Authorization\Service\Authenti
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\FindInvitationDeliveryStatus;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\User\Query\GetUserById;
+use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use LogicException;
@@ -33,20 +35,27 @@ final readonly class ReadInvitationStatus
     }
 
     /**
-     * Returns only the qualified package delivery View for the authorized target
+     * Composes bounded package target and delivery observations after exact read authorization
      */
-    public function read(AuthenticationContext $authentication, UserId $userId): InvitationDeliveryStatusView
+    public function read(AuthenticationContext $authentication, UserId $userId): InvitationStatus
     {
-        $actor = $this->authority->require($authentication, [PermissionName::fromString('MANAGE_USER_INVITATIONS')]);
+        $actor = $this->authority->require($authentication, [PermissionName::fromString('READ_USERS')]);
         $this->limiter->consume($actor, InvitationOperation::STATUS);
-        $view = $this->queries->fetch(new FindInvitationDeliveryStatus($userId));
-        if ($view === null) {
+        $user = $this->queries->fetch(new GetUserById($userId));
+        if ($user === null) {
             throw new ResourceNotFound();
         }
-        if (!$view instanceof InvitationDeliveryStatusView || !$view->getUserId()->equals($userId)) {
+        if (!$user instanceof UserView || !$user->getUserId()->equals($userId)) {
+            throw new LogicException('Invitation target is unavailable.');
+        }
+        $view = $this->queries->fetch(new FindInvitationDeliveryStatus($userId));
+        if (
+            $view !== null
+            && (!$view instanceof InvitationDeliveryStatusView || !$view->getUserId()->equals($userId))
+        ) {
             throw new LogicException('Invitation status is unavailable.');
         }
 
-        return $view;
+        return new InvitationStatus($user, $view);
     }
 }

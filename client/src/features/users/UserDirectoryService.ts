@@ -79,6 +79,16 @@ export class UserDirectoryService {
   readonly #api: ApiClient;
   readonly #lifecycle: { accessRejected?: () => void; authorityRejected?: () => void };
   #blocked: 'authentication' | 'authorization' | null = null;
+  readonly #listeners = new Set<() => void>();
+  #generation = 0;
+  subscribe = (listener: () => void): (() => void) => {
+    this.#listeners.add(listener);
+    return () => this.#listeners.delete(listener);
+  };
+  invalidate = (): void => {
+    ++this.#generation;
+    for (const listener of this.#listeners) listener();
+  };
 
   constructor(
     api: ApiClient,
@@ -95,6 +105,7 @@ export class UserDirectoryService {
 
   async load(page = 1, perPage = 25, signal?: AbortSignal): Promise<ApiResult<DirectoryPage>> {
     if (this.#blocked) return apiFailure(this.#blocked);
+    const generation = this.#generation;
     const result = await this.#api.get<DirectoryPage>(
       '/users',
       (value) => {
@@ -133,7 +144,7 @@ export class UserDirectoryService {
       },
       { access: 'required', pagination: { page, perPage }, ...(signal ? { signal } : {}) }
     );
-    if (signal?.aborted) return apiFailure('cancelled');
+    if (signal?.aborted || generation !== this.#generation) return apiFailure('cancelled');
     if (
       !result.ok &&
       (result.error.kind === 'authentication' || result.error.kind === 'authorization')

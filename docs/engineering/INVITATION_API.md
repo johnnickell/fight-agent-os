@@ -1,15 +1,14 @@
 # Authorized invitation API
 
-TASK-00041 issuance/status and TASK-00042 recovery expose five Bearer-protected operations, not public
-registration or a browser invitation screen:
+TASK-00041 issuance/status and TASK-00042 recovery expose five Bearer-protected operations, not public registration. TASK-00060 consumes status/recovery in the protected browser page:
 
 | Operation | Input | Exact current permission |
 |---|---|---|
 | `POST /api/v1/invitations` | JSON `email`, `mode`, optional boolean `confirm_super_admin` | `INVITE_USERS`; `super_admin` also requires `ASSIGN_SUPER_ADMIN` |
-| `GET /api/v1/invitations/{user_id}` | User UUID path only; no query/body/Content-Type | `MANAGE_USER_INVITATIONS` |
-| `POST /api/v1/invitations/{user_id}/retry` | User UUID path only; no query/body/Content-Type | `MANAGE_USER_INVITATIONS` |
-| `POST /api/v1/invitations/{user_id}/resend` | User UUID path only; no query/body/Content-Type | `MANAGE_USER_INVITATIONS` |
-| `PATCH /api/v1/invitations/{user_id}/email` | User UUID path and JSON `email` only | `MANAGE_USER_INVITATIONS` |
+| `GET /api/v1/invitations/{user_id}` | User UUID path only; no query/body/Content-Type | `READ_USERS` |
+| `POST /api/v1/invitations/{user_id}/retry` | User UUID path only; no query/body/Content-Type | `READ_USERS` and `MANAGE_USER_INVITATIONS` |
+| `POST /api/v1/invitations/{user_id}/resend` | User UUID path only; no query/body/Content-Type | `READ_USERS` and `MANAGE_USER_INVITATIONS` |
+| `PATCH /api/v1/invitations/{user_id}/email` | User UUID path and JSON `email` only | `READ_USERS` and `MANAGE_USER_INVITATIONS` |
 
 `mode` is exactly `ordinary` or `super_admin`. Ordinary maps only to the stable installation-managed `ROLE_USER`;
 elevated maps only to managed `ROLE_SUPER_ADMIN` and requires literal JSON `true` confirmation. Missing or false
@@ -36,8 +35,9 @@ The existing Bearer extraction guard requires a seekable body and rejects bodies
 65,536-byte ceiling does not promise acceptance of authenticated bodies that large.
 
 All API outcomes use JSend, `Cache-Control: no-store`, and sanitized `X-Correlation-ID`; no CORS or cookie grant is
-introduced. OpenAPI attributes on the actual Actions/Responders are authoritative. Responses contain no canonical
-email because these operations need only stable user identity and delivery lifecycle, reducing unnecessary PII.
+introduced. OpenAPI attributes on the actual Actions/Responders are authoritative. Under the explicit 2026-11-02 human correction, READ_USERS governs user/status reads; MANAGE_USER_INVITATIONS grants mutation authority, never reading. Existing recovery APIs return delivery data and therefore require both permissions at HTTP and Application boundaries. The underlying package mutation/correction authorization remains separate.
+
+TASK-00060 implements `/app/admin/invitations/{user_id}` with READ_USERS-only viewing and additionally gated recovery controls (independent acceptance pending). The existing status GET now returns exactly `user_id`, canonical `email`, lifecycle `state` and nullable `delivery`, composed from package GetUserById/FindInvitationDeliveryStatus through the normal QueryBus. It never scans the directory or trusts route/form email. A known user without a generation has `delivery: null`; unknown users return 404. No roles, provider diagnostics, destination history or credentials enter this projection. Issuance and recovery delivery Views retain their bounded four-field shapes.
 
 | HTTP | Meaning |
 |---|---|
@@ -46,7 +46,7 @@ email because these operations need only stable user identity and delivery lifec
 | 400 `fail` | Invalid JSON/source/type/bound/allowlist or malformed path identifier; no dispatch |
 | 401 `error` | Missing/invalid/stale authentication or rejected alternative/oversized credential transport |
 | 403 `error` | Exact required permission absent, or Application authentication no longer authoritative |
-| 404 `error` | Authorized target has no invitation delivery generation |
+| 404 `error` | Status target is unknown, or a recovery target has no invitation delivery generation |
 | 409 `error` | Canonical/reservation conflict, policy drift, ineligible recovery state or concurrent transition |
 | 422 `fail` | Missing/false explicit elevation confirmation |
 | 429 `error` | Atomic actor/action budget or key capacity exhausted; integer `Retry-After` seconds |
@@ -57,7 +57,7 @@ email because these operations need only stable user identity and delivery lifec
 Issuance `data` contains exactly `user_id` (nullable only for uncertainty), `assignment`
 (`confirmed`, `unconfirmed`, `unknown`), `audit` (`confirmed`, `unconfirmed`), and nullable `delivery`.
 These assignment/audit fields describe observed steps, not a parallel invitation-delivery lifecycle.
-`delivery` and status-read `data` use the package `InvitationDeliveryStatusView` directly: `user_id`, `status`,
+Issuance `delivery`, status-read `data.delivery` and recovery `data` use the package `InvitationDeliveryStatusView` directly: `user_id`, `status`,
 `expires_at`, `activation_delivery_id`. TASK-00125's current package adoption adds the safe generation identifier;
 it is an expectation for protected operational inspection, never authentication or recovery authority.
 The qualified package statuses are `pending`, `claimed`, `retry_pending`, `delivered`,
@@ -87,26 +87,28 @@ operator inspect persisted identity, roles, audit and package delivery. Existing
 an eligible ordinary membership with the rules in [console invitations](CONSOLE_INVITATIONS.md); it cannot elevate
 Super Admin. Elevated or unknown-state recovery needs operator investigation and separately scoped work.
 The recovery operations below do not resume or repair issuance's independently committed role assignment.
-Admin UI, activation transport/UI, real provider enrollment and recovery scheduling remain separate. A client must
+Issuance UI, activation transport/UI, real provider enrollment and recovery scheduling remain separate. A client must
 not interpret any 503 as a safe idempotent retry instruction.
 
 ## Atomic invitation recovery
 
-The deliberate current lock selects Access Control **v0.6.0**, source/lock
+Historical TASK-00042 adoption selected Access Control **v0.6.0**, source/lock
 `dc4621d13851dd08cdf85ed9715ead24b1051e80`; Common remains **v1.3.0**,
 `7de6cad6e8a9752973ad9f8e27e285b0c1510582`. Version availability alone was not qualification. The v0.6.0
 retry handler checks its injected Clock inside its transaction. Actual PostgreSQL probes reject at exact expiry
 and afterward without changing revision or writing a success audit, including with normal post-commit coordination.
 A separate injected audit failure proves rollback. Historical v0.5.0 qualification failures remain in TASK-00042.
 
-Every recovery entry re-resolves invocation authentication and exact `MANAGE_USER_INVITATIONS`, then checks
+The current lock selects Access Control **v0.8.0**, source/lock `319738255e682d587642b67856039f882b9588d6`; Common remains v1.3.0 at the reference above. No dependency change is made by TASK-00060.
+
+Every data-returning recovery entry re-resolves invocation authentication and exact `READ_USERS` plus `MANAGE_USER_INVITATIONS`, then checks
 current installation actor/target authority before admission or grant lookup. The package's
 `InvitationAdministrationAuthorization` correction callback uses the same exact authoritative Role/Permission
 references; a Role name never grants the permission, and missing/mismatched references fail closed. The callback
 accepts trusted internal actor/target IDs, not HTTP authentication: nontrusted callers must enter through
 `RecoverInvitation` with verified invocation authentication. Raw package bus access remains trusted composition,
 not a public forwarding API. Unknown targets return generic 403; an authorized existing target without a grant
-returns 404. No target email is disclosed.
+returns 404. Recovery responses disclose no email; canonical target email is available only from the READ_USERS-protected status GET.
 
 - **Retry** dispatches `RetryInvitationDelivery`. Only live issued, retryable failed work returns to pending;
   generation, credential and provider idempotency identity remain unchanged. It is not an arbitrary reset.
@@ -145,6 +147,12 @@ At-least-once provider attempts can duplicate effects after provider success/out
 retry nor resend is exactly-once or request-idempotent. Sequential deliberate resends can create another successor;
 competing snapshots are fenced by package revision/reference checks. Responses never identify a winning raw
 credential, digest, ciphertext, link, provider payload/message/key or exception trace.
+
+## Browser status and recovery
+
+The volatile page uses the sole AuthorityCache and strict exact-key services. Read-only viewers receive canonical identity, lifecycle, stored delivery classification and UTC expiry; local deadline copy never fabricates a stored terminal transition. Retry is offered only for live pending users with `retry_pending` work; package admission remains final. Resend and correction require a named Cancel-first modal, explicit old-link invalidation and seven-day replacement copy; correction additionally confirms old/new canonical addresses and atomic replacement.
+
+Every attempted mutation retires outstanding status generations and invalidates local directory reads. The page clears correction fields and refetches status once after success, safe conflict, throttle or uncertainty; it never adopts mutation response/form email as authoritative target identity or automatically replays a mutation. No persistent cache, cross-tab data channel or new command/endpoint is added. Explicit reload recovers from a failed/throttled read; authentication/authorization refusals require explicit recovery and cannot replay through guard remount. Reads and mutations have eight-second client bounds; a timeout does not establish rollback. Navigation/context retirement suppresses late outcomes and clears private DOM/fields. Package concurrency/activation/claim invariants remain unchanged.
 
 ## Atomic bounded rate policy
 

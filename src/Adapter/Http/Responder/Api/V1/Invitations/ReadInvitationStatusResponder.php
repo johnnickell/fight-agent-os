@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Responder\Api\V1\Invitations;
 
+use App\Application\Invitation\InvitationStatus;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
@@ -32,6 +33,32 @@ use Psr\Http\Message\ResponseInterface;
     additionalProperties: false
 )]
 #[OA\Schema(
+    schema: 'InvitationTarget',
+    required: ['user_id', 'email', 'state', 'delivery'],
+    properties: [
+        new OA\Property(property: 'user_id', type: 'string', format: 'uuid'),
+        new OA\Property(property: 'email', type: 'string', maxLength: 254),
+        new OA\Property(
+            property: 'state',
+            type: 'string',
+            enum: ['pending_activation', 'active', 'disabled', 'deleted']
+        ),
+        new OA\Property(property: 'delivery', ref: '#/components/schemas/InvitationDelivery', nullable: true)
+    ],
+    type: 'object',
+    additionalProperties: false
+)]
+#[OA\Schema(
+    schema: 'InvitationTargetSuccess',
+    required: ['status', 'data'],
+    properties: [
+        new OA\Property(property: 'status', type: 'string', enum: ['success']),
+        new OA\Property(property: 'data', ref: '#/components/schemas/InvitationTarget')
+    ],
+    type: 'object',
+    additionalProperties: false
+)]
+#[OA\Schema(
     schema: 'InvitationStatusSuccess',
     required: ['status', 'data'],
     properties: [
@@ -53,8 +80,10 @@ final readonly class ReadInvitationStatusResponder
     /**
      * Returns no provider diagnostics, credential material or inferred receipt
      */
-    public function respond(InvitationDeliveryStatusView $view): ResponseInterface
+    public function respond(InvitationStatus|InvitationDeliveryStatusView $view): ResponseInterface
     {
-        return $this->responses->fromEnvelope(JSendEnvelope::success($view), 200, ['Cache-Control' => 'no-store']);
+        $data = $view instanceof InvitationStatus ? new InvitationStatusData($view) : $view;
+
+        return $this->responses->fromEnvelope(JSendEnvelope::success($data), 200, ['Cache-Control' => 'no-store']);
     }
 }

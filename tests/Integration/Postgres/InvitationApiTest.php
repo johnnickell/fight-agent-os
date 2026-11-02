@@ -265,7 +265,7 @@ final class InvitationApiTest extends TestCase
             self::assertSame($this->actor->getId()->toString(), $row['actor_id']);
         }
         $status = $this->request('GET', '/api/v1/invitations/'.$data['user_id']);
-        self::assertSame($data['delivery'], $this->assertResponse($status, 200, false)['data']);
+        self::assertSame($data['delivery'], $this->assertResponse($status, 200, false)['data']['delivery']);
         $privateValues = [
             $grant['credential_digest'], $grant['delivery_ciphertext'],
             $this->token, $this->session->getId()->toString()
@@ -383,7 +383,7 @@ final class InvitationApiTest extends TestCase
     public function testAuthority(string $case, bool $status, int $expected): void
     {
         if ($case === 'permission') {
-            $name = $status ? 'MANAGE_USER_INVITATIONS' : 'INVITE_USERS';
+            $name = $status ? 'READ_USERS' : 'INVITE_USERS';
             $this->connection->executeStatement(
                 'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
                 [$name]
@@ -549,7 +549,10 @@ final class InvitationApiTest extends TestCase
             $this->issue(['email' => 'other@example.test', 'mode' => 'ordinary']),
             201
         )['data'];
-        self::assertSame($data['delivery'], $this->assertResponse($this->request('GET', $path), 200, false)['data']);
+        self::assertSame(
+            $data['delivery'],
+            $this->assertResponse($this->request('GET', $path), 200, false)['data']['delivery']
+        );
         self::assertSame($this->clock->now()->modify('+7 days')->getTimestamp(), (new DateTimeImmutable(
             (string) $this->connection->fetchOne('SELECT expires_at FROM activation_grants WHERE user_id = ?', [
                 $next['user_id']

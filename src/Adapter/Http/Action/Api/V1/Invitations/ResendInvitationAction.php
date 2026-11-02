@@ -22,6 +22,7 @@ use Throwable;
  *
  * Maps a verified actor and target to atomic invitation replacement
  */
+#[RequiresPermission('READ_USERS')]
 #[RequiresPermission('MANAGE_USER_INVITATIONS')]
 final readonly class ResendInvitationAction
 {
@@ -40,7 +41,8 @@ final readonly class ResendInvitationAction
         operationId: 'resendInvitation',
         summary: 'Atomically replace an issued invitation and request delivery',
         description: <<<'TEXT'
-            Requires exact current MANAGE_USER_INVITATIONS before target disclosure. No query or body input.
+            Requires exact current READ_USERS and MANAGE_USER_INVITATIONS before target disclosure.
+            No query or body input.
             The latest grant must be issued, including expired issued grants. Revocation and a new purpose-bound
             seven-day grant and delivery generation commit with durable audit in one package transaction.
             Actor/action and actor/action/target atomic budgets default to 3 per 60 seconds, with bounded capacity.

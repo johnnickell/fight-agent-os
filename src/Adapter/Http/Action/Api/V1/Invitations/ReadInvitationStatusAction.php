@@ -22,7 +22,7 @@ use Throwable;
  *
  * Maps one target path identifier into an authorized safe status query
  */
-#[RequiresPermission('MANAGE_USER_INVITATIONS')]
+#[RequiresPermission('READ_USERS')]
 final readonly class ReadInvitationStatusAction
 {
     /**
@@ -40,7 +40,8 @@ final readonly class ReadInvitationStatusAction
         operationId: 'readInvitationStatus',
         summary: 'Read safe invitation delivery lifecycle and expiry',
         description: <<<'TEXT'
-            Requires exact MANAGE_USER_INVITATIONS. Package delivery lifecycle is stored state, not proof of inbox
+            Requires exact READ_USERS; MANAGE_USER_INVITATIONS alone grants no read authority.
+            Package delivery lifecycle is stored state, not proof of inbox
             receipt or a computed expiry transition. Actor/action fixed-window limits default to 60 reads per
             60 seconds; configurable server-side. No query or body input.
             TEXT,
@@ -55,7 +56,7 @@ final readonly class ReadInvitationStatusAction
             new OA\Response(
                 response: 200,
                 description: 'Credential-free package status',
-                content: new OA\JsonContent(ref: '#/components/schemas/InvitationStatusSuccess')
+                content: new OA\JsonContent(ref: '#/components/schemas/InvitationTargetSuccess')
             ),
             new OA\Response(ref: '#/components/responses/PublicValidationBadRequest', response: 400),
             new OA\Response(ref: '#/components/responses/Unauthorized', response: 401),

@@ -96,7 +96,11 @@ final readonly class RecoverInvitation
         UserId $target,
         InvitationOperation $operation
     ): UserId {
-        $actor = $this->authority->require($authentication, [PermissionName::fromString('MANAGE_USER_INVITATIONS')]);
+        // These entry points return user/delivery data; mutation permission alone grants no read authority.
+        $actor = $this->authority->require($authentication, [
+            PermissionName::fromString('READ_USERS'),
+            PermissionName::fromString('MANAGE_USER_INVITATIONS')
+        ]);
         $this->targets->assertInvitationPermission($actor, $target);
         $this->limiter->consume($actor, $operation, $target);
 
