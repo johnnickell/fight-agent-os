@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | — (standalone chore) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -607,4 +607,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | — (standalone chore) | done | — | [PR #178](https://github.com/johnnickell/fight-agent-os/pull/178) |
 | — | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | — (standalone bug) | done | — | [PR #183](https://github.com/johnnickell/fight-agent-os/pull/183) |
 | — | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | — (standalone chore) | done | — | [PR #188](https://github.com/johnnickell/fight-agent-os/pull/188) |
+| — | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | — (standalone chore) | done | — | — |
 <!-- /planning:board -->
