@@ -8,8 +8,8 @@ import { childEnvironment } from '../workspace/rpc.mjs';
 
 // Observation resources only. There is deliberately no execute, launch or cancel method.
 export class NativeObservation {
-  constructor(context, { started = Number(process.hrtime.bigint() / 1000000n), wallUs = Date.now() * 1000 } = {}) {
-    this.started = started; this.wallUs = wallUs;
+  constructor(context, { started = Number(process.hrtime.bigint() / 1000000n), wallUs = Date.now() * 1000, refused = () => {} } = {}) {
+    this.started = started; this.wallUs = wallUs; this.refused = refused;
     this.primary = context.cwd; this.parent = context.sessionManager.getSessionId();
     this.sessionFile = context.sessionManager.getSessionFile(); this.closed = false;
     this.parentFile = null;
@@ -31,7 +31,7 @@ export class NativeObservation {
     }
     if (witness.path !== this.pendingParentFile) throw new Error('Native session file replaced');
     this.parentFile = witness; this.pendingParentFile = undefined;
-    if (this.child?.connected) this.child.send({ type: 'bind-session', parentFile: witness }, () => {});
+    if (this.child?.connected) this.child.send({ type: 'bind-session', parentFile: witness }, () => { this.flushSubagents(); });
   }
   async start() {
     if (this.closed || this.child || !this.sessionFile) return;
@@ -43,14 +43,49 @@ export class NativeObservation {
     const child = fork(custodianScript, [generation], { cwd: this.primary, detached: true,
       env: childEnvironment(process.env), stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
     this.child = child;
+    child.on('message', message => this.receive(message));
     child.on('error', () => this.close());
     // The daemon is an observation reader, never an executor or child custodian.
     child.send({ type: 'initialize', primary: this.primary, parent: this.parent, parentFile: this.parentFile,
       pendingParentFile: this.pendingParentFile, generation,
       native: { pid: process.pid, entry, process: stdout.trim(), mode: 'tui', started: this.started, wallUs: this.wallUs } }, () => {});
   }
+  receive(message) {
+    if (this.closed) return;
+    if (message?.type === 'ready') { this.ready = true; this.flushSubagents(); }
+    else if (message?.type === 'subagent-refused') this.refused(message);
+  }
+  observeSubagent(message) {
+    if (this.closed) return;
+    this.queuedSubagents ??= new Map();
+    if (!this.queuedSubagents.has(message.id) && this.queuedSubagents.size >= 8) {
+      this.refused({ id: message.id, reason: 'observation-capacity-eight' }); return;
+    }
+    this.queuedSubagents.set(message.id, message);
+    this.flushSubagents();
+  }
+  flushSubagents() {
+    if (this.closed || !this.ready || !this.parentFile || !this.child?.connected) return;
+    this.pendingSubagents ??= new Set();
+    for (const [id, message] of this.queuedSubagents ?? []) {
+      if (this.pendingSubagents.size >= 8) break;
+      if (this.pendingSubagents.has(id)) continue;
+      this.queuedSubagents.delete(id); this.pendingSubagents.add(id);
+      try { this.child.send(message, () => { this.pendingSubagents.delete(id); this.flushSubagents(); }); }
+      catch { this.pendingSubagents.delete(id); }
+    }
+  }
   close() {
-    if (this.closed) return; this.closed = true;
+    if (this.closed) return;
+    this.closed = true;
+    // At most eight coalesced frames. Preserve IPC ordering even if an earlier send's callback
+    // has not fired; disconnect drains Node's queued messages, never waits on agent execution.
+    if (this.ready && this.parentFile && this.child?.connected) {
+      for (const message of this.queuedSubagents?.values() ?? []) {
+        try { this.child.send(message, () => {}); } catch { /* Transport unavailable, not an SDK failure. */ }
+      }
+    }
+    this.queuedSubagents?.clear();
     if (this.child?.connected) this.child.disconnect();
     this.child?.unref();
   }

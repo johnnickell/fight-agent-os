@@ -17,7 +17,10 @@ function admitted(value, witness) {
       value.history.reduce((sum, text) => sum + text.length, 0) > limits.units ||
       !Number.isSafeInteger(value.omitted) || value.omitted < 0 ||
       (value.gaps !== undefined && (!Number.isSafeInteger(value.gaps) || value.gaps < 0)) ||
-      (['completed', 'failed'].includes(value.lifecycle) ? !Number.isInteger(value.exitCode) || value.exitCode < 0 || value.exitCode > 255 || (value.lifecycle === 'completed') !== (value.exitCode === 0) : value.exitCode !== null)) throw new Error('Invalid admitted child');
+      (value.source === 'pi-subagents'
+        ? value.exitCode !== null || !['running', 'completed', 'steered', 'aborted', 'stopped', 'error'].includes(value.upstreamStatus) ||
+          value.lifecycle !== (value.upstreamStatus === 'running' ? 'running' : ['completed', 'steered'].includes(value.upstreamStatus) ? 'completed' : 'failed')
+        : (['completed', 'failed'].includes(value.lifecycle) ? !Number.isInteger(value.exitCode) || value.exitCode < 0 || value.exitCode > 255 || (value.lifecycle === 'completed') !== (value.exitCode === 0) : value.exitCode !== null))) throw new Error('Invalid admitted child');
   if (clean(value.identity.worktree) !== value.identity.worktree || realpathSync(value.identity.worktree) !== value.identity.worktree) throw new Error('Noncanonical admitted worktree');
   return { ...value, identity: Object.fromEntries(keys.map(key => [key, clean(value.identity[key]).replace(/\n/g, ' ')])), history: value.history.map(text => clean(text).replace(/\n/g, ' ')), verified: true };
 }
@@ -45,12 +48,16 @@ export class RegisteredChildren {
     return item?.verified && ['starting', 'connected'].includes(item.state) && activeStates.has(item.lifecycle) &&
       this.now() - item.receivedAt <= Math.max(5000, item.heartbeatSeconds * 3000);
   }
+  completed(item) { return item?.verified && item.source === 'pi-subagents' && ['completed', 'failed'].includes(item.lifecycle); }
   recompute() {
     const previous = this.selected;
     if (this.pin && this.sources.has(this.pin)) this.selected = this.pin;
     else if (!this.active(this.sources.get(this.selected))) {
       this.selected = [...this.sources.values()].filter(item => this.active(item)).sort((a, b) =>
-        b.started - a.started || (a.generation === b.generation ? b.order - a.order : 0) || a.id.localeCompare(b.id)).map(sourceKey)[0] ?? null;
+        b.started - a.started || (a.generation === b.generation ? b.order - a.order : 0) || a.id.localeCompare(b.id)).map(sourceKey)[0] ??
+        (this.completed(this.sources.get(this.selected)) ? this.selected :
+          [...this.sources.values()].filter(item => this.completed(item))
+            .sort((a, b) => b.started - a.started || b.order - a.order).map(sourceKey)[0]) ?? null;
     }
     if (previous !== this.selected) { this.paused = false; this.frozen = null; }
   }
@@ -94,7 +101,7 @@ export class RegisteredChildren {
         if (lost && !next.has(this.pin)) next.set(this.pin, { ...lost, verified: false, state: 'disconnected' });
         const sorted = [...next.entries()].sort(([a, x], [b, y]) => (b === this.pin || b === this.selected ? 1 : 0) - (a === this.pin || a === this.selected ? 1 : 0) || y.started - x.started || a.localeCompare(b));
         this.sources = new Map(sorted.slice(0, limits.children)); this.recompute();
-        this.notice = `${refused ? `${refused} stale/replaced/mismatched custody candidate(s) refused. ` : ''}${next.size > limits.children ? 'Capacity: newest eight plus retained selection/pin only. ' : ''}${next.size ? 'Trusted-local monitor association verified; pane is human-only' : 'No eligible monitor association; unregistered/unsupported children unavailable, never guessed'}`;
+        this.notice = `${refused ? `${refused} stale/replaced/mismatched custody candidate(s) refused. ` : ''}${next.size > limits.children ? 'Capacity: newest eight plus retained selection/pin only. ' : ''}${next.size ? 'Trusted-local child association verified; pane is human-only' : 'No eligible monitor association; unregistered/unsupported children unavailable, never guessed'}`;
         this.restorePreference(); this.savePreference(); this.changed();
       } catch { if (epoch === this.epoch && !this.closed) { for (const item of this.sources.values()) item.verified = false; this.recompute(); this.notice = 'Registration discovery unavailable/capacity exceeded; no unverified source admitted'; this.changed(); } }
     })().finally(() => {
@@ -121,7 +128,7 @@ export class RegisteredChildren {
     } else if (type === 'reconnect') { this.open = true; void this.refresh(); }
     else if (type === 'pin') { this.pin = this.pin === null ? this.selected : null; this.recompute(); }
     else if (type === 'next' || type === 'previous') {
-      const eligible = [...this.sources.entries()].filter(([key, item]) => this.active(item) || key === this.pin).map(([key]) => key).sort();
+      const eligible = [...this.sources.entries()].filter(([key, item]) => this.active(item) || key === this.pin || this.completed(item)).map(([key]) => key).sort();
       if (eligible.length) {
         const current = eligible.indexOf(this.selected), delta = type === 'next' ? 1 : -1;
         this.selected = eligible[(current + delta + eligible.length) % eligible.length];
@@ -159,7 +166,7 @@ export class RegisteredChildren {
     return ['AUTOMATIC current-session children · observation only', `${this.pin === null ? 'UNPINNED' : 'PINNED'} · ${item ? `${item.identity.role} ${item.identity.task}` : 'IDLE — no eligible active child'}${this.open ? '' : ' · READERS CLOSED'}`,
       '[ / ] choose · f pin/unpin · p pause · c readers · r rediscover', `Primary session: ${clean(this.session ?? '(waiting)')}`,
       ...[...this.sources.entries()].map(([key, source]) => `${key === this.selected ? '>' : ' '} ${key === this.pin ? '[PIN] ' : ''}${source.identity.role} ${source.identity.task} · ${source.verified ? (this.active(source) ? source.state : 'unknown/inactive — heartbeat expired or last known terminal') : 'CUSTODY LOST'}/${source.lifecycle}\n  Worktree ${source.identity.worktree}\n  Attempt ${source.identity.attempt}\n  Generation ${source.generation} · child ${source.id}`),
-      this.notice, item ? `Last known ${item.lifecycle}${item.exitCode === null ? '' : ` (exit ${item.exitCode}; not acceptance)`} · sequence ${item.sequence} · omitted ${item.omitted} · pipe gaps ${item.gaps ?? 'unknown (earlier custodian)'}${this.paused ? ' · DISPLAY PAUSED' : ''}` : 'Legacy/unregistered children unavailable; never relaunched',
+      this.notice, item ? `Last known ${item.source === 'pi-subagents' ? `upstream ${item.upstreamStatus} (SDK; no process exit or acceptance)` : `${item.lifecycle}${item.exitCode === null ? '' : ` (exit ${item.exitCode}; not acceptance)`}`} · sequence ${item.sequence} · omitted ${item.omitted} · pipe gaps ${item.gaps ?? 'unknown (earlier custodian)'}${this.paused ? ' · DISPLAY PAUSED' : ''}` : 'Legacy/unregistered children unavailable; never relaunched',
       ...(this.paused ? this.frozen ?? [] : item?.history ?? []), 'Conversation cwd/grants unchanged; no pane output enters Pi/model context.'].join('\n');
   }
   close() { if (this.closed) return; this.savePreference(); this.closed = true; this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null; }

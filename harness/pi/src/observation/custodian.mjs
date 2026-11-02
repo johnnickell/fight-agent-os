@@ -13,13 +13,18 @@ const script = fileURLToPath(import.meta.url);
 const monitor = fileURLToPath(new URL('./run-stage.py', import.meta.url));
 const identityKeys = ['task', 'role', 'provider', 'model', 'thinking', 'worktree', 'attempt'];
 const terminalStates = new Set(['completed', 'failed']);
+const sdkStatuses = new Set(['running', 'completed', 'steered', 'aborted', 'stopped', 'error']);
 
 export function applyProgress(registration, event) {
   if (terminalStates.has(registration.lifecycle) || !['starting', 'running', 'settled-awaiting-exit', 'completed', 'failed'].includes(event.lifecycle) ||
       typeof event.text !== 'string' || [...event.text].length > 600 || !Number.isSafeInteger(event.sequence) || event.sequence <= registration.sequence ||
-      (terminalStates.has(event.lifecycle) ? !Number.isInteger(event.exitCode) || event.exitCode < 0 || event.exitCode > 255 || (event.lifecycle === 'completed') !== (event.exitCode === 0) : event.exitCode !== null)) throw new Error('Invalid monitor progress');
+      (registration.source === 'pi-subagents'
+        ? event.exitCode !== null || !sdkStatuses.has(event.upstreamStatus) ||
+          event.lifecycle !== (event.upstreamStatus === 'running' ? 'running' : ['completed', 'steered'].includes(event.upstreamStatus) ? 'completed' : 'failed')
+        : (terminalStates.has(event.lifecycle) ? !Number.isInteger(event.exitCode) || event.exitCode < 0 || event.exitCode > 255 || (event.lifecycle === 'completed') !== (event.exitCode === 0) : event.exitCode !== null))) throw new Error('Invalid monitor progress');
   registration.gaps = Math.min(Number.MAX_SAFE_INTEGER, (registration.gaps ?? 0) + event.sequence - registration.sequence - 1);
   registration.sequence = event.sequence; registration.lifecycle = event.lifecycle; registration.exitCode = event.exitCode;
+  if (registration.source === 'pi-subagents') registration.upstreamStatus = event.upstreamStatus;
   registration.receivedAt = Date.now(); registration.state = 'connected';
   const text = clean(event.text).replace(/\n/g, ' '); registration.history.push(text); registration.units += text.length;
   while (registration.history.length > limits.records || registration.units > limits.units) { registration.units -= registration.history.shift().length; registration.omitted++; }
@@ -28,6 +33,32 @@ export function bindParentFile(pendingPath, witness) {
   if (typeof pendingPath !== 'string' || witness?.path !== pendingPath ||
       !sameSessionFile(sessionFileIdentity(pendingPath), witness)) throw new Error('Native session file witness refused');
   return witness;
+}
+// This route is accepted only from the native parent's inherited IPC channel, never a socket client.
+export function admitSubagent(message, { parent, generation, children, order, retained = [], now = Date.now(),
+  registrations = worktree => execFileSync('git', ['-C', worktree, 'worktree', 'list', '--porcelain', '-z'], { encoding: 'utf8', timeout: 1000, maxBuffer: 1024 * 1024 }) }) {
+  if (message?.parent !== parent || !/^[a-f0-9-]{36}$/.test(message.id) ||
+      !identityKeys.every(key => typeof message.identity?.[key] === 'string' && message.identity[key].length > 0 &&
+        message.identity[key].length <= 1100 && clean(message.identity[key]) === message.identity[key])) throw new Error('Invalid subagent observation');
+  let child = children.get(message.id);
+  if (!child) {
+    const worktree = realpathSync(message.identity.worktree);
+    if (worktree !== message.identity.worktree || !registrations(worktree).split('\0').includes(`worktree ${worktree}`)) throw new Error('Unregistered subagent worktree');
+    child = { id: message.id, parent, generation, started: now, order, identity: message.identity,
+      state: 'starting', lifecycle: 'starting', exitCode: null, heartbeatSeconds: 2,
+      sequence: 0, receivedAt: now, history: [], units: 0, omitted: 0, gaps: 0, source: 'pi-subagents' };
+  } else if (child.source !== 'pi-subagents' || JSON.stringify(child.identity) !== JSON.stringify(message.identity)) throw new Error('Subagent identity changed');
+  applyProgress(child, message);
+  if (!children.has(message.id) && children.size >= limits.children) {
+    // Reuse the reader's existing preference: history pressure must not steal its selection/pin.
+    // Only terminal SDK history is replaceable; live SDK work and monitor custody are untouched.
+    const oldest = [...children.values()].filter(item => item.source === 'pi-subagents' && terminalStates.has(item.lifecycle) &&
+      !retained.includes(`${item.generation}:${item.id}`)).sort((a, b) => a.order - b.order)[0];
+    if (!oldest) throw new Error('Observation capacity reached');
+    children.delete(oldest.id);
+  }
+  children.set(message.id, child);
+  return child;
 }
 // Exact ancestry is launch evidence, not PID/cwd proximity. Bootstrap witnesses alone cannot
 // confer membership: require the fixed live provider monitor below this exact live native process.
@@ -128,9 +159,30 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
     writeFileSync(routePath, JSON.stringify({ primary, parent, generation, native, pid: process.pid, process: descriptor.process, created, endpoint: descriptor.endpoint }), { flag: 'wx', mode: 0o600 });
     routeFile = lstatSync(routePath); if (process.connected) process.send({ type: 'ready' }, () => {});
   });
-  process.on('disconnect', () => { attached = false; remove(routePath, routeFile); });
+  process.on('disconnect', () => {
+    attached = false; remove(routePath, routeFile);
+    for (const child of children.values()) if (child.source === 'pi-subagents') child.state = 'disconnected';
+  });
   process.on('message', message => {
-    if (!attached || message.type !== 'bind-session') return;
+    if (!attached) return;
+    if (message?.type === 'subagent-progress') {
+      try {
+        if (pendingParentFile !== undefined || !sameSessionFile(sessionFileIdentity(parentFile.path), parentFile)) throw new Error('Native custody unavailable');
+        let retained = [];
+        try {
+          const path = join(root, 'preference.json'); privateFile(path);
+          const preference = JSON.parse(readFileSync(path, 'utf8')); retained = [preference.selected, preference.pin];
+        } catch { /* A preference grants no custody; absent/invalid choices retain nothing. */ }
+        admitSubagent(message, { parent, generation, children, order: ++sequence, retained });
+      } catch (error) {
+        // Fixed diagnostics only, never SDK/session data or execution control. Even a fast final
+        // sample needs a refusal reply: send completion is not daemon admission.
+        if (process.connected) process.send({ type: 'subagent-refused', id: message.id,
+          reason: error.message === 'Observation capacity reached' ? 'observation-capacity-eight' : 'subagent-admission-refused' }, () => {});
+      }
+      return;
+    }
+    if (message?.type !== 'bind-session') return;
     try { parentFile = bindParentFile(pendingParentFile, message.parentFile); pendingParentFile = undefined; if (descriptor) descriptor.parentFile = parentFile; publish(); }
     catch { cleanup(1); }
   });

@@ -69,6 +69,13 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+John authorized prioritized upstream subagent adoption on 2026-11-01:
+[TICKET-00129](tickets/00129-TICKET.md) / [TASK-00554](tasks/00554-TASK.md) has independent Review ACCEPT
+and bounded QA PASS on its accepted candidate. Publication and cleanup were pending at closeout; current results
+are in `.runs/tasks/TASK-00554/runs/land/receipt.md` and the TASK PR. [TASK-00544](tasks/00544-TASK.md) retains its separate existing-monitor repair scope.
+[TASK-00555](tasks/00555-TASK.md) records native-first MCP client evaluation and adapter options for later,
+after subagent adoption. This priority does not cancel unrelated active resource work.
+
 **TASK-00553 accepted supplier checkpoint:** independent Review and QA accept the candidate recorded in
 [TASK-00553](tasks/00553-TASK.md#accepted-implementation-checkpoint--2026-11-01). Publication and cleanup
 are separate; actual outcomes are in `.runs/tasks/TASK-00553/runs/land/receipt.md` and its PR. [TASK-00543](tasks/00543-TASK.md#accepted-implementation-checkpoint--2026-11-02)

@@ -1,0 +1,18 @@
+{
+  "worktreeIsolation": false,
+  "workflowsEnabled": false,
+  "schedulingEnabled": false,
+  "maxSubagentDepth": 1,
+  "disableDefaultAgents": true,
+  "fallbackSubagent": "none",
+  "packageAgents": ["@fight/agent-os-pi"],
+  "packageWorkflows": false,
+  "agentMentions": "off",
+  "outputTranscript": false,
+  "rememberAgents": true,
+  "backgroundByDefault": false,
+  "maxConcurrent": 4,
+  "maxConcurrentForeground": 4,
+  "scopeModels": true,
+  "strictAgentFiles": true
+}

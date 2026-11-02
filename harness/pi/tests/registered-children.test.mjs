@@ -65,6 +65,42 @@ test('pin survives completion/disconnection with verified context; unpin returns
   assert.match(f.observe.view(), /PINNED/); assert.match(f.observe.view(), /exit 0; not acceptance/);
   f.observe.action('pin'); assert.equal(f.observe.selected, null); assert.equal(f.observe.verifiedWorktree, null); assert.match(f.observe.view(), /IDLE/);
 });
+test('SDK completion remains readable/selectable without inventing a process exit', async t => {
+  const f = fixture(t), first = f.child({ source: 'pi-subagents', upstreamStatus: 'running' });
+  f.set([first]); await f.observe.start(f.parent, f.file);
+  f.set([{ ...first, sequence: 2, lifecycle: 'completed', upstreamStatus: 'steered', history: ['FINAL'] }]);
+  await f.observe.refresh();
+  assert.notEqual(f.observe.selected, null); assert.match(f.observe.view(), /upstream steered/);
+  assert.match(f.observe.view(), /FINAL/); assert.doesNotMatch(f.observe.view(), /exit 0/);
+  f.set([{ ...first, sequence: 3, lifecycle: 'completed', upstreamStatus: 'completed', exitCode: 0 }]);
+  await f.observe.refresh(); assert.equal(f.observe.sources.size, 0);
+});
+
+test('older completed SDK selection and pause survive unchanged refresh; live work still auto-follows unless pinned', async t => {
+  const f = fixture(t);
+  const older = f.child({ source: 'pi-subagents', lifecycle: 'completed', upstreamStatus: 'completed', history: ['OLDER_FINAL'] });
+  const newer = f.child({ source: 'pi-subagents', lifecycle: 'completed', upstreamStatus: 'completed', started: 2000, order: 2 });
+  f.set([older, newer]); await f.observe.start(f.parent, f.file);
+  assert.equal(f.observe.sources.get(f.observe.selected).id, newer.id);
+  f.observe.action('next'); const selected = f.observe.selected;
+  assert.equal(f.observe.sources.get(selected).id, older.id); f.observe.action('pause');
+  for (let i = 0; i < 3; i++) {
+    f.observe.tick(); await f.observe.refresh();
+    assert.equal(f.observe.selected, selected); assert.equal(f.observe.paused, true);
+    assert.deepEqual(f.observe.frozen, ['OLDER_FINAL']);
+  }
+  f.observe.action('pin'); f.observe.action('pause');
+  const live = f.child({ source: 'pi-subagents', upstreamStatus: 'running', started: 3000, order: 3 });
+  f.set([older, newer, live]); await f.observe.refresh();
+  assert.equal(f.observe.selected, selected); assert.equal(f.observe.paused, true);
+  f.observe.action('pin');
+  assert.equal(f.observe.sources.get(f.observe.selected).id, live.id); assert.equal(f.observe.paused, false);
+  f.set([older, newer, { ...live, lifecycle: 'completed', upstreamStatus: 'completed', sequence: 2 }]);
+  await f.observe.refresh(); f.observe.action('next'); f.observe.action('pause');
+  f.refuse(true); await f.observe.refresh();
+  assert.equal(f.observe.selected, null); assert.equal(f.observe.paused, false); assert.equal(f.observe.verifiedWorktree, null);
+});
+
 test('heartbeat expiry, lost/replaced custody and regressed sequences cannot retain log authority or infer completion', async t => {
   const f = fixture(t); await f.observe.start(f.parent, f.file); f.advance(7000); f.observe.recompute(); assert.equal(f.observe.selected, null);
   f.set([{ ...f.values()[0], sequence: 2, receivedAt: 107000 }]); await f.observe.refresh(); f.observe.action('pin');
