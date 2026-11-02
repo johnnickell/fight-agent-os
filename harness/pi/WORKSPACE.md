@@ -67,9 +67,14 @@ executor/tool/shell settings, reads transcripts, or sends progress to Pi, provid
 Missing association leaves execution unchanged and visibly unavailable. The provider's ordinary monitor entry
 now delegates to `src/observation/run-stage.py` inside the selected trusted Harness package. Its observer and the
 custodian qualify each other's fixed package-owned paths, not source-provider or target-checkout siblings.
-When native Pi uses an installed copy, pass that same resolved package to the existing provider command with
-`--harness-package /absolute/trusted/package`; the selection also owns screening preflight. No target skill copy,
-manual socket or per-child registration is needed. The package must include the monitor; an older copy requires
+The provider entry uses the running Pi's native resource resolver offline to select one complete Harness from
+package settings or direct/auto-discovered extensions, or its own checkout package when none is configured.
+An explicit `--harness-package` must match any configured Harness. Multiple owners, filtered/disabled/incomplete
+resources or unavailable inventory hold before monitor dispatch. Project Harness configuration requires established
+native trust; path inspection cannot grant execution authority. Offline native registration also checks the selected
+package injection; diagnostics hold even with Pi exit zero. Inspect native settings without disabling discovery.
+The selection also owns screening preflight. No target skill copy, manual socket or per-child registration is
+needed. The package must include the monitor; an older copy requires
 an explicit owned update, never an automatic global mutation. Different package identities remain unavailable.
 The three-second best-effort association attempt emits at most one safe reason-only diagnostic on failure;
 no raw process command, host path or daemon error is disclosed. Never relaunch a child for observation.
@@ -375,10 +380,11 @@ Keep the path short: Unix socket pathname limits are platform-specific (about 10
 does not change stage model, authority, request or settlement requirements. An already-running monitor without
 the option cannot be retrofitted; do not relaunch its child or fall back to transcript/scratch tailing.
 
-If the monitor lives in a candidate worktree while a different checkout's Harness is already installed,
-inspect `pi list` first. Select that trusted installed package explicitly on the monitor with
-`--harness-package /absolute/installed/harness/pi`. Pi deduplicates the same resolved package path; different
-checkout paths are distinct resources and can conflict. This selects the package-owned monitor, its passive association, bootstrap and complete protected
+The provider entry automatically selects the configured Harness even when invoked from a different candidate
+worktree. Inspect `pi list` when selection is held; an explicit `--harness-package` cannot override a different
+configured copy. Native inventory also checks direct/auto-discovered resource ownership and completeness.
+Pi deduplicates the same resolved package path; different checkout paths are distinct resources
+and can conflict. This selects the package-owned monitor, its passive association, bootstrap and complete protected
 package, retaining normal resource discovery and `--fight-screening-required`; it does not disable extensions,
 change settings/trust/enrollment, copy credentials or fall back after failure. Qualify startup/status before
 provider work. An unknown installation or conflict remains a prerequisite, not permission to bypass protections.
