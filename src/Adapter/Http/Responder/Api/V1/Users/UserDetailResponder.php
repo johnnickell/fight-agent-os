@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Responder\Api\V1\Users;
 
+use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
@@ -37,12 +38,17 @@ final readonly class UserDetailResponder
     /**
      * Returns only approved user fields without cache reuse
      *
-     * @param array{user: UserView, roles: list<array{name: string, managed: bool}>} $detail
+     * @param UserView $user
+     * @param array $roles
+     *
+     * @phpstan-param list<RoleView> $roles
      */
-    public function respond(array $detail): ResponseInterface
+    public function respond(UserView $user, array $roles): ResponseInterface
     {
+        $presentation = UserRoleData::map([$user], $roles);
+
         return $this->responses->fromEnvelope(
-            JSendEnvelope::success(new UserData($detail['user'], $detail['roles'])),
+            JSendEnvelope::success(new UserData($user, $presentation[$user->getUserId()->toString()])),
             200,
             ['Cache-Control' => 'no-store']
         );

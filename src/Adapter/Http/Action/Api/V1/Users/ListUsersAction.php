@@ -8,11 +8,24 @@ use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
-use App\Application\Users\ReadUserDirectory;
+use App\Application\Authorization\AuthenticatedPermissions;
+use App\Application\Authorization\InstallationAuthority;
+use App\Application\Failure\PermissionDenied;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
+use Fight\AccessControl\Domain\AccessControl\User\Query\ListUsers;
+use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Messaging\Query\QueryBus;
+use Fight\Common\Application\Validation\Exception\ValidationException;
+use Fight\Common\Domain\Repository\Pagination;
+use Fight\Common\Domain\Repository\ResultSet;
+use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
 
 /**
  * Class ListUsersAction
@@ -23,8 +36,12 @@ final readonly class ListUsersAction
     /**
      * Constructs ListUsersAction
      */
-    public function __construct(private ReadUserDirectory $directory, private UserDirectoryResponder $responder)
-    {
+    public function __construct(
+        private AuthenticatedPermissions $authentication,
+        private InstallationAuthority $installation,
+        private QueryBus $queries,
+        private UserDirectoryResponder $responder
+    ) {
     }
 
     /**
@@ -72,13 +89,46 @@ final readonly class ListUsersAction
     ])]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        $permission = PermissionName::fromString('READ_USERS');
+        $actor = $this->authentication->require(CatalogInput::authentication($request), [$permission]);
+        try {
+            $this->installation->assertInstallationPermission($actor, $permission);
+        } catch (Throwable) {
+            throw new PermissionDenied();
+        }
         /** @var array{page?: string, per_page?: string} $input */
         $input = $request->getAttribute(QueryString::class);
 
-        return $this->responder->respond($this->directory->read(
-            CatalogInput::authentication($request),
-            (int) ($input['page'] ?? '1'),
-            (int) ($input['per_page'] ?? '25')
-        ));
+        $page = (int) ($input['page'] ?? '1');
+        $perPage = (int) ($input['per_page'] ?? '25');
+        if ($page < 1 || $page > 1000 || $perPage < 1 || $perPage > 100) {
+            throw new ValidationException(['page' => ['Invalid value.']]);
+        }
+        $users = $this->queries->fetch(new ListUsers(new Pagination($page, $perPage)));
+        if (
+            !$users instanceof ResultSet
+            || $users->itemType() !== UserView::class
+            || $users->page() !== $page
+            || $users->perPage() !== $perPage
+            || $users->count() > $perPage
+        ) {
+            throw new LogicException('User directory is unavailable.');
+        }
+        $ids = [];
+        foreach ($users->records() as $user) {
+            foreach ($user->getRoleIds() as $id) {
+                $ids[$id->toString()] = $id;
+            }
+        }
+        $roles = [];
+        foreach ($ids as $id) {
+            $role = $this->queries->fetch(new GetRoleById($id));
+            if (!$role instanceof RoleView || !$role->getRoleId()->equals($id)) {
+                throw new LogicException('User role presentation is unavailable.');
+            }
+            $roles[] = $role;
+        }
+
+        return $this->responder->respond($users, $roles);
     }
 }

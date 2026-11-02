@@ -7,9 +7,19 @@ namespace App\Adapter\Http\Action\Api\V1\Users;
 use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDetailResponder;
-use App\Application\Users\ReadUserDetail;
+use App\Application\Authorization\AuthenticatedPermissions;
+use App\Application\Authorization\InstallationAuthority;
+use App\Application\Failure\PermissionDenied;
+use App\Application\Failure\ResourceNotFound;
+use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
+use Fight\AccessControl\Domain\AccessControl\User\Query\GetUserById;
+use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
+use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -27,8 +37,12 @@ final readonly class GetUserAction
     /**
      * Constructs GetUserAction
      */
-    public function __construct(private ReadUserDetail $detail, private UserDetailResponder $responder)
-    {
+    public function __construct(
+        private AuthenticatedPermissions $authentication,
+        private InstallationAuthority $installation,
+        private QueryBus $queries,
+        private UserDetailResponder $responder
+    ) {
     }
 
     /**
@@ -39,7 +53,7 @@ final readonly class GetUserAction
         operationId: 'getUser',
         summary: 'Read one safe installation user',
         description: <<<'TEXT'
-            Requires Bearer authentication and exact current protected READ_USERS in Application before
+            Requires Bearer authentication and exact current protected READ_USERS in this Action before
             package GetUserById dispatch, independently of the early route gate. Role names, JWT claims and
             ownership grant nothing. Includes pending_activation, active, disabled and deleted identities.
             Returns exactly the directory's safe fields and complete roles sorted by name. Missing or duplicate
@@ -78,7 +92,13 @@ final readonly class GetUserAction
     )]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $authentication = CatalogInput::authentication($request);
+        $permission = PermissionName::fromString('READ_USERS');
+        $actor = $this->authentication->require(CatalogInput::authentication($request), [$permission]);
+        try {
+            $this->installation->assertInstallationPermission($actor, $permission);
+        } catch (Throwable) {
+            throw new PermissionDenied();
+        }
         $value = (string) RouteContext::fromRequest($request)->getRoute()?->getArgument('userId');
         try {
             if (strlen($value) !== 36) {
@@ -89,6 +109,22 @@ final readonly class GetUserAction
             throw new ValidationException(['user_id' => ['Invalid value.']]);
         }
 
-        return $this->responder->respond($this->detail->read($authentication, $id));
+        $user = $this->queries->fetch(new GetUserById($id));
+        if ($user === null) {
+            throw new ResourceNotFound();
+        }
+        if (!$user instanceof UserView || !$user->getUserId()->equals($id)) {
+            throw new LogicException('User detail is unavailable.');
+        }
+        $roles = [];
+        foreach ($user->getRoleIds() as $roleId) {
+            $role = $this->queries->fetch(new GetRoleById($roleId));
+            if (!$role instanceof RoleView || !$role->getRoleId()->equals($roleId)) {
+                throw new LogicException('User role presentation is unavailable.');
+            }
+            $roles[] = $role;
+        }
+
+        return $this->responder->respond($user, $roles);
     }
 }

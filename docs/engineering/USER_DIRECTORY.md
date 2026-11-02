@@ -6,15 +6,17 @@ TASK; independent Review/QA and delivery remain separate.
 ## Authority and ownership
 
 The matched API Action requires Bearer authentication and exact current `READ_USERS` through the existing
-request-scoped principal provider. `ReadUserDirectory` then re-resolves invocation-bound authentication with
+request-scoped principal provider. The Action itself then re-resolves invocation-bound authentication with
 `AuthenticatedPermissions` and checks the protected installation permission through `InstallationAuthority`
-before dispatching package `ListUsers` on the configured shared query bus. Missing, stale, incomplete or
+before dispatching package `ListUsers` on the configured shared QueryBus. This is the owner's TASK-00118
+HTTP-boundary correction; no consumer read use-case wrapper remains. Missing, stale, incomplete or
 non-active authority fails closed. A displayed `ROLE_SUPER_ADMIN`, JWT/HTML claim, submitted actor or client
 route never grants a read. No new identity, principal, session or authorization store is introduced.
 
 Fight Access Control owns identity pagination and safe `UserView` production. The existing PostgreSQL user
-repository fixes ordering to `created_at ASC, id ASC`; callers supply no ordering expression. Application
-projection resolves the union of assigned role IDs through the authoritative role repository. Missing,
+repository fixes ordering to `created_at ASC, id ASC`; callers supply no ordering expression. The Action
+collects the union of assigned role IDs and dispatches public package `GetRoleById` for each unique reference.
+The Responder maps only already-fetched `UserView`/`RoleView` values; it performs no repository lookup. Missing,
 unexpected or duplicate returned references, duplicate assignments/identities or duplicate resolved names
 fail the whole response with a sanitized system failure, not an incomplete role list. Each user's assignments
 are sorted by exact role name. An empty assignment remains empty; it does not imply `ROLE_USER`.
@@ -75,17 +77,18 @@ Forbidden controls are absent, not hidden focus targets. Client presentation nev
 ## Safe user detail (TASK-00118 implementation)
 
 `GET /api/v1/users/{userId}` uses a matched FQCN Action with early `READ_USERS`, followed by
-`ReadUserDetail` re-resolving invocation-bound authentication and exact protected installation permission
-before dispatching the existing shared package `GetUserById` query. Self-service permissions and ownership
+fresh permission enforcement explicitly in the Action, re-resolving invocation-bound authentication and exact
+protected installation permission before dispatching existing package `GetUserById` and referenced
+`GetRoleById` queries through injected QueryBus. Self-service permissions and ownership
 never authorize this route. Missing/stale authority fails before target dispatch; an authorized missing target
 returns generic 404. Malformed UUIDs, query fields and GET bodies are sanitized 400s. All outcomes are no-store.
 
 Success is `{status: "success", data: <DirectoryUser>}` with exactly the directory's six safe fields.
-`UserRolePresentation` now owns complete deterministic role resolution for both reads; `UserData` owns their
-single HTTP field allowlist. No credential, permission membership, audit, revision or pending-email fields are
+`UserRoleData` maps complete already-fetched package Views into deterministic endpoint role data for both
+Responders; `UserData` owns their single HTTP field allowlist. Neither mapper fetches data or decides authority. No credential, permission membership, audit, revision or pending-email fields are
 added. Missing, duplicate, unexpected or aliased role references fail the entire response. Lifecycle remains
 one of the same four package states. Reads observe current committed data, not an atomic cross-request snapshot;
-a target disappearing after the early gate returns 404, and changed authority is rechecked in Application.
+a target disappearing after the early gate returns 404, and changed authority is rechecked by the Action before target dispatch.
 
 Each directory row has a permission-rechecked **View details** button. Selection clears the list and fetches
 fresh detail; it does not reuse the row as current target state. Detail remains within `/app/admin/users`, with
@@ -99,8 +102,11 @@ Qualified installed Fight Access Control **v0.8.0**, source/Composer lock refere
 `319738255e682d587642b67856039f882b9588d6`: `GetUserById(UserId)` dispatches through the configured bus,
 returns nullable safe `UserView`, and does not authorize public callers. The consumer enforces permission,
 checks returned identity/type and explicitly maps role references rather than serializing `UserView::toArray()`.
-No dependency upgrade, parallel handler graph or duplicate role projector is introduced. Independent acceptance
-and browser QA remain separate from Work's local checks.
+`GetRoleById(RoleId)` returns nullable `RoleView` with public ID/name/managed accessors; it needs no permission
+membership or revision in the wire output. The package does not promise a combined user-plus-role snapshot;
+missing references fail the whole endpoint. No dependency upgrade or parallel handler graph is introduced.
+The removed `ReadUserDetail`, `ReadUserDirectory` and repository-backed `UserRolePresentation` have no surviving
+callers. Independent acceptance and browser QA remain separate from Work's local checks.
 
 ## Responsive and verification boundaries
 

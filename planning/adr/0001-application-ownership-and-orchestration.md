@@ -5,6 +5,26 @@
 - **Decision owners:** Fight Agent OS maintainers
 - **Acceptance:** Explicitly accepted by the human maintainer under TASK-00009 on 2026-09-23
 
+## TASK-00118 owner clarification — 2026-11-02
+
+For the safe user detail and directory reads, the owner explicitly corrected the original HTTP boundary:
+**“the permission check is explicitly supposed to be in the HTTP action”.** The Action freshly enforces exact
+current `READ_USERS` with the existing authoritative authentication and installation-policy capabilities,
+dispatches public package queries through injected QueryBus, and passes safe Views to the Responder. Early
+route metadata is defense in depth, not a substitute for that check. Do not retain consumer read wrappers just
+to relocate permission enforcement or forward queries. The original rejection of authorization in Actions below
+is superseded for these HTTP permission checks, not for Domain invariants, ownership policy or transactions.
+
+Installed public user/role queries and Views suffice for these reads. Actions may compose required reference
+queries; Responders map complete Views into the endpoint allowlist without repository access or fetching.
+Generic identity behavior remains package-owned. Any surviving owned Application use case must pass the
+orchestration test below and identify context, aggregate/capability and responsibility (for example
+`App\Application\AccessControl\User\Service` or `...\QueryHandler` for an actual handler). Removing the three
+unnecessary `Application/Users` types leaves no new owned use case to classify. This bounded correction does
+not authorize moving unrelated Application inventory or weakening mutation and non-HTTP authorization.
+The original acceptance and alternatives remain historical decisions; this explicit clarification governs the
+affected reads. See [TASK-00118](../tasks/00118-TASK.md) for implementation and renewed acceptance status.
+
 ## Context
 
 Fight Access Control is the authoritative, framework-neutral identity and authorization package. Its public
@@ -110,8 +130,9 @@ exactly-once behavior. Each such guarantee must come from the owning use case an
 
 Each HTTP interaction has one final Action. The Action maps already validated transport input and authenticated
 context into exactly one package/owned command, one package/owned query, or one explicitly justified orchestrator,
-then delegates successful presentation. It contains no Domain policy, authorization policy, persistence logic,
-transaction control, or external-provider logic.
+then delegates successful presentation. The safe-user-read clarification above permits the required public
+user/role query composition and makes fresh HTTP permission enforcement an Action responsibility. Actions contain
+no Domain policy, persistence logic, transaction control or external-provider logic.
 
 An endpoint-specific Responder owns successful status, headers, JSend envelope, and transport mapping. A package
 safe View may cross into the Responder, but package entities, password hashes, credentials, grants, secret-bearing
@@ -120,7 +141,9 @@ values, and persistence models must not become transport models. Transport field
 concerns and must not expose arbitrary exception messages or internals.
 
 Authentication middleware may establish trusted principal context, but authorization remains a server-side
-business/application decision for every protected command and query. Enforcement uses explicit permission and
+decision for every protected command and query. For the safe user reads, the Action enforces the HTTP permission
+using authoritative capabilities; package/Domain owners retain intrinsic invariants. Other justified Application
+policies and non-HTTP consumers retain their explicit authorization contracts. Enforcement uses explicit permission and
 ownership policy against authoritative state. An Action, middleware, or handler must not grant access because of a
 role name, UI visibility, route reachability, or client-provided authority. The transport supplies actor/target
 context to the owning package policy or justified owned use case and does not reproduce that policy itself.
@@ -152,7 +175,8 @@ The following are explicitly prohibited:
 - service location from Domain or Application code;
 - framework, HTTP, persistence, or provider imports into Domain, or concrete Adapter/framework imports into
   Application;
-- business, authorization, persistence, transaction, or external-effect policy in Actions or Responders;
+- Domain business/ownership, persistence, transaction or external-effect policy in Actions or Responders,
+  or permission decisions in Responders (fresh safe-user-read Action permission checks are required above);
 - authorization based on role names or client/UI decisions;
 - exposing entities, hashes, credentials, grants, secret-bearing values, or persistence models at transport
   boundaries;
@@ -208,7 +232,8 @@ or provider integration. Genuine Agent OS orchestration belongs in `App\Applicat
 
 ### Put workflow and authorization in Slim Actions
 
-Rejected. Transport code is difficult to reuse and test as business policy, reverses dependency direction, and
+Historical decision; the TASK-00118 clarification above supersedes its exclusion of the affected HTTP permission
+checks, not its rejection of Domain/workflow policy in transport code. Originally rejected. Transport code is difficult to reuse and test as business policy, reverses dependency direction, and
 risks inconsistent authorization across transports.
 
 ### Perform provider effects inside the state transaction

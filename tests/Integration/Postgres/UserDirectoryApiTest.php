@@ -11,10 +11,9 @@ use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
+use App\Application\Authorization\AuthenticatedPermissions;
+use App\Application\Authorization\InstallationAuthority;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
-use App\Application\Users\ReadUserDetail;
-use App\Application\Users\ReadUserDirectory;
-use App\Application\Users\UserRolePresentation;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
@@ -29,6 +28,7 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
@@ -38,7 +38,9 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
+use Fight\Common\Domain\Messaging\Query\Query;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
@@ -179,7 +181,7 @@ final class UserDirectoryApiTest extends TestCase
             [ArrayParameterType::STRING]
         );
         $this->check($this->request(), ($mask & 1) ? 200 : 403);
-        self::assertSame(($mask & 1) ? 1 : 0, $this->probe->count());
+        self::assertSame(($mask & 1) ? 2 : 0, $this->probe->count());
     }
 
     /**
@@ -340,7 +342,12 @@ final class UserDirectoryApiTest extends TestCase
 DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = 'READ_USERS')
 SQL);
 
-            return new ListUsersAction($c->get(ReadUserDirectory::class), $c->get(UserDirectoryResponder::class));
+            return new ListUsersAction(
+                $c->get(AuthenticatedPermissions::class),
+                $c->get(InstallationAuthority::class),
+                $c->get(QueryBus::class),
+                $c->get(UserDirectoryResponder::class)
+            );
         });
         $this->check($this->request(), 403);
         self::assertSame(0, $this->probe->count());
@@ -396,15 +403,22 @@ SQL);
         $logs = new TestHandler();
         $this->container->get('http.failure.logger')->setHandlers([$logs]);
         $this->container->set(ListUsersAction::class, function (Container $c): ListUsersAction {
-            $roles = $this->createStub(RoleRepository::class);
-            $roles->method('getByIds')->willThrowException(new \RuntimeException('private-SQL-provider-marker'));
+            $bus = $c->get(QueryBus::class);
+            $queries = $this->createStub(QueryBus::class);
+            $queries->method('fetch')->willReturnCallback(static function (Query $query) use ($bus): mixed {
+                if ($query instanceof GetRoleById) {
+                    throw new \RuntimeException('private-SQL-provider-marker');
+                }
 
-            return new ListUsersAction(new ReadUserDirectory(
-                $c->get(\App\Application\Authorization\AuthenticatedPermissions::class),
-                $c->get(\App\Application\Authorization\InstallationAuthority::class),
-                $c->get(\Fight\Common\Application\Messaging\Query\QueryBus::class),
-                new UserRolePresentation($roles)
-            ), $c->get(UserDirectoryResponder::class));
+                return $bus->fetch($query);
+            });
+
+            return new ListUsersAction(
+                $c->get(AuthenticatedPermissions::class),
+                $c->get(InstallationAuthority::class),
+                $queries,
+                $c->get(UserDirectoryResponder::class)
+            );
         });
         self::assertSame(
             ['status' => 'error', 'message' => 'Internal server error.'],
@@ -448,7 +462,7 @@ SQL);
         $this->check($this->request(target: $target), ($mask & 1) ? 200 : 403, true);
         $this->check($this->request(target: '/'.UserId::generate()->toString()), ($mask & 1) ? 404 : 403, true);
         $this->check($this->request(target: '/private-invalid-target'), ($mask & 1) ? 400 : 403, true);
-        self::assertSame(($mask & 1) ? 2 : 0, $this->probe->count());
+        self::assertSame(($mask & 1) ? 3 : 0, $this->probe->count());
     }
 
     /**
@@ -534,7 +548,12 @@ SQL);
                     SQL
             });
 
-            return new GetUserAction($c->get(ReadUserDetail::class), $c->get(UserDetailResponder::class));
+            return new GetUserAction(
+                $c->get(AuthenticatedPermissions::class),
+                $c->get(InstallationAuthority::class),
+                $c->get(QueryBus::class),
+                $c->get(UserDetailResponder::class)
+            );
         });
         $this->check($this->request(target: '/'.$this->actor->getId()->toString()), 403, true);
         self::assertSame(0, $this->probe->count());
@@ -568,7 +587,12 @@ SQL);
         $this->container->set(GetUserAction::class, function (Container $c) use ($user): GetUserAction {
             $this->connection->executeStatement('DELETE FROM users WHERE id = ?', [$user->getId()->toString()]);
 
-            return new GetUserAction($c->get(ReadUserDetail::class), $c->get(UserDetailResponder::class));
+            return new GetUserAction(
+                $c->get(AuthenticatedPermissions::class),
+                $c->get(InstallationAuthority::class),
+                $c->get(QueryBus::class),
+                $c->get(UserDetailResponder::class)
+            );
         });
         $this->check($this->request(target: '/'.$user->getId()->toString()), 404, true);
         self::assertSame(1, $this->probe->count());
@@ -600,15 +624,17 @@ SQL);
             $this->container->get(UserRepository::class)->add($user);
         });
         $this->container->set(GetUserAction::class, function (Container $c): GetUserAction {
-            $roles = $this->createStub(RoleRepository::class);
-            $roles->method('getByIds')->willReturn([]);
+            $bus = $c->get(QueryBus::class);
+            $queries = $this->createStub(QueryBus::class);
+            $queries->method('fetch')->willReturnCallback(static fn(Query $query): mixed =>
+                $query instanceof GetRoleById ? null : $bus->fetch($query));
 
-            return new GetUserAction(new ReadUserDetail(
-                $c->get(\App\Application\Authorization\AuthenticatedPermissions::class),
-                $c->get(\App\Application\Authorization\InstallationAuthority::class),
-                $c->get(\Fight\Common\Application\Messaging\Query\QueryBus::class),
-                new UserRolePresentation($roles)
-            ), $c->get(UserDetailResponder::class));
+            return new GetUserAction(
+                $c->get(AuthenticatedPermissions::class),
+                $c->get(InstallationAuthority::class),
+                $queries,
+                $c->get(UserDetailResponder::class)
+            );
         });
         $this->check($this->request(target: '/'.$user->getId()->toString()), 500, true);
         self::assertSame(1, $this->probe->count());
