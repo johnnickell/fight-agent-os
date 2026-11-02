@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tooling\Build;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use RuntimeException;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
@@ -15,9 +17,15 @@ use Throwable;
 final class BuildCache
 {
     private const array EXCLUSIONS = [
-        '.git', '.runs', 'var', '.idea', '.DS_Store', 'client/dist', 'public/build',
+        '.git', '.runs', 'var', '.idea', '.DS_Store', 'client/dist', 'public/build', 'planning',
         'client/node_modules/.cache', 'client/node_modules/.vite-temp'
     ];
+
+    /**
+     * @var array<string, string>
+     */
+    private array $components = [];
+    private string $missReason = 'No successful cache pointer';
 
     /**
      * Constructs BuildCache
@@ -26,6 +34,48 @@ final class BuildCache
      */
     public function __construct(private readonly string $root)
     {
+    }
+
+    /**
+     * Calculates application identity, retaining governing instructions within planning
+     */
+    public function projectFingerprint(): string
+    {
+        $instructions = [];
+        $directory = $this->root.'/planning';
+        if (is_link($directory)) {
+            $instructions['planning'] = $this->tree($directory);
+        } elseif (is_dir($directory)) {
+            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(
+                $directory,
+                RecursiveDirectoryIterator::SKIP_DOTS
+            ));
+            foreach ($iterator as $file) {
+                $path = $file->getPathname();
+                $relative = substr($path, strlen($this->root) + 1);
+                if (
+                    $file->isLink() || $file->getExtension() !== 'md' ||
+                    $relative === 'planning/CONVENTIONS.md' ||
+                    str_starts_with($relative, 'planning/agents/') ||
+                    str_starts_with($relative, 'planning/adr/') ||
+                    str_ends_with($relative, '_TEMPLATE.md') ||
+                    in_array($file->getFilename(), ['AGENTS.md', 'CLAUDE.md', 'SKILL.md'], true)
+                ) {
+                    $instructions[$relative] = $this->tree($path);
+                }
+            }
+        }
+        ksort($instructions);
+
+        return hash('sha256', json_encode([$this->tree($this->root, true), $instructions], JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * Reports a bounded cache decision without exposing input values
+     */
+    public function missReason(): string
+    {
+        return $this->missReason;
     }
 
     /**
@@ -43,12 +93,12 @@ final class BuildCache
         }
         ksort($extensions);
         $runtime = [
-            'schema'      => 1,
+            'schema'      => 2,
             'root'        => $this->root,
             'environment' => $environment,
             'os'          => php_uname(),
-            'php'         => [PHP_VERSION, PHP_BINARY, PHP_INT_SIZE, $extensions, ini_get_all()],
-            'project'     => $this->tree($this->root, true)
+            'php_runtime' => [PHP_VERSION, PHP_BINARY, PHP_INT_SIZE, $extensions, ini_get_all()],
+            'project'     => $this->projectFingerprint()
         ];
         $paths = [PHP_BINARY, PHP_EXTENSION_DIR];
         foreach (['var/openapi', 'var/validations', 'var/client/build'] as $path) {
@@ -113,7 +163,19 @@ final class BuildCache
             ['APP_ENV' => 'test']
         );
 
-        return hash('sha256', json_encode($runtime, JSON_THROW_ON_ERROR));
+        $this->components = [];
+        $inputs = [
+            'project'   => $runtime['project'],
+            'generated' => $runtime['generated'],
+            'database'  => $runtime['database']
+        ];
+        foreach ($inputs as $component => $value) {
+            $this->components[$component] = hash('sha256', json_encode($value, JSON_THROW_ON_ERROR));
+        }
+        unset($runtime['project'], $runtime['generated'], $runtime['database']);
+        $this->components['runtime'] = hash('sha256', json_encode($runtime, JSON_THROW_ON_ERROR));
+
+        return hash('sha256', json_encode($this->components, JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -142,20 +204,44 @@ final class BuildCache
     public function reusable(string $fingerprint): ?string
     {
         try {
+            $this->missReason = 'Cache pointer missing or unreadable';
             $cache = $this->json($this->root.'/var/build.json');
+            $this->missReason = 'Cache format changed; a fresh build is required';
+            if (($cache['schema_version'] ?? null) !== 2) {
+                return null;
+            }
+            $this->missReason = 'Cache pointer is invalid or does not record success';
             if (
-                ($cache['schema_version'] ?? null) !== 1 || ($cache['exit'] ?? null) !== 0 ||
-                ($cache['fingerprint'] ?? null) !== $fingerprint ||
+                ($cache['exit'] ?? null) !== 0 ||
                 !is_string($cache['receipt'] ?? null) ||
                 preg_match('#^\.runs/build/[0-9]{8}T[0-9]{6}Z-[0-9]+/receipt\.json$#D', $cache['receipt']) !== 1
             ) {
                 return null;
             }
+            if (($cache['fingerprint'] ?? null) !== $fingerprint) {
+                $changed = [];
+                $labels = [
+                    'project'   => 'project/dependency/instruction contents',
+                    'generated' => 'generated inputs',
+                    'runtime'   => 'runtime/environment',
+                    'database'  => 'database identity'
+                ];
+                foreach ($labels as $key => $label) {
+                    if (($cache['components'][$key] ?? null) !== ($this->components[$key] ?? null)) {
+                        $changed[] = $label;
+                    }
+                }
+                $this->missReason = 'Changed '.($changed === [] ? 'input fingerprint' : implode(', ', $changed));
+
+                return null;
+            }
+            $this->missReason = 'Original receipt missing, unreadable or modified';
             $path = $this->root.'/'.$cache['receipt'];
             if ($this->tree($path) !== ($cache['receipt_sha256'] ?? null)) {
                 return null;
             }
             $receipt = $this->json($path);
+            $this->missReason = 'Original receipt does not certify stable successful inputs';
             if (
                 ($receipt['result'] ?? null) !== 'pass' || ($receipt['exit'] ?? null) !== 0 ||
                 ($receipt['source_unchanged'] ?? null) !== true ||
@@ -164,15 +250,18 @@ final class BuildCache
             ) {
                 return null;
             }
+            $this->missReason = 'Original receipt contains an unsuccessful phase';
             foreach ($receipt['phases'] as $phase) {
                 if (($phase['exit'] ?? null) !== 0) {
                     return null;
                 }
             }
+            $this->missReason = 'Retained logs, snapshots, reports or generated artifacts missing or changed';
             if ($this->evidence(dirname($path)) !== ($cache['evidence_sha256'] ?? null)) {
                 return null;
             }
 
+            $this->missReason = 'Guarded test database is unavailable or no longer clean';
             $this->command(
                 [PHP_BINARY, 'scripts/guarded_test_database.php', 'reuse-check'],
                 ['APP_ENV' => 'test']
@@ -203,8 +292,9 @@ final class BuildCache
         $path = $this->root.'/var/build.json';
         $temporary = $path.'.tmp';
         $data = [
-            'schema_version'  => 1,
+            'schema_version'  => 2,
             'fingerprint'     => $fingerprint,
+            'components'      => $this->components,
             'exit'            => 0,
             'receipt'         => substr($run, strlen($this->root) + 1).'/receipt.json',
             'receipt_sha256'  => $this->tree($run.'/receipt.json'),

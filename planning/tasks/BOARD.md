@@ -608,4 +608,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | — (standalone bug) | done | — | [PR #183](https://github.com/johnnickell/fight-agent-os/pull/183) |
 | — | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | — (standalone chore) | done | — | [PR #188](https://github.com/johnnickell/fight-agent-os/pull/188) |
 | — | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | — (standalone bug) | done | — | [PR #195](https://github.com/johnnickell/fight-agent-os/pull/195) |
+| — | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | — (standalone chore) | done | — | [PR #194](https://github.com/johnnickell/fight-agent-os/pull/194) |
 <!-- /planning:board -->
