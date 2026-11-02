@@ -194,14 +194,14 @@ with `/fight-workspace open` in the intended native session, not by trusting an 
 | `i`, PageUp/PageDown | Full conversation/child/source identities, endpoint, container generation, notices and bounded history |
 | `q`, Ctrl+C | Reap only this display's reader; Pi, children and containers remain unchanged |
 
-The [fixed Docker reader's limits](#human-only-shared-docker-logs-task-00449-candidate) remain unchanged: 100-line
-tail, 300 records / 32 Ki units plus at most one equal paused snapshot, bounded escaped records, metadata and
-process deadlines, 15-minute lifetime, TERM/KILL and finite reaping. The fixed reader itself never retries;
-this companion alone performs the bounded fresh discovery/admission above. The 15-minute lifetime still needs
-explicit human recovery. Exact canonical checkout labels, local Unix endpoint, service and full running-container
-identity are checked before reading. Endpoint/checkout authority replacement requires fresh inspected human
+The [fixed Docker reader](#human-only-shared-docker-logs-task-00449-candidate) keeps its 100-line
+tail, 300 records / 32 Ki units plus at most one equal paused snapshot, bounded escaped records, metadata
+query deadlines, TERM/KILL and finite reaping. An open stream has no automatic time cutoff; it can keep
+following while the source and native selection remain valid. The fixed reader itself never retries;
+this companion alone performs the bounded fresh discovery/admission above. Exact canonical checkout labels,
+local Unix endpoint, service and full running-container identity are checked before reading. Endpoint/checkout authority replacement requires fresh inspected human
 selection; container lifecycle replacement is freshly verified only within the pinned source authority.
-The retained legacy shared reader's behavior is unchanged. Healthy
+The retained legacy shared reader also has no time cutoff; its other behavior is unchanged. Healthy
 repeated open is idempotent and does not re-prompt. A closed reader/companion never stops a container or child.
 No stack provisioning, restart, Compose
 evaluation, database mutation, full logging service or automatic global update is included.
@@ -479,8 +479,8 @@ adds at most one equal-sized buffer. Each raw record retains **4 Ki UTF-16 units
 escaped display records cap at approximately **8 Ki units**. UTF-8 framing preserves fragmented characters,
 replaces malformed bytes and visibly escapes C0/C1, escape/clipboard, CR and bidi controls. These are presentation
 limits, not a new logging/redaction policy. Identity queries cap combined output at **64 KiB**, **32 containers**,
-and **5 seconds**. One sequential metadata/read process is used; reader lifetime is **15 minutes**, followed by
-explicit human reconnect only. Automatic retries: **zero**. Close sends TERM, then KILL after **1 second**,
+and **5 seconds**. One sequential metadata/read process is used; an open log stream has no automatic time
+cutoff. The fixed reader's automatic retries remain **zero**. Close sends TERM, then KILL after **1 second**,
 with a **2-second** wait bound. An unreaped reader remains tracked; no replacement starts while tracked processes
 remain. Workspace exit also disposes readers. No container lifecycle operation is implemented.
 
@@ -697,8 +697,8 @@ Before every subscription, the fixed adapter checks the current local Unix endpo
 label, eligible service and full running container ID. Test bindings pin the eligible service/container generation;
 a recreated/removed/added eligible container or changed endpoint requires inspecting and supplying a fresh human
 binding. No source is trusted because of an old receipt. One-service test bindings also narrow metadata queries
-to that service. All existing Docker record/buffer/lifetime/reaping limits above remain intact. Pane data and
-source choices never enter Pi/model context.
+to that service. The Docker record/buffer, identity-query and reaping limits above remain intact; open streams
+have no time cutoff. Pane data and source choices never enter Pi/model context.
 
 ### TASK-00502 qualification
 
