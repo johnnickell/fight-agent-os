@@ -66,8 +66,9 @@ def remove(root, selector, expected_oid, delivery=None):
         return complete()
 
     def source_state():
+        entries = registrations(safe)
         if present:
-            current = next((value for value in registrations(safe) if value['path'] == str(checkout)), None)
+            current = next((value for value in entries if value['path'] == str(checkout)), None)
             require(current == entry, 'Source registration changed before removal')
             require(text(['git', 'rev-parse', 'HEAD'], checkout) == expected_oid,
                     'Source OID changed; unique work retained')
@@ -75,11 +76,17 @@ def remove(root, selector, expected_oid, delivery=None):
                     'Dirty/unique source retained')
             require(not text(['git', 'ls-files', '--others', '--ignored', '--exclude-standard'], checkout),
                     'Ignored/private output remains; dispose only known temporary output after consumers end')
+        else:
+            require(not checkout.exists() and not any(value['path'] == str(checkout) for value in entries),
+                    'Absent source path/registration changed before removal')
+            require(not any(value['branch'] == branch for value in entries),
+                    'Surviving ref is checked out in a registered worktree; source/ref retained')
         if ref:
             require(text(['git', 'rev-parse', ref], safe) == expected_oid,
                     'Exact source ref/OID changed; unique work retained')
         if not delivery:
-            require(present, 'Absent fixture source with surviving ref requires explicit delivery qualification')
+            # Interrupted native removal may leave only the exact fixture ref.
+            # The same canonical ancestry proof applies with or without source.
             run(['git', 'merge-base', '--is-ancestor', expected_oid, 'HEAD'], safe)
 
     source_state()
@@ -97,6 +104,8 @@ def remove(root, selector, expected_oid, delivery=None):
     # Re-read complete effective pre/post hooks in BOTH contexts immediately before
     # the native effect, using the same inherited config/environment as removal.
     removal_hooks(safe, checkout if present else safe)
+    # Hook inventory is native work too: revalidate ownership after it, before effect.
+    source_state()
     target = str(checkout) if present else branch
     if target:
         result = subprocess.run(['wt', 'remove', '--foreground', '--format=json', '--yes', target],
