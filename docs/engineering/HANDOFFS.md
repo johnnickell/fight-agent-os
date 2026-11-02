@@ -63,11 +63,11 @@ ignored receipt and actual PR, not tracked delivery markers/tables or a persiste
 link is publication history, not proof of current state; no routine post-merge planning maintenance is required.
 Preserve independent reports, historical facts and separate planning/decomposition handoffs. Planning stays offline.
 
-Work and Build carry the exact [resource inventory](LANDING.md#inventory-and-preserve) in their existing
-handoffs to Land: Git checkout/ref/published OIDs, Compose context/container/network identities, live sessions,
-evidence and data ownership/dependencies, including unknowns and explicit main/current/active holds. Capture
-creating-container mounts and named/anonymous volume provenance before disappearance; inventory created versus
-merely used/shared containers, networks, volumes, images and caches with size, authority and retention reasons. Land owns
+Work and Build carry native [resource observations](LANDING.md#inventory-and-preserve) in their existing
+handoffs to Land: Git checkout/ref/published OIDs, Compose project/config/minimal teardown locator, current native
+containers/networks/volumes/task tags/builders, live source consumers and evidence still needed. Task database/
+storage is disposable by definition; main/foreign projects and shared images/caches are separate. No second
+resource inventory ledger or Docker worker/PID registration. Land owns
 [required safe cleanup and postcondition verification](LANDING.md#cleanup-and-handoff), not another registry or
 an unconditional branch-retention handoff. Return published/delivery state separately from cleanup: a verified
 PR with a held resource is publication with incomplete cleanup, naming the resource, reason, recovery owner/action

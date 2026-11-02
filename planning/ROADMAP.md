@@ -75,6 +75,13 @@ worktree. [TASK-00544](tasks/00544-TASK.md) retains its separate existing-monito
 [TASK-00555](tasks/00555-TASK.md) records native-first MCP client evaluation and adapter options for later,
 after subagent adoption. This priority does not cancel unrelated active resource work.
 
+**TASK-00553 accepted supplier checkpoint:** independent Review and QA accept the candidate recorded in
+[TASK-00553](tasks/00553-TASK.md#accepted-implementation-checkpoint--2026-11-01). Publication and cleanup
+are separate; actual outcomes are in `.runs/tasks/TASK-00553/runs/land/receipt.md` and its PR. [TASK-00543](tasks/00543-TASK.md#accepted-implementation-checkpoint--2026-11-02)
+has independent Review ACCEPT and QA PASS on its integrated candidate; publication and final delivery checks
+are separate, with current results in `.runs/tasks/TASK-00543/runs/land/receipt.md` and its TASK PR. Older
+references below to TASK-00543 being unstarted are historical checkpoints.
+
 **TASK-00548 accepted implementation checkpoint:** [accepted simplification](tasks/00548-TASK.md#accepted-implementation-checkpoint--2026-10-31)
 has independent Review ACCEPT and nonvisual QA PASS on `a7e062a` plus the exact owner-authorized ignore,
 committed as `15bf30f`; the complete 24-phase gate is qualified reused evidence. Publication and eligible cleanup
@@ -223,7 +230,7 @@ checkout. Its updated scope records the eight-project inventory, authorized isol
 without extra TASKs, and complete removal of delivery-marker bookkeeping. Acceptance/integration remain
 pending and later TASKs are unstarted.
 TASK-00540 stays done with its existing reports/delivery provenance unchanged. TASK-00539 moves to `order: 2`;
-all other orders/active ownership remain unchanged. Use the [Board](tasks/BOARD.md#current-human-priority--2026-10-27)
+all other orders/active ownership remain unchanged. Use the [Board](tasks/BOARD.md)
 for actual eligibility. Secondary fixes must follow each owning project's instructions and verified default;
 John retains every merge. Local skills do not deliver
 managed TASK-00140 or browser execution authority.
