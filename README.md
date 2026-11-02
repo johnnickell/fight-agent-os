@@ -256,7 +256,10 @@ names without a dashboard permission prerequisite. Protected read-only role and 
 [guarded authority catalogs](docs/engineering/AUTHORITY_CATALOGS.md) for exact permissions, pagination and redaction.
 The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) at `GET /api/v1/users` and
 `/app/admin/users` uses exact current `READ_USERS`, fixed bounded pagination and explicit safe role presentation
-(TASK-00059 implementation; independent Review/QA pending). Invitation controls link only to registered,
+(TASK-00059 implementation; independent Review/QA pending). TASK-00118 adds a safe read-only
+`GET /api/v1/users/{userId}` and fresh detail entry within that directory, with authoritative Application
+`READ_USERS`, shared exact role projection and no target data in browser history (independent Review/QA pending).
+Invitation controls link only to registered,
 truthfully unavailable journeys; no invitation or lifecycle mutation UI is added.
 Guarded custom Role create/rename/remove APIs now carry exact displayed revisions and atomic safe audit, pending
 independent Review/QA; no Role UI or Permission delegation is enabled. Read [custom Roles and v0.8.0 adoption](docs/engineering/CUSTOM_ROLES.md)

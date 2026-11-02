@@ -360,7 +360,9 @@ remain pending. See [owned-session contracts and retention](../docs/engineering/
 `features/users/UserDirectoryService` and `pages/UsersPage` replace the Users landing with the
 [permission-controlled directory](../docs/engineering/USER_DIRECTORY.md), using the same sole session/principal
 owners. Exact-key safe codecs, volatile authority-scoped rows, server pagination, reflowing table/cards and
-explicit denial recovery introduce no persistence, filtering or mutation. Independently permitted invitation
+explicit denial recovery introduce no persistence, filtering or mutation. TASK-00118 adds a permission-rechecked
+row detail entry within that same route: a fresh safe GET, volatile scope-fenced detail, explicit recovery and
+same-page authoritative return, without target IDs in browser history or a broader administration UI. Independently permitted invitation
 links still reach truthful registered unavailable seams; TASK-00060/00061/00062 own working invitation UI.
 
 `features/authority/CatalogService` supplies protected role/permission page and get reads with exact safe
@@ -515,7 +517,7 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **163** named examples across eighteen story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+`stories/` holds **170** named examples across nineteen story files: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
 7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples, eleven reset-completion examples and eleven authenticated password-change examples, plus eight owned-session list/state/retirement examples, six confirmed-revocation examples and twelve production-backed Users directory/state/permission/pagination examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;

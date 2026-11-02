@@ -9,6 +9,7 @@ use App\Application\Authorization\InstallationAuthority;
 use App\Application\Authorization\PermissionGuard;
 use App\Application\Failure\PermissionDenied;
 use App\Application\Users\ReadUserDirectory;
+use App\Application\Users\UserRolePresentation;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
@@ -130,7 +131,7 @@ final class ReadUserDirectoryTest extends TestCase
             ), new PermissionGuard()),
             new InstallationAuthority($users, $roles, $permissions),
             $bus,
-            $roles
+            new UserRolePresentation($roles)
         );
     }
 

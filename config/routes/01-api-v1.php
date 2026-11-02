@@ -28,6 +28,7 @@ use App\Adapter\Http\Action\Api\V1\Repositories\GetRepositoryRegistrationAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\ListRepositoryRegistrationsAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\PreviewRepositoryConflictsAction;
 use App\Adapter\Http\Action\Api\V1\Repositories\RegisterRepositoryAction;
+use App\Adapter\Http\Action\Api\V1\Users\GetUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\ListUsersAction;
 use App\Adapter\Http\Action\Api\V1\Validations\ReadValidationAction;
 use App\Adapter\Http\Action\Documentation\ReadPrivateOpenApiAction;
@@ -114,6 +115,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $api) use ($container): voi
     $api->get('/me/sessions', \App\Adapter\Http\Action\Api\V1\Sessions\ListOwnedSessionsAction::class.':handle')
         ->setName('api.v1.me.sessions');
     $api->get('/users', ListUsersAction::class.':handle')->setName('api.v1.users.list');
+    $api->get('/users/{userId}', GetUserAction::class.':handle')->setName('api.v1.users.get');
     $api->get('/me', ReadCurrentPrincipalAction::class.':handle')
         ->setName('api.v1.me');
     $api->get('/validations/{form_name}', ReadValidationAction::class.':handle')

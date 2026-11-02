@@ -9,7 +9,6 @@ use App\Application\Authorization\InstallationAuthority;
 use App\Application\Failure\PermissionDenied;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
-use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Query\ListUsers;
 use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\Common\Application\Messaging\Query\QueryBus;
@@ -33,7 +32,7 @@ final readonly class ReadUserDirectory
         private AuthenticatedPermissions $authentication,
         private InstallationAuthority $installation,
         private QueryBus $queries,
-        private RoleRepository $roles
+        private UserRolePresentation $roles
     ) {
     }
 
@@ -64,51 +63,7 @@ final readonly class ReadUserDirectory
         ) {
             throw new LogicException('User directory is unavailable.');
         }
-        $expected = [];
-        $users = [];
-        foreach ($result->records() as $user) {
-            $key = $user->getUserId()->toString();
-            if (isset($users[$key])) {
-                throw new LogicException('User directory is unavailable.');
-            }
-            $users[$key] = [];
-            foreach ($user->getRoleIds() as $id) {
-                $roleKey = $id->toString();
-                if (isset($users[$key][$roleKey])) {
-                    throw new LogicException('User role presentation is unavailable.');
-                }
-                $users[$key][$roleKey] = true;
-                $expected[$roleKey] = $id;
-            }
-        }
-        $resolved = [];
-        $names = [];
-        // Empty assignments need no authority lookup and do not imply an ordinary role.
-        if ($expected !== []) {
-            foreach ($this->roles->getByIds(array_values($expected)) as $role) {
-                $key = $role->getId()->toString();
-                $name = $role->getName()->toString();
-                if (!isset($expected[$key]) || isset($names[$name])) {
-                    throw new LogicException('User role presentation is unavailable.');
-                }
-                unset($expected[$key]);
-                $names[$name] = true;
-                $resolved[$key] = ['name' => $name, 'managed' => $role->isManaged()];
-            }
-            if ($expected !== []) {
-                throw new LogicException('User role presentation is unavailable.');
-            }
-        }
-        $presentation = [];
-        foreach ($users as $key => $ids) {
-            $assigned = [];
-            foreach (array_keys($ids) as $id) {
-                $assigned[] = $resolved[$id];
-            }
-            usort($assigned, static fn(array $a, array $b): int => strcmp($a['name'], $b['name']));
-            $presentation[$key] = $assigned;
-        }
 
-        return ['users' => $result, 'roles' => $presentation];
+        return ['users' => $result, 'roles' => $this->roles->resolve($result->records())];
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Responder\Api\V1\Users;
 
-use DateTimeZone;
 use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\Common\Domain\Repository\ResultSet;
 use Fight\Common\Domain\Type\Arrayable;
@@ -34,14 +33,7 @@ final readonly class UserDirectoryData implements Arrayable
         $records = [];
         foreach ($users->records() as $user) {
             $id = $user->getUserId()->toString();
-            $records[] = [
-                'user_id'    => $id,
-                'email'      => $user->getEmail()->canonical(),
-                'state'      => $user->getState()->value,
-                'roles'      => $this->page['roles'][$id],
-                'created_at' => $user->getCreatedAt()->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM),
-                'updated_at' => $user->getUpdatedAt()->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM)
-            ];
+            $records[] = new UserData($user, $this->page['roles'][$id])->toArray();
         }
 
         return [

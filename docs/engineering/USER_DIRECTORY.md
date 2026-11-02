@@ -72,6 +72,36 @@ is placed in the URL/history. TASK-00060 owns the target contract and working st
 TASK-00061/00062 own ordinary/elevated invitation forms. No invitation API is duplicated and no link sends mail.
 Forbidden controls are absent, not hidden focus targets. Client presentation never replaces server enforcement.
 
+## Safe user detail (TASK-00118 implementation)
+
+`GET /api/v1/users/{userId}` uses a matched FQCN Action with early `READ_USERS`, followed by
+`ReadUserDetail` re-resolving invocation-bound authentication and exact protected installation permission
+before dispatching the existing shared package `GetUserById` query. Self-service permissions and ownership
+never authorize this route. Missing/stale authority fails before target dispatch; an authorized missing target
+returns generic 404. Malformed UUIDs, query fields and GET bodies are sanitized 400s. All outcomes are no-store.
+
+Success is `{status: "success", data: <DirectoryUser>}` with exactly the directory's six safe fields.
+`UserRolePresentation` now owns complete deterministic role resolution for both reads; `UserData` owns their
+single HTTP field allowlist. No credential, permission membership, audit, revision or pending-email fields are
+added. Missing, duplicate, unexpected or aliased role references fail the entire response. Lifecycle remains
+one of the same four package states. Reads observe current committed data, not an atomic cross-request snapshot;
+a target disappearing after the early gate returns 404, and changed authority is rechecked in Application.
+
+Each directory row has a permission-rechecked **View details** button. Selection clears the list and fetches
+fresh detail; it does not reuse the row as current target state. Detail remains within `/app/admin/users`, with
+no new parameterized browser route, user ID/email in history, intended-route payload or persisted cache. Back
+refetches the same bounded page; Retry/Reload are explicit. Authority retirement clears selection and data,
+aborts/fences outstanding work and does not replay the directory. The sole service's 401/403 refusal fence and
+existing session/principal owners still control recovery. Read-only detail has accessible loading, missing,
+forbidden, system and cleared states; lifecycle/role/session operations remain later TASKs.
+
+Qualified installed Fight Access Control **v0.8.0**, source/Composer lock reference
+`319738255e682d587642b67856039f882b9588d6`: `GetUserById(UserId)` dispatches through the configured bus,
+returns nullable safe `UserView`, and does not authorize public callers. The consumer enforces permission,
+checks returned identity/type and explicitly maps role references rather than serializing `UserView::toArray()`.
+No dependency upgrade, parallel handler graph or duplicate role projector is introduced. Independent acceptance
+and browser QA remain separate from Work's local checks.
+
 ## Responsive and verification boundaries
 
 The same captioned table, scoped headers and rows reflow as cards below 1100px; no duplicate hidden data tree

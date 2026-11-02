@@ -74,7 +74,7 @@ const decodeUser: ResponseDecoder<DirectoryUser> = (value) => {
   });
 };
 
-/** Reads only the protected fixed-order directory; retains no list or principal. */
+/** Reads protected safe users; retains only refusal state, never user data or a principal. */
 export class UserDirectoryService {
   readonly #api: ApiClient;
   readonly #lifecycle: { accessRejected?: () => void; authorityRejected?: () => void };
@@ -91,6 +91,21 @@ export class UserDirectoryService {
   /** Requires explicit recovery; a guard remount cannot replay a refused request. */
   retry(): void {
     this.#blocked = null;
+  }
+
+  async detail(userId: string, signal?: AbortSignal): Promise<ApiResult<DirectoryUser>> {
+    if (this.#blocked) return apiFailure(this.#blocked);
+    if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(userId))
+      return apiFailure('protocol');
+    const result = await this.#api.get<DirectoryUser>(
+      `/users/${userId}`,
+      (value) => {
+        const user = decodeUser(value);
+        return user?.userId === userId ? user : null;
+      },
+      { access: 'required', ...(signal ? { signal } : {}) }
+    );
+    return this.#accept(result, signal);
   }
 
   async load(page = 1, perPage = 25, signal?: AbortSignal): Promise<ApiResult<DirectoryPage>> {
@@ -133,6 +148,10 @@ export class UserDirectoryService {
       },
       { access: 'required', pagination: { page, perPage }, ...(signal ? { signal } : {}) }
     );
+    return this.#accept(result, signal);
+  }
+
+  #accept<T>(result: ApiResult<T>, signal?: AbortSignal): ApiResult<T> {
     if (signal?.aborted) return apiFailure('cancelled');
     if (
       !result.ok &&
