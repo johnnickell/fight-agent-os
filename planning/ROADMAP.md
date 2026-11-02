@@ -69,6 +69,16 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Approved local Build/Herdr follow-on — 2026-11-02:** [TICKET-00130](tickets/00130-TICKET.md) requirements and
+TASK decomposition are approved: [TASK-00560](tasks/00560-TASK.md) delivers upstream Engineer execution;
+[TASK-00561](tasks/00561-TASK.md) completes independent stage cutover and launcher retirement after TASK-00560;
+[TASK-00562](tasks/00562-TASK.md) delivers AGENTS browsing/simple pane names; [TASK-00563](tasks/00563-TASK.md)
+delivers stack-wide LOGS with Main/Follow and service filters. TASK-00560/00562/00563 wait for accepted/integrated
+TASK-00544 and TASK-00554. John reports TASK-00544 running independently; its own checkout/owner retains status
+and repair authority. No installation or implementation starts from this planning handoff. New TASKs are unranked,
+existing Board priority is unchanged, and no unrelated map phase is marked complete. Execution selection remains
+with the Board after prerequisites are satisfied.
+
 John authorized prioritized upstream subagent adoption on 2026-11-01:
 [TICKET-00129](tickets/00129-TICKET.md) / [TASK-00554](tasks/00554-TASK.md) has independent Review ACCEPT
 and bounded QA PASS on its accepted candidate. Publication and cleanup were pending at closeout; current results
