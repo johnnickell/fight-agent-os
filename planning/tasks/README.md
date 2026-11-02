@@ -559,6 +559,6 @@
 | [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | done | [TICKET-00129](../tickets/00129-TICKET.md) |
 | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | ready-for-agent | — |
 | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | ready-for-agent | — |
-| [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | done | — |
 | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | done | — |
+| [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | done | — |
 <!-- /planning:records -->
