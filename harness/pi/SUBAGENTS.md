@@ -2,7 +2,8 @@
 
 [TASK-00554](../../planning/tasks/00554-TASK.md) implements a passive bridge to
 [`@tintinweb/pi-subagents`](https://github.com/tintinweb/pi-subagents). Private installed/native qualification
-has run; the application gate and independent Review/QA remain outstanding. This is not global rollout or acceptance.
+has run and the full local gate passed during delivered-base recovery. Independent Review/QA remain pending;
+see the TASK's current completion checkpoint. This is not global rollout or acceptance.
 
 ## Select the supported profile
 
@@ -96,9 +97,10 @@ replacement/foreign/nested refusal and transport bounds; they are not live accep
 
 The complete direct host Harness run passed **657/657**, zero skips, using a canonical temporary path (macOS
 `/tmp` is a symlink and fails existing private-storage checks). Earlier failed host-environment attempts remain
-in evidence. The full `./bin/build` is held before phases by this branch's legacy task-preparation wrapper;
-canonical worktree startup additionally requires the separately operated TASK-00553 shared ingress. No borrowed
-stack, fabricated receipt, shared-service startup or silent unfinished-branch merge is a solution.
+in evidence. At that earlier checkpoint, `./bin/build` was held before phases by the legacy preparation wrapper
+and full worktree startup needed the separately operated shared ingress. Delivered TASK-00543/00553 are now
+integrated; the TASK's recovery checkpoint records explicit headless setup and the successful full gate. No
+borrowed stack, fabricated receipt, shared-service startup or unfinished-branch merge was used.
 
 ### Repair cycle 1 — Engineer evidence, acceptance still held
 
@@ -111,8 +113,9 @@ pressure. This is Engineer evidence, not independent Review/QA; genuine capacity
 evidence, not a live eight-agent claim (the supported upstream profile retains maxConcurrent 4).
 
 Canonical ignored `repair-1/` and the Work handoff own current counts, inspected captures, source identity,
-cleanup and warnings. The mandatory full gate still has no success receipt. The older Engineer-3 evidence above
-remains historical qualification with its original final-guard/capture limits; it is not fresh repaired-source QA.
+cleanup and warnings. The gate remained held at that repair checkpoint; the TASK's later recovery checkpoint
+supplies its first full success and the test-fixture-only adjustment. The older Engineer-3 evidence above remains
+historical qualification with its original final-guard/capture limits; it is not fresh repaired-source QA.
 
 ## Caller/removal inventory
 

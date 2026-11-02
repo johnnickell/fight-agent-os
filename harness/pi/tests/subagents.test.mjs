@@ -144,8 +144,10 @@ test('custodian admits registered worktree progress and rejects identity changes
 for (const resume of [false, true]) test(`terminal history admits more than eight sequential ${resume ? 'same-session resumes' : 'Agent sessions'}`, () => {
   const parent = randomUUID(), generation = randomUUID(), children = new Map(), records = new Map();
   let order = 0;
-  const observer = new SubagentObserver(parent, message => admitSubagent(message, { parent, generation, children, order: ++order }),
-    { registry: () => ({ getRecord: id => records.get(id) }) });
+  // Exercise history policy independently of the runner's cwd/mount spelling.
+  // Registered-worktree admission/refusal has its own checks above and in custody.
+  const observer = new SubagentObserver(parent, message => admitSubagent(message, { parent, generation, children, order: ++order,
+    registrations: cwd => `worktree ${cwd}\0` }), { registry: () => ({ getRecord: id => records.get(id) }) });
   const id = randomUUID(); let previous;
   try {
     for (let i = 0; i < 12; i++) {
