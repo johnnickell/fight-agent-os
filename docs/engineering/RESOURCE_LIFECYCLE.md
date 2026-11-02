@@ -56,8 +56,10 @@ readiness at **https://localhost:18443** before printing that URL. It does not c
 generate certificates, migrate data or select a proxy based on stale configuration. Main down retains persistent
 data. The earlier TASK-00543 main-up failure was a regression, not an acceptable supplier prerequisite.
 
-[TASK-00553](../../planning/tasks/00553-TASK.md)'s shared supplier has independent Review and QA acceptance
-on the recorded candidate; publication and cleanup remain separate. Follow [shared local HTTPS operations](LOCAL_INGRESS.md) for explicit
+[TASK-00543](../../planning/tasks/00543-TASK.md#accepted-implementation-checkpoint--2026-11-02) has independent
+Review and QA acceptance on its integrated candidate; publication and final delivery checks remain separate.
+[TASK-00553](../../planning/tasks/00553-TASK.md)'s shared supplier also has independent Review and QA acceptance
+on its recorded candidate. Follow [shared local HTTPS operations](LOCAL_INGRESS.md) for explicit
 `bin/ingress setup/up/down/status/remove` and human actual-name certificate setup through `bin/https`.
 `bin/up --worktree SELECTOR` requires that separately operated supplier. `bin/up --shared-ingress` explicitly
 opts main into the same topology; ordinary main up never does. The optional existing-Herd mode in that runbook
