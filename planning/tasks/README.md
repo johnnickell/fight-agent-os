@@ -545,7 +545,7 @@
 | [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | done | — |
 | [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | done | — |
 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | done | — |
-| [TASK-00543](00543-TASK.md) | Manage local task resources from preparation through verified cleanup | in-progress | — |
+| [TASK-00543](00543-TASK.md) | Manage local task resources from preparation through verified cleanup | done | — |
 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | ready-for-agent | — |
 | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | done | — |
 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | done | — |

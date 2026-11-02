@@ -208,12 +208,13 @@ Ordinary `bin/up` uses the main checkout's direct TLS stack at **https://localho
 `.env`/certificate prerequisites below. It does not require shared ingress or load generated task/main proxy
 overrides. TASK-00543's earlier main-startup failure was a regression, now repaired, not deferred browser testing.
 
-**TASK-00543 shared-topology acceptance is incomplete:** `bin/up --worktree SELECTOR` requires
+**TASK-00543 consumer acceptance is complete** on its independently reviewed and QA-verified candidate;
+publication and final delivery checks remain separate. See the [acceptance checkpoint](planning/tasks/00543-TASK.md#accepted-implementation-checkpoint--2026-11-02)
+and `.runs/tasks/TASK-00543/runs/land/receipt.md` for delivery results. `bin/up --worktree SELECTOR` still requires
 [TASK-00553](planning/tasks/00553-TASK.md)'s separately operated shared HTTPS ingress and actual-name certificates;
 it reports missing prerequisites without starting substitute services or printing a ready URL. Intended shared
 origins are `https://fight-agent-os.localhost` and distinct `https://fight-wt-<checkout-hash>.localhost` names.
-The supplier is independently accepted; TASK-00543's consumer acceptance remains separate. This does not block ordinary main startup. Trust/certificates
-remain explicit. This application has committed Composer lockfiles:
+This does not block ordinary main startup. Trust/certificates remain explicit. This application has committed Composer lockfiles:
 
 ```sh
 export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
@@ -228,7 +229,8 @@ export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
 
 For explicit shared `<name>.localhost` HTTPS, see [shared ingress operations](docs/engineering/LOCAL_INGRESS.md).
 TASK-00553's supplier includes optional existing-Herd coexistence with verified high-port upstream TLS;
-independent ingress remains the default. The approved three-name Herd configuration is loaded. Work qualified
+independent ingress remains the default. At the historical acceptance checkpoint, the approved three-name Herd
+configuration was loaded; the supplier's later cleanup detached its include, without proving live unload. Work qualified
 canonical HTTPS, both verified proxy hops and available auth flows on two full disposable task stacks; main
 root/CSRF/UI transport was exercised without changing its inherited unprepared database. Independent Review ACCEPT and QA PASS bind the accepted TASK-00553 candidate; publication and cleanup are
 pending at this checkpoint, with actual results in `.runs/tasks/TASK-00553/runs/land/receipt.md` and the TASK PR.

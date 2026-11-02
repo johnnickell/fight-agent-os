@@ -16,6 +16,11 @@ cannot be exercised while protected Herd owns 80/443; its native model is qualif
 The TASK and canonical Work handoff own exact subjects, warnings and platform/browser limits. Neither service
 health nor this document supplies independent acceptance.
 
+**Current handoff:** TASK-00543's integrated consumer candidate has independent Review ACCEPT and QA PASS;
+see its [acceptance checkpoint](../../planning/tasks/00543-TASK.md#accepted-implementation-checkpoint--2026-11-02).
+Publication and final delivery checks are separate. The supplier's later cleanup detached its Herd include;
+that does not prove live unload of retained configuration or leaves. Its Land handoff owns those separate holds.
+
 ## Ownership and boundaries
 
 The canonical Git checkout owns `var/local-ingress/compose.json`, copied runtime configuration, generated routes
