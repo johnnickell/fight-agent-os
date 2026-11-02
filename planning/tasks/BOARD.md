@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | — (standalone chore) | in-progress | — | — |
 
 ## Ready Frontier
 
