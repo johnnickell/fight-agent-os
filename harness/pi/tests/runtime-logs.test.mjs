@@ -154,14 +154,30 @@ test('context endpoint is pinned across explicit reconnect and never silently re
   assert.equal(logs.state, 'unavailable'); assert.match(logs.view(), /identity changed/);
   assert.equal(calls.filter(call => call.args.includes('logs')).length, 1); await logs.close();
 });
-test('identity lookup deadline and finite follow lifetime stop only owned readers without retry', async t => {
+test('a healthy open reader keeps the same stream beyond fifteen minutes and a day', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const { logs, calls, stream } = await fixture();
+  try {
+    const count = calls.length;
+    for (const elapsed of [899999, 2, 24 * 60 * 60 * 1000]) {
+      t.mock.timers.tick(elapsed); await settled();
+      stream.stdout.write(`still following after ${elapsed}\n`);
+      assert.equal(logs.state, 'following');
+      assert.equal(logs.history.at(-1), `still following after ${elapsed}`);
+      assert.deepEqual(stream.signals, [], 'elapsed time must not stop the reader');
+      assert.equal(calls.length, count, 'no timer-driven reopen or identity query');
+      assert.ok(logs.processes.has(stream));
+    }
+  } finally { await logs.close(); t.mock.timers.reset(); }
+  assert.deepEqual(stream.signals, ['SIGTERM'], 'explicit close still reaps the reader');
+});
+
+test('identity lookup deadline stops only owned metadata processes without retry', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   try {
     const hung = await fixture({ fail: 'hang' }); t.mock.timers.tick(5001); await settled();
     assert.equal(hung.logs.state, 'unavailable'); assert.match(hung.logs.notice, /timed out/); await hung.logs.close();
-    const { logs, calls, stream } = await fixture(); t.mock.timers.tick(900001); await settled();
-    assert.equal(logs.state, 'disconnected'); assert.match(logs.notice, /lifetime/); assert.deepEqual(stream.signals, ['SIGTERM']);
-    const count = calls.length; t.mock.timers.tick(900001); await settled(); assert.equal(calls.length, count); await logs.close();
+    const count = hung.calls.length; t.mock.timers.tick(5001); await settled(); assert.equal(hung.calls.length, count);
   } finally { t.mock.timers.reset(); }
 });
 test('preference is owner-private under main var, never loaded to redirect explicit launch selection', async () => {

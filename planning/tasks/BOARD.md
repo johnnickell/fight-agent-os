@@ -10,6 +10,13 @@ Read the referenced current section, not the full historical record. Missing han
 The [blended delivery strategy](../ROADMAP.md#approved-blended-delivery-strategy) permits terminal, browser and
 shared-foundation interleaving; it does not override active work, TASK orders, dependencies or readiness holds below.
 
+### Current assessment handoff
+
+[TASK-00544](00544-TASK.md#accepted-implementation-checkpoint--2026-11-02) has independent Review ACCEPT and
+bounded QA PASS on its accepted candidate. Publication and cleanup are pending at this checkpoint; current results
+are in `.runs/build/TASK-00544/20261102-build-01/land-01/result.md` and [PR #202](https://github.com/johnnickell/fight-agent-os/pull/202).
+Full-workflow/two-application demonstrations remain deferred and unproven; no further repair is authorized.
+
 ### Work selection
 
 Use the generated sections below to choose the next executable TASK. See the [foundation planning brief](../FOUNDATION.md) for starting context.
@@ -25,7 +32,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | — (standalone bug) | ready-for-agent | — | — |
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 121 | [TASK-00127](00127-TASK.md) | Guard custom-role permission delegation at every entry path | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | ready-for-agent | — | — |
@@ -46,6 +52,9 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | [TICKET-00126 — Maintain source-verified Python diagrams beside feature documentation](../tickets/00126-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | ready-for-agent | — | — |
+| — | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -319,10 +328,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | [TICKET-00125 — Promote and recover an explicitly approved release](../tickets/00125-TICKET.md) | ready-for-agent | [TASK-00532](00532-TASK.md), [TASK-00530](00530-TASK.md), [TASK-00362](00362-TASK.md), [TASK-00365](00365-TASK.md), [TASK-00367](00367-TASK.md) | — |
 | — | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | [TICKET-00127 — Review material architecture changes with diagrams in pull requests](../tickets/00127-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
 | — | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | [TICKET-00128 — Show feature architecture on demand in Pi](../tickets/00128-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
-| — | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | [TASK-00544](00544-TASK.md) | — |
 | — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | [TASK-00560](00560-TASK.md) | — |
-| — | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | [TASK-00544](00544-TASK.md) | — |
-| — | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | [TASK-00544](00544-TASK.md) | — |
 
 ## Needs Info
 
@@ -464,6 +470,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | — (standalone bug) | done | — | [PR #166](https://github.com/johnnickell/fight-agent-os/pull/166) |
 | 1 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | — (standalone bug) | done | — | [PR #181](https://github.com/johnnickell/fight-agent-os/pull/181) |
 | 1 | [TASK-00543](00543-TASK.md) | Manage local task resources from preparation through verified cleanup | — (standalone chore) | done | — | [PR #192](https://github.com/johnnickell/fight-agent-os/pull/192) |
+| 1 | [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | — (standalone bug) | done | — | [PR #202](https://github.com/johnnickell/fight-agent-os/pull/202) |
 | 1 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | — (standalone bug) | done | — | [PR #186](https://github.com/johnnickell/fight-agent-os/pull/186) |
 | 1 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | — (standalone bug) | done | — | [PR #185](https://github.com/johnnickell/fight-agent-os/pull/185) |
 | 1 | [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | — (standalone chore) | done | — | [PR #189](https://github.com/johnnickell/fight-agent-os/pull/189) |

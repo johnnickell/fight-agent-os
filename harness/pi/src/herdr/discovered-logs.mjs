@@ -53,7 +53,6 @@ export class DiscoveredLogs {
   refresh({ force = false } = {}) {
     if (this.refreshPending) return this.refreshPending;
     const entry = this.entries.get(this.worktree), generation = this.generation;
-    if (entry && this.current?.expired) entry.closed = true;
     if (!this.valid(generation) || this.menu || !entry || entry.closed || entry.cancelled || !force && Date.now() < this.refreshAt) return this.transition;
     this.transition = this.transition.then(async () => {
       // A rebind or explicit action may still be scanning when this refresh is queued.
@@ -86,7 +85,6 @@ export class DiscoveredLogs {
       if (!selected) { await this.stopCurrent(); return; }
       const unchanged = entry.selected && sameGeneration(entry.selected, selected);
       entry.selected = selected;
-      if (this.current?.expired) return; // Absolute reader lifetime still requires explicit human recovery.
       if (unchanged && this.current?.open && this.current.state === 'following') return;
       if (this.current) entry.paused = this.current.paused;
       await this.stopCurrent();

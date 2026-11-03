@@ -7,7 +7,7 @@ import { StringDecoder } from 'node:string_decoder';
 const name = /^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/;
 const projectName = /^[a-z0-9][a-z0-9_-]{0,127}$/;
 const cap = n => Math.min(Number.MAX_SAFE_INTEGER, n);
-export const logLimits = Object.freeze({ tail: 100, lines: 300, units: 32768, record: 4096, metadata: 65536, lifetime: 900000 });
+export const logLimits = Object.freeze({ tail: 100, lines: 300, units: 32768, record: 4096, metadata: 65536 });
 // Escape controls visibly, rather than interpreting ANSI, OSC, CR, bidi or clipboard actions.
 export const safeLog = text => text.toWellFormed().replace(/[\x00-\x1f\x7f-\x9f\u061c\u200b\u200e\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g,
   char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
@@ -34,7 +34,7 @@ export class RuntimeLogs {
     this.label = label ?? (this.source?.purpose === 'test' ? 'WORKTREE TEST' : 'SHARED');
     this.generation = 0; this.processes = new Set(); this.pending = new Set(); this.open = false; this.paused = false;
     this.history = []; this.units = 0; this.omitted = 0; this.clipped = 0; this.gaps = 0; this.state = 'unselected';
-    this.notice = 'No runtime selected'; this.services = []; this.endpoint = null; this.timer = null; this.frozen = null;
+    this.notice = 'No runtime selected'; this.services = []; this.endpoint = null; this.frozen = null;
     this.containers = null; this.pinGeneration = this.source?.purpose === 'test' || pinGeneration;
   }
   start() { if (this.source) { this.open = true; void this.subscribe(); } }
@@ -47,7 +47,7 @@ export class RuntimeLogs {
     return child;
   }
   async stop() {
-    this.generation++; clearTimeout(this.timer);
+    this.generation++;
     for (const cancel of [...this.pending]) cancel();
     await Promise.all([...this.processes].map(child => new Promise(resolve => {
       const timer = setTimeout(() => child.kill('SIGKILL'), 1000);
@@ -126,8 +126,7 @@ export class RuntimeLogs {
       };
       accept(child.stdout); accept(child.stderr);
       child.once('error', () => { if (current()) { this.state = 'unavailable'; this.notice = 'Docker reader unavailable; no automatic retry'; this.changed(); } });
-      child.once('close', code => { if (current()) { clearTimeout(this.timer); this.state = 'disconnected'; this.notice = `Stream ended (${code ?? 'signal'}); source may be stopped or inaccessible. History/liveness unknown; r explicitly reconnects.`; this.changed(); } });
-      this.timer = setTimeout(() => { if (current()) { this.expired = true; void this.stop(); this.state = 'disconnected'; this.notice = '15-minute reader lifetime reached; r reconnects explicitly, with possible gaps/duplicates'; this.changed(); } }, logLimits.lifetime);
+      child.once('close', code => { if (current()) { this.state = 'disconnected'; this.notice = `Stream ended (${code ?? 'signal'}); source may be stopped or inaccessible. History/liveness unknown; r explicitly reconnects.`; this.changed(); } });
       this.changed();
     } catch (error) {
       if (current()) {

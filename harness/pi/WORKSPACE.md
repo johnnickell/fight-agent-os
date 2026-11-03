@@ -199,14 +199,14 @@ with `/fight-workspace open` in the intended native session, not by trusting an 
 | `i`, PageUp/PageDown | Full conversation/child/source identities, endpoint, container generation, notices and bounded history |
 | `q`, Ctrl+C | Reap only this display's reader; Pi, children and containers remain unchanged |
 
-The [fixed Docker reader's limits](#human-only-shared-docker-logs-task-00449-candidate) remain unchanged: 100-line
-tail, 300 records / 32 Ki units plus at most one equal paused snapshot, bounded escaped records, metadata and
-process deadlines, 15-minute lifetime, TERM/KILL and finite reaping. The fixed reader itself never retries;
-this companion alone performs the bounded fresh discovery/admission above. The 15-minute lifetime still needs
-explicit human recovery. Exact canonical checkout labels, local Unix endpoint, service and full running-container
-identity are checked before reading. Endpoint/checkout authority replacement requires fresh inspected human
+The [fixed Docker reader](#human-only-shared-docker-logs-task-00449-candidate) keeps its 100-line
+tail, 300 records / 32 Ki units plus at most one equal paused snapshot, bounded escaped records, metadata
+query deadlines, TERM/KILL and finite reaping. An open stream has no automatic time cutoff; it can keep
+following while the source and native selection remain valid. The fixed reader itself never retries;
+this companion alone performs the bounded fresh discovery/admission above. Exact canonical checkout labels,
+local Unix endpoint, service and full running-container identity are checked before reading. Endpoint/checkout authority replacement requires fresh inspected human
 selection; container lifecycle replacement is freshly verified only within the pinned source authority.
-The retained legacy shared reader's behavior is unchanged. Healthy
+The retained legacy shared reader also has no time cutoff; its other behavior is unchanged. Healthy
 repeated open is idempotent and does not re-prompt. A closed reader/companion never stops a container or child.
 No stack provisioning, restart, Compose
 evaluation, database mutation, full logging service or automatic global update is included.
@@ -485,8 +485,8 @@ adds at most one equal-sized buffer. Each raw record retains **4 Ki UTF-16 units
 escaped display records cap at approximately **8 Ki units**. UTF-8 framing preserves fragmented characters,
 replaces malformed bytes and visibly escapes C0/C1, escape/clipboard, CR and bidi controls. These are presentation
 limits, not a new logging/redaction policy. Identity queries cap combined output at **64 KiB**, **32 containers**,
-and **5 seconds**. One sequential metadata/read process is used; reader lifetime is **15 minutes**, followed by
-explicit human reconnect only. Automatic retries: **zero**. Close sends TERM, then KILL after **1 second**,
+and **5 seconds**. One sequential metadata/read process is used; an open log stream has no automatic time
+cutoff. The fixed reader's automatic retries remain **zero**. Close sends TERM, then KILL after **1 second**,
 with a **2-second** wait bound. An unreaped reader remains tracked; no replacement starts while tracked processes
 remain. Workspace exit also disposes readers. No container lifecycle operation is implemented.
 
@@ -638,11 +638,26 @@ never selects workflow/role authority. Native exit followed by `fight-terminal -
 canonical parent checkout rediscovers valid still-live custodians without relaunching children. Editable saved
 pin/selection preferences are restored only after fresh membership admission; they cannot create authority.
 
-Each observation daemon holds at most **eight monitor associations**, 128 used bootstrap tokens over its lifetime,
-and **100 entries / 32 Ki UTF-16 units per child**. Monitor-stream
-sequence gaps are reported separately from retained-history eviction; an older custodian without that field
-says unknown rather than inventing zero loss. Completed entries
-can be pruned after ten minutes. Each workspace inspects at most **eight custodians / seventeen directory entries**
+Each observation daemon retains at most **eight admitted children** (monitors and SDK agents combined),
+128 used bootstrap tokens over its lifetime, and **100 entries / 32 Ki UTF-16 units per child**. Monitor EOF
+closes the reader's writable half and marks disconnection, never inferred completion. Once a new child's owning
+route has validated custody/identity, history pressure can retire the oldest unselected/unpinned terminal SDK
+entry or terminal disconnected monitor. A still-connected monitor, nonterminal entry or retained selection/pin
+cannot be evicted for capacity. If none is eligible, admission stays unavailable; neither the eight-child bound
+nor execution changes. Unretained disconnected entries can also be pruned after ten minutes.
+Monitor-stream sequence gaps are reported separately from retained-history eviction; an older custodian
+without that field says unknown rather than inventing zero loss.
+
+The owning [`sequential-observation.py`](tests/native/sequential-observation.py) check runs twelve fixed monitors
+through genuine offline native Pi `!!` execution against an explicitly selected installed-layout package, including
+one nonzero child. It invokes that package's fixed `src/observation/run-stage.py` directly; only its JSON child
+is controlled. This monitor EOF/history fixture does not exercise independent role dispatch or the provider's
+real native inventory/registration preflights. Do not route the controlled `pi` through those preflights or make
+it impersonate inventory. Real stages still use the provider dispatcher above, with all safeguards intact.
+The check covers admission, terminal EOF and bounded history without provider prompts or retained pane/transcript
+streams. A pending native file remains pending: it does not qualify signed session-file reader admission,
+independent stages, actual Herdr interaction/captures or runtime logs. TASK-00544's current
+[scope](../../planning/tasks/00544-TASK.md#scope) owns its explicit demonstration deferrals and remaining acceptance. Each workspace inspects at most **eight custodians / seventeen directory entries**
 and retains at most **eight children**, preserving its selected/pinned entry under overflow. One refresh is in
 flight per current session; ticks skip while it runs. Each custodian challenge has an absolute **one-second
 elapsed transport deadline** and **2 MiB** response cap; trickling bytes do not extend it. Challenges are
@@ -692,8 +707,8 @@ Before every subscription, the fixed adapter checks the current local Unix endpo
 label, eligible service and full running container ID. Test bindings pin the eligible service/container generation;
 a recreated/removed/added eligible container or changed endpoint requires inspecting and supplying a fresh human
 binding. No source is trusted because of an old receipt. One-service test bindings also narrow metadata queries
-to that service. All existing Docker record/buffer/lifetime/reaping limits above remain intact. Pane data and
-source choices never enter Pi/model context.
+to that service. The Docker record/buffer, identity-query and reaping limits above remain intact; open streams
+have no time cutoff. Pane data and source choices never enter Pi/model context.
 
 ### TASK-00502 qualification
 

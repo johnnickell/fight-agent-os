@@ -132,13 +132,24 @@ test('selection ticks refresh discovery without delaying native/child revocation
   const calls = f.calls(); await companion.tick(); await companion.logs.transition; assert.equal(f.calls(), calls);
 });
 
-test('reader lifetime remains an explicit recovery boundary and closure retains pause across rebind', async t => {
+test('manual closure retains pause across rebind and explicit recovery', async t => {
   const f = await fixture(t); f.set([source()]); await f.logs.rebind('/checkout');
   await f.logs.action('pause'); await f.logs.action('toggle');
   await f.logs.rebind('/checkout'); await f.logs.action('toggle'); assert.equal(f.logs.current.paused, true);
-  f.logs.current.expired = true; await f.logs.current.stop();
+  await f.logs.action('toggle');
   const count = f.readers.length; await f.refresh(); assert.equal(f.readers.length, count);
   await f.logs.action('reconnect'); assert.equal(f.readers.length, count + 1);
+  assert.equal(f.logs.current.paused, true);
+});
+
+test('fresh discovery retains a healthy reader and recovers an ordinary stream exit', async t => {
+  const f = await fixture(t); f.set([source()]); await f.logs.rebind('/checkout');
+  const reader = f.logs.current;
+  await f.refresh(); assert.equal(f.logs.current, reader); assert.equal(f.readers.length, 1);
+  reader.state = 'disconnected'; await reader.stop();
+  await f.refresh(); assert.notEqual(f.logs.current, reader); assert.equal(f.readers.length, 2);
+  assert.equal(f.logs.current.state, 'following');
+  assert.equal(f.logs.entries.get('/checkout').closed, false, 'stream exit is not manual close intent');
 });
 
 test('context revocation during explicit close cannot throw or lose closed/paused intent', async t => {

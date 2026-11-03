@@ -34,6 +34,19 @@ export function bindParentFile(pendingPath, witness) {
       !sameSessionFile(sessionFileIdentity(pendingPath), witness)) throw new Error('Native session file witness refused');
   return witness;
 }
+// Called only after the owning route has validated custody/identity and progress. History
+// pressure may retire terminal readers, never live monitor streams or a selection/pin.
+export function retainChild(children, child, retained = []) {
+  if (!children.has(child.id) && children.size >= limits.children) {
+    const oldest = [...children.values()].filter(item => terminalStates.has(item.lifecycle) &&
+      (item.source === 'pi-subagents' || item.state === 'disconnected') &&
+      !retained.includes(`${item.generation}:${item.id}`)).sort((a, b) => a.order - b.order)[0];
+    if (!oldest) throw new Error('Observation capacity reached');
+    children.delete(oldest.id);
+  }
+  children.set(child.id, child);
+  return child;
+}
 // This route is accepted only from the native parent's inherited IPC channel, never a socket client.
 export function admitSubagent(message, { parent, generation, children, order, retained = [], now = Date.now(),
   registrations = worktree => execFileSync('git', ['-C', worktree, 'worktree', 'list', '--porcelain', '-z'], { encoding: 'utf8', timeout: 1000, maxBuffer: 1024 * 1024 }) }) {
@@ -49,16 +62,7 @@ export function admitSubagent(message, { parent, generation, children, order, re
       sequence: 0, receivedAt: now, history: [], units: 0, omitted: 0, gaps: 0, source: 'pi-subagents' };
   } else if (child.source !== 'pi-subagents' || JSON.stringify(child.identity) !== JSON.stringify(message.identity)) throw new Error('Subagent identity changed');
   applyProgress(child, message);
-  if (!children.has(message.id) && children.size >= limits.children) {
-    // Reuse the reader's existing preference: history pressure must not steal its selection/pin.
-    // Only terminal SDK history is replaceable; live SDK work and monitor custody are untouched.
-    const oldest = [...children.values()].filter(item => item.source === 'pi-subagents' && terminalStates.has(item.lifecycle) &&
-      !retained.includes(`${item.generation}:${item.id}`)).sort((a, b) => a.order - b.order)[0];
-    if (!oldest) throw new Error('Observation capacity reached');
-    children.delete(oldest.id);
-  }
-  children.set(message.id, child);
-  return child;
+  return retainChild(children, child, retained);
 }
 // Exact ancestry is launch evidence, not PID/cwd proximity. Bootstrap witnesses alone cannot
 // confer membership: require the fixed live provider monitor below this exact live native process.
@@ -109,6 +113,13 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
   const { privateKey, publicKey } = generateKeyPairSync('ed25519');
   const created = Date.now(), children = new Map(), tokens = new Set(), sockets = new Set();
   let sequence = 0, attached = true, lastLive = created, descriptor, descriptorFile, routeFile;
+  const retainedChildren = () => {
+    try {
+      const path = join(root, 'preference.json'); privateFile(path);
+      const preference = JSON.parse(readFileSync(path, 'utf8'));
+      return [preference.selected, preference.pin];
+    } catch { return []; } // A preference grants no custody; invalid choices retain nothing.
+  };
   const publish = () => {
     if (!descriptor || descriptorFile || pendingParentFile !== undefined) return;
     writeFileSync(descriptorPath, JSON.stringify(descriptor), { flag: 'wx', mode: 0o600 }); descriptorFile = lstatSync(descriptorPath);
@@ -120,6 +131,9 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
     // Absolute bootstrap/query deadline; monitor streams have a separate absolute lifetime.
     const deadline = setTimeout(() => socket.destroy(), 1000); let lifetime;
     socket.setEncoding('utf8'); socket.on('error', () => {});
+    // Queries half-close before their reply; monitor EOF must also release our
+    // writable half so close marks disconnection without inventing completion.
+    socket.on('end', () => socket.end());
     socket.on('close', () => { clearTimeout(deadline); clearTimeout(lifetime); sockets.delete(socket); if (registration) registration.state = 'disconnected'; });
     socket.on('data', chunk => {
       buffer += chunk;
@@ -135,14 +149,15 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
             const body = JSON.stringify({ nonce: request.nonce, parent, parentFile, primary, generation, pid: process.pid, launcher, at: Date.now(), children: [...children.values()] });
             socket.end(JSON.stringify({ body, signature: sign(null, Buffer.from(body), privateKey).toString('base64') }) + '\n'); return;
           }
-          for (const [id, child] of children) if (child.state === 'disconnected' && Date.now() - child.receivedAt > limits.retention) children.delete(id);
-          if (!attached || tokens.has(request.token) || tokens.size >= 128 || children.size >= limits.children || Date.now() - created > limits.lifetime) throw new Error();
-          const witness = monitorWitness(request, native);
-          const id = randomUUID(); tokens.add(request.token);
+          if (!attached || tokens.has(request.token) || tokens.size >= 128 || Date.now() - created > limits.lifetime) throw new Error();
+          const witness = monitorWitness(request, native), retained = retainedChildren();
+          for (const [id, child] of children) if (child.state === 'disconnected' && Date.now() - child.receivedAt > limits.retention &&
+            !retained.includes(`${child.generation}:${id}`)) children.delete(id);
+          const id = randomUUID();
           registration = { id, parent, generation, started: witness.started, order: ++sequence,
             identity: witness.identity, state: 'starting', lifecycle: 'starting', exitCode: null, heartbeatSeconds: witness.heartbeat,
             sequence: 0, receivedAt: Date.now(), history: [], units: 0, omitted: 0, gaps: 0 };
-          children.set(id, registration); clearTimeout(deadline);
+          retainChild(children, registration, retained); tokens.add(request.token); clearTimeout(deadline);
           lifetime = setTimeout(() => socket.destroy(), limits.lifetime);
           // Admission acknowledgement only; no command, cancellation or child-facing data.
           socket.write(JSON.stringify({ observed: true, pid: request.pid }) + '\n');
@@ -168,12 +183,7 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
     if (message?.type === 'subagent-progress') {
       try {
         if (pendingParentFile !== undefined || !sameSessionFile(sessionFileIdentity(parentFile.path), parentFile)) throw new Error('Native custody unavailable');
-        let retained = [];
-        try {
-          const path = join(root, 'preference.json'); privateFile(path);
-          const preference = JSON.parse(readFileSync(path, 'utf8')); retained = [preference.selected, preference.pin];
-        } catch { /* A preference grants no custody; absent/invalid choices retain nothing. */ }
-        admitSubagent(message, { parent, generation, children, order: ++sequence, retained });
+        admitSubagent(message, { parent, generation, children, order: ++sequence, retained: retainedChildren() });
       } catch (error) {
         // Fixed diagnostics only, never SDK/session data or execution control. Even a fast final
         // sample needs a refusal reply: send completion is not daemon admission.
