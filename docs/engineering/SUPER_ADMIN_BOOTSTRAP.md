@@ -117,11 +117,21 @@ credential URLs, tokens or provider secrets, including at verbose levels. Packag
 private diagnostic material; no operator-facing failure subscriber is installed. Docker errors outside PHP remain
 a separate operational boundary.
 
-Access Control remains v0.5.0 (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`) and Common v1.3.0
-(`7de6cad6e8a9752973ad9f8e27e285b0c1510582`). Tests protect authoritative admission/refusal, fresh permissions,
+The selected `composer.lock` records Access Control **v0.8.0**
+(`319738255e682d587642b67856039f882b9588d6`) and Common **v1.3.0**
+(`7de6cad6e8a9752973ad9f8e27e285b0c1510582`). TASK-00564 changes no dependency and does not establish fresh
+v0.8.0 Console qualification.
+
+### Historical TASK-00446 qualification — 2026-10-15
+
+TASK-00446's qualification used Access Control **v0.5.0** (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`) and
+Common **v1.3.0** (`7de6cad6e8a9752973ad9f8e27e285b0c1510582`). The test description and linked TASK-00446
+evidence below describe that historical checkpoint, not fresh Console qualification against the selected lock.
+
+Tests protect authoritative admission/refusal, fresh permissions,
 independent commits and retained partial steps, manual retry, historical evidence, delivery recovery and safe output.
 Concurrent admission and intent/claim-guard tests are deliberately removed with their superseded mechanics.
 Validate loader/aliases/discovery directly with owning tools, never product wiring tests. Serialize focused
-PostgreSQL checks after `./bin/database test-reset`; `./bin/build` remains mandatory. Fresh counts, coverage,
+PostgreSQL checks after `./bin/database test-reset`; `./bin/build` remains mandatory. Historical counts, coverage,
 warnings and limits belong to [TASK-00446](../../planning/tasks/00446-TASK.md). Independent Review/QA and publication
 remain separate.
