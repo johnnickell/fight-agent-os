@@ -260,9 +260,9 @@ The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) a
 `GET /api/v1/users/{userId}` and fresh detail entry within that directory, with exact authoritative `READ_USERS`
 declared once on each HTTP Action and enforced centrally by `ApiActionSecurity`, public package user/role
 queries and safe Responder presentation. No target data is stored in browser history. Removal of duplicate
-permission checks from both Actions is pending independent Review/QA. The earlier HTTP-boundary correction
-has historical independent Review and QA acceptance on `c2227fa`, not acceptance of this new repair.
-Publication and final delivery checks were pending at closeout; current results are in
+permission checks from both Actions has independent Review and QA acceptance on `ba7f652`; the earlier
+acceptance on `c2227fa` is historical. Publication and final delivery checks were pending at this checkpoint;
+current results are in
 `.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200).
 Invitation controls link only to registered,
 truthfully unavailable journeys; no invitation or lifecycle mutation UI is added.

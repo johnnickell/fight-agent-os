@@ -47,7 +47,7 @@ Only allowlisted route/body fields and validated IDs/revisions/reason enter use 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00118](../tasks/00118-TASK.md) | Expose a safe authorized user detail | in-progress |
+| [TASK-00118](../tasks/00118-TASK.md) | Expose a safe authorized user detail | done |
 | [TASK-00119](../tasks/00119-TASK.md) | Guard user disable and enable transitions | ready-for-agent |
 | [TASK-00120](../tasks/00120-TASK.md) | Guard user soft deletion and restoration | ready-for-agent |
 | [TASK-00121](../tasks/00121-TASK.md) | Authorize user role assignments and removals | ready-for-agent |
@@ -59,8 +59,9 @@ Only allowlisted route/body fields and validated IDs/revisions/reason enter use 
 
 TASK-00118 single-declaration correction (2026-11-03): **“Fix it in both actions”** removes duplicate
 Action rechecks in both safe reads; centrally enforced Action metadata owns the HTTP permission boundary.
-Implementation remains pending independent Review/QA of this new repair. Earlier acceptance below covers
-only `c2227fa`, not the new change; mutation and non-HTTP requirements are unchanged.
+Independent Review and QA accept repair candidate `ba7f652`; publication and final-head checks were pending
+at this checkpoint. Current delivery results are in [TASK-00118](../tasks/00118-TASK.md) and its Land receipt.
+Earlier acceptance below covers only `c2227fa`; mutation and non-HTTP requirements are unchanged.
 
 Historical TASK-00118 boundary correction (2026-11-02): **“the permission check is explicitly supposed to be in the HTTP action”**. This supersedes the original shared-Application requirement for the affected safe reads only; the [ADR amendment](../adr/0001-application-ownership-and-orchestration.md#task-00118-owner-clarification--2026-11-02) governs ownership. Independent Review/QA accepted repaired candidate `c2227fa`; prior acceptance is historical. Current delivery results are in [TASK-00118](../tasks/00118-TASK.md) and its Land receipt.
 
