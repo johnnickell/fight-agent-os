@@ -1,37 +1,68 @@
-# Application Ownership Enforcement
+# Application ownership and enforcement
 
-[ADR 0001](../../planning/adr/0001-application-ownership-and-orchestration.md) is the authority for package ownership and dependency direction. This document records the first executable proof and the boundaries automated by TASK-00010.
+[Engineering standards](STANDARDS.md#architecture) own the shared normative architecture contract.
+[ADR 0001](../../planning/adr/0001-application-ownership-and-orchestration.md) retains package rationale and its
+explicit EPIC-00023 amendment. Use standards for implementation/assessment; current source and a green checker
+are evidence, not alternative policy or proof that the approved correction is complete.
 
-## Representative composition
+## Approved target and current source
 
-The outer query configuration registers Fight Access Control's public `ListPermissions` query directly to its public `ListPermissionsHandler`. The handler receives the package-owned `PermissionRepository` capability through constructor injection. The production composition intentionally does not bind a repository implementation: PostgreSQL authority and that adapter belong to TICKET-00009.
+The target is aggregate-first Domain and matching Application ownership, registered handler coordination,
+collection-like repositories, capability-first adapters, direct canonical Fight contracts and inward dependencies
+including supported PSR contracts in Application. Entry adapters own authentication/permission/scope admission;
+the raw bus is trusted. Creation uses adapter-generated typed IDs in void commands; ordinary response loss uses
+uniqueness and fresh authorized queries. Follow the linked standards for exact transaction/audit, safe typed
+read/failure, sensitive synchronous and application compatibility/data requirements rather than copying a second
+contract here.
 
-This is query-only, non-user-facing composition. A command and event are not added because they would require transaction, persistence, audit, or delivery behavior owned by later requirements. No `App\Application` orchestrator is justified or introduced because this interaction is already wholly owned by Fight Access Control. Configuration wiring is not a product behavior and has no dedicated PHPUnit test; any real interaction that uses this path will fail directly if composition is invalid.
+Source observations at TASK-00564's base `eb5fe2f56a8fbb8b5c27f64b959dc2d36d5bc01a`:
 
-## Automated rules
+| Current implementation, not target conformity | Correction / qualification owner |
+|---|---|
+| `RegisterRepositoryAction` directly calls container-registered `Application/Workspace/RegisterRepository::register()`, not a registered message handler; it uses internal aggregate IDs, `RegistrationStore`, original results and Application authority fences | TASK-00574/00575; current [registration runbook](REPOSITORY_REGISTRATION.md) remains executable |
+| `RoleMutationUnitOfWork` infers required audit from the transaction callback's returned Role event | TASK-00573; preserve existing atomic audit until explicit package-handler support is qualified |
+| `config/common/persistence.php` binds one shared EntityManager/DBAL Connection and Common `DoctrineTransactionalUnitOfWork` | TASK-00572 qualifies an actual DBAL-only alternative; no ORM replacement or second transaction authority is implied |
+| `AuthenticatedRoleAssignment::assign()` is the existing Application admission path, not a new all-entry rule | TASK-00576 owns its correction; do not bypass current checks or expose raw messages to untrusted callers meanwhile |
+| `ChangePasswordAction` calls owned `ChangePassword`, which invokes public package `AuthenticationService::changePassword()` synchronously with sensitive inputs | Actual sensitive non-serializable exception, not a reason to put passwords/tokens in messages; broader correction belongs to TASK-00580 |
+| Local failure classes and HTTP mappings remain in use; the lock selects Common v1.3.0 and Access Control v0.8.0 | TASK-00582 qualifies shared failures/safe HTTP and owned consumer cutover; supplier plans/local tags are not available/qualified consumer APIs |
 
-Run the focused check with:
+This documentation changes no source, executable dependency rule, dependency lock, runtime route/permission or
+data. TICKET-00132 owns unfinished individual-plan reconciliation; TICKET-00133 through TICKET-00136 own source
+corrections. A missing supplier holds only its affected integration, not unrelated local work. Upstream packages
+retain their own compatibility obligations; deliberate Agent OS breaks still require needed-data preservation,
+migration or explicitly authorized disposal.
+
+## Current automated boundary
+
+Run the focused owning tool:
 
 ```sh
 ./bin/architecture
 ```
 
-Deptrac analyses owned production source and enforces these currently representable directions:
+`deptrac.php` currently classifies these dependency directions:
 
-- `App\Domain` may depend only on owned Domain, package Domain contracts, Fight Common Domain, and PHP internals.
-- `App\Application` may depend inward and on public Fight Access Control Domain/Application and Fight Common Domain/Application contracts, but not adapters or infrastructure.
-- `App\Adapter` may depend inward, on selected package layers, and on infrastructure.
-- Dependencies from an owned layer to an unclassified type are reported and fail the check, so an external framework cannot bypass the rules merely because its namespace is absent from the configured infrastructure collector.
+- `App\Domain` may use owned/package Domain contracts and PHP internals.
+- `App\Application` may use owned Domain and public Fight Domain/Application contracts, not adapters/infrastructure.
+- `App\Adapter` may depend inward, on selected package layers and infrastructure; composition constructs the graph.
+- Unclassified dependencies fail rather than silently bypassing collection.
 
-Package ownership, service-location, wrapper intent, and other semantic concerns not represented by dependency direction remain code-review responsibilities. The build does not test Deptrac with deliberately invalid source. TICKET-00013 owns integration and extension of the focused dependency check into the final pre-submit gate.
+The current collector groups `Psr` with infrastructure and does **not** yet implement the approved supported-PSR
+Application allowance. Its scoped source owner must reconcile the executable rule with actual changes, not weaken
+standards or edit this documentation-only TASK's configuration. No current gate failure is inferred from that
+latent mismatch. Deptrac cannot prove package ownership, descriptive collaborator names, genuine coordination,
+admission timing, required atomic audit, safe results or absence of forwarding aliases: these require review of
+real callers and contracts. Validate tooling directly; never seed invalid product fixtures to test the checker.
 
-## Deferred enforcement
+## Historical TASK-00010 proof
 
-| Boundary | Why it is not enforced here | Downstream owner |
-|---|---|---|
-| PostgreSQL repository implementation, exact transaction capability, shared connection, and durable intent | No persistence adapter or schema exists in this proof | TICKET-00009 |
-| One-Action/one-interaction delivery, validation, safe errors, Responders, and transport-safe Views | This proof deliberately exposes no endpoint | TICKET-00010 |
-| Post-commit provider effects, recovery, retries, leasing, and idempotency | This query has no event or external effect | TICKET-00011 |
-| Semantic authorization placement and absence of role-name bypass | No protected product interaction exists yet | TICKET-00010 and feature TICKETs |
-| Complete syntax, style, static-analysis, Rector, coverage, and architecture gate integration | TASK-00010 introduces only the focused architecture boundary | TICKET-00013 |
-| Genuine-orchestration and anti-speculation judgments not reducible to dependency or name checks | These require use-case evidence and review | TICKET-00013 and independent review |
+TASK-00010 introduced a query-only representative composition: outer configuration registered package
+`ListPermissions` directly with `ListPermissionsHandler` and injected package `PermissionRepository`. At that
+checkpoint there was no production repository binding, HTTP endpoint, command, event or justified owned
+orchestrator. That established direct package composition, not today's full persistence/application inventory.
+
+Its deferred enforcement owners were TICKET-00009 (PostgreSQL/transaction/durable intent), TICKET-00010
+(HTTP/validation/safe presentation), TICKET-00011 (post-commit delivery/recovery), and TICKET-00013 (full gate
+and semantic review). Those are historical responsibility assignments, not claims those boundaries remain
+absent today. Exact acceptance and verification remain with their owning records; the present canonical
+`./bin/build` and independent Review/QA retain their own obligations.

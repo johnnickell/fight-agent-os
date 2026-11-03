@@ -3,6 +3,19 @@
 Use these terms consistently in product planning, Domain contracts and user-facing explanations. A name describes
 its concept; it does not by itself grant authority or establish implemented behavior.
 
+## Project and physical source identities
+
+[Engineering standards](engineering/STANDARDS.md#aggregate-ownership-and-naming) own the architecture naming
+contract: **Project** is one intended collaboration/publication target in a Workspace, not a directory or a
+new multi-repository umbrella. Source descriptors are evidence; forks/upstreams remain distinct. Qualified
+**Git repository** is a source-control term, while a Domain repository is a collection-like aggregate contract.
+Host, Checkout (one Git common directory on a Host) and Worktree have separate identities and links.
+
+Older product records and current runtime APIs still say Repository for that business Project. TICKET-00132
+owns unfinished-plan reconciliation; TASK-00575 owns the actual registration cutover. The exact existing Role,
+Permission, route, table and marker identifiers are not renamed here. Read the authority rules below with that
+business meaning; naming alone never grants access or proves physical availability.
+
 ## People, Agents and authority
 
 | Term | Meaning |

@@ -5,6 +5,42 @@
 - **Decision owners:** Fight Agent OS maintainers
 - **Acceptance:** Explicitly reaccepted by the human maintainer after the package-owned delivery revision under TASK-00011 on 2026-09-24
 
+## EPIC-00023 transaction and admission amendment — TASK-00564
+
+Under the approved [EPIC-00023](../epics/00023-EPIC.md),
+[engineering standards](../../docs/engineering/STANDARDS.md#handler-owned-transactions-and-audit) own the shared
+current transaction contract. The original acceptance and exact package/version evidence below remain history.
+These are specific amendments, not removal of PostgreSQL, migration or credential-recovery guarantees:
+
+- Replace the ORM-specific universal boundary with generic `TransactionalUnitOfWork`, invoked by the registered
+  owning CommandHandler around aggregate persistence and required audit/justified intent. Qualified Common
+  Doctrine and DBAL-only implementations are alternatives for actual needs. All participants still use the exact
+  owning connection; no nested/second transaction authority, repository commit or independent flush is permitted.
+  DBAL-only availability must be qualified in TASK-00572; it is not supplied by this amendment.
+- Repositories remain collection-like aggregate persistence boundaries. Complete-state comparisons, uniqueness,
+  coupled authority/session writes, reference integrity, grant succession and claim/outcome fences remain actual
+  business consistency, not redundant locks to delete indiscriminately.
+- Entry adapters own caller authentication and permission/scope admission. Remove any requirement solely to
+  serialize ordinary permission revocation through a command's commit or repeat blanket admission in Application/
+  bus filters. This does not remove intrinsic package consistency, one-time use, stale-generation fencing or
+  required atomic audit. Stronger operation-specific guarantees need their own justification.
+- Required audit belongs to explicit handler coordination, not inference from a transaction callback's returned
+  event. The current consumer Role audit decorator is not the target; preserve its required atomicity until the
+  qualified package-handler replacement in TASK-00573. A second consumer transaction or post-commit subscriber
+  cannot fill that supplier gap.
+- Ordinary creates use adapter-generated typed IDs in void commands and uniqueness/fresh-query reconciliation,
+  not universal original-result replay. Credential delivery's stable generation, claims, encrypted material,
+  leases, stale-outcome fencing and recoverable at-least-once attempts remain separately required.
+- The secret-free serializable message rule does not prohibit the upstream synchronous non-serializable
+  authentication/password/token operation exception. Keep those inputs invocation-scoped and never persist/log
+  them as message, View, event or audit payloads. Provider materialization still follows its qualified package API.
+- Successful events remain after commit; post-commit exceptions do not prove rollback. External effects remain
+  outside business transactions, with their actual recovery guarantees, never exactly-once promises.
+
+Original migration/schema/guard requirements still apply; qualify migrations and tooling directly with their
+owning tools, not product tests of architecture, wiring or tooling. Historical release prerequisites and source
+snapshots below describe their recorded subjects, not today's lock or an assertion of newly available APIs.
+
 ## Context
 
 Fight Agent OS must persist the foundation identity, authorization, session, grant, audit, and required-delivery

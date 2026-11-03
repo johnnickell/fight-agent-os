@@ -4,6 +4,12 @@ Ordinary invitation uses two independent package business steps and a narrowly t
 TASK-00446 simplifies their composition and Application sequencing; its fresh independent Review/QA are separate
 from historical TASK-00037/00038 acceptance. No public HTTP or browser role-administration surface is introduced.
 
+The procedures below describe current source. The approved
+[architecture contract](STANDARDS.md#architecture) places admission in entry adapters and coordination in
+registered handlers; TASK-00576 owns that cutover. Existing `ConsoleUserOperation` and
+`AuthenticatedRoleAssignment` below are not target templates. Keep their checks and partial-result/audit limits
+until verified replacement; this documentation grants no untrusted raw-bus access or additional atomicity.
+
 ## Prepare the intended installation
 
 Restrict shell, checkout, Docker and database access to trusted operators. `--internal` acknowledges that trust

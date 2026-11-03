@@ -1,9 +1,16 @@
 # Explicit Workspace bootstrap and Repository registration
 
 TASK-00078 supplies registration metadata, not a checkout, Repository access writer or execution capability.
-[ADR 0005](../../planning/adr/0005-repository-identity-and-link-consistency.md) and its supporting contract remain
-normative. John's approved 2026-10-20 amendment separates explicit Workspace bootstrap here from initial Host
-enrollment in TASK-00079. No Host/Checkout/Worktree persistence or physical linking is implemented here.
+This is a **current-source runbook**, not the approved target. The
+[shared contract](STANDARDS.md#architecture) and amended
+[ADR 0005](../../planning/adr/0005-repository-identity-and-link-consistency.md) now specify Project vocabulary,
+adapter-generated IDs in void commands, entry admission and ordinary uniqueness/fresh-query recovery.
+TASK-00574/00575 own that source cutover. Today's Repository routes, internal IDs, original-result replay,
+Application checks and authority fences below still describe executable behavior; they must not be copied as
+new requirements. No source, endpoint, permission, table or data has changed in TASK-00564.
+
+John's approved 2026-10-20 amendment separates explicit Workspace bootstrap here from initial Host enrollment
+in TASK-00079. No Host/Checkout/Worktree persistence or physical linking is implemented here.
 
 ## Explicit installation setup
 

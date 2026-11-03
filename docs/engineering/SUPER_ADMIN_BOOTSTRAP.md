@@ -9,6 +9,12 @@ a normal invitation conflict, not an implicit resend, reset or resume.
 This TASK-00446 policy supersedes TASK-00038/TICKET-00015's permanent-claim/no-retry, concurrent admission and
 command-specific composition requirements. Their old implementation reports remain historical evidence.
 
+This runbook describes current source, including the existing `AuthenticatedRoleAssignment` admission path.
+The [approved architecture contract](STANDARDS.md#architecture) puts entry admission in adapters, not a blanket
+second Application gate. TASK-00576 owns that source correction; do not bypass current checks or expose trusted
+Console/raw-bus operations while waiting. The manual single-operator and retained partial-result/audit limits
+below remain truthful; this document does not upgrade them to atomic bootstrap or replay guarantees.
+
 ## Prepare and confirm
 
 Restrict shell, checkout, Docker and database access to trusted operators. Verify the intended Compose project

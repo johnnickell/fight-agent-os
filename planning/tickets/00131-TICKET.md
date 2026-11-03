@@ -82,7 +82,7 @@ is introduced by a documentation dependency. Current source must remain describe
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00564](../tasks/00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | ready-for-agent |
+| [TASK-00564](../tasks/00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
