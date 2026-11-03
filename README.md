@@ -256,7 +256,17 @@ names without a dashboard permission prerequisite. Protected read-only role and 
 [guarded authority catalogs](docs/engineering/AUTHORITY_CATALOGS.md) for exact permissions, pagination and redaction.
 The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) at `GET /api/v1/users` and
 `/app/admin/users` uses exact current `READ_USERS`, fixed bounded pagination and explicit safe role presentation
-(TASK-00059 implementation; independent Review/QA pending). Invitation controls link only to registered,
+(TASK-00059 implementation; independent Review/QA pending). TASK-00118 adds a safe read-only
+`GET /api/v1/users/{userId}` and fresh detail entry within that directory, with exact authoritative `READ_USERS`
+declared once on each HTTP Action and enforced centrally by `ApiActionSecurity`, public package user/role
+queries and safe Responder presentation. No target data is stored in browser history. The pagination-only
+correction has independent Review/QA acceptance on `55c55ad`; delivery results are in the receipt and PR below.
+Removal of duplicate
+permission checks from both Actions has independent Review and QA acceptance on `ba7f652`; the earlier
+acceptance on `c2227fa` is historical. Publication and final delivery checks were pending at this checkpoint;
+current results are in
+`.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200).
+Invitation controls link only to registered,
 truthfully unavailable journeys; no invitation or lifecycle mutation UI is added.
 Guarded custom Role create/rename/remove APIs now carry exact displayed revisions and atomic safe audit, pending
 independent Review/QA; no Role UI or Permission delegation is enabled. Read [custom Roles and v0.8.0 adoption](docs/engineering/CUSTOM_ROLES.md)
