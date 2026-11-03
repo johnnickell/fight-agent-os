@@ -382,7 +382,12 @@ export default function InvitationPage({
         </>
       )}
       {allowed && (
-        <Button disabled={view.kind === 'loading' || pending !== null} onClick={reload}>
+        <Button
+          busy={view.kind === 'loading'}
+          busyLabel="Reload invitation"
+          disabled={pending !== null}
+          onClick={reload}
+        >
           Reload invitation
         </Button>
       )}

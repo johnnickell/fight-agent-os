@@ -74,6 +74,111 @@ describe('Pending invitation', () => {
       expect(screen.queryByText('pending@example.test')).not.toBeInTheDocument();
     }
   });
+  it.each(
+    ([200, 500, 'network'] as const).flatMap((outcome) =>
+      [false, true].map((readOnly) => ({ outcome, readOnly }))
+    )
+  )(
+    'retains Reload keyboard focus through $outcome and recovery (read only: $readOnly)',
+    async ({ outcome, readOnly }) => {
+      const target = invitationTarget();
+      const delayed = deferred<Response>();
+      let reads = 0;
+      const d = await mount(target, readOnly ? ['READ_USERS'] : undefined, () =>
+        ++reads === 2 ? delayed.promise : Promise.resolve(invitationResponse(target))
+      );
+      await screen.findByText(target.email);
+      const reload = screen.getByRole('button', { name: 'Reload invitation' });
+      reload.focus();
+      await userEvent.keyboard('{Enter}');
+      expect(screen.getByText('Reading invitation')).toBeVisible();
+      // jsdom does not reproduce native blur on disable; require the focus-preserving
+      // semantic busy contract as well as focus, and verify native behavior in Chrome.
+      expect(reload).toBeEnabled();
+      expect(reload).toHaveAttribute('aria-disabled', 'true');
+      expect(reload).toHaveAttribute('aria-busy', 'true');
+      expect(reload).toHaveFocus();
+      await userEvent.keyboard('{Enter} ');
+      fireEvent.click(reload);
+      expect(d.transport).toHaveBeenCalledTimes(2);
+      await act(async () => {
+        if (outcome === 'network') delayed.reject(new TypeError('offline'));
+        else delayed.resolve(invitationResponse(outcome === 200 ? target : null, outcome));
+        await delayed.promise.catch(() => {});
+      });
+      if (outcome !== 200) {
+        expect(await screen.findByText('Invitation unavailable')).toBeVisible();
+        expect(screen.queryByText(target.email)).not.toBeInTheDocument();
+      } else expect(await screen.findByText(target.email)).toBeVisible();
+      expect(reload).toHaveFocus();
+      expect(reload).toBeEnabled();
+      expect(reload).toHaveAttribute('aria-busy', 'false');
+      // Recover using the retained keyboard location, without an artificial refocus.
+      await userEvent.keyboard('{Enter}');
+      expect(await screen.findByText(target.email)).toBeVisible();
+      expect(reload).toHaveFocus();
+      expect(d.transport.mock.calls.map(([, init]) => init.method)).toEqual(['GET', 'GET', 'GET']);
+    }
+  );
+  it('keeps Reload focus after its deadline and ignores the late read after explicit recovery', async () => {
+    vi.useFakeTimers();
+    const target = invitationTarget();
+    const late = deferred<Response>();
+    let reads = 0;
+    const d = await mount(target, undefined, () =>
+      ++reads === 2 ? late.promise : Promise.resolve(invitationResponse(target))
+    );
+    await act(async () => {});
+    const reload = screen.getByRole('button', { name: 'Reload invitation' });
+    reload.focus();
+    fireEvent.click(reload);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8_000);
+    });
+    expect(screen.getByText('Invitation unavailable')).toBeVisible();
+    expect(reload).toHaveFocus();
+    expect(reload).toHaveAttribute('aria-busy', 'false');
+    fireEvent.click(reload);
+    await act(async () => {});
+    expect(screen.getByText(target.email)).toBeVisible();
+    await act(async () => {
+      late.resolve(invitationResponse({ ...target, email: 'obsolete@example.test' }));
+      await late.promise;
+    });
+    expect(screen.queryByText('obsolete@example.test')).not.toBeInTheDocument();
+    expect(reload).toHaveFocus();
+    expect(d.transport).toHaveBeenCalledTimes(3);
+  });
+  it('does not take focus on initial load or steal it after leaving a pending Reload', async () => {
+    const target = invitationTarget();
+    const initial = deferred<Response>();
+    const delayed = deferred<Response>();
+    let reads = 0;
+    const d = await mount(target, undefined, () =>
+      ++reads === 1 ? initial.promise : delayed.promise
+    );
+    const reload = screen.getByRole('button', { name: 'Reload invitation' });
+    expect(reload).not.toHaveFocus();
+    fireEvent.click(reload);
+    expect(d.transport).toHaveBeenCalledOnce();
+    await act(async () => {
+      initial.resolve(invitationResponse(target));
+      await initial.promise;
+    });
+    expect(reload).not.toHaveFocus();
+    reload.focus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.tab({ shift: true });
+    const back = screen.getByRole('link', { name: 'Back to Users' });
+    expect(back).toHaveFocus();
+    await act(async () => {
+      delayed.resolve(invitationResponse(target));
+      await delayed.promise;
+    });
+    await screen.findByText(target.email);
+    expect(back).toHaveFocus();
+    expect(d.transport).toHaveBeenCalledTimes(2);
+  });
   it('registers only canonical UUID target paths without accepting query or authority fields', () => {
     const id = crypto.randomUUID();
     const route = matchApplicationRoute(`/app/admin/invitations/${id}`);
