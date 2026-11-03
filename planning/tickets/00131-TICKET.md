@@ -2,7 +2,7 @@
 id: TICKET-00131
 epic: EPIC-00023
 title: Establish one authoritative architecture contract
-status: ready-for-agent
+status: done
 ---
 
 # Establish one authoritative architecture contract
@@ -82,10 +82,14 @@ is introduced by a documentation dependency. Current source must remain describe
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00564](../tasks/00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | in-progress |
+| [TASK-00564](../tasks/00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+TASK-00564's candidate `c160a31ba985978633c904e8493c091c8a35d785` has independent Review ACCEPT and nonvisual QA PASS.
+Publication and final delivery checks were pending at the acceptance checkpoint; current delivery results are in
+canonical ignored `.runs/tasks/TASK-00564/runs/land.md` and the TASK PR. The following is planning history.
 
 John approved this requirement as the first of six cohesive TICKET areas under EPIC-00023, then approved the
 single-TASK decomposition now written as [TASK-00564](../tasks/00564-TASK.md). It delivers the shared architecture

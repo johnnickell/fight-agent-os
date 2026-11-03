@@ -26,12 +26,20 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 1 | [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | [TICKET-00131 — Establish one authoritative architecture contract](../tickets/00131-TICKET.md) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
+| 2 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
+| 3 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
+| 4 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
+| 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
+| 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
+| 7 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
+| 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | — | — |
+| 19 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | [TICKET-00136 — Adopt shared failures and safe error presentation](../tickets/00136-TICKET.md) | ready-for-agent | — | — |
 | 61 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
@@ -61,20 +69,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00564](00564-TASK.md) | — |
 | 3 | [TASK-00139](00139-TASK.md) | Start and inspect an authorized TASK from the terminal | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00496](00496-TASK.md), [TASK-00498](00498-TASK.md) | — |
-| 3 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00564](00564-TASK.md) | — |
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
-| 4 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00564](00564-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00377](00377-TASK.md) | — |
-| 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00564](00564-TASK.md) | — |
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
-| 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00564](00564-TASK.md) | — |
-| 7 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00564](00564-TASK.md) | — |
 | 8 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00565](00565-TASK.md), [TASK-00566](00566-TASK.md), [TASK-00567](00567-TASK.md), [TASK-00568](00568-TASK.md), [TASK-00569](00569-TASK.md), [TASK-00570](00570-TASK.md) | — |
-| 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | [TASK-00564](00564-TASK.md) | — |
 | 12 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | [TASK-00574](00574-TASK.md) | — |
-| 19 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | [TICKET-00136 — Adopt shared failures and safe error presentation](../tickets/00136-TICKET.md) | ready-for-agent | [TASK-00564](00564-TASK.md) | — |
 | 62 | [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | [TASK-00061](00061-TASK.md) | — |
 | 63 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00062](00062-TASK.md) | — |
 | 64 | [TASK-00064](00064-TASK.md) | Prove integrated authorization throttling and secret safety | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00063](00063-TASK.md) | — |
@@ -342,14 +342,14 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 9 | [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | needs-info | [TASK-00564](00564-TASK.md) | — |
-| 10 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | needs-info | [TASK-00564](00564-TASK.md) | — |
-| 13 | [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | [TASK-00564](00564-TASK.md) | — |
-| 14 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | [TASK-00564](00564-TASK.md), [TASK-00576](00576-TASK.md) | — |
-| 15 | [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | [TASK-00564](00564-TASK.md) | — |
-| 16 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | [TASK-00564](00564-TASK.md) | — |
-| 17 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | [TASK-00564](00564-TASK.md) | — |
-| 18 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | [TASK-00564](00564-TASK.md) | — |
+| 9 | [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | needs-info | — | — |
+| 10 | [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | [TICKET-00133 — Adopt canonical transaction and audit contracts](../tickets/00133-TICKET.md) | needs-info | — | — |
+| 13 | [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | — | — |
+| 14 | [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | [TASK-00576](00576-TASK.md) | — |
+| 15 | [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | — | — |
+| 16 | [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | — | — |
+| 17 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | — | — |
+| 18 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | [TICKET-00135 — Correct existing identity, security, and delivery use-case ownership](../tickets/00135-TICKET.md) | needs-info | — | — |
 | — | [TASK-00186](00186-TASK.md) | Inspect private memory under scoped oversight | [TICKET-00046 — Keep scoped private Agent memory](../tickets/00046-TICKET.md) | needs-info | [TASK-00185](00185-TASK.md) | — |
 | — | [TASK-00189](00189-TASK.md) | Inspect retained lessons under historical authority | [TICKET-00047 — Share attributed Workflow and TASK learning](../tickets/00047-TICKET.md) | needs-info | [TASK-00188](00188-TASK.md) | — |
 | — | [TASK-00191](00191-TASK.md) | Review and publish guidance at an authorized target | [TICKET-00048 — Review and publish broader memory lessons](../tickets/00048-TICKET.md) | needs-info | [TASK-00190](00190-TASK.md) | — |
@@ -492,6 +492,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 1 | [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | — (standalone chore) | done | — | [PR #189](https://github.com/johnnickell/fight-agent-os/pull/189) |
 | 1 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | done | — | [PR #190](https://github.com/johnnickell/fight-agent-os/pull/190) |
 | 1 | [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | [TICKET-00129 — Adopt upstream Pi subagents with Fight observation](../tickets/00129-TICKET.md) | done | — | [PR #193](https://github.com/johnnickell/fight-agent-os/pull/193) |
+| 1 | [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | [TICKET-00131 — Establish one authoritative architecture contract](../tickets/00131-TICKET.md) | done | — | — |
 | 2 | [TASK-00002](00002-TASK.md) | Establish and prove safe TASK execution | [TICKET-00002 — Establish safe TASK execution](../tickets/00002-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 2 | [TASK-00130](00130-TASK.md) | Strengthen engineering guidance and TASK delivery conventions | — (standalone chore) | done | — | [PR #33](https://github.com/johnnickell/fight-agent-os/pull/33) |
 | 2 | [TASK-00136](00136-TASK.md) | Design the project-local security audit skill | — (standalone chore) | done | — | — |
