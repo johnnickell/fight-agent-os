@@ -17,6 +17,26 @@ guarantees: deterministic equivalence, exact expiring confirmation, conditional 
 reservations and proved writer exclusion. Any amendment must be explicit in the same ADR decision;
 an implementation cannot silently weaken these guarantees or substitute different details.
 
+## EPIC-00023 binding amendments — TASK-00564
+
+The approved [EPIC-00023](../../planning/epics/00023-EPIC.md) and
+[ADR 0005 amendment](../../planning/adr/0005-repository-identity-and-link-consistency.md#epic-00023-identity-and-coordination-amendment--task-00564)
+explicitly change sections 1, 2 and 5 below. [Standards](STANDARDS.md#architecture) own the shared contract.
+This note still owns the detailed source/physical protocol; its original acceptance/hash subjects remain history.
+
+The business Repository in the retained protocol prose means **Project**, the same one collaboration/publication
+target, with target `ProjectId`/`ProjectRepository`/`RegisterProject`/`RegisterProjectHandler`/`ProjectRegistered`
+contracts. Qualified Git repository and distinct Host/Checkout/Worktree meanings are unchanged. Existing
+`repository_id` marker bytes/key order, descriptor versions, routes, permissions and tables are not silently
+renamed; this TASK changes no runtime or writer. A later source cutover must reconcile actual wire/storage
+consumers explicitly without weakening exact-key matching or needed-data preservation.
+
+Ordinary registration/bootstrap/Host creation no longer requires original-response replay or an original-result
+journal. This removal does **not** apply to sections 5–7's physical link/relink/reconciliation operation identity,
+results, reservations, generation fences or writer exclusion. Those results describe recoverable multi-resource
+work, not an ordinary create guarantee. Every actual entry and physical phase owns its stated admission;
+no blanket Application recheck or ordinary permission-revocation/commit lock follows from this protocol.
+
 ## Context and decision boundary
 
 [WF-008](../../planning/wayfinder/tickets/WF-008-establish-repository-identity-and-registration-boundaries.md)
@@ -39,10 +59,10 @@ must also wait for that capability and qualify the host-specific filesystem guar
 ### 1. Identity and aggregate ownership
 
 All five identities are distinct Agent-OS-owned readonly types extending Fight Common `UniqueId`:
-`WorkspaceId`, `RepositoryId`, `HostId`, `CheckoutId`, and `WorktreeId`. Normal creation calls the owning typed
-`generate()` factory internally; that factory uses `Uuid::comb()`. PostgreSQL UUID primary keys enforce uniqueness.
-COMB improves locality; it is not an ordering, secrecy, authorization or collision-impossibility guarantee.
-Normal callers never choose these IDs. Preserved-ID imports and exceptional manual references require separately
+`WorkspaceId`, `RepositoryId`, `HostId`, `CheckoutId`, and `WorktreeId`. The creation entry adapter calls the owning typed
+`generate()` factory, backed by `Uuid::comb()`, and passes the ID in a void command; the aggregate accepts it.
+PostgreSQL UUID primary keys enforce uniqueness. COMB improves locality; it is not ordering, secrecy,
+authorization or a collision-impossibility guarantee. Arbitrary untrusted client IDs are not accepted. Preserved-ID imports and exceptional manual references require separately
 validated paths, not a relaxed normal-create endpoint.
 
 | Aggregate/root | Owned state and invariant |
@@ -59,21 +79,26 @@ Application transaction and database constraints. Planning and Execution referen
 recreate its aggregate or use a remote/path foreign key. Access Control retains User/Agent identity, Roles and
 Permissions. No Access Control command/entity alias is introduced.
 
-An explicit installation bootstrap transaction in TASK-00078 creates the one initial Workspace, its audit
-record and original result. A uniquely constrained installation bootstrap slot prevents two winners. Retry reads
-the same committed Workspace ID; startup/query failure never creates another Workspace. Explicit initial local
-Host enrollment remains TASK-00079, with its own atomic state, audit and original result and idempotent retries.
-This is not Runner enrollment, a browser auto-registration flow or a multi-workspace access model.
+An explicit installation bootstrap handler creates the one initial Workspace and required audit atomically.
+The uniquely constrained installation bootstrap slot still prevents two winners; startup/query failure never
+creates another Workspace. Initial local Host enrollment remains a separate explicit operation. For these
+ordinary database creates and Project registration, a repeated attempt may conflict on uniqueness; a fresh
+authorized query reveals the existing identity. An immutable original response/result journal is not required.
+This is not Runner enrollment, browser auto-registration or a multi-workspace access model. TASK-00574/00575
+own correction of current bootstrap/registration source; TASK-00078's old retry behavior is not changed by prose.
 
 **Approved amendment, 2026-10-20:** During TASK-00078 intake John replied exactly **“approved”** to the
 coordinator's proposal to preserve Workspace bootstrap in TASK-00078 and explicit Host enrollment in TASK-00079.
 [ADR 0005 records the exact question](../../planning/adr/0005-repository-identity-and-link-consistency.md#approved-bootstrap-amendment--task-00078).
 This replaces only the original joint-bootstrap requirement; original acceptance history and every other source,
-authority, uniqueness, transaction, recovery and per-operation atomicity/idempotency guarantee remain intact.
+authority, uniqueness, transaction and physical recovery guarantees remained intact at that approval.
+EPIC-00023's amendment above now replaces the ordinary-create original-result/idempotency requirement,
+not the approved bootstrap split or separately required audit and physical operation recovery.
 No Host/Checkout/Worktree persistence or physical observation/linking, Planning or Execution effect is added.
 
 Use authoritative **current state**, independent monotonic expected revisions for the fields being changed,
-append-only owned audit and immutable operation results. Owned events such as `RepositoryRegistered`,
+append-only owned audit and, for justified physical recovery, immutable operation results. Ordinary creates
+have no original-result journal obligation. Owned events such as `RepositoryRegistered`,
 `RepositorySourceChanged`, `CheckoutLinked`, `WorktreeLinked`, `CheckoutRelinked`, `WorktreeDesignated`,
 `RepositoryArchived` and `RepositoryRestored` describe committed facts, not previews or filesystem observations.
 A pending link intent is not `CheckoutLinked`. Post-commit in-process dispatch may be lost; it is not recovery
@@ -83,14 +108,17 @@ The inspected package audit model only accepts User/Agent subjects and a closed 
 smuggle Repository IDs into that model. Workspace owns its typed Repository/Host/Checkout/Worktree audit records
 on the same connection. They contain verified actor type/ID, action, target typed IDs, operation ID, predecessor/
 result revisions, server time and bounded reason/result codes. Recovery records both the initiating human and
-trusted recovery executor. State, required audit and operation result commit or roll back together.
+trusted recovery executor. The registered owning handler coordinates state and required audit atomically;
+physical operations also persist their required operation result. Repositories do not orchestrate admission,
+response or recovery, and a combined Store/UoW or callback-result audit decorator is not the target design.
 
 ### 2. PostgreSQL consistency and competing writers
 
-Use the existing container-scoped EntityManager and its exact DBAL Connection, with Fight Common
-`DoctrineTransactionalUnitOfWork::commitTransactional()` as the sole business transaction authority. No nested
-transaction, second write connection, independent repository flush, reflection hydration or request-time schema
-change is permitted. Use explicit supported reconstitution and targeted DBAL comparisons/locks where needed.
+The registered CommandHandler uses generic Fight Common `TransactionalUnitOfWork` as the sole business
+transaction authority. Qualified Doctrine and DBAL-only implementations are alternatives according to actual
+persistence needs; the existing Doctrine implementation remains usable, not mandated for every future operation.
+All participating persistence/audit/intent uses the exact owning connection. No nested transaction, second write
+connection, independent repository flush, reflection hydration or request-time schema change is permitted. Use explicit supported reconstitution and targeted DBAL comparisons/locks where needed.
 All new schema is introduced through Doctrine Migrations in the later implementation TASKs.
 
 | Invariant | Authoritative boundary and race outcome |
@@ -100,7 +128,7 @@ All new schema is introduced through Doctrine Migrations in the later implementa
 | Relationship integrity | Typed UUID primary keys and foreign keys, including same-Workspace/Repository/Host relationship constraints. No source claim or Worktree designation can reference another Repository accidentally |
 | Physical link reservation | Unique active or pending claim on `(host_id, canonical_common_directory)` and separately on `(host_id, canonical_worktree_path)`. Observed filesystem identity is an additional conflict signal, never the primary key |
 | Designation | One nullable designated Worktree reference per Repository. The target must be a linked Worktree of that Repository; unavailable targets remain visible but cannot serve filesystem operations |
-| Idempotency | Unique `(workspace_id, verified_actor_type, actor_id, command_kind, idempotency_key)` plus immutable canonical request digest and original typed result. Reusing a key for different intent is a conflict |
+| Physical-operation idempotency | For justified link/relink/reconciliation only: unique `(workspace_id, verified_actor_type, actor_id, command_kind, idempotency_key)`, immutable canonical request digest and original typed result; changed intent conflicts. Ordinary database creation has no original-response/replay obligation |
 | Revision | Conditional writes compare the complete relevant expected state, lifecycle and exact expected revisions, then increment the owned revisions. No last-write-wins or blind retry against new state |
 
 Claim keys use canonical bytes, not a lossy hash alone. A digest may index observations but must not substitute
@@ -114,13 +142,16 @@ intentionally favors a simple bounded installation over maximum write throughput
 including source change, designation and archive/restore, participates; a query's precheck is not a fence.
 Unique constraints remain the final race authority. No database transaction or transaction advisory lock is held
 across Git reads/writes, waiting for confirmation or host I/O. Separate recovery phases use the same canonical
-transaction capability, never a nested transaction. Admission and finalization integrate the current Access Control
-reference/authority fences for their actor and Permissions on that connection; a concurrent revocation must
-serialize before the protected write or after its commit, not slip between an unchecked permission read and mutation.
+transaction capability, never a nested transaction. Entry adapters establish trusted actor, operation permission
+and target/scope admission. Remove the former requirement to serialize ordinary Permission revocation with commit
+or repeat a blanket Application/bus gate: admitted ordinary requests may finish; later requests recheck afresh.
+Retain reference/relationship and expected-state fences for actual business consistency. Physical link phases
+still require current admission and bound confirmation as specified in sections 5–7; no ordinary authorization
+race lock is implied.
 
 Two registrations for the same source or slug yield one winner and one safe conflict, not two IDs returned as
-success. A source change atomically replaces the claim set, revision, audit and original result; a conflict rolls
-back the whole change, retaining the old set. Host/Repository retirement or other conflicting mutations cannot
+success. A source change atomically replaces the claim set, revision and required audit; ordinary metadata
+operations need no immutable original-response record. A conflict rolls back the whole change, retaining the old set. Host/Repository retirement or other conflicting mutations cannot
 pass a pending physical-link reservation.
 
 ### 3. Closed source descriptors and equivalence
@@ -191,6 +222,12 @@ object identity before each write; symlink substitution, root revision/mount dri
 fails closed. HTTP Actions only map input; the approved-root Adapter and Application link use case own this work.
 
 ### 5. Preview, confirmation and original results
+
+This section's original results and same-operation retries apply to recoverable physical linking, not ordinary
+registration/bootstrap/Host creates. Entry adapters own phase authentication, operation permission and target/scope
+admission; Application handlers coordinate the admitted business operation and physical evidence, not a second
+blanket permission gate. Exact confirmation, fresh phase admission and writer exclusion remain required even
+though ordinary permission revocation is not serialized through commit.
 
 Preview is read-only and secret-safe. Persist a bounded expiring confirmation proposal only as an explicit
 application preparation operation, never as a query side effect. The server binds its opaque confirmation

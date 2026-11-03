@@ -4,6 +4,12 @@ Ordinary invitation uses two independent package business steps and a narrowly t
 TASK-00446 simplifies their composition and Application sequencing; its fresh independent Review/QA are separate
 from historical TASK-00037/00038 acceptance. No public HTTP or browser role-administration surface is introduced.
 
+The procedures below describe current source. The approved
+[architecture contract](STANDARDS.md#architecture) places admission in entry adapters and coordination in
+registered handlers; TASK-00576 owns that cutover. Existing `ConsoleUserOperation` and
+`AuthenticatedRoleAssignment` below are not target templates. Keep their checks and partial-result/audit limits
+until verified replacement; this documentation grants no untrusted raw-bus access or additional atomicity.
+
 ## Prepare the intended installation
 
 Restrict shell, checkout, Docker and database access to trusted operators. `--internal` acknowledges that trust
@@ -160,8 +166,18 @@ suppresses PHP engine display/logging and interactive suggestions. Docker can re
 PHP: never capture verbose private configuration. Normal package `CommandFailedEvent` remains private diagnostic
 material; no operator-facing logging subscriber is registered, and one must not be added without sanitization.
 
-The unchanged lock is Access Control **v0.5.0** (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`), Common **v1.3.0**
-(`7de6cad6e8a9752973ad9f8e27e285b0c1510582`) and Symfony Console **v8.1.6**. No package/upstream/ADR edit is required.
+The selected `composer.lock` records Access Control **v0.8.0**
+(`319738255e682d587642b67856039f882b9588d6`), Common **v1.3.0**
+(`7de6cad6e8a9752973ad9f8e27e285b0c1510582`) and Symfony Console **v8.1.6**. TASK-00564 changes no dependency
+and does not establish fresh v0.8.0 Console qualification.
+
+### Historical TASK-00446 qualification — 2026-10-15
+
+TASK-00446's qualification used Access Control **v0.5.0** (`46ffcf75f1e14dbc5b58a5049e05a600ce5cf8a0`),
+Common **v1.3.0** (`7de6cad6e8a9752973ad9f8e27e285b0c1510582`) and Symfony Console **v8.1.6**.
+The test description and linked TASK-00446 evidence below describe that historical checkpoint, not fresh Console
+qualification against the selected lock.
+
 Unit tests protect input, policy, package effects, uncertainty and rendering. PostgreSQL integration tests exercise
 real package commits/rollback, early provider timing, retained invitations, assignment/audit failures, postcommit
 inspection, correction/repeats, ordinary/custom roles, current drift/stale references and dispatch failures/vetoes.
@@ -171,7 +187,7 @@ assertions, not silently removed. Owning tools validate wiring/source paths dire
 
 Serialize `./bin/database test-reset` then `./bin/phpunit --filter OrdinaryInvitation` for focused PostgreSQL work.
 `./bin/backend-tests` measures backend coverage; `./bin/build` remains the mandatory full local gate. Fresh-process
-recovery history belongs to [TASK-00037](../../planning/tasks/00037-TASK.md); current refactor evidence and
+recovery history belongs to [TASK-00037](../../planning/tasks/00037-TASK.md); TASK-00446 refactor evidence and
 counts/warnings belong to [TASK-00446](../../planning/tasks/00446-TASK.md). No real-inbox delivery,
 scheduler, production certification, crash-kill testing, hosted CI, independent acceptance or publication follows
 from an Engineer gate. Fresh independent Review and affected behavioral QA remain required; visual screenshots

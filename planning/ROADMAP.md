@@ -69,6 +69,11 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**TASK-00564 acceptance checkpoint:** Independent Review ACCEPT and nonvisual QA PASS cover candidate
+`c160a31ba985978633c904e8493c091c8a35d785`. Publication and final delivery checks were pending at this checkpoint;
+current results are in canonical ignored `.runs/tasks/TASK-00564/runs/land.md` and the TASK PR. Other EPIC slices
+remain separate. The approved-planning narrative below records its original checkpoint, not current TASK status.
+
 **Approved architecture correction — EPIC-00023:** [the owning EPIC](epics/00023-EPIC.md#progress) records the
 approved whole-PHP-application correction and all-unfinished-plan reconciliation. Grill and the full six-TICKET
 split are complete: [TICKET-00131](tickets/00131-TICKET.md) through [TICKET-00136](tickets/00136-TICKET.md) own guidance,

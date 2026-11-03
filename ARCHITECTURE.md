@@ -4,6 +4,24 @@ Fight Agent OS is an open-source software factory: software for planning, buildi
 software. Its browser and Pi surfaces serve engineering workflows, not a general-purpose personal AI operating
 system or an Internet homepage. It starts with the Slim composition from `johnnickell/project-slim`.
 
+## Contract and implementation status
+
+[Engineering standards](docs/engineering/STANDARDS.md#architecture) own the shared normative contract approved
+in [EPIC-00023](planning/epics/00023-EPIC.md). ADR 0001/0002/0005, WF-008 and the binding link note retain rationale,
+history and explicit amendments. Follow that contract for new/revised PHP work and assessments, not source shape
+as an alternative rule. The approved target is aggregate-first Project-owned CQRS with registered coordinating
+handlers, collection-like repositories, adapter-owned admission and presentation, generic transactions with
+required audit, and deliberate application cutovers that preserve needed data. This is direction, not a claim
+that the existing PHP inventory already conforms.
+
+Current registration still uses Repository names, internal creation IDs, original-result replay and Application
+authority fences. The Role audit transaction decorator still exists; Common failures/safe HTTP and DBAL-only
+transactions need actual supplier/consumer qualification. [Ownership guidance](docs/engineering/OWNERSHIP.md)
+records those source facts and scoped correction owners. No runtime command, route, permission, table or marker
+is renamed by this documentation change. Unfinished individual plans remain TICKET-00132's separate portfolio.
+
+## Implementation inventory and historical checkpoints
+
 For TASK-00059, [the authoritative TASK](planning/tasks/00059-TASK.md) records current acceptance provenance and
 merged/integrated PR #172. Its pending-merge wording below remains a historical implementation checkpoint, not
 a current human merge action. Other capability states are unchanged.
@@ -54,9 +72,10 @@ a current human merge action. Other capability states are unchanged.
   and qualified process isolation remain separate
 
 Fight Common and Fight Access Control remain Composer dependencies. The inherited `App` namespace and
-hello-world HTTP behavior are preserved for the initial scaffold. Framework migration is a future decision. The
-accepted package boundary and its focused automated checks are summarized in
-[application ownership enforcement](docs/engineering/OWNERSHIP.md).
+hello-world HTTP behavior remain in the scaffold. Framework migration needs an observed use case. The
+package boundary, historical proof and current executable-check limits are summarized in
+[application ownership enforcement](docs/engineering/OWNERSHIP.md); a passing checker is not whole-source
+conformity with the approved target.
 
 The proposed web application owns planning and workflow records; Pi performs assigned agent work. The browser
 will support planning and observation first, and workflow commands as they become well defined. These are

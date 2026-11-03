@@ -34,8 +34,10 @@ Use [planning/tasks/BOARD.md](planning/tasks/BOARD.md) for executable work and
 - In a participating session with `jev_read_file` and its shared rule available, follow
   [selective file reads](harness/pi/FILE_SCREENING_RULE.md). Load mandatory governing/selected-skill instructions
   directly. Native reads need no screening receipt or exception; discovery refusals do not prohibit them
-- Keep PHP business logic in Domain, orchestration in Application, and framework/provider concerns in Adapter
-- Prefer capability-named interfaces without an Interface suffix, injected dependencies, and single-use-case HTTP Actions
+- For PHP implementation, planning or assessment, read the shared [architecture contract](docs/engineering/STANDARDS.md#architecture):
+  aggregate-first ownership, Project vocabulary, registered handlers, adapter admission, typed creation/results,
+  transaction/audit and application breaking-change/data rules. ADRs retain rationale and explicit amendments;
+  current code is not an alternative authority. Qualify suppliers and keep target versus implementation distinct
 - For console entry points, bus pipelines and shared container services, follow [shared services and dispatch](docs/engineering/STANDARDS.md#shared-services-and-bus-dispatch)
 - Use final classes and readonly properties by default, with Doctrine entity exceptions; readonly value objects
 - Use multiline docblocks, capitalized active-verb summaries without periods, and inheritDoc for inherited behavior

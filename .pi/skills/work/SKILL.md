@@ -21,7 +21,11 @@ target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_S
    evidence, not permanent source copies; source/Git holds cannot suppress explicit Docker teardown. Use the
    shared guarded Worktrunk remover for owned fixtures too: the exact repository down hook runs unattended
    after effective-hook inspection, without persistent approval. Unknown/user/changed hooks retain source only.
-4. Implement only accepted behavior. Reproduce confirmed bugs with a failing owning regression before repair.
+4. Implement only accepted behavior. For Agent OS PHP work, apply the shared
+   [architecture contract](../../../docs/engineering/STANDARDS.md#architecture) and explicit ADR amendments,
+   distinguishing approved target, current source and qualified supplier capabilities. Do not copy a conflicting
+   source pattern or silently weaken policy; name the scoped correction/supplier owner when blocked.
+   Reproduce confirmed bugs with a failing owning regression before repair.
    Test owned product behavior; qualify infrastructure with its own tools, not application tests of tooling.
    Use [quality guidance](../../../docs/engineering/QUALITY.md) as needed and
    [Writing for Agents](../writing-for-agents/SKILL.md) for instruction changes. Keep affected current docs accurate.

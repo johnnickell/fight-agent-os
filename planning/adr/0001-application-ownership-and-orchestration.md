@@ -5,6 +5,42 @@
 - **Decision owners:** Fight Agent OS maintainers
 - **Acceptance:** Explicitly accepted by the human maintainer under TASK-00009 on 2026-09-23
 
+## EPIC-00023 architecture amendment — TASK-00564
+
+John's approved [EPIC-00023](../epics/00023-EPIC.md) changes the following requirements of this ADR.
+[Engineering standards](../../docs/engineering/STANDARDS.md#architecture) own the current shared contract;
+this amendment records which earlier decisions changed, not implementation acceptance.
+
+- **Ownership/names:** use aggregate-first Domain and matching Application homes, collection-like repositories,
+  registered coordinating handlers and capability-first adapters. Project replaces the business Repository term;
+  canonical Fight contracts remain direct, without forwarding aliases. Application may use supported PSR contracts.
+- **Admission:** every entry adapter owns authentication, operation permission and target/scope admission before
+  trusted bus dispatch. The original exclusion of permission decisions from Actions, and any blanket second
+  Application/bus authentication/permission gate, are superseded across entries, not only safe reads/invitations.
+  Keep genuine Domain/package invariants and reusable business policy with their owner. Ordinary admitted requests
+  may finish after concurrent revocation; do not serialize that race through commit. Real business locks remain.
+- **Coordination/transactions:** registered CommandHandlers coordinate aggregates, repositories and required audit
+  through canonical generic `TransactionalUnitOfWork` on one shared connection. No combined Store/UoW, audit-by-
+  callback-result decorator or repository interception substitutes for explicit coordination. Qualified Doctrine
+  and DBAL implementations are alternatives, not two authorities or a requirement to replace ORM. Success events
+  remain after commit; external-effect recovery and post-commit uncertainty remain explicit.
+- **Creation/results:** entry adapters generate typed creation IDs in void commands. Ordinary lost responses use
+  uniqueness and fresh authorized queries, not immutable original-result journals. Required audit and separately
+  justified filesystem/Git/publication recovery are not removed.
+- **Dispatch exception/failures:** ordinary messages use configured buses. Preserve public synchronous,
+  non-serializable sensitive-input operations; never put raw passwords/tokens in messages for uniformity.
+  Safe typed Views, direct qualified Common failures and one safe reporting owner follow standards; Domain
+  exceptions stay Domain-owned and transports retain deliberate mappings. This is not today's error-format cutover.
+- **Compatibility:** Agent OS may deliberately break application contracts at any stage, updating owned consumers
+  and removing superseded paths after verification. Preserve/migrate needed durable data or obtain explicit disposal
+  authority. Upstream packages keep their own compatibility obligations.
+
+The original acceptance, scoped TASK-00118/TASK-00060 decisions, package ownership, non-disclosure and genuine
+business/external-effect guarantees remain recorded below. Their original text is historical wherever the exact
+requirements above supersede it. In particular, neither the original HTTP prohibition nor scoped-only admission
+exceptions restrict the new all-entry rule. Current source and unavailable supplier APIs remain correction/
+qualification work under TICKET-00133 through TICKET-00136; prose does not prove conformity.
+
 ## TASK-00060 invitation admission amendment — 2026-11-03
 
 The maintainer explicitly separated mutation from reading and rejected redundant admission/forwarding in this
@@ -82,6 +118,9 @@ source and dependency conventions accepted by [WF-001](../wayfinder/tickets/WF-0
 and [WF-003](../wayfinder/tickets/WF-003-qualify-dependency-baseline.md).
 
 ## Decision
+
+Original accepted decision, read with the targeted EPIC-00023 amendment above. Historical installed-version
+observations and compatibility bindings below are not current dependency-selection instructions.
 
 ### Package and application ownership
 

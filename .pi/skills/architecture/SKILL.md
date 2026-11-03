@@ -9,8 +9,10 @@ For discovery in a participating `jev_read_file` session, follow the shared
 [selective-read rule](../../../harness/pi/FILE_SCREENING_RULE.md); native reads need no screening receipt or exception, including mandatory instructions and exact targets.
 
 Start with the question, affected use cases, maintainer's constraints and inspected revision. Read applicable
-accepted ADRs, especially [ADR 0001](../../../planning/adr/0001-application-ownership-and-orchestration.md), and
-[engineering standards](../../../docs/engineering/STANDARDS.md). Scope missing information before expanding a scan.
+[engineering standards](../../../docs/engineering/STANDARDS.md#architecture) as Agent OS's shared normative
+contract, and applicable ADRs with their explicit amendments, especially
+[ADR 0001](../../../planning/adr/0001-application-ownership-and-orchestration.md). Distinguish approved target,
+current source and qualified supplier APIs; source disagreement is not policy. Scope gaps before expanding a scan.
 This is design exploration; cross-module compliance belongs to [audit](../audit/SKILL.md), and independent TASK
 acceptance belongs to [review](../review/SKILL.md).
 
@@ -37,15 +39,18 @@ Compare proportionate options, including retaining the current design when warra
 caller relationships, interface/ownership changes, benefits, tradeoffs, migration/test impact and uncertainty.
 For interface changes, show a concrete before/after caller example and explain which complexity becomes internal
 and which domain choices, failures and effects remain explicit. Challenge an existing large interface rather than
-carrying it forward by default; identify affected consumers and a compatible transition or a proposed breaking
-change for the decision owner. Reject a simpler-looking facade that merely moves complexity into flags/options,
+carrying it forward by default; identify affected consumers and a deliberate cutover for the decision owner.
+Apply [application compatibility/data rules](../../../docs/engineering/STANDARDS.md#application-compatibility-and-data):
+Agent OS has no standing compatibility-layer obligation, while needed data and upstream package obligations
+remain. Reject a simpler-looking facade that merely moves complexity into flags/options,
 crosses ownership boundaries, or adds a prohibited wrapper around an existing package use case.
 A small diagram helps when relationships are the issue; no HTML artifact or visual scaffold is mandatory.
 Do not combine similar-looking code unless it represents the same knowledge and changes for the same reason.
 
 Use the shared [quality checks](../../../docs/engineering/QUALITY.md) when test fragility, duplication, types or
 guidance drift bears on the question. Identify the observable contracts and independently justified expectations
-that would verify each option, preserving required side-effect ordering and compatibility. Explain affected
+that would verify each option, preserving required side-effect ordering and actual package/data obligations,
+without reinstating superseded ordinary-create replay or blanket Application admission. Explain affected
 instruction boundaries and README/CHANGELOG implications; distinguish descriptive drift from a violated policy.
 These are design and verification proposals, not permission to delete tests, refactor, or synchronize documents.
 Apply the [human-facing prose guidance](../../../docs/engineering/QUALITY.md#human-facing-documentation) to the
