@@ -100,7 +100,7 @@ and distinguish fresh from qualified reused evidence, implementation acceptance,
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00560](../tasks/00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | ready-for-agent |
+| [TASK-00560](../tasks/00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | needs-info |
 | [TASK-00561](../tasks/00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent |
 | [TASK-00562](../tasks/00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | ready-for-agent |
 | [TASK-00563](../tasks/00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | ready-for-agent |

@@ -36,6 +36,40 @@ OS isolation. Fight extensions initialize their own session-local state; absent 
 Do not claim all parent protections automatically propagate: the opt-in deterministic tool policy refuses Agent
 at the parent tool boundary, so delegation under that selected policy is unavailable rather than a bypass.
 
+## Build Engineer prerequisite — TASK-00560 held
+
+TASK-00560's 2026-11-03 private qualification used Pi `1.5.0` and upstream `0.23.0`
+(source `a60247c47f8b0a17bfe7208f9e248e464eda05f0`). These are tested identities, not Pi version gates
+or adoption of a new everyday companion. The real Build Engineer route is **not implemented**. Keep the existing
+Build process stages; do not select a subordinate Agent as an independent stage or silently replace an executor.
+
+Two upstream capabilities are missing:
+
+- **Trusted initialization before extension binding.** The supported RPC/manager `spawn` surface overwrites a
+  caller's `onSessionCreated`. Internally `runAgent` calls it only after `session.bindExtensions()`, too late for
+  Fight's `session_start` workflow admission. `onSpawned` supplies a record ID, not the actual SDK session.
+- **Verified native-root association for programmatic spawn.** `spawnTopLevel` strips `rootSessionId` without
+  deriving it from the bound parent context. A persisted session's `parentSession` header does not supply the
+  missing manager-record association or grant Build stage authority. Existing rootless refusal stays intact.
+
+The prerequisite owner is `@tintinweb/pi-subagents`: its supported host spawn boundary needs to derive the root
+from the actual bound parent and offer an awaited, session-specific trusted setup boundary before child extension
+initialization/prompting. Setup rejection must settle without executing the assignment, including queued starts
+and cancellation. Fight can then bind the actual session to the authorized stage/TASK/checkout/attempt/effects
+and verify exact model/thinking before execution. No existing hook name is claimed, and no upstream contribution
+or publication is authorized by this qualification. Pi's direct SDK supports host-controlled resource loading;
+replacing upstream execution with another session engine is not this TASK's accepted route.
+
+A real private installed/native TUI probe created **one pre-aborted qualification session**, not an Engineer
+assignment. It retained the exact model/thinking and checkout, but had no root association, zero caller
+`onSessionCreated` calls, zero messages/provider requests and no assigned TASK. Fight truthfully restored it as
+Reviewer and its passive reader emitted zero frames with `root-association-unavailable`. This is bounded failure
+evidence, not the required Engineer/Herdr/Review journey. Canonical TASK-00560 Work evidence records the exact
+session identities and limits. Do not poll/rename records, infer authority from profiles/prompts or mutate shared
+`process.env` to bypass this hold. Resume implementation only after the supported upstream capabilities are
+available and deliberately qualified in a private installation at a safe session boundary; never reload the
+active parent or change global settings/trust as an implicit effect.
+
 ## Supported observation boundary
 
 The bridge uses upstream lifecycle events and its documented
