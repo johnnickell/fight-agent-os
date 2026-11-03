@@ -566,4 +566,23 @@
 | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
+| [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | ready-for-agent | [TICKET-00131](../tickets/00131-TICKET.md) |
+| [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | needs-info | [TICKET-00133](../tickets/00133-TICKET.md) |
+| [TASK-00573](00573-TASK.md) | Replace Role audit inference with explicit package-handler audit | needs-info | [TICKET-00133](../tickets/00133-TICKET.md) |
+| [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | ready-for-agent | [TICKET-00134](../tickets/00134-TICKET.md) |
+| [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | ready-for-agent | [TICKET-00134](../tickets/00134-TICKET.md) |
+| [TASK-00576](00576-TASK.md) | Correct trusted Console invitation assignment and bootstrap | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00577](00577-TASK.md) | Correct HTTP invitation issuance status and recovery | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00578](00578-TASK.md) | Correct directory authority catalogs and existing Role administration | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00579](00579-TASK.md) | Correct authentication session and CSRF ownership | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
+| [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | ready-for-agent | [TICKET-00136](../tickets/00136-TICKET.md) |
 <!-- /planning:records -->

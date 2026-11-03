@@ -69,6 +69,33 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**Approved architecture correction — EPIC-00023:** [the owning EPIC](epics/00023-EPIC.md#progress) records the
+approved whole-PHP-application correction and all-unfinished-plan reconciliation. Grill and the full six-TICKET
+split are complete: [TICKET-00131](tickets/00131-TICKET.md) through [TICKET-00136](tickets/00136-TICKET.md) own guidance,
+portfolio plans, canonical transaction/audit adoption, Project CQRS, remaining identity/security/delivery and shared
+safe errors. TICKET-00131's single-TASK decomposition is approved and written as [TASK-00564](tasks/00564-TASK.md),
+with no blockers and explicitly approved `order: 1` ahead of currently ready PHP feature work. TICKET-00132's
+seven-area decomposition is approved and written as [TASK-00565](tasks/00565-TASK.md) through
+[TASK-00571](tasks/00571-TASK.md), orders `2`–`8`: six independent area corrections after TASK-00564, then actual
+operations/architecture correction with final combined coverage after those six. The owning TICKET records area
+coverage. TICKET-00133's two integration TASKs are approved/written as [TASK-00572](tasks/00572-TASK.md) (Common DBAL,
+order `9`) and [TASK-00573](tasks/00573-TASK.md) (explicit Role audit, order `10`), both `needs-info` for their separate
+external capabilities and locally dependent only on TASK-00564, not one another. TICKET-00134's two cutovers are
+approved/written as [TASK-00574](tasks/00574-TASK.md) (Workspace/bootstrap/reference ownership, order `11`, after
+TASK-00564) and [TASK-00575](tasks/00575-TASK.md) (Project creation/inspection, order `12`, after TASK-00574), with no
+blanket DBAL/Role-audit or portfolio gate. TICKET-00135's six corrections are approved/written as
+[TASK-00576](tasks/00576-TASK.md) through [TASK-00581](tasks/00581-TASK.md), orders `13`–`18`: Console, HTTP invitations,
+directory/catalog/Role operations, authentication/sessions/CSRF, activation/passwords and credential recovery/mail.
+All are `needs-info` for their own precise supplier capabilities and depend locally on TASK-00564; TASK-00577 also
+consumes TASK-00576's policy. TICKET-00136's single end-to-end safe-error cutover is approved/written as
+[TASK-00582](tasks/00582-TASK.md), order `19`, ready-for-agent behind TASK-00564 only, owning dependency qualification,
+HTTP/Console failure presentation, affected clients and removal together. Grill, all six TICKETs and their nineteen
+TASKs are now fully planned; no decomposition remains for this EPIC. Other TASK priorities remain unchanged.
+Next: `/skill:next` for read-only current Board selection, not automatic implementation. Explicit checkout/worktree
+choice and separate Work invocation are still required. This is accepted planning, not executed refactoring,
+qualified supplier adoption or completed acceptance. Missing upstream capabilities hold affected adoption only;
+the EPIC owns precise amendments, exclusions and the completed-planning handoff.
+
 **Approved local Build/Herdr follow-on — 2026-11-02:** [TICKET-00130](tickets/00130-TICKET.md) requirements and
 TASK decomposition are approved: [TASK-00560](tasks/00560-TASK.md) delivers upstream Engineer execution;
 [TASK-00561](tasks/00561-TASK.md) completes independent stage cutover and launcher retirement after TASK-00560;
@@ -350,6 +377,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00020](epics/00020-EPIC.md) | Keep delivery handoffs synchronized through Land | land-owned-delivery-handoff-synchronization | done |
 | [EPIC-00021](epics/00021-EPIC.md) | Deploy and recover private Fight Agent OS in staging and production | first-private-production | ready-for-agent |
 | [EPIC-00022](epics/00022-EPIC.md) | Make feature architecture reviewable with Python diagrams | feature-architecture-review | ready-for-agent |
+| [EPIC-00023](epics/00023-EPIC.md) | Adopt canonical Fight contracts and refactor Agent OS around Project-owned CQRS | maintainable-project-owned-cqrs | ready-for-agent |
 <!-- /planning:epics -->
 
 ## Planning Frontier
