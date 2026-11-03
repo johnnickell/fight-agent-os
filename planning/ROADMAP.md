@@ -74,8 +74,10 @@ TASK decomposition are approved: [TASK-00560](tasks/00560-TASK.md) delivers upst
 [TASK-00561](tasks/00561-TASK.md) completes independent stage cutover and launcher retirement after TASK-00560;
 [TASK-00562](tasks/00562-TASK.md) delivers AGENTS browsing/simple pane names; [TASK-00563](tasks/00563-TASK.md)
 delivers stack-wide LOGS with Main/Follow and service filters. TASK-00560/00562/00563 wait for accepted/integrated
-TASK-00544 and TASK-00554. John reports TASK-00544 running independently; its own checkout/owner retains status
-and repair authority. No installation or implementation starts from this planning handoff. New TASKs are unranked,
+TASK-00544 and TASK-00554. TASK-00544 has independent Review ACCEPT and bounded QA PASS on its accepted
+candidate; publication and cleanup are pending at this checkpoint, with current results in
+`.runs/build/TASK-00544/20261102-build-01/land-01/result.md` and [PR #202](https://github.com/johnnickell/fight-agent-os/pull/202).
+No installation or implementation starts from this planning handoff. New TASKs are unranked,
 existing Board priority is unchanged, and no unrelated map phase is marked complete. Execution selection remains
 with the Board after prerequisites are satisfied.
 

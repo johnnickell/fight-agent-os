@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { RegisteredChildren } from '../src/workspace/registered-children.mjs';
 import { directory, sessionFileIdentity } from '../src/observation/custody.mjs';
 import { recycledInode } from './helpers/session-file.mjs';
+import { retainChild } from '../src/observation/custodian.mjs';
 
 function fixture(t, preferences = false) {
   const cwd = realpathSync(mkdtempSync(join(tmpdir(), 'registered-'))), other = join(cwd, 'other'); mkdirSync(other);
@@ -30,6 +31,22 @@ test('only actual-session matching launch custody admits a canonical worktree; l
   await f.observe.sessionChanged(randomUUID(), f.file); await f.observe.refresh();
   assert.equal(f.observe.sources.size, 0); assert.equal(f.observe.pin, null); assert.equal(f.observe.verifiedWorktree, null);
 });
+test('sequential monitor retirement keeps following new attempts, failed completion and idle primary without reopening', async t => {
+  const f = fixture(t), children = new Map(); f.set([]); await f.observe.start(f.parent, f.file);
+  for (let order = 1; order <= 12; order++) {
+    const next = f.child({ started: order * 1000, order, identity: { ...f.child().identity, attempt: `/owned/attempt-${order}` } });
+    retainChild(children, next, [f.observe.selected, f.observe.pin]);
+    f.set([...children.values()]); await f.observe.refresh();
+    assert.equal(f.observe.sources.get(f.observe.selected).id, next.id);
+    assert.equal(f.observe.verifiedWorktree, f.other); assert.ok(f.observe.sources.size <= 8);
+    next.state = 'disconnected'; next.sequence++;
+    next.lifecycle = order === 3 ? 'failed' : 'completed'; next.exitCode = order === 3 ? 3 : 0;
+    f.set([...children.values()]); await f.observe.refresh();
+    assert.equal(f.observe.selected, null); assert.equal(f.observe.verifiedWorktree, null);
+    assert.match(f.observe.view(), /IDLE/);
+  }
+});
+
 test('loss at the bounded monitor pipe remains visibly distinct from retained-history eviction', async t => {
   const f = fixture(t); f.set([{ ...f.values()[0], sequence: 5, gaps: 3, omitted: 0 }]);
   await f.observe.start(f.parent, f.file); assert.match(f.observe.view(), /gaps 3/); assert.match(f.observe.view(), /omitted 0/);

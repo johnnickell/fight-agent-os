@@ -12,7 +12,7 @@ import { NativeWorkspaceContext, serveLocal } from '../src/herdr/context.mjs';
 import { RuntimeLogs } from '../src/workspace/runtime-logs.mjs';
 
 const turn = () => new Promise(done => setImmediate(done));
-async function fixture(t, { multiple = false, shared = false } = {}) {
+async function fixture(t, { multiple = false, shared = false, discovery = false } = {}) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'herdr-logs-')));
   const a = join(root, 'a'), b = join(root, 'b'), missing = join(root, 'missing');
   for (const directory of [a, b, missing]) mkdirSync(directory);
@@ -25,12 +25,19 @@ async function fixture(t, { multiple = false, shared = false } = {}) {
     return { ...value, at: Date.now() };
   });
   const source = (main, project) => ({ main, context: 'local', project, service: 'web' });
-  native.logs = { tests: [source(a, 'test-a'), source(b, 'test-b'), ...(multiple ? [source(a, 'alternate')] : [])], shared: shared ? source(a, 'shared') : null,
+  native.logs = { discovery, tests: [source(a, 'test-a'), source(b, 'test-b'), ...(multiple ? [source(a, 'alternate')] : [])], shared: shared ? source(a, 'shared') : null,
     companion: { port: endpoint.port, token } };
   const config = await readLogConfiguration(binding), calls = [], streams = [], rows = new Map();
-  config.tests.forEach((item, index) => rows.set(item.project, { id: String(index + 1).repeat(64), directory: item.main, service: 'web', state: 'running' }));
+  native.logs.tests.forEach((item, index) => rows.set(item.project, { id: String(index + 1).repeat(64), directory: item.main, service: 'web', state: 'running' }));
   rows.set('shared', { id: 'e'.repeat(64), directory: a, service: 'web', state: 'running' });
-  const logs = new HerdrLogs(binding, config, () => {}, { reader: (source, changed) => new RuntimeLogs(source, changed, { persist: false, pinGeneration: true, spawnProcess: (command, args, options) => {
+  const logs = new HerdrLogs(binding, config, () => {}, { sources: discovery ? {
+    async discover(main) {
+      return { notice: 'verified fixture inventory', choices: native.logs.tests.filter(item => item.main === main).map(item => ({
+        ...item, endpoint: 'unix:///controlled-endpoint.sock', socket: { inode: 1 }, checkout: { root: main },
+        container: rows.get(item.project).id, witness: rows.get(item.project).id, label: item.project,
+      })) };
+    }, async close() {},
+  } : undefined, reader: (source, changed) => new RuntimeLogs(source, changed, { persist: false, pinGeneration: true, spawnProcess: (command, args, options) => {
     calls.push({ command, args, options });
     const child = new EventEmitter(); child.pid = 1000 + calls.length; child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.signals = [];
     child.kill = signal => { child.signals.push(signal); queueMicrotask(() => child.emit('close', null)); };
@@ -308,6 +315,44 @@ test('actual bounded loopback selection drives primary, child, pin and idle with
   assert.equal(f.logs.logs.source.main, f.a); assert.doesNotMatch(f.logs.view(), /B-only|A-private/);
   assert.ok(f.calls.every(c => c.command === 'docker' && c.options.shell === false));
   assert.ok(f.calls.every(c => !c.args.some(arg => ['up', 'restart', 'run', 'exec', 'compose'].includes(arg))));
+});
+
+for (const discovery of [false, true]) test(`healthy Herdr follow has no time cutoff (${discovery ? 'discovery' : 'explicit binding'})`, async t => {
+  const f = await fixture(t, { discovery });
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  try {
+    // Synthetic selection isolates this reader check from native admission. Renew its
+    // independent 1.5-second lease each second, rather than jumping over that guard.
+    f.logs.selection = async () => ({ ...f.native.snapshot(), state: 'idle', worktree: f.a, child: null, at: Date.now() });
+    await f.refresh();
+    const reader = f.logs.logs.current, stream = f.streams[0], count = f.calls.length;
+    for (let minute = 1; minute <= 61; minute++) {
+      for (let second = 0; second < 60; second++) { t.mock.timers.tick(1000); await f.refresh(); }
+      stream.stdout.write(`minute ${minute}\n`);
+      assert.equal(f.logs.invalidated, undefined);
+      assert.equal(f.logs.logs.current, reader); assert.equal(reader.state, 'following');
+      assert.equal(f.streams.length, 1); assert.deepEqual(stream.signals, []);
+      assert.equal(f.calls.length, count, 'healthy follow does not reopen or re-query the reader');
+      assert.equal(reader.history.at(-1), `minute ${minute}`);
+      if (minute === 15) await f.logs.action('pause');
+      if (minute === 16) {
+        assert.match(reader.body(), /minute 15/); assert.doesNotMatch(reader.body(), /minute 16/);
+        await f.logs.action('pause'); assert.match(reader.body(), /minute 16/);
+      }
+    }
+    await f.logs.action('toggle'); assert.deepEqual(stream.signals, ['SIGTERM']);
+    const closedCount = f.calls.length;
+    for (let second = 0; second < 4; second++) { t.mock.timers.tick(1000); await f.refresh(); }
+    assert.equal(f.calls.length, closedCount, 'manual close stays closed');
+    await f.logs.action('toggle'); await turn(); assert.equal(f.streams.length, 2);
+    await f.logs.action('reconnect'); await turn(); assert.equal(f.streams.length, 3);
+    assert.deepEqual(f.streams[1].signals, ['SIGTERM']);
+    f.logs.selection = async () => { throw Error('native parent lost'); };
+    await f.refresh();
+    assert.equal(f.logs.invalidated, true); assert.equal(f.logs.logs.current, null);
+    assert.deepEqual(f.streams[2].signals, ['SIGTERM']);
+    await f.logs.action('reconnect'); assert.equal(f.streams.length, 3, 'lost parent cannot retry');
+  } finally { await f.logs.close(); t.mock.timers.reset(); }
 });
 
 test('ownership health reports only tracked reader PIDs and drops them after reaping', async t => {

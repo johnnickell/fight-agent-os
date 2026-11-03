@@ -510,7 +510,7 @@
 | [TASK-00505](00505-TASK.md) | Preserve the current page through background session renewal | done | — |
 | [TASK-00506](00506-TASK.md) | Compact the application header and standardize navigation controls | done | — |
 | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | ready-for-agent | [TICKET-00110](../tickets/00110-TICKET.md) |
-| [TASK-00508](00508-TASK.md) | Preserve readable prose in agent handoffs | ready-for-human | — |
+| [TASK-00508](00508-TASK.md) | Preserve readable prose in agent handoffs | done | — |
 | [TASK-00509](00509-TASK.md) | Patch repository-owned runtimes and tooling affected by October security advisories | done | — |
 | [TASK-00510](00510-TASK.md) | Keep native Pi usable in an owned Herdr workspace | done | [TICKET-00110](../tickets/00110-TICKET.md) |
 | [TASK-00511](00511-TASK.md) | Observe current-session children beside native Pi in Herdr | done | [TICKET-00110](../tickets/00110-TICKET.md) |
@@ -546,7 +546,7 @@
 | [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | done | — |
 | [TASK-00542](00542-TASK.md) | Retire task-owned disposable Docker storage and qualify active-repository cleanup | done | — |
 | [TASK-00543](00543-TASK.md) | Manage local task resources from preparation through verified cleanup | done | — |
-| [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | ready-for-agent | — |
+| [TASK-00544](00544-TASK.md) | Keep installed workspace child and runtime-log followers attached across sequential Build journeys | done | — |
 | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | done | — |
 | [TASK-00546](00546-TASK.md) | Prevent local Docker disk exhaustion with recoverable-storage cleanup | done | — |
 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | done | — |
