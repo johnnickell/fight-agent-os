@@ -62,7 +62,7 @@
 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | done | [TICKET-00020](../tickets/00020-TICKET.md) |
 | [TASK-00058](00058-TASK.md) | Deliver confirmed revocation of another owned session | done | [TICKET-00020](../tickets/00020-TICKET.md) |
 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | done | [TICKET-00021](../tickets/00021-TICKET.md) |
-| [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | in-progress | [TICKET-00021](../tickets/00021-TICKET.md) |
+| [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | done | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | ready-for-agent | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | ready-for-agent | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | ready-for-agent | [TICKET-00022](../tickets/00022-TICKET.md) |
