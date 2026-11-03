@@ -5,12 +5,22 @@ declare(strict_types=1);
 namespace App\Adapter\Http\Action\Api\V1\Invitations;
 
 use App\Adapter\Http\Attribute\RequiresPermission;
-use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
+use App\Adapter\Http\Responder\Api\V1\Invitations\InvitationMutationResponder;
 use App\Application\Failure\AuthenticationRequired;
-use App\Application\Invitation\RecoverInvitation;
+use App\Application\Failure\InvitationRecoveryUncertain;
+use App\Application\Failure\PermissionDenied;
+use App\Application\Failure\StateConflict;
+use App\Application\Invitation\InvitationRateLimiter;
+use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ResendInvitationDelivery;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationDeliveryNotResendableException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
 use Fight\Common\Application\Validation\Exception\ValidationException;
+use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,15 +32,18 @@ use Throwable;
  *
  * Maps a verified actor and target to atomic invitation replacement
  */
-#[RequiresPermission('READ_USERS')]
 #[RequiresPermission('MANAGE_USER_INVITATIONS')]
 final readonly class ResendInvitationAction
 {
     /**
      * Constructs ResendInvitationAction
      */
-    public function __construct(private RecoverInvitation $recovery, private ReadInvitationStatusResponder $responder)
-    {
+    public function __construct(
+        private CommandBus $commandBus,
+        private UserRepository $userRepository,
+        private InvitationRateLimiter $invitationRateLimiter,
+        private InvitationMutationResponder $responder
+    ) {
     }
 
     /**
@@ -41,13 +54,14 @@ final readonly class ResendInvitationAction
         operationId: 'resendInvitation',
         summary: 'Atomically replace an issued invitation and request delivery',
         description: <<<'TEXT'
-            Requires exact current READ_USERS and MANAGE_USER_INVITATIONS before target disclosure.
+            Requires exact current MANAGE_USER_INVITATIONS; grants no user/status reading.
             No query or body input.
             The latest grant must be issued, including expired issued grants. Revocation and a new purpose-bound
             seven-day grant and delivery generation commit with durable audit in one package transaction.
             Actor/action and actor/action/target atomic budgets default to 3 per 60 seconds, with bounded capacity.
             Throttle denial writes no package state. Delivery is at least once, not exactly once or inbox receipt.
-            200 includes current credential-free status; it does not identify which concurrent credential won.
+            200 acknowledges completed command dispatch with data null.
+            Read authoritative outcomes separately with READ_USERS.
             On 503 the transition may have committed: read status before any further operation; never auto-retry.
             TEXT,
         security: [['AccessBearer' => []]],
@@ -60,17 +74,12 @@ final readonly class ResendInvitationAction
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Recovery dispatched and a state effect observed; safe current status',
-                content: new OA\JsonContent(ref: '#/components/schemas/InvitationStatusSuccess')
+                description: 'Command dispatch completed; no user or status data',
+                content: new OA\JsonContent(ref: '#/components/schemas/InvitationMutationSuccess')
             ),
             new OA\Response(ref: '#/components/responses/PublicValidationBadRequest', response: 400),
             new OA\Response(ref: '#/components/responses/Unauthorized', response: 401),
             new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
-            new OA\Response(
-                response: 404,
-                description: 'No safe invitation generation',
-                content: new OA\JsonContent(ref: '#/components/schemas/NotFoundError')
-            ),
             new OA\Response(
                 response: 409,
                 description: 'Not resendable, used, replaced or concurrent state conflict',
@@ -99,6 +108,28 @@ final readonly class ResendInvitationAction
             throw new ValidationException(['user_id' => ['Invalid value.']]);
         }
 
-        return $this->responder->respond($this->recovery->resend($authentication, $target));
+        // ApiActionSecurity owns exact current operation permission and trusted request identity.
+        if ($this->userRepository->getById($target) === null) {
+            throw new PermissionDenied();
+        }
+        $this->invitationRateLimiter->consume($authentication->getUserId(), InvitationOperation::RESEND, $target);
+        try {
+            $this->commandBus->execute(new ResendInvitationDelivery($authentication->getUserId()->toString(), $target));
+        } catch (EventDispatchFailed) {
+            throw new InvitationRecoveryUncertain();
+        } catch (ActivationDeliveryNotResendableException) {
+            throw new StateConflict();
+        } catch (LogicException $failure) {
+            // The locked package reports this one expected compare-and-replace rejection as LogicException.
+            if (
+                $failure::class !== LogicException::class
+                || $failure->getMessage() !== 'The activation grant changed concurrently.'
+            ) {
+                throw $failure;
+            }
+            throw new StateConflict();
+        }
+
+        return $this->responder->respond();
     }
 }

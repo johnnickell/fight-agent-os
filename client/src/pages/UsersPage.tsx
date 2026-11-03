@@ -4,6 +4,7 @@ import { Button } from '@/components/Button';
 import { ContentState } from '@/components/ContentState';
 import { evaluateAccess } from '@/features/authority/evaluateAccess';
 import { useAuthority } from '@/features/authority/useAuthority';
+import UserDetail from '@/pages/UserDetail';
 import { matchApplicationRoute } from '@/routes/applicationRoutes';
 
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
@@ -25,48 +26,56 @@ export default function UsersPage({
   service,
   cache
 }: {
-  service: Pick<UserDirectoryService, 'load' | 'retry'> &
+  service: Pick<UserDirectoryService, 'load' | 'detail' | 'retry'> &
     Partial<Pick<UserDirectoryService, 'subscribe'>>;
   cache: AuthorityCache;
 }) {
   const authority = useAuthority(cache);
   const allowed = evaluateAccess(authority, usersRoute?.requirements) === 'allowed';
   const [page, setPage] = useState(1);
+  const [selected, select] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [retained, setState] = useState<State>({ kind: 'loading' });
   const state: State = allowed ? retained : { kind: 'retired' };
   const heading = useRef<HTMLHeadingElement>(null);
   const focusAfterRead = useRef(false);
+  const retired = useRef(false);
   useEffect(() => {
     const scope = cache.captureScope();
     const controller = new AbortController();
     let active = true;
     const retire = () => {
       controller.abort();
-      if (active) setState({ kind: 'retired' });
+      retired.current = true;
+      if (active) {
+        setState({ kind: 'retired' });
+        select(null);
+      }
     };
     if (
+      retired.current ||
       !scope.isCurrent() ||
       evaluateAccess(cache.getSnapshot(), usersRoute?.requirements) !== 'allowed'
     )
       return;
     scope.signal.addEventListener('abort', retire, { once: true });
-    void service.load(page, 25, controller.signal).then((result) => {
-      if (!active || controller.signal.aborted || !scope.isCurrent()) return;
-      if (result.ok) setState({ kind: 'ready', data: result.value });
-      else if (result.error.kind !== 'cancelled')
-        setState({ kind: 'error', forbidden: result.error.kind === 'authorization' });
-      if (focusAfterRead.current) {
-        focusAfterRead.current = false;
-        heading.current?.focus({ preventScroll: true });
-      }
-    });
+    if (selected === null)
+      void service.load(page, 25, controller.signal).then((result) => {
+        if (!active || controller.signal.aborted || !scope.isCurrent()) return;
+        if (result.ok) setState({ kind: 'ready', data: result.value });
+        else if (result.error.kind !== 'cancelled')
+          setState({ kind: 'error', forbidden: result.error.kind === 'authorization' });
+        if (focusAfterRead.current) {
+          focusAfterRead.current = false;
+          heading.current?.focus({ preventScroll: true });
+        }
+      });
     return () => {
       active = false;
       scope.signal.removeEventListener('abort', retire);
       controller.abort();
     };
-  }, [service, cache, page, attempt]);
+  }, [service, cache, page, attempt, selected]);
   useEffect(
     () =>
       service.subscribe?.(() => {
@@ -78,6 +87,7 @@ export default function UsersPage({
   const reload = () => {
     if (evaluateAccess(cache.getSnapshot(), usersRoute?.requirements) !== 'allowed') return;
     service.retry();
+    retired.current = false;
     focusAfterRead.current = true;
     setState({ kind: 'loading' });
     setAttempt((value) => value + 1);
@@ -88,6 +98,21 @@ export default function UsersPage({
     setState({ kind: 'loading' });
     setPage(next);
   };
+  if (selected !== null && allowed)
+    return (
+      <UserDetail
+        key={selected}
+        userId={selected}
+        service={service}
+        cache={cache}
+        onBack={() => {
+          if (evaluateAccess(cache.getSnapshot(), usersRoute?.requirements) !== 'allowed') return;
+          focusAfterRead.current = true;
+          setState({ kind: 'loading' });
+          select(null);
+        }}
+      />
+    );
   return (
     <section className="users-page" aria-labelledby="users-heading">
       <header className="users-header">
@@ -159,7 +184,19 @@ export default function UsersPage({
               </thead>
               <tbody>
                 {state.data.records.map((user) => (
-                  <UserRow key={user.userId} user={user} cache={cache} />
+                  <UserRow
+                    key={user.userId}
+                    user={user}
+                    cache={cache}
+                    onDetail={() => {
+                      if (
+                        evaluateAccess(cache.getSnapshot(), usersRoute?.requirements) !== 'allowed'
+                      )
+                        return;
+                      setState({ kind: 'loading' });
+                      select(user.userId);
+                    }}
+                  />
                 ))}
               </tbody>
             </table>
@@ -220,7 +257,15 @@ function Destination({
   );
 }
 
-function UserRow({ user, cache }: { user: DirectoryUser; cache: AuthorityCache }) {
+function UserRow({
+  user,
+  cache,
+  onDetail
+}: {
+  user: DirectoryUser;
+  cache: AuthorityCache;
+  onDetail: () => void;
+}) {
   const lifecycle = {
     pending_activation: 'Pending activation',
     active: 'Active',
@@ -229,8 +274,11 @@ function UserRow({ user, cache }: { user: DirectoryUser; cache: AuthorityCache }
   }[user.state];
   return (
     <tr role="row">
-      <th scope="row" role="rowheader">
+      <th scope="row" role="rowheader" aria-label={user.email}>
         <span className="users-email">{user.email}</span>
+        <Button onClick={onDetail} aria-label={`View details for ${user.email}`}>
+          View details
+        </Button>
       </th>
       <td data-label="Lifecycle">
         <span className={`user-state user-state--${user.state}`}>{lifecycle}</span>

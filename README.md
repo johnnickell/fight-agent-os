@@ -256,7 +256,22 @@ names without a dashboard permission prerequisite. Protected read-only role and 
 [guarded authority catalogs](docs/engineering/AUTHORITY_CATALOGS.md) for exact permissions, pagination and redaction.
 The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) at `GET /api/v1/users` and
 `/app/admin/users` uses exact current `READ_USERS`, fixed bounded pagination and explicit safe role presentation
-(TASK-00059 implementation; independent Review/QA pending). TASK-00060's READ_USERS-protected target invitation status/recovery at `/app/admin/invitations/{user_id}` has independent Review and QA acceptance; publication and final delivery verification were pending at closeout. Current delivery result: `.runs/tasks/TASK-00060/runs/land-delivery.md`. READ_USERS-only viewers get read-only status; recovery additionally requires MANAGE_USER_INVITATIONS, which alone grants no reading. Existing status/recovery APIs enforce the same data-disclosure policy. Ordinary/elevated invitation issuance UI remains unavailable.
+(TASK-00059 implementation; independent Review/QA pending). TASK-00118 adds a safe read-only
+`GET /api/v1/users/{userId}` and fresh detail entry within that directory, with exact authoritative `READ_USERS`
+declared once on each HTTP Action and enforced centrally by `ApiActionSecurity`, public package user/role
+queries and safe Responder presentation. No target data is stored in browser history. The pagination-only
+correction has independent Review/QA acceptance on `55c55ad`; delivery results are in the receipt and PR below.
+Removal of duplicate
+permission checks from both Actions has independent Review and QA acceptance on `ba7f652`; the earlier
+acceptance on `c2227fa` is historical. Publication and final delivery checks were pending at this checkpoint;
+current results are in
+`.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200).
+TASK-00060's `/app/admin/invitations/{user_id}` deliberately reads safe user detail and invitation status
+under READ_USERS; READ_USERS-only viewers receive read-only presentation. Page management additionally needs
+MANAGE_USER_INVITATIONS. Mutation APIs need only that operation permission and return no user/status data;
+manage-only grants no reading. The maintainer revision of existing [PR #204](https://github.com/johnnickell/fight-agent-os/pull/204)
+awaits fresh independent Review/QA; earlier acceptance/delivery is historical in the TASK and canonical
+`.runs/tasks/TASK-00060/runs/land-delivery.md`. Ordinary/elevated invitation issuance UI remains unavailable.
 Guarded custom Role create/rename/remove APIs now carry exact displayed revisions and atomic safe audit, pending
 independent Review/QA; no Role UI or Permission delegation is enabled. Read [custom Roles and v0.8.0 adoption](docs/engineering/CUSTOM_ROLES.md)
 before upgrading an existing database: historical reset authority is never guessed or discarded.

@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ApiClient } from '@/api/ApiClient';
+import { InvitationService } from '@/features/invitations/InvitationService';
+
 import { deferred } from '../../apiFixtures';
 import {
   invitationDependencies,
   invitationResponse,
   invitationTarget
 } from '../../invitationFixtures';
+import { directoryUser } from '../../userDirectoryFixtures';
 
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 
@@ -26,6 +30,125 @@ afterEach(() => {
 });
 
 describe('InvitationService', () => {
+  async function wireService(
+    fetch: (url: string, init: RequestInit) => Promise<Response>,
+    permissions?: string[]
+  ) {
+    const { cache } = await setup(
+      () => Promise.reject(new Error('Unused fixture transport')),
+      permissions
+    );
+    const invalidated = vi.fn();
+    const accessRejected = vi.fn();
+    const authorityRejected = vi.fn();
+    const service = new InvitationService(
+      new ApiClient(
+        { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
+        { fetch, accessTokens: { getAccessToken: () => 'synthetic.access.only' } }
+      ),
+      cache,
+      { invalidated, accessRejected, authorityRejected }
+    );
+    return { service, cache, invalidated, accessRejected, authorityRejected };
+  }
+
+  it('reads actual separate status and user-detail wire contracts without mutation data', async () => {
+    const target = invitationTarget();
+    const user = directoryUser({
+      user_id: target.user_id,
+      email: target.email,
+      state: target.state
+    });
+    const fetch = vi.fn((url: string) =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            status: 'success',
+            data: url.includes('/invitations/') ? target.delivery : user
+          }),
+          { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
+        )
+      )
+    );
+    const { service } = await wireService(fetch);
+    expect(await service.load(target.user_id)).toMatchObject({
+      ok: true,
+      value: {
+        userId: target.user_id,
+        email: target.email,
+        state: target.state,
+        delivery: { generation: target.delivery.activation_delivery_id }
+      }
+    });
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+      `/api/v1/invitations/${target.user_id}`,
+      `/api/v1/users/${target.user_id}`
+    ]);
+  });
+
+  it.each([401, 403, 500])(
+    'stops at a refused status read (%s), without fetching identity',
+    async (status) => {
+      const fetch = vi.fn(() => Promise.resolve(invitationResponse(null, status)));
+      const { service } = await wireService(fetch);
+      expect((await service.load(crypto.randomUUID())).ok).toBe(false);
+      expect(fetch).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('discards safe status when the separately admitted detail is refused', async () => {
+    const target = invitationTarget();
+    const fetch = vi.fn((url: string) =>
+      Promise.resolve(
+        url.includes('/users/')
+          ? invitationResponse(null, 403)
+          : new Response(JSON.stringify({ status: 'success', data: target.delivery }), {
+              headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+            })
+      )
+    );
+    const { service, authorityRejected } = await wireService(fetch);
+    expect(await service.load(target.user_id)).toMatchObject({
+      ok: false,
+      error: { kind: 'authorization' }
+    });
+    expect(authorityRejected).toHaveBeenCalledOnce();
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(['retry', 'resend', 'correct'] as const)(
+    'allows manage-only %s with a null acknowledgement and no reads',
+    async (operation) => {
+      const fetch = vi.fn<(url: string, init: RequestInit) => Promise<Response>>(() =>
+        Promise.resolve(invitationResponse(null))
+      );
+      const { service } = await wireService(fetch, ['MANAGE_USER_INVITATIONS']);
+      expect(
+        await service.change(crypto.randomUUID(), operation, 'safe@example.test')
+      ).toMatchObject({ ok: true, value: true });
+      expect(fetch).toHaveBeenCalledOnce();
+      expect(fetch.mock.calls[0]?.[1].method).toBe(operation === 'correct' ? 'PATCH' : 'POST');
+    }
+  );
+
+  it.each([{ email: 'private-marker' }, { status: 'delivered' }, 'private-marker'])(
+    'rejects data-bearing mutation success %j without adopting it',
+    async (data) => {
+      const fetch = vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ status: 'success', data }), {
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+          })
+        )
+      );
+      const { service, invalidated } = await wireService(fetch);
+      const result = await service.change(crypto.randomUUID(), 'retry');
+      expect(result).toMatchObject({ ok: false, error: { kind: 'protocol' } });
+      expect(JSON.stringify(result)).not.toContain('private-marker');
+      expect(invalidated).toHaveBeenCalledOnce();
+      expect(fetch).toHaveBeenCalledOnce();
+    }
+  );
   it.each(
     [
       [],
@@ -41,9 +164,10 @@ describe('InvitationService', () => {
     const d = await setup(fetch, permissions);
     expect((await d.service.load(target.user_id)).ok).toBe(permissions.includes('READ_USERS'));
     expect((await d.service.change(target.user_id, 'resend')).ok).toBe(
-      permissions.includes('READ_USERS') && permissions.includes('MANAGE_USER_INVITATIONS')
+      permissions.includes('MANAGE_USER_INVITATIONS')
     );
-    if (!permissions.includes('READ_USERS')) expect(fetch).not.toHaveBeenCalled();
+    if (!permissions.includes('READ_USERS') && !permissions.includes('MANAGE_USER_INVITATIONS'))
+      expect(fetch).not.toHaveBeenCalled();
   });
   it('uses exact bodyless POST and canonical PATCH wire without query, actor or provider input', async () => {
     const target = invitationTarget();
@@ -167,8 +291,8 @@ describe('InvitationService', () => {
     const target = invitationTarget();
     const old = deferred<Response>();
     let reads = 0;
-    const d = await setup(() =>
-      ++reads === 1
+    const d = await setup((url) =>
+      (url.includes('/invitations/') ? ++reads : reads) === 1
         ? old.promise
         : Promise.resolve(invitationResponse({ ...target, email: 'latest@example.test' }))
     );
@@ -223,7 +347,7 @@ describe('InvitationService', () => {
     read.resolve(invitationResponse(other));
     expect(await foreign).toMatchObject({ ok: true, value: { email: other.email } });
     expect(detached).not.toHaveBeenCalled();
-    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch).toHaveBeenCalledTimes(4);
   });
   it('suppresses late reads after logout and abort, and bounds unanswered mutations without replay', async () => {
     vi.useFakeTimers();

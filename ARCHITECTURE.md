@@ -31,7 +31,20 @@ a current human merge action. Other capability states are unchanged.
   the installation-wide [user directory](docs/engineering/USER_DIRECTORY.md) at `/app/admin/users` and
   `GET /api/v1/users` dispatches package `ListUsers` only after exact authoritative `READ_USERS`, projects
   complete safe role presentation and fences volatile browser pages with the sole cache (TASK-00059,
-  independently reviewed and QA passed; [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172) merged into `develop` at `d6b9db3c8c46f1c2853bd1469fd003cb6445c3d5`; TASK-00060 now implements READ_USERS-protected UUID-target invitation status, bounded package-query email/lifecycle composition and separately gated recovery; data-returning recovery APIs additionally require MANAGE_USER_INVITATIONS, which alone grants no reading; independent acceptance of this consumer integration is pending);
+  independently reviewed and QA passed; [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172) merged into `develop` at `d6b9db3c8c46f1c2853bd1469fd003cb6445c3d5`);
+  TASK-00060's invitation page deliberately reads safe user detail and package delivery status under READ_USERS.
+  Mutation Actions admit MANAGE_USER_INVITATIONS and dispatch package commands with no data response; manage-only
+  grants no reading. Page management requires both permissions. This maintainer revision awaits independent acceptance;
+  TASK-00118 adds safe package `GetUserById` detail with a single `READ_USERS` declaration on each detail
+  and directory HTTP Action, enforced centrally by `ApiActionSecurity` before execution, referenced package
+  `GetRoleById` reads through injected QueryBus, and complete
+  safe View/HTTP mapping in Responders without fetching there. The redundant consumer read services are removed.
+  Volatile in-directory detail remains; no mutation or self-service expansion. The pagination-only correction
+  has independent Review/QA acceptance on `55c55ad`; delivery results are in the receipt and PR below.
+  Removal of duplicate permission
+  checks in both Actions has independent Review/QA acceptance on `ba7f652`. Earlier acceptance on `c2227fa`
+  is historical; publication/final checks were pending at this checkpoint.
+  Current delivery results: `.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200);
   canonical login at `/app/login` reuses package authentication, browser guards,
   schema/Formik and memory/cookie seams, also pending independent acceptance; rotating cookie-only refresh and current-session logout now have HTTP/client services and login-success UI pending independent Review/QA; TASK-00048 adds bounded memory-only multi-tab continuity/restoration at `/app/login`, pending independent Review/QA; TASK-00049 connects one strict typed client `/me` service and the existing cache to login/restoration, pending independent Review/QA; the protected frame now uses that same sole graph, with truthful future landing seams and explicit unavailable-product copy
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)

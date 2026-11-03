@@ -5,26 +5,24 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Failure\StateConflict;
-use App\Application\Invitation\RecoverInvitation;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
-use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\ResendInvitationDelivery;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Command\RetryInvitationDelivery;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationDeliveryNotResendableException;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationDeliveryNotRetryableException;
+use Fight\AccessControl\Domain\AccessControl\User\Command\CorrectPendingInvitation;
+use Fight\AccessControl\Domain\AccessControl\User\Exception\PendingInvitationCorrectionException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Messaging\Event\Sync\ServiceAwareEventDispatcher;
+use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
-use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
+use LogicException;
 use RuntimeException;
 use Throwable;
 
@@ -56,15 +54,6 @@ final class InvitationRecoveryRaceWorker
             $container->set(Connection::class, static fn(): Connection => $connection);
             $clock = new AccessClock(new DateTimeImmutable($input['now']));
             $container->set(Clock::class, static fn(): Clock => $clock);
-            $container->set(AuthoritativePrincipalResolver::class, static fn(
-                Container $c
-            ): AuthoritativePrincipalResolver => new AuthoritativePrincipalResolver(
-                $c->get(UserRepository::class),
-                $c->get(RefreshSessionRepository::class),
-                $c->get(RoleRepository::class),
-                $c->get(PermissionRepository::class),
-                $clock
-            ));
             $inner = $container->get(ActivationGrantRepository::class);
             $waited = false;
             $barrier = new RecoveryGrantBarrier($inner, static function () use ($connection, &$waited): void {
@@ -82,23 +71,32 @@ final class InvitationRecoveryRaceWorker
             // Post-commit coordination is optional; lost dispatch must remain discoverable from durable work.
             $events = new ServiceAwareEventDispatcher($container);
             $container->set(EventDispatcher::class, static fn(): EventDispatcher => $events);
-            $recovery = $container->get(RecoverInvitation::class);
-            $authentication = new AuthenticationContext(
-                UserId::fromString($input['actor']),
-                RefreshSessionId::fromString($input['session']),
-                $input['version']
-            );
+            // These trusted fixtures qualify persistence races; real HTTP admission is tested separately.
+            $actor = UserId::fromString($input['actor']);
             $target = UserId::fromString($input['target']);
+            $command = match ($input['operation']) {
+                'retry' => new RetryInvitationDelivery($actor->toString(), $target),
+                'resend' => new ResendInvitationDelivery($actor->toString(), $target),
+                'email' => new CorrectPendingInvitation($actor, $target,
+                    EmailAddress::fromString('race-corrected@example.test')),
+                default => throw new RuntimeException('Unsupported race operation.')
+            };
             try {
-                match ($input['operation']) {
-                    'retry' => $recovery->retry($authentication, $target),
-                    'resend' => $recovery->resend($authentication, $target),
-                    'email' => $recovery->correct($authentication, $target,
-                        EmailAddress::fromString('race-corrected@example.test')),
-                    default => throw new RuntimeException('Unsupported race operation.')
-                };
+                $container->get(CommandBus::class)->execute($command);
                 echo "committed\n";
-            } catch (StateConflict) {
+            } catch (ActivationDeliveryNotRetryableException | ActivationDeliveryNotResendableException) {
+                echo "conflict\n";
+            } catch (PendingInvitationCorrectionException) {
+                echo "conflict\n";
+            } catch (LogicException $failure) {
+                if (
+                    $failure::class !== LogicException::class || !in_array($failure->getMessage(), [
+                    'The pending invitation email changed concurrently or is reserved.',
+                    'The activation grant changed concurrently.'
+                    ], true)
+                ) {
+                    throw $failure;
+                }
                 echo "conflict\n";
             }
         } catch (Throwable) {

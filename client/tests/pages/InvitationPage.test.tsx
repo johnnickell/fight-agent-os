@@ -41,7 +41,12 @@ async function mount(
       ((_url, init) =>
         Promise.resolve(invitationResponse(init.method === 'GET' ? target : target.delivery)))
   );
-  const d = invitationDependencies(transport, permissions);
+  // Existing lifecycle assertions count invitation-endpoint requests, not the separate detail GET.
+  const detailTransport = fetch ?? (() => Promise.resolve(invitationResponse(target)));
+  const d = invitationDependencies(
+    (url, init) => (url.includes('/users/') ? detailTransport(url, init) : transport(url, init)),
+    permissions
+  );
   caches.push(d.cache);
   await d.cache.load();
   const rendered = render(<InvitationPage userId={target.user_id} {...d} />);
@@ -84,8 +89,10 @@ describe('Pending invitation', () => {
       const target = invitationTarget();
       const delayed = deferred<Response>();
       let reads = 0;
-      const d = await mount(target, readOnly ? ['READ_USERS'] : undefined, () =>
-        ++reads === 2 ? delayed.promise : Promise.resolve(invitationResponse(target))
+      const d = await mount(target, readOnly ? ['READ_USERS'] : undefined, (url) =>
+        (url.includes('/invitations/') ? ++reads : reads) === 2
+          ? delayed.promise
+          : Promise.resolve(invitationResponse(target))
       );
       await screen.findByText(target.email);
       const reload = screen.getByRole('button', { name: 'Reload invitation' });
@@ -125,8 +132,10 @@ describe('Pending invitation', () => {
     const target = invitationTarget();
     const late = deferred<Response>();
     let reads = 0;
-    const d = await mount(target, undefined, () =>
-      ++reads === 2 ? late.promise : Promise.resolve(invitationResponse(target))
+    const d = await mount(target, undefined, (url) =>
+      (url.includes('/invitations/') ? ++reads : reads) === 2
+        ? late.promise
+        : Promise.resolve(invitationResponse(target))
     );
     await act(async () => {});
     const reload = screen.getByRole('button', { name: 'Reload invitation' });
@@ -154,8 +163,8 @@ describe('Pending invitation', () => {
     const initial = deferred<Response>();
     const delayed = deferred<Response>();
     let reads = 0;
-    const d = await mount(target, undefined, () =>
-      ++reads === 1 ? initial.promise : delayed.promise
+    const d = await mount(target, undefined, (url) =>
+      (url.includes('/invitations/') ? ++reads : reads) === 1 ? initial.promise : delayed.promise
     );
     const reload = screen.getByRole('button', { name: 'Reload invitation' });
     expect(reload).not.toHaveFocus();
@@ -234,9 +243,9 @@ describe('Pending invitation', () => {
       const mutation = deferred<Response>();
       const newRead = deferred<Response>();
       let reads = 0;
-      const d = await mount(original, undefined, (_url, init) => {
+      const d = await mount(original, undefined, (url, init) => {
         if (init.method !== 'GET') return mutation.promise;
-        ++reads;
+        if (url.includes('/invitations/')) ++reads;
         return reads === 1
           ? Promise.resolve(invitationResponse(original))
           : reads === 2
@@ -306,10 +315,14 @@ describe('Pending invitation', () => {
       const fresh = { ...original, email: 'authoritative@example.test', state: 'active' };
       const mutation = deferred<Response>();
       let reads = 0;
-      const d = await mount(original, undefined, (_url, init) =>
+      const d = await mount(original, undefined, (url, init) =>
         init.method !== 'GET'
           ? mutation.promise
-          : Promise.resolve(invitationResponse(++reads === 1 ? original : fresh))
+          : Promise.resolve(
+              invitationResponse(
+                (url.includes('/invitations/') ? ++reads : reads) === 1 ? original : fresh
+              )
+            )
       );
       await submitRecovery(operation);
       d.unmount();
@@ -493,10 +506,12 @@ describe('Pending invitation', () => {
       const original = invitationTarget();
       const fresh = { ...original, email: 'authoritative@example.test', state: 'active' };
       let reads = 0;
-      const d = await mount(original, undefined, (_url, init) =>
+      const d = await mount(original, undefined, (url, init) =>
         Promise.resolve(
           init.method === 'GET'
-            ? invitationResponse(++reads === 1 ? original : fresh)
+            ? invitationResponse(
+                (url.includes('/invitations/') ? ++reads : reads) === 1 ? original : fresh
+              )
             : invitationResponse(status === 200 ? original.delivery : null, status)
         )
       );
@@ -653,9 +668,9 @@ describe('Pending invitation', () => {
     const target = invitationTarget();
     const late = deferred<Response>();
     let reads = 0;
-    const d = await mount(target, undefined, (_url, init) =>
+    const d = await mount(target, undefined, (url, init) =>
       init.method === 'GET'
-        ? ++reads === 1
+        ? (url.includes('/invitations/') ? ++reads : reads) === 1
           ? Promise.resolve(invitationResponse(target))
           : late.promise
         : Promise.resolve(invitationResponse(null, 409))

@@ -7,10 +7,17 @@ namespace App\Adapter\Http\Action\Api\V1\Invitations;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
 use App\Application\Failure\AuthenticationRequired;
-use App\Application\Invitation\ReadInvitationStatus;
+use App\Application\Failure\ResourceNotFound;
+use App\Application\Invitation\InvitationRateLimiter;
+use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\FindInvitationDeliveryStatus;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
+use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,8 +35,12 @@ final readonly class ReadInvitationStatusAction
     /**
      * Constructs ReadInvitationStatusAction
      */
-    public function __construct(private ReadInvitationStatus $status, private ReadInvitationStatusResponder $responder)
-    {
+    public function __construct(
+        private QueryBus $queryBus,
+        private UserRepository $userRepository,
+        private InvitationRateLimiter $invitationRateLimiter,
+        private ReadInvitationStatusResponder $responder
+    ) {
     }
 
     /**
@@ -56,14 +67,14 @@ final readonly class ReadInvitationStatusAction
             new OA\Response(
                 response: 200,
                 description: 'Credential-free package status',
-                content: new OA\JsonContent(ref: '#/components/schemas/InvitationTargetSuccess')
+                content: new OA\JsonContent(ref: '#/components/schemas/InvitationStatusSuccess')
             ),
             new OA\Response(ref: '#/components/responses/PublicValidationBadRequest', response: 400),
             new OA\Response(ref: '#/components/responses/Unauthorized', response: 401),
             new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
             new OA\Response(
                 response: 404,
-                description: 'No invitation delivery generation for this target',
+                description: 'Authorized target user not found',
                 content: new OA\JsonContent(ref: '#/components/schemas/NotFoundError')
             ),
             new OA\Response(ref: '#/components/responses/InvitationThrottled', response: 429),
@@ -84,6 +95,18 @@ final readonly class ReadInvitationStatusAction
             throw new ValidationException(['user_id' => ['Invalid value.']]);
         }
 
-        return $this->responder->respond($this->status->read($authentication, $userId));
+        $this->invitationRateLimiter->consume($authentication->getUserId(), InvitationOperation::STATUS);
+        if ($this->userRepository->getById($userId) === null) {
+            throw new ResourceNotFound();
+        }
+        $delivery = $this->queryBus->fetch(new FindInvitationDeliveryStatus($userId));
+        if (
+            $delivery !== null && (!$delivery instanceof InvitationDeliveryStatusView
+            || !$delivery->getUserId()->equals($userId))
+        ) {
+            throw new LogicException('Invitation status is unavailable.');
+        }
+
+        return $this->responder->respond($delivery);
     }
 }

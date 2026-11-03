@@ -30,8 +30,13 @@ export function invitationResponse(data: unknown, status = 200) {
             : status === 409
               ? 'Conflict.'
               : 'Internal server error.';
+  // Delivery-shaped mutation fixtures now mean an empty command acknowledgement.
+  const payload =
+    data && typeof data === 'object' && 'activation_delivery_id' in data ? null : data;
   return new Response(
-    JSON.stringify(status === 200 ? { status: 'success', data } : { status: 'error', message }),
+    JSON.stringify(
+      status === 200 ? { status: 'success', data: payload } : { status: 'error', message }
+    ),
     { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
   );
 }
@@ -54,7 +59,32 @@ export function invitationDependencies(
   );
   const api = new ApiClient(
     { schemaVersion: 2, apiBasePath: '/api/v1', appDebug: false, swaggerAvailable: false },
-    { fetch, accessTokens: { getAccessToken: () => 'synthetic.access.only' } }
+    {
+      fetch: async (url, init) => {
+        const response = await fetch(url, init);
+        // One synthetic target fixture supplies the two real read representations.
+        // Clone because controlled promises may intentionally serve the same snapshot twice.
+        const copy = response.clone();
+        if (init.method !== 'GET' || response.status !== 200) return copy;
+        const envelope = (await copy.json()) as { status: string; data: unknown };
+        const data = envelope.data;
+        if (!data || typeof data !== 'object' || !('delivery' in data)) return response.clone();
+        const { delivery, ...identity } = data;
+        const payload = url.includes('/users/')
+          ? {
+              ...identity,
+              roles: [],
+              created_at: '2026-11-01T12:00:00+00:00',
+              updated_at: '2026-11-01T12:00:00+00:00'
+            }
+          : delivery;
+        return new Response(JSON.stringify({ status: 'success', data: payload }), {
+          status: 200,
+          headers: response.headers
+        });
+      },
+      accessTokens: { getAccessToken: () => 'synthetic.access.only' }
+    }
   );
   return {
     cache,

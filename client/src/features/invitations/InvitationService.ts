@@ -1,6 +1,7 @@
 import { apiFailure } from '@/api/ApiResult';
 import { hasExactKeys } from '@/api/decodeResponse';
 import { evaluateAccess } from '@/features/authority/evaluateAccess';
+import { decodeDirectoryUser } from '@/features/users/UserDirectoryService';
 
 import type { ApiClient } from '@/api/ApiClient';
 import type { ApiResult } from '@/api/ApiResult';
@@ -8,6 +9,9 @@ import type { ResponseDecoder } from '@/api/decodeResponse';
 import type { AuthorityCache } from '@/features/authority/AuthorityCache';
 
 export const invitationRead = [{ kind: 'permissions', all: ['READ_USERS'] }] as const;
+export const invitationMutation = [
+  { kind: 'permissions', all: ['MANAGE_USER_INVITATIONS'] }
+] as const;
 export const invitationChange = [
   { kind: 'permissions', all: ['READ_USERS', 'MANAGE_USER_INVITATIONS'] }
 ] as const;
@@ -70,29 +74,6 @@ const decodeDelivery: ResponseDecoder<InvitationDelivery> = (value) => {
     expiresAt: value.expires_at
   });
 };
-const decodeTarget: ResponseDecoder<InvitationTarget> = (value) => {
-  if (
-    !hasExactKeys(value, ['user_id', 'email', 'state', 'delivery']) ||
-    typeof value.user_id !== 'string' ||
-    !isUserId(value.user_id) ||
-    typeof value.email !== 'string' ||
-    value.email.length === 0 ||
-    value.email.length > 254 ||
-    value.email !== value.email.toLowerCase() ||
-    [...value.email].some((character) => character.charCodeAt(0) < 32 || character === '\u007f') ||
-    typeof value.state !== 'string' ||
-    !['pending_activation', 'active', 'disabled', 'deleted'].includes(value.state)
-  )
-    return null;
-  const delivery = value.delivery === null ? null : decodeDelivery(value.delivery);
-  if (value.delivery !== null && (!delivery || delivery.userId !== value.user_id)) return null;
-  return Object.freeze({
-    userId: value.user_id,
-    email: value.email,
-    state: value.state as InvitationTarget['state'],
-    delivery
-  });
-};
 
 /** Uses existing APIs only; keeps no target, form, credential or authority snapshot. */
 export class InvitationService {
@@ -144,14 +125,41 @@ export class InvitationService {
     scope.signal.addEventListener('abort', abort, { once: true });
     if (signal?.aborted || !scope.isCurrent()) controller.abort();
     const timer = setTimeout(abort, 8_000);
-    const result = await this.#api.get(
+    const delivery = await this.#api.get<Readonly<{ delivery: InvitationDelivery | null }>>(
       `/invitations/${userId}`,
       (value) => {
-        const target = decodeTarget(value);
-        return target?.userId === userId ? target : null;
+        if (value === null) return Object.freeze({ delivery: null });
+        const status = decodeDelivery(value);
+        return status?.userId === userId ? Object.freeze({ delivery: status }) : null;
       },
       { access: 'required', signal: controller.signal }
     );
+    // Both are authoritative, separately admitted reads, not a cross-request snapshot.
+    // Never run an identity read after refusal or retirement of the status request.
+    const user = delivery.ok
+      ? await this.#api.get(
+          `/users/${userId}`,
+          (value) => {
+            const view = decodeDirectoryUser(value);
+            return view?.userId === userId ? view : null;
+          },
+          { access: 'required', signal: controller.signal }
+        )
+      : delivery;
+    const result: ApiResult<InvitationTarget> = !user.ok
+      ? user
+      : !delivery.ok
+        ? delivery
+        : {
+            ok: true,
+            value: Object.freeze({
+              userId,
+              email: user.value.email,
+              state: user.value.state,
+              delivery: delivery.value.delivery
+            }),
+            correlationId: user.correlationId
+          };
     clearTimeout(timer);
     unsubscribe();
     signal?.removeEventListener('abort', abort);
@@ -170,7 +178,7 @@ export class InvitationService {
     const scope = this.#authority.captureScope();
     if (
       !scope.isCurrent() ||
-      evaluateAccess(this.#authority.getSnapshot(), invitationChange) !== 'allowed'
+      evaluateAccess(this.#authority.getSnapshot(), invitationMutation) !== 'allowed'
     )
       return apiFailure('authorization');
     if (!isUserId(userId) || (operation === 'correct' && !email)) return apiFailure('protocol');
@@ -189,10 +197,7 @@ export class InvitationService {
           operation === 'correct' ? 'PATCH' : 'POST',
           `/invitations/${userId}/${operation === 'correct' ? 'email' : operation}`,
           operation === 'correct' ? { email } : null,
-          (value) => {
-            const delivery = decodeDelivery(value);
-            return delivery?.userId === userId ? (true as const) : null;
-          }
+          (value) => (value === null ? (true as const) : null)
         )
         .then((outcome) => {
           // A local deadline cannot cancel a server mutation. A later transport

@@ -360,7 +360,17 @@ remain pending. See [owned-session contracts and retention](../docs/engineering/
 `features/users/UserDirectoryService` and `pages/UsersPage` replace the Users landing with the
 [permission-controlled directory](../docs/engineering/USER_DIRECTORY.md), using the same sole session/principal
 owners. Exact-key safe codecs, volatile authority-scoped rows, server pagination, reflowing table/cards and
-explicit denial recovery introduce no persistence, filtering or mutation. Pending-user links now reach TASK-00060's `/app/admin/invitations/{user_id}` using only a classified UUID. `InvitationService` strictly decodes the existing status GET's bounded canonical email/lifecycle and nullable delivery projection under READ_USERS. The production page is read-only with READ_USERS alone; recovery additionally requires MANAGE_USER_INVITATIONS at route actions, services and server boundaries, without a role bypass. Cancel-first resend/correction confirmations describe old-link invalidation and atomic correction; outcomes refetch authoritative state and invalidate local directory generations, never fabricate form/response email or terminal delivery. Correction values stay volatile and clear on outcome/navigation/authority retirement. No new endpoint/command is introduced. Ordinary/elevated issuance remains unavailable under TASK-00061/00062; independent acceptance of the status/recovery implementation is pending.
+explicit denial recovery introduce no persistence, filtering or mutation. TASK-00118 adds a permission-rechecked
+row detail entry within that same route: a fresh safe GET, volatile scope-fenced detail, explicit recovery and
+same-page authoritative return, without target IDs in browser history or a broader administration UI.
+Pending-user links reach TASK-00060's `/app/admin/invitations/{user_id}` using only a classified UUID.
+`InvitationService` combines deliberate safe user-detail and nullable delivery GETs under READ_USERS.
+Page management needs READ_USERS plus MANAGE_USER_INVITATIONS; the mutation transport needs only management
+and returns an empty acknowledgement, never user/status data. Outcomes trigger authoritative reads and retire
+local directory/detail generations without adopting form/response identity. Cancel-first confirmations,
+volatile correction values, stale-response fences and no automatic mutation replay remain. No new endpoint
+or command is introduced. Ordinary/elevated issuance remains unavailable under TASK-00061/00062; this bounded
+maintainer revision awaits fresh independent acceptance.
 
 `features/authority/CatalogService` supplies protected role/permission page and get reads with exact safe
 snake_case-to-camelCase codecs, bounded pagination, current Bearer transport and no retained catalog cache.
@@ -514,7 +524,7 @@ guard, status and permission-action components above. None adds product routes t
 | `ContentState`    | Loading/empty/error/success presentation. Retry is explicit and only offered when supplied; no fetching, automatic retries or retained data.                                                                                                  |
 | `ContentPanel`    | Named section with wrapping header/actions and unbounded content reflow.                                                                                                                                                                      |
 
-`stories/` holds **178** named examples across twenty story files, including fifteen pending-invitation status/recovery examples: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
+`stories/` holds **185** named examples across twenty-one story files, including seven user-detail and fifteen pending-invitation status/recovery examples: 4 Button, 9 TextField, 4 Notice, 4 ContentState,
 7 Composition states, 11 Authority states/interactions, 9 production-backed Activation states and 11 production-backed Login states, 5 production-backed current-session states, 6 production-backed continuity states and 17 production-backed Frame examples, plus 11 production-backed Dashboard examples, eight bounded Swagger states/interactions and nine production-backed reset-request examples, eleven reset-completion examples and eleven authenticated password-change examples, plus eight owned-session list/state/retirement examples, six confirmed-revocation examples and twelve production-backed Users directory/state/permission/pagination examples. The form composition demonstrates rejection,
 focus correction and local success; the shared Formik examples use synthetic local responses to exercise
 multiple messages, correction, unavailable metadata and late-response suppression;

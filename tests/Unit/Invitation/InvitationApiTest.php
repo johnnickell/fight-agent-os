@@ -8,12 +8,10 @@ use App\Application\Authorization\AuthenticatedPermissions;
 use App\Application\Authorization\PermissionGuard;
 use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\PermissionDenied;
-use App\Application\Failure\ResourceNotFound;
 use App\Application\Failure\StateConflict;
 use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
-use App\Application\Invitation\ReadInvitationStatus;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\InvitationMode;
 use App\Domain\Invitation\InvitationOperation;
@@ -79,7 +77,6 @@ final class InvitationApiTest extends TestCase
     private array $audits = [];
     /** @var list<InvitationOperation> */
     private array $admissions = [];
-    private ReadInvitationStatus $reader;
     private string $fault = '';
 
     /**
@@ -239,115 +236,6 @@ final class InvitationApiTest extends TestCase
         foreach (['policy', 'duplicate', 'race'] as $fault) {
             yield [$fault];
         }
-    }
-
-    /**
-     * Requires exact management authority before status admission and returns the package View directly
-     */
-    public function testStatus(): void
-    {
-        $target = $this->statusTarget(['READ_USERS']);
-        $view = $this->reader->read($this->authentication, $target);
-        self::assertEquals($target, $view->user->getUserId());
-        self::assertSame('target@example.test', $view->user->getEmail()->canonical());
-        self::assertSame(CredentialDeliveryStatus::PENDING, $view->delivery?->getStatus());
-        self::assertSame([InvitationOperation::STATUS], $this->admissions);
-        self::assertSame([], $this->effects);
-    }
-
-    /**
-     * Denies user status disclosure to a manage-only principal
-     */
-    public function testStatusManageOnlyForbidden(): void
-    {
-        $this->issuer(['MANAGE_USER_INVITATIONS']);
-        $this->expectException(PermissionDenied::class);
-        $this->reader->read($this->authentication, UserId::generate());
-    }
-
-    /**
-     * Refuses status reads even when invitation authority exists
-     */
-    public function testStatusForbidden(): void
-    {
-        $this->issuer(['INVITE_USERS', 'ASSIGN_SUPER_ADMIN']);
-        $this->expectException(PermissionDenied::class);
-        $this->reader->read($this->authentication, UserId::generate());
-    }
-
-    /**
-     * Separates a missing generation from a mismatched or unavailable dependency result
-     *
-     * @param string $fault
-     * @param string $exception
-     *
-     * @phpstan-param class-string<\Throwable> $exception
-     */
-    #[DataProvider('statusFailures')]
-    public function testStatusFailures(string $fault, string $exception): void
-    {
-        $this->fault = $fault;
-        $target = $this->statusTarget(['READ_USERS']);
-        if ($fault === 'target-null') {
-            $this->target = null;
-        } elseif ($fault === 'target-wrong') {
-            $this->target = new UserView(
-                UserId::generate(),
-                EmailAddress::fromString('wrong@example.test'),
-                UserState::ACTIVE,
-                [],
-                new DateTimeImmutable(),
-                new DateTimeImmutable()
-            );
-        }
-        $this->expectException($exception);
-        $this->reader->read($this->authentication, $target);
-    }
-
-    /**
-     * Supplies explicit safe query failure meanings
-     *
-     * @return iterable<array{string, class-string<\Throwable>}>
-     */
-    public static function statusFailures(): iterable
-    {
-        yield ['target-null', ResourceNotFound::class];
-        yield ['target-wrong', LogicException::class];
-        yield ['delivery-wrong', LogicException::class];
-    }
-
-    /**
-     * Presents lifecycle even when no delivery generation exists
-     */
-    public function testStatusWithoutGeneration(): void
-    {
-        $this->fault = 'delivery-null';
-        $target = $this->statusTarget(['READ_USERS']);
-        self::assertNull($this->reader->read($this->authentication, $target)->delivery);
-    }
-
-    /**
-     * Creates canonical target query evidence independent of a directory row
-     *
-     * @param array $names
-     *
-     * @phpstan-param list<string> $names
-     */
-    private function statusTarget(array $names): UserId
-    {
-        $this->issuer($names);
-        $target = UserId::generate();
-        $now = new DateTimeImmutable('2026-10-17T12:00:00Z');
-        $this->target = new UserView(
-            $target,
-            EmailAddress::fromString('target@example.test'),
-            UserState::PENDING_ACTIVATION,
-            [],
-            $now,
-            $now
-        );
-
-        return $target;
     }
 
     /**
@@ -517,7 +405,6 @@ final class InvitationApiTest extends TestCase
             }
             $this->audits[] = $evidence;
         });
-        $this->reader = new ReadInvitationStatus($authority, $limiter, $queries);
 
         return new IssueInvitation(
             $authority,

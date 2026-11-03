@@ -24,6 +24,11 @@ Dependencies point `Adapter → Application → Domain`.
 Keep `App\` mapped directly to `src/`: `App\Domain`, `App\Application`, and `App\Adapter`. Organize below each layer by the responsibility actually owned, then by capability or transport where useful. `Middleware` holds only code that implements a middleware pipeline; HTTP failure classification, mapped representations, validation values, and response mapping belong in the appropriate `Adapter/Http/Api/` or other transport home, not `Middleware`. Responders and safe transport representations belong in Adapter; Domain policy stays with the concept that knows the rule. Do not create speculative `Service`, `Manager`, `Helper`, `Value`, or protocol-neutral buckets for types without a demonstrated boundary. Review an existing exception against its actual role, callers and accepted contract; move it only when the scoped work owns the change and can prove compatibility. Do not bulk-move unrelated source to conform to a diagram.
 
 [Fight Access Control ownership](../../planning/adr/0001-application-ownership-and-orchestration.md) governs identity and authorization. Dispatch its public package commands and queries through the configured Fight Common buses and consume its safe Views directly; do not recreate them behind Agent OS aliases or invoke handlers to bypass routing and filters. Introduce owned Application orchestration only when a missing package behavior enforces Agent OS policy or coordinates real ownership boundaries with observable input, result/failure and injected inward capabilities. Place state-based business decisions with their Domain owner; a handler coordinates them and an adapter translates them, not the other way around. A repository-backed condition may need an injected capability or application policy rather than a getter-based replica of entity policy. Assess each use case against the accepted ownership ADR before extracting a specification or adding a handler.
+For the revised safe user reads, follow its TASK-00118 owner clarification: remove forwarding read services,
+compose public package user/role queries in Actions, and map safe Views in Responders without fetching there.
+Classify surviving owned Application use cases by context, aggregate/capability and actual responsibility,
+for example `App\Application\AccessControl\User\QueryHandler` or `...\Service`; never label a read a CommandHandler.
+This does not authorize bulk moves of unrelated existing inventory.
 
 Review namespace cohesion as a project taste criterion: when a directory combines unrelated responsibilities,
 propose deeper capability-based subnamespaces with examples of callers and ownership. Class count is a signal,
@@ -95,14 +100,30 @@ interface or an upstream proposal do not authorize consumer aliases or speculati
 
 ## CQRS and HTTP
 
+### Scoped invitation admission amendment — TASK-00060
+
+The maintainer's 2026-11-03 correction governs invitation status and retry/resend/pending-email correction:
+entry adapters own trusted actor, exact operation permission, validated input, installation target admission
+and throttling. HTTP declares the permission once on the Action; `ApiActionSecurity` enforces it centrally.
+READ_USERS is required for every user/status/page read. Mutation APIs require MANAGE_USER_INVITATIONS and
+return no user/status payload; page management needs both because the page reads. Dispatch existing package
+commands/queries through the configured buses. Do not restore redundant Application admission, post-command
+repository peeking or locks whose only purpose is ordinary revocation/commit serialization. An admitted request
+may finish after revocation; the next request is checked afresh. Preserve package-owned business consistency,
+uniqueness, generation comparisons, atomic correction/audit and independent rate admission. Raw buses remain
+trusted in-process infrastructure; each actual non-HTTP entry must own its admission. This scoped amendment
+supersedes the blanket Application-admission wording below only for this path, not unrelated security use cases.
+See [the ownership amendment](../../planning/adr/0001-application-ownership-and-orchestration.md#task-00060-invitation-admission-amendment--2026-11-03).
+
+
 Commands express intent and may change state. Queries return data without business mutation. Events report facts that already happened. Messages carry use-case context, not transport details, and handlers do not reconstruct Domain policy from exposed state.
 
 Use Action–Domain–Responder for HTTP interactions. Actions expose `handle()` as their sole entry point;
 Responders present through `respond()`. Register API Actions with Slim's `Class:handle` callable so
 post-routing validation examines the executed method; web routes call the injected Action's `handle()`.
 
-- One Action handles one interaction, maps validated transport input and authenticated actor/target context, dispatches one package or owned use case, and delegates presentation. Do not put business policy or transaction control in an Action.
-- Authentication middleware and transport permission checks provide an early server-side gate, not the sole authority: package or justified Agent OS Application policy must enforce target, ownership and permission decisions against authoritative state on every entry path, including non-HTTP callers. Do not infer authorization from role names, UI reachability or a request attribute. Do not duplicate package-owned invariants in handlers or adapters.
+- One Action handles one interaction, maps validated transport input and authenticated actor/target context, dispatches package queries or one justified owned use case, and delegates presentation. For safe user detail/directory reads, `#[RequiresPermission('READ_USERS')]` on each Action is the single permission declaration, enforced by existing `ApiActionSecurity` against authoritative current request state before execution or user/role dispatch. Do not repeat permission or installation-policy checks in the Actions or relocate duplication into a wrapper; repeated lookups do not establish atomic authorization. Do not put Domain business policy or transaction control in an Action.
+- Package/Domain owners retain target, ownership and intrinsic invariants; genuinely owned Application policy remains reusable across its entry paths. Non-HTTP adapters must demonstrate their own authorization boundary before trusted package bus use. Do not infer authority from role names, UI reachability, request claims or service presence. Do not duplicate package-owned invariants in handlers or adapters. The bounded safe-read clarification does not change mutation or other non-HTTP contracts.
 - A Responder owns status, headers, response shape, and boundary mapping; it neither fetches missing business data nor decides policy. JSend is scoped to the documented API, not every HTTP path or other transport; an arbitrary lookup failure does not become a public 404 without explicit use-case context.
 - Cross presentation boundaries with explicit safe Views, not raw entities. Keep PHP properties camelCase and map HTTP JSON and database fields to snake_case.
 - Enforce authorization on the server. Sanitize public errors and keep secrets out of diagnostics.

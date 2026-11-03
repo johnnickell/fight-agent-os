@@ -31,6 +31,60 @@ async function mount(
 }
 
 describe('UsersPage', () => {
+  it('opens a freshly authorized detail from page two and returns by refetching that page without history data', async () => {
+    const user = directoryUser({ email: 'page-two@example.test' });
+    const fetch = vi.fn((url: string) =>
+      Promise.resolve(
+        directoryResponse(
+          url === `/api/v1/users/${user.user_id}`
+            ? { ...user, state: 'disabled' }
+            : url.includes('page=2&')
+              ? directoryPage([user], { page: 2, total_records: 26, total_pages: 2 })
+              : directoryPage(
+                  Array.from({ length: 25 }, (_, i) =>
+                    directoryUser({ email: `person${i}@example.test` })
+                  ),
+                  { total_records: 26, total_pages: 2 }
+                )
+        )
+      )
+    );
+    const before = window.location.href;
+    await mount(fetch, ['READ_USERS']);
+    await screen.findByRole('table');
+    await userEvent.click(screen.getByRole('button', { name: 'Next page' }));
+    await screen.findByText(user.email);
+    await userEvent.click(screen.getByRole('button', { name: `View details for ${user.email}` }));
+    expect(await screen.findByText('disabled')).toBeVisible();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'User detail' })).toHaveFocus();
+    expect(window.location.href).toBe(before);
+    await userEvent.click(screen.getByRole('button', { name: 'Back to user list' }));
+    expect(await screen.findByRole('table')).toBeVisible();
+    expect(screen.getByRole('status')).toHaveTextContent('Page 2 of 2');
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+      '/api/v1/users?page=1&per_page=25',
+      '/api/v1/users?page=2&per_page=25',
+      `/api/v1/users/${user.user_id}`,
+      '/api/v1/users?page=2&per_page=25'
+    ]);
+  });
+
+  it('clears a selected detail on logout without replaying a directory read', async () => {
+    const user = directoryUser({ email: 'private-selected@example.test' });
+    const fetch = vi.fn((url: string) =>
+      Promise.resolve(directoryResponse(url.includes('?') ? directoryPage([user]) : user))
+    );
+    const d = await mount(fetch, ['READ_USERS']);
+    await screen.findByRole('table');
+    await userEvent.click(screen.getByRole('button', { name: `View details for ${user.email}` }));
+    await screen.findByRole('heading', { name: 'User detail' });
+    await act(() => d.cache.signal('logout'));
+    expect(screen.queryByText(user.email)).not.toBeInTheDocument();
+    expect(screen.queryByText(user.user_id)).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'User detail' })).not.toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
   it.each(Array.from({ length: 16 }, (_, mask) => mask))(
     'uses independent exact permission controls for subset %i, never role names',
     async (mask) => {
@@ -241,7 +295,12 @@ describe('UsersPage', () => {
     await d.cache.load();
     const load = vi.fn(() => Promise.resolve(apiFailure('authorization')));
     const retry = vi.fn();
-    const view = render(<UsersPage cache={d.cache} service={{ load, retry }} />);
+    const view = render(
+      <UsersPage
+        cache={d.cache}
+        service={{ load, retry, detail: d.service.detail.bind(d.service) }}
+      />
+    );
     expect(await screen.findByText('Access forbidden')).toBeVisible();
     expect(load).toHaveBeenCalledTimes(1);
     await userEvent.click(screen.getByRole('button', { name: 'Retry user list' }));
@@ -249,7 +308,12 @@ describe('UsersPage', () => {
     expect(load).toHaveBeenCalledTimes(2);
     view.unmount();
     const pending = vi.fn(() => new Promise<ReturnType<typeof apiFailure>>(() => {}));
-    const next = render(<UsersPage cache={d.cache} service={{ load: pending, retry }} />);
+    const next = render(
+      <UsersPage
+        cache={d.cache}
+        service={{ load: pending, retry, detail: d.service.detail.bind(d.service) }}
+      />
+    );
     next.unmount();
     expect(pending.mock.calls).toHaveLength(1);
   });

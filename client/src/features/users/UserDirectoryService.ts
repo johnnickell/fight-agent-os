@@ -31,7 +31,7 @@ const timestamp = (value: unknown): value is string =>
 const lifecycle = (value: unknown): value is DirectoryUser['state'] =>
   typeof value === 'string' &&
   ['pending_activation', 'active', 'disabled', 'deleted'].includes(value);
-const decodeUser: ResponseDecoder<DirectoryUser> = (value) => {
+export const decodeDirectoryUser: ResponseDecoder<DirectoryUser> = (value) => {
   if (
     !hasExactKeys(value, ['user_id', 'email', 'state', 'roles', 'created_at', 'updated_at']) ||
     typeof value.user_id !== 'string' ||
@@ -74,7 +74,7 @@ const decodeUser: ResponseDecoder<DirectoryUser> = (value) => {
   });
 };
 
-/** Reads only the protected fixed-order directory; retains no list or principal. */
+/** Reads protected safe users; retains only refusal state, never user data or a principal. */
 export class UserDirectoryService {
   readonly #api: ApiClient;
   readonly #lifecycle: { accessRejected?: () => void; authorityRejected?: () => void };
@@ -103,6 +103,23 @@ export class UserDirectoryService {
     this.#blocked = null;
   }
 
+  async detail(userId: string, signal?: AbortSignal): Promise<ApiResult<DirectoryUser>> {
+    if (this.#blocked) return apiFailure(this.#blocked);
+    if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(userId))
+      return apiFailure('protocol');
+    const generation = this.#generation;
+    const result = await this.#api.get<DirectoryUser>(
+      `/users/${userId}`,
+      (value) => {
+        const user = decodeDirectoryUser(value);
+        return user?.userId === userId ? user : null;
+      },
+      { access: 'required', ...(signal ? { signal } : {}) }
+    );
+    if (generation !== this.#generation) return apiFailure('cancelled');
+    return this.#accept(result, signal);
+  }
+
   async load(page = 1, perPage = 25, signal?: AbortSignal): Promise<ApiResult<DirectoryPage>> {
     if (this.#blocked) return apiFailure(this.#blocked);
     const generation = this.#generation;
@@ -126,7 +143,7 @@ export class UserDirectoryService {
         const records: DirectoryUser[] = [];
         const ids = new Set<string>();
         for (const item of value.records) {
-          const user = decodeUser(item);
+          const user = decodeDirectoryUser(item);
           if (!user || ids.has(user.userId)) return null;
           const previous = records.at(-1);
           // Persisted ordering has finer time precision than the safe second-precision wire.
@@ -144,7 +161,12 @@ export class UserDirectoryService {
       },
       { access: 'required', pagination: { page, perPage }, ...(signal ? { signal } : {}) }
     );
-    if (signal?.aborted || generation !== this.#generation) return apiFailure('cancelled');
+    if (generation !== this.#generation) return apiFailure('cancelled');
+    return this.#accept(result, signal);
+  }
+
+  #accept<T>(result: ApiResult<T>, signal?: AbortSignal): ApiResult<T> {
+    if (signal?.aborted) return apiFailure('cancelled');
     if (
       !result.ok &&
       (result.error.kind === 'authentication' || result.error.kind === 'authorization')

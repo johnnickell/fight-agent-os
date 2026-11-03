@@ -62,7 +62,7 @@
 | [TASK-00057](00057-TASK.md) | Deliver authoritative owned-session visibility | done | [TICKET-00020](../tickets/00020-TICKET.md) |
 | [TASK-00058](00058-TASK.md) | Deliver confirmed revocation of another owned session | done | [TICKET-00020](../tickets/00020-TICKET.md) |
 | [TASK-00059](00059-TASK.md) | Deliver the permission-controlled user directory | done | [TICKET-00021](../tickets/00021-TICKET.md) |
-| [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | done | [TICKET-00021](../tickets/00021-TICKET.md) |
+| [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | in-progress | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | ready-for-agent | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | ready-for-agent | [TICKET-00021](../tickets/00021-TICKET.md) |
 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | ready-for-agent | [TICKET-00022](../tickets/00022-TICKET.md) |
@@ -120,7 +120,7 @@
 | [TASK-00115](00115-TASK.md) | Remove redundant root index and placeholder and align path indentation | done | — |
 | [TASK-00116](00116-TASK.md) | Reconcile the real access-control API and security work plan | done | — |
 | [TASK-00117](00117-TASK.md) | Guard API-v1 Actions with JWT and permission attributes | done | [TICKET-00010](../tickets/00010-TICKET.md) |
-| [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
+| [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | done | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00120](00120-TASK.md) | Guard user soft deletion and restoration | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |
 | [TASK-00121](00121-TASK.md) | Authorize user role assignments and removals | ready-for-agent | [TICKET-00030](../tickets/00030-TICKET.md) |

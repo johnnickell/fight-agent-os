@@ -20,25 +20,112 @@ function serviceFor(data: unknown) {
 }
 
 describe('UserDirectoryService', () => {
-  it('invalidates mounted readers and rejects an obsolete in-flight page after invitation recovery', async () => {
+  it.each(['list', 'detail'] as const)(
+    'invalidates mounted readers and rejects an obsolete %s after invitation recovery',
+    async (kind) => {
+      let finish: ((response: Response) => void) | undefined;
+      const { service, cache } = directoryDependencies(
+        () =>
+          new Promise<Response>((resolve) => {
+            finish = resolve;
+          })
+      );
+      cache.dispose();
+      const listener = vi.fn();
+      const detach = service.subscribe(listener);
+      const user = directoryUser();
+      const pending = kind === 'detail' ? service.detail(user.user_id) : service.load();
+      service.invalidate();
+      finish?.(directoryResponse(kind === 'detail' ? user : directoryPage()));
+      expect(await pending).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
+      expect(listener).toHaveBeenCalledOnce();
+      detach();
+      service.invalidate();
+      expect(listener).toHaveBeenCalledOnce();
+    }
+  );
+  it('reads one current safe user without pagination or retained data and rejects wrong-target responses', async () => {
+    const user = directoryUser({ email: '"a@b"@example.test', roles: [] });
+    const { service, fetch } = serviceFor(user);
+    const result = await service.detail(user.user_id);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.email).toBe('"a@b"@example.test');
+      expect(result.value.roles).toEqual([]);
+      expect(Object.isFrozen(result.value)).toBe(true);
+    }
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/v1/users/${user.user_id}`,
+      expect.objectContaining({ cache: 'no-store' })
+    );
+    expect(new Headers(fetch.mock.calls[0]?.[1]?.headers).get('Authorization')).toBe(
+      'Bearer test.access.signature'
+    );
+    expect(await service.detail(crypto.randomUUID())).toEqual(apiFailure('protocol'));
+    for (const id of ['../me', 'private-marker', `${user.user_id}?include=password_hash`])
+      expect(await service.detail(id)).toEqual(apiFailure('protocol'));
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    { password_hash: 'private-marker' },
+    { audit: {} },
+    { role_ids: [] },
+    { state: ['active'] },
+    { roles: [{ name: 'ROLE_USER', managed: true, permissions: [] }] },
+    {
+      roles: [
+        { name: 'ROLE_USER', managed: true },
+        { name: 'ROLE_CUSTOM', managed: false }
+      ]
+    }
+  ])('rejects unsafe or malformed detail %j atomically', async (override) => {
+    const user = directoryUser(override);
+    expect(await serviceFor(user).service.detail(user.user_id)).toEqual(apiFailure('protocol'));
+  });
+
+  it.each(['authentication', 'authorization'] as const)(
+    'fences detail after %s without replaying either read',
+    async (kind) => {
+      const fetch = vi.fn(() =>
+        Promise.resolve(directoryResponse(null, kind === 'authentication' ? 401 : 403))
+      );
+      const { api, cache } = directoryDependencies(fetch);
+      cache.dispose();
+      const rejected = vi.fn();
+      const service = new UserDirectoryService(api, {
+        accessRejected: rejected,
+        authorityRejected: rejected
+      });
+      const id = crypto.randomUUID();
+      await service.detail(id);
+      await service.detail(id);
+      await service.load();
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(rejected).toHaveBeenCalledTimes(1);
+      service.retry();
+      await service.detail(id);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    }
+  );
+
+  it('discards late detail denial after cancellation without invalidating newer authority', async () => {
     let finish: ((response: Response) => void) | undefined;
-    const { service, cache } = directoryDependencies(
+    const { api, cache } = directoryDependencies(
       () =>
-        new Promise<Response>((resolve) => {
+        new Promise((resolve) => {
           finish = resolve;
         })
     );
     cache.dispose();
-    const listener = vi.fn();
-    const detach = service.subscribe(listener);
-    const pending = service.load();
-    service.invalidate();
-    finish?.(directoryResponse(directoryPage()));
-    expect(await pending).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
-    expect(listener).toHaveBeenCalledOnce();
-    detach();
-    service.invalidate();
-    expect(listener).toHaveBeenCalledOnce();
+    const rejected = vi.fn();
+    const service = new UserDirectoryService(api, { authorityRejected: rejected });
+    const controller = new AbortController();
+    const pending = service.detail(crypto.randomUUID(), controller.signal);
+    controller.abort();
+    finish?.(directoryResponse(null, 403));
+    expect(await pending).toEqual(apiFailure('cancelled'));
+    expect(rejected).not.toHaveBeenCalled();
   });
   it('sends only current Bearer and bounded pagination; maps exact immutable safe fields without persistence', async () => {
     const row = directoryUser({

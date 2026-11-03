@@ -14,7 +14,6 @@ use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
-use App\Application\Invitation\ReadInvitationStatus;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\InvitationRatePolicy;
@@ -40,6 +39,7 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use League\OpenAPIValidation\PSR7\OperationAddress;
@@ -193,7 +193,9 @@ final class InvitationApiTest extends TestCase
             ++$this->constructions;
 
             return new ReadInvitationStatusAction(
-                $container->get(ReadInvitationStatus::class),
+                $container->get(QueryBus::class),
+                $container->get(UserRepository::class),
+                $container->get(InvitationRateLimiter::class),
                 $container->get(ReadInvitationStatusResponder::class)
             );
         });
@@ -265,7 +267,7 @@ final class InvitationApiTest extends TestCase
             self::assertSame($this->actor->getId()->toString(), $row['actor_id']);
         }
         $status = $this->request('GET', '/api/v1/invitations/'.$data['user_id']);
-        self::assertSame($data['delivery'], $this->assertResponse($status, 200, false)['data']['delivery']);
+        self::assertSame($data['delivery'], $this->assertResponse($status, 200, false)['data']);
         $privateValues = [
             $grant['credential_digest'], $grant['delivery_ciphertext'],
             $this->token, $this->session->getId()->toString()
@@ -551,7 +553,7 @@ final class InvitationApiTest extends TestCase
         )['data'];
         self::assertSame(
             $data['delivery'],
-            $this->assertResponse($this->request('GET', $path), 200, false)['data']['delivery']
+            $this->assertResponse($this->request('GET', $path), 200, false)['data']
         );
         self::assertSame($this->clock->now()->modify('+7 days')->getTimestamp(), (new DateTimeImmutable(
             (string) $this->connection->fetchOne('SELECT expires_at FROM activation_grants WHERE user_id = ?', [

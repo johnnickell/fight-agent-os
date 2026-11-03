@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Postgres;
 
+use App\Adapter\Http\Action\Api\V1\Users\GetUserAction;
 use App\Adapter\Http\Action\Api\V1\Users\ListUsersAction;
+use App\Adapter\Http\Responder\Api\V1\Users\UserDetailResponder;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
-use App\Application\Users\ReadUserDirectory;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Doctrine\DBAL\ArrayParameterType;
@@ -25,6 +26,7 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
+use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
@@ -34,7 +36,9 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Service\Container;
+use Fight\Common\Domain\Messaging\Query\Query;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
@@ -175,7 +179,7 @@ final class UserDirectoryApiTest extends TestCase
             [ArrayParameterType::STRING]
         );
         $this->check($this->request(), ($mask & 1) ? 200 : 403);
-        self::assertSame(($mask & 1) ? 1 : 0, $this->probe->count());
+        self::assertSame(($mask & 1) ? 2 : 0, $this->probe->count());
     }
 
     /**
@@ -202,6 +206,7 @@ final class UserDirectoryApiTest extends TestCase
         $claims['permissions'] = ['READ_USERS'];
         $this->token = $this->tokens->signed(json_encode($claims, JSON_THROW_ON_ERROR));
         $this->check($this->request(), 401);
+        $this->check($this->request(target: '/'.$this->actor->getId()->toString()), 401, true);
         self::assertSame(0, $this->probe->count());
     }
 
@@ -287,6 +292,9 @@ final class UserDirectoryApiTest extends TestCase
         self::assertCount(2, $records);
         self::assertSame($user->getId()->toString(), $records[0]['user_id']);
         self::assertSame('"a@b"@example.test', $records[0]['email']);
+        $detail = $this->check($this->request(target: '/'.$user->getId()->toString()), 200, true)['data'];
+        self::assertSame('"a@b"@example.test', $detail['email']);
+        self::assertSame([], $detail['roles']);
         self::assertSame($this->actor->getId()->toString(), $records[1]['user_id']);
     }
 
@@ -323,27 +331,14 @@ final class UserDirectoryApiTest extends TestCase
     }
 
     /**
-     * Revalidates permission removal between the early gate and the actual Action
-     */
-    public function testAuthorityRace(): void
-    {
-        $this->container->set(ListUsersAction::class, function (Container $c): ListUsersAction {
-            $this->connection->executeStatement(<<<'SQL'
-DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = 'READ_USERS')
-SQL);
-
-            return new ListUsersAction($c->get(ReadUserDirectory::class), $c->get(UserDirectoryResponder::class));
-        });
-        $this->check($this->request(), 403);
-        self::assertSame(0, $this->probe->count());
-    }
-
-    /**
-     * Rejects stale and non-active authority without trusting the retained signed identity or role label
+     * Refreshes central authority on each request without dispatch after revocation or principal corruption
      */
     #[DataProvider('authorityFailures')]
     public function testStaleAuthority(string $fault): void
     {
+        $this->check($this->request(), 200);
+        $this->check($this->request(target: '/'.$this->actor->getId()->toString()), 200, true);
+        $dispatched = $this->probe->count();
         match ($fault) {
             'assignment' => $this->connection->executeStatement('DELETE FROM user_role_assignments'),
             'permission' => $this->connection->executeStatement('DELETE FROM role_permissions'),
@@ -351,17 +346,18 @@ SQL);
             'revision' => $this->connection->executeStatement(
                 'UPDATE users SET authentication_version = authentication_version + 1'
             ),
-            'name' => $this->connection->executeStatement(
-                "UPDATE roles SET name = 'ROLE_LOOKALIKE' WHERE name = 'ROLE_SUPER_ADMIN'"
+            'spoof' => $this->connection->executeStatement(
+                "UPDATE roles SET managed = FALSE WHERE name = 'ROLE_SUPER_ADMIN'"
             ),
             'pending_activation' => $this->connection->executeStatement(
                 "UPDATE users SET state = 'pending_activation', password_hash = NULL"
             ),
             default => $this->connection->executeStatement('UPDATE users SET state = ?', [$fault])
         };
-        $status = in_array($fault, ['assignment', 'permission', 'name'], true) ? 403 : 401;
+        $status = in_array($fault, ['assignment', 'permission'], true) ? 403 : 401;
         $this->check($this->request(), $status);
-        self::assertSame(0, $this->probe->count());
+        $this->check($this->request(target: '/'.$this->actor->getId()->toString()), $status, true);
+        self::assertSame($dispatched, $this->probe->count());
     }
 
     /**
@@ -372,7 +368,7 @@ SQL);
     public static function authorityFailures(): iterable
     {
         $faults = [
-            'assignment', 'permission', 'session', 'revision', 'name', 'pending_activation', 'disabled', 'deleted'
+            'assignment', 'permission', 'session', 'revision', 'spoof', 'pending_activation', 'disabled', 'deleted'
         ];
         foreach ($faults as $fault) {
             yield [$fault];
@@ -387,15 +383,20 @@ SQL);
         $logs = new TestHandler();
         $this->container->get('http.failure.logger')->setHandlers([$logs]);
         $this->container->set(ListUsersAction::class, function (Container $c): ListUsersAction {
-            $roles = $this->createStub(RoleRepository::class);
-            $roles->method('getByIds')->willThrowException(new \RuntimeException('private-SQL-provider-marker'));
+            $bus = $c->get(QueryBus::class);
+            $queries = $this->createStub(QueryBus::class);
+            $queries->method('fetch')->willReturnCallback(static function (Query $query) use ($bus): mixed {
+                if ($query instanceof GetRoleById) {
+                    throw new \RuntimeException('private-SQL-provider-marker');
+                }
 
-            return new ListUsersAction(new ReadUserDirectory(
-                $c->get(\App\Application\Authorization\AuthenticatedPermissions::class),
-                $c->get(\App\Application\Authorization\InstallationAuthority::class),
-                $c->get(\Fight\Common\Application\Messaging\Query\QueryBus::class),
-                $roles
-            ), $c->get(UserDirectoryResponder::class));
+                return $bus->fetch($query);
+            });
+
+            return new ListUsersAction(
+                $queries,
+                $c->get(UserDirectoryResponder::class)
+            );
         });
         self::assertSame(
             ['status' => 'error', 'message' => 'Internal server error.'],
@@ -416,11 +417,188 @@ SQL);
     }
 
     /**
+     * Requires exact READ_USERS before any known, unknown or own-target detail lookup
+     */
+    #[DataProvider('permissionCombinations')]
+    public function testDetailPermissionMatrix(int $mask): void
+    {
+        $target = '/'.$this->actor->getId()->toString();
+        $this->check($this->request(target: $target, authenticated: false), 401, true);
+        self::assertSame(0, $this->probe->count());
+        $names = ['READ_USERS', 'INVITE_USERS', 'MANAGE_USER_INVITATIONS', 'ASSIGN_SUPER_ADMIN'];
+        $allowed = ['READ_OWN_SESSIONS', 'DELETE_OWN_SESSIONS'];
+        foreach ($names as $index => $name) {
+            if ($mask & (1 << $index)) {
+                $allowed[] = $name;
+            }
+        }
+        $this->connection->executeStatement(
+            'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name NOT IN (?))',
+            [$allowed],
+            [ArrayParameterType::STRING]
+        );
+        $this->check($this->request(target: $target), ($mask & 1) ? 200 : 403, true);
+        $this->check($this->request(target: '/'.UserId::generate()->toString()), ($mask & 1) ? 404 : 403, true);
+        $this->check($this->request(target: '/private-invalid-target'), ($mask & 1) ? 400 : 403, true);
+        self::assertSame(($mask & 1) ? 3 : 0, $this->probe->count());
+    }
+
+    /**
+     * Returns every lifecycle through the package and shared exact role and field allowlists
+     */
+    public function testSafeDetail(): void
+    {
+        $now = new DateTimeImmutable('2026-01-01T00:00:00Z');
+        $custom = Role::define(RoleId::generate(), RoleName::fromString('ROLE_CUSTOM'), [], $now);
+        $this->container->get(Connection::class)->transactional(
+            fn() => $this->container->get(RoleRepository::class)->add($custom)
+        );
+        foreach (['pending_activation', 'active', 'disabled', 'deleted'] as $index => $state) {
+            $user = User::invite(UserId::generate(), EmailAddress::fromString('PERSON'.$index.'@EXAMPLE.TEST'), $now);
+            if ($state !== 'pending_activation') {
+                $user->activate($this->actor->getPasswordHash(), $now);
+            }
+            $user->assignRole($custom->getId(), $now);
+            $user->assignRole(RoleId::fromString(InstallationManagedPolicy::USER_ROLE_ID), $now);
+            $this->container->get(Connection::class)->transactional(
+                fn() => $this->container->get(UserRepository::class)->add($user)
+            );
+            $this->connection->executeStatement(
+                'UPDATE users SET state = ?, pending_email_change = ? WHERE id = ?',
+                [$state, 'private-reservation@example.test', $user->getId()->toString()]
+            );
+            $target = '/'.$user->getId()->toString();
+            $data = $this->check($this->request(target: $target), 200, true)['data'];
+            self::assertSame(['user_id', 'email', 'state', 'roles', 'created_at', 'updated_at'], array_keys($data));
+            self::assertSame($state, $data['state']);
+            self::assertSame('person'.$index.'@example.test', $data['email']);
+            self::assertSame($user->getId()->toString(), $data['user_id']);
+            self::assertSame([
+                ['name' => 'ROLE_CUSTOM', 'managed' => false],
+                ['name' => 'ROLE_USER', 'managed' => true]
+            ], $data['roles']);
+            self::assertSame($data, $this->check($this->request(target: $target), 200, true)['data']);
+        }
+        self::assertSame(0, (int) $this->connection->fetchOne('SELECT count(*) FROM audit_evidence'));
+    }
+
+    /**
+     * Rejects malformed paths, query selectors and bodies without dispatch
+     */
+    #[DataProvider('detailInput')]
+    public function testDetailValidation(string $target, string $query, string $body): void
+    {
+        $target = $target === 'valid' ? $this->actor->getId()->toString() : $target;
+        $this->check($this->request($query, true, $body, '/'.$target), 400, true);
+        self::assertSame(0, $this->probe->count());
+    }
+
+    /**
+     * Supplies bounded path and undeclared input attacks
+     *
+     * @return iterable<array{string, string, string}>
+     */
+    public static function detailInput(): iterable
+    {
+        foreach (['not-a-uuid', str_repeat('a', 37), str_repeat('a', 36)] as $id) {
+            yield [$id, '', ''];
+        }
+        $queries = ['?include=password_hash', '?actor_id=private-marker', '?page=1', '?roles=ROLE_SUPER_ADMIN'];
+        foreach ($queries as $query) {
+            yield ['valid', $query, ''];
+        }
+        yield ['valid', '', '{"permission":"READ_USERS"}'];
+    }
+
+    /**
+     * Reports a target removed after the early permission gate as an authorized not-found
+     */
+    public function testDetailTargetDisappears(): void
+    {
+        $user = User::invite(
+            UserId::generate(),
+            EmailAddress::fromString('disappearing@example.test'),
+            $this->tokens->clock->now()
+        );
+        $this->container->get(Connection::class)->transactional(
+            fn() => $this->container->get(UserRepository::class)->add($user)
+        );
+        $this->container->set(GetUserAction::class, function (Container $c) use ($user): GetUserAction {
+            $this->connection->executeStatement('DELETE FROM users WHERE id = ?', [$user->getId()->toString()]);
+
+            return new GetUserAction(
+                $c->get(QueryBus::class),
+                $c->get(UserDetailResponder::class)
+            );
+        });
+        $this->check($this->request(target: '/'.$user->getId()->toString()), 404, true);
+        self::assertSame(1, $this->probe->count());
+    }
+
+    /**
+     * Rejects an unmanaged reserved-name impersonation at the central principal gate
+     */
+    public function testDetailRoleNameSpoof(): void
+    {
+        $this->connection->executeStatement(
+            "UPDATE roles SET managed = FALSE WHERE name = 'ROLE_SUPER_ADMIN'"
+        );
+        $this->check($this->request(target: '/'.$this->actor->getId()->toString()), 401, true);
+        self::assertSame(0, $this->probe->count());
+    }
+
+    /**
+     * Refuses a lookalike role label without the exact authoritative permission on both reads
+     */
+    public function testRoleLabelCannotGrantAccess(): void
+    {
+        $this->connection->executeStatement('DELETE FROM role_permissions');
+        $this->connection->executeStatement(
+            "UPDATE roles SET name = 'ROLE_LOOKALIKE' WHERE name = 'ROLE_SUPER_ADMIN'"
+        );
+        $this->check($this->request(), 403);
+        $this->check($this->request(target: '/'.$this->actor->getId()->toString()), 403, true);
+        self::assertSame(0, $this->probe->count());
+    }
+
+    /**
+     * Fails closed when a persisted target reference disappears without exposing private diagnostics
+     */
+    public function testDetailMissingRole(): void
+    {
+        $now = $this->tokens->clock->now();
+        $role = Role::define(RoleId::generate(), RoleName::fromString('ROLE_TARGET'), [], $now);
+        $user = User::invite(UserId::generate(), EmailAddress::fromString('target@example.test'), $now);
+        $user->assignRole($role->getId(), $now);
+        $this->container->get(Connection::class)->transactional(function () use ($role, $user): void {
+            $this->container->get(RoleRepository::class)->add($role);
+            $this->container->get(UserRepository::class)->add($user);
+        });
+        $this->container->set(GetUserAction::class, function (Container $c): GetUserAction {
+            $bus = $c->get(QueryBus::class);
+            $queries = $this->createStub(QueryBus::class);
+            $queries->method('fetch')->willReturnCallback(static fn(Query $query): mixed =>
+                $query instanceof GetRoleById ? null : $bus->fetch($query));
+
+            return new GetUserAction(
+                $queries,
+                $c->get(UserDetailResponder::class)
+            );
+        });
+        $this->check($this->request(target: '/'.$user->getId()->toString()), 500, true);
+        self::assertSame(1, $this->probe->count());
+    }
+
+    /**
      * Sends actual raw input through the registered guarded route
      */
-    private function request(string $query = '', bool $authenticated = true, string $body = ''): ResponseInterface
-    {
-        $path = '/api/v1/users'.$query;
+    private function request(
+        string $query = '',
+        bool $authenticated = true,
+        string $body = '',
+        string $target = ''
+    ): ResponseInterface {
+        $path = '/api/v1/users'.$target.$query;
         $request = new ServerRequestFactory()->createServerRequest(
             'GET',
             'https://agent-os.test'.$path,
@@ -439,7 +617,7 @@ SQL);
      *
      * @return array<string, mixed>
      */
-    private function check(ResponseInterface $response, int $status): array
+    private function check(ResponseInterface $response, int $status, bool $detail = false): array
     {
         self::assertSame($status, $response->getStatusCode(), (string) $response->getBody());
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
@@ -459,7 +637,7 @@ SQL);
         static $spec = null;
         $spec ??= Document::generate();
         (new ValidatorBuilder())->fromJson($spec)->getResponseValidator()->validate(
-            new OperationAddress('/api/v1/users', 'get'),
+            new OperationAddress($detail ? '/api/v1/users/{userId}' : '/api/v1/users', 'get'),
             $response
         );
 
