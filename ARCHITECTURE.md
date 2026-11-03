@@ -36,7 +36,9 @@ a current human merge action. Other capability states are unchanged.
   and directory HTTP Action, enforced centrally by `ApiActionSecurity` before execution, referenced package
   `GetRoleById` reads through injected QueryBus, and complete
   safe View/HTTP mapping in Responders without fetching there. The redundant consumer read services are removed.
-  Volatile in-directory detail remains; no mutation or self-service expansion. Removal of duplicate permission
+  Volatile in-directory detail remains; no mutation or self-service expansion. The pagination-only correction
+  has independent Review/QA acceptance on `55c55ad`; delivery results are in the receipt and PR below.
+  Removal of duplicate permission
   checks in both Actions has independent Review/QA acceptance on `ba7f652`. Earlier acceptance on `c2227fa`
   is historical; publication/final checks were pending at this checkpoint.
   Current delivery results: `.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200);

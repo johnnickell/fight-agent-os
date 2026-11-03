@@ -259,7 +259,9 @@ The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) a
 (TASK-00059 implementation; independent Review/QA pending). TASK-00118 adds a safe read-only
 `GET /api/v1/users/{userId}` and fresh detail entry within that directory, with exact authoritative `READ_USERS`
 declared once on each HTTP Action and enforced centrally by `ApiActionSecurity`, public package user/role
-queries and safe Responder presentation. No target data is stored in browser history. Removal of duplicate
+queries and safe Responder presentation. No target data is stored in browser history. The pagination-only
+correction has independent Review/QA acceptance on `55c55ad`; delivery results are in the receipt and PR below.
+Removal of duplicate
 permission checks from both Actions has independent Review and QA acceptance on `ba7f652`; the earlier
 acceptance on `c2227fa` is historical. Publication and final delivery checks were pending at this checkpoint;
 current results are in

@@ -47,7 +47,7 @@ Only allowlisted route/body fields and validated IDs/revisions/reason enter use 
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00118](../tasks/00118-TASK.md) | Expose a safe authorized user detail | in-progress |
+| [TASK-00118](../tasks/00118-TASK.md) | Expose a safe authorized user detail | done |
 | [TASK-00119](../tasks/00119-TASK.md) | Guard user disable and enable transitions | ready-for-agent |
 | [TASK-00120](../tasks/00120-TASK.md) | Guard user soft deletion and restoration | ready-for-agent |
 | [TASK-00121](../tasks/00121-TASK.md) | Authorize user role assignments and removals | ready-for-agent |
@@ -56,6 +56,9 @@ Only allowlisted route/body fields and validated IDs/revisions/reason enter use 
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+TASK-00118 pagination-only correction has independent Review ACCEPT and QA PASS on `55c55ad`;
+publication and final checks are pending at this checkpoint. Current results are in the TASK and Land receipt.
 
 TASK-00118 single-declaration correction (2026-11-03): **“Fix it in both actions”** removes duplicate
 Action rechecks in both safe reads; centrally enforced Action metadata owns the HTTP permission boundary.
