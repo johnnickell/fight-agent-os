@@ -11,6 +11,7 @@ import { SessionCoordinator } from '@/features/auth/SessionCoordinator';
 import { SessionService } from '@/features/auth/SessionService';
 import { AuthorityCache } from '@/features/authority/AuthorityCache';
 import { CurrentPrincipalService } from '@/features/authority/CurrentPrincipalService';
+import { InvitationService } from '@/features/invitations/InvitationService';
 import { OwnedSessionsService } from '@/features/sessions/OwnedSessionsService';
 import { SwaggerService } from '@/features/swagger/SwaggerService';
 import { UserDirectoryService } from '@/features/users/UserDirectoryService';
@@ -62,6 +63,23 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
     authority
   );
   coordinator.subscribeSessions(sessions.invalidate);
+  const users = new UserDirectoryService(api, {
+    accessRejected: () => {
+      void coordinator.restore();
+    },
+    authorityRejected: () => {
+      coordinator.authorityChanged();
+    }
+  });
+  const invitations = new InvitationService(api, authority, {
+    invalidated: users.invalidate,
+    accessRejected: () => {
+      void coordinator.restore();
+    },
+    authorityRejected: () => {
+      coordinator.authorityChanged();
+    }
+  });
   return {
     authority,
     intent,
@@ -87,14 +105,8 @@ export function createApplicationSession(runtime: RuntimeConfiguration) {
       window.location.origin,
       safeDiagnostics(runtime)
     ),
-    users: new UserDirectoryService(api, {
-      accessRejected: () => {
-        void coordinator.restore();
-      },
-      authorityRejected: () => {
-        void coordinator.authorityChanged();
-      }
-    }),
+    users,
+    invitations,
     sessions,
     schemas: new PublicSchemaService(api)
   };

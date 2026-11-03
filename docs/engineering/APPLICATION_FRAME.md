@@ -26,11 +26,9 @@ Server authorization remains authoritative; an SPA route response is not an acce
 | `/app/admin/users` | Authenticated + `READ_USERS` |
 | `/app/admin/invite` | Authenticated + `INVITE_USERS` |
 | `/app/admin/invite-super-admin` | Authenticated + both `INVITE_USERS` and `ASSIGN_SUPER_ADMIN` |
-| `/app/admin/invitations` | Authenticated + `MANAGE_USER_INVITATIONS`, independent of Users directory access |
+| `/app/admin/invitations`, `/app/admin/invitations/{user_id}` | Authenticated + `READ_USERS`; page changes additionally require `MANAGE_USER_INVITATIONS` |
 
-The Users route now loads its guarded directory; remaining operational landing destinations supply no data,
-forms or unavailable enabled actions. Directory invitation links reach these truthful static seams. Parameterized
-invitation status is not registered until its owning journey supplies a safe target contract. No fake records,
+The Users route loads its guarded directory. TASK-00060 now registers UUID-target invitation status using the existing READ_USERS-protected API, with read-only viewing and separately authorized recovery (independent acceptance pending). Ordinary/elevated invitation issuance remains unavailable. No email, form input or credential enters a route or intended-route record. No fake records,
 role-name bypass, workspace switcher, planning/agent/observability content or Feature gate is introduced.
 
 The HTTP `/` now serves the same no-store client document as `/app`; the old PHP root smoke representation
@@ -118,11 +116,10 @@ without exact `VIEW_DASHBOARD` receives authenticated Forbidden, not Login.
 The accepted C composition uses the existing semantic tokens, Ubuntu headings/Open Sans body, named panels,
 wrapping link lists and responsive account/administration cards. Account & Security requires authentication;
 Active Sessions independently needs `READ_OWN_SESSIONS`. Users, Invite User and Invitation Administration independently
-need `READ_USERS`, `INVITE_USERS` and `MANAGE_USER_INVITATIONS`. The Dashboard does not advertise elevated assignment;
+need `READ_USERS`, `INVITE_USERS` and `READ_USERS`, respectively. MANAGE_USER_INVITATIONS grants no read authority; page changes additionally require it (human correction, 2026-11-02). The Dashboard does not advertise elevated assignment;
 the existing elevated route/rail still needs both `INVITE_USERS` and `ASSIGN_SUPER_ADMIN`. Role names grant nothing.
 Each Dashboard link includes the manifest's truthful availability copy and reaches its registered
-destination. Users opens its read-only directory; invitation destinations remain unavailable seams.
-There are no enabled mutation controls or fake forms, records or session rows.
+destination. Users opens its directory and pending rows link to canonical invitation status; issuance destinations remain unavailable. The Dashboard itself has no mutation controls or fake forms, records or session rows.
 
 “Available today” describes installed sign-in/restoration/current-access/appearance/current-session sign-out.
 “Not installed yet” explicitly names planning, observability, agent sessions, charts, metrics and workspace

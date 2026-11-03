@@ -1,0 +1,46 @@
+.invitation-page {
+  max-width: 60rem;
+  overflow-wrap: anywhere;
+
+  h2,
+  form,
+  > button,
+  > a {
+    margin-block: 1rem;
+  }
+  > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  form {
+    max-width: 38rem;
+  }
+}
+
+.invitation-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+
+  dt {
+    font-weight: 700;
+  }
+  dd {
+    margin-block: 0.25rem 0;
+  }
+}
+
+.invitation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.invitation-confirm strong {
+  overflow-wrap: anywhere;
+}

@@ -14,7 +14,6 @@ use App\Adapter\Persistence\Repository\PostgresPermissionRepository;
 use App\Adapter\Persistence\Repository\PostgresRoleRepository;
 use App\Adapter\Persistence\Repository\PostgresUserRepository;
 use App\Application\Authorization\InstallationAuthority;
-use App\Application\Authorization\InvitationCorrectionAuthorization;
 use App\Application\Authorization\SessionAdministrationDecision;
 use App\Application\Authorization\UnavailableEmailChangeAdministration;
 use App\Application\Failure\PermissionDenied;
@@ -28,7 +27,6 @@ use Doctrine\ORM\ORMSetup;
 use Fight\AccessControl\Application\AccessControl\Agent\CommandHandler\GrantPermissionToAgentHandler;
 use Fight\AccessControl\Application\AccessControl\Role\CommandHandler\GrantPermissionToCustomRoleHandler;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
-use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\InvitationAdministrationAuthorizationException;
 use Fight\AccessControl\Domain\AccessControl\Agent\Agent;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentCredentialId;
 use Fight\AccessControl\Domain\AccessControl\Agent\AgentId;
@@ -371,7 +369,6 @@ final class AuthorityRepositoryTest extends TestCase
             new AuthenticationAuthorityFences($this->connection)
         );
         $authority = new InstallationAuthority($users, $this->roles, $this->permissions);
-        $invitationCallback = new InvitationCorrectionAuthorization($authority);
         $readCallback = SessionAdministrationDecision::forRead($authority);
         $revokeCallback = SessionAdministrationDecision::forRevocation($authority);
         $sharedCallback = SessionAdministrationDecision::forSharedFallback($authority);
@@ -385,7 +382,6 @@ final class AuthorityRepositoryTest extends TestCase
             $users->add($actor);
             $users->add($target);
             $authority->assertInstallationPermission($actorId, $permission->getName(), $target->getId());
-            $invitationCallback->assertCanCorrectInvitation($actorId, $target->getId());
             $readCallback->assertCanManageSessions($actorId, $target->getId());
             try {
                 $revokeCallback->assertCanManageSessions($actorId, $target->getId());
@@ -421,12 +417,6 @@ final class AuthorityRepositoryTest extends TestCase
                 $authority->assertInstallationPermission($actorId, $permission->getName(), $target->getId());
                 self::fail('Revoked membership must be observed on the next decision.');
             } catch (PermissionDenied) {
-                self::assertSame([], $users->getById($actorId)->getRoleIds());
-            }
-            try {
-                $invitationCallback->assertCanCorrectInvitation($actorId, $target->getId());
-                self::fail('Revoked membership cannot authorize pending invitation correction.');
-            } catch (InvitationAdministrationAuthorizationException) {
                 self::assertSame([], $users->getById($actorId)->getRoleIds());
             }
             try {

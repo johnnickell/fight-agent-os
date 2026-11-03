@@ -30,7 +30,7 @@ Out of scope for this TICKET: custom roles/permissions (TICKET-00031), active em
 
 Canonical email, target lifecycle, managed role, confirmation, stale version, and delivery-state validations are server-owned. Conflicts and concurrent correction/resend/activation return safe recoverable results rather than overwriting authoritative state. Listings paginate/filter only through explicitly supported safe fields.
 
-`READ_USERS`, `INVITE_USERS`, `MANAGE_USER_INVITATIONS`, and `ASSIGN_SUPER_ADMIN` gate their exact interactions. Possessing `ROLE_SUPER_ADMIN` is not itself an authorization bypass. Audit evidence records actor, target, action, time, result, and safe context without grants/passwords.
+`READ_USERS` is required for every user/status/page read; READ_USERS-only operators receive a read-only page. `MANAGE_USER_INVITATIONS` separately authorizes retry/resend/pending-email correction and grants no read authority; those mutation APIs return no user/status payload and require only management. Page changes require both because the page reads. Entry adapters own admission; configured package buses are trusted in-process infrastructure. Reopened TASK-00060 owns this bounded 2026-11-03 maintainer amendment and its verification, not broader architecture adoption. `INVITE_USERS` and `ASSIGN_SUPER_ADMIN` retain their exact issuance requirements. The 2026-11-02 rejection of manage-only reading remains in force. Possessing `ROLE_SUPER_ADMIN` is not itself an authorization bypass. Audit evidence records actor, target, action, time, result, and safe context without grants/passwords.
 
 ## Acceptance and evidence
 
@@ -49,7 +49,7 @@ Canonical email, target lifecycle, managed role, confirmation, stale version, an
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00059](../tasks/00059-TASK.md) | Deliver the permission-controlled user directory | done |
-| [TASK-00060](../tasks/00060-TASK.md) | Deliver pending-invitation status and recovery | ready-for-agent |
+| [TASK-00060](../tasks/00060-TASK.md) | Deliver pending-invitation status and recovery | done |
 | [TASK-00061](../tasks/00061-TASK.md) | Deliver the ordinary web invitation journey | ready-for-agent |
 | [TASK-00062](../tasks/00062-TASK.md) | Deliver the confirmed elevated invitation journey | ready-for-agent |
 <!-- /planning:children -->

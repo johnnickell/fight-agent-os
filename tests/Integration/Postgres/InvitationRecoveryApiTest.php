@@ -174,6 +174,104 @@ final class InvitationRecoveryApiTest extends TestCase
     }
 
     /**
+     * Separates user reading from mutation authority at the real HTTP boundary
+     */
+    #[DataProvider('readPermissions')]
+    public function testStatusReadPermission(bool $read, bool $manage): void
+    {
+        foreach (['READ_USERS' => $read, 'MANAGE_USER_INVITATIONS' => $manage] as $name => $keep) {
+            if (!$keep) {
+                $this->connection->executeStatement(
+                    'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
+                    [$name]
+                );
+            }
+        }
+        $response = $this->request('GET', '/api/v1/invitations/'.$this->target);
+        self::assertSame($read ? 200 : 403, $response->getStatusCode());
+        $data = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR)['data'] ?? null;
+        if ($read) {
+            self::assertSame(['user_id', 'status', 'expires_at', 'activation_delivery_id'], array_keys($data));
+            self::assertSame('retry_pending', $data['status']);
+        } else {
+            self::assertNull($data);
+            self::assertStringNotContainsString('pending@example.test', (string) $response->getBody());
+        }
+    }
+
+    /**
+     * Admits manage-only recovery without returning identity or granting any read capability
+     */
+    #[DataProvider('replacementOperations')]
+    public function testManageOnlyWriteWithoutDisclosure(string $operation, string $audit): void
+    {
+        $this->connection->executeStatement(
+            'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
+            ['READ_USERS']
+        );
+        $before = $this->grant();
+        $response = $this->recover($operation);
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+        self::assertSame(['status' => 'success', 'data' => null], json_decode(
+            (string) $response->getBody(),
+            true,
+            flags: JSON_THROW_ON_ERROR
+        ));
+        self::assertNotSame($before['id'], $this->grant()['id']);
+        self::assertSame(1, $this->auditCount($audit));
+        foreach (['/api/v1/users', '/api/v1/users/'.$this->target, '/api/v1/invitations/'.$this->target] as $path) {
+            $denied = $this->request('GET', $path);
+            self::assertSame(403, $denied->getStatusCode());
+            self::assertStringNotContainsString('example.test', (string) $denied->getBody());
+        }
+    }
+
+    /**
+     * Admits manage-only same-generation retry with an empty acknowledgement
+     */
+    public function testManageOnlyRetryWithoutDisclosure(): void
+    {
+        $this->connection->executeStatement(
+            'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
+            ['READ_USERS']
+        );
+        $before = $this->grant();
+        $response = $this->recover('retry');
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+        self::assertSame(['status' => 'success', 'data' => null], json_decode(
+            (string) $response->getBody(),
+            true,
+            flags: JSON_THROW_ON_ERROR
+        ));
+        self::assertSame($before['id'], $this->grant()['id']);
+        self::assertGreaterThan((int) $before['revision'], (int) $this->grant()['revision']);
+    }
+
+    /**
+     * Supplies all independent read and mutation permission combinations
+     *
+     * @return iterable<array{bool, bool}>
+     */
+    public static function readPermissions(): iterable
+    {
+        yield [false, false];
+        yield [false, true];
+        yield [true, false];
+        yield [true, true];
+    }
+
+    /**
+     * Returns safe lifecycle without inventing an invitation for an active target
+     */
+    public function testActiveTargetWithoutInvitation(): void
+    {
+        $response = $this->request('GET', '/api/v1/invitations/'.$this->actor->getId());
+        self::assertSame(200, $response->getStatusCode());
+        $data = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR)['data'];
+        self::assertNull($data);
+    }
+
+    /**
      * Removes owned failure injection and restores process environment
      */
     protected function tearDown(): void
@@ -195,8 +293,9 @@ final class InvitationRecoveryApiTest extends TestCase
         $before = $this->grant();
         for ($attempt = 0; $attempt < 2; ++$attempt) {
             $response = $this->recover('retry');
-            $data = $this->assertResponse($response, 200, 'retry')['data'];
-            self::assertSame('retry_pending', $data['status']);
+            self::assertNull($this->assertResponse($response, 200, 'retry')['data']);
+            $status = $this->request('GET', '/api/v1/invitations/'.$this->target);
+            self::assertSame('retry_pending', json_decode((string) $status->getBody(), true)['data']['status']);
             $after = $this->grant();
             self::assertSame($before['id'], $after['id']);
             self::assertSame($before['delivery_id'], $after['delivery_id']);
@@ -270,6 +369,7 @@ final class InvitationRecoveryApiTest extends TestCase
             ));
         }
         self::assertSame(2, $this->providerCalls);
+        $this->assertStatusConverges();
     }
 
     /**
@@ -289,10 +389,10 @@ final class InvitationRecoveryApiTest extends TestCase
     #[DataProvider('authorityCases')]
     public function testAuthority(string $operation, string $case, int $status): void
     {
-        if ($case === 'permission') {
+        if ($case === 'permission' || $case === 'read-permission') {
             $this->connection->executeStatement(
                 'DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = ?)',
-                ['MANAGE_USER_INVITATIONS']
+                [$case === 'read-permission' ? 'READ_USERS' : 'MANAGE_USER_INVITATIONS']
             );
         } elseif ($case === 'stale') {
             $this->connection->executeStatement(
@@ -327,7 +427,7 @@ final class InvitationRecoveryApiTest extends TestCase
     {
         foreach (['retry', 'resend', 'email'] as $operation) {
             foreach (['permission', 'stale', 'revoked', 'anonymous'] as $case) {
-                yield [$operation, $case, $case === 'permission' ? 403 : 401];
+                yield [$operation, $case, in_array($case, ['permission', 'read-permission'], true) ? 403 : 401];
             }
         }
     }
@@ -451,8 +551,9 @@ final class InvitationRecoveryApiTest extends TestCase
     public function testTerminalDelivery(CredentialDeliveryOutcome $outcome, string $status): void
     {
         $this->outcome = $outcome;
-        $data = $this->assertResponse($this->recover('retry'), 200, 'retry')['data'];
-        self::assertSame($status, $data['status']);
+        self::assertNull($this->assertResponse($this->recover('retry'), 200, 'retry')['data']);
+        $read = $this->request('GET', '/api/v1/invitations/'.$this->target);
+        self::assertSame($status, json_decode((string) $read->getBody(), true)['data']['status']);
         $before = $this->grant();
         $this->assertResponse($this->recover('resend'), 200, 'resend');
         self::assertNotSame($before['id'], $this->grant()['id']);
@@ -478,8 +579,8 @@ final class InvitationRecoveryApiTest extends TestCase
     public function testProviderFailureRedaction(): void
     {
         $this->providerThrows = true;
-        $data = $this->assertResponse($this->recover('retry'), 200, 'retry')['data'];
-        self::assertSame('retry_pending', $data['status']);
+        self::assertNull($this->assertResponse($this->recover('retry'), 200, 'retry')['data']);
+        self::assertSame('retry_pending', $this->grant()['delivery_status']);
         self::assertSame(2, $this->providerCalls);
         self::assertSame([], $this->logs->getRecords());
     }
@@ -531,7 +632,7 @@ final class InvitationRecoveryApiTest extends TestCase
             'DELETE FROM activation_grants WHERE user_id = ?',
             [$this->target->toString()]
         );
-        $this->assertResponse($this->recover('retry'), 404, 'retry');
+        $this->assertResponse($this->recover('retry'), 409, 'retry');
         self::assertSame(1, $this->providerCalls);
     }
 
@@ -682,6 +783,7 @@ SELECT count(*) FROM activation_grants WHERE user_id = ? AND revoked_at IS NULL 
 SQL,
                 [$this->target->toString()]
             ));
+            $this->assertStatusConverges();
         } finally {
             $this->closeRaces($children);
         }
@@ -730,6 +832,7 @@ SQL,
                 'SELECT max(generation) FROM activation_grants WHERE user_id = ?',
                 [$other->toString()]
             ));
+            $this->assertStatusConverges();
         } finally {
             $this->closeRaces($children);
         }
@@ -766,9 +869,31 @@ SQL,
                     self::assertNull($this->grant()['consumed_at']);
                 }
             }
+            $this->assertStatusConverges();
         } finally {
             $this->closeRaces($children);
         }
+    }
+
+    /**
+     * Confirms the real status API converges to persisted identity and generation after races
+     */
+    private function assertStatusConverges(): void
+    {
+        $response = $this->request('GET', '/api/v1/invitations/'.$this->target);
+        self::assertSame(200, $response->getStatusCode());
+        $data = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR)['data'];
+        $user = $this->connection->fetchAssociative('SELECT email, state FROM users WHERE id = ?', [
+            $this->target->toString()
+        ]);
+        self::assertIsArray($user);
+        self::assertSame($this->grant()['delivery_id'], $data['activation_delivery_id']);
+        self::assertSame(['user_id', 'status', 'expires_at', 'activation_delivery_id'], array_keys($data));
+        $detail = $this->request('GET', '/api/v1/users/'.$this->target);
+        self::assertSame(200, $detail->getStatusCode());
+        $identity = json_decode((string) $detail->getBody(), true, flags: JSON_THROW_ON_ERROR)['data'];
+        self::assertSame($user['email'], $identity['email']);
+        self::assertSame($user['state'], $identity['state']);
     }
 
     /**
@@ -951,7 +1076,12 @@ SQL,
             }
         }
 
-        return json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        $decoded = json_decode((string) $response->getBody(), true, flags: JSON_THROW_ON_ERROR);
+        if ($status === 200) {
+            self::assertSame(['status' => 'success', 'data' => null], $decoded);
+        }
+
+        return $decoded;
     }
 
     /**

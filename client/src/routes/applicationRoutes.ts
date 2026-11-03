@@ -15,11 +15,13 @@ export type ApplicationRoute = RegisteredRoute &
       | 'password-change'
       | 'sessions'
       | 'users'
+      | 'invitation'
       | 'landing'
       | 'swagger';
     group?: 'Workspace' | 'Security' | 'Administration';
     icon?: PresentationIconName;
     availability?: string;
+    targetUserId?: string;
   }>;
 
 const authenticated = [{ kind: 'authenticated' }] as const;
@@ -153,14 +155,28 @@ export const applicationRoutes: readonly ApplicationRoute[] = [
     title: 'Invitation Admin',
     icon: 'invitations',
     access: 'protected',
-    requirements: permission('MANAGE_USER_INVITATIONS'),
+    requirements: permission('READ_USERS'),
     destination: 'landing',
     group: 'Administration',
     intendedRoute: {},
-    availability: 'Invitation status and recovery operations are not available here yet.'
+    availability:
+      'Choose a pending user in Users to inspect current invitation status. Recovery additionally requires MANAGE_USER_INVITATIONS.'
   }
 ];
 
 export function matchApplicationRoute(pathname: string): ApplicationRoute | undefined {
+  const target =
+    /^\/app\/admin\/invitations\/([a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})$/.exec(
+      pathname
+    )?.[1];
+  if (target)
+    return {
+      pathname,
+      title: 'Pending invitation',
+      access: 'protected',
+      requirements: permission('READ_USERS'),
+      destination: 'invitation',
+      targetUserId: target
+    };
   return applicationRoutes.find((route) => route.pathname === pathname);
 }

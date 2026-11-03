@@ -26,7 +26,8 @@ export default function UsersPage({
   service,
   cache
 }: {
-  service: Pick<UserDirectoryService, 'load' | 'detail' | 'retry'>;
+  service: Pick<UserDirectoryService, 'load' | 'detail' | 'retry'> &
+    Partial<Pick<UserDirectoryService, 'subscribe'>>;
   cache: AuthorityCache;
 }) {
   const authority = useAuthority(cache);
@@ -75,6 +76,14 @@ export default function UsersPage({
       controller.abort();
     };
   }, [service, cache, page, attempt, selected]);
+  useEffect(
+    () =>
+      service.subscribe?.(() => {
+        setState({ kind: 'loading' });
+        setAttempt((value) => value + 1);
+      }),
+    [service]
+  );
   const reload = () => {
     if (evaluateAccess(cache.getSnapshot(), usersRoute?.requirements) !== 'allowed') return;
     service.retry();
@@ -128,8 +137,8 @@ export default function UsersPage({
         times are UTC.
       </p>
       <p>
-        Invitation links open registered destinations that explain their unavailable workflows; no
-        invitation is sent here.
+        Invitation status opens current canonical user and delivery state. No invitation is sent by
+        this list.
       </p>
       {state.kind === 'loading' ? (
         <ContentState
@@ -308,10 +317,10 @@ function UserRow({
         {user.state === 'pending_activation' ? (
           <Destination
             cache={cache}
-            path="/app/admin/invitations"
-            label={`Invitation status for ${user.email} (not available yet)`}
+            path={`/app/admin/invitations/${user.userId}`}
+            label={`Invitation status for ${user.email}`}
           >
-            Invitation status <span>(not available yet)</span>
+            Invitation status
           </Destination>
         ) : (
           'Not pending'

@@ -36,6 +36,45 @@ async function mount(
 }
 
 describe('UserDetail', () => {
+  it.each([false, true])(
+    'retires correction-invalidated detail (already ready: %s) until deliberate reload',
+    async (ready) => {
+      const user = directoryUser();
+      let finish: ((response: Response) => void) | undefined;
+      let reads = 0;
+      const fetch = vi.fn(() => {
+        ++reads;
+        if (!ready && reads === 1)
+          return new Promise<Response>((resolve) => {
+            finish = resolve;
+          });
+        return Promise.resolve(
+          directoryResponse({ ...user, email: reads === 1 ? user.email : 'current@example.test' })
+        );
+      });
+      const d = directoryDependencies(fetch);
+      caches.push(d.cache);
+      await d.cache.load();
+      render(
+        <UserDetail userId={user.user_id} service={d.service} cache={d.cache} onBack={vi.fn()} />
+      );
+      if (ready) await screen.findByText(user.email);
+      act(() => {
+        d.service.invalidate();
+      });
+      expect(screen.getByText('User detail cleared')).toBeVisible();
+      expect(screen.queryByText(user.email)).not.toBeInTheDocument();
+      expect(fetch).toHaveBeenCalledTimes(1);
+      await userEvent.click(screen.getByRole('button', { name: 'Retry user detail' }));
+      expect(await screen.findByText('current@example.test')).toBeVisible();
+      await act(async () => {
+        finish?.(directoryResponse(user));
+        await Promise.resolve();
+      });
+      expect(screen.queryByText(user.email)).not.toBeInTheDocument();
+      expect(fetch).toHaveBeenCalledTimes(2);
+    }
+  );
   it('shows exact safe read-only state, supports keyboard return and focuses its heading', async () => {
     const d = await mount();
     expect(await screen.findByText('"a@b"@example.test')).toBeVisible();

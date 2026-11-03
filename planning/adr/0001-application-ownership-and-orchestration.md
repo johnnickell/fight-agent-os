@@ -5,6 +5,34 @@
 - **Decision owners:** Fight Agent OS maintainers
 - **Acceptance:** Explicitly accepted by the human maintainer under TASK-00009 on 2026-09-23
 
+## TASK-00060 invitation admission amendment — 2026-11-03
+
+The maintainer explicitly separated mutation from reading and rejected redundant admission/forwarding in this
+existing PR. For invitation status and retry/resend/pending-email correction, entry adapters establish trusted
+actor, exact operation permission, validated input, installation target scope and independent rate admission.
+HTTP uses one permission declaration per Action, enforced by `ApiActionSecurity`; READ_USERS governs every
+user/status/page read, while mutation APIs require only MANAGE_USER_INVITATIONS and acknowledge with no data.
+The page's management controls need both. Every new nontrusted entry must implement its own admission before
+dispatch; a caller-supplied actor is not authority. The configured in-process bus is trusted, not a public API.
+
+Ordinary admitted work may finish after concurrent revocation. No second Application permission lookup or
+revocation-through-commit serialization is required for this scoped path. The package correction callback
+binding explicitly trusts adapter-admitted dispatch; it carries no ambient permission flag or transaction wrapper.
+Package handlers still own lifecycle, uniqueness, generation comparison, atomic user/grant/audit writes and
+post-commit events. Actual business locks and bounded throttle transactions remain necessary.
+
+Use existing package commands/queries/Views directly. Delete the union forwarding service and redundant
+composite projection/read service; the page deliberately reads the merged safe user-detail API and nullable
+package delivery status separately. These reads are not a cross-request snapshot. Void command return means
+completed configured dispatch, not proof of a particular observed repository effect, provider receipt or winner.
+Do not peek after commands to fabricate a result; read outcomes separately with READ_USERS. Expected rejection
+and post-commit uncertainty retain intentional safe mappings; internal LogicException must not be broadly masked
+as conflict. No package upgrade or whole-application refactor is authorized by this amendment.
+
+This supersedes conflicting original admission/orchestration wording below only for the named invitation path.
+Original approvals and TASK-00118's separate read correction remain historical and applicable in their scopes.
+See [TASK-00060](../tasks/00060-TASK.md) and [current API contracts](../../docs/engineering/INVITATION_API.md).
+
 ## TASK-00118 single permission declaration — 2026-11-03
 
 The owner's **“Fix it in both actions”** correction makes `#[RequiresPermission('READ_USERS')]` on each

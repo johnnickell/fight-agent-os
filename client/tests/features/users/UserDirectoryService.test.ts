@@ -20,6 +20,30 @@ function serviceFor(data: unknown) {
 }
 
 describe('UserDirectoryService', () => {
+  it.each(['list', 'detail'] as const)(
+    'invalidates mounted readers and rejects an obsolete %s after invitation recovery',
+    async (kind) => {
+      let finish: ((response: Response) => void) | undefined;
+      const { service, cache } = directoryDependencies(
+        () =>
+          new Promise<Response>((resolve) => {
+            finish = resolve;
+          })
+      );
+      cache.dispose();
+      const listener = vi.fn();
+      const detach = service.subscribe(listener);
+      const user = directoryUser();
+      const pending = kind === 'detail' ? service.detail(user.user_id) : service.load();
+      service.invalidate();
+      finish?.(directoryResponse(kind === 'detail' ? user : directoryPage()));
+      expect(await pending).toMatchObject({ ok: false, error: { kind: 'cancelled' } });
+      expect(listener).toHaveBeenCalledOnce();
+      detach();
+      service.invalidate();
+      expect(listener).toHaveBeenCalledOnce();
+    }
+  );
   it('reads one current safe user without pagination or retained data and rejects wrong-target responses', async () => {
     const user = directoryUser({ email: '"a@b"@example.test', roles: [] });
     const { service, fetch } = serviceFor(user);

@@ -63,7 +63,7 @@ describe('honest Dashboard permission and destination contracts', () => {
     for (const [title, bit, path] of [
       ['Users', 2, '/app/admin/users'],
       ['Invite User', 4, '/app/admin/invite'],
-      ['Invitation Admin', 8, '/app/admin/invitations']
+      ['Invitation Admin', 2, '/app/admin/invitations']
     ] as const) {
       const link = main.queryByRole('link', { name: title });
       if (mask & bit) {
@@ -71,7 +71,7 @@ describe('honest Dashboard permission and destination contracts', () => {
         expect(admin).toContainElement(link);
       } else expect(link).not.toBeInTheDocument();
     }
-    expect(Boolean(admin)).toBe(Boolean(mask & 14));
+    expect(Boolean(admin)).toBe(Boolean(mask & 6));
     expect(main.queryByRole('link', { name: 'Invite Super Admin' })).not.toBeInTheDocument();
     expect(main.getByRole('link', { name: 'Account & Security' })).toHaveAttribute(
       'href',
@@ -85,6 +85,8 @@ describe('honest Dashboard permission and destination contracts', () => {
         expect(route.availability).toBe(
           'Read the installation-wide user directory and current role assignments.'
         );
+      else if (route?.pathname === '/app/admin/invitations')
+        expect(route.availability).toMatch(/Choose a pending user/);
       else expect(route?.availability).toMatch(/not available/);
       expect(main.getByText(route?.availability ?? '')).toBeVisible();
     }

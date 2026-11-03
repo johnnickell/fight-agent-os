@@ -109,7 +109,7 @@ describe('authoritative frame transitions', () => {
   });
   it.each([
     ['/app/swagger', 'API Docs', 'READ_SWAGGER'],
-    ['/app/admin/invitations', 'Invitation Admin', 'MANAGE_USER_INVITATIONS']
+    ['/app/admin/invitations', 'Invitation Admin', 'READ_USERS']
   ])('uses the concise destination title throughout %s', async (pathname, title, permission) => {
     const owner = session([permission]);
     render(<Mounted owner={owner} initial={pathname} />);
@@ -188,7 +188,7 @@ describe('authoritative frame transitions', () => {
     ['/app/admin/users', 'READ_USERS'],
     ['/app/admin/invite', 'INVITE_USERS'],
     ['/app/admin/invite-super-admin', 'ASSIGN_SUPER_ADMIN'],
-    ['/app/admin/invitations', 'MANAGE_USER_INVITATIONS']
+    ['/app/admin/invitations', 'READ_USERS']
   ])('denies %s when exact %s is missing, including joint requirements', async (path, missing) => {
     const owner = session(
       [

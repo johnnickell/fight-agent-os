@@ -100,6 +100,22 @@ interface or an upstream proposal do not authorize consumer aliases or speculati
 
 ## CQRS and HTTP
 
+### Scoped invitation admission amendment — TASK-00060
+
+The maintainer's 2026-11-03 correction governs invitation status and retry/resend/pending-email correction:
+entry adapters own trusted actor, exact operation permission, validated input, installation target admission
+and throttling. HTTP declares the permission once on the Action; `ApiActionSecurity` enforces it centrally.
+READ_USERS is required for every user/status/page read. Mutation APIs require MANAGE_USER_INVITATIONS and
+return no user/status payload; page management needs both because the page reads. Dispatch existing package
+commands/queries through the configured buses. Do not restore redundant Application admission, post-command
+repository peeking or locks whose only purpose is ordinary revocation/commit serialization. An admitted request
+may finish after revocation; the next request is checked afresh. Preserve package-owned business consistency,
+uniqueness, generation comparisons, atomic correction/audit and independent rate admission. Raw buses remain
+trusted in-process infrastructure; each actual non-HTTP entry must own its admission. This scoped amendment
+supersedes the blanket Application-admission wording below only for this path, not unrelated security use cases.
+See [the ownership amendment](../../planning/adr/0001-application-ownership-and-orchestration.md#task-00060-invitation-admission-amendment--2026-11-03).
+
+
 Commands express intent and may change state. Queries return data without business mutation. Events report facts that already happened. Messages carry use-case context, not transport details, and handlers do not reconstruct Domain policy from exposed state.
 
 Use Action–Domain–Responder for HTTP interactions. Actions expose `handle()` as their sole entry point;

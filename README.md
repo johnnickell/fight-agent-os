@@ -266,8 +266,13 @@ permission checks from both Actions has independent Review and QA acceptance on 
 acceptance on `c2227fa` is historical. Publication and final delivery checks were pending at this checkpoint;
 current results are in
 `.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200).
-Invitation controls link only to registered,
-truthfully unavailable journeys; no invitation or lifecycle mutation UI is added.
+TASK-00060's `/app/admin/invitations/{user_id}` deliberately reads safe user detail and invitation status
+under READ_USERS; READ_USERS-only viewers receive read-only presentation. Page management additionally needs
+MANAGE_USER_INVITATIONS. Mutation APIs need only that operation permission and return no user/status data;
+manage-only grants no reading. The maintainer revision has independent Review/QA acceptance; publication and
+final checks were pending at closeout. Current delivery is in [PR #204](https://github.com/johnnickell/fight-agent-os/pull/204)
+and `.runs/tasks/TASK-00060/runs/land-delivery.md`; earlier acceptance/delivery is historical. Ordinary/elevated
+invitation issuance UI remains unavailable.
 Guarded custom Role create/rename/remove APIs now carry exact displayed revisions and atomic safe audit, pending
 independent Review/QA; no Role UI or Permission delegation is enabled. Read [custom Roles and v0.8.0 adoption](docs/engineering/CUSTOM_ROLES.md)
 before upgrading an existing database: historical reset authority is never guessed or discarded.

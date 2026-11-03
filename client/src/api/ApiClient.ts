@@ -105,7 +105,7 @@ export class ApiClient {
   mutate<T>(
     method: 'POST' | 'PATCH' | 'DELETE',
     path: string,
-    body: Readonly<Record<string, unknown>>,
+    body: Readonly<Record<string, unknown>> | null,
     decode: ResponseDecoder<T>,
     successStatus: 200 | 201 = 200
   ): Promise<ApiResult<T>> {
@@ -123,7 +123,7 @@ export class ApiClient {
     options: GetOptions,
     mutation?: Readonly<{
       method: 'POST' | 'PATCH' | 'DELETE';
-      body: Readonly<Record<string, unknown>>;
+      body: Readonly<Record<string, unknown>> | null;
       csrfProof?: string;
       successStatus?: 200 | 201;
     }>,
@@ -161,7 +161,7 @@ export class ApiClient {
       }
       headers.set('Authorization', `Bearer ${token}`);
     }
-    if (mutation) {
+    if (mutation && mutation.body !== null) {
       headers.set('Content-Type', 'application/json');
       if (mutation.csrfProof) headers.set('X-CSRF-Proof', mutation.csrfProof);
     }
@@ -170,7 +170,7 @@ export class ApiClient {
       response = await this.#fetch(`${this.#basePath}${path}${query}`, {
         method: mutation?.method ?? 'GET',
         headers,
-        ...(mutation ? { body: JSON.stringify(mutation.body) } : {}),
+        ...(mutation && mutation.body !== null ? { body: JSON.stringify(mutation.body) } : {}),
         credentials: 'same-origin',
         mode: 'same-origin',
         cache: 'no-store',

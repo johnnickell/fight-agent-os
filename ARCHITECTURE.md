@@ -31,7 +31,10 @@ a current human merge action. Other capability states are unchanged.
   the installation-wide [user directory](docs/engineering/USER_DIRECTORY.md) at `/app/admin/users` and
   `GET /api/v1/users` dispatches package `ListUsers` only after exact authoritative `READ_USERS`, projects
   complete safe role presentation and fences volatile browser pages with the sole cache (TASK-00059,
-  independently reviewed and QA passed; [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172) merged into `develop` at `d6b9db3c8c46f1c2853bd1469fd003cb6445c3d5`; invitation links remain truthful registered seams, not mutation UI);
+  independently reviewed and QA passed; [PR #172](https://github.com/johnnickell/fight-agent-os/pull/172) merged into `develop` at `d6b9db3c8c46f1c2853bd1469fd003cb6445c3d5`);
+  TASK-00060's invitation page deliberately reads safe user detail and package delivery status under READ_USERS.
+  Mutation Actions admit MANAGE_USER_INVITATIONS and dispatch package commands with no data response; manage-only
+  grants no reading. Page management requires both permissions. This maintainer revision awaits independent acceptance;
   TASK-00118 adds safe package `GetUserById` detail with a single `READ_USERS` declaration on each detail
   and directory HTTP Action, enforced centrally by `ApiActionSecurity` before execution, referenced package
   `GetRoleById` reads through injected QueryBus, and complete

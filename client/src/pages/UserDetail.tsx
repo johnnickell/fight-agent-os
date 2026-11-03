@@ -24,7 +24,8 @@ export default function UserDetail({
   onBack
 }: {
   userId: string;
-  service: Pick<UserDirectoryService, 'detail' | 'retry'>;
+  service: Pick<UserDirectoryService, 'detail' | 'retry'> &
+    Partial<Pick<UserDirectoryService, 'subscribe'>>;
   cache: AuthorityCache;
   onBack: () => void;
 }) {
@@ -46,6 +47,7 @@ export default function UserDetail({
     if (!scope.isCurrent() || evaluateAccess(cache.getSnapshot(), requirements) !== 'allowed')
       return;
     scope.signal.addEventListener('abort', retire, { once: true });
+    const unsubscribe = service.subscribe?.(retire);
     void service.detail(userId, controller.signal).then((result) => {
       if (!active || controller.signal.aborted || !scope.isCurrent()) return;
       if (result.ok) setState({ kind: 'ready', user: result.value });
@@ -62,6 +64,7 @@ export default function UserDetail({
     });
     return () => {
       active = false;
+      unsubscribe?.();
       scope.signal.removeEventListener('abort', retire);
       controller.abort();
     };

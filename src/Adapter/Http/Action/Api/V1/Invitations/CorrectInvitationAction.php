@@ -6,14 +6,24 @@ namespace App\Adapter\Http\Action\Api\V1\Invitations;
 
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Http\Attribute\RequiresPermission;
-use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
+use App\Adapter\Http\Responder\Api\V1\Invitations\InvitationMutationResponder;
 use App\Application\Failure\AuthenticationRequired;
-use App\Application\Invitation\RecoverInvitation;
+use App\Application\Failure\InvitationRecoveryUncertain;
+use App\Application\Failure\PermissionDenied;
+use App\Application\Failure\StateConflict;
+use App\Application\Invitation\InvitationRateLimiter;
+use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
+use Fight\AccessControl\Domain\AccessControl\User\Command\CorrectPendingInvitation;
+use Fight\AccessControl\Domain\AccessControl\User\Exception\PendingInvitationCorrectionException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Application\Attribute\Validation;
+use Fight\Common\Application\Messaging\Command\CommandBus;
+use Fight\Common\Application\Messaging\Event\EventDispatchFailed;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
+use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -31,8 +41,12 @@ final readonly class CorrectInvitationAction
     /**
      * Constructs CorrectInvitationAction
      */
-    public function __construct(private RecoverInvitation $recovery, private ReadInvitationStatusResponder $responder)
-    {
+    public function __construct(
+        private CommandBus $commandBus,
+        private UserRepository $userRepository,
+        private InvitationRateLimiter $invitationRateLimiter,
+        private InvitationMutationResponder $responder
+    ) {
     }
 
     /**
@@ -43,7 +57,7 @@ final readonly class CorrectInvitationAction
         operationId: 'correctInvitation',
         summary: 'Atomically correct a pending invitation address and replace its grant',
         description: <<<'TEXT'
-            Requires exact current MANAGE_USER_INVITATIONS before target disclosure. No query input.
+            Requires exact current MANAGE_USER_INVITATIONS; grants no user/status reading. No query input.
             Requires a pending-activation user and current issued invitation. Canonicalizes email and rejects
             canonical or reserved email claims. User email, predecessor revocation, fresh purpose-bound seven-day
             grant/delivery and safe actor/target/action audit commit atomically through the package command.
@@ -74,17 +88,12 @@ final readonly class CorrectInvitationAction
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Recovery dispatched and a state effect observed; safe current status',
-                content: new OA\JsonContent(ref: '#/components/schemas/InvitationStatusSuccess')
+                description: 'Command dispatch completed with data null; read outcomes separately with READ_USERS',
+                content: new OA\JsonContent(ref: '#/components/schemas/InvitationMutationSuccess')
             ),
             new OA\Response(ref: '#/components/responses/PublicValidationBadRequest', response: 400),
             new OA\Response(ref: '#/components/responses/Unauthorized', response: 401),
             new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
-            new OA\Response(
-                response: 404,
-                description: 'No safe invitation generation',
-                content: new OA\JsonContent(ref: '#/components/schemas/NotFoundError')
-            ),
             new OA\Response(
                 response: 409,
                 description: 'Not pending, used, replaced, email claimed or concurrent conflict',
@@ -126,10 +135,35 @@ final readonly class CorrectInvitationAction
         /** @var array{email: string} $input */
         $input = $request->getAttribute(JsonBody::class);
 
-        return $this->responder->respond($this->recovery->correct(
-            $authentication,
-            $target,
-            EmailAddress::fromString($input['email'])
-        ));
+        // ApiActionSecurity owns exact current operation permission and trusted request identity.
+        if ($this->userRepository->getById($target) === null) {
+            throw new PermissionDenied();
+        }
+        $email = EmailAddress::fromString($input['email']);
+        $this->invitationRateLimiter->consume($authentication->getUserId(), InvitationOperation::CORRECT, $target);
+        try {
+            $this->commandBus->execute(new CorrectPendingInvitation(
+                $authentication->getUserId(),
+                $target,
+                EmailAddress::fromString($email->canonical())
+            ));
+        } catch (EventDispatchFailed) {
+            throw new InvitationRecoveryUncertain();
+        } catch (PendingInvitationCorrectionException) {
+            throw new StateConflict();
+        } catch (LogicException $failure) {
+            // Only the locked package's two expected compare-and-replace rejections are conflicts.
+            if (
+                $failure::class !== LogicException::class || !in_array($failure->getMessage(), [
+                'The pending invitation email changed concurrently or is reserved.',
+                'The activation grant changed concurrently.'
+                ], true)
+            ) {
+                throw $failure;
+            }
+            throw new StateConflict();
+        }
+
+        return $this->responder->respond();
     }
 }

@@ -7,10 +7,17 @@ namespace App\Adapter\Http\Action\Api\V1\Invitations;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
 use App\Application\Failure\AuthenticationRequired;
-use App\Application\Invitation\ReadInvitationStatus;
+use App\Application\Failure\ResourceNotFound;
+use App\Application\Invitation\InvitationRateLimiter;
+use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\FindInvitationDeliveryStatus;
+use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
+use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,14 +29,18 @@ use Throwable;
  *
  * Maps one target path identifier into an authorized safe status query
  */
-#[RequiresPermission('MANAGE_USER_INVITATIONS')]
+#[RequiresPermission('READ_USERS')]
 final readonly class ReadInvitationStatusAction
 {
     /**
      * Constructs ReadInvitationStatusAction
      */
-    public function __construct(private ReadInvitationStatus $status, private ReadInvitationStatusResponder $responder)
-    {
+    public function __construct(
+        private QueryBus $queryBus,
+        private UserRepository $userRepository,
+        private InvitationRateLimiter $invitationRateLimiter,
+        private ReadInvitationStatusResponder $responder
+    ) {
     }
 
     /**
@@ -40,7 +51,8 @@ final readonly class ReadInvitationStatusAction
         operationId: 'readInvitationStatus',
         summary: 'Read safe invitation delivery lifecycle and expiry',
         description: <<<'TEXT'
-            Requires exact MANAGE_USER_INVITATIONS. Package delivery lifecycle is stored state, not proof of inbox
+            Requires exact READ_USERS; MANAGE_USER_INVITATIONS alone grants no read authority.
+            Package delivery lifecycle is stored state, not proof of inbox
             receipt or a computed expiry transition. Actor/action fixed-window limits default to 60 reads per
             60 seconds; configurable server-side. No query or body input.
             TEXT,
@@ -62,7 +74,7 @@ final readonly class ReadInvitationStatusAction
             new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
             new OA\Response(
                 response: 404,
-                description: 'No invitation delivery generation for this target',
+                description: 'Authorized target user not found',
                 content: new OA\JsonContent(ref: '#/components/schemas/NotFoundError')
             ),
             new OA\Response(ref: '#/components/responses/InvitationThrottled', response: 429),
@@ -83,6 +95,18 @@ final readonly class ReadInvitationStatusAction
             throw new ValidationException(['user_id' => ['Invalid value.']]);
         }
 
-        return $this->responder->respond($this->status->read($authentication, $userId));
+        $this->invitationRateLimiter->consume($authentication->getUserId(), InvitationOperation::STATUS);
+        if ($this->userRepository->getById($userId) === null) {
+            throw new ResourceNotFound();
+        }
+        $delivery = $this->queryBus->fetch(new FindInvitationDeliveryStatus($userId));
+        if (
+            $delivery !== null && (!$delivery instanceof InvitationDeliveryStatusView
+            || !$delivery->getUserId()->equals($userId))
+        ) {
+            throw new LogicException('Invitation status is unavailable.');
+        }
+
+        return $this->responder->respond($delivery);
     }
 }

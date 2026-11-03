@@ -8,12 +8,10 @@ use App\Application\Authorization\AuthenticatedPermissions;
 use App\Application\Authorization\PermissionGuard;
 use App\Application\Failure\IncompleteInvitation;
 use App\Application\Failure\PermissionDenied;
-use App\Application\Failure\ResourceNotFound;
 use App\Application\Failure\StateConflict;
 use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
-use App\Application\Invitation\ReadInvitationStatus;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use App\Domain\Invitation\InvitationMode;
 use App\Domain\Invitation\InvitationOperation;
@@ -79,7 +77,6 @@ final class InvitationApiTest extends TestCase
     private array $audits = [];
     /** @var list<InvitationOperation> */
     private array $admissions = [];
-    private ReadInvitationStatus $reader;
     private string $fault = '';
 
     /**
@@ -239,58 +236,6 @@ final class InvitationApiTest extends TestCase
         foreach (['policy', 'duplicate', 'race'] as $fault) {
             yield [$fault];
         }
-    }
-
-    /**
-     * Requires exact management authority before status admission and returns the package View directly
-     */
-    public function testStatus(): void
-    {
-        $this->issuer(['MANAGE_USER_INVITATIONS']);
-        $target = UserId::generate();
-        $view = $this->reader->read($this->authentication, $target);
-        self::assertEquals($target, $view->getUserId());
-        self::assertSame(CredentialDeliveryStatus::PENDING, $view->getStatus());
-        self::assertSame([InvitationOperation::STATUS], $this->admissions);
-        self::assertSame([], $this->effects);
-    }
-
-    /**
-     * Refuses status reads even when invitation authority exists
-     */
-    public function testStatusForbidden(): void
-    {
-        $this->issuer(['INVITE_USERS', 'ASSIGN_SUPER_ADMIN']);
-        $this->expectException(PermissionDenied::class);
-        $this->reader->read($this->authentication, UserId::generate());
-    }
-
-    /**
-     * Separates a missing generation from a mismatched or unavailable dependency result
-     *
-     * @param string $fault
-     * @param string $exception
-     *
-     * @phpstan-param class-string<\Throwable> $exception
-     */
-    #[DataProvider('statusFailures')]
-    public function testStatusFailures(string $fault, string $exception): void
-    {
-        $this->fault = $fault;
-        $this->issuer();
-        $this->expectException($exception);
-        $this->reader->read($this->authentication, UserId::generate());
-    }
-
-    /**
-     * Supplies explicit safe query failure meanings
-     *
-     * @return iterable<array{string, class-string<\Throwable>}>
-     */
-    public static function statusFailures(): iterable
-    {
-        yield ['delivery-null', ResourceNotFound::class];
-        yield ['delivery-wrong', LogicException::class];
     }
 
     /**
@@ -460,7 +405,6 @@ final class InvitationApiTest extends TestCase
             }
             $this->audits[] = $evidence;
         });
-        $this->reader = new ReadInvitationStatus($authority, $limiter, $queries);
 
         return new IssueInvitation(
             $authority,

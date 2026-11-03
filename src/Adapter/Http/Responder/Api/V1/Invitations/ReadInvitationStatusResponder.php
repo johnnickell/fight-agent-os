@@ -36,7 +36,7 @@ use Psr\Http\Message\ResponseInterface;
     required: ['status', 'data'],
     properties: [
         new OA\Property(property: 'status', type: 'string', enum: ['success']),
-        new OA\Property(property: 'data', ref: '#/components/schemas/InvitationDelivery')
+        new OA\Property(property: 'data', ref: '#/components/schemas/InvitationDelivery', nullable: true)
     ],
     type: 'object',
     additionalProperties: false
@@ -53,7 +53,7 @@ final readonly class ReadInvitationStatusResponder
     /**
      * Returns no provider diagnostics, credential material or inferred receipt
      */
-    public function respond(InvitationDeliveryStatusView $view): ResponseInterface
+    public function respond(?InvitationDeliveryStatusView $view): ResponseInterface
     {
         return $this->responses->fromEnvelope(JSendEnvelope::success($view), 200, ['Cache-Control' => 'no-store']);
     }

@@ -95,7 +95,7 @@ describe('compact account controls', () => {
   it.each([false, true])(
     'renders concise destinations and a decorative API Docs icon (narrow: %s)',
     async (narrow) => {
-      await frame(narrow, ['READ_SWAGGER', 'MANAGE_USER_INVITATIONS']);
+      await frame(narrow, ['READ_SWAGGER', 'READ_USERS']);
       if (narrow) await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
       const navigation = within(screen.getByRole('navigation', { name: 'Primary' }));
       const docs = navigation.getByRole('link', { name: 'API Docs' });
