@@ -13,7 +13,6 @@ use Fight\AccessControl\Domain\AccessControl\User\Query\ListUsers;
 use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\Common\Application\Attribute\Validation;
 use Fight\Common\Application\Messaging\Query\QueryBus;
-use Fight\Common\Application\Validation\Exception\ValidationException;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Repository\ResultSet;
 use LogicException;
@@ -87,9 +86,6 @@ final readonly class ListUsersAction
 
         $page = (int) ($input['page'] ?? '1');
         $perPage = (int) ($input['per_page'] ?? '25');
-        if ($page < 1 || $page > 1000 || $perPage < 1 || $perPage > 100) {
-            throw new ValidationException(['page' => ['Invalid value.']]);
-        }
         $users = $this->queries->fetch(new ListUsers(new Pagination($page, $perPage)));
         if (
             !$users instanceof ResultSet

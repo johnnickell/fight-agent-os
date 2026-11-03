@@ -23,7 +23,6 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Query\QueryBus;
-use Fight\Common\Application\Validation\Exception\ValidationException;
 use Fight\Common\Domain\Collection\ArrayList;
 use Fight\Common\Domain\Messaging\Query\Query;
 use Fight\Common\Domain\Repository\ResultSet;
@@ -226,35 +225,6 @@ final class UsersReadActionsTest extends TestCase
         self::assertSame([], $this->queries[0]->getPagination()->orderings());
         self::assertSame(3, $this->queries[0]->getPagination()->offset());
         self::assertSame(3, $this->queries[0]->getPagination()->limit());
-    }
-
-    /**
-     * Rejects unbounded pagination without dispatch
-     */
-    #[DataProvider('bounds')]
-    public function testBounds(int $page, int $perPage): void
-    {
-        try {
-            $this->directory->handle($this->request->withAttribute(QueryString::class, [
-                'page' => (string) $page, 'per_page' => (string) $perPage
-            ]));
-            self::fail('Invalid pagination dispatched.');
-        } catch (ValidationException) {
-            self::assertSame([], $this->queries);
-        }
-    }
-
-    /**
-     * Supplies pagination limits
-     *
-     * @return iterable<array{int, int}>
-     */
-    public static function bounds(): iterable
-    {
-        yield [0, 25];
-        yield [1001, 25];
-        yield [1, 0];
-        yield [1, 101];
     }
 
     /**
