@@ -5,11 +5,11 @@ TASK; independent Review/QA and delivery remain separate.
 
 ## Authority and ownership
 
-The matched API Action requires Bearer authentication and exact current `READ_USERS` through the existing
-request-scoped principal provider. The Action itself then re-resolves invocation-bound authentication with
-`AuthenticatedPermissions` and checks the protected installation permission through `InstallationAuthority`
-before dispatching package `ListUsers` on the configured shared QueryBus. This is the owner's TASK-00118
-HTTP-boundary correction; no consumer read use-case wrapper remains. Missing, stale, incomplete or
+Each matched user Action declares `#[RequiresPermission('READ_USERS')]` once. Existing `ApiActionSecurity`
+enforces Bearer authentication and exact current `READ_USERS` through the authoritative request-scoped
+principal provider before Action execution, validation or package dispatch. Neither Action repeats permission
+or installation-policy enforcement. The directory dispatches package `ListUsers` on the configured shared
+QueryBus. This is the owner's TASK-00118 single-declaration correction; no consumer read wrapper remains. Missing, stale, incomplete or
 non-active authority fails closed. A displayed `ROLE_SUPER_ADMIN`, JWT/HTML claim, submitted actor or client
 route never grants a read. No new identity, principal, session or authorization store is introduced.
 
@@ -76,10 +76,9 @@ Forbidden controls are absent, not hidden focus targets. Client presentation nev
 
 ## Safe user detail (TASK-00118 implementation)
 
-`GET /api/v1/users/{userId}` uses a matched FQCN Action with early `READ_USERS`, followed by
-fresh permission enforcement explicitly in the Action, re-resolving invocation-bound authentication and exact
-protected installation permission before dispatching existing package `GetUserById` and referenced
-`GetRoleById` queries through injected QueryBus. Self-service permissions and ownership
+`GET /api/v1/users/{userId}` uses a matched FQCN Action whose single `READ_USERS` metadata declaration
+is enforced by the same central request gate before execution. It dispatches existing package `GetUserById`
+and referenced `GetRoleById` queries through injected QueryBus. Self-service permissions and ownership
 never authorize this route. Missing/stale authority fails before target dispatch; an authorized missing target
 returns generic 404. Malformed UUIDs, query fields and GET bodies are sanitized 400s. All outcomes are no-store.
 
@@ -88,7 +87,8 @@ Success is `{status: "success", data: <DirectoryUser>}` with exactly the directo
 Responders; `UserData` owns their single HTTP field allowlist. Neither mapper fetches data or decides authority. No credential, permission membership, audit, revision or pending-email fields are
 added. Missing, duplicate, unexpected or aliased role references fail the entire response. Lifecycle remains
 one of the same four package states. Reads observe current committed data, not an atomic cross-request snapshot;
-a target disappearing after the early gate returns 404, and changed authority is rechecked by the Action before target dispatch.
+a target disappearing after the gate returns 404. Each new request resolves authority anew at the gate;
+there is no second Action recheck or atomic authorization-and-read guarantee.
 
 Each directory row has a permission-rechecked **View details** button. Selection clears the list and fetches
 fresh detail; it does not reuse the row as current target state. Detail remains within `/app/admin/users`, with
@@ -117,7 +117,7 @@ forbidden/system states, polite page-count announcements and post-pagination/ret
 existing frame, themes, fonts, focus and reduced-motion rules. Pagination clears previous-page rows while
 loading and offers First page after navigation.
 
-Owned tests exercise exact permission subsets, no-dispatch rejections, stale authority races, PostgreSQL ties
+Owned tests exercise exact permission subsets, no-dispatch rejections, stale authority at the central gate, PostgreSQL ties
 and lifecycle visibility, complete role resolution, safe Views/OpenAPI, strict client decoding, cancellation,
 volatile retirement, registered destinations, keyboard recovery and semantics. Twelve production-backed Users
 stories cover ready/dark/narrow/long-email/loading/empty/system/server-forbidden/role-name-denied/read-only/

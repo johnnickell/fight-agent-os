@@ -9,36 +9,18 @@ use App\Adapter\Http\Action\Api\V1\Users\ListUsersAction;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDetailResponder;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
-use App\Application\Authorization\AuthenticatedPermissions;
-use App\Application\Authorization\InstallationAuthority;
-use App\Application\Authorization\PermissionGuard;
-use App\Application\Failure\PermissionDenied;
 use App\Application\Failure\ResourceNotFound;
 use DateTimeImmutable;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
-use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthoritativePrincipalResolver;
-use Fight\AccessControl\Domain\AccessControl\Permission\Permission;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionRepository;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionTier;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
-use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionRepository;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\AccessControl\Domain\AccessControl\Role\Role;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
-use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
-use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\Query\GetUserById;
 use Fight\AccessControl\Domain\AccessControl\User\Query\ListUsers;
 use Fight\AccessControl\Domain\AccessControl\User\Query\UserView;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
-use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
@@ -57,10 +39,9 @@ use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Factory\StreamFactory;
 use Slim\Routing\RouteContext;
 use Slim\Routing\RoutingResults;
-use Tests\Support\AccessClock;
 
 /**
- * Protects fresh Action authorization, bounded package reads and credential-free responses
+ * Protects bounded package reads and credential-free responses after central authorization
  */
 final class UsersReadActionsTest extends TestCase
 {
@@ -72,67 +53,24 @@ final class UsersReadActionsTest extends TestCase
     private Role $role;
     private mixed $result;
     private string $fault = '';
-    private int $actorReads = 0;
     /** @var list<Query> */
     private array $queries = [];
 
     /**
-     * Constructs authoritative stores separately from returned target Views
+     * Supplies package Views independently of the HTTP gate exercised by route tests
      */
     protected function setUp(): void
     {
         $now = new DateTimeImmutable('2026-11-02T12:00:00Z');
-        $permission = Permission::defineManaged(
-            PermissionId::generate(),
-            PermissionName::fromString('READ_USERS'),
-            PermissionTier::SUPER_ADMIN_ONLY,
-            $now
-        );
         $this->role = Role::defineManaged(
             RoleId::generate(),
             RoleName::fromString('ROLE_SUPER_ADMIN'),
-            [$permission->getId()],
+            [],
             $now
         );
         $this->actor = User::invite(UserId::generate(), EmailAddress::fromString('reader@example.test'), $now);
-        $this->actor->activate(
-            PasswordHash::fromString((string) password_hash('fixture', PASSWORD_BCRYPT, ['cost' => 4])),
-            $now
-        );
-        $this->actor->assignRole($this->role->getId(), $now);
         $this->target = User::invite(UserId::generate(), EmailAddress::fromString('target@example.test'), $now);
         $this->result = UserView::fromUser($this->target);
-        $session = RefreshSession::start(
-            RefreshSessionId::generate(),
-            $this->actor->getId(),
-            RefreshCredential::fromString(bin2hex(random_bytes(32))),
-            $now,
-            $now->modify('+1 day'),
-            $now->modify('+2 days'),
-            1,
-            false
-        );
-        $users = $this->createStub(UserRepository::class);
-        $users->method('getById')->willReturnCallback(function (UserId $id): ?User {
-            self::assertTrue($id->equals($this->actor->getId()), 'No target lookup before authorized dispatch.');
-            ++$this->actorReads;
-
-            if ($this->fault === 'unknown' || ($this->fault === 'race' && $this->actorReads === 2)) {
-                return null;
-            }
-
-            return $this->actor;
-        });
-        $sessions = $this->createStub(RefreshSessionRepository::class);
-        $sessions->method('getById')->willReturnCallback(fn() => $this->fault === 'session' ? null : $session);
-        $roles = $this->createStub(RoleRepository::class);
-        $roles->method('getByIds')->willReturnCallback(fn() => $this->fault === 'roles' ? [] : [$this->role]);
-        $roles->method('getByName')->willReturn($this->role);
-        $permissions = $this->createStub(PermissionRepository::class);
-        $permissions->method('getByIds')->willReturnCallback(
-            fn() => $this->fault === 'permission' ? [] : [$permission]
-        );
-        $permissions->method('getByName')->willReturnCallback(fn() => $this->fault === 'policy' ? null : $permission);
         $bus = $this->createStub(QueryBus::class);
         $bus->method('fetch')->willReturnCallback(function (Query $query): mixed {
             $this->queries[] = $query;
@@ -157,62 +95,16 @@ final class UsersReadActionsTest extends TestCase
 
             return $this->result;
         });
-        $authentication = new AuthenticatedPermissions(new AuthoritativePrincipalResolver(
-            $users,
-            $sessions,
-            $roles,
-            $permissions,
-            new AccessClock($now)
-        ), new PermissionGuard());
-        $installation = new InstallationAuthority($users, $roles, $permissions);
         $responses = new JSendResponseFactory(new ResponseFactory(), new StreamFactory());
-        $this->detail = new GetUserAction($authentication, $installation, $bus, new UserDetailResponder($responses));
-        $this->directory = new ListUsersAction(
-            $authentication,
-            $installation,
-            $bus,
-            new UserDirectoryResponder($responses)
-        );
+        $this->detail = new GetUserAction($bus, new UserDetailResponder($responses));
+        $this->directory = new ListUsersAction($bus, new UserDirectoryResponder($responses));
         $route = $this->createStub(RouteInterface::class);
         $route->method('getArgument')->willReturn($this->target->getId()->toString());
         $this->request = (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/users')
-            ->withAttribute(AuthenticationContext::class, new AuthenticationContext(
-                $this->actor->getId(),
-                $session->getId(),
-                1
-            ))->withAttribute(QueryString::class, [])
+            ->withAttribute(QueryString::class, [])
             ->withAttribute(RouteContext::ROUTE, $route)
             ->withAttribute(RouteContext::ROUTE_PARSER, $this->createStub(RouteParserInterface::class))
             ->withAttribute(RouteContext::ROUTING_RESULTS, $this->createStub(RoutingResults::class));
-    }
-
-    /**
-     * Rejects stale invocation authority without dispatching any user or role query
-     */
-    #[DataProvider('denials')]
-    public function testNoDispatch(bool $detail, string $fault): void
-    {
-        $this->fault = $fault;
-        try {
-            ($detail ? $this->detail : $this->directory)->handle($this->request);
-            self::fail('Unresolved authority allowed target dispatch.');
-        } catch (PermissionDenied) {
-            self::assertSame([], $this->queries);
-        }
-    }
-
-    /**
-     * Supplies both reads and independently stale authority boundaries
-     *
-     * @return iterable<array{bool, string}>
-     */
-    public static function denials(): iterable
-    {
-        foreach ([false, true] as $detail) {
-            foreach (['unknown', 'session', 'roles', 'permission', 'policy', 'race'] as $fault) {
-                yield [$detail, $fault];
-            }
-        }
     }
 
     /**

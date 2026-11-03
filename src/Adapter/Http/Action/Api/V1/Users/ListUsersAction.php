@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Users;
 
-use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Attribute\QueryString;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
-use App\Application\Authorization\AuthenticatedPermissions;
-use App\Application\Authorization\InstallationAuthority;
-use App\Application\Failure\PermissionDenied;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\AccessControl\Domain\AccessControl\User\Query\ListUsers;
@@ -25,7 +20,6 @@ use LogicException;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Throwable;
 
 /**
  * Class ListUsersAction
@@ -37,8 +31,6 @@ final readonly class ListUsersAction
      * Constructs ListUsersAction
      */
     public function __construct(
-        private AuthenticatedPermissions $authentication,
-        private InstallationAuthority $installation,
         private QueryBus $queries,
         private UserDirectoryResponder $responder
     ) {
@@ -52,7 +44,8 @@ final readonly class ListUsersAction
         operationId: 'listUsers',
         summary: 'Read the safe installation-wide user directory',
         description: <<<'TEXT'
-            Requires Bearer authentication and exact current managed READ_USERS before package ListUsers.
+            Requires Bearer authentication and exact current READ_USERS, centrally enforced from this
+            Action's permission metadata before execution and package ListUsers dispatch.
             Role names and token claims grant nothing. Includes pending_activation, active, disabled and deleted
             identities, ordered by created_at ASC then stable user ID ASC. Offset pages describe committed state,
             not a cross-request snapshot. Defaults: page 1, per_page 25. Only these two query fields are accepted;
@@ -89,13 +82,6 @@ final readonly class ListUsersAction
     ])]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $permission = PermissionName::fromString('READ_USERS');
-        $actor = $this->authentication->require(CatalogInput::authentication($request), [$permission]);
-        try {
-            $this->installation->assertInstallationPermission($actor, $permission);
-        } catch (Throwable) {
-            throw new PermissionDenied();
-        }
         /** @var array{page?: string, per_page?: string} $input */
         $input = $request->getAttribute(QueryString::class);
 

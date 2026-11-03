@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Action\Api\V1\Users;
 
-use App\Adapter\Http\Api\V1\Authority\CatalogInput;
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Users\UserDetailResponder;
-use App\Application\Authorization\AuthenticatedPermissions;
-use App\Application\Authorization\InstallationAuthority;
-use App\Application\Failure\PermissionDenied;
 use App\Application\Failure\ResourceNotFound;
-use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\AccessControl\Domain\AccessControl\User\Query\GetUserById;
@@ -29,7 +24,7 @@ use Throwable;
 /**
  * Class GetUserAction
  *
- * Maps a bounded target into an independently authorized installation read
+ * Maps a bounded target into a metadata-guarded installation read
  */
 #[RequiresPermission('READ_USERS')]
 final readonly class GetUserAction
@@ -38,8 +33,6 @@ final readonly class GetUserAction
      * Constructs GetUserAction
      */
     public function __construct(
-        private AuthenticatedPermissions $authentication,
-        private InstallationAuthority $installation,
         private QueryBus $queries,
         private UserDetailResponder $responder
     ) {
@@ -53,8 +46,8 @@ final readonly class GetUserAction
         operationId: 'getUser',
         summary: 'Read one safe installation user',
         description: <<<'TEXT'
-            Requires Bearer authentication and exact current protected READ_USERS in this Action before
-            package GetUserById dispatch, independently of the early route gate. Role names, JWT claims and
+            Requires Bearer authentication and exact current READ_USERS, centrally enforced from this
+            Action's permission metadata before execution and package GetUserById dispatch. Role names, JWT claims and
             ownership grant nothing. Includes pending_activation, active, disabled and deleted identities.
             Returns exactly the directory's safe fields and complete roles sorted by name. Missing or duplicate
             role references fail closed. No credentials, sessions, grants, permission memberships, revisions,
@@ -92,13 +85,6 @@ final readonly class GetUserAction
     )]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $permission = PermissionName::fromString('READ_USERS');
-        $actor = $this->authentication->require(CatalogInput::authentication($request), [$permission]);
-        try {
-            $this->installation->assertInstallationPermission($actor, $permission);
-        } catch (Throwable) {
-            throw new PermissionDenied();
-        }
         $value = (string) RouteContext::fromRequest($request)->getRoute()?->getArgument('userId');
         try {
             if (strlen($value) !== 36) {

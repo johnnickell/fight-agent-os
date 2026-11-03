@@ -258,8 +258,10 @@ The [permission-controlled user directory](docs/engineering/USER_DIRECTORY.md) a
 `/app/admin/users` uses exact current `READ_USERS`, fixed bounded pagination and explicit safe role presentation
 (TASK-00059 implementation; independent Review/QA pending). TASK-00118 adds a safe read-only
 `GET /api/v1/users/{userId}` and fresh detail entry within that directory, with exact authoritative `READ_USERS`
-enforced in the HTTP Actions, public package user/role queries and safe Responder presentation. No target data
-is stored in browser history. The owner's HTTP-boundary correction has independent Review and QA acceptance on `c2227fa`.
+declared once on each HTTP Action and enforced centrally by `ApiActionSecurity`, public package user/role
+queries and safe Responder presentation. No target data is stored in browser history. Removal of duplicate
+permission checks from both Actions is pending independent Review/QA. The earlier HTTP-boundary correction
+has historical independent Review and QA acceptance on `c2227fa`, not acceptance of this new repair.
 Publication and final delivery checks were pending at closeout; current results are in
 `.runs/tasks/TASK-00118/runs/land/receipt.md` and [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200).
 Invitation controls link only to registered,

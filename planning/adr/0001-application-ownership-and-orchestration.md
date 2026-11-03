@@ -5,15 +5,25 @@
 - **Decision owners:** Fight Agent OS maintainers
 - **Acceptance:** Explicitly accepted by the human maintainer under TASK-00009 on 2026-09-23
 
+## TASK-00118 single permission declaration — 2026-11-03
+
+The owner's **“Fix it in both actions”** correction makes `#[RequiresPermission('READ_USERS')]` on each
+safe user detail/directory Action the single permission declaration. Existing `ApiActionSecurity` enforces
+that metadata against authoritative current request state before Action execution, validation and package
+query dispatch. Do not repeat `AuthenticatedPermissions` or installation-permission enforcement in either
+Action or relocate those duplicate checks into a helper. A second lookup does not establish atomic
+authorization; no atomic authorization-and-read snapshot is promised. Each new request resolves authority anew.
+Package/Domain invariants, mutation and non-HTTP authorization contracts remain unchanged.
+
 ## TASK-00118 owner clarification — 2026-11-02
 
-For the safe user detail and directory reads, the owner explicitly corrected the original HTTP boundary:
-**“the permission check is explicitly supposed to be in the HTTP action”.** The Action freshly enforces exact
-current `READ_USERS` with the existing authoritative authentication and installation-policy capabilities,
-dispatches public package queries through injected QueryBus, and passes safe Views to the Responder. Early
-route metadata is defense in depth, not a substitute for that check. Do not retain consumer read wrappers just
-to relocate permission enforcement or forward queries. The original rejection of authorization in Actions below
-is superseded for these HTTP permission checks, not for Domain invariants, ownership policy or transactions.
+Historical boundary decision, refined by the single-declaration correction above: the owner said
+**“the permission check is explicitly supposed to be in the HTTP action”.** The first repair interpreted this
+as a fresh explicit Action recheck in addition to the early route gate. That duplicate-enforcement interpretation
+is superseded, not a requirement to preserve it. Actions still dispatch public package queries through injected
+QueryBus and pass safe Views to Responders. Do not retain consumer read wrappers just to relocate permission
+enforcement or forward queries. The original rejection of authorization in Actions below is superseded for
+these HTTP permission declarations, not for Domain invariants, ownership policy or transactions.
 
 Installed public user/role queries and Views suffice for these reads. Actions may compose required reference
 queries; Responders map complete Views into the endpoint allowlist without repository access or fetching.
@@ -131,7 +141,7 @@ exactly-once behavior. Each such guarantee must come from the owning use case an
 Each HTTP interaction has one final Action. The Action maps already validated transport input and authenticated
 context into exactly one package/owned command, one package/owned query, or one explicitly justified orchestrator,
 then delegates successful presentation. The safe-user-read clarification above permits the required public
-user/role query composition and makes fresh HTTP permission enforcement an Action responsibility. Actions contain
+user/role query composition and declares HTTP permission on the Action for central enforcement. Actions contain
 no Domain policy, persistence logic, transaction control or external-provider logic.
 
 An endpoint-specific Responder owns successful status, headers, JSend envelope, and transport mapping. A package
@@ -141,8 +151,8 @@ values, and persistence models must not become transport models. Transport field
 concerns and must not expose arbitrary exception messages or internals.
 
 Authentication middleware may establish trusted principal context, but authorization remains a server-side
-decision for every protected command and query. For the safe user reads, the Action enforces the HTTP permission
-using authoritative capabilities; package/Domain owners retain intrinsic invariants. Other justified Application
+decision for every protected command and query. For the safe user reads, central enforcement of the Action's
+permission metadata satisfies that boundary; package/Domain owners retain intrinsic invariants. Other justified Application
 policies and non-HTTP consumers retain their explicit authorization contracts. Enforcement uses explicit permission and
 ownership policy against authoritative state. An Action, middleware, or handler must not grant access because of a
 role name, UI visibility, route reachability, or client-provided authority. The transport supplies actor/target
@@ -176,7 +186,7 @@ The following are explicitly prohibited:
 - framework, HTTP, persistence, or provider imports into Domain, or concrete Adapter/framework imports into
   Application;
 - Domain business/ownership, persistence, transaction or external-effect policy in Actions or Responders,
-  or permission decisions in Responders (fresh safe-user-read Action permission checks are required above);
+  or permission decisions in Responders (safe-user-read Action metadata is centrally enforced as required above);
 - authorization based on role names or client/UI decisions;
 - exposing entities, hashes, credentials, grants, secret-bearing values, or persistence models at transport
   boundaries;

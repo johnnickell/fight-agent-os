@@ -11,8 +11,6 @@ use App\Adapter\Http\Responder\Api\V1\Users\UserDirectoryResponder;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
-use App\Application\Authorization\AuthenticatedPermissions;
-use App\Application\Authorization\InstallationAuthority;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
@@ -333,32 +331,14 @@ final class UserDirectoryApiTest extends TestCase
     }
 
     /**
-     * Revalidates permission removal between the early gate and the actual Action
-     */
-    public function testAuthorityRace(): void
-    {
-        $this->container->set(ListUsersAction::class, function (Container $c): ListUsersAction {
-            $this->connection->executeStatement(<<<'SQL'
-DELETE FROM role_permissions WHERE permission_id IN (SELECT id FROM permissions WHERE name = 'READ_USERS')
-SQL);
-
-            return new ListUsersAction(
-                $c->get(AuthenticatedPermissions::class),
-                $c->get(InstallationAuthority::class),
-                $c->get(QueryBus::class),
-                $c->get(UserDirectoryResponder::class)
-            );
-        });
-        $this->check($this->request(), 403);
-        self::assertSame(0, $this->probe->count());
-    }
-
-    /**
-     * Rejects stale and non-active authority without trusting the retained signed identity or role label
+     * Refreshes central authority on each request without dispatch after revocation or principal corruption
      */
     #[DataProvider('authorityFailures')]
     public function testStaleAuthority(string $fault): void
     {
+        $this->check($this->request(), 200);
+        $this->check($this->request(target: '/'.$this->actor->getId()->toString()), 200, true);
+        $dispatched = $this->probe->count();
         match ($fault) {
             'assignment' => $this->connection->executeStatement('DELETE FROM user_role_assignments'),
             'permission' => $this->connection->executeStatement('DELETE FROM role_permissions'),
@@ -366,18 +346,18 @@ SQL);
             'revision' => $this->connection->executeStatement(
                 'UPDATE users SET authentication_version = authentication_version + 1'
             ),
-            'name' => $this->connection->executeStatement(
-                "UPDATE roles SET name = 'ROLE_LOOKALIKE' WHERE name = 'ROLE_SUPER_ADMIN'"
+            'spoof' => $this->connection->executeStatement(
+                "UPDATE roles SET managed = FALSE WHERE name = 'ROLE_SUPER_ADMIN'"
             ),
             'pending_activation' => $this->connection->executeStatement(
                 "UPDATE users SET state = 'pending_activation', password_hash = NULL"
             ),
             default => $this->connection->executeStatement('UPDATE users SET state = ?', [$fault])
         };
-        $status = in_array($fault, ['assignment', 'permission', 'name'], true) ? 403 : 401;
+        $status = in_array($fault, ['assignment', 'permission'], true) ? 403 : 401;
         $this->check($this->request(), $status);
         $this->check($this->request(target: '/'.$this->actor->getId()->toString()), $status, true);
-        self::assertSame(0, $this->probe->count());
+        self::assertSame($dispatched, $this->probe->count());
     }
 
     /**
@@ -388,7 +368,7 @@ SQL);
     public static function authorityFailures(): iterable
     {
         $faults = [
-            'assignment', 'permission', 'session', 'revision', 'name', 'pending_activation', 'disabled', 'deleted'
+            'assignment', 'permission', 'session', 'revision', 'spoof', 'pending_activation', 'disabled', 'deleted'
         ];
         foreach ($faults as $fault) {
             yield [$fault];
@@ -414,8 +394,6 @@ SQL);
             });
 
             return new ListUsersAction(
-                $c->get(AuthenticatedPermissions::class),
-                $c->get(InstallationAuthority::class),
                 $queries,
                 $c->get(UserDirectoryResponder::class)
             );
@@ -533,45 +511,6 @@ SQL);
     }
 
     /**
-     * Revalidates authority after the route gate and before package detail dispatch
-     */
-    #[DataProvider('detailRaces')]
-    public function testDetailAuthorityRace(string $fault): void
-    {
-        $this->container->set(GetUserAction::class, function (Container $c) use ($fault): GetUserAction {
-            $this->connection->executeStatement(match ($fault) {
-                'session' => 'UPDATE refresh_sessions SET revoked = TRUE',
-                'actor' => "UPDATE users SET state = 'disabled'",
-                default => <<<'SQL'
-                    DELETE FROM role_permissions WHERE permission_id IN
-                        (SELECT id FROM permissions WHERE name = 'READ_USERS')
-                    SQL
-            });
-
-            return new GetUserAction(
-                $c->get(AuthenticatedPermissions::class),
-                $c->get(InstallationAuthority::class),
-                $c->get(QueryBus::class),
-                $c->get(UserDetailResponder::class)
-            );
-        });
-        $this->check($this->request(target: '/'.$this->actor->getId()->toString()), 403, true);
-        self::assertSame(0, $this->probe->count());
-    }
-
-    /**
-     * Supplies independently changed current authority
-     *
-     * @return iterable<array{string}>
-     */
-    public static function detailRaces(): iterable
-    {
-        yield ['permission'];
-        yield ['session'];
-        yield ['actor'];
-    }
-
-    /**
      * Reports a target removed after the early permission gate as an authorized not-found
      */
     public function testDetailTargetDisappears(): void
@@ -588,8 +527,6 @@ SQL);
             $this->connection->executeStatement('DELETE FROM users WHERE id = ?', [$user->getId()->toString()]);
 
             return new GetUserAction(
-                $c->get(AuthenticatedPermissions::class),
-                $c->get(InstallationAuthority::class),
                 $c->get(QueryBus::class),
                 $c->get(UserDetailResponder::class)
             );
@@ -599,13 +536,27 @@ SQL);
     }
 
     /**
-     * Refuses role-name spoof authority even for an existing own target
+     * Rejects an unmanaged reserved-name impersonation at the central principal gate
      */
     public function testDetailRoleNameSpoof(): void
     {
         $this->connection->executeStatement(
+            "UPDATE roles SET managed = FALSE WHERE name = 'ROLE_SUPER_ADMIN'"
+        );
+        $this->check($this->request(target: '/'.$this->actor->getId()->toString()), 401, true);
+        self::assertSame(0, $this->probe->count());
+    }
+
+    /**
+     * Refuses a lookalike role label without the exact authoritative permission on both reads
+     */
+    public function testRoleLabelCannotGrantAccess(): void
+    {
+        $this->connection->executeStatement('DELETE FROM role_permissions');
+        $this->connection->executeStatement(
             "UPDATE roles SET name = 'ROLE_LOOKALIKE' WHERE name = 'ROLE_SUPER_ADMIN'"
         );
+        $this->check($this->request(), 403);
         $this->check($this->request(target: '/'.$this->actor->getId()->toString()), 403, true);
         self::assertSame(0, $this->probe->count());
     }
@@ -630,8 +581,6 @@ SQL);
                 $query instanceof GetRoleById ? null : $bus->fetch($query));
 
             return new GetUserAction(
-                $c->get(AuthenticatedPermissions::class),
-                $c->get(InstallationAuthority::class),
                 $queries,
                 $c->get(UserDetailResponder::class)
             );
