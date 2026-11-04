@@ -28,8 +28,11 @@ The QA-purpose native branch is `qa/task-NNNNN/FULL_OID`; its registered checkou
 `.worktrees/qa-task-NNNNN-FULL_OID`. It never adopts an engineering/main checkout. The existing path-derived
 Compose project/hostname and isolated settings, database and output are reused without a second inventory.
 An OS advisory lock serializes QA up/down, without saved PIDs or a daemon. A healthy repeat reuses the SAME
-stack and data. A different revision, ambiguous sessions or stopped/interrupted setup requires explicit exact
-down/up; no reset or silent source switch. A native retained exact QA ref can be reopened without changing it.
+stack and data. A different live/partial revision, ambiguous sessions or stopped/interrupted setup requires
+explicit exact down/up; no reset or silent source switch. After completed down, unchanged retained refs are
+annotations, not conflicting sessions: another revision can start, or the same OID can reopen, even with several
+retired refs. Changed/re-registered refs, remaining source/configuration or native project resources still block
+allocation; do not force-delete refs or repeat completed cleanup merely to switch revisions.
 
 ## Prepare external prerequisites explicitly
 
@@ -55,7 +58,10 @@ retain held leaves without retaining disposable runtime/source merely for the pr
 
 Supported revisions must retain the operator checkout's qualified host-executed wrappers, runtime preparation,
 Compose and Docker templates plus documented bootstrap/catcher setup and lockfiles. Changed host setup or
-creation hooks are refused before allocation. Effective Worktrunk startup hooks must be absent in both contexts;
+creation hooks are refused before allocation. The fixed setup commands also require unchanged Python import
+namespaces at `scripts/` and `scripts/resource_lifecycle/`: new package initializers, module/package shadows,
+bytecode and extension-module names are refused before they can run on the host. Other existing scripts are
+not implicitly authorized for host execution. Effective Worktrunk startup hooks must be absent in both contexts;
 Git post-checkout hooks and relative hooksPath are refused. No hooks are hidden/skipped or persistently approved.
 This is trusted local tooling, **not a hostile-code sandbox**: the selected application code executes in the
 existing containers. Deliberately qualify a changed setup boundary before adding support; `--ref` is not approval.

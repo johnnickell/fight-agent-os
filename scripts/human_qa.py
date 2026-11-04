@@ -110,6 +110,27 @@ def environments(safe):
     return list(entries.values())
 
 
+def retired(safe, entry):
+    """Distinguish a protected ref annotation from a live or partial session"""
+    if not entry.get('ref_only') or entry['ref_revision'] != entry['revision']:
+        return False
+    checkout = Path(entry['path'])
+    project = identity(safe, checkout)
+    state_directory = safe / 'var/worktrees' / project
+    if (checkout.exists() or checkout.is_symlink() or state_directory.exists() or state_directory.is_symlink() or
+            any(e['path'] == entry['path'] or e['branch'] == entry['branch'] for e in registrations(safe))):
+        return False
+    if any(native_ids(safe, kind, project) for kind in ('containers', 'volumes', 'networks')):
+        return False
+    if any(tag.startswith(project + '-') for tag in text([
+            'docker', 'image', 'ls', '--format', '{{.Repository}}:{{.Tag}}'], safe).splitlines()):
+        return False
+    if project in text(['docker', 'buildx', 'ls', '--format', '{{.Name}}'], safe).splitlines():
+        return False
+    return not text(['docker', 'volume', 'ls', '-q', '--filter',
+                     'name=^buildx_buildkit_' + project + '0_state$'], safe)
+
+
 def state(safe, entry):
     project = identity(safe, Path(entry['path']))
     ids = native_ids(safe, 'containers', project)
@@ -136,9 +157,9 @@ def state(safe, entry):
         status, url = 'running', 'https://' + project + '.localhost'
     elif not actual or not ready:
         status = 'partial'
-    if entry.get('ref_only') and not containers and not checkout.exists():
-        actual = entry['ref_revision']
-        status = 'stopped (retained ref only)' if actual == entry['revision'] else 'partial'
+    if entry.get('ref_only'):
+        actual = actual or entry['ref_revision']
+        status = 'stopped (retained ref only)' if retired(safe, entry) else 'partial'
     return {'task': entry['task'], 'revision': entry['revision'], 'actual_revision': actual,
             'checkout': entry['path'], 'project': project, 'status': status, 'url': url,
             'down': shlex.join([str(ROOT / 'bin/qa'), 'down', entry['path']])}
@@ -268,12 +289,15 @@ def up(safe, task, ref):
     supported(ROOT, oid)
     creation_hooks(safe, oid)
     with serialize(safe):
-        existing = [e for e in environments(safe) if e['task'] == task]
+        # Unchanged refs left by completed non-force removal are annotations,
+        # not exclusive sessions. Native leftovers, changed refs and registered
+        # (even physically missing) owners still block switching or allocation.
+        existing = [e for e in environments(safe) if e['task'] == task and not retired(safe, e)]
         require(len(existing) <= 1, 'Ambiguous QA sessions; list and down an exact checkout')
         if existing:
             require(existing[0]['revision'] == oid, 'A different QA revision exists; down its exact checkout before up')
             require(existing[0].get('ref_revision', oid) == oid, 'QA ref changed; unique work retained')
-        if existing and not existing[0].get('ref_only'):
+        if existing:
             entry = existing[0]
             observed = state(safe, entry)
             require(observed['status'] == 'running', 'Existing QA environment is stopped/partial; use its exact down command, then up')

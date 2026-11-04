@@ -22,6 +22,20 @@ SETUP_PATHS = (
 
 def supported(root, oid):
     from resource_lifecycle.resources import text
+    # Fixed setup commands import the modules below from scripts/ and its
+    # resource_lifecycle package. Reject new names at BOTH import search roots:
+    # initializers, package/module shadows, bytecode and extension modules can
+    # execute before an unchanged module is reached. Other existing scripts are
+    # not invoked by setup; their application code need not be byte-identical.
+    for directory in ('scripts', 'scripts/resource_lifecycle'):
+        def namespace(revision):
+            return {tuple(row.split('\t', 1)[0].split()[:2]) + (row.split('\t', 1)[1],)
+                    for row in text(['git', 'ls-tree', revision + ':' + directory], root).splitlines()}
+        require(namespace(oid) <= namespace('HEAD'),
+                'Unsupported revision: changed host import namespace ' + directory)
+        initializer = directory + '/__init__.py'
+        require(not text(['git', 'ls-tree', oid, '--', initializer], root),
+                'Unsupported revision: unqualified host package initializer ' + initializer)
     entries = text(['git', 'ls-tree', '-r', oid, '--', *SETUP_PATHS], root).splitlines()
     require(entries, 'Unsupported revision: no documented setup boundary')
     paths = set()
