@@ -5,7 +5,7 @@ import { agentDetail, agentRow } from './agent-presentation.mjs';
 export class NativeAgentBrowser {
   constructor(ctx, uiTools, { reader = (...args) => new RegisteredChildren(...args) } = {}) {
     this.ctx = ctx; this.tools = uiTools; this.active = false; this.closed = false;
-    this.children = reader(ctx.cwd, () => this.changed(), { preferences: false });
+    this.children = reader(ctx.cwd, () => this.changed(), { preferences: false, retention: true });
   }
   start() {
     const { ui, sessionManager } = this.ctx;
@@ -17,7 +17,12 @@ export class NativeAgentBrowser {
     this.unsubscribe = ui.onTerminalInput(data => this.input(data));
     this.timer = setInterval(() => this.children.tick(), 1000);
   }
-  changed() { if (!this.closed) { this.tui?.requestRender(); this.viewerTui?.requestRender(); } }
+  changed() {
+    if (!this.closed) {
+      this.children.retain(this.viewKey ?? (this.active ? this.children.selected : null));
+      this.tui?.requestRender(); this.viewerTui?.requestRender();
+    }
+  }
   activate() { if (!this.closed && !this.viewing) { this.active = !this.active; this.changed(); } }
   suspend() { this.active = false; this.changed(); }
   picker(width, theme) {
@@ -30,7 +35,10 @@ export class NativeAgentBrowser {
         return theme.fg(key === this.children.selected && this.active ? 'accent' : item.lifecycle === 'completed' ? 'success' : 'muted', row);
       }),
       ...(rows.length > 3 ? [theme.fg('dim', `${first + 1}–${Math.min(rows.length, first + 3)} of ${rows.length}/8 retained · ↑↓ more`)] : []),
-      ...(!rows.length ? [theme.fg('dim', 'No eligible agents · bounded verified activity only')] : []),
+      ...(!rows.length || /refused|unavailable/i.test(this.children.notice) ? [
+        ...this.tools.wrapTextWithAnsi(this.children.notice, width).map(line => theme.fg('dim', line)),
+        ...(!this.children.session ? ['Recover: /fight-workspace close', 'Then: /fight-workspace open (after restoring source)'].map(line => theme.fg('dim', line)) : []),
+      ] : []),
       ...(this.children.removed ? [theme.fg('dim', `Observed lost/evicted: ${this.children.removed} · not complete history`)] : []),
     ].map(line => this.tools.truncateToWidth(line, width));
   }
@@ -47,7 +55,7 @@ export class NativeAgentBrowser {
   async view() {
     const key = this.children.selected;
     if (!key || this.closed || this.viewing) { this.changed(); return; }
-    this.viewing = true; this.active = false;
+    this.viewing = true; this.viewKey = key; this.active = false; this.changed();
     let scroll = 0, paused = null, sequence = 0;
     try {
       await this.ctx.ui.custom((tui, theme, _keybindings, done) => {
@@ -78,7 +86,7 @@ export class NativeAgentBrowser {
           invalidate() {},
         };
       }, { overlay: true, overlayOptions: { width: '100%', maxHeight: '100%', anchor: 'top-left' } });
-    } finally { this.viewerTui = null; this.finishViewer = null; this.viewing = false; this.changed(); }
+    } finally { this.viewerTui = null; this.finishViewer = null; this.viewing = false; this.viewKey = null; this.changed(); }
   }
   close() {
     if (this.closed) return;

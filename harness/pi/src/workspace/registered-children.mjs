@@ -1,4 +1,5 @@
-import { constants, closeSync, fstatSync, ftruncateSync, openSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { constants, closeSync, fstatSync, ftruncateSync, openSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { candidates, challenge, directory, privateDirectory, privateFile, sessionFileIdentity, sameSessionFile, limits } from '../observation/custody.mjs';
 import { clean } from './presentation.mjs';
@@ -26,8 +27,9 @@ function admitted(value, witness) {
   return { ...value, identity: Object.fromEntries([...keys, ...(value.identity.assignment === undefined ? [] : ['assignment'])].map(key => [key, clean(value.identity[key]).replace(/\n/g, ' ')])), history: value.history.map(text => clean(text).replace(/\n/g, ' ')), verified: true };
 }
 export class RegisteredChildren {
-  constructor(cwd, changed = () => {}, { discover = candidates, verify = challenge, now = Date.now, preferences = true } = {}) {
+  constructor(cwd, changed = () => {}, { discover = candidates, verify = challenge, now = Date.now, preferences = true, retention = false } = {}) {
     this.cwd = realpathSync(cwd); this.changed = changed; this.discover = discover; this.verify = verify; this.now = now; this.preferences = preferences;
+    this.retention = retention; this.retentionOwner = randomUUID();
     this.sources = new Map(); this.selected = null; this.pin = null; this.session = null; this.file = null;
     this.epoch = 0; this.closed = false; this.open = true; this.pending = null; this.paused = false; this.frozen = null;
     this.removed = 0;
@@ -36,13 +38,14 @@ export class RegisteredChildren {
   start(session, file) {
     if (this.closed || this.session !== null || typeof session !== 'string' || !session) return;
     this.session = session; this.sessionFile = file;
+    if (this.retention) this.retentionPath = join(directory(this.cwd, session), 'main-view.json');
     try { this.file = file ? sessionFileIdentity(file) : null; } catch { this.file = null; }
     if (!this.file) this.notice = 'Native session file lifetime pending/unavailable; no child or log authority admitted';
     this.loadPreference(); return this.refresh();
   }
   sessionChanged(session, file) {
     if (session === this.session && file === this.file?.path) return;
-    this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null;
+    this.retain(null); this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null;
     this.removed = 0;
     this.session = null; this.file = null; this.notice = 'Session changed: old readers, pin and source context cleared'; this.changed();
     if (session) return this.start(session, file);
@@ -68,7 +71,7 @@ export class RegisteredChildren {
     if (!this.file) return true;
     try { if (sameSessionFile(sessionFileIdentity(this.sessionFile), this.file)) return true; } catch {}
     this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null;
-    this.session = null; this.file = null; this.sessionFile = null;
+    this.session = null; this.file = null; this.sessionFile = null; this.retain(null);
     this.notice = 'Actual session file replaced/unavailable: admissions, pin and source authority cleared; reopen explicitly';
     return false;
   }
@@ -146,6 +149,31 @@ export class RegisteredChildren {
     if (type !== 'pause') { this.paused = false; this.frozen = null; }
     this.savePreference(); this.changed();
   }
+  // One expiring display hint in the existing custody directory, never membership or log authority.
+  // A separate preference file keeps the main and companion writers from clobbering each other.
+  retain(key) {
+    if (!this.retention || !this.retentionPath) return;
+    const temporary = `${this.retentionPath}.pending`;
+    let fd;
+    try {
+      if (key && !this.closed && this.file && this.sources.get(key)?.verified &&
+          sameSessionFile(sessionFileIdentity(this.sessionFile), this.file)) {
+        privateDirectory(directory(this.cwd, this.session));
+        fd = openSync(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600);
+        const info = fstatSync(fd);
+        if (!info.isFile() || info.nlink !== 1 || info.uid !== process.getuid() || info.mode & 0o077) throw new Error();
+        ftruncateSync(fd, 0);
+        writeFileSync(fd, JSON.stringify({ owner: this.retentionOwner, selected: key, parentFile: this.file, expires: this.now() + 5000 }));
+        closeSync(fd); fd = undefined; renameSync(temporary, this.retentionPath);
+      } else {
+        privateFile(this.retentionPath);
+        if (JSON.parse(readFileSync(this.retentionPath, 'utf8')).owner === this.retentionOwner) unlinkSync(this.retentionPath);
+      }
+    } catch {
+      // Real source loss releases the hint too; a crashed reader expires after five seconds.
+      try { privateFile(this.retentionPath); if (JSON.parse(readFileSync(this.retentionPath, 'utf8')).owner === this.retentionOwner) unlinkSync(this.retentionPath); } catch {}
+    } finally { if (fd !== undefined) closeSync(fd); try { privateFile(temporary); unlinkSync(temporary); } catch {} }
+  }
   loadPreference() {
     if (!this.preferences) return;
     try { const path = join(directory(this.cwd, this.session), 'preference.json'); privateFile(path); this.preference = JSON.parse(readFileSync(path, 'utf8')); } catch {}
@@ -176,5 +204,5 @@ export class RegisteredChildren {
       this.notice, item ? `Last known ${item.source === 'pi-subagents' ? `upstream ${item.upstreamStatus} (SDK; no process exit or acceptance)` : `${item.lifecycle}${item.exitCode === null ? '' : ` (exit ${item.exitCode}; not acceptance)`}`} · sequence ${item.sequence} · omitted ${item.omitted} · pipe gaps ${item.gaps ?? 'unknown (earlier custodian)'}${this.paused ? ' · DISPLAY PAUSED' : ''}` : 'Legacy/unregistered children unavailable; never relaunched',
       ...(this.paused ? this.frozen ?? [] : item?.history ?? []), 'Conversation cwd/grants unchanged; no pane output enters Pi/model context.'].join('\n');
   }
-  close() { if (this.closed) return; this.savePreference(); this.closed = true; this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null; }
+  close() { if (this.closed) return; this.retain(null); this.savePreference(); this.closed = true; this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null; }
 }

@@ -310,6 +310,7 @@ try {
             '../harness/pi/tests/workspace.test.mjs',
             '../harness/pi/tests/subagents.test.mjs',
             '../harness/pi/tests/registered-children.test.mjs',
+            '../harness/pi/tests/native-agent-browser.test.mjs',
             '../harness/pi/tests/custody.test.mjs',
             '../harness/pi/tests/session-file.test.mjs',
             '../harness/pi/tests/runtime-logs.test.mjs',

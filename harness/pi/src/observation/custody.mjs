@@ -64,9 +64,9 @@ export function candidates(cwd, session) {
     const info = lstatSync(root);
     if (!info.isDirectory() || info.uid !== process.getuid() || info.mode & 0o077 || realpathSync(root) !== root) throw new Error('Invalid custody directory');
     handle = opendirSync(root);
-    // Two files per custodian, plus one preference file; never an unbounded glob/watch.
+    // Two files per custodian, companion preference, main hint and its fixed atomic-write slot.
     for (let count = 0, entry; (entry = handle.readSync()); count++) {
-      if (count >= limits.brokers * 2 + 1) throw new Error('Custody discovery capacity exceeded; inspect expired registrations');
+      if (count >= limits.brokers * 2 + 3) throw new Error('Custody discovery capacity exceeded; inspect expired registrations');
       if (/^[a-f0-9-]{36}\.json$/.test(entry.name)) {
         const path = join(root, entry.name); privateFile(path);
         const descriptor = JSON.parse(readFileSync(path, 'utf8'));

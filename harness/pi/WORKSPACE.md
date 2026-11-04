@@ -121,10 +121,23 @@ extension prompts release picker focus. AGENTS selection never opens this viewer
 The main display reuses `RegisteredChildren` and its exact native session/file/custody admission, not a new
 registry or transcript reader. Its display choice is independent of AGENTS/log selection. An open view stays bound
 to one attempt, including through completion; loss/eviction displays unavailable rather than another agent's text.
-PgUp/PgDn browses, `p` freezes the main display while bounded discovery continues. Closing the workspace disposes
+PgUp/PgDn browses, `p` freezes the main display while bounded discovery continues. The explicitly focused picker
+choice or open view is protected from capacity eviction by the existing custodian, independently of AGENTS/log
+selection and pin. Esc releases main protection; closing the workspace, custody/file loss or five seconds without
+reader renewal also releases it. The owner keeps only one expiring main display hint (`main-view.json`, atomically
+replaced through one fixed pending slot) beside existing companion preferences, not another child registry.
+Hints cannot admit children or grant log authority, and capacity remains eight. Closing the workspace disposes
 this reader too. Whole Pi shutdown/reload remains different and may abort upstream workers. Main UI requires
 supported `setWidget` below-editor placement, `onTerminalInput` and `custom` overlays; absent capabilities leave
 a visible limitation, never a private-API patch. This keyboard integration does not claim mouse/click parity.
+
+The picker shows the actual reader notice for lost/refused/unavailable sources, not healthy emptiness. After
+actual native session-file loss/replacement, restore the intended source if appropriate, then run
+`/fight-workspace close` followed by `/fight-workspace open` in that same native session. Open alone recovers
+companions but does not recreate an already-invalid main reader. File restoration/ticks cannot resurrect its
+revoked admission; the explicit close/open sequence creates a fresh reader and revalidates current custody.
+Neither command changes the coordinator/editor or relaunches children. A refused candidate stays refused unless
+fresh verification succeeds; reopening never overrides a changed file lifetime or unavailable custody.
 
 Each open generation creates an owner-private canonical `var/herdr-workspace/*.context.json` binding to actual
 native session ID/file/cwd/PID and a read-only loopback responder. A pending native file can become persistent
@@ -685,7 +698,7 @@ it impersonate inventory. Real stages still use the provider dispatcher above, w
 The check covers admission, terminal EOF and bounded history without provider prompts or retained pane/transcript
 streams. A pending native file remains pending: it does not qualify signed session-file reader admission,
 independent stages, actual Herdr interaction/captures or runtime logs. TASK-00544's current
-[scope](../../planning/tasks/00544-TASK.md#scope) owns its explicit demonstration deferrals and remaining acceptance. Each workspace inspects at most **eight custodians / seventeen directory entries**
+[scope](../../planning/tasks/00544-TASK.md#scope) owns its explicit demonstration deferrals and remaining acceptance. Each workspace inspects at most **eight custodians / nineteen directory entries**
 and retains at most **eight children**, preserving its selected/pinned entry under overflow. One refresh is in
 flight per current session; ticks skip while it runs. Each custodian challenge has an absolute **one-second
 elapsed transport deadline** and **2 MiB** response cap; trickling bytes do not extend it. Challenges are
