@@ -57,7 +57,12 @@ them before any certificate setup writes. macOS's system LibreSSL 3.3.6 lacks th
 select an already installed capable executable in the invoking shell, for example
 `export FIGHT_INGRESS_OPENSSL=/opt/homebrew/opt/openssl@3/bin/openssl` on the qualified macOS host; use the actual
 path on your host. Preserve that selection for ingress certificate status, application startup and ingress up.
-No automatic installation, PATH rewrite or equality-version gate is performed. OpenSSL 3.6.3 was capability-checked;
+No automatic installation, PATH rewrite or equality-version gate is performed.
+
+For [on-demand human QA](HUMAN_QA.md), explicit certificate setup/removal also accepts an exact absent future
+or retired absolute worktree path. It derives the SAME path-based hostname without allocating source/runtime
+or starting ingress; existing unknown paths and aliases are refused. QA up prints its future path when a leaf
+is missing. This remains a deliberate human certificate operation, not automatic trust or front-door enrollment. OpenSSL 3.6.3 was capability-checked;
 actual-name leaves were subsequently generated with the existing trusted CA on the qualified host.
 
 The existing [TASK-00145 direct TLS flow](LOCAL_HTTPS.md) remains unchanged. The ingress extension reuses

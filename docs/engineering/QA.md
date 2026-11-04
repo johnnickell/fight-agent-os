@@ -59,6 +59,11 @@ do not rewind the user's current checkout. Keep secrets out of environment inspe
 Use target-owned wrappers and existing qualified tooling. Check resource ownership and port collisions before
 startup; do not repoint shared services at another checkout. When an earlier landing removed the worktree or
 runtime, recover the exact revision in an isolated environment within existing authority, or report what is missing.
+For this application, [human QA operations](HUMAN_QA.md) documents the initial `bin/qa up TASK-ID [--ref REVISION]`
+convenience layer (full browser qualification/independent acceptance pending). Reuse its exact OID and synthetic
+scenario limits; readiness is not acceptance. Include the printed `bin/qa down /absolute/checkout` command in
+any retained human-QA handoff. Terminal/browser closure never supplies cleanup or permission to retain an
+original engineering environment. Missing ingress/trust/setup remains a named prerequisite.
 Recheck the source/runtime and PR head at completion. If it moved, retain historical results but require new QA
 or a documented behavior-preserving bridge before describing the current target as passed.
 

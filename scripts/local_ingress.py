@@ -265,7 +265,17 @@ def operate(safe, action, bind_ports=False):
 
 
 def certificate_operation(root, action, selector):
-    safe, checkout, project, host = consumer(root, selector)
+    if selector and Path(selector).is_absolute() and action in ('setup', 'remove'):
+        # Explicit human leaf preparation may precede disposable QA allocation;
+        # exact original paths also remain useful after source retirement. This
+        # resolves only the existing deterministic hostname, never creates source,
+        # runtime settings, trust or ingress. Refuse aliases/recreated unknown paths.
+        safe, checkout, project, entry = resolve(root, selector, removed=True)
+        require(checkout == checkout.resolve() and not checkout.is_symlink() and
+                (entry is not None or not checkout.exists()), 'Unknown/aliased certificate checkout path')
+        host = project + '.localhost'
+    else:
+        safe, checkout, project, host = consumer(root, selector)
     directory = certificates(safe, host)
     if action == 'setup':
         # Explicit human invocation only. Preflight capabilities before any leaf/CA writes.

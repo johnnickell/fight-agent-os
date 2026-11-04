@@ -204,6 +204,11 @@ worker/PID or stale feature-branch gate. Worktrunk/Land use the same Docker-firs
 removal. The exact reviewed repository down hook runs unattended after effective-hook inspection, without
 persistent trust; unknown/user/changed hooks retain source, not Docker resources.
 
+For on-demand human testing after original task cleanup, TASK-00556's initial `bin/qa up TASK-ID [--ref REVISION]`,
+`bin/qa list` and `bin/qa down SELECTOR` implementation is available, pending full browser qualification and
+independent acceptance. See [human QA operations](docs/engineering/HUMAN_QA.md) for fixed-OID selection,
+explicit certificate/front-door prerequisites, fresh synthetic activation and mandatory end-of-session down.
+
 Ordinary `bin/up` uses the main checkout's direct TLS stack at **https://localhost:18443**, with the explicit
 `.env`/certificate prerequisites below. It does not require shared ingress or load generated task/main proxy
 overrides. TASK-00543's earlier main-startup failure was a regression, now repaired, not deferred browser testing.

@@ -60,7 +60,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | [TICKET-00127 — Review material architecture changes with diagrams in pull requests](../tickets/00127-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | [TICKET-00128 — Show feature architecture on demand in Pi](../tickets/00128-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | — (standalone chore) | ready-for-agent | — | — |
-| — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
@@ -461,6 +460,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 73 | [TASK-00076](00076-TASK.md) | Qualify supported local Planning operation | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-human | [TASK-00075](00075-TASK.md) | — |
 | 101 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-human | [TASK-00103](00103-TASK.md) | — |
 | 111 | [TASK-00114](00114-TASK.md) | Qualify the migrated Planning Dashboard | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-human | [TASK-00104](00104-TASK.md), [TASK-00113](00113-TASK.md) | — |
+| — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | ready-for-human | — | — |
 
 ## Needs Triage
 

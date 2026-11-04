@@ -521,6 +521,14 @@ from independently eligible Docker effects. Do not delete any remote ref.
 
 ### Retire task Docker resources
 
+Original task cleanup never waits for possible future human QA. The initial
+[human QA convenience layer](HUMAN_QA.md) can recreate a fixed published OID in a separate native QA checkout,
+subject to its explicit setup/ingress prerequisites and still-pending full qualification/independent acceptance.
+When handing off an already opened QA environment, carry its exact revision, synthetic-data limitations and
+printed `bin/qa down /absolute/checkout` command; do not substitute terminal/browser closure or a new publication.
+QA down uses the same Docker-first guarded remover with QA-purpose exact-revision proof. This does not waive
+Land's publication proof or change existing task completion, acceptance, merge or cleanup timing.
+
 Use `bin/down --worktree SELECTOR` with the registered checkout or minimal interrupted-removal locator.
 Compose `down --volumes --remove-orphans` governs the disposable project, followed by remaining native project
 resources, task-specific image tags and a dedicated task builder if created. No per-resource preservation

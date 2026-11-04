@@ -1,6 +1,7 @@
 """Guard native Worktrunk removal independently of disposable Docker teardown."""
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 
@@ -26,11 +27,12 @@ def removal_hooks(safe, checkout):
                     ' context; source retained, Docker teardown completed')
 
 
-def remove(root, selector, expected_oid, delivery=None):
+def remove(root, selector, expected_oid, delivery=None, *, qa_revision=False):
     """Run Docker first, then one non-force native removal for delivery or owned fixtures
 
-    Land supplies its exact publication check. Without it, only an explicitly owned
-    qualification fixture with no commits outside canonical HEAD is eligible.
+    Land supplies its exact publication check. Without it, an explicitly owned
+    qualification fixture needs canonical ancestry. A QA-purpose ref instead binds
+    its immutable full revision in its native branch name; no fabricated PR is needed.
     Caller authority and live-source qualification remain required; this is not a sandbox.
     """
     safe, checkout, project, entry = resolve(root, selector, removed=True)
@@ -52,6 +54,9 @@ def remove(root, selector, expected_oid, delivery=None):
             'Main/current checkout is never disposable; Docker teardown completed')
     branch = entry['branch']
     ref = 'refs/heads/' + branch if branch else None
+    if qa_revision:
+        require(delivery is None and re.fullmatch(r'qa/task-\d{5}/' + re.escape(expected_oid), branch or '') and
+                re.fullmatch(r'[0-9a-f]{40}', expected_oid), 'Exact QA-purpose ref/revision required')
     present = str(checkout) in [value['path'] for value in registrations(safe)]
     require(present == checkout.exists(), 'Source path/registration mismatch; inspect partial effects')
 
@@ -107,7 +112,7 @@ def remove(root, selector, expected_oid, delivery=None):
         if ref:
             require(text(['git', 'rev-parse', ref], safe) == expected_oid,
                     'Exact source ref/OID changed; unique work retained')
-        if not delivery:
+        if not delivery and not qa_revision:
             # Interrupted native removal may leave only the exact fixture ref.
             # The same canonical ancestry proof applies with or without source.
             run(['git', 'merge-base', '--is-ancestor', expected_oid, 'HEAD'], safe)
