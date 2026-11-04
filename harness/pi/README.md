@@ -75,8 +75,10 @@ Nothing here installs tools, extensions or global settings automatically.
 After the [explicit executable installation](#install-the-global-workspace-command), run `fight-workspace` in
 the intended project/worktree inside Herdr. It starts native Pi and automatically opens owned child/log
 companions without a log setup form; no follow-up slash command or model turn is needed. Logs discover only
-verified matching existing local sources; readable choices appear in the log pane only when needed. Missing logs
-or cancelling selection never blocks the workspace. Ordinary `pi` does not auto-open anything. Inside either
+verified existing local stacks. Idle shows all main-stack services; eligible selected activity follows its own
+stack, with no hidden main fallback. Multiple services need no picker; genuine project ambiguity remains inspected.
+Use **f Follow active**, **m Main** to pin main, and **s Services** for All/an inspected subset. Stack changes clear
+stale output and reset filters. Missing logs or cancelling selection never blocks the workspace. Ordinary `pi` does not auto-open anything. Inside either
 native entry, `/fight-workspace [open|close]` remains available for manual open, recovery and companion-only close.
 The companions are named **AGENTS** and **LOGS**. AGENTS has list/Enter-detail/Esc-back navigation inside its own
 pane. Main stays with the coordinator; a separate below-prompt picker (Ctrl+Shift+A or `/fight-agents`) explicitly
@@ -88,7 +90,8 @@ session-file loss/replacement, restore the intended source, then run `/fight-wor
 restore custody. See [browsing controls and recovery](WORKSPACE.md#separate-main-pane-viewer).
 Pi owns its editor, Tab completion, colors, Markdown, dialogs,
 session and workflow authority; Herdr owns layout, focus, resize and zoom. Source association requires canonical
-checkout/worktree metadata, local Unix endpoint and exact container/service/lifecycle plus mount evidence.
+checkout/worktree metadata, local Unix endpoint and complete container/service/lifecycle witnesses. Source-root
+mounts anchor each stack; non-source-mounted services additionally require actual reciprocal project-network endpoints.
 Missing mappings/custody remain unavailable, never shared fallback. Missing/incompatible Herdr prerequisites
 leave ordinary Pi usable; outside Herdr, use ordinary Pi
 without companions. No automatic RPC fallback, installation or workflow selection occurs.
@@ -187,8 +190,8 @@ A supported Herdr caller context and interactive TTY are required. Outside Herdr
 never installs Herdr/integrations. Startup preserves the primary PID/terminal/cwd with native process replacement.
 A new/resumed/reloaded session does not inherit another automatic open; manual commands remain available. Source
 discovery/selection is human-facing and never enters conversation context. Panes open before discovery; no
-source, denied/missing Docker or cancelling optional selection leaves Pi and companions usable. Use `s` in the
-log pane for readable source choices and `r` to retry; no checkout/context/project/service text is requested.
+source, denied/missing Docker or cancelling selection leaves Pi and companions usable. LOGS provides `f` Follow
+active, `m` Main, `s` Services (arrows/Space/Enter), and `r` retry; no project IDs, commands or credentials are requested.
 Partial failures use the existing ownership checks, disclose retained IDs/state
 and uncertain splits, and never blindly retry or kill an existing conversation/child/container.
 

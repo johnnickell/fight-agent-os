@@ -35,7 +35,7 @@ opaque pane and terminal IDs, and non-secret companion tokens. Before reuse/clea
 must match a live loopback companion handshake. A saved PID/label alone is insufficient. Loopback services are
 bounded identity responders; the child handshake also reports its generation and permanent observation-invalidation
 state. The log handshake also reports bounded tracked Docker-reader and Git/Docker-metadata subprocess PIDs, never
-output or source declarations. At most two tracked direct children are admitted alongside the live companion
+output or source declarations. At most sixteen tracked log readers plus one fixed metadata child are admitted alongside the live companion
 in its foreground process group, with fresh direct-parent proof; unknown/untracked jobs retain the ownership hold.
 These health facts alone do not grant pane ownership. The child companion additionally serves only validated
 selection metadata as described below, never progress or tool APIs. Same-user state/processes are trusted local inputs,
@@ -184,23 +184,32 @@ non-authoritative runtime files; no crash survivor is blindly reused as authorit
 
 Both executable startup and `/fight-workspace open` create the owned companions **before** log discovery.
 There is no checkout/context/project/service form or authorization interrogation. The explicit invocation permits
-an unambiguous verified matching existing local source; it does not permit arbitrary-container or shared-stack
-fallback. Nothing provisions, starts or restarts containers.
+an unambiguous verified existing local **stack**, with all its running services and service/container prefixes.
+Multiple services never require a source form. Follow active uses the verified selected agent checkout; idle
+resolves the canonical main checkout through Git registration, even when Pi itself runs in a worktree.
+An active checkout without a stack stays visibly unavailable, never hidden main fallback. Nothing provisions,
+starts or restarts containers; merely registering another worktree cannot change the selected activity.
 
 The human-only log companion derives checkout identity from validated native/child context and canonical Git
 root/registered-worktree metadata. Fixed metadata commands have a 1.8-second deadline and 64 KiB output cap;
-Git discovery uses three commands, Docker discovery four, with at most 16 exact-checkout candidate containers.
-No Compose file is evaluated. Only the current local Unix context and existing Compose containers are inspected.
-Exact canonical checkout association, actual source mount evidence,
-service, full container ID, creation/start/restart witness, actual Unix socket and checkout/common-directory
-filesystem identities must agree. Names and cwd alone are insufficient. Remote
-contexts, unprovable/stale associations, replicated services and out-of-bound inventories are unavailable.
+Git identity uses three commands. Docker discovery uses four initial commands, then at most three per candidate
+project (at most four projects); pre-read verification freshly repeats Git/context and the complete project checks.
+Each inventory permits at most sixteen containers and sixteen attached networks, with one metadata command in flight.
+No Compose file or arbitrary shell is evaluated. Complete project listings must agree on canonical checkout,
+Compose configuration-file association and service configuration hashes. Running canonical-root bind mounts anchor
+the project. Services without source mounts require reciprocal actual endpoint IDs on project-owned networks
+connected to those anchors; matching names/labels or shared ingress membership alone are insufficient.
+Full container/image IDs, creation/start/restart witnesses, actual Unix socket and checkout/common-directory
+filesystem identities stay pinned. Stopped services are disclosed, not started. Missing supplier metadata,
+unproved members, remote contexts and over-bound inventories make the stack visibly unavailable, not partially admitted.
 
-One eligible source opens directly. Multiple eligible sources show readable checkout/project/service choices in
-the log companion; `s` opens selection, arrows and Enter choose, Esc cancels without closing panes. Selection
-shows one active source with a fixed ordinal and choose/cancel controls; PageUp/PageDown inspect its wrapped
-label and full checkout path. Arrows wrap through every source and reset the detail viewport. Resize keeps the
-active source; below 40 columns × 10 rows, a resize prompt disables Enter until the choice is inspectable.
+One verified project opens directly. Genuine multiple-project ambiguity shows inspected stack choices, not a
+per-service source picker. **f Follow active**, **m Main** (explicit main pin), and **s Services** are the only
+source/filter controls. Main survives activity/idle changes; Follow releases it. Services opens All or an inspected
+subset: arrows move, Space toggles a service (Space on All selects all), Enter applies a nonempty subset, Esc cancels.
+Stack/context or container-generation changes reset Services to All and clear both live and paused records.
+Selection shows a fixed ordinal, wrapped identities and apply/cancel controls; PageUp/PageDown inspect details.
+Below 40 columns × 10 rows Enter is disabled until the choice is inspectable.
 With no eligible source, discovery continues automatically while native/child context remains verified. It runs
 at most once every **three seconds after the previous discovery settles**, one pass in flight. A healthy late
 source normally appears on the next pass; allow **60 seconds** including a stale in-flight pass, bounded fresh
@@ -208,13 +217,14 @@ discovery, verification and reader admission (event-loop scheduling is not a rea
 same way. `r` requests an immediate fresh check. Docker missing/denied or no matching source explains what to
 check without requiring technical identifiers.
 
-For an already selected source, each pass revalidates its checkout, daemon socket, project/service, mount and
-container lifecycle. Stop or lost verification clears live/paused output and reaps the reader. Restart/replacement
-may automatically follow **only that same verified checkout/daemon/project/service**, with a fresh container
-witness and pre-read verification; a changed checkout/daemon or different service requires `s` and inspected
-selection. Other eligible sources never replace a missing selected service. Replicas remain unavailable.
+Each pass revalidates the complete selected project's checkout, daemon socket, mounts, network associations and
+service/container set. Stop, lost verification or a broken stream clears live/paused output and reaps the whole
+reader set before replacement. Restart/replacement follows **only that same verified checkout/daemon/project**,
+with fresh complete witnesses and pre-read verification. Another project never replaces a missing selected stack;
+changed checkout/daemon authority requires fresh inspected selection. Multiple inspected containers of one service
+remain distinguishable by their prefixes, within the sixteen-container bound.
 Explicit close or selection cancellation suspends automatic admission for that checkout until `c`, `r` or `s`;
-pause remains paused across runtime replacement, with stale frozen records cleared. No selection changes execution authority.
+pause stays paused across runtime replacement, with frozen records cleared. No display choice changes execution authority.
 
 Source metadata remains in the human-only companion's memory, not prompts, transcripts or saved preferences.
 No log content is returned to native Pi, the
@@ -225,8 +235,8 @@ not independently attested native origin, Docker-enforced read-only credentials 
 The log companion polls validated selection at most twice a second, with one query in flight. Native/child
 queries retain their 350 ms elapsed deadline and 16 KiB cap; selection authority expires after 1.5 seconds.
 Initial child discovery may settle for at most ten seconds, without starting Docker or granting source authority.
-Idle follows the actual primary checkout; selected/pinned context follows the verified child worktree. New child
-identity/generation, source switch, closed/unavailable custody or expired/malformed lifetime immediately revoke
+Idle follows verified main; selected/pinned context follows the verified child checkout unless Main is pinned.
+New followed child identity/generation, source switch, closed/unavailable custody or expired/malformed lifetime immediately revoke
 the old reader callbacks and clear live/paused output before reaping and any new verification. Even two children
 in the same worktree get a fresh reader when their verified generation/identity changes. An unreaped process
 blocks every replacement. Lost native/child transport permanently invalidates this display generation: recover
@@ -234,23 +244,28 @@ with `/fight-workspace open` in the intended native session, not by trusting an 
 
 | Log companion input | Display-only effect |
 |---|---|
-| `s`, arrows, Enter, Esc | Show readable source choices, choose or cancel without closing panes |
+| `f`, `m` | Follow active / explicitly pin Main, without changing execution |
+| `s`, arrows, Space, Enter, Esc | Services All/subset; inspect/apply/cancel without closing panes |
 | `p` | Freeze display while draining bounded recent output; resume shows the recent window |
 | `c`, `r` | Close/reopen reader / retry discovery or reconnect the pinned source, with possible gaps/duplicate tails |
 | `i`, PageUp/PageDown | Full conversation/child/source identities, endpoint, container generation, notices and bounded history |
 | `q`, Ctrl+C | Reap only this display's reader; Pi, children and containers remain unchanged |
 
-The [fixed Docker reader](#human-only-shared-docker-logs-task-00449-candidate) keeps its 100-line
-tail, 300 records / 32 Ki units plus at most one equal paused snapshot, bounded escaped records, metadata
-query deadlines, TERM/KILL and finite reaping. An open stream has no automatic time cutoff; it can keep
-following while the source and native selection remain valid. The fixed reader itself never retries;
-this companion alone performs the bounded fresh discovery/admission above. Exact canonical checkout labels,
-local Unix endpoint, service and full running-container identity are checked before reading. Endpoint/checkout authority replacement requires fresh inspected human
-selection; container lifecycle replacement is freshly verified only within the pinned source authority.
-The retained legacy shared reader also has no time cutoff; its other behavior is unchanged. Healthy
-repeated open is idempotent and does not re-prompt. A closed reader/companion never stops a container or child.
-No stack provisioning, restart, Compose
-evaluation, database mutation, full logging service or automatic global update is included.
+The fixed reader runs `docker --host LOCAL_UNIX_ENDPOINT container logs --tail 100 --timestamps --follow FULL_ID`
+for each inspected running container: at most sixteen readers plus one serialized Git/Docker metadata process.
+All streams share **300 records / 32 Ki UTF-16 units** plus one equal paused snapshot, not one history per service.
+Per-stream framing retains at most 4 Ki units per raw record; escaped records cap near 8 Ki units. UTF-8 framing,
+visible C0/C1/ANSI/OSC/CR/bidi escaping and clipped/omitted counts remain. A quiet verified follower is labelled
+QUIET, distinct from missing/denied/unavailable sources. Mixed stdout/stderr arrival is not a total timestamp order.
+There is no time cutoff or lossless archive: reconnect/filter/source changes may lose records or replay up to
+100 lines per container. Close sends TERM, KILL after one second, and waits at most two seconds; every unreaped
+process stays tracked and blocks all replacement. The fixed reader never retries itself; the companion alone
+owns bounded fresh discovery. Healthy repeated open remains idempotent.
+
+The unused explicit shared/test binding path, its preference writer and per-service reader controls are removed;
+workspace opening was their only remaining production caller and already used discovery. Historical RPC examples
+below are evidence, not retained executable APIs. No collector, registry, SDK execution cutover, container lifecycle
+control, database mutation, provisioning or automatic global package update is included.
 
 ### Native entry and existing RPC sessions
 
