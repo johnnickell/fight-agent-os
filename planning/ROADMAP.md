@@ -117,8 +117,10 @@ John authorized prioritized upstream subagent adoption on 2026-11-01:
 [TICKET-00129](tickets/00129-TICKET.md) / [TASK-00554](tasks/00554-TASK.md) has independent Review ACCEPT
 and bounded QA PASS on its accepted candidate. Publication and cleanup were pending at closeout; current results
 are in `.runs/tasks/TASK-00554/runs/land/receipt.md` and the TASK PR. [TASK-00544](tasks/00544-TASK.md) retains its separate existing-monitor repair scope.
-[TASK-00555](tasks/00555-TASK.md) records native-first MCP client evaluation and adapter options for later,
-after subagent adoption. This priority does not cancel unrelated active resource work.
+[TASK-00555](tasks/00555-TASK.md#accepted-implementation-checkpoint--2026-11-04) has independent Review ACCEPT
+and behavioral QA PASS for its conditional native-first MCP evaluation. Publication and cleanup were pending at
+that checkpoint; current results are in `.runs/tasks/TASK-00555/runs/land/receipt.md` and its TASK PR. Live Fight
+integration prerequisites remain unverified. This priority does not cancel unrelated active resource work.
 
 **TASK-00553 accepted supplier checkpoint:** independent Review and QA accept the candidate recorded in
 [TASK-00553](tasks/00553-TASK.md#accepted-implementation-checkpoint--2026-11-01). Publication and cleanup
