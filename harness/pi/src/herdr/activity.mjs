@@ -1,5 +1,5 @@
 import { realpathSync } from 'node:fs';
-import { basename } from 'node:path';
+import { agentDetail, agentList } from '../workspace/agent-presentation.mjs';
 import { RegisteredChildren } from '../workspace/registered-children.mjs';
 import { queryLocal, validateContext, same } from './context.mjs';
 import { clean } from '../workspace/presentation.mjs';
@@ -43,7 +43,9 @@ export class HerdrActivity {
     return this.pending;
   }
   action(type) {
-    if (type === 'details') this.details = !this.details;
+    if (type === 'details' || type === 'enter') this.details = true;
+    else if (type === 'back') this.details = false;
+    else if (type === 'help') this.help = !this.help;
     else if (this.valid && !this.closed) this.children?.action(type);
     this.changed();
   }
@@ -59,20 +61,17 @@ export class HerdrActivity {
       child: children.open && item && worktree ? { generation: item.generation, id: item.id, worktree, lifecycle: item.lifecycle, state: children.active(item) ? item.state : 'unknown-or-inactive', pinned: children.pin !== null } : null };
   }
   view() {
-    const children = this.children, item = children?.sources.get(children.selected);
-    if (!this.valid) return ['CHILD ACTIVITY — observation only', this.notice, 'No execution controls. Ordinary Pi/children unchanged.'].join('\n');
-    if (this.details) return children.view();
-    const ordinal = [...children.sources.keys()].indexOf(children.selected) + 1;
-    const status = item ? `${children.pin ? 'PINNED' : 'FOLLOW'} ${ordinal}/${children.sources.size} ${basename(item.identity.attempt)}` : 'IDLE — no eligible active child';
-    const lifecycle = item ? `${item.source === 'pi-subagents' ? `SDK ${item.upstreamStatus} (not acceptance)` : `${item.lifecycle}${item.exitCode === null ? '' : ` exit ${item.exitCode} (not acceptance)`}`} · ${item.verified ? (children.active(item) ? item.state : 'unknown/inactive liveness') : 'CUSTODY LOST'}` : 'Unregistered/unsupported children unavailable';
-    return [`CHILD ACTIVITY${children.paused ? ` · PAUSED +${Math.max(0, (item?.sequence ?? 0) - children.pausedSequence)}` : ' — human only'}`, `${children.open ? '' : 'READERS CLOSED · '}${status}`, lifecycle,
-      item ? `${item.identity.role} ${item.identity.task}` : 'No execution controls',
-      `[ ] choose · f pin · p pause · c readers · r rediscover · i details`,
-      `Primary ${clean(children.session)}`,
-      ...(item ? [`Worktree ${item.identity.worktree}`, `Attempt ${item.identity.attempt}`,
-        `Child ${item.id} · generation ${item.generation}`,
-        `Omitted ${item.omitted} · pipe gaps ${item.gaps ?? 'unknown'}${children.paused ? ` · PAUSED, ${Math.max(0, item.sequence - children.pausedSequence)} subsequent records drained` : ''}`] : []),
-      children.notice, ...(children.paused ? children.frozen ?? [] : item?.history ?? [])].join('\n');
+    const children = this.children;
+    if (!this.valid) return ['AGENTS', this.notice, 'Passive reader · no execution controls'].join('\n');
+    const counts = [...children.sources.values()].reduce((n, item) => { if (children.active(item)) n.live++; else if (children.completed(item)) n.done++; return n; }, { live: 0, done: 0 });
+    return ['AGENTS', this.details ? agentDetail(children)[0] : `${counts.live} live · ${counts.done} finished · ${children.sources.size}/8 retained${children.removed ? ` · lost/evicted ${children.removed}` : ''}${children.open ? '' : ' · READERS CLOSED'}`,
+      '↑↓ choose · Enter view · Esc list · f pin · p pause · i help',
+      ...(this.help ? ['Passive bounded activity, not a transcript or acceptance. No messages/stop controls.',
+        'Selection stays in AGENTS. Use the separate below-prompt picker for main.',
+        '[ ] also choose · PgUp/PgDn scroll · c close/open readers · r rediscover · q quit',
+        `Primary ${clean(children.session)}`, children.notice] : []),
+      ...(this.details ? agentDetail(children).slice(1) : children.sources.size ? agentList(children) : ['IDLE — no eligible agents; unregistered/unsupported children unavailable']),
+      children.notice].join('\n');
   }
   close() { this.closed = true; this.valid = false; this.children?.close(); }
 }

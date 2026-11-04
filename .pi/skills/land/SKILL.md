@@ -26,7 +26,8 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    renewed verification/independence. Commit only
    owned files, non-force push, create/update the exact PR using its template and `TASK-NNNNN — <title>`. Verify
    current base/head/remote OID, required checks and audience-accessible applicable captures. Follow the standards'
-   upload/partial-publication recovery; missing required proof keeps delivery incomplete. No approval or merge.
+   upload/partial-publication recovery and the [native attachment method](#github-native-artifact-attachments) below;
+   missing required proof keeps delivery incomplete. No approval or merge.
 4. **Retire and inspect.** Follow the one shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md).
    Routine owned cleanup is already authorized. Invoke `bin/down --worktree SELECTOR` FIRST: task DB/storage
    is disposable; native Compose/Docker metadata governs teardown without worker/PID/receipt gates. Preserve
@@ -48,6 +49,50 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    exact remaining identities/reasons, fresh/reused evidence and finite next action. Verify postconditions yourself;
    a helper exit, successful PR or technical acceptance is not complete cleanup. No tracked cleanup-result loop,
    persistent delivery queue, routine post-merge maintenance, remote-ref deletion, archive, release or deployment.
+
+## GitHub-native artifact attachments
+
+Use this only within explicit evidence-publication authority, after binding the exact repository/PR and checking
+capture sanitization, captions and provenance. Prefer **`gh pr edit --attach`** for PR-body evidence; use
+**`gh pr comment --attach`** only when a comment is the authorized destination. Inspect the installed
+`gh pr edit --help` and `gh pr comment --help` for actual capabilities, not a version-number gate or an assumed
+separate `gh upload` command. Do not request browser/manual upload, use gists or commit screenshots to product
+source merely because no separate upload command exists. Keep credentials and private images out of logs/publication.
+
+Preserve the current PR body and other contributors' work in a task-owned body file, adding/updating the readable
+Before/After table with matching local Markdown image references. Recheck the live body before editing; reconcile
+concurrent changes rather than overwrite them. For example, with `pr_url`/`repo` bound to the verified exact PR
+and `evidence_dir` the owned sanitized capture directory, preserve the body in `pr-body.md` there and include:
+
+```markdown
+| Before | After |
+|---|---|
+| ![Before: baseline terminal](./before.png) | ![After: reviewed terminal](./after.png) |
+```
+
+Use actual filenames and scenario captions, baseline/result commits and any comparison limits. From that directory:
+
+```sh
+cd "$evidence_dir"
+gh pr edit "$pr_url" --repo "$repo" --body-file ./pr-body.md \
+  --attach './before.png#Before: baseline terminal' \
+  --attach './after.png#After: reviewed terminal'
+```
+
+Repeat `--attach` for multiple files; supported image syntax is `'path#alt text'`. `gh` rewrites matching local
+body references to uploaded assets, retaining the reference's alt text; unmatched attachments are appended.
+For an authorized comment destination, use `gh pr comment` with the same body-file/reference/attachment method,
+not an extra comment alongside a PR-body update.
+
+A nonzero exit is not proof that nothing published: `gh pr edit` can upload some attachments and update the PR
+with those successes before exiting nonzero. After any partial/uncertain result, inspect the actual exact PR or
+comment body and uploaded URLs first. Retain successful asset URLs/references; retry only proven missing effects,
+without duplicate uploads/comments or replacing successful URLs with local paths. If current state is unverified,
+hold retries. Before claiming upload unavailable, inspect relevant native help/capabilities and actual authorized
+errors; do not blindly update the global CLI or broaden authentication grants. Report the precise capability,
+authority or access prerequisite when blocked. Verify the actual rendered body/table and each required asset's
+access for the intended PR audience; command success, an uploader-only view or local paths alone is insufficient.
+Missing required access keeps delivery incomplete.
 
 Use [readable handoffs](../../../docs/engineering/HANDOFFS.md). Finish with the actual human PR review/merge URL,
 cleanup prerequisite, or owning Work/Review/QA route. Never recommend merging an already-ended original PR.

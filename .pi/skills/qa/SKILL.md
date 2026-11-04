@@ -38,10 +38,15 @@ Include required release scenarios and return to that coordinator; TASK routing 
    unchanged evidence rather than blindly rerunning suites. Recheck final source/runtime/PR head: drift prevents
    a current PASS. Missing technical acceptance leaves readiness INCOMPLETE, even if diagnostic probes pass.
 5. **Publish and stop.** Use the [report template](../../../docs/engineering/QA_REPORT_TEMPLATE.md), preserve needed
-   run evidence, atomically replace/read back the canonical report and separate local QA from PR artifact upload.
+   run evidence and atomically replace/read back the canonical report. Default to local-only evidence: prepare
+   inspected sanitized captures, scenario captions and exact paths/provenance for authorized Land to upload using
+   the shared [GitHub-native attachment method](../land/SKILL.md#github-native-artifact-attachments), preferably
+   `gh pr edit --attach` for PR-body evidence. A QA invocation or existing PR grants no publication authority.
+   Only a separately explicit evidence-publication authorization permits QA to upload/update its authorized
+   destination using that same method and its partial-upload/access checks; otherwise report publication pending.
    Return disposition, exact subject/report path, fresh/reused evidence, warnings and limits. Existing TASK/PR
    receives necessary outcomes before final temporary disposal; do not create a permanent fixture/source archive.
 
 Follow [handoff rules](../../../docs/engineering/HANDOFFS.md): confirmed defects to Work, missing acceptance to
 Review, other INCOMPLETE to its exact prerequisite plus QA resume, and satisfied QA to authorized Land. Stop before
-source/test repair, TASK edits, commits, publication, approval or merge. Technical ACCEPT is not QA PASS.
+source/test repair, TASK edits, commits, unauthorized publication, approval or merge. Technical ACCEPT is not QA PASS.

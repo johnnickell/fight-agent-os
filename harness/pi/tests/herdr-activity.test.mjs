@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { PassThrough } from 'node:stream';
+import { installActivityInput } from '../src/herdr/activity-input.mjs';
 import assert from 'node:assert/strict';
 import { chmodSync, existsSync, linkSync, mkdtempSync, realpathSync, writeFileSync, renameSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -8,6 +10,7 @@ import net from 'node:net';
 import { NativeWorkspaceContext, queryLocal, readBinding, validateContext, serveLocal } from '../src/herdr/context.mjs';
 import { HerdrActivity, validateSelection } from '../src/herdr/activity.mjs';
 import { RegisteredChildren } from '../src/workspace/registered-children.mjs';
+import { NativeAgentBrowser } from '../src/workspace/native-agent-browser.mjs';
 
 async function fixture(t) {
   const cwd = realpathSync(mkdtempSync(join(tmpdir(), 'herdr-activity-'))), file = join(cwd, 'native.jsonl');
@@ -28,6 +31,67 @@ async function fixture(t) {
   t.after(() => { activity.close(); native.close(); rmSync(cwd, { recursive: true, force: true }); });
   return { native, primary, binding, activity, child, values: () => values, set: next => { values = next; }, refuse: () => { refused = true; }, replace: next => { current = next; } };
 }
+
+test('native coalesced/split navigation and standalone Esc decode to pane-local actions', async () => {
+  const input = new PassThrough(), actions = [], pages = [];
+  installActivityInput(input, { action: type => actions.push(type), close() {}, page: delta => pages.push(delta) });
+  input.write('\x1b[B\r'); input.write('\x1b['); input.write('A'); input.write('\x1b');
+  await new Promise(done => setTimeout(done, 600)); input.end();
+  assert.deepEqual(actions, ['next', 'enter', 'previous', 'back']);
+  const paging = new PassThrough(); installActivityInput(paging, { action() {}, close() {}, page: delta => pages.push(delta) });
+  paging.write('\x1b[5~\x1b[6~'); paging.end(); assert.deepEqual(pages, [5, -5]);
+});
+
+test('AGENTS list/detail/back stays pane-local and preserves selected identity', async t => {
+  const f = await fixture(t); await f.activity.tick();
+  const selected = f.activity.children.selected;
+  assert.match(f.activity.view(), /^AGENTS\n/); assert.match(f.activity.view(), /› ● work/);
+  f.activity.action('enter'); assert.match(f.activity.view(), /configured-only/);
+  f.activity.action('back'); assert.equal(f.activity.details, false);
+  assert.equal(f.activity.children.selected, selected);
+  assert.doesNotMatch(f.activity.view().split('\n')[0], /human only|observation/);
+});
+
+test('main picker consumes only explicit focus; fixed viewer survives concurrent selection and never controls sessions', async t => {
+  const f = await fixture(t); await f.activity.tick();
+  let widget, listener, component, finish;
+  const theme = { fg: (_tone, text) => text };
+  const ctx = { cwd: f.primary.cwd, sessionManager: { getSessionId: () => f.primary.sessionId, getSessionFile: () => f.primary.sessionFile },
+    ui: { setWidget: (_key, value, options) => { widget = value; if (value) assert.equal(options.placement, 'belowEditor'); },
+      onTerminalInput: callback => { listener = callback; return () => { listener = null; }; },
+      custom: (factory, options) => new Promise(resolve => { assert.equal(options.overlay, true); finish = resolve; component = factory({ terminal: { rows: 24 }, requestRender() {} }, theme, {}, resolve); }),
+    } };
+  const browser = new NativeAgentBrowser(ctx, { matchesKey: (data, key) => data === key, truncateToWidth: (line, width) => line.slice(0, width), wrapTextWithAnsi: line => [line] }, { reader: () => f.activity.children });
+  t.after(() => browser.close()); browser.start();
+  assert.equal(listener('return'), undefined);
+  const picker = widget({ requestRender() {} }, theme);
+  assert.ok(picker.render(30).every(line => line.length <= 30));
+  browser.activate(); assert.deepEqual(listener('UNTRUSTED PASTE'), { consume: true });
+  assert.deepEqual(listener('return'), { consume: true });
+  assert.match(component.render(100).join('\n'), /safe progress not authority/);
+  const original = f.values()[0]; f.set([original, f.child({ started: Date.now(), history: ['OTHER_AGENT'] })]);
+  await f.activity.tick(); f.activity.children.action('next');
+  assert.doesNotMatch(component.render(100).join('\n'), /OTHER_AGENT/);
+  component.handleInput('p');
+  f.set([]); await f.activity.tick();
+  assert.match(component.render(100).join('\n'), /lost or evicted/);
+  assert.doesNotMatch(component.render(100).join('\n'), /safe progress/);
+  component.handleInput('escape'); await Promise.resolve();
+  assert.equal(browser.active, false); assert.equal(listener('typed editor text'), undefined);
+  finish(); browser.close(); assert.equal(listener, null); assert.equal(widget, undefined);
+});
+
+test('agent rows/details sanitize untrusted activity and keep bounded assignments as display metadata', async t => {
+  const f = await fixture(t);
+  const value = f.values()[0];
+  f.set([{ ...value, identity: { ...value.identity, assignment: 'Inspect terminal boundary' }, history: ['\u001b]52;c;fixture\u0007\u202e界é'.repeat(20)] }]);
+  await f.activity.tick();
+  assert.match(f.activity.view(), /Inspect terminal boundary/);
+  assert.doesNotMatch(f.activity.view(), /[\u001b\u0007\u202e]/);
+  f.activity.action('enter'); assert.doesNotMatch(f.activity.view(), /[\u001b\u0007\u202e]/);
+  assert.match(f.activity.view(), /generation/);
+  const metadata = await f.activity.selection(); assert.equal(metadata.assignment, undefined);
+});
 
 test('native context is live, generation-bound and read-only; wrong token, parent and generation refuse', async t => {
   const f = await fixture(t);
@@ -57,7 +121,7 @@ test('stable concurrent follow, explicit pin, pause/drain, custody loss and idle
   f.set([...f.values(), f.child({ started: Date.now() - 10, order: 2 })]); await f.activity.tick();
   assert.equal(f.activity.children.selected, selected);
   f.activity.action('next'); assert.notEqual(f.activity.children.selected, selected);
-  f.activity.action('pin'); f.activity.action('pause');
+  f.activity.action('enter'); f.activity.action('pin'); f.activity.action('pause');
   const pinned = f.activity.children.pin, frozen = [...f.activity.children.frozen];
   f.set(f.values().map(item => ({ ...item, sequence: 8, history: ['drained progress'], omitted: 5 })));
   await f.activity.tick(); assert.deepEqual(f.activity.children.frozen, frozen); assert.match(f.activity.view(), /7 subsequent records drained/);

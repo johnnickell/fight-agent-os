@@ -51,6 +51,7 @@ export function retainChild(children, child, retained = []) {
 export function admitSubagent(message, { parent, generation, children, order, retained = [], now = Date.now(),
   registrations = worktree => execFileSync('git', ['-C', worktree, 'worktree', 'list', '--porcelain', '-z'], { encoding: 'utf8', timeout: 1000, maxBuffer: 1024 * 1024 }) }) {
   if (message?.parent !== parent || !/^[a-f0-9-]{36}$/.test(message.id) ||
+      (message.identity?.assignment !== undefined && (typeof message.identity.assignment !== 'string' || message.identity.assignment.length > 600 || clean(message.identity.assignment) !== message.identity.assignment || message.identity.assignment.includes('\n'))) ||
       !identityKeys.every(key => typeof message.identity?.[key] === 'string' && message.identity[key].length > 0 &&
         message.identity[key].length <= 1100 && clean(message.identity[key]) === message.identity[key])) throw new Error('Invalid subagent observation');
   let child = children.get(message.id);
@@ -94,6 +95,22 @@ export function monitorWitness(message, native, { inspect = processIdentity, bir
   if (inspect(message.pid) !== witness.process || inspect(native.pid) !== native.process) throw new Error('Native descendant lifetime changed');
   return witness;
 }
+export function retainedPreferences(root, parentFile, now = Date.now()) {
+  const retained = [];
+  try {
+    const path = join(root, 'preference.json'); privateFile(path);
+    const preference = JSON.parse(readFileSync(path, 'utf8'));
+    retained.push(preference.selected, preference.pin);
+  } catch {} // A preference grants no custody; invalid choices retain nothing.
+  try {
+    const path = join(root, 'main-view.json'); privateFile(path);
+    const view = JSON.parse(readFileSync(path, 'utf8'));
+    if (typeof view.selected === 'string' && /^[a-f0-9-]{36}:[a-f0-9-]{36}$/.test(view.selected) &&
+        Number.isSafeInteger(view.expires) && view.expires > now && view.expires <= now + 5000 &&
+        sameSessionFile(view.parentFile, parentFile) && sameSessionFile(sessionFileIdentity(parentFile.path), parentFile)) retained.push(view.selected);
+  } catch {} // Missing, expired or replaced-file hints cannot protect a main view.
+  return retained;
+}
 export function startCustodian({ primary, parent, parentFile, pendingParentFile, generation, native }) {
   if (!native || native.pid !== process.ppid) throw new Error('native-parent-pid-mismatch');
   if (processIdentity(process.ppid) !== native.process) throw new Error('native-parent-lifetime-mismatch');
@@ -113,13 +130,7 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
   const { privateKey, publicKey } = generateKeyPairSync('ed25519');
   const created = Date.now(), children = new Map(), tokens = new Set(), sockets = new Set();
   let sequence = 0, attached = true, lastLive = created, descriptor, descriptorFile, routeFile;
-  const retainedChildren = () => {
-    try {
-      const path = join(root, 'preference.json'); privateFile(path);
-      const preference = JSON.parse(readFileSync(path, 'utf8'));
-      return [preference.selected, preference.pin];
-    } catch { return []; } // A preference grants no custody; invalid choices retain nothing.
-  };
+  const retainedChildren = () => retainedPreferences(root, parentFile);
   const publish = () => {
     if (!descriptor || descriptorFile || pendingParentFile !== undefined) return;
     writeFileSync(descriptorPath, JSON.stringify(descriptor), { flag: 'wx', mode: 0o600 }); descriptorFile = lstatSync(descriptorPath);

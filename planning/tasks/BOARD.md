@@ -60,8 +60,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | [TICKET-00126 — Maintain source-verified Python diagrams beside feature documentation](../tickets/00126-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | ready-for-agent | — | — |
-| — | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
@@ -455,6 +453,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00485](00485-TASK.md) | Support bounded authenticated log streaming and extraction | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | needs-info | [TASK-00483](00483-TASK.md), [TASK-00072](00072-TASK.md) | — |
 | — | [TASK-00493](00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | [TICKET-00097 — Inspect and control execution through the sessions Dashboard](../tickets/00097-TICKET.md) | needs-info | [TASK-00139](00139-TASK.md), [TASK-00203](00203-TASK.md), [TASK-00390](00390-TASK.md), [TASK-00496](00496-TASK.md) | — |
 | — | [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | needs-info | — | — |
+| — | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | needs-info | — | — |
 
 ## Human Action
 
@@ -640,4 +639,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | — (standalone chore) | done | — | [PR #194](https://github.com/johnnickell/fight-agent-os/pull/194) |
 | — | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | — (standalone bug) | done | — | [PR #195](https://github.com/johnnickell/fight-agent-os/pull/195) |
 | — | [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | — (standalone bug) | done | — | [PR #196](https://github.com/johnnickell/fight-agent-os/pull/196) |
+| — | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | [PR #207](https://github.com/johnnickell/fight-agent-os/pull/207) |
 <!-- /planning:board -->

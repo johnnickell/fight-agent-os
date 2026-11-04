@@ -86,14 +86,14 @@ export class HerdrLogs {
   view() {
     const value = this.metadata;
     if (this.discovery) {
-      return ['RUNTIME LOGS — human only', this.notice,
+      return ['LOGS', this.notice,
         value ? `${value.state === 'idle' ? 'PRIMARY' : value.child.pinned ? 'PINNED CHILD' : 'SELECTED CHILD'} ${value.worktree}` : 'Waiting for verified checkout context',
         this.logs.current?.summary() ?? 'Logs unavailable — workspace stays open\ns choose source · r retry',
         'Exact checkout only · no shared fallback',
         ...(this.details ? [`Native session ${this.binding.primary.sessionId}`, this.logs.view()] : [this.logs.body()])
       ].join('\n').split('\n').map(safeLog).join('\n');
     }
-    const header = ['RUNTIME LOGS — human only', this.notice,
+    const header = ['LOGS', this.notice,
       value ? `${value.state === 'idle' ? 'PRIMARY' : value.child.pinned ? 'PINNED CHILD' : 'SELECTED CHILD'} ${value.worktree}` : 'No verified source context',
       this.logs.current?.summary() ?? `Reader unavailable\n${this.logs.unavailable()}`,
       this.logs.mode === 'shared' ? 'EXPLICIT SHARED — not worktree-isolated' : 'FOLLOW WORKTREE TEST — no shared fallback'];

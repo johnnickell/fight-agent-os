@@ -10,7 +10,7 @@ import { NativeWorkspaceContext } from './context.mjs';
 const execute = promisify(execFile);
 const pause = (ms) => new Promise((done) => setTimeout(done, ms));
 const quote = (text) => `'${text.replaceAll("'", "'\\''")}'`;
-const labels = ['Child activity — observation only', 'Runtime logs — human only'];
+const labels = ['AGENTS', 'LOGS'];
 const logCompanion = fileURLToPath(new URL('./logs-terminal.mjs', import.meta.url));
 const activityCompanion = fileURLToPath(new URL('./activity-terminal.mjs', import.meta.url));
 
