@@ -533,7 +533,7 @@
 | [TASK-00528](00528-TASK.md) | Operate scheduled account-mail recovery across both environments | ready-for-agent | [TICKET-00123](../tickets/00123-TICKET.md) |
 | [TASK-00529](00529-TASK.md) | Back up and restore coherent staging state | ready-for-agent | [TICKET-00124](../tickets/00124-TICKET.md) |
 | [TASK-00530](00530-TASK.md) | Recover production state through Managed PostgreSQL and Spaces | ready-for-agent | [TICKET-00124](../tickets/00124-TICKET.md) |
-| [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | in-progress | — |
+| [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | done | — |
 | [TASK-00532](00532-TASK.md) | Stage and recover an exact release candidate | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
 | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | ready-for-agent | [TICKET-00125](../tickets/00125-TICKET.md) |
 | [TASK-00534](00534-TASK.md) | Complete Land resource cleanup and reconcile project closeout | done | — |

@@ -26,7 +26,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | in-progress | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -628,6 +628,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00512](00512-TASK.md) | Follow verified worktree logs in Herdr and retire the RPC workspace | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #162](https://github.com/johnnickell/fight-agent-os/pull/162) |
 | — | [TASK-00513](00513-TASK.md) | Unify local HTTP and HTTPS startup under bin/up | — (standalone bug) | done | — | [PR #152](https://github.com/johnnickell/fight-agent-os/pull/152) |
 | — | [TASK-00514](00514-TASK.md) | Repair API Docs navigation and Dashboard scrolling with concise navigation labels | — (standalone bug) | done | — | [PR #156](https://github.com/johnnickell/fight-agent-os/pull/156) |
+| — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | done | — | [PR #208](https://github.com/johnnickell/fight-agent-os/pull/208) |
 | — | [TASK-00535](00535-TASK.md) | Launch native Pi with workspace panes already open | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | done | — | [PR #168](https://github.com/johnnickell/fight-agent-os/pull/168) |
 | — | [TASK-00536](00536-TASK.md) | Remove the legacy fight-terminal command | — (standalone chore) | done | — | [PR #170](https://github.com/johnnickell/fight-agent-os/pull/170) |
 | — | [TASK-00537](00537-TASK.md) | Finish merged-task retirement without VM-handle deadlocks | — (standalone bug) | done | — | [PR #171](https://github.com/johnnickell/fight-agent-os/pull/171) |
