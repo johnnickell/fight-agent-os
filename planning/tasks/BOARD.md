@@ -26,7 +26,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | in-progress | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 
 ## Ready Frontier
 
@@ -455,7 +455,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00485](00485-TASK.md) | Support bounded authenticated log streaming and extraction | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | needs-info | [TASK-00483](00483-TASK.md), [TASK-00072](00072-TASK.md) | — |
 | — | [TASK-00493](00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | [TICKET-00097 — Inspect and control execution through the sessions Dashboard](../tickets/00097-TICKET.md) | needs-info | [TASK-00139](00139-TASK.md), [TASK-00203](00203-TASK.md), [TASK-00390](00390-TASK.md), [TASK-00496](00496-TASK.md) | — |
 | — | [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | needs-info | — | — |
-| — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | needs-info | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 
 ## Human Action
 

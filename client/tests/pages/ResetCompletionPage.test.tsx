@@ -58,7 +58,8 @@ describe('real schema reset completion form', () => {
       pending.resolve(jsonResponse({ completed: true }));
       await pending.promise;
     });
-    expect(await screen.findByRole('heading', { name: 'Password reset complete' })).toHaveFocus();
+    const success = await screen.findByRole('heading', { name: 'Password reset complete' });
+    await waitFor(() => expect(success).toHaveFocus());
     expect(screen.queryByLabelText('New password (required)')).not.toBeInTheDocument();
     expect(notify).toHaveBeenCalledExactlyOnceWith(d.userId);
     expect(d.credential.current()).toBeNull();

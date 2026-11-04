@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { LoginPage } from '@/pages/LoginPage';
 
@@ -89,7 +89,8 @@ export const SignedIn: Story = {
   play: async (context) => {
     await submit(context);
     const canvas = within(context.canvasElement);
-    await expect(await canvas.findByRole('heading', { name: 'You’re signed in' })).toHaveFocus();
+    const success = await canvas.findByRole('heading', { name: 'You’re signed in' });
+    await waitFor(() => expect(success).toHaveFocus());
     await expect(canvas.queryByLabelText('Password (required)')).not.toBeInTheDocument();
   }
 };
