@@ -187,6 +187,14 @@ selection never blocks panes.
 Herdr owns layout/focus/resize only. Outside Herdr or with unavailable prerequisites, keep ordinary Pi;
 there is no automatic RPC-editor fallback.
 
+[TASK-00563's accepted LOGS candidate](planning/tasks/00563-TASK.md#accepted-implementation-checkpoint--2026-11-04)
+`9d9d952` has independent Review ACCEPT and visual/behavioral QA PASS (18 scenario groups / 18 inspected native
+captures), including the explicit persistent Sol/high QA/Land defaults and single-owner caller documentation.
+Publication/capture access and eligible cleanup are pending at this checkpoint; actual outcomes are in canonical
+ignored `.runs/tasks/TASK-00563/runs/land-delivery.md` and the TASK PR. Actual main/two-worktree tooling-stack
+observation is qualified, not full worktree HTTPS/auth startup (actual-name certificates missing), everyday
+installed-package rollout or upstream SDK Build cutover. Human merge remains separate.
+
 TASK-00512's native replacement A and repository-only RPC retirement B have independent technical acceptance and
 current independent QA PASS. Its accepted-candidate closeout is published in [PR #162](https://github.com/johnnickell/fight-agent-os/pull/162); final delivery verification and human merge remain separate. See the [current Land checkpoint](planning/tasks/00512-TASK.md#current-land-closeout--2026-10-25).
 The package no longer ships `fight-terminal` or its direct retirement stub; `fight-workspace` is the sole
