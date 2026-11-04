@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ResetRequestPage } from '@/pages/ResetRequestPage';
 
@@ -63,7 +63,8 @@ export const Accepted: Story = {
   play: async (context) => {
     await submit(context);
     const canvas = within(context.canvasElement);
-    await expect(await canvas.findByRole('heading', { name: 'Check your inbox' })).toHaveFocus();
+    const success = await canvas.findByRole('heading', { name: 'Check your inbox' });
+    await waitFor(() => expect(success).toHaveFocus());
     await expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
   }
 };

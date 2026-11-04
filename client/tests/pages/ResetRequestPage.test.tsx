@@ -43,7 +43,7 @@ describe('real schema-backed reset request form', () => {
     expect(screen.getByRole('button', { name: 'Request reset link' })).toHaveFocus();
     await userEvent.setup().keyboard('{Enter}');
     const success = await screen.findByRole('heading', { name: 'Check your inbox' });
-    expect(success).toHaveFocus();
+    await waitFor(() => expect(success).toHaveFocus());
     expect(screen.getByText(/If this address is eligible/)).toBeVisible();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(document.body).not.toHaveTextContent('Person@example.test');
@@ -112,7 +112,8 @@ describe('real schema-backed reset request form', () => {
       pending.resolve(resetAccepted());
       await pending.promise;
     });
-    expect(await screen.findByRole('heading', { name: 'Check your inbox' })).toHaveFocus();
+    const success = await screen.findByRole('heading', { name: 'Check your inbox' });
+    await waitFor(() => expect(success).toHaveFocus());
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     deps.service.dispose();
   });

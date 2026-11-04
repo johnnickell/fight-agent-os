@@ -125,7 +125,8 @@ describe('schema-backed production login', () => {
     });
     expect(screen.queryByText('Sign-in not completed')).not.toBeInTheDocument();
     submit();
-    expect(await screen.findByRole('heading', { name: 'You’re signed in' })).toHaveFocus();
+    const success = await screen.findByRole('heading', { name: 'You’re signed in' });
+    await waitFor(() => expect(success).toHaveFocus());
     expect(screen.queryByLabelText('Password (required)')).not.toBeInTheDocument();
     deps.service.dispose();
   });
