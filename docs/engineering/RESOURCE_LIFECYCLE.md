@@ -60,7 +60,10 @@ data. The earlier TASK-00543 main-up failure was a regression, not an acceptable
 Review and QA acceptance on its integrated candidate; publication and final delivery checks remain separate.
 [TASK-00553](../../planning/tasks/00553-TASK.md)'s shared supplier also has independent Review and QA acceptance
 on its recorded candidate. Follow [shared local HTTPS operations](LOCAL_INGRESS.md) for explicit
-`bin/ingress setup/up/down/status/remove` and human actual-name certificate setup through `bin/https`.
+`bin/ingress setup/up/down/status/remove` and explicit actual-name certificate setup through `bin/https`.
+Its [scoped task process](LOCAL_INGRESS.md#scoped-task-preparation-and-retirement) owns tool-based leaf/front-door
+preparation and retirement: preserve peers, full-test/gracefully reload with existing privilege, and keep
+referenced leaves when reload is held. App teardown and source retirement remain independent of that hold.
 `bin/up --worktree SELECTOR` requires that separately operated supplier. `bin/up --shared-ingress` explicitly
 opts main into the same topology; ordinary main up never does. The optional existing-Herd mode in that runbook
 retains standard browser origins while publishing only a selected high supplier HTTPS port; it never makes

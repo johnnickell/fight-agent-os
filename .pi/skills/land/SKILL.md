@@ -31,7 +31,14 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
 4. **Retire and inspect.** Follow the one shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md).
    Routine owned cleanup is already authorized. Invoke `bin/down --worktree SELECTOR` FIRST: task DB/storage
    is disposable; native Compose/Docker metadata governs teardown without worker/PID/receipt gates. Preserve
-   main data and foreign/shared projects. Then separately qualify source/ref/private data, consumers and genuine
+   main data and foreign/shared projects. Follow [scoped ingress retirement](../../../docs/engineering/LOCAL_INGRESS.md#scoped-task-preparation-and-retirement):
+   verify the selected gateway/route is gone, then use supported tools/existing privilege to remove only its
+   owned front-door blocks, full-test and gracefully reload before exact leaf removal. Preserve peer blocks,
+   referenced material and shared supplier services/network/trust; no restart or blanket human-only cleanup.
+   If full-test/reload privilege is unavailable, report exact names/include/digest and retain their leaves;
+   that hold does not block independent Docker/source effects. Any required recovery setup uses the same
+   runbook's explicit exact-name preparation, never silent infrastructure enrollment.
+   Then separately qualify source/ref/private data, consumers and genuine
    filesystem protections before Worktrunk removal. Use the shared guarded native remover: it rechecks effective
    canonical/target hooks and uses per-invocation noninteractive consent only for absent hooks or the exact
    reviewed repository down hook. Do not ask the user for that routine cleanup; unknown/user/changed hooks

@@ -34,15 +34,20 @@ down/up; no reset or silent source switch. A native retained exact QA ref can be
 Docker, Worktrunk, locked dependency access and the [shared ingress prerequisites](LOCAL_INGRESS.md) must exist.
 Up never installs tools, starts/enrolls shared ingress, generates certificates, edits Herd or changes trust/DNS.
 Its preallocation output identifies the exact OID, source, future checkout and project, **not a ready URL**.
-Missing leaf preparation prints a copyable human `bin/https setup --ingress --worktree /absolute/future/path`
+Missing leaf preparation prints a copyable explicit `bin/https setup --ingress --worktree /absolute/future/path`
 command. The supplier now accepts an absent exact future absolute path for explicit leaf setup, and an exact
 retired path for leaf removal; neither creates source or a runtime locator. Existing unknown paths/aliases fail.
 
-The human must deliberately run the printed certificate command and any required front-door configuration
-and reload from the ingress runbook, then rerun QA up. In Herd mode a new exact hostname needs its own approved
-include update/full test/graceful reload; successful supplier transport alone is not browser readiness. Do not
-use insecure TLS or automatically enroll trust to get past this prerequisite. Human-owned leaves and loaded
-front-door references remain external prerequisites, not resources created or removed by QA up/down.
+An authorized operator/agent deliberately performs the printed leaf command using the existing CA and follows
+[scoped ingress preparation/retirement](LOCAL_INGRESS.md#scoped-task-preparation-and-retirement), then reruns QA up.
+In Herd mode, `bin/ingress herd-config --include-worktree /absolute/future/path` explicitly renders the name
+before allocation; leaf setup alone does not create its front-door block. Preserve existing peer blocks, verify
+owned include content/digests, full-test and gracefully reload with actual available privilege. No blanket
+human-only rule applies to routine setup, but missing privilege is a genuine browser-readiness hold; never
+substitute restart, insecure TLS or trust enrollment. Successful supplier transport alone is not browser readiness.
+Leaves/loaded front-door references are explicitly managed outside QA up/down, not automatically removed by it.
+After exact QA down, unload only its owned host blocks and verify reload before removing a referenced leaf;
+retain held leaves without retaining disposable runtime/source merely for the privilege hold.
 
 ## Synthetic scenario and readiness
 
