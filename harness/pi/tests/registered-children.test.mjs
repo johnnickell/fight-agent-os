@@ -118,6 +118,19 @@ test('older completed SDK selection and pause survive unchanged refresh; live wo
   assert.equal(f.observe.selected, null); assert.equal(f.observe.paused, false); assert.equal(f.observe.verifiedWorktree, null);
 });
 
+test('explicit completed SDK choice survives live arrivals and completion without pinning', async t => {
+  const f = fixture(t);
+  const done = f.child({ source: 'pi-subagents', upstreamStatus: 'completed', lifecycle: 'completed', history: ['FINAL'] });
+  const live = f.child({ source: 'pi-subagents', upstreamStatus: 'running', started: 2000, order: 2 });
+  f.set([done, live]); await f.observe.start(f.parent, f.file);
+  f.observe.action('next');
+  assert.equal(f.observe.sources.get(f.observe.selected).id, done.id);
+  const selected = f.observe.selected;
+  f.set([done, live, f.child({ source: 'pi-subagents', upstreamStatus: 'running', started: 3000, order: 3 })]);
+  await f.observe.refresh(); assert.equal(f.observe.selected, selected);
+  f.observe.action('pause'); await f.observe.refresh(); assert.deepEqual(f.observe.frozen, ['FINAL']);
+});
+
 test('heartbeat expiry, lost/replaced custody and regressed sequences cannot retain log authority or infer completion', async t => {
   const f = fixture(t); await f.observe.start(f.parent, f.file); f.advance(7000); f.observe.recompute(); assert.equal(f.observe.selected, null);
   f.set([{ ...f.values()[0], sequence: 2, receivedAt: 107000 }]); await f.observe.refresh(); f.observe.action('pin');
@@ -238,6 +251,15 @@ test('same-custodian start ties use trusted admission order before the stable at
   const first = f.child({ id: ids[0], started: 2000, order: 1 }), second = f.child({ id: ids[1], started: 2000, order: 2 });
   f.set([first, second]); await f.observe.start(f.parent, f.file);
   assert.equal(f.observe.sources.get(f.observe.selected).id, second.id);
+});
+
+test('observed lost/evicted attempts are disclosed without inventing why or a complete history', async t => {
+  const f = fixture(t), first = f.child({ source: 'pi-subagents', upstreamStatus: 'completed', lifecycle: 'completed' });
+  f.set([first]); await f.observe.start(f.parent, f.file);
+  f.set([f.child({ source: 'pi-subagents', upstreamStatus: 'completed', lifecycle: 'completed', started: 2000 })]);
+  await f.observe.refresh(); assert.equal(f.observe.removed, 1);
+  assert.match(f.observe.notice, /lost\/evicted attempts: 1/);
+  await f.observe.refresh(); assert.equal(f.observe.removed, 1, 'same removal is not recounted');
 });
 
 test('discovery and retention are bounded to eight sources, with an explicit overflow notice', async t => {

@@ -35,6 +35,11 @@ under EPIC-00006, not server-managed Execution, sandbox isolation or database-au
 - Name the panes **AGENTS** and **LOGS**, including narrow presentations, without `human only` suffixes.
   Explain observation-only semantics in help/details. AGENTS provides a keyboard list/detail/back interface for
   verified live and retained completed top-level attempts, with existing pin/pause and bounded safe activity.
+  John's approved 2026-11-03 clarification keeps child details/output inside AGENTS on selection. Main normally
+  retains the running coordinator and high-level progress. A separate picker below the main prompt explicitly
+  opens bounded child output temporarily in main; Esc returns to the same coordinator/editor without session
+  switching, cancellation or steering. Use compact terminal hierarchy and colored status dots/checkmarks;
+  rejected disposable HTML sidebar-to-main switching is not the production interaction contract.
 - LOGS defaults to all services of the verified main-checkout stack when no eligible active worktree is selected:
   the useful equivalent of `docker compose logs -f`, with bounded recent tail and service/container prefixes.
   Multiple services in one verified stack must not require a per-service picker. Genuine project ambiguity still
@@ -64,6 +69,7 @@ or cancellation, automatic worktree/runtime provisioning and publication authori
 | Execute an authorized stage | Existing explicit Build invocation through supported upstream execution | Current authorization, session/checkout/model identity and capabilities | Actual upstream lifecycle and existing stage outcomes | Fresh correctly bound worker, permitted role effects and ordinary handoff |
 | Advance or repair | Existing evidence-based Build progression | Canonical reports, candidate identity, remaining repairs and actual liveness | Existing report/outcome facts | Correct next fresh stage or finite hold; no duplicate execution/publication |
 | Browse agents | AGENTS list/select/back/pin/pause | Verified current-parent attempts and bounded history | Existing observation updates | Display selection and existing verified log context only |
+| Inspect child temporarily in main | Separate below-prompt picker/open/Esc | Existing verified attempts and bounded safe activity | Existing observation updates | Passive temporary view; same running coordinator/editor restored |
 | Follow stack output | LOGS Follow active/Main | Verified main/active checkout, project and current container set | Existing context/runtime lifecycle and Docker output | Bounded all-service tail/follow; no provisioning |
 | Filter output | LOGS Services: All or inspected subset | Current stack services | Display filter change | Selected service output, prefixed sources; filters reset on stack change |
 | Adopt installed integration | Explicit owning package/profile update procedure | Effective packages, agent definitions, collisions and supported APIs | N/A: local setup needs no new product event | Deliberate selected-installation update only |
@@ -85,7 +91,7 @@ existing trusted-local limitations remain, without a claim of OS-enforced isolat
 ## Acceptance and evidence
 
 TASK-00560 delivers a usable upstream Engineer path and ordinary independent Review handoff. TASK-00561 delivers
-the complete independent local Build replacement and caller retirement. TASK-00562 delivers AGENTS browsing and
+the complete independent local Build replacement and caller retirement. TASK-00562 delivers pane-local AGENTS browsing, the separate passive main-picker/view/Esc interaction and
 simple pane names. TASK-00563 delivers stack-wide LOGS defaults, Main/Follow and service filtering. Each owns its
 focused Harness checks, installed/native interaction and applicable inspected terminal captures, normal full
 `./bin/build`, independent Review and applicable behavioral/visual QA. No product-suite tooling tests, separate
@@ -102,7 +108,7 @@ and distinguish fresh from qualified reused evidence, implementation acceptance,
 |---|---|---|
 | [TASK-00560](../tasks/00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | needs-info |
 | [TASK-00561](../tasks/00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent |
-| [TASK-00562](../tasks/00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | ready-for-agent |
+| [TASK-00562](../tasks/00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | in-progress |
 | [TASK-00563](../tasks/00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | ready-for-agent |
 <!-- /planning:children -->
 

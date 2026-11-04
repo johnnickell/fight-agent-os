@@ -51,6 +51,7 @@ export function retainChild(children, child, retained = []) {
 export function admitSubagent(message, { parent, generation, children, order, retained = [], now = Date.now(),
   registrations = worktree => execFileSync('git', ['-C', worktree, 'worktree', 'list', '--porcelain', '-z'], { encoding: 'utf8', timeout: 1000, maxBuffer: 1024 * 1024 }) }) {
   if (message?.parent !== parent || !/^[a-f0-9-]{36}$/.test(message.id) ||
+      (message.identity?.assignment !== undefined && (typeof message.identity.assignment !== 'string' || message.identity.assignment.length > 600 || clean(message.identity.assignment) !== message.identity.assignment || message.identity.assignment.includes('\n'))) ||
       !identityKeys.every(key => typeof message.identity?.[key] === 'string' && message.identity[key].length > 0 &&
         message.identity[key].length <= 1100 && clean(message.identity[key]) === message.identity[key])) throw new Error('Invalid subagent observation');
   let child = children.get(message.id);

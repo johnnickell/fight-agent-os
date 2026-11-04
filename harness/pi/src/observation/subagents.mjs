@@ -96,7 +96,7 @@ export class SubagentObserver {
           run.session = session;
           run.identity = { task: 'Unassigned', role: text(record.type) || 'subagent', provider: text(session.model?.provider) || 'unknown',
             model: text(session.model?.id) || 'unknown', thinking: text(session.thinkingLevel) || 'unknown',
-            worktree: realpathSync(session.sessionManager.getCwd()), attempt: id };
+            worktree: realpathSync(session.sessionManager.getCwd()), attempt: id, assignment: text(record.description) || 'Assignment unavailable' };
           this.emit(run, `Observing ${text(record.description)}`);
           if (this.closed || this.runs.get(id) !== run) continue;
           run.unsubscribe = session.subscribe(event => {

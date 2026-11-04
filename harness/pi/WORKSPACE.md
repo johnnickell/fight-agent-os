@@ -8,8 +8,7 @@ With the [explicit user-prefix executable installation](README.md#install-the-gl
 `fight-workspace` starts native Pi inside Herdr and opens these companions automatically without a blocking
 log-configuration form. Manual open has the same no-form behavior; missing logs never block pane creation.
 Ordinary `pi` remains unchanged. In either native Pi entry, `/fight-workspace` (or
-`/fight-workspace open`) manually opens or recovers a human-only child activity companion and a human-only
-verified log companion. `/fight-workspace close` closes only proven-owned
+`/fight-workspace open`) manually opens or recovers the **AGENTS** and **LOGS** companions. `/fight-workspace close` closes only proven-owned
 companions. Repeated open reuses the same healthy panes. The existing Pi process, session/file, cwd, editor,
 Tab completion, themes, dialogs, tools and workflow binding are unchanged. Herdr owns focus, resize and zoom;
 Pi's Tab is not a pane-navigation shortcut here. The child companion supplies the validated context below;
@@ -84,19 +83,48 @@ apply unchanged; a signature is not independent native-origin attestation or OS 
 
 | Companion input | Display-only effect |
 |---|---|
-| `[` / `]` | Choose active siblings (or the pinned inactive child); no new output steals an active selection |
+| Up/Down, `[` / `]` | Choose verified live/retained completed siblings in displayed order; explicit selection is stable |
+| Enter / Esc | Open bounded details **inside AGENTS** / return to its list; main is unchanged |
 | `f` | Pin/unpin; a pin retains completion/disconnection labels; unpin recomputes activity |
 | `p` | Freeze progress while draining bounded snapshots and counting subsequent records; lifecycle stays live |
 | `c` / `r` | Close/reopen readers / explicitly rediscover; no child relaunch |
-| `i`, PageUp/PageDown | Full identities/notices and bounded history; selection/lifecycle stay at the top |
+| `i`, PageUp/PageDown | Toggle passive-reader help / scroll identities and bounded history; selected identity stays at the top |
 | `q`, Ctrl+C | Exit only this display; explicit workspace open recovers owned companions |
 
-No active child means idle. Initial/recomputed choice uses newest trusted start time, admission order within
+Verified completed upstream SDK attempts remain browsable within the existing eight-child bound. Explicitly
+chosen completed SDK output stays selected when live siblings arrive, without requiring a pin. A lost pinned
+source stays visibly disconnected but loses log authority. Retention may evict older unselected terminal attempts;
+capacity refuses new observations rather than evicting live work or the existing retained selection/pin.
+A reader reports previously observed lost/evicted attempts without guessing their cause or claiming a complete
+upstream history; it cannot count events that preceded observation. No full
+transcript, reasoning or tool bodies are collected. Assignment text, when available, is bounded upstream description
+metadata, not stage authority. Monitor completion without an eligible retained SDK attempt still returns to idle.
+
+Initial/recomputed choice uses newest trusted start time, admission order within
 the same custodian for timestamp ties, then stable child ID. Automatic or explicit selection changes discard a
 frozen view. Completion means only the monitor's normal settled zero exit, never Review/QA acceptance. Expired
 heartbeats say unknown/inactive; missing custody retains a pinned label but removes verified worktree authority.
 Terminal-default text follows the companion terminal's foreground/background, independently of Pi's theme.
-Narrow views keep a compact attempt/ordinal and known lifecycle header; `i` and paging reveal clipped identities.
+Narrow views keep compact status/selection headers. Ellipses and paging disclose clipping; help and details reveal
+full bounded identities. Dots/checkmarks distinguish live, completed, failed and disconnected states without
+invented token/cost metrics.
+
+#### Separate main-pane viewer
+
+Opening the workspace also adds a picker **below Pi's prompt**. Main normally remains the coordinating session,
+including its high-level progress. Press **Ctrl+Shift+A** (or `/fight-agents`) to explicitly focus that picker;
+Up/Down chooses, Enter opens a passive bounded-output overlay **in main**, and Esc returns to the same running
+coordinator/editor. Esc while only the picker is focused returns input to the editor. The viewer consumes its own
+keys; it never aborts, switches, steers or accepts a session, and does not replace Pi's editor component. Other
+extension prompts release picker focus. AGENTS selection never opens this viewer.
+
+The main display reuses `RegisteredChildren` and its exact native session/file/custody admission, not a new
+registry or transcript reader. Its display choice is independent of AGENTS/log selection. An open view stays bound
+to one attempt, including through completion; loss/eviction displays unavailable rather than another agent's text.
+PgUp/PgDn browses, `p` freezes the main display while bounded discovery continues. Closing the workspace disposes
+this reader too. Whole Pi shutdown/reload remains different and may abort upstream workers. Main UI requires
+supported `setWidget` below-editor placement, `onTerminalInput` and `custom` overlays; absent capabilities leave
+a visible limitation, never a private-API patch. This keyboard integration does not claim mouse/click parity.
 
 Each open generation creates an owner-private canonical `var/herdr-workspace/*.context.json` binding to actual
 native session ID/file/cwd/PID and a read-only loopback responder. A pending native file can become persistent

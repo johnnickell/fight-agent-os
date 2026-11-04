@@ -4,7 +4,7 @@ import { writeFile, rename, unlink } from 'node:fs/promises';
 // A display-only companion: no tools, provider, Docker, observer or execution API.
 const [receipt, token, index] = process.argv.slice(2);
 if (!receipt || !token || !['0', '1'].includes(index) || process.env.HERDR_ENV !== '1' || !process.env.HERDR_PANE_ID || !process.stdin.isTTY || !process.stdout.isTTY) process.exit(1);
-const title = index === '0' ? 'Child activity' : 'Runtime logs';
+const title = index === '0' ? 'AGENTS' : 'LOGS';
 const next = index === '0' ? 'TASK-00511' : 'TASK-00512';
 let closing = false;
 const server = net.createServer((socket) => {

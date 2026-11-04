@@ -78,6 +78,10 @@ companions without a log setup form; no follow-up slash command or model turn is
 verified matching existing local sources; readable choices appear in the log pane only when needed. Missing logs
 or cancelling selection never blocks the workspace. Ordinary `pi` does not auto-open anything. Inside either
 native entry, `/fight-workspace [open|close]` remains available for manual open, recovery and companion-only close.
+The companions are named **AGENTS** and **LOGS**. AGENTS has list/Enter-detail/Esc-back navigation inside its own
+pane. Main stays with the coordinator; a separate below-prompt picker (Ctrl+Shift+A or `/fight-agents`) explicitly
+opens bounded child output in main, with Esc restoring the same coordinator/editor. These are passive readers,
+not execution/session switching controls; see [browsing controls](WORKSPACE.md#separate-main-pane-viewer).
 Pi owns its editor, Tab completion, colors, Markdown, dialogs,
 session and workflow authority; Herdr owns layout, focus, resize and zoom. Source association requires canonical
 checkout/worktree metadata, local Unix endpoint and exact container/service/lifecycle plus mount evidence.

@@ -564,7 +564,7 @@
 | [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | done | — |
 | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | needs-info | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
-| [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
+| [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | in-progress | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | done | [TICKET-00131](../tickets/00131-TICKET.md) |
 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |

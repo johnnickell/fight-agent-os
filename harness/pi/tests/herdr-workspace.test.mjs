@@ -77,7 +77,7 @@ test('Open keeps the native process and uses returned IDs, no-focus, same cwd an
   assert.equal(splits[0][2], 'caller');
   assert.equal(splits[1][2], 'returned-1');
   assert.ok(splits.every((c) => c.includes('--no-focus') && c.includes(workspace.context.cwd)));
-  assert.deepEqual(calls.filter((c) => c[1] === 'rename').map((c) => c[3]), ['Child activity — observation only', 'Runtime logs — human only']);
+  assert.deepEqual(calls.filter((c) => c[1] === 'rename').map((c) => c[3]), ['AGENTS', 'LOGS']);
   assert.ok(calls.filter((c) => ['run', 'close', 'rename'].includes(c[1])).every((c) => c[2] !== 'caller'));
   assert.equal(JSON.parse(await readFile(workspace.file)).primary.pid, process.pid);
 });

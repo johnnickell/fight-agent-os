@@ -12,6 +12,7 @@ function admitted(value, witness) {
       !Number.isSafeInteger(value.sequence) || value.sequence < 0 || !Number.isSafeInteger(value.receivedAt) || value.receivedAt > witness.at ||
       !['connected', 'starting', 'disconnected'].includes(value.state) || ![...activeStates, 'completed', 'failed'].includes(value.lifecycle) ||
       !Number.isFinite(value.heartbeatSeconds) || value.heartbeatSeconds < 1 || value.heartbeatSeconds > 60 ||
+      (value.identity?.assignment !== undefined && (typeof value.identity.assignment !== 'string' || value.identity.assignment.length > 600)) ||
       !keys.every(key => typeof value.identity?.[key] === 'string' && value.identity[key].length > 0 && value.identity[key].length <= 2200) ||
       !Array.isArray(value.history) || value.history.length > limits.records || value.history.some(text => typeof text !== 'string' || text.length > 1200) ||
       value.history.reduce((sum, text) => sum + text.length, 0) > limits.units ||
@@ -22,13 +23,14 @@ function admitted(value, witness) {
           value.lifecycle !== (value.upstreamStatus === 'running' ? 'running' : ['completed', 'steered'].includes(value.upstreamStatus) ? 'completed' : 'failed')
         : (['completed', 'failed'].includes(value.lifecycle) ? !Number.isInteger(value.exitCode) || value.exitCode < 0 || value.exitCode > 255 || (value.lifecycle === 'completed') !== (value.exitCode === 0) : value.exitCode !== null))) throw new Error('Invalid admitted child');
   if (clean(value.identity.worktree) !== value.identity.worktree || realpathSync(value.identity.worktree) !== value.identity.worktree) throw new Error('Noncanonical admitted worktree');
-  return { ...value, identity: Object.fromEntries(keys.map(key => [key, clean(value.identity[key]).replace(/\n/g, ' ')])), history: value.history.map(text => clean(text).replace(/\n/g, ' ')), verified: true };
+  return { ...value, identity: Object.fromEntries([...keys, ...(value.identity.assignment === undefined ? [] : ['assignment'])].map(key => [key, clean(value.identity[key]).replace(/\n/g, ' ')])), history: value.history.map(text => clean(text).replace(/\n/g, ' ')), verified: true };
 }
 export class RegisteredChildren {
   constructor(cwd, changed = () => {}, { discover = candidates, verify = challenge, now = Date.now, preferences = true } = {}) {
     this.cwd = realpathSync(cwd); this.changed = changed; this.discover = discover; this.verify = verify; this.now = now; this.preferences = preferences;
     this.sources = new Map(); this.selected = null; this.pin = null; this.session = null; this.file = null;
     this.epoch = 0; this.closed = false; this.open = true; this.pending = null; this.paused = false; this.frozen = null;
+    this.removed = 0;
     this.notice = 'Waiting for actual Pi session identity';
   }
   start(session, file) {
@@ -41,6 +43,7 @@ export class RegisteredChildren {
   sessionChanged(session, file) {
     if (session === this.session && file === this.file?.path) return;
     this.invalidateRefresh(); this.sources.clear(); this.selected = null; this.pin = null; this.paused = false; this.frozen = null;
+    this.removed = 0;
     this.session = null; this.file = null; this.notice = 'Session changed: old readers, pin and source context cleared'; this.changed();
     if (session) return this.start(session, file);
   }
@@ -52,14 +55,14 @@ export class RegisteredChildren {
   recompute() {
     const previous = this.selected;
     if (this.pin && this.sources.has(this.pin)) this.selected = this.pin;
-    else if (!this.active(this.sources.get(this.selected))) {
+    else if (!(this.explicit && this.completed(this.sources.get(this.selected))) && !this.active(this.sources.get(this.selected))) {
       this.selected = [...this.sources.values()].filter(item => this.active(item)).sort((a, b) =>
         b.started - a.started || (a.generation === b.generation ? b.order - a.order : 0) || a.id.localeCompare(b.id)).map(sourceKey)[0] ??
         (this.completed(this.sources.get(this.selected)) ? this.selected :
           [...this.sources.values()].filter(item => this.completed(item))
             .sort((a, b) => b.started - a.started || b.order - a.order).map(sourceKey)[0]) ?? null;
     }
-    if (previous !== this.selected) { this.paused = false; this.frozen = null; }
+    if (previous !== this.selected) { this.explicit = false; this.paused = false; this.frozen = null; }
   }
   fileCurrent() {
     if (!this.file) return true;
@@ -96,12 +99,15 @@ export class RegisteredChildren {
           } catch { refused++; }
         }
         if (epoch !== this.epoch || this.closed || !this.open) return;
+        // Count only previously observed removals; never claim a complete upstream history or infer their cause.
+        this.removed = Math.min(Number.MAX_SAFE_INTEGER, this.removed + [...this.sources].filter(([key, item]) => item.verified && !next.has(key)).length);
         // Keep a pinned lost source visibly disconnected, but never use invalidated custody for logs.
         const lost = this.sources.get(this.pin);
         if (lost && !next.has(this.pin)) next.set(this.pin, { ...lost, verified: false, state: 'disconnected' });
         const sorted = [...next.entries()].sort(([a, x], [b, y]) => (b === this.pin || b === this.selected ? 1 : 0) - (a === this.pin || a === this.selected ? 1 : 0) || y.started - x.started || a.localeCompare(b));
         this.sources = new Map(sorted.slice(0, limits.children)); this.recompute();
         this.notice = `${refused ? `${refused} stale/replaced/mismatched custody candidate(s) refused. ` : ''}${next.size > limits.children ? 'Capacity: newest eight plus retained selection/pin only. ' : ''}${next.size ? 'Trusted-local child association verified; pane is human-only' : 'No eligible monitor association; unregistered/unsupported children unavailable, never guessed'}`;
+        if (this.removed) this.notice += ` · Observed lost/evicted attempts: ${this.removed}; window is not complete history`;
         this.restorePreference(); this.savePreference(); this.changed();
       } catch { if (epoch === this.epoch && !this.closed) { for (const item of this.sources.values()) item.verified = false; this.recompute(); this.notice = 'Registration discovery unavailable/capacity exceeded; no unverified source admitted'; this.changed(); } }
     })().finally(() => {
@@ -119,6 +125,7 @@ export class RegisteredChildren {
     this.recompute(); this.changed(); void this.refresh();
   }
   get verifiedWorktree() { if (!this.fileCurrent()) return null; const item = this.sources.get(this.selected); return item?.verified ? item.identity.worktree : null; }
+  get orderedSources() { return [...this.sources].sort(([a, x], [b, y]) => y.started - x.started || (x.generation === y.generation ? y.order - x.order : 0) || a.localeCompare(b)); }
   action(type) {
     if (this.closed || !this.session) return;
     if (type === 'toggle') {
@@ -126,12 +133,12 @@ export class RegisteredChildren {
       if (!this.open) { for (const item of this.sources.values()) { item.verified = false; item.state = 'disconnected'; } this.recompute(); this.notice = 'Readers closed; children unchanged'; }
       else void this.refresh();
     } else if (type === 'reconnect') { this.open = true; void this.refresh(); }
-    else if (type === 'pin') { this.pin = this.pin === null ? this.selected : null; this.recompute(); }
+    else if (type === 'pin') { this.pin = this.pin === null ? this.selected : null; if (this.pin === null) this.explicit = false; this.recompute(); }
     else if (type === 'next' || type === 'previous') {
-      const eligible = [...this.sources.entries()].filter(([key, item]) => this.active(item) || key === this.pin || this.completed(item)).map(([key]) => key).sort();
+      const eligible = this.orderedSources.filter(([key, item]) => this.active(item) || key === this.pin || this.completed(item)).map(([key]) => key);
       if (eligible.length) {
         const current = eligible.indexOf(this.selected), delta = type === 'next' ? 1 : -1;
-        this.selected = eligible[(current + delta + eligible.length) % eligible.length];
+        this.selected = eligible[(current + delta + eligible.length) % eligible.length]; this.explicit = true;
         if (this.pin !== null) this.pin = this.selected;
       }
     } else if (type === 'pause') { this.paused = !this.paused; this.pausedSequence = this.sources.get(this.selected)?.sequence ?? 0; this.frozen = this.paused ? [...(this.sources.get(this.selected)?.history ?? [])] : null; }
@@ -148,7 +155,7 @@ export class RegisteredChildren {
     // An editable preference cannot create membership. Keep it pending only until the first discovery.
     this.preference = null;
     if (this.sources.get(choice.pin)?.verified) { this.pin = choice.pin; this.selected = choice.pin; }
-    else if (this.active(this.sources.get(choice.selected))) this.selected = choice.selected;
+    else if (this.active(this.sources.get(choice.selected)) || this.completed(this.sources.get(choice.selected))) { this.selected = choice.selected; this.explicit = true; }
   }
   savePreference() {
     if (!this.preferences || !this.session || this.closed) return;
