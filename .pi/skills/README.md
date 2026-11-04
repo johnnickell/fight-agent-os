@@ -28,10 +28,10 @@ applicable screenshot uploads without another approval prompt. Five shared repai
 QA failures do not reset the allowance. The successful handoff is human review/merge on GitHub. Run `/reload`
 in an existing Pi session to discover the new skill. No subagent extension is required with the qualified Pi
 1.2.0 CLI. Local context separation is not managed identity, sandboxing or Pi Durable execution.
-Build resolves [phase models](build/SKILL.md#resolve-phase-models) independently of its coordinator: Sol for
-engineering/review, Terra with high reasoning for QA and land with `openai-codex`. Explicit invocation and target-bound
-role choices take precedence; exact selections are verified and pinned per delivery. Existing active children
-keep their selection. These are local defaults, not implemented managed Agent profile configuration.
+Build is the single owner of [per-role model selection and local defaults](build/SKILL.md#pin-models-then-launch-fresh-roles),
+independent of its coordinator's model. Explicit invocation and target-bound role choices take precedence; exact
+selections are verified and pinned per delivery. Existing active children keep their selection. These are local
+defaults, not implemented managed Agent profile configuration.
 The read-only [next skill](next/SKILL.md) now recommends `build` by default for implementation and confirmed
 repairs; evidence-only, QA, delivery and planning handoffs retain their appropriate stage commands.
 It uses Board sections, Wayfinder inventory and current handoffs within a bounded read budget. Closed maps

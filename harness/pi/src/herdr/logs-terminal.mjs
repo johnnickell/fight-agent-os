@@ -15,9 +15,9 @@ const chooser = (choice, width, height) => {
   }
   // Keep the active ordinal and authorization controls outside the physical-row viewport.
   // Only the active source is paged: long labels/paths cannot hide it behind earlier choices.
-  const header = fit(`Choose logs ${choice.index + 1}/${choice.count} — verified local`, width);
-  const controls = wrap('↑/↓ source · Enter choose · Esc cancel\nPgUp/PgDn details · q exit', width);
-  const body = wrap(`> ${choice.label}\nCheckout: ${choice.worktree}\nExact checkout only · no shared fallback\nCancellation keeps the workspace open.`, width);
+  const header = fit(`LOGS · ${choice.kind} ${choice.index + 1}/${choice.count}`, width);
+  const controls = wrap('↑/↓ move · Space mark · Enter apply · Esc cancel\nf Follow active · m Main · PgUp/PgDn details · q exit', width);
+  const body = wrap(`> ${choice.label}\n${choice.selection ?? ''}\nCheckout: ${choice.worktree}\n${choice.notice ?? ''}\nExact verified stack only; cancellation keeps panes open.`, width);
   const space = height - controls.length - 1;
   scroll = Math.max(0, Math.min(scroll, Math.max(0, body.length - space)));
   return [header, ...body.slice(scroll, scroll + space), ...Array(Math.max(0, space - body.length)).fill(''), ...controls];
@@ -27,14 +27,14 @@ const draw = () => {
   if (blocked) { dirty = true; return; }
   dirty = false;
   const { width, height } = dimensions();
-  const choice = logs.discovery ? logs.logs.choice() : null;
+  const choice = logs.logs.choice();
   if (choice) {
     blocked = !process.stdout.write('\x1b[H\x1b[2J' + chooser(choice, width, height).join('\r\n'));
     return;
   }
   const lines = logs.view().split('\n');
   const header = lines.slice(0, 6).map(line => fit(line, width));
-  const controls = fit(logs.discovery ? (width < 45 ? 's choose · r retry · i info · q exit' : 's choose source · r retry · p pause · c reader · i info · q exit') : (width < 45 ? 'p c r i · [ ] service · { } stack · q' : 'p pause c reader r retry i info [ ] service { } stack m shared q quit'), width);
+  const controls = fit(width < 65 ? 'f Follow · m Main · s Services · i help · q exit' : 'f Follow active · m Main · s Services · p pause · c reader · r retry · i help · q exit', width);
   const body = lines.slice(6).flatMap(line => wrap(line, width));
   const space = Math.max(0, height - header.length - 1);
   scroll = Math.max(0, Math.min(scroll, Math.max(0, body.length - space)));

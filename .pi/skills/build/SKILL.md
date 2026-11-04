@@ -35,7 +35,7 @@ per-stage proof trees. Missing browser prerequisites hold affected advancement, 
 ## Pin models, then launch fresh roles
 
 Explicit invocation choices override target bindings, then local defaults: retain configured provider; for
-`openai-codex`, Team Lead Sol/medium, Engineer and Review Sol/high, QA and Land Terra/high. Resolve the newest
+`openai-codex`, Team Lead Sol/medium, Engineer, Review, QA and Land Sol/high. Resolve the newest
 available stable numeric model in that requested family from installed Pi metadata; explicit exact IDs stay
 exact. Verify thinking support. No fallback/escalation/provider change or mid-delivery refresh. Pin the resolved
 provider/model/thinking per role for repairs/resume; an explicit human change preserves prior history. Record

@@ -6,6 +6,7 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
 import { NativeWorkspaceContext } from './context.mjs';
+import { logLimits } from '../workspace/runtime-logs.mjs';
 
 const execute = promisify(execFile);
 const pause = (ms) => new Promise((done) => setTimeout(done, ms));
@@ -137,8 +138,9 @@ export class HerdrWorkspace {
       // Admit only bounded, live-tracked Docker readers or fixed Git/Docker metadata
       // subprocesses AND fresh direct-parent proof. Extra/foreign jobs retain the hold.
       const children = processes.filter(process => process.pid !== live.pid);
-      const tracked = [...(live.readerPids ?? []), ...(live.metadataPids ?? [])];
-      if (this.state.panes[1] === owned && owner.length === 1 && children.length > 0 && children.length <= 2 &&
+      const readers = live.readerPids ?? [], metadata = live.metadataPids ?? [];
+      const tracked = [...readers, ...metadata];
+      if (this.state.panes[1] === owned && owner.length === 1 && readers.length <= logLimits.sources && metadata.length <= 1 && children.length > 0 && children.length <= logLimits.sources + 1 &&
           info.shell_pid === live.pid && info.foreground_process_group_id === live.pid &&
           tracked.length === children.length && new Set(tracked).size === tracked.length &&
           children.every(child => Number.isSafeInteger(child.pid) && child.pid > 0 &&

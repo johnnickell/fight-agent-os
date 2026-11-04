@@ -101,6 +101,14 @@ choice and separate Work invocation are still required. This is accepted plannin
 qualified supplier adoption or completed acceptance. Missing upstream capabilities hold affected adoption only;
 the EPIC owns precise amendments, exclusions and the completed-planning handoff.
 
+**TASK-00563 accepted LOGS checkpoint — 2026-11-04:** [the TASK](tasks/00563-TASK.md#accepted-implementation-checkpoint--2026-11-04)
+records independent Review ACCEPT and visual/behavioral QA PASS on amended candidate `9d9d952`, including the
+explicit Sol/high QA/Land defaults and sole-owner caller documentation. Publication/capture access and eligible
+cleanup are pending at this checkpoint; actual outcomes are in canonical ignored
+`.runs/tasks/TASK-00563/runs/land-delivery.md` and the TASK PR. Main/two-worktree tooling observation passed;
+full worktree HTTPS/auth startup and everyday package rollout remain unclaimed. The following original planning
+checkpoint retains its historical dependency/authorization statements, not today's TASK-00563 stage.
+
 **Approved local Build/Herdr follow-on — 2026-11-02:** [TICKET-00130](tickets/00130-TICKET.md) requirements and
 TASK decomposition are approved: [TASK-00560](tasks/00560-TASK.md) delivers upstream Engineer execution;
 [TASK-00561](tasks/00561-TASK.md) completes independent stage cutover and launcher retirement after TASK-00560;
