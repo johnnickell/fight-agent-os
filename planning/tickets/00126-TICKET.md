@@ -78,7 +78,7 @@ case rather than creating a renderer-only infrastructure demonstration.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00549](../tasks/00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | ready-for-agent |
+| [TASK-00549](../tasks/00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
