@@ -389,6 +389,11 @@ Use the current project-owned `./bin/build` gate and [engineering standards](doc
 Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees use approved dedicated roots
 (such as a sibling `.worktrees/` directory, outside `.runs/`). Runtime sandboxing remains planned, not implied by the development Compose stack.
 
+For maintained feature architecture pictures, use the [source-verified diagram standard](docs/engineering/DIAGRAMS.md)
+and its explicit local `./bin/diagrams` setup/render commands. The
+[CSRF bootstrap example](docs/engineering/browser-auth-requests/README.md) shows actual PHP layer ownership with
+source and arrow traces; it is not runtime or security acceptance evidence.
+
 See [architecture](ARCHITECTURE.md), [roadmap](planning/ROADMAP.md), and [scaffold origin](docs/ORIGIN.md).
 The inherited starter retains its [MIT license](LICENSE).
 

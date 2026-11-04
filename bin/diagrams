@@ -1,0 +1,44 @@
+#!/usr/bin/env sh
+set -eu
+cd "$(dirname "$0")/.."
+export FIGHT_AGENT_OS_USER="$(id -u):$(id -g)"
+
+usage() {
+    echo 'Usage: ./bin/diagrams setup | versions | render docs/path/view.py' >&2
+    exit 2
+}
+
+require_image() {
+    image="$(./bin/runtime docker compose --profile diagrams config --images | grep -- '-diagrams$')"
+    if ! ./bin/runtime docker image inspect "$image" >/dev/null 2>&1; then
+        echo 'Diagram image unavailable; run ./bin/diagrams setup first.' >&2
+        exit 1
+    fi
+}
+
+[ "$#" -ge 1 ] || usage
+case "$1" in
+    setup)
+        [ "$#" -eq 1 ] || usage
+        ./bin/runtime storage-admit
+        exec ./bin/runtime docker compose --profile diagrams build --pull diagrams
+        ;;
+    versions)
+        [ "$#" -eq 1 ] || usage
+        require_image
+        exec ./bin/runtime docker compose --profile diagrams run --rm --no-deps --pull never -T \
+            --entrypoint sh diagrams -ec 'python --version; dot -V; dpkg-query -W graphviz fonts-dejavu-core; python -m pip freeze'
+        ;;
+    render)
+        [ "$#" -eq 2 ] || usage
+        case "$2" in
+            *'/../'*|*'/./'*) usage ;;
+            docs/*.py) [ -f "$2" ] || usage ;;
+            *) usage ;;
+        esac
+        require_image
+        exec ./bin/runtime docker compose --profile diagrams run --rm --no-deps --pull never -T \
+            diagrams "/docs/${2#docs/}"
+        ;;
+    *) usage ;;
+esac

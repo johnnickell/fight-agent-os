@@ -5,6 +5,14 @@ TASK-00045 provides reusable login/refresh/logout controls. [TASK-00046 login](L
 Activation continues using the shared browser guard and session responder. Its separate admission limits
 and invitation/password behavior are unchanged. Complete deployment qualification remains TASK-00063/64.
 
+## Source-verified CSRF ownership
+
+The [CSRF bootstrap ownership view](browser-auth-requests/README.md) traces actual PHP Domain, Application and
+Adapter placement and the configured QueryBus hop to a named source revision. Its editable Python Diagrams
+source and rendered image live together beside that focused explanation. Follow the
+[shared diagram standard](DIAGRAMS.md) to regenerate and inspect it; this is a partial source view, not proof of
+runtime security or the complete login/refresh/logout pipeline.
+
 ## Composition and request matrix
 
 Login, refresh and logout Actions declare `#[JsonBody]` and `#[Validation]` and consume only the validated source attribute.

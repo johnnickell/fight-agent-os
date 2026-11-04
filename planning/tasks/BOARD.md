@@ -57,7 +57,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | [TICKET-00126 — Maintain source-verified Python diagrams beside feature documentation](../tickets/00126-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | [TICKET-00127 — Review material architecture changes with diagrams in pull requests](../tickets/00127-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | [TICKET-00128 — Show feature architecture on demand in Pi](../tickets/00128-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
 
@@ -330,8 +331,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00530](00530-TASK.md) | Recover production state through Managed PostgreSQL and Spaces | [TICKET-00124 — Back up and restore coherent application state](../tickets/00124-TICKET.md) | ready-for-agent | [TASK-00529](00529-TASK.md), [TASK-00528](00528-TASK.md) | — |
 | — | [TASK-00532](00532-TASK.md) | Stage and recover an exact release candidate | [TICKET-00125 — Promote and recover an explicitly approved release](../tickets/00125-TICKET.md) | ready-for-agent | [TASK-00529](00529-TASK.md) | — |
 | — | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | [TICKET-00125 — Promote and recover an explicitly approved release](../tickets/00125-TICKET.md) | ready-for-agent | [TASK-00532](00532-TASK.md), [TASK-00530](00530-TASK.md), [TASK-00362](00362-TASK.md), [TASK-00365](00365-TASK.md), [TASK-00367](00367-TASK.md) | — |
-| — | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | [TICKET-00127 — Review material architecture changes with diagrams in pull requests](../tickets/00127-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
-| — | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | [TICKET-00128 — Show feature architecture on demand in Pi](../tickets/00128-TICKET.md) | ready-for-agent | [TASK-00549](00549-TASK.md) | — |
 | — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | [TASK-00560](00560-TASK.md) | — |
 
 ## Needs Info
@@ -634,6 +633,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00540](00540-TASK.md) | Make Land cleanup qualification and evidence preservation executable | — (standalone bug) | done | — | [PR #179](https://github.com/johnnickell/fight-agent-os/pull/179) |
 | — | [TASK-00541](00541-TASK.md) | Reduce repeated validation and complete gate duration | — (standalone chore) | done | — | [PR #178](https://github.com/johnnickell/fight-agent-os/pull/178) |
 | — | [TASK-00545](00545-TASK.md) | Respect retained checkouts during cleanup report protection | — (standalone bug) | done | — | [PR #183](https://github.com/johnnickell/fight-agent-os/pull/183) |
+| — | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | [TICKET-00126 — Maintain source-verified Python diagrams beside feature documentation](../tickets/00126-TICKET.md) | done | — | [PR #209](https://github.com/johnnickell/fight-agent-os/pull/209) |
 | — | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | — (standalone chore) | done | — | [PR #188](https://github.com/johnnickell/fight-agent-os/pull/188) |
 | — | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | — (standalone chore) | done | — | [PR #194](https://github.com/johnnickell/fight-agent-os/pull/194) |
 | — | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | — (standalone bug) | done | — | [PR #195](https://github.com/johnnickell/fight-agent-os/pull/195) |

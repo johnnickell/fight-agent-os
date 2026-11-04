@@ -74,6 +74,23 @@ services:
         target: /app
         read_only: false
 
+  # Local documentation renderer only; never started by application up/build.
+  diagrams:
+    profiles: [diagrams]
+    image: ${COMPOSE_PROJECT_NAME:-fight-agent-os}-diagrams
+    build:
+      context: ./etc/docker/diagrams
+    user: "${FIGHT_AGENT_OS_USER:-1000:1000}"
+    network_mode: none
+    volumes: ["./docs:/docs"]
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,size=64m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 64
+
   https_php:
     profiles: [https]
     init: true

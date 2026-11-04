@@ -17,6 +17,10 @@ Design architecture, domain language and capability interfaces for human readers
 need not follow TDD: settle ownership and interfaces, implement testable behavior, then prove it with meaningful
 tests. Test convenience must not dictate public APIs or fragment cohesive concepts.
 
+Use the [source-verified diagram standard](DIAGRAMS.md) when a feature benefits from an ownership, dependency
+or interaction view. Keep editable Python source, rendered image, revision and traces with the owning feature
+documentation; a diagram illustrates evidence, not architectural conformity or runtime correctness.
+
 ### Aggregate ownership and naming
 
 Keep `App\` mapped directly to `src/`. Domain uses `Domain/{BoundedContext}/{Aggregate}`: the aggregate root,
