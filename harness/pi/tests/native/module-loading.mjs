@@ -18,6 +18,7 @@ const provider = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
 const harness = process.env.FIGHT_QUALIFICATION_HARNESS ? resolve(process.env.FIGHT_QUALIFICATION_HARNESS) : join(provider, 'harness/pi');
 const manifest = JSON.parse(readFileSync(join(harness, 'package.json'), 'utf8'));
 const entries = manifest.pi.extensions.map(path => resolve(harness, path));
+writeFileSync(join(agentDir, 'subagents.json'), readFileSync(join(harness, 'profiles/subagents.json')));
 const sdk = await import(pathToFileURL(join(modules, '@earendil-works/pi-coding-agent/dist/index.js')));
 const { visibleWidth } = await import(pathToFileURL(join(modules, '@earendil-works/pi-tui/dist/index.js')));
 const runtime = await sdk.ModelRuntime.create({ authPath: join(agentDir, 'auth.json'), modelsPath: null,
@@ -26,9 +27,9 @@ let credentialReads = 0;
 runtime.getApiKeyForProvider = async () => { credentialReads++; throw new Error('Unexpected credential resolution'); };
 const model = runtime.getModel('openai-codex', 'gpt-6.1-sol'); assert.ok(model);
 const expectedCommands = ['fight-agents', 'fight-header', 'fight-policy', 'fight-subagents', 'fight-workspace', 'file-screening', 'jev'];
-const expectedFlags = ['fight-header', 'fight-screening-required', 'fight-tool-policy'];
+const expectedFlags = ['fight-build-engineer', 'fight-header', 'fight-screening-required', 'fight-tool-policy'];
 // file_locate is session/enrollment-dependent and exercised by optional-jev.mjs.
-const expectedTools = ['file_screening_status', 'jev_read_file'];
+const expectedTools = ['fight_build_engineer', 'file_screening_status', 'jev_read_file'];
 const scenarios = [], headers = {};
 let outcomes = 0;
 async function load(paths) {
@@ -42,14 +43,18 @@ async function load(paths) {
 for (const [name, paths, mode] of [
   ['package', [harness], 'tui'], ['explicit', entries, 'tui'],
   ['package-and-explicit-deduplicated', [harness, ...entries], 'tui'],
-  ['header-only', [entries[0]], 'tui'], ['package-json', [harness], 'json'],
+  ['header-only', [entries.find(path => path.endsWith('/src/header-extension.ts'))], 'tui'], ['package-json', [harness], 'json'],
   ['package-no-tools', [harness], 'json'],
 ]) {
   const { settings, loader, loaded } = await load(paths);
   assert.deepEqual(loaded.errors, []); assert.deepEqual(loaded.warnings ?? [], []);
   const headerOnly = name === 'header-only';
-  assert.equal(loaded.extensions.length, headerOnly ? 1 : 5);
-  const registrations = key => loaded.extensions.flatMap(extension => [...extension[key].keys()]).sort();
+  assert.equal(loaded.extensions.length, headerOnly ? 1 : entries.length);
+  // Upstream owns its own registration inventory; qualify Fight's contract and
+  // one bundled engine without pinning the supplier's unrelated commands.
+  assert.equal(loaded.extensions.filter(extension => extension.path.endsWith('/vendor/pi-subagents/src/index.ts')).length, headerOnly ? 0 : 1);
+  const registrations = key => loaded.extensions.filter(extension => !extension.path.includes('/vendor/pi-subagents/'))
+    .flatMap(extension => [...extension[key].keys()]).sort();
   assert.deepEqual(registrations('commands'), headerOnly ? ['fight-header'] : expectedCommands);
   assert.deepEqual(registrations('flags'), headerOnly ? ['fight-header'] : expectedFlags);
   assert.deepEqual(registrations('tools'), headerOnly ? [] : expectedTools);
@@ -62,7 +67,8 @@ for (const [name, paths, mode] of [
   session.agent.streamFunction = async () => { throw new Error('Unexpected model request'); };
   try {
     await session.bindExtensions({ mode, uiContext: mode === 'tui' ? {
-      setHeader(value) { header = value; headerCalls++; }, setFooter() {}, setStatus() {},
+      setHeader(value) { header = value; headerCalls++; }, setFooter() {}, setStatus() {}, setWidget() {},
+      onTerminalInput: () => () => {}, addAutocompleteProvider() {},
       notify(message) { notices.push(message); }, select: async () => undefined,
     } : undefined, onError: error => errors.push(error) });
     if (name === 'package-no-tools') { assert.equal(session.getActiveToolNames().includes('bash'), false); outcomes++; }

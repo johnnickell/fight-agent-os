@@ -1,4 +1,15 @@
-# Upstream subagents and Fight observation
+# Bundled subagents and Fight observation
+
+## Fight-owned component — TASK-00560 packaging prerequisite
+
+John approved maintaining the patched upstream engine inside this GitHub repository on 2026-11-04.
+`vendor/pi-subagents/` is ordinary source, not a submodule, runtime checkout or second session engine. Its
+[component README](vendor/pi-subagents/README.md) records upstream 0.23.1/base revision, MIT attribution and the
+maintained delta. The Harness manifest loads its source entry once; the package ships runtime source/license/docs,
+not development dependencies or tests. Fight owns policy and observation; the bundled engine owns SDK execution.
+This packaging candidate is not independent acceptance, an everyday installation update or the actual Build route.
+
+### Historical companion qualification
 
 [TASK-00554](../../planning/tasks/00554-TASK.md) implements a passive bridge to
 [`@tintinweb/pi-subagents`](https://github.com/tintinweb/pi-subagents). Private installed/native qualification
@@ -9,12 +20,20 @@ behavioral/visual QA PASS cover the accepted candidate; see the TASK's completio
 
 For a new, explicitly authorized installation:
 
-1. Install both the Fight package and the companion through Pi's package settings. The qualified companion is
-   `npm:@tintinweb/pi-subagents@0.22.1`, source `fc089c4b7ab0f1185453b2e53027997c1f637e38`.
-   Pi itself is capability-qualified, never version-pinned. Tested Pi `1.4.0` and Herdr `0.9.5` are evidence only.
-2. Review the shipped `profiles/subagents.json` and explicitly apply it as the project's `.pi/subagents.json`
-   (or private agent-directory `subagents.json`). Merge existing settings deliberately; never overwrite another
-   operator's configuration. Project settings override agent-directory defaults. Restart only the intended session.
+1. Review the shipped `profiles/subagents.json` and explicitly merge it into the project's `.pi/subagents.json`
+   (or private agent-directory `subagents.json`) **before launching the updated package**. Never overwrite another
+   operator's configuration. Project settings override agent-directory defaults; absent profile is not the supported
+   setup. Package installation does not automatically apply settings or grant stage authority.
+2. Install only the Fight package through Pi's package settings. The subagent engine is now bundled; remove an
+   existing standalone `npm:@tintinweb/pi-subagents...` declaration in the intended settings scope, after affected
+   sessions/Builds exit and before starting the updated copy. Inspect `pi list` and explicit extension paths/filters:
+   there must be one Fight package identity and one engine, never standalone and bundled copies together.
+   No second npm/Git package is needed. For source-local installs, explicitly prepare runtime dependencies with
+   `npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund` from the repository root;
+   Pi does not install a local directory's dependencies. Copied npm installs install the declared runtime dependencies.
+   Pi itself is capability-qualified, never version-pinned. Earlier companion 0.22.1/source
+   `fc089c4b7ab0f1185453b2e53027997c1f637e38`, Pi 1.4.0 and Herdr 0.9.5 are historical evidence, not this candidate's
+   acceptance. Restart only the intended session; no active-parent reload or shared installation mutation.
 3. Confirm effective settings in upstream `/agents`: **worktreeIsolation false**, workflows/scheduling disabled,
    nesting disabled, strict agent files, no default-agent fallback and only Fight package agents. Local agent
    definitions override package definitions; inspect collisions rather than assuming package provenance.
@@ -36,14 +55,105 @@ OS isolation. Fight extensions initialize their own session-local state; absent 
 Do not claim all parent protections automatically propagate: the opt-in deterministic tool policy refuses Agent
 at the parent tool boundary, so delegation under that selected policy is unavailable rather than a bypass.
 
+## Opt-in Build Engineer
+
+The bootstrap candidate adds **`--fight-build-engineer sdk`** and **`fight_build_engineer`** for one actual Engineer
+assignment. It does not change the default executor or migrate Review/QA/Land; those process callers remain live
+until TASK-00561. Packaging or scripted SDK qualification alone does not satisfy TASK-00560. Its real native Work
+assignment, inspected Herdr captures and independent acceptance remain required.
+
+### Prepare a new native host
+
+At a safe session boundary, prepare one private copied installation using the profile above. Keep the active
+Build/shared installation untouched. The package manifest loads the Build listener before the engine so it sees
+the engine's actual settings-loaded event. Do not filter/reorder entries or load another engine. Prepare private
+Pi `settings.json` with `packages` containing that copy, the actual provider skill directory in `skills`, and an
+absolute `sessionDir` under the target canonical `.runs/tasks/<TASK-ID>/runs/` (or its Build run). Apply the shipped
+`subagents.json` to that private agent directory before starting; do not change global settings/trust. Resolve
+provider authentication through the existing supported operator/SDK credential path, never copied credentials.
+Unavailable authentication holds the live qualification; a faux provider is only a controlled check.
+
+Start ordinary **native Pi in an owned Herdr terminal**, in the already selected registered checkout:
+
+```sh
+PI_CODING_AGENT_DIR="$private_agent_dir" pi --fight-build-engineer sdk \
+  --provider "$coordinator_provider" --model "$coordinator_model" --thinking "$coordinator_thinking"
+```
+
+This flag selects a route, **not Build authority**. A genuine operator `/skill:build TASK-NNNNN --checkout /absolute/checkout`
+interaction or an existing trusted Build launcher must select Build/coordination for that exact TASK/checkout.
+An Engineer bootstrap cannot promote itself, replay coordinator dialogue or synthesize interactive user input.
+When the current host cannot load the candidate, commit the bootstrap and hand the exact private-host continuation
+to the authorized Build owner. Do not call it complete or launch a subordinate demo in place of the remaining Work.
+
+### Dispatch and inspect
+
+The coordinator prepares/reads back a fresh canonical `.runs/build/<TASK-ID>/<run>/<attempt>/request.md` under
+[Build's ordinary request rules](../../.pi/skills/build/SKILL.md). Keep governing skill/context paths, source/base/head,
+permitted Work effects, the pinned Engineer provider/model/thinking, single Compose project, repair allowance and
+canonical Work handoff. Then call `fight_build_engineer` with:
+
+- `task`, `role: "engineer"`, exact canonical `checkout`, current full `head`, fresh absolute `attempt` directory;
+- exact pinned `provider`, `model`, `thinking`, and finite `timeout` seconds (at most 21600).
+
+The tool requires actual session-local Build authority, same TASK/checkout, registered repository membership,
+feature-branch/head, executable TASK, supported profile/model and the engine's actual
+`capabilities.beforeSessionStart`/`boundRootSession` flags. It claims `dispatch.lock` before calling the **one
+upstream manager directly**. Existing execution evidence or an already claimed attempt refuses. No generic launch
+facade, scheduler, second engine, parent-path inference or automatic worktree management is involved.
+
+The awaited host-only setup runs **after factories**, before extension binding/session_start/prompting. Inspection
+established that Fight chooses workflow authority in `session_start`, so this is early enough. Setup verifies the
+actual fresh child, bound root, checkout, model/thinking, task-private session storage, loaded Fight extensions and
+governing instructions, then binds Engineer/work/TASK/attempt and `source`, `checks`, `commit`, `task-handoff` effects
+to the actual SessionManager. Fight verifies its initialized workflow again at input before a provider request.
+No prompt, name, profile, persisted role entry or shared `process.env` impersonation grants the stage. The engine's
+async-local child marker is shared across Pi module loaders; ordinary unbound SDK assistants do not inherit the
+native parent's launcher role. Shutdown/reload revokes the binding; it cannot restore itself from transcript history.
+These are trusted-local workflow responsibilities, not OS confinement. Native file tools and shell remain native.
+
+The existing passive observer derives assigned identity from that exact live binding while retaining native-root
+custody, registered-worktree verification, foreign/rootless/replaced refusal and bounded assistant/tool-name output.
+Reader closure never cancels work. Missing display does not change the executor or result. Upstream parent shutdown
+or reload aborts/disposes children; it does not provide durable survival.
+
+The tool writes `sdk-outcome.json`, returns identity/state rather than Engineer dialogue, and consumes its own upstream
+completion notification. Timeout/abort/settings change/shutdown request cancellation and allow ten seconds for the
+original promise/live session to settle. A terminal label alone is not quiescence. Missing/replaced records, unsettled
+execution or an exception after spawn was called remain **uncertain**; the coordinator/session checkpoint holds another
+dispatch, including after reload. Reconcile the original native execution and any external effects before replacement;
+never retry through Python to get output. A fresh host is not proof that old effects stopped. No automatic recovery or
+acceptance follows from `completed`: inspect the committed candidate, normal gate and canonical Work handoff, then
+use the existing **fresh independent Review** process request without Engineer conversation.
+
+Controlled owning qualification:
+
+```sh
+node --test harness/pi/tests/build-engineer.test.mjs harness/pi/tests/subagents.test.mjs
+node harness/pi/tests/native/build-engineer.mjs "$PI_SDK_MODULES" "$task_evidence" "$installed_harness"
+```
+
+The installed probe uses a scripted provider and real SDK/engine/Fight initialization, including Work admission,
+passive early/final text and tool names, duplicate refusal, unbound subordinate roles, provider error, timeout and
+shutdown/reload uncertainty. It is **not** a real permitted Work assignment, Sol-provider attestation, native terminal
+capture or independent acceptance. Record those remaining boundaries in the TASK and Work handoff.
+
 ## Build Engineer prerequisite — TASK-00560 held
+
+This heading and the following original hold are retained as historical evidence. John's later supplier amendment
+and the opt-in bootstrap above supersede the missing-hook/MAIN-only instruction, not the incomplete actual Engineer
+acceptance. The bundled engine supplies the awaited setup and actual bound-root capabilities; see its
+[supported local RPC contract](vendor/pi-subagents/docs/rpc.md). No upstream maintainer approval or separate
+publication is a prerequisite to ordinary in-repository maintenance.
+
+### Historical missing-capability qualification
 
 TASK-00560's 2026-11-03 private qualification used Pi `1.5.0` and upstream `0.23.0`
 (source `a60247c47f8b0a17bfe7208f9e248e464eda05f0`). These are tested identities, not Pi version gates
 or adoption of a new everyday companion. The real Build Engineer route is **not implemented**. Keep the existing
 Build process stages; do not select a subordinate Agent as an independent stage or silently replace an executor.
 
-Two upstream capabilities are missing:
+At that historical supplier revision, two capabilities were missing:
 
 - **Trusted initialization before extension binding.** The supported RPC/manager `spawn` surface overwrites a
   caller's `onSessionCreated`. Internally `runAgent` calls it only after `session.bindExtensions()`, too late for
@@ -52,7 +162,7 @@ Two upstream capabilities are missing:
   deriving it from the bound parent context. A persisted session's `parentSession` header does not supply the
   missing manager-record association or grant Build stage authority. Existing rootless refusal stays intact.
 
-The prerequisite owner is `@tintinweb/pi-subagents`: its supported host spawn boundary needs to derive the root
+The original prerequisite owner was `@tintinweb/pi-subagents`: its supported host spawn boundary needed to derive the root
 from the actual bound parent and offer an awaited, session-specific trusted setup boundary before child extension
 initialization/prompting. Setup rejection must settle without executing the assignment, including queued starts
 and cancellation. Fight can then bind the actual session to the authorized stage/TASK/checkout/attempt/effects
@@ -66,9 +176,10 @@ assignment. It retained the exact model/thinking and checkout, but had no root a
 Reviewer and its passive reader emitted zero frames with `root-association-unavailable`. This is bounded failure
 evidence, not the required Engineer/Herdr/Review journey. Canonical TASK-00560 Work evidence records the exact
 session identities and limits. Do not poll/rename records, infer authority from profiles/prompts or mutate shared
-`process.env` to bypass this hold. Resume implementation only after the supported upstream capabilities are
-available and deliberately qualified in a private installation at a safe session boundary; never reload the
-active parent or change global settings/trust as an implicit effect.
+`process.env` to bypass this hold. The later authorized bundled candidate above addresses these API gaps locally, not the missing real Engineer
+qualification. Resume the Build route only after its capabilities and Fight admission are deliberately qualified
+in a private installation at a safe session boundary; never reload an active parent or change global settings/trust
+as an implicit effect.
 
 ## Supported observation boundary
 
@@ -85,8 +196,9 @@ and waits for an actual record run transition. Input never supplies ownership. R
 attempt identity without recreating or executing the SDK session. Existing pins deliberately stay on the old
 attempt until changed/unpinned; an active explicit selection is not stolen by concurrent output.
 
-In the qualified upstream, RPC/direct `spawnTopLevel` strips root identity. Those rootless routes are **not
-observable**, even if upstream executes them successfully. They produce `root-association-unavailable`, not a guessed
+In the historically qualified standalone companion, RPC/direct `spawnTopLevel` strips root identity. That old
+rootless route remains **not observable**, even if the old companion executes it successfully. The bundled
+candidate instead derives actual bound-root identity; it does not waive any admission checks. They produce `root-association-unavailable`, not a guessed
 association from cwd, agent metadata or transcript filenames. Nested/workflow, missing, replaced and foreign
 records are likewise refused. Missing registry/session APIs, capacity and the five-second session/resume window
 have finite diagnostics. There is no requirement to make every upstream route supported, no monkey patch and no

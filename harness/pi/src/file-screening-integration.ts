@@ -12,6 +12,8 @@ import { FileScreeningSettings } from './jev/local-store.mjs';
 import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
 import { FileAdmission } from './jev/file-admission.mjs';
 import { WorkflowAccess, skillEffects } from './jev/workflow-access.mjs';
+import { inChildSessionContext } from '../vendor/pi-subagents/src/child-context.ts';
+import { closeWorkflow, engineerIdentity, isSdkSession, publishWorkflow, rememberSdkSession, stageBinding } from './build/authority.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
 import { ToolPolicy, PolicyDenied } from './tool-policy/policy.mjs';
 import { trackRuntimeHooks } from './tool-policy/runtime.mjs';
@@ -38,7 +40,7 @@ const textResult = (value: unknown, isError = false) => ({ content: [{ type: 'te
 const repositoryRecovery = 'Operator: inspect git worktree list --porcelain from the enrolled repository; repair reciprocal registration with Git worktree repair, or return to a valid registered checkout and reload. Do not enroll each worktree, edit Git pointers manually, reset accounting or bypass the denial with shell.';
 const allowed = ['read', 'write', 'edit', 'bash', 'jev_read_file', 'file_locate', 'file_screening_status'];
 const sources = [rulePath, fileURLToPath(import.meta.url), join(sourceDir, 'enrollment-preview.ts'), ...['jev', 'tool-policy'].flatMap(dir => readdirSync(join(sourceDir, dir))
-  .filter(name => /\.(mjs|py)$/.test(name)).map(name => join(sourceDir, dir, name))), join(sourceDir, 'jev-extension.ts'), join(sourceDir, 'screening-bootstrap.mjs')];
+  .filter(name => /\.(mjs|py)$/.test(name)).map(name => join(sourceDir, dir, name))), join(sourceDir, 'jev-extension.ts'), join(sourceDir, 'screening-bootstrap.mjs'), join(sourceDir, 'build/authority.mjs')];
 type Dependencies = { settings?: FileScreeningSettings; configuration: () => OperatorConfiguration | null;
   profiles: ScreeningProfiles; credentialConfigured: (ctx: ExtensionContext) => boolean };
 
@@ -51,12 +53,14 @@ const localScreeningFailures = new Set(['source-limit', 'batch-source-limit', 'r
 /** Bind optional discovery without intercepting native file tools or shell execution */
 export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencies) {
   const hooks = trackRuntimeHooks(pi, { screening: true });
+  const childFactory = inChildSessionContext();
   const profiles = dependencies.profiles;
   pi.registerFlag('fight-screening-required', { type: 'string', description: 'Trusted launcher enrollment identity; missing/changed authority holds optional discovery' });
   let screening: FileScreening | undefined, admission: FileAdmission | undefined, guard: ToolPolicy | undefined;
   let selected = false, live = false, failure: string | undefined, inputFailure: string | undefined, evaluationFailure: string | undefined;
   let context: ExtensionContext | undefined;
   let workflow = new WorkflowAccess();
+  const coordinatorTool = () => workflow.skill === 'build' && workflow.mode === 'default' && pi.getFlag('fight-build-engineer') === 'sdk';
   let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0, lastNotice = '', lastWarning = '';
   const persistRole = (role: string) => {
     try { pi.appendEntry('fight-workflow-role-v3', workflow.checkpoint(sessionId, role)); }
@@ -111,6 +115,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     }
   }
   function status(ctx: ExtensionContext) {
+    const binding = stageBinding(ctx.sessionManager);
     let budget: ReturnType<ProfileBudget['inspect']> | null = null;
     let allocation: { requestMicroUsd: number; sessionMicroUsd: number } | null = null;
     let reason = failure ?? inputFailure ?? evaluationFailure;
@@ -136,6 +141,8 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       phase: workflow.role, budget, allocation,
       workflow: { skill: workflow.skill, effect: skillEffects[workflow.skill], taskId: workflow.taskId,
         checkout: workflow.checkout, mode: workflow.mode, launcherRole: workflow.launcher },
+      ...(binding ? { stage: { role: 'engineer', skill: 'work', task: binding.task, attempt: binding.attempt,
+        parent: binding.parent, effects: binding.effects, live: binding.live } } : {}),
       credential: selected && dependencies.credentialConfigured(ctx) ? 'configured-resolution-unchecked' : 'not-configured',
       bindingLimit: budget ? budget.availableMicroUsd <= budget.session.availableMicroUsd ? 'monthly' : 'session' : 'unavailable',
       coverage: selected ? `Pi ${VERSION} optional discovery; native reads, writes and edits are unchanged; preflighted provider Build children. Native shell is unchanged and makes no Jev request. Shell bypasses relevance; scripts/descendants/plugins/SDK OS calls are not intercepted or confined.` : 'none',
@@ -206,7 +213,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           return textResult({ blocked, nextAction }, true);
         }
       } });
-    pi.setActiveTools(allowed);
+    pi.setActiveTools([...allowed, ...(coordinatorTool() ? ['fight_build_engineer'] : [])]);
   }
   registerScreen(false);
   pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, selected workflow and shared monthly accounting. Inspect workflow.skill/effect for active workflow authority; phase is the workflow role (Build also uses qa), not the selected skill. Never resolves credentials or makes a provider request.',
@@ -216,11 +223,15 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     context = ctx; sessionId = ctx.sessionManager.getSessionId(); live = true; failure = undefined; inputFailure = undefined; evaluationFailure = undefined; authority = ''; sequence = 0; lastNotice = ''; lastWarning = '';
     workflow = new WorkflowAccess('review');
     try {
-      workflow = WorkflowAccess.restore({ phase: process.env.FIGHT_SCREENING_PHASE, sessionId,
-        taskId: process.env.FIGHT_SCREENING_TASK, checkout: process.env.FIGHT_SCREENING_CHECKOUT ??
+      if (childFactory) rememberSdkSession(ctx.sessionManager);
+      const binding = stageBinding(ctx.sessionManager), sdk = isSdkSession(ctx.sessionManager);
+      workflow = binding?.live ? new WorkflowAccess('work', { taskId: binding.task, checkout: binding.checkout }) :
+        WorkflowAccess.restore({ phase: sdk ? 'review' : process.env.FIGHT_SCREENING_PHASE, sessionId,
+        taskId: sdk ? undefined : process.env.FIGHT_SCREENING_TASK, checkout: sdk ? ctx.cwd : process.env.FIGHT_SCREENING_CHECKOUT ??
           profiles.selection(ctx.cwd)?.repository.roots.filter(root => ctx.cwd === root || ctx.cwd.startsWith(root + '/')).sort((a, b) => b.length - a.length)[0] ?? ctx.cwd,
         entries: ctx.sessionManager.getEntries(), parentSession: ctx.sessionManager.getHeader()?.parentSession });
     } catch (error) { failure = safeCode(error); }
+    publishWorkflow(ctx.sessionManager, workflow);
     owner = pi.getAllTools().find(tool => tool.name === 'jev_read_file')?.sourceInfo?.path ?? '';
     try { const selection = profiles.selection(ctx.cwd); selected = Boolean(selection); authority = selection?.identity ?? ''; }
     catch (error) { selected = true; failure = safeCode(error); }
@@ -260,8 +271,20 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     if (options.forceSystemPrompt || !event.systemPrompt.includes(enforcedRule)) failure = 'required-tool-or-rule-missing';
     present(ctx, ctx.mode !== 'tui');
   });
-  hooks.on('input', event => {
-    if (!selected) return;
+  hooks.on('input', (event, ctx) => {
+    const binding = stageBinding(ctx.sessionManager);
+    if (binding) {
+      if (!engineerIdentity({ sessionManager: ctx.sessionManager, model: ctx.model, thinkingLevel: ctx.thinkingLevel }, binding.parent)) {
+        binding.failure = 'engineer-initialized-admission-mismatch';
+        return { action: 'handled' as const };
+      }
+      binding.admitted = true;
+      // A model/extension prompt cannot re-select the bound worker's stage.
+      return;
+    }
+    // Workflow selection is independent of optional enrollment. A headless SDK
+    // prompt's default "interactive" source is not an operator interaction.
+    if (isSdkSession(ctx.sessionManager)) return;
     try {
       if (workflow.input(event.text, event.source, persistRole)) inputFailure = undefined;
     } catch (error) {
@@ -275,14 +298,14 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
     if (!selected) return;
     // Native file tools and shell stay independent of optional discovery authority.
     if (['bash', 'read', 'write', 'edit'].includes(event.toolName)) return;
-    const reason = event.parentToolCallId ? 'unsupported-nested-route' : !allowed.includes(event.toolName) ? 'unsupported-explicit-tool-route' : undefined;
+    const reason = event.parentToolCallId ? 'unsupported-nested-route' : !allowed.includes(event.toolName) && !(event.toolName === 'fight_build_engineer' && coordinatorTool()) ? 'unsupported-explicit-tool-route' : undefined;
     if (reason) { observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
       pathId: hash('path' in event.input && typeof event.input.path === 'string' ? resolve(context!.cwd, event.input.path) : `tool:${event.toolName}`),
       needId: hash('need' in event.input && typeof event.input.need === 'string' ? event.input.need : '') }); return { block: true, reason: `File screening: ${reason}` }; }
   });
   const invalidate = () => { epoch++; failure = 'session-changed-reload-required'; admission?.close(); screening?.close(); guard?.cancel('session-changed'); };
   hooks.on('session_before_switch', invalidate); hooks.on('session_before_fork', invalidate); hooks.on('session_before_tree', invalidate);
-  hooks.on('session_shutdown', (_event, ctx) => { live = false; invalidate(); if (ctx.mode === 'tui') ctx.ui.setStatus('fight-file-screen', undefined); });
+  hooks.on('session_shutdown', (_event, ctx) => { closeWorkflow(ctx.sessionManager); live = false; invalidate(); if (ctx.mode === 'tui') ctx.ui.setStatus('fight-file-screen', undefined); });
   pi.registerCommand('file-screening', { description: 'Inspect or explicitly enroll/revoke/convert project screening; no provider calls or key entry', handler: async (args, ctx) => {
     const action = args.trim();
     if (action.startsWith('role ')) {

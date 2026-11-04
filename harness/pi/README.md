@@ -102,20 +102,27 @@ See [native setup and recovery](WORKSPACE.md#native-pi-in-herdr-task-00510-candi
 [log controls](WORKSPACE.md#verified-logs-in-herdr-task-00512-candidate) and
 [actual-file session migration](WORKSPACE.md#native-entry-and-existing-rpc-sessions).
 
-## Optional upstream subagents
+## Bundled subagents
 
-The [supported upstream profile](SUBAGENTS.md) ships subordinate Fight agents and passively follows their
-actual Agent-tool sessions in the existing Herdr activity pane. Upstream owns execution; Fight retains native
-custody, workflow independence and Compose/worktree ownership. Explicit profile selection disables upstream
-worktrees/workflows/scheduling. `/fight-subagents` reports capabilities and finite refusals; rootless RPC routes
-are not admitted. Reader closure is passive, but upstream's whole-runtime shutdown/reload aborts its agents.
-TASK-00554 has a qualified full gate, independent Review ACCEPT and bounded behavioral/visual QA PASS on its accepted candidate; publication remains separate.
+The [supported profile](SUBAGENTS.md) uses the Fight-maintained upstream engine in `vendor/pi-subagents/` and
+ships subordinate Fight agents. One package now supplies the engine and passive Herdr observation; no separate
+companion installation or npm publication is needed. Existing standalone companion declarations must be removed
+from the intended settings scope before an explicitly authorized safe-boundary adoption—never load two engines.
+Apply the supported profile **before launching the updated copy**; package installation does not overwrite settings.
+Fight retains native custody, independent-stage authority and Compose/worktree ownership. The profile disables
+upstream worktrees/workflows/scheduling. `/fight-subagents` reports capabilities and finite refusals; rootless records
+remain refused. Reader closure is passive, but whole-runtime shutdown/reload aborts agents. The bundled setup hook
+and bound-parent association are prerequisites, not a working Build Engineer route; TASK-00560 remains incomplete.
+TASK-00554's standalone-companion Review/QA acceptance is historical, not acceptance of this packaging candidate.
 
 ## Install
 
+For a source-local installation, prepare runtime dependencies explicitly and follow the [subagent profile and
+standalone-companion migration](SUBAGENTS.md#select-the-supported-profile) before the next session starts.
 From the repository root, install for every Pi session:
 
 ```sh
+npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
 pi install ./harness/pi
 ```
 
@@ -315,10 +322,24 @@ full `./bin/build` includes this check. If the check image is missing, explicitl
 docker pull node@sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94
 ```
 
-For direct development with Node 22 or later, `npm test` in this directory runs the same tests. Pi supplies the
-declared peer dependencies when loading extensions. There are no third-party runtime dependencies to install.
+For direct development with supported Node, `npm test` in this directory runs the same Fight behavior tests.
+The full gate additionally runs the bundled engine's lint/typecheck/full suite. Prepare its locked development
+installation explicitly, on the OS where checks execute (native optional modules are platform-specific):
+
+```sh
+npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+# For the Docker gate, from a prepared worktree use its writable maintenance service instead:
+./bin/runtime docker compose run --rm --no-deps \
+  -e HOME=/app/.runs/setup/subagents -e npm_config_cache=/app/.runs/cache/npm-subagents \
+  -e npm_config_update_notifier=false composer \
+  npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+```
+
+Pi supplies declared host peers when loading extensions; never bundle another SDK. The Harness declares the
+engine's `croner` and `nanoid` runtime dependencies; source-local installs need the explicit runtime setup above.
 Use `npm pack --ignore-scripts --pack-destination <output-directory>` to create a distributable tarball; package
-contents include the manifest, package-owned bin, source and declared runbooks/license. Keep local build artifacts under `.runs/`.
+contents include the manifest, package-owned bin, Fight/engine runtime source and declared runbooks/licenses,
+not component tests, node_modules or development configuration. Keep local build artifacts under `.runs/`.
 
 Controlled behavior tests are separate from Pi integration qualification. For installed-SDK loading and
 public behavior checks, set `PI_SDK_MODULES` to the reviewed Pi installation's `node_modules` directory and run
@@ -330,6 +351,18 @@ node harness/pi/tests/native/optional-jev.mjs "$PI_SDK_MODULES" .runs/tasks/TASK
 node harness/pi/tests/native/read-policy.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/read-policy
 node harness/pi/tests/native/worktree-access.mjs "$PI_SDK_MODULES" .runs/tasks/TASK-00495/runs/worktree-access
 ```
+
+For the opt-in Build Engineer bootstrap, prepare a private **copied** package and run the real SDK/engine/Fight
+initialization probe with its installed root as the final argument:
+
+```sh
+node harness/pi/tests/native/build-engineer.mjs "$PI_SDK_MODULES" "$task_evidence" "$installed_harness"
+```
+
+Its scripted provider qualifies initialized authority, actual bound-root association, exact model/thinking,
+passive early/final text/tool names, duplicates, provider error, timeout and shutdown/reload uncertainty. It is
+not a real permitted Engineer assignment, native Herdr capture or independent acceptance. Use the
+[opt-in Build runbook](SUBAGENTS.md#opt-in-build-engineer) for the genuine next assignment, not a faux demonstration.
 
 These probes use disposable operator/session fixtures and controlled provider boundaries, not live Jev calls.
 The loading probe exercises the manifest, explicit entries, deduplication, header-only loading, JSON mode,

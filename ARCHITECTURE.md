@@ -67,9 +67,14 @@ a current human merge action. Other capability states are unchanged.
   schema/Formik and memory/cookie seams, also pending independent acceptance; rotating cookie-only refresh and current-session logout now have HTTP/client services and login-success UI pending independent Review/QA; TASK-00048 adds bounded memory-only multi-tab continuity/restoration at `/app/login`, pending independent Review/QA; TASK-00049 connects one strict typed client `/me` service and the existing cache to login/restoration, pending independent Review/QA; the protected frame now uses that same sole graph, with truthful future landing seams and explicit unavailable-product copy
   (TASK-00027's transport and TASK-00028's injected authority foundation have independent review/scoped QA acceptance)
 - `.pi/skills/`: local planning, engineering, Graphify and instruction-writing guidance; managed runtime execution remains planned
-- `harness/pi/`: installable terminal identity, Jev/file-screening capabilities and an opt-in
-  [deterministic Pi tool policy](harness/pi/TOOL_POLICY.md); future typed Workflow clients, semantic tool screening
-  and qualified process isolation remain separate
+- `harness/pi/`: installable terminal identity, Jev/file-screening capabilities, an opt-in
+  [deterministic Pi tool policy](harness/pi/TOOL_POLICY.md), and a Fight-maintained MIT-licensed upstream SDK-agent
+  engine under `vendor/pi-subagents/`. The Harness packages one engine and owns policy/observation, not a second
+  scheduler. An explicitly selected SDK Engineer bootstrap now binds real session-local Work authority before
+  execution and reuses passive native observation. TASK-00560 still requires a real permitted native Engineer
+  assignment/Herdr evidence before independent Review; controlled SDK qualification is not completion. Default
+  and non-Engineer process callers remain live. Future typed Workflow clients, semantic tool screening and
+  qualified process isolation remain separate
 
 Fight Common and Fight Access Control remain Composer dependencies. The inherited `App` namespace and
 hello-world HTTP behavior remain in the scaffold. Framework migration needs an observed use case. The

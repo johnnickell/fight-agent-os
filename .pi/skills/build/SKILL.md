@@ -42,7 +42,17 @@ provider/model/thinking per role for repairs/resume; an explicit human change pr
 configured identity separately from unavailable provider attestation. Check installed `pi --version`, `--help`
 and `--list-models`; versions are evidence, not equality gates. No global install/settings/trust changes.
 
-Launch **one child at a time** using the existing provider-owned `scripts/run-stage.py`. Resolve its absolute path
+Launch **one child at a time**. The default and all non-Engineer stages use the existing provider-owned
+`scripts/run-stage.py`. Only a new native Build host deliberately started with `--fight-build-engineer sdk`
+uses [the opt-in SDK Engineer route](../../../harness/pi/SUBAGENTS.md#opt-in-build-engineer). That route requires
+actual Build/coordination authority for the same TASK and selected checkout; a subordinate Agent, stage label,
+profile or request cannot supply it. Use `fight_build_engineer` for that host's actual Engineer assignment, not
+an SDK demonstration. Never run the Python Engineer executor after SDK dispatch or display loss; reconcile the
+original attempt first. An active host without this capability needs a deliberately prepared fresh native host,
+not `/reload`, fabricated interactive input or a shared installation replacement. Do not advance a bootstrap
+candidate to Review as a completed TASK before its required real assignment and native evidence exist.
+
+For process stages, resolve the launcher's absolute path
 beside this skill, never from an unrelated target. The launcher uses the running Pi's exported native resource
 resolver offline to inspect configured packages and direct/auto-discovered extensions. One complete Harness
 selects its canonical package directory. With no configured Harness, it selects the trusted provider checkout's

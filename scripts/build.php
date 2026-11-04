@@ -309,6 +309,7 @@ try {
             '../harness/pi/tests/tool-policy.test.mjs',
             '../harness/pi/tests/workspace.test.mjs',
             '../harness/pi/tests/subagents.test.mjs',
+            '../harness/pi/tests/build-engineer.test.mjs',
             '../harness/pi/tests/registered-children.test.mjs',
             '../harness/pi/tests/native-agent-browser.test.mjs',
             '../harness/pi/tests/custody.test.mjs',
@@ -316,6 +317,9 @@ try {
             '../harness/pi/tests/runtime-logs.test.mjs',
             '../harness/pi/tests/worktree-logs.test.mjs'
         ]
+    ];
+    $frontendSteps['Pi subagent engine'] = [
+        'npm', '--prefix', '../harness/pi/vendor/pi-subagents', 'run', 'check'
     ];
     $frontendChecks = [
         'typecheck', 'lint', 'format-check', 'coverage', 'build-check',
@@ -325,7 +329,16 @@ try {
         $frontendSteps['Frontend '.$step] = ['npm', 'run', $step];
     }
     foreach ($frontendSteps as $name => $command) {
-        $exitCode = $execute($name, $command, $root.'/client', $frontendEnvironment);
+        $environment = $frontendEnvironment;
+        if ($name === 'Pi subagent engine') {
+            $temporary = $run.'/subagents';
+            if (!mkdir($temporary, 0700)) {
+                throw new RuntimeException('Cannot create subagent test scratch.');
+            }
+            $environment['TMPDIR'] = $temporary;
+            $environment['GIT_CEILING_DIRECTORIES'] = $temporary;
+        }
+        $exitCode = $execute($name, $command, $root.'/client', $environment);
         if ($exitCode !== 0) {
             throw new RuntimeException('Build failed during '.$name.'.');
         }
