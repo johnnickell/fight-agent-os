@@ -57,7 +57,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | ready-for-agent | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 | — | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | [TICKET-00126 — Maintain source-verified Python diagrams beside feature documentation](../tickets/00126-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | — (standalone chore) | ready-for-agent | — | — |
 | — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | ready-for-agent | — | — |
@@ -456,6 +455,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00485](00485-TASK.md) | Support bounded authenticated log streaming and extraction | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | needs-info | [TASK-00483](00483-TASK.md), [TASK-00072](00072-TASK.md) | — |
 | — | [TASK-00493](00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | [TICKET-00097 — Inspect and control execution through the sessions Dashboard](../tickets/00097-TICKET.md) | needs-info | [TASK-00139](00139-TASK.md), [TASK-00203](00203-TASK.md), [TASK-00390](00390-TASK.md), [TASK-00496](00496-TASK.md) | — |
 | — | [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | needs-info | — | — |
+| — | [TASK-00531](00531-TASK.md) | Await asynchronous authentication-result focus in acceptance checks | — (standalone bug) | needs-info | — | [PR #160](https://github.com/johnnickell/fight-agent-os/pull/160) |
 
 ## Human Action
 
