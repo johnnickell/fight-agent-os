@@ -60,6 +60,10 @@ Read installed Pi [CLI/skills documentation](../../../harness/pi/README.md) as n
 Native session-file birthtime, ancestry/custody and independent role admission remain unchanged. Observation is
 human-only/best-effort; missing visibility never authorizes relaunch or executor substitution.
 
+Use `--role engineer` for the Engineer running the `work` skill; use `review`, `qa` and `land` for the
+remaining stages. Role names are launcher inputs, not skill invocations. The monitor preserves the role in
+passive observation; it grants no workflow authority. Existing `work` monitor callers remain supported.
+
 Create a fresh private attempt with `request.md`. Include role, TASK, verified checkout/base/head, absolute owning
 skill/context/instruction paths, permitted effects, relevant evidence, pinned model/thinking, remaining repair
 allowance and expected canonical report/handoff. Carry the exact Compose project/checkout and native state;

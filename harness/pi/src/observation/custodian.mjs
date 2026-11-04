@@ -80,7 +80,7 @@ export function monitorWitness(message, native, { inspect = processIdentity, bir
       witness.token !== message.token || witness.worktree !== worktree || witness.process !== inspect(message.pid) ||
       !witness.process.includes(` ${monitor} `) || inspect(native.pid) !== native.process ||
       !identityKeys.every(key => typeof witness.identity?.[key] === 'string' && witness.identity[key].length > 0 && witness.identity[key].length <= 1100 && clean(witness.identity[key]) === witness.identity[key]) ||
-      witness.identity.worktree !== worktree || !/^TASK-\d{5}$/.test(witness.identity.task) || !['work', 'review', 'qa', 'land'].includes(witness.identity.role) ||
+      witness.identity.worktree !== worktree || !/^TASK-\d{5}$/.test(witness.identity.task) || !['engineer', 'work', 'review', 'qa', 'land'].includes(witness.identity.role) ||
       !Number.isFinite(witness.heartbeat) || witness.heartbeat < 1 || witness.heartbeat > 60 ||
       !Number.isSafeInteger(native.started) || !Number.isSafeInteger(witness.started) || witness.started < native.started || witness.started > Number(process.hrtime.bigint() / 1000000n) ||
       !Number.isSafeInteger(witness.created) || Math.abs(Date.now() - witness.created) > 5000) throw new Error('Monitor witness refused');

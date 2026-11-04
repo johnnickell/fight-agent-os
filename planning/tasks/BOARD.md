@@ -26,7 +26,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
