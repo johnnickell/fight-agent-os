@@ -34,7 +34,10 @@ per-stage proof trees. Missing browser prerequisites hold affected advancement, 
 For shared HTTPS, carry [scoped ingress preparation/retirement](../../../docs/engineering/LOCAL_INGRESS.md#scoped-task-preparation-and-retirement)
 in the child request: exact checkout/name, existing supplier mode/port, leaf/include ownership/digests and peer
 references. Have Work use supported tools/existing privilege for explicit task setup, including planned-name
-rendering before QA allocation. Do not defer all leaf/include work to a human or silently enroll infrastructure.
+rendering before QA allocation. On explicitly authorized macOS hosts, use the runbook's native administrator
+dialog for an exact digest/master-bound test/HUP command; credentials stay in the OS dialog, no persistent
+permissions or restart. `sudo -n` denial alone does not prove that path unavailable. Respect cancellation and
+reconcile partial effects. Do not defer all leaf/include work to a human or silently enroll infrastructure.
 A verified full-config-test/graceful-reload privilege hold blocks browser readiness, not independent cleanup;
 retain referenced leaves and name the exact remaining action. Never substitute shared-service restart.
 

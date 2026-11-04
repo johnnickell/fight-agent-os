@@ -60,7 +60,7 @@ Use target-owned wrappers and existing qualified tooling. Check resource ownersh
 startup; do not repoint shared services at another checkout. When an earlier landing removed the worktree or
 runtime, recover the exact revision in an isolated environment within existing authority, or report what is missing.
 For this application, [human QA operations](HUMAN_QA.md) documents the initial `bin/qa up TASK-ID [--ref REVISION]`
-convenience layer (full browser qualification/independent acceptance pending). Reuse its exact OID and synthetic
+convenience layer (bounded Work browser qualification recorded; independent acceptance pending). Reuse its exact OID and synthetic
 scenario limits; readiness is not acceptance. Include the printed `bin/qa down /absolute/checkout` command in
 any retained human-QA handoff. Terminal/browser closure never supplies cleanup or permission to retain an
 original engineering environment. Use the shared [scoped ingress process](LOCAL_INGRESS.md#scoped-task-preparation-and-retirement)

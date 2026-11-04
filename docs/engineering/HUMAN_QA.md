@@ -1,6 +1,8 @@
 # Reopen a disposable TASK for human QA
 
-`bin/qa` is TASK-00556's initial implementation, **not yet independently accepted or fully browser-qualified**.
+`bin/qa` is TASK-00556's candidate implementation, **awaiting independent Review/QA acceptance**.
+Work qualified default published and explicit revisions, isolated stacks, host Chrome activation/login and scoped
+cleanup on the existing macOS/Herd supplier. This is bounded host evidence, not other-platform certification.
 It is an operator convenience over Worktrunk, the existing isolated Compose project and shared HTTPS ingress.
 It never accepts a TASK, publishes, merges, delays Land cleanup or keeps an original engineering checkout alive.
 
@@ -59,8 +61,8 @@ This is trusted local tooling, **not a hostile-code sandbox**: the selected appl
 existing containers. Deliberately qualify a changed setup boundary before adding support; `--ref` is not approval.
 
 Fresh setup uses the target's documented wrappers: image build, locked Composer install (scripts/plugins disabled),
-`bin/client setup` (locked npm with lifecycle scripts disabled), client build, database start/migrate and full
-`bin/up --worktree`. It opts only that disposable project into the existing local catcher, then invokes the
+`bin/client setup` (locked npm with lifecycle scripts disabled), client build, database start/migrate, full
+`bin/up --worktree` and `bin/validations export/check` for the exact-source public activation/login catalog. It opts only that disposable project into the existing local catcher, then invokes the
 [trusted bootstrap](SUPER_ADMIN_BOOTSTRAP.md) once with a library-generated operator UUID and synthetic
 `human-qa@example.test`. It imports no main/private/production data or settings. Missing setup capability or
 bootstrap/mail delivery is a failed startup, not an invented account or successful readiness claim.
@@ -75,8 +77,10 @@ fragment, mail body, password, cookies or tokens. No password or possession link
 Repeat up does not reseed accounts, renew grants, reset QA data or regenerate a consumed activation scenario.
 An already activated account uses its human-chosen password. An expired/consumed grant without a usable account
 needs explicit down/up or the revision's documented isolated recovery commands. Fresh data cannot reconstruct
-historical manually entered QA scenarios. Working synthetic activation/login and full browser behavior still
-need direct qualification on this implementation; curl readiness alone does not prove them.
+historical manually entered QA scenarios. Work exercised synthetic activation and fresh-context login in trusted
+host Chrome on two exact revisions; independent behavioral QA remains required. Readiness additionally probes
+both public form schemas, so missing catalog output cannot yield a ready URL. Curl readiness alone does not
+prove a browser journey.
 
 ## Inspect and finish explicitly
 

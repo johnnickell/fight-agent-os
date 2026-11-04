@@ -136,7 +136,14 @@ sites, default servers, trust and other projects stay owned by their operators.
    these are `/Applications/Herd.app/Contents/Resources/nginx-arm64` and
    `$HOME/Library/Application Support/Herd/config/nginx/nginx.conf`; reverify the live root master command,
    binary/config, pid and workers, rather than trusting a historical pid. Use native `-t -c` with existing
-   privilege; `sudo -n` is permitted when available, never password collection or persistent approval.
+   privilege; `sudo -n` is permitted when available. On macOS, explicit operator authorization may instead
+   use `/usr/bin/osascript` `do shell script` with `administrator privileges` for the exact bound test/reload
+   command. Credentials stay solely in the native OS authorization dialog, never chat/stdin/argv/logs. This
+   path was qualified on TASK-00556; it grants no persistent sudo rule, helper installation or service restart.
+   Bind the command to the freshly verified root master command/binary/config and global-config/owned-include
+   SHA-256 digests; check these before the full test and again before signaling that SAME master. Run from
+   private scratch, not a writable arbitrary privileged script. Respect denial/cancel and reconcile partial
+   effects before another attempt; never collect a password or broaden permissions.
    Only after the installed candidate passes the full test, reverify the SAME master and gracefully HUP it
    (or native reload with verified prefix/pid). Verify worker turnover and request behavior; signal success
    alone is not a verified reload. Never restart/stop the service. On failure restore the exact owned preimage,
@@ -146,9 +153,11 @@ sites, default servers, trust and other projects stay owned by their operators.
    scripting exposed no full-test/graceful-reload operation in TASK-00556's investigation; `herd restart nginx`
    is restart, not reload, and CLI Nginx lint was unimplemented. Direct native Nginx supports test/reload, but
    root-owned logs and root master signaling require actual privilege. A known `sudo -n` password denial is a
-   finite prerequisite, not a reason to retry unchanged, invoke arbitrary privileged helpers or change service
-   configuration. If unavailable, leave the installed include/loaded leaves unchanged and hand off only the
-   exact privileged test/reload action. No blanket human-only leaf/include rule applies. Scoped syntax checks,
+   limit of that mechanism, not proof that native OS authorization is unavailable. Use the explicitly authorized
+   exact-operation native dialog path above when applicable; never retry unchanged sudo denial, invoke arbitrary
+   privileged helpers or change service configuration. If authorization is denied/cancelled or genuinely
+   unavailable, leave/restore the ownership-verified include, retain loaded leaves and hand off only the exact
+   remaining privileged test/reload action. No blanket human-only leaf/include rule applies. Scoped syntax checks,
    generated files and docs alone never establish a successful full test, reload or browser readiness.
 
 4. Verify safe read-only existing `.test` requests before/after, then canonical Fight root/CSRF, exact original

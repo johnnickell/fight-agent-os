@@ -25,7 +25,10 @@ target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_S
    reuse the existing supplier, explicitly prepare exact leaves with its CA, render planned QA paths before
    allocation, preserve peer blocks and use supported full-test/graceful-reload tools with existing privilege.
    Routine authorized setup is not blanket human-only; no implicit trust/DNS/settings or shared-service restart.
-   Qualify missing capability/privilege and hold readiness honestly. On teardown remove the app route first;
+   On macOS, explicit authorization can use the runbook's native administrator dialog for an exact digest/master-
+   bound full-test/HUP command; credentials stay in the OS dialog, with no persistent permissions or restart.
+   A `sudo -n` denial alone does not block that path. Respect cancellation and reconcile partial effects.
+   Qualify genuinely missing capability/privilege and hold readiness honestly. On teardown remove the app route first;
    retain referenced leaves until verified scoped unload/reload. Report exact created/removed/held names and
    include digests independently of Docker/source cleanup.
 4. Implement only accepted behavior. For Agent OS PHP work, apply the shared

@@ -35,7 +35,10 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    verify the selected gateway/route is gone, then use supported tools/existing privilege to remove only its
    owned front-door blocks, full-test and gracefully reload before exact leaf removal. Preserve peer blocks,
    referenced material and shared supplier services/network/trust; no restart or blanket human-only cleanup.
-   If full-test/reload privilege is unavailable, report exact names/include/digest and retain their leaves;
+   Explicit macOS authorization may use the runbook's native administrator dialog for an exact digest/master-
+   bound test/HUP command; credentials stay in the OS dialog, with no persistent permissions or restart.
+   `sudo -n` denial alone does not establish unavailability. Respect cancellation and reconcile partial effects.
+   If full-test/reload privilege is genuinely unavailable, report exact names/include/digest and retain their leaves;
    that hold does not block independent Docker/source effects. Any required recovery setup uses the same
    runbook's explicit exact-name preparation, never silent infrastructure enrollment.
    Then separately qualify source/ref/private data, consumers and genuine

@@ -129,6 +129,10 @@ def state(safe, entry):
         from local_ingress import live, ready as ingress_ready
         ingress_ready(safe)
         live(safe, project + '.localhost')
+        for form in ('invitation_activation', 'login'):
+            text(['curl', '--noproxy', '*', '--fail', '--silent', '--show-error', '--connect-timeout', '3',
+                  '--max-time', '10', '--resolve', project + '.localhost:443:127.0.0.1', '--output', '/dev/null',
+                  'https://' + project + '.localhost/api/v1/validations/' + form], safe)
         status, url = 'running', 'https://' + project + '.localhost'
     elif not actual or not ready:
         status = 'partial'
@@ -279,7 +283,7 @@ def up(safe, task, ref):
             try:
                 check_leaf(safe, project + '.localhost')
             except Hold as error:
-                raise Hold(str(error) + '; before allocation, human: ' + shlex.join([
+                raise Hold(str(error) + '; before allocation, explicitly prepare the exact leaf: ' + shlex.join([
                     str(ROOT / 'bin/https'), 'setup', '--ingress', '--worktree', str(checkout)])) from error
             entry = {'path': str(checkout), 'branch': 'qa/' + task.lower() + '/' + oid,
                      'task': task, 'revision': oid}

@@ -23,8 +23,8 @@ receipt reuse. Report fresh planning, reused original application evidence and i
 separately. Review/QA requirements and publication authority remain unchanged.
 
 For recreating a published application TASK after its original cleanup, see [human QA operations](HUMAN_QA.md).
-The initial `bin/qa up/list/down` layer uses these same supplier paths; full browser qualification and independent
-acceptance remain pending. Explicit end-of-session QA down does not alter Land's original cleanup timing.
+The candidate `bin/qa up/list/down` layer uses these same supplier paths. Work's bounded macOS/Herd browser
+qualification is recorded in TASK-00556; independent acceptance remains pending. Explicit end-of-session QA down does not alter Land's original cleanup timing.
 
 This rollout uses isolated feature worktrees and existing engineering instructions without new TASK documents.
 It covers Common, Agent OS, AccessControl and the five framework starters. `epic-legacy` is excluded by the

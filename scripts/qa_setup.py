@@ -14,7 +14,7 @@ from resource_lifecycle.resources import require, run, write_private
 # boundary needs deliberate qualification, never implicit approval from --ref.
 SETUP_PATHS = (
     'compose.yaml', 'bin/composer', 'bin/client', 'bin/runtime', 'bin/database',
-    'bin/console', 'scripts/runtime.py', 'scripts/resource_lifecycle/cli.py',
+    'bin/console', 'bin/validations', 'scripts/runtime.py', 'scripts/resource_lifecycle/cli.py',
     'scripts/resource_lifecycle/runtime.py', 'scripts/resource_lifecycle/resources.py',
     'scripts/resource_lifecycle/preparation.py', 'etc/docker',
 )
@@ -71,6 +71,10 @@ def setup(root, safe, checkout, project):
     tool('database', 'migrate')
     # Suppress the supplier's ready URL until synthetic scenario setup also passes.
     run([root / 'bin/up', '--worktree', checkout], root, capture=True)
+    # Public activation/login fail closed without the exact source/lock catalog.
+    # Generate through the documented wrapper before reporting scenario readiness.
+    tool('validations', 'export')
+    tool('validations', 'check')
     operator = str(uuid.uuid4())
     email = 'human-qa@example.test'
     result = json.loads(tool('console', 'user:bootstrap-super-admin', '--internal', '--confirm-bootstrap',

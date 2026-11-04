@@ -159,8 +159,8 @@ existing Build ledger/handoff carries remaining effects and native locators, not
 
 ## On-demand human QA
 
-[Human QA operations](HUMAN_QA.md) describes TASK-00556's initial `bin/qa up/list/down` convenience layer,
-pending full browser qualification and independent acceptance. Native `qa/task-NNNNN/FULL_OID` refs supply the
+[Human QA operations](HUMAN_QA.md) describes TASK-00556's candidate `bin/qa up/list/down` convenience layer.
+Work's bounded macOS/Herd browser qualification is complete; independent acceptance remains pending. Native `qa/task-NNNNN/FULL_OID` refs supply the
 small QA-purpose annotation; existing locators cover interruption. It uses this SAME project preparation,
 public down and guarded remover. Exact QA ref/OID proof substitutes only for owned QA removal's fixture ancestry
 proof, not Land delivery verification. Native non-force retained-ref policy, source guards and shared-resource
