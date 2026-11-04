@@ -2,7 +2,7 @@
 id: TICKET-00126
 epic: EPIC-00022
 title: Maintain source-verified Python diagrams beside feature documentation
-status: ready-for-agent
+status: done
 ---
 
 # Maintain source-verified Python diagrams beside feature documentation
@@ -78,7 +78,7 @@ case rather than creating a renderer-only infrastructure demonstration.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00549](../tasks/00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | in-progress |
+| [TASK-00549](../tasks/00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
