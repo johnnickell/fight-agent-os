@@ -40,6 +40,18 @@ counterchecks, including legitimate interactions and replacement coverage. A sta
 violation of an accepted instruction require different corrections. These checks refine the existing IDs; they
 do not add a score, independent verdict, edit authority or automatic cleanup pass.
 
+For a material class-ownership, dependency-direction or runtime-flow change, apply the
+[PR diagram guidance](LANDING.md#architecture-diagrams-in-pr-descriptions). Compare the applicable view,
+canonical Python, PNG and feature traces with the **exact reviewed base/head diff and implementation**. Check
+that artifact links agree, their claimed source revision matches the represented code (or has an evidenced
+unchanged-source bridge to head), and important arrows, ownership, omissions and uncertainty are honest.
+Record the view as `accurate`, `inaccurate`, `incomplete` or `unavailable`, with file/method/configuration or
+revision-linked evidence and limits. These describe the view, not new review verdicts: assess defects or missing
+required evidence under the existing Spec/Standards IDs and verdict rules. A valid render or included image is
+not correctness or acceptance proof. A non-material change needs no unhelpful diagram; record inapplicability
+briefly rather than treating omission as a failure. If inline display fails, inspect the repository image link;
+if the view remains inaccessible, record what is unverified and the needed evidence action rather than guessing.
+
 Assess [QA applicability](QA.md#applicability) in the handoff after technical acceptance. Identify changed
 observable contracts and useful adversarial scenarios for independent QA, or give criterion-specific reasons
 that no behavioral exercise applies. No UI is not a reason to skip QA. Technical review and behavioral QA retain

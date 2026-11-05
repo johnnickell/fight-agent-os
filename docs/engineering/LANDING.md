@@ -300,6 +300,77 @@ through that PR did not occur; maintainer must decide future delivery.” Use ac
 OIDs in execution, not these example descriptions. Historical delivery-pending text stays untouched beneath a
 clearly separate current pointer. The correction's human review/merge action, if any, names only its own open PR.
 
+## Architecture diagrams in PR descriptions
+
+Require a relevant diagram when the effective change materially affects **class ownership, dependency direction
+or runtime flow**. Choose the smallest view explaining the changed boundary or interaction, not a picture of the
+whole application. For non-material changes where a diagram adds no useful information, omit the section; that is complete,
+not missing evidence. A copy edit, for example, does not require a diagram. Follow the existing
+[source/image and rendering standard](DIAGRAMS.md); this section adds no renderer or application gate.
+
+For an applicable change, prepare the following in the PR description before authorized publication:
+
+- Name the changed responsibilities, dependency direction or flow and the view's scope. Distinguish existing
+  implementation from **PROPOSED** elements; a proposal is not a picture of implemented behavior.
+- Embed the maintained PNG and link its canonical editable Python source and owning feature documentation.
+  Use repository URLs pinned to a full commit, not local filesystem paths or moving branch links. Keep the
+  source and image at the same artifact revision; name the full implementation source revision they describe
+  (which can precede the documentation commit). If the PR head differs, explain the relevant unchanged-source
+  bridge or update and reinspect the view against the head. Never relabel an old image as current without checking.
+- State known omissions, uncertainty and unverified edges beside the image; link the feature's class/arrow traces.
+  If the PR viewer cannot display the image, retain a usable repository image link and disclose that limitation.
+  An unavailable or misleading view needs an explicit evidence/correction handoff, not a claim of completeness.
+
+The diagram supplements existing architecture, behavior, security and evidence checks. Inclusion or successful
+rendering alone proves none of them and grants no publication, approval or merge authority. Independent Review
+[compares the view to source](REVIEW.md#two-named-passes) within its existing criteria.
+
+### Material-change example
+
+This is a historical PR-description walkthrough of the CSRF ownership slice, **not** a claim that TASK-00549 or
+TASK-00550 changes PHP. Compare base `5746b3422b2a656415f2f2dcb127d158e3a584ee` with implementation source
+`b986243f613bf1542b1d275b9e34ed8c010aa20b` for that slice. The range includes other changes; the selected view
+only explains the material placement of the query/result and the signing capability, not the entire range.
+The artifact links below all use documentation commit `2718678c6b35d8abb5b5e031d7369bf871b73aa5`; its Python,
+PNG caption and source traces identify the same implementation revision. A real PR must bind these claims to its
+own exact base/head, not copy the example's historical identities.
+
+> **Changed architecture:** CSRF bootstrap separates the HTTP Action/Responder from query coordination. The
+> query, result and proof value live in Domain; the handler and signing interface live in Application; the HMAC
+> implementation stays in Adapter. The handler depends on `CsrfProofs`, not `HmacCsrfProofs`. R1 is indirect
+> dispatch through the registered QueryBus, not an Action-to-handler static dependency.
+>
+> **Implementation source:** [`b986243f613bf1542b1d275b9e34ed8c010aa20b`](https://github.com/johnnickell/fight-agent-os/tree/b986243f613bf1542b1d275b9e34ed8c010aa20b).
+> **Canonical view and traces:** [CSRF ownership documentation](https://github.com/johnnickell/fight-agent-os/blob/2718678c6b35d8abb5b5e031d7369bf871b73aa5/docs/engineering/browser-auth-requests/README.md),
+> [editable Python](https://github.com/johnnickell/fight-agent-os/blob/2718678c6b35d8abb5b5e031d7369bf871b73aa5/docs/engineering/browser-auth-requests/csrf-ownership.py),
+> [owning feature documentation](https://github.com/johnnickell/fight-agent-os/blob/2718678c6b35d8abb5b5e031d7369bf871b73aa5/docs/engineering/BROWSER_AUTH_REQUESTS.md).
+>
+> ![Existing CSRF bootstrap ownership at b986243f613bf1542b1d275b9e34ed8c010aa20b](https://github.com/johnnickell/fight-agent-os/raw/2718678c6b35d8abb5b5e031d7369bf871b73aa5/docs/engineering/browser-auth-requests/csrf-ownership.png)
+>
+> [Open the maintained PNG](https://github.com/johnnickell/fight-agent-os/blob/2718678c6b35d8abb5b5e031d7369bf871b73aa5/docs/engineering/browser-auth-requests/csrf-ownership.png)
+> if inline display is unavailable. **Limits:** selected dependencies only; clock/nonce collaborators, admission,
+> mutation-time verification and full request ordering are omitted. S1–S8/R1 have source traces, not measured
+> runtime proof. This depicts existing placement, not certification of conformity to the architecture target.
+
+The reviewer can retrieve the named source with `git show b986243f613bf1542b1d275b9e34ed8c010aa20b:PATH`
+using the feature's class/arrow tables, and compare the scoped base/head diff. The renderer result is not evidence
+that the handler uses the right interface or that the registered bus hop executes successfully.
+
+### Non-material example
+
+For a PR that only corrects prose in the
+[CSRF feature explanation at the same artifact revision](https://github.com/johnnickell/fight-agent-os/blob/2718678c6b35d8abb5b5e031d7369bf871b73aa5/docs/engineering/browser-auth-requests/README.md),
+without changing its source/arrow claims, Python or PNG, the implementation remains
+`b986243f613bf1542b1d275b9e34ed8c010aa20b`. A complete description can simply say:
+
+> Correct the CSRF explanation's wording. No class ownership, dependency direction or runtime flow changes;
+> application source and diagram artifacts are unchanged.
+
+Omit the architecture-diagram section and image for that PR; no placeholder or obligatory N/A field is needed.
+If the diff actually moves the signing interface or changes dispatch, this example no longer applies: update
+and include the relevant view instead. A documentation-only diff that changes architecture claims still needs
+source checking; a file extension alone does not decide materiality.
+
 ## Verify and publish
 
 Use the TASK completion notes to record the accepted candidate/report and any finding dispositions, reconciliation
@@ -317,7 +388,7 @@ parent review, approval or closeout handoff is required.
 Run `./bin/build` normally before initial publication; it validates automatic reuse. Apply
 [gate evidence reuse](EXECUTION.md#gate-evidence-reuse) to reporting and administrative-only closeout; run focused checks for affected contracts.
 A substantive implementation/input change needs one complete final gate, not another run for each publication step.
-Run `./bin/planning-check` and `git diff --check` for owned metadata changes. Stage only owned planning or reconciliation files; inspect the staged diff and commit them if needed. Push the feature branch without force; create or update its PR against `develop`. For a TASK PR, set and verify the title `TASK-NNNNN — <TASK title>` (the body template cannot set a title), and use the editable [PR body template](../../.github/pull_request_template.md) for scope, behavior, verification, warnings, evidence, and outstanding review/merge status. Remove placeholder text and avoid implying a check passed if it was not run. Preserve an existing PR's identity when updating it; do not rename an unrelated or historical branch merely to match the new convention. Record the actual PR URL in the TASK and refresh generated views. Inspect the exact administrative diff, validate planning, whitespace and applicable live delivery provenance before committing/pushing PR metadata; reuse the qualified implementation receipt without relabeling it final-head execution. If a result changes, correct the evidence and rerun the affected checks. Avoid repeating gates for an unchanged tree merely to accumulate receipts.
+Run `./bin/planning-check` and `git diff --check` for owned metadata changes. Stage only owned planning or reconciliation files; inspect the staged diff and commit them if needed. Push the feature branch without force; create or update its PR against `develop`. For a TASK PR, set and verify the title `TASK-NNNNN — <TASK title>` (the body template cannot set a title), and use the editable [PR body template](../../.github/pull_request_template.md) for scope, behavior, verification, warnings, evidence, and outstanding review/merge status. Apply the [conditional architecture-diagram guidance](#architecture-diagrams-in-pr-descriptions) when preparing its description. Remove placeholder text and avoid implying a check passed if it was not run. Preserve an existing PR's identity when updating it; do not rename an unrelated or historical branch merely to match the new convention. Record the actual PR URL in the TASK and refresh generated views. Inspect the exact administrative diff, validate planning, whitespace and applicable live delivery provenance before committing/pushing PR metadata; reuse the qualified implementation receipt without relabeling it final-head execution. If a result changes, correct the evidence and rerun the affected checks. Avoid repeating gates for an unchanged tree merely to accumulate receipts.
 
 Land owns final delivery verification after independent acceptance. Verify the A → B diff contains only
 permitted administrative closeout and preserve any mechanical-reconciliation bridge. For required final-head
