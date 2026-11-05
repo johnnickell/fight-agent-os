@@ -11,6 +11,15 @@
 - Key behavior or documentation changes:
 - Compatibility, permissions, failure/recovery or migration effects (or why not applicable):
 
+## Architecture diagram (material changes only)
+
+<!-- Keep only when class ownership, dependency direction or runtime flow changes materially; otherwise remove
+this section without a placeholder. Follow docs/engineering/LANDING.md#architecture-diagrams-in-pr-descriptions.
+Embed the maintained PNG and link its canonical Python source and owning feature docs using commit-pinned
+repository URLs. Name the full implementation source SHA and artifact SHA, changed boundary/flow, known omissions
+and uncertainty. If inline display fails, include a usable repository image link and state the limitation.
+The image/render is context, not acceptance proof or authority to publish. -->
+
 ## Verification
 
 | Check | Result, counts, warnings or limits |

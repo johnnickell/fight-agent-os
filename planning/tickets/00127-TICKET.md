@@ -75,7 +75,7 @@ whole-TICKET dependency on the Pi skill is required.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00550](../tasks/00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | ready-for-agent |
+| [TASK-00550](../tasks/00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
