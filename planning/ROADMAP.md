@@ -69,16 +69,15 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00565 area-A Work — 2026-11-05:** [the repair-02 checkpoint](tasks/00565-TASK.md#repair-02-checkpoint--2026-11-05)
-records bounded R1/R2 corrections after independent Review REVISE: actual invitation partial commits/recovery
-and existing `/me` supplier status, without qualifying future Feature integration. Original exhaustive coverage,
-TASK-00571 handoff, completed history and the authorized Lifecycle repair remain. Fresh planning/direct checks
-pass; normal build automatically reuses original `20261105T202957Z-94` application evidence on clean `d47a72e`.
-The filesystem locking limitation remains unrepaired. Canonical `repair-02-handoff.md` owns current subject,
-evidence, warnings and SAME retained tooling runtime. Next: renewed independent Review, then affected QA;
-no source/supplier/feature acceptance, closure or publication is inferred. Other area priorities and
-dependencies remain unchanged. The architecture-decomposition checkpoint below is historical; routing stays
-with the Board.
+**TASK-00565 area-A acceptance — 2026-11-05:** [the accepted checkpoint](tasks/00565-TASK.md#accepted-implementation-checkpoint--2026-11-05)
+records independent Review ACCEPT and nonvisual QA PASS on clean `37613562`, mechanically integrated as
+`4642f018`; R1/R2 are resolved. Exhaustive coverage, TASK-00571's evidence handoff, completed history and the
+Lifecycle readiness repair remain. The integrated normal gate freshly passes all 25 phase rows
+(`20261105T215954Z-11835`), not reused application execution. The filesystem locking limitation remains
+unrepaired. Publication/final delivery checks and eligible cleanup are pending at this checkpoint; actual results
+are in canonical ignored `.runs/tasks/TASK-00565/runs/land-receipt.md` and the TASK PR. Human merge is separate;
+no sibling/source/supplier/Feature acceptance is inferred. Other priorities/dependencies remain unchanged.
+The architecture-decomposition checkpoint below is historical; routing stays with the Board.
 
 **TASK-00564 acceptance checkpoint:** Independent Review ACCEPT and nonvisual QA PASS cover candidate
 `c160a31ba985978633c904e8493c091c8a35d785`. Publication and final delivery checks were pending at this checkpoint;

@@ -87,7 +87,7 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | in-progress |
+| [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | done |
 | [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | ready-for-agent |
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | ready-for-agent |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
@@ -98,14 +98,15 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 
 ## Decisions and progress
 
-Current area-A Work: [TASK-00565](../tasks/00565-TASK.md#repair-02-checkpoint--2026-11-05) records bounded
-R1/R2 corrections after independent Review REVISE: actual invitation partial commits/recovery and existing `/me`
-supplier status, with future Feature integration still unqualified. Original 62-record unfinished inspection,
-completed TASK-00531/history, TASK-00571 coverage and the authorized Lifecycle repair remain. Fresh planning/direct
-checks pass; normal build automatically reuses original `20261105T202957Z-94` application evidence on clean
-`d47a72e`. The filesystem locking limitation remains unrepaired. Canonical `repair-02-handoff.md` owns current
-subject, supplemental coverage, warnings and SAME retained tooling runtime. Next: renewed independent Review,
-then affected QA; no acceptance, closure, publication or sibling completion is claimed.
+Current area-A acceptance: [TASK-00565](../tasks/00565-TASK.md#accepted-implementation-checkpoint--2026-11-05)
+has independent Review ACCEPT and nonvisual QA PASS on clean `37613562`, mechanically integrated as `4642f018`.
+R1/R2 are resolved; 62 unfinished dispositions (40 corrected / 22 unchanged), completed history and TASK-00571's
+coverage handoff remain. The integrated normal gate freshly passes all 25 phase rows (`20261105T215954Z-11835`),
+not reused application execution. The filesystem locking limitation remains unrepaired. Publication/final delivery
+checks and eligible cleanup are pending at this checkpoint; actual results are in canonical ignored
+`.runs/tasks/TASK-00565/runs/land-receipt.md` and the TASK PR. Human merge is separate. This TICKET stays open:
+other area corrections and final combined coverage are unfinished; no sibling/source/supplier/Feature acceptance
+is inferred.
 The checkpoints below remain historical, including their original inventory counts and unstarted-work statements.
 
 John approved whole-portfolio planning reconciliation and this second requirement area in the six-TICKET split,
