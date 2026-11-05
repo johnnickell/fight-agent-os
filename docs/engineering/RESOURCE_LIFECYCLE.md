@@ -79,6 +79,33 @@ flows and route removal. Config scaffolding is NOT delivery. Task up fails clear
 falls back to main, and prints a usable URL only after verified HTTPS root/CSRF readiness. Task down and repeated
 teardown work without ingress. Do not claim browser-ready from Compose health alone.
 
+### Framework worktree previews
+
+The CodeIgniter, Laravel, Slim, Symfony and Yii tooling profiles can use the same ingress supplier.
+Start the framework's exact isolated checkout through its own dependency setup and `bin/up --worktree`.
+Use absolute paths for the framework primary and linked checkout, then run these commands from this
+repository's ingress-capable checkout:
+
+```sh
+./bin/ingress certificate --certificate-action setup --consumer-root "$framework" --worktree "$checkout"
+./bin/ingress preview --consumer-root "$framework" --worktree "$checkout"
+```
+
+Set up and start the ingress supplier separately. In Herd mode, between certificate setup and preview,
+rerender the existing owned include with `./bin/ingress herd-config --consumer-root "$framework"`. Repeat
+`--consumer-root` for all frameworks that need to remain routed and carry forward any existing explicit
+`--include-worktree` selections. Inspect, install, syntax-check and reload the owned Herd include as usual.
+Preview checks the exact-name HTTPS root through the selected front door before printing its URL.
+
+The preview adds one TLS gateway to the framework's existing isolated Compose project. The ingress
+verifies TLS to that gateway, and the gateway forwards to the configured HTTP service on its private
+project network. The framework's own `bin/down --worktree "$checkout"` stops the gateway and runtime
+together. An unsuccessful readiness check can leave the selected gateway running for diagnosis. Stop
+it through that same command. The supplier, shared network and certificate trust have their own lifecycle.
+Remove an unneeded preview leaf explicitly with `certificate --certificate-action remove` while the
+framework worktree is still registered.
+
+
 ## Retire runtime, then finish the task
 
 Application roles and Worktrunk use the SAME `bin/down --worktree SELECTOR`. Only explicitly owned
