@@ -80,6 +80,12 @@ PI_CODING_AGENT_DIR="$private_agent_dir" pi --fight-build-engineer sdk \
   --provider "$coordinator_provider" --model "$coordinator_model" --thinking "$coordinator_thinking"
 ```
 
+Build alone registers and reads this extension-local flag, after Pi binds CLI values at `session_start`.
+It publishes ephemeral route selection through the existing actual-SessionManager ownership state. Screening
+consults that same-session selection, never another extension's private `getFlag`. Shutdown clears selection;
+reload must bind it anew. SDK siblings cannot borrow it, and selection never substitutes for the actual
+Build/TASK/checkout/mode, fresh-attempt, profile/model or initialized-worker checks below.
+
 This flag selects a route, **not Build authority**. A genuine operator `/skill:build TASK-NNNNN --checkout /absolute/checkout`
 interaction or an existing trusted Build launcher must select Build/coordination for that exact TASK/checkout.
 An Engineer bootstrap cannot promote itself, replay coordinator dialogue or synthesize interactive user input.
@@ -147,15 +153,22 @@ not guessed aliases. Unknown roles refuse before starting a stage. SDK Engineer 
 aliases at its owning tool boundary, but always binds/emits Engineer. Build coordination is not a QA stage.
 Non-Engineer process callers remain live until TASK-00561; no authority comes from AGENTS spelling alone.
 
-Controlled owning qualification:
+Controlled owning qualification (use new task-private evidence directories):
 
 ```sh
 node --test harness/pi/tests/build-engineer.test.mjs harness/pi/tests/subagents.test.mjs
 node harness/pi/tests/native/build-engineer.mjs "$PI_SDK_MODULES" "$sdk_evidence" "$installed_harness"
+node harness/pi/tests/native/build-engineer-boundary.mjs "$PI_SDK_MODULES" "$boundary_evidence" "$installed_harness"
 python3 -B harness/pi/tests/native/portable-stages.py "$process_evidence" "$installed_harness" "$read_only_consumer"
 ```
 
-The installed probe uses a scripted provider and real SDK/engine/Fight initialization, including Work admission,
+The boundary regression separately uses real extension API instances, enrolled Screening and the normal SDK
+prompt/model/tool-call pipeline into exactly one bounded Engineer dispatch. It does not stub shared flag access
+or invoke the registered executor directly. Absent opt-in, wrong workflow/mode/TASK/checkout, unbound siblings,
+closed/replaced sessions and unresolved-attempt reload remain refused before unauthorized dispatch. Its
+launcher/authority fixtures and faux transport are controlled checks, never genuine operator selection.
+
+The original installed probe uses a scripted provider and real SDK/engine/Fight initialization, including Work admission,
 passive early/final text and tool names, duplicate refusal, unbound subordinate roles, provider error, timeout and
 shutdown/reload uncertainty. Its private target has `work-items` records, a different state vocabulary,
 `topic/` branch and `CLAUDE.md`, with wrong-role/target/context/head refusals. The separate native process probe

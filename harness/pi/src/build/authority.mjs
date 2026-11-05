@@ -5,7 +5,7 @@ import { sep } from 'node:path';
 // transcript entry, profile or prompt. Symbol storage also shares it across Pi's
 // extension loader and native ESM imports. This is authority, not a child registry.
 const key = Symbol.for('fight:session-workflow-authority');
-const state = globalThis[key] ??= { workflows: new WeakMap(), stages: new WeakMap(), sdk: new WeakSet() };
+const state = globalThis[key] ??= { workflows: new WeakMap(), stages: new WeakMap(), sdk: new WeakSet(), engineerRoutes: new WeakMap() };
 export const engineerEffects = Object.freeze(['source', 'checks', 'commit', 'task-handoff']);
 const fail = code => { throw new Error(code); };
 
@@ -13,9 +13,20 @@ export function rememberSdkSession(manager) { state.sdk.add(manager); }
 export function isSdkSession(manager) { return state.sdk.has(manager); }
 export function publishWorkflow(manager, workflow) { state.workflows.set(manager, workflow); }
 export function sessionWorkflow(manager) { return state.workflows.get(manager); }
+// Only Build's owning extension reads its private CLI flag, after runtime binding.
+// Route selection is ephemeral readiness, not workflow or worker stage authority.
+export function selectEngineerRoute(manager, selected) {
+  if (selected) state.engineerRoutes.set(manager, manager.getSessionId());
+  else state.engineerRoutes.delete(manager);
+}
+export function engineerRouteSelected(manager) {
+  return !isSdkSession(manager) && state.engineerRoutes.has(manager) &&
+    state.engineerRoutes.get(manager) === manager.getSessionId();
+}
 export function stageBinding(manager) { return state.stages.get(manager); }
 export function closeWorkflow(manager) {
   state.workflows.delete(manager);
+  state.engineerRoutes.delete(manager);
   const stage = state.stages.get(manager);
   if (stage) stage.live = false;
 }

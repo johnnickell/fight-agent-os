@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { prepareEngineer, runEngineer } from '../src/build/engineer.mjs';
 import { bindEngineerSession, closeWorkflow, engineerEffects, engineerIdentity, isSdkSession,
-  publishWorkflow, sessionWorkflow, stageBinding } from '../src/build/authority.mjs';
+  publishWorkflow, sessionWorkflow, stageBinding, selectEngineerRoute, engineerRouteSelected, rememberSdkSession } from '../src/build/authority.mjs';
 import { WorkflowAccess } from '../src/jev/workflow-access.mjs';
 import { SubagentObserver } from '../src/observation/subagents.mjs';
 
@@ -54,6 +54,28 @@ function fixture(t) {
     instructions: ['Controlled governing instructions'], sessionRoots: [join(root, '.runs/tasks/TASK-00560/runs')] };
   return { root, ctx, request, options, child, assignment, registry, profile };
 }
+
+test('Build opt-in is live exact-session readiness, never workflow or sibling authority', () => {
+  let id = 'original';
+  const manager = { getSessionId: () => id }, sibling = { getSessionId: () => id };
+  assert.equal(engineerRouteSelected(manager), false);
+  selectEngineerRoute(manager, true);
+  assert.equal(engineerRouteSelected(manager), true);
+  assert.equal(sessionWorkflow(manager), undefined);
+  assert.equal(engineerRouteSelected(sibling), false);
+  selectEngineerRoute(sibling, true);
+  closeWorkflow(manager);
+  assert.equal(engineerRouteSelected(manager), false);
+  assert.equal(engineerRouteSelected(sibling), true);
+  selectEngineerRoute(manager, true);
+  id = 'replacement';
+  assert.equal(engineerRouteSelected(manager), false);
+  selectEngineerRoute(manager, true);
+  rememberSdkSession(manager);
+  assert.equal(engineerRouteSelected(manager), false); // A child cannot borrow a host's flag.
+  selectEngineerRoute(sibling, false);
+  assert.equal(engineerRouteSelected(sibling), false);
+});
 
 test('only explicit SDK selection plus actual Build/TASK/checkout authority admits a launch', t => {
   const f = fixture(t);

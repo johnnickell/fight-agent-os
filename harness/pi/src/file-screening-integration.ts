@@ -13,7 +13,7 @@ import { ScreeningProfiles, hash } from './jev/screening-profile.mjs';
 import { FileAdmission } from './jev/file-admission.mjs';
 import { WorkflowAccess, skillEffects } from './jev/workflow-access.mjs';
 import { inChildSessionContext } from '../vendor/pi-subagents/src/child-context.ts';
-import { closeWorkflow, engineerIdentity, isSdkSession, publishWorkflow, rememberSdkSession, stageBinding } from './build/authority.mjs';
+import { closeWorkflow, engineerIdentity, engineerRouteSelected, isSdkSession, publishWorkflow, rememberSdkSession, sessionWorkflow, stageBinding } from './build/authority.mjs';
 import { MonthlyLedger, ProfileBudget } from './jev/monthly-budget.mjs';
 import { ToolPolicy, PolicyDenied } from './tool-policy/policy.mjs';
 import { trackRuntimeHooks } from './tool-policy/runtime.mjs';
@@ -60,7 +60,10 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
   let selected = false, live = false, failure: string | undefined, inputFailure: string | undefined, evaluationFailure: string | undefined;
   let context: ExtensionContext | undefined;
   let workflow = new WorkflowAccess();
-  const coordinatorTool = () => workflow.skill === 'build' && workflow.mode === 'default' && pi.getFlag('fight-build-engineer') === 'sdk';
+  const coordinatorTool = (ctx: ExtensionContext) => {
+    const current = sessionWorkflow(ctx.sessionManager);
+    return live && current?.skill === 'build' && current.mode === 'default' && engineerRouteSelected(ctx.sessionManager);
+  };
   let sessionId = '', authority = '', owner = '', epoch = 0, sequence = 0, lastNotice = '', lastWarning = '';
   const persistRole = (role: string) => {
     try { pi.appendEntry('fight-workflow-role-v3', workflow.checkpoint(sessionId, role)); }
@@ -213,7 +216,7 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
           return textResult({ blocked, nextAction }, true);
         }
       } });
-    pi.setActiveTools([...allowed, ...(coordinatorTool() ? ['fight_build_engineer'] : [])]);
+    pi.setActiveTools([...allowed, ...(coordinatorTool(context!) ? ['fight_build_engineer'] : [])]);
   }
   registerScreen(false);
   pi.registerTool({ name: 'file_screening_status', label: 'Inspect file screening', description: 'Read-only enrollment, selected workflow and shared monthly accounting. Inspect workflow.skill/effect for active workflow authority; phase is the workflow role (Build also uses qa), not the selected skill. Never resolves credentials or makes a provider request.',
@@ -294,11 +297,11 @@ export function installFileScreening(pi: ExtensionAPI, dependencies: Dependencie
       else failure ??= reason;
     }
   });
-  hooks.on('tool_call', event => {
+  hooks.on('tool_call', (event, ctx) => {
     if (!selected) return;
     // Native file tools and shell stay independent of optional discovery authority.
     if (['bash', 'read', 'write', 'edit'].includes(event.toolName)) return;
-    const reason = event.parentToolCallId ? 'unsupported-nested-route' : !allowed.includes(event.toolName) && !(event.toolName === 'fight_build_engineer' && coordinatorTool()) ? 'unsupported-explicit-tool-route' : undefined;
+    const reason = event.parentToolCallId ? 'unsupported-nested-route' : !allowed.includes(event.toolName) && !(event.toolName === 'fight_build_engineer' && coordinatorTool(ctx)) ? 'unsupported-explicit-tool-route' : undefined;
     if (reason) { observe({ kind: 'blocked-read', reason, operationId: randomUUID(),
       pathId: hash('path' in event.input && typeof event.input.path === 'string' ? resolve(context!.cwd, event.input.path) : `tool:${event.toolName}`),
       needId: hash('need' in event.input && typeof event.input.need === 'string' ? event.input.need : '') }); return { block: true, reason: `File screening: ${reason}` }; }
