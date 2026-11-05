@@ -84,7 +84,7 @@ apply unchanged; a signature is not independent native-origin attestation or OS 
 | Companion input | Display-only effect |
 |---|---|
 | Up/Down, `[` / `]` | Choose verified live/retained completed siblings in displayed order; explicit selection is stable |
-| Enter / Esc | Open bounded details **inside AGENTS** / return to its list; main is unchanged |
+| Enter / Esc | Open bounded details **inside AGENTS** / return to its list; main is unchanged. Legacy keys and unmodified CSI-u `13u`/`13;1u` and `27u`/`27;1u` presses are recognized; modified/release encodings do not act |
 | `f` | Pin/unpin; a pin retains completion/disconnection labels; unpin recomputes activity |
 | `p` | Freeze progress while draining bounded snapshots and counting subsequent records; lifecycle stays live |
 | `c` / `r` | Close/reopen readers / explicitly rediscover; no child relaunch |
@@ -108,6 +108,16 @@ Terminal-default text follows the companion terminal's foreground/background, in
 Narrow views keep compact status/selection headers. Ellipses and paging disclose clipping; help and details reveal
 full bounded identities. Dots/checkmarks distinguish live, completed, failed and disconnected states without
 invented token/cost metrics.
+
+#### Compact ordinary process-stage rows
+
+On hosts supporting `registerToolRenderer`, simple ordinary Python stage launches show a compact `● Agent`
+role/TASK/attempt row and one tool-lifecycle line in Pi's native tool shell. The renderer does not replace bash,
+change its output/model context, register a child or infer observation health from shell output. Working means
+that the process tool is running; finished is not independent acceptance. Native tool expansion reveals the
+attempt and the last twelve sanitized, clipped output lines. Other tools, ordinary shell commands and complex
+shell scripts retain their existing renderers. A host without this public renderer capability retains native
+presentation; no executor or global installation is replaced. Concurrent tool calls retain separate native rows.
 
 #### Separate main-pane viewer
 
