@@ -94,10 +94,24 @@ permitted Work effects, the pinned Engineer provider/model/thinking, single Comp
 canonical Work handoff. Then call `fight_build_engineer` with:
 
 - `task`, `role: "engineer"`, exact canonical `checkout`, current full `head`, fresh absolute `attempt` directory;
+- resolved target `base` (canonical evidence checkout), exact current `branch`, absolute target `record`, and
+  absolute `context` from the coordinator's private `.runs/build/<TASK-ID>/`;
 - exact pinned `provider`, `model`, `thinking`, and finite `timeout` seconds (at most 21600).
 
+Resolve these target facts using [PROJECT_CONTEXT](../../docs/engineering/PROJECT_CONTEXT.md) before dispatch:
+the coordinator verifies the actual record's approval/executable state, local branch/base rules, instructions,
+gates and runtime. The runtime does not parse Agent OS YAML/status spellings or require `planning/tasks`, a
+`feature/` prefix or root `AGENTS.md` in another project. It checks same-repository registered checkout/base,
+exact branch/head, context in that target's task-owned Build scope and the selected record's TASK identity inside
+the selected checkout. Matching TASK numbers in a provider/foreign repository are not permission to use it.
+Context/record contents join the fresh assignment; they supply target facts, never trusted stage authority.
+Native discovered instructions (`project_context`, including `CLAUDE.md` or ancestor instructions when used)
+remain inherited and verified; the engine supplies the child's own skills/cwd rather than a parent transcript.
+An unassigned/no-instruction target does not gain an artificial AGENTS prerequisite. Task-private session storage
+may use the resolved base or selected checkout; no first-worktree heuristic selects target policy.
+
 The tool requires actual session-local Build authority, same TASK/checkout, registered repository membership,
-feature-branch/head, executable TASK, supported profile/model and the engine's actual
+exact branch/head, resolved target context/record, supported profile/model and the engine's actual
 `capabilities.beforeSessionStart`/`boundRootSession` flags. It claims `dispatch.lock` before calling the **one
 upstream manager directly**. Existing execution evidence or an already claimed attempt refuses. No generic launch
 facade, scheduler, second engine, parent-path inference or automatic worktree management is involved.
@@ -126,17 +140,31 @@ never retry through Python to get output. A fresh host is not proof that old eff
 acceptance follows from `completed`: inspect the committed candidate, normal gate and canonical Work handoff, then
 use the existing **fresh independent Review** process request without Engineer conversation.
 
+Canonical process stages are `engineer`, `reviewer`, `qa`, `land`; their skills remain `work`, `review`, `qa`,
+`land`. Existing workflow aliases normalize at launch and after custody admission, from one shipped vocabulary
+in `src/stage-roles.json`. This includes legacy Work/Review callers and existing QA Engineer/Release Manager workflow inputs,
+not guessed aliases. Unknown roles refuse before starting a stage. SDK Engineer likewise accepts legitimate Work
+aliases at its owning tool boundary, but always binds/emits Engineer. Build coordination is not a QA stage.
+Non-Engineer process callers remain live until TASK-00561; no authority comes from AGENTS spelling alone.
+
 Controlled owning qualification:
 
 ```sh
 node --test harness/pi/tests/build-engineer.test.mjs harness/pi/tests/subagents.test.mjs
-node harness/pi/tests/native/build-engineer.mjs "$PI_SDK_MODULES" "$task_evidence" "$installed_harness"
+node harness/pi/tests/native/build-engineer.mjs "$PI_SDK_MODULES" "$sdk_evidence" "$installed_harness"
+python3 -B harness/pi/tests/native/portable-stages.py "$process_evidence" "$installed_harness" "$read_only_consumer"
 ```
 
 The installed probe uses a scripted provider and real SDK/engine/Fight initialization, including Work admission,
 passive early/final text and tool names, duplicate refusal, unbound subordinate roles, provider error, timeout and
-shutdown/reload uncertainty. It is **not** a real permitted Work assignment, Sol-provider attestation, native terminal
-capture or independent acceptance. Record those remaining boundaries in the TASK and Work handoff.
+shutdown/reload uncertainty. Its private target has `work-items` records, a different state vocabulary,
+`topic/` branch and `CLAUDE.md`, with wrong-role/target/context/head refusals. The separate native process probe
+uses real installed Pi/monitor startup for each existing alias in a private main/linked target, plus read-only
+known-consumer startup/provider resolution and custody negatives. It handles input without a provider turn;
+its expected monitor exit 1 is an incomplete-response result, not successful Work. It creates no consumer TASK
+or source changes. These probes are **not** a real permitted Work assignment, Sol-provider attestation,
+inspected Herdr capture, independent acceptance or universal-project certification. Record sample limits and
+actual consumer availability in the TASK and Work handoff.
 
 ## Build Engineer prerequisite — TASK-00560 held
 

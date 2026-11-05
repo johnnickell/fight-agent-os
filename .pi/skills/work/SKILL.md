@@ -10,12 +10,14 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md); never s
 target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md).
 
 1. Verify cwd/origin/branch/base/status and accepted scope. Preserve unrelated work. Ask main checkout versus
-   worktree only if not already selected; use `feature/task-NNNNN-<slug>` from the target base. Keep scratch in
+   worktree only if not already selected; apply the target's branch/base policy (Agent OS uses
+   `feature/task-NNNNN-<slug>` from `develop`). Keep scratch in
    canonical `.runs/tasks/<TASK-ID>/runs/`, outside disposable checkouts.
 2. On revision read canonical base `.runs/reviews/<TASK-ID>/review.md` and current QA report. Trace each current
    finding against the exact subject. Missing evidence routes to its owner, not speculative repairs. Never reset
    consumed repair allowance. An unchanged accepted implementation routes to QA/Land, not another Work attempt.
-3. Follow the **explicit [Compose resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md)**.
+3. Follow the target's resolved runtime/resource procedure; a library need not run Agent OS services.
+   For Agent OS, follow the **explicit [Compose resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md)**.
    `bin/up`/`bin/down` select main; `--worktree SELECTOR` selects a registered disposable project. Reuse that
    project across roles/repairs. No resource receipt, branch/PID or worker-registration gate. Keep active-role
    evidence, not permanent source copies; source/Git holds cannot suppress explicit Docker teardown. Use the

@@ -26,9 +26,12 @@ function fixture(t) {
   const attempt = join(root, '.runs/build/TASK-00560/run/engineer');
   mkdirSync(attempt, { recursive: true }); writeFileSync(join(attempt, 'request.md'), 'Do the permitted remaining work.');
   const parent = { getSessionId: () => 'actual-parent' };
-  const ctx = { cwd: root, sessionManager: parent, modelRegistry: { find: (provider, id) => ({ provider, id, reasoning: true }) } };
+  const ctx = { cwd: root, sessionManager: parent, getSystemPrompt: () => '<project_context>\nControlled governing instructions\n</project_context>', modelRegistry: { find: (provider, id) => ({ provider, id, reasoning: true }) } };
   const model = { provider: 'qualified', id: 'exact-model', reasoning: true };
-  const request = { task: 'TASK-00560', role: 'engineer', checkout: root, attempt, head: git('rev-parse', 'HEAD'),
+  const context = join(root, '.runs/build/TASK-00560/run/context.md');
+  writeFileSync(context, `Controlled fixture context only, not target Work permission. Target ${root}; TASK-00560.`);
+  const request = { task: 'TASK-00560', role: 'engineer', checkout: root, base: root, branch: git('branch', '--show-current'),
+    context, record: join(root, 'planning/tasks/00560-TASK.md'), attempt, head: git('rev-parse', 'HEAD'),
     provider: model.provider, model: model.id, thinking: 'high', timeout: 10 };
   const profile = { worktreeIsolation: false, workflowsEnabled: false, schedulingEnabled: false,
     maxSubagentDepth: 1, disableDefaultAgents: true, fallbackSubagent: 'none', packageWorkflows: false,
@@ -82,6 +85,51 @@ test('missing hooks, active work, unsafe profile, role, head and model refuse be
   }
   f.ctx.modelRegistry.find = () => undefined;
   assert.throws(() => prepareEngineer(f.ctx, f.request, f.options), /model-unavailable/);
+});
+
+test('target context admits a different record layout, status vocabulary, branch and instruction discovery', t => {
+  const f = fixture(t);
+  const git = (...args) => execFileSync('git', ['-C', f.root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  git('branch', '-m', 'topic/consumer-change');
+  rmSync(join(f.root, 'AGENTS.md'));
+  rmSync(join(f.root, 'planning'), { recursive: true });
+  mkdirSync(join(f.root, 'work-items'));
+  f.request.record = join(f.root, 'work-items/current.md');
+  writeFileSync(f.request.record, '# TASK-00560\nState: approved-to-code (controlled fixture, not actual Work).\n');
+  writeFileSync(join(f.root, 'CLAUDE.md'), 'Consumer governing instructions');
+  f.ctx.getSystemPrompt = () => '<project_context>\nConsumer governing instructions\n</project_context>\n\n<skills>Parent-only skills</skills>';
+  f.request.branch = 'topic/consumer-change';
+  const ready = prepareEngineer(f.ctx, { ...f.request, role: 'work' }, f.options);
+  assert.deepEqual(ready.instructions, ['Consumer governing instructions']);
+  assert.ok(ready.prompt.includes('State: approved-to-code'));
+  assert.ok(ready.prompt.includes(f.request.context));
+});
+
+test('matching TASK text cannot substitute foreign target facts or missing governing context', t => {
+  const f = fixture(t), foreign = fixture(t);
+  for (const [patch, reason] of [
+    [{ checkout: foreign.root }, /build-authority-required/],
+    [{ base: foreign.root }, /base-mismatch/],
+    [{ record: foreign.request.record }, /target-context-mismatch/],
+    [{ context: foreign.request.context }, /target-context-mismatch/],
+    [{ branch: 'other-branch' }, /candidate-changed/],
+  ]) assert.throws(() => prepareEngineer(f.ctx, { ...f.request, ...patch }, f.options), reason);
+  // Even a coordinator bound to the foreign label cannot cross the actual repository.
+  publishWorkflow(f.ctx.sessionManager, new WorkflowAccess('build', { taskId: f.request.task, checkout: foreign.root }));
+  assert.throws(() => prepareEngineer(f.ctx, { ...f.request, checkout: foreign.root }, f.options), /checkout-unregistered/);
+  publishWorkflow(f.ctx.sessionManager, new WorkflowAccess('build', { taskId: f.request.task, checkout: f.root }));
+  writeFileSync(f.request.record, '# TASK-99999\n');
+  assert.throws(() => prepareEngineer(f.ctx, f.request, f.options), /task-identity-mismatch/);
+  writeFileSync(f.request.record, '# TASK-00560\n');
+  f.ctx.getSystemPrompt = () => '';
+  assert.throws(() => prepareEngineer(f.ctx, f.request, f.options), /governing-context-missing/);
+  f.ctx.getSystemPrompt = () => 'Native base prompt with no discovered instructions';
+  const nested = join(f.root, 'nested-consumer'); mkdirSync(nested);
+  execFileSync('git', ['-C', nested, 'init', '--initial-branch=trunk'], { stdio: 'ignore' });
+  const nestedRecord = join(nested, 'record.md'); writeFileSync(nestedRecord, '# TASK-00560\n');
+  assert.throws(() => prepareEngineer(f.ctx, { ...f.request, record: nestedRecord }, f.options), /target-context-mismatch/);
+  // Missing optional instruction files are not a reason to invent AGENTS.md.
+  assert.deepEqual(prepareEngineer(f.ctx, f.request, f.options).instructions, []);
 });
 
 test('a matching label or transcript cannot bind an inherited/wrong-model/wrong-checkout session', t => {

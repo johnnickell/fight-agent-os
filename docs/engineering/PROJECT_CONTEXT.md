@@ -47,4 +47,11 @@ identity in its working directory and applies the same substitutions to nested r
 binding or requirements require reconciling the context and evidence before continuing. Do not switch targets
 mid-run or reuse another repository's ledger, reports or revision allowance merely because the TASK ID matches.
 
+For the opt-in SDK Engineer, pass the resolved target `base`, current exact `branch`, absolute selected `record`
+and this `context` path to the existing tool alongside checkout/head/attempt/model pins. The coordinator verifies
+target approval, branch/base policy and required resources before dispatch; the runtime verifies actual target
+membership/fresh identity, not provider-specific planning paths or status words. Context is target fact transport,
+not a way to select Build/stage authority. Native process stages use the same context in their fresh request.
+Keep all non-Engineer process callers until their separately authorized replacement.
+
 This is context resolution, not installation, runtime provisioning, a permission grant or independent acceptance.

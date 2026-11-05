@@ -21,10 +21,10 @@ const ai = await import(pathToFileURL(join(modules, '@earendil-works/pi-ai/dist/
 const { runToolCall } = await import(pathToFileURL(join(modules, '@earendil-works/pi-agent-core/dist/index.js')));
 const { SubagentObserver } = await import(pathToFileURL(join(harness, 'src/observation/subagents.mjs')));
 const git = (...args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim();
-git('init', '--initial-branch=feature/installed-engineer');
-mkdirSync(join(root, 'planning/tasks'), { recursive: true });
-writeFileSync(join(root, 'AGENTS.md'), 'Controlled installed SDK governing instructions. No external provider requests.');
-writeFileSync(join(root, 'planning/tasks/00560-TASK.md'), '---\nid: TASK-00560\nstatus: in-progress\n---\n');
+git('init', '--initial-branch=topic/installed-consumer');
+mkdirSync(join(root, 'work-items'), { recursive: true });
+writeFileSync(join(root, 'CLAUDE.md'), 'Controlled consumer governing instructions. No external provider requests.');
+writeFileSync(join(root, 'work-items/assigned.md'), '# TASK-00560\nState: approved-to-code. Private transport fixture, not permission for real target Work.\n');
 git('add', '.'); git('-c', 'user.name=Harness fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-m', 'Controlled native fixture');
 mkdirSync(join(root, '.pi'));
 writeFileSync(join(root, '.pi/subagents.json'), readFileSync(join(harness, 'profiles/subagents.json')));
@@ -47,7 +47,7 @@ const errors = [], frames = [];
 let requests = 0;
 faux.setResponses([
   () => { requests++; return ai.fauxAssistantMessage([ai.fauxText('Early scripted Engineer activity'),
-    ai.fauxToolCall('read', { path: join(root, 'AGENTS.md') })], { stopReason: 'toolUse' }); },
+    ai.fauxToolCall('read', { path: join(root, 'CLAUDE.md') })], { stopReason: 'toolUse' }); },
   async () => { requests++; await new Promise(resolve => setTimeout(resolve, 100));
     return ai.fauxAssistantMessage([ai.fauxText('Qualified scripted Engineer completion')]); },
   () => { requests++; return ai.fauxAssistantMessage('Ordinary subordinate, no stage authority'); },
@@ -77,9 +77,26 @@ try {
   const ticker = setInterval(() => observer.tick(), 10);
   ticker.unref();  const attempt = join(root, '.runs/build/TASK-00560/run/engineer'); mkdirSync(attempt, { recursive: true });
   writeFileSync(join(attempt, 'request.md'), 'Scripted transport qualification only. No real Work or acceptance claim.');
-  const request = { task: 'TASK-00560', role: 'engineer', checkout: root, attempt, head: git('rev-parse', 'HEAD'),
+  const context = join(root, '.runs/build/TASK-00560/run/context.md');
+  writeFileSync(context, `Controlled consumer context for ${root}. Provider ${harness}; TASK-00560 is only a fixture identity here. Consumer gates/statuses/branches are not provider defaults.`);
+  const request = { task: 'TASK-00560', role: 'engineer', checkout: root, base: root,
+    branch: 'topic/installed-consumer', context, record: join(root, 'work-items/assigned.md'), attempt, head: git('rev-parse', 'HEAD'),
     provider: 'faux', model: 'engineer-qualification', thinking: 'high', timeout: 30 };
-  const result = await call('fight_build_engineer', request);
+  // All target-fact and role refusals use the actual installed tool/schema before
+  // engine execution; matching TASK text is not authority for another target.
+  const refusals = [];
+  const nested = join(root, 'nested-foreign'); mkdirSync(nested);
+  execFileSync('git', ['-C', nested, 'init', '--initial-branch=trunk'], { stdio: 'ignore' });
+  const foreignRecord = join(nested, 'record.md');
+  writeFileSync(foreignRecord, '# TASK-00560\nControlled foreign identity, not target authority.\n');
+  for (const patch of [{ role: 'reviewer' }, { role: 'unknown' }, { branch: 'feature/provider-default' },
+    { base: harness }, { record: join(harness, 'README.md') }, { context: join(harness, 'README.md') },
+    { checkout: harness }, { head: '0'.repeat(40) }, { record: foreignRecord }]) {
+    const result = await call('fight_build_engineer', { ...request, ...patch });
+    assert.equal(result.isError, true); assert.equal(requests, 0);
+    refusals.push(patch);
+  }
+  const result = await call('fight_build_engineer', { ...request, role: 'work' });
   assert.equal(result.isError, false, JSON.stringify(result.result));
   const outcome = JSON.parse(result.result.content[0].text);
   assert.equal(outcome.state, 'completed'); assert.equal(outcome.admitted, true); assert.equal(outcome.executionSettled, true);
@@ -88,6 +105,9 @@ try {
   const record = registry.getRecord(outcome.id);
   assert.equal(record.rootSessionId, session.sessionManager.getSessionId());
   assert.equal(record.session.messages.filter(message => message.role === 'user').length, 1);
+  const freshPrompt = JSON.stringify(record.session.messages.find(message => message.role === 'user').content);
+  assert.ok(freshPrompt.includes('approved-to-code')); assert.ok(freshPrompt.includes(context));
+  assert.ok(record.session.systemPrompt.includes('Controlled consumer governing instructions'));
   observer.tick();
   assert.ok(frames.some(frame => frame.text.includes('Early scripted')));
   assert.ok(frames.some(frame => /Tool: read|Finished: read/.test(frame.text)));
@@ -150,7 +170,7 @@ try {
   assert.deepEqual(errors, []);
   const summary = { sdk: sdk.VERSION, harness, fixture: root, pass: true, installedCopy: true,
     engines: loader.getExtensions().extensions.filter(extension => extension.path.endsWith('/vendor/pi-subagents/src/index.ts')).length,
-    outcome, failures, childWorkflow: child.workflow, childStage: child.stage, passiveFrames: frames.length, scriptedRequests: requests,
+    outcome, failures, refusals, targetLayout: { record: request.record, branch: request.branch, instructions: 'CLAUDE.md', context }, childWorkflow: child.workflow, childStage: child.stage, passiveFrames: frames.length, scriptedRequests: requests,
     externalProviderRequests: 0, realEngineerAssignment: false, nativeHerdrEvidence: false };
   writeFileSync(join(evidence, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
   console.log(JSON.stringify(summary));

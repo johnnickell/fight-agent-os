@@ -17,6 +17,8 @@ is reference documentation, not our installation procedure or evidence that its 
 - Child resource-loading context uses one async-local store across Pi module-loader copies, preventing child factories
   from mistaking a native parent's process-launcher environment for their own. Owning regression and installed-SDK
   qualification reproduce the former duplicate-store failure before repair; no shared environment role mutation.
+- Remove upstream's extra EOF blank lines in `agent-types.ts` and `enabled-models.ts` so the delivered source passes
+  Git whitespace checks. These two formatting-only deviations are deliberate; the original base remains above.
 - Harness packaging owns runtime dependencies and loads this source entry once. Host Pi peers use capability-based
   ranges; the inherited development lock records tested dependency identities, not an allowed Pi-version list.
 - Native `.mts` test config and task-private temporary/cache output allow the suite to run with read-only source.

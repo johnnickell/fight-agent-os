@@ -27,8 +27,9 @@ Use a private `.runs/build/<TASK-ID>/<run>/` and exclusive `active` directory. I
 resume; release only your lock after children stop. One concise ledger holds authorization, project/subject,
 checkout/base/head, pinned models, stage/attempt/report/PR locators, shared repairs and incomplete effects.
 Keep active coordinator/session protected. No duplicate resource registry or permanent local source archive.
-Use the **one shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md)**: Work prepares one
-explicit Compose project, all roles reuse it. Main up/down and registered `--worktree` up/down are separate;
+Use the target's resolved runtime/resource procedure; do not import application services into a library.
+For Agent OS, the **one shared [resource procedure](../../../docs/engineering/RESOURCE_LIFECYCLE.md)** means Work
+prepares one explicit Compose project and all roles reuse it. Main up/down and registered `--worktree` up/down are separate;
 Docker lifecycle has no receipt/PID/worker-registration gate. Inspect actual handoffs/native resources, not
 per-stage proof trees. Missing browser prerequisites hold affected advancement, not explicit task teardown.
 
@@ -70,12 +71,16 @@ Read installed Pi [CLI/skills documentation](../../../harness/pi/README.md) as n
 Native session-file birthtime, ancestry/custody and independent role admission remain unchanged. Observation is
 human-only/best-effort; missing visibility never authorizes relaunch or executor substitution.
 
-Use `--role engineer` for the Engineer running the `work` skill; use `review`, `qa` and `land` for the
-remaining stages. Role names are launcher inputs, not skill invocations. The monitor preserves the role in
-passive observation; it grants no workflow authority. Existing `work` monitor callers remain supported.
+Use canonical stage inputs `--role engineer`, `reviewer`, `qa` and `land`. Owning skills remain `work`,
+`review`, `qa` and `land`; never rename them to match stage labels. The process owner normalizes existing workflow
+aliases using the Harness's single `src/stage-roles.json` vocabulary before launch, persistence and observation.
+Legacy `work`/`review` callers remain supported; unknown roles and coordinator names refuse. Normalization never
+replaces native custody or actual workflow admission. Build's `phase: qa` / `skill: build` / coordination effect
+is not a QA worker. AGENTS displays verified canonical stage identity, not a prompt-derived authority claim.
 
 Create a fresh private attempt with `request.md`. Include role, TASK, verified checkout/base/head, absolute owning
-skill/context/instruction paths, permitted effects, relevant evidence, pinned model/thinking, remaining repair
+skill/context/instruction paths, target-owned record/status/branch/gate/runtime rules, permitted effects,
+relevant evidence, pinned model/thinking, remaining repair
 allowance and expected canonical report/handoff. Carry the exact Compose project/checkout and native state;
 no Docker worker registration. Preserve native session/custody admission separately. Do not copy Engineer dialogue into independent requests or
 suggest verdicts. Tell each child to verify target identity, read instructions, perform only its role and stop.

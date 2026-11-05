@@ -30,6 +30,16 @@ except Exception:
     AutomaticObservation = None  # Missing/broken optional observer never disables the monitor.
 
 
+def stage_role(value):
+    """Normalize existing workflow aliases from the single provider-owned vocabulary"""
+    roles = json.loads(Path(__file__).resolve().parents[1].joinpath('stage-roles.json').read_text())
+    key = '-'.join(value.strip().lower().split())
+    for canonical, aliases in roles.items():
+        if key in aliases:
+            return canonical
+    raise argparse.ArgumentTypeError('unknown stage role; use engineer, reviewer, qa or land')
+
+
 def positive_seconds(value):
     seconds = float(value)
     if not math.isfinite(seconds) or seconds <= 0:
@@ -226,6 +236,9 @@ class Progress:
 
 def run(args):
     os.umask(0o077)
+    args.role = stage_role(args.role)  # Also covers direct owning run() callers, before any effects.
+    if not re.fullmatch(r'TASK-\d{5}', args.task):
+        raise ValueError('invalid TASK identity')
     attempt = Path(args.attempt).resolve(strict=True)
     if not (attempt / "request.md").is_file():
         raise ValueError("attempt must contain request.md")
@@ -252,7 +265,7 @@ def run(args):
                "--name", f"{args.task} {args.role}", "--provider", args.provider,
                "--model", args.model, "--thinking", args.thinking, "--", f"@{attempt / 'request.md'}"]
     env = dict(os.environ, PI_PROVIDER=args.provider, PI_MODEL=args.model, PI_REASONING_LEVEL=args.thinking,
-               FIGHT_SCREENING_PHASE=re.sub(r"[^A-Za-z0-9-]", "-", args.role)[:48],
+               FIGHT_SCREENING_PHASE=args.role,
                FIGHT_SCREENING_TASK=args.task, FIGHT_SCREENING_CHECKOUT=str(Path.cwd().resolve()))
     cancelled = [0]
     def on_signal(signum, _frame):
@@ -394,7 +407,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--attempt", required=True)
     parser.add_argument("--task", required=True)
-    parser.add_argument("--role", required=True)
+    parser.add_argument("--role", required=True, type=stage_role)
     parser.add_argument("--provider", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--thinking", required=True)

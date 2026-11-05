@@ -1,10 +1,7 @@
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { Unavailable } from './readiness.mjs';
 
-const roles = { work: 'engineer', engineer: 'engineer', 'software-engineer': 'engineer',
-  review: 'reviewer', reviewer: 'reviewer', 'senior-engineer': 'reviewer',
-  qa: 'qa', 'qa-engineer': 'qa', build: 'qa', 'team-lead': 'qa', land: 'land', 'release-manager': 'land' };
-const normalize = value => typeof value === 'string' ? value.trim().toLowerCase().replace(/\s+/g, '-') : '';
+import { normalizeRole, stageRole } from '../stage-roles.mjs';
 export const skillEffects = Object.freeze({
   work: 'source', review: 'review-report', qa: 'qa-report', land: 'delivery', build: 'coordination',
   next: 'inspect', fix: 'bug-planning', audit: 'inspect', architecture: 'inspect', 'security-audit': 'inspect',
@@ -37,7 +34,7 @@ export class WorkflowAccess {
       ['fight-workflow-role-v1', 'fight-workflow-role-v2', 'fight-workflow-role-v3'].includes(entry.customType));
     const data = prior?.data;
     if (['fight-workflow-role-v2', 'fight-workflow-role-v3'].includes(prior?.customType) && data?.sessionId === sessionId &&
-      data.launcher === null && Object.values(roles).includes(data.role)) {
+      data.launcher === null && stageRole(data.role) === data.role) {
       access.select(data.role);
       if (prior.customType === 'fight-workflow-role-v3' && Object.hasOwn(skillEffects, data.skill) &&
           skillRole(data.skill) === data.role && (data.taskId === null || scopedSubject(data.skill, data.taskId)) &&
@@ -58,8 +55,8 @@ export class WorkflowAccess {
         checkout: current.checkout, mode: current.mode } : {}) };
   }
   select(value, persist = () => {}) {
-    const key = normalize(value);
-    const role = Object.hasOwn(skillEffects, key) ? skillRole(key) : Object.hasOwn(roles, key) ? roles[key] : null;
+    const key = normalizeRole(value);
+    const role = Object.hasOwn(skillEffects, key) ? skillRole(key) : key === 'team-lead' ? 'qa' : stageRole(key);
     if (!role) throw new Unavailable('unknown-workflow-role');
     const skill = Object.hasOwn(skillEffects, key) ? key : key === 'team-lead' ? 'build' : ({ engineer: 'work', reviewer: 'review', qa: 'qa', land: 'land' })[role];
     const next = { role, skill, taskId: this.taskId, checkout: this.checkout, mode: this.mode, ...this.requested };

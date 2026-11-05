@@ -1,14 +1,22 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join, sep } from 'node:path';
+import { dirname, isAbsolute, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bindEngineerSession, engineerEffects, sessionWorkflow } from './authority.mjs';
+import { stageRole } from '../stage-roles.mjs';
 
 const harness = fileURLToPath(new URL('../..', import.meta.url));
 const terminal = new Set(['completed', 'steered', 'aborted', 'stopped', 'error']);
 const fail = code => { throw new Error(code); };
 const git = (cwd, ...args) => execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', timeout: 5000, maxBuffer: 1024 * 1024 }).trim();
 const canonical = path => typeof path === 'string' && isAbsolute(path) && realpathSync(path) === path;
+const inside = (path, root) => path.startsWith(root + sep);
+const document = path => {
+  if (!canonical(path)) fail('engineer-context-path-invalid');
+  const stat = lstatSync(path);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size < 1 || stat.size > 128 * 1024) fail('engineer-context-file-invalid');
+  return readFileSync(path, 'utf8');
+};
 const profileKeys = { worktreeIsolation: false, workflowsEnabled: false, schedulingEnabled: false,
   maxSubagentDepth: 1, disableDefaultAgents: true, fallbackSubagent: 'none', packageWorkflows: false, strictAgentFiles: true };
 
@@ -18,7 +26,7 @@ export function prepareEngineer(ctx, request, { selected, registry, profile }) {
   const workflow = sessionWorkflow(ctx.sessionManager);
   if (workflow?.skill !== 'build' || workflow.role !== 'qa' || workflow.mode !== 'default' ||
       workflow.taskId !== request.task || workflow.checkout !== request.checkout) fail('build-authority-required');
-  if (!/^TASK-\d{5}$/.test(request.task) || request.role !== 'engineer') fail('engineer-assignment-invalid');
+  if (!/^TASK-\d{5}$/.test(request.task) || stageRole(request.role) !== 'engineer') fail('engineer-assignment-invalid');
   if (registry?.capabilities?.beforeSessionStart !== true || registry.capabilities.boundRootSession !== true ||
       typeof registry.spawn !== 'function' || typeof registry.getRecord !== 'function' || typeof registry.hasRunning !== 'function') fail('sdk-engineer-capability-unavailable');
   if (registry.hasRunning()) fail('sdk-engineer-work-already-running');
@@ -29,12 +37,21 @@ export function prepareEngineer(ctx, request, { selected, registry, profile }) {
   if (!registrations.includes(`worktree ${request.checkout}`) ||
       realpathSync(git(ctx.cwd, 'rev-parse', '--path-format=absolute', '--git-common-dir')) !==
       realpathSync(git(request.checkout, 'rev-parse', '--path-format=absolute', '--git-common-dir'))) fail('engineer-checkout-unregistered');
-  const base = registrations.find(value => value.startsWith('worktree '))?.slice(9);
-  if (!base || !canonical(request.attempt) || !request.attempt.startsWith(join(base, '.runs/build', request.task) + sep)) fail('engineer-attempt-outside-build');
-  if (!/^feature\//.test(git(request.checkout, 'branch', '--show-current')) ||
+  // PROJECT_CONTEXT supplies target facts, never stage authority. Do not import
+  // the provider's planning layout, approval statuses or feature-branch policy.
+  const base = request.base;
+  if (!canonical(base) || !registrations.includes(`worktree ${base}`) ||
+      realpathSync(git(base, 'rev-parse', '--path-format=absolute', '--git-common-dir')) !==
+      realpathSync(git(request.checkout, 'rev-parse', '--path-format=absolute', '--git-common-dir'))) fail('engineer-base-mismatch');
+  if (!canonical(request.attempt) || !inside(request.attempt, join(base, '.runs/build', request.task))) fail('engineer-attempt-outside-build');
+  if (typeof request.branch !== 'string' || !request.branch || git(request.checkout, 'branch', '--show-current') !== request.branch ||
       !/^[a-f0-9]{40}$/.test(request.head) || git(request.checkout, 'rev-parse', 'HEAD') !== request.head) fail('engineer-candidate-changed');
-  const task = readFileSync(join(request.checkout, 'planning/tasks', `${request.task.slice(5)}-TASK.md`), 'utf8');
-  if (!task.includes(`id: ${request.task}\n`) || !/^status: (in-progress|ready-for-agent)$/m.test(task)) fail('engineer-task-not-executable');
+  if (typeof request.context !== 'string' || !inside(request.context, join(base, '.runs/build', request.task)) ||
+      typeof request.record !== 'string' || !inside(request.record, request.checkout)) fail('engineer-target-context-mismatch');
+  const context = document(request.context), task = document(request.record);
+  if (git(dirname(request.context), 'rev-parse', '--show-toplevel') !== base ||
+      git(dirname(request.record), 'rev-parse', '--show-toplevel') !== request.checkout) fail('engineer-target-context-mismatch');
+  if (!new RegExp(`\\b${request.task}\\b`).test(task)) fail('engineer-task-identity-mismatch');
   const model = ctx.modelRegistry.find(request.provider, request.model);
   if (!model || model.provider !== request.provider || model.id !== request.model ||
       !['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'].includes(request.thinking) ||
@@ -44,8 +61,16 @@ export function prepareEngineer(ctx, request, { selected, registry, profile }) {
   if (!stat.isFile() || stat.isSymbolicLink() || stat.size < 1 || stat.size > 128 * 1024) fail('engineer-request-invalid');
   if (['sdk-outcome.json', 'events.jsonl', 'sessions', 'pi-exit-code', 'exit-code', 'process.json', 'progress.log']
     .some(path => existsSync(join(request.attempt, path)))) fail('engineer-attempt-not-fresh');
-  const prompt = readFileSync(requestFile, 'utf8');
-  const instructions = [readFileSync(join(request.checkout, 'AGENTS.md'), 'utf8').trim()];
+  const prompt = `Apply the resolved target context below before Work. It supplies target requirements and substitutions, not role authority. Keep provider skill references at their owning installation.\nTarget: ${request.checkout}\nBranch: ${request.branch}\nEvidence base: ${base}\n\nProject context (${request.context}):\n${context}\n\nSelected record (${request.record}):\n${task}\n\nFresh assignment:\n${readFileSync(requestFile, 'utf8')}`;
+  // The engine's append profile preserves actual native governing context, even
+  // when the target uses CLAUDE.md, ancestor instructions or no root AGENTS.md.
+  const governing = ctx.getSystemPrompt?.()?.trim();
+  if (!governing) fail('engineer-governing-context-missing');
+  // Pi renders discovered instructions in project_context. The engine deliberately
+  // replaces parent skills/cwd/turn sections, so the whole rendered prompt is not
+  // an inheritable-context witness. No context section means none was discovered.
+  const instructions = [...governing.matchAll(/<project_context>\n([\s\S]*?)\n<\/project_context>/g)]
+    .map(match => match[1].trim()).filter(Boolean);
   const requiredExtensions = ['jev-extension.ts', 'build-engineer-extension.ts'].map(path => join(harness, 'src', path));
   // Claim BEFORE spawn. An uncertain spawn, abort or crash never releases this
   // claim for replay. Build reconciles the original attempt; it never falls back.
@@ -60,7 +85,8 @@ export async function runEngineer(pi, ctx, request, options) {
   const assignment = { parent, task: request.task, checkout: request.checkout, attempt: request.attempt,
     role: 'engineer', skill: 'work', effects: engineerEffects, provider: request.provider, model: request.model,
     thinking: request.thinking, instructions: prepared.instructions, requiredExtensions: prepared.requiredExtensions,
-    sessionRoots: [join(prepared.base, '.runs/tasks', request.task, 'runs'), join(prepared.base, '.runs/build', request.task)] };
+    sessionRoots: [...new Set([prepared.base, request.checkout])].flatMap(root =>
+      [join(root, '.runs/tasks', request.task, 'runs'), join(root, '.runs/build', request.task)]) };
   let id, session, binding, observedRecord, reason = null, settled = false, unknown = false, spawnCalled = false;
   const save = value => writeFileSync(join(request.attempt, 'sdk-outcome.json'), JSON.stringify(value, null, 2) + '\n', { mode: 0o600 });
   const cancel = code => { reason ??= code; controller.abort(); };
@@ -85,7 +111,8 @@ export async function runEngineer(pi, ctx, request, options) {
           const current = sessionWorkflow(ctx.sessionManager);
           if (current?.skill !== 'build' || current.role !== 'qa' || current.mode !== 'default' ||
               current.taskId !== request.task || current.checkout !== request.checkout) fail('build-authority-changed');
-          if (git(request.checkout, 'rev-parse', 'HEAD') !== request.head) fail('engineer-candidate-changed');
+          if (git(request.checkout, 'rev-parse', 'HEAD') !== request.head ||
+              git(request.checkout, 'branch', '--show-current') !== request.branch) fail('engineer-candidate-changed');
           binding = bindEngineerSession(child, assignment); session = child;
         },
       });

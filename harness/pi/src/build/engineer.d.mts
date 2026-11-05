@@ -1,6 +1,7 @@
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 export type EngineerRequest = {
   task: string; role: 'engineer'; checkout: string; head: string; attempt: string;
+  base: string; branch: string; context: string; record: string;
   provider: string; model: string; thinking: string; timeout: number;
 };
 export type EngineerOptions = {

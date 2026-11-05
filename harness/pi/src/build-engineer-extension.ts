@@ -1,7 +1,8 @@
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 import { Type } from 'typebox';
-import { runEngineer } from './build/engineer.mjs';
+import { runEngineer, type EngineerRequest } from './build/engineer.mjs';
 import { sessionWorkflow } from './build/authority.mjs';
+import { stageRole } from './stage-roles.mjs';
 
 /** Offer one explicitly selected SDK Engineer route to the actual Build coordinator */
 export default function installBuildEngineer(pi: ExtensionAPI) {
@@ -14,13 +15,18 @@ export default function installBuildEngineer(pi: ExtensionAPI) {
     unresolved = prior?.type === 'custom' && (prior.data as { executionSettled?: boolean })?.executionSettled !== true;
   });
   const shutdown = new Set<() => void>();
-  pi.events.on('subagents:settings_loaded', (event: { settings?: unknown }) => { profile = event?.settings; });
+  pi.events.on('subagents:settings_loaded', event => { profile = (event as { settings?: unknown } | undefined)?.settings; });
   pi.events.on('subagents:settings_changed', () => { for (const cancel of shutdown) cancel(); });
   pi.on('session_shutdown', () => { for (const cancel of shutdown) cancel(); shutdown.clear(); });
   pi.registerTool({ name: 'fight_build_engineer', label: 'Build Engineer (SDK)', defaultActive: false,
     description: 'Run the actual fresh Engineer/work stage through the bundled upstream engine. Requires explicit --fight-build-engineer sdk and current trusted Build/TASK/checkout authority. No fallback, publication or acceptance. Inspect canonical evidence before independent Review.',
+    prepareArguments(args) {
+      const input = args as { role?: unknown };
+      return { ...input, role: stageRole(input?.role) ?? input?.role } as EngineerRequest;
+    },
     parameters: Type.Object({ task: Type.String({ pattern: '^TASK-\\d{5}$' }), role: Type.Literal('engineer'),
-      checkout: Type.String(), head: Type.String({ pattern: '^[a-f0-9]{40}$' }), attempt: Type.String(),
+      checkout: Type.String(), base: Type.String(), branch: Type.String(), context: Type.String(), record: Type.String(),
+      head: Type.String({ pattern: '^[a-f0-9]{40}$' }), attempt: Type.String(),
       provider: Type.String(), model: Type.String(), thinking: Type.String(), timeout: Type.Integer({ minimum: 1, maximum: 21600 }),
     }, { additionalProperties: false }),
     executionMode: 'sequential',
