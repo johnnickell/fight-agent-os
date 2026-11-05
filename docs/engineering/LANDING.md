@@ -507,7 +507,10 @@ intentionally retained pending integration, not a failed eligible closeout or au
 command and runs unattended under standing owned-cleanup authority after those checks; do not ask the operator
 for routine known-hook approval. Unexpected hooks require a separate owner decision, not blanket approval.
 Declining hooks is not Docker teardown. Clean qualification fixtures use the same guarded callable with exact
-OID/ancestor proof, not fabricated publication proof; actual delivery retains all publication guards above.
+OID/ancestor proof, not fabricated publication proof. Explicitly owned generated repositories with no runtime
+may select its [runtime-free fixture mode](RESOURCE_LIFECYCLE.md#runtime-free-qualification-fixtures), which
+requires native absence and no removal hooks; missing `bin/down` alone never selects it. Actual delivery
+retains public Docker-first teardown and all publication guards above.
 Verify actual filesystem, registration, runtime and configuration absence plus the exact deleted-or-retained
 ref disposition as well as structured output; native exit 0 alone can mean incomplete removal. Resume only
 remaining effects through the same command, including Worktrunk branch-only removal while an interrupted

@@ -32,7 +32,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | — (standalone bug) | in-progress | — | — |
 
 ## Ready Frontier
 
