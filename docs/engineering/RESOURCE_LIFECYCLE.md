@@ -81,7 +81,9 @@ teardown work without ingress. Do not claim browser-ready from Compose health al
 
 ## Retire runtime, then finish the task
 
-All roles and Worktrunk use the SAME `bin/down --worktree SELECTOR`. It calls Compose
+Application roles and Worktrunk use the SAME `bin/down --worktree SELECTOR`. Only explicitly owned
+[runtime-free qualification fixtures](#runtime-free-qualification-fixtures) use native absence checks instead.
+The application command calls Compose
 `down --volumes --remove-orphans`, then removes remaining native project-labeled resources and task-specific
 image tags, plus a dedicated reserved project builder/backing volume if created. Native removal refuses foreign
 volume/network consumers. It never removes a shared immutable image ID to force task-tag cleanup. Real command
@@ -156,6 +158,28 @@ by surviving ref, recreate source or publish again for cleanup.
 If Land's own session consumes source, Build observes its real exit before source retirement from the safe
 checkout. Docker down itself does not need that exit. There is no post-worker receipt/PID cleanup helper. The
 existing Build ledger/handoff carries remaining effects and native locators, not another resource record.
+
+## Runtime-free qualification fixtures
+
+A generated local Git fixture with no application runtime must not acquire a fake `bin/down` just to retire
+its linked checkout. Its owning caller may explicitly use the SAME guarded
+`scripts/resource_lifecycle/worktrunk.py` `remove` callable with `runtime_free_fixture=True`, its canonical
+fixture primary, exact linked path and expected OID. This is not delivery or QA-purpose removal and is never
+selected automatically because a command is missing. Caller provenance/ownership remains required.
+
+The mode requires no remotes, application down/Compose declarations, generated project configuration/evidence,
+project-labeled containers/networks/volumes, task image tags or dedicated builder/backing volume. Native
+inventory must succeed. Any declared/configured/live runtime holds removal for its actual owning teardown;
+this mode never creates locators/settings or disposes Docker resources. Application/default paths still run
+public down first, including when later source or publication qualification fails.
+
+Exact registration/path/ref/OID and canonical ancestry, tracked/untracked/ignored cleanliness, actual consumers,
+filesystem protections, installed Worktrunk capabilities and structured native postconditions still apply.
+Complete effective pre/post-remove hooks must be absent in both contexts: even an application down hook is not
+a runtime-free fixture hook. Runtime absence is checked again before native removal and after it. Only the
+qualified linked checkout/ref is removed; its generated standalone primary and surrounding temporary material
+need separate ownership/consumer qualification. Repeating a completed removal uses its original absolute path,
+never a branch-based redirect. Preserve unknown/changed/active fixture data and failure evidence.
 
 ## On-demand human QA
 

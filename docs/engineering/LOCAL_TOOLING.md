@@ -12,9 +12,12 @@ their local `docs/engineering/LOCAL_TOOLING.md`; their actual service sets and g
 Use `bin/down --worktree /absolute/registered/checkout` before qualifying source removal. Run the target's
 `bin/runtime finish` from its canonical safe checkout only after delivery verification and durable outcomes.
 Its guarded Worktrunk remover rechecks exact native hooks and source ownership. If the canonical target has
-not yet adopted `bin/down`, keep the source hold; a provider's remover is not permission to bypass it or copy
-an unreviewed command into an active main checkout. Independent Docker effects may still be retired through
-their existing owning command. Never redirect removal to a provider or another project.
+not yet adopted `bin/down`, keep the application source hold; a provider's remover is not permission to bypass it or copy
+an unreviewed command into an active main checkout. Explicitly owned generated Git fixtures with no runtime
+may use the shared remover's narrow [runtime-free fixture mode](RESOURCE_LIFECYCLE.md#runtime-free-qualification-fixtures),
+which qualifies native absence and preserves source/hook guards rather than inventing a down command.
+Independent Docker effects may still be retired through their existing owning command. Never redirect removal
+to a provider or another project.
 
 A normal target `bin/build` validates planning freshly and reuses only its own qualifying application receipt.
 Use `--force` for deliberate fresh application execution. Shared Docker layers and local gate evidence are
