@@ -37,19 +37,25 @@ claiming it survived reload or granting a browser permission to change mounts.
 
 Persist one attempt identity, immutable confirmed plan, initiating actor/grant, stage identities and verified
 intent/result evidence. Sequence: generate; initialize Git/initial commit; optional preparation; optional GitHub
-creation/push; register Repository/Checkout/Worktree; resolve first database-authoritative context. Stage adapters
+creation/push; register Project and link/designate Checkout/Worktree; resolve first database-authoritative context. Stage adapters
 from TICKET-00100/00102/00103 supply exact outcomes; this owner alone decides attempt transitions. It is not a
 coding Workflow, TASK claim, Team Lead/Software Engineer assignment or Review/publication pipeline.
 
-Commit state, required audit and delivery intent together before external effects. Use bounded delivery/claim and
+Use a CreationAttempt aggregate with its typed attempt ID and registered aggregate-owned command/query handlers.
+The creation adapter generates the ID before void confirmation dispatch and retains it for separate typed status
+queries. Handler-owned generic `TransactionalUnitOfWork` commits state, required audit, pinned references and
+delivery intent together on one connection before external effects; repositories remain collections, not a
+combined Store/UoW or generic operation engine. Use bounded delivery/claim and
 currentness contracts compatible with the existing eligible Runner, not another general job platform. Duplicate
-confirmation/delivery returns the original operation where applicable. Progress and receipt queries read durable
+confirmation/delivery resolves the same confirmed multi-resource attempt, not an ordinary-create response journal.
+Retain the attempt's known ProjectId for registration reconciliation through fresh Project queries; RegisterProject
+itself remains void and does not promise immutable-response replay. Progress and receipt queries read durable
 facts; queue delivery, process exit, live UI or Agent inference never establishes success. Report partial/stale/
 unavailable observations distinctly and reconcile after browser disconnect, application/Runner restart or process
 interruption without relaunching uncertain effects.
 
 Explicit retry revalidates every completed effect and resumes only at the first incomplete safe stage. Prevent
-duplicate directory, initial commit, remote, push, Repository/Checkout link or context revision. Changed authority,
+duplicate directory, initial commit, remote, push, Project registration/Checkout link or context revision. Changed authority,
 missing capability, unexpected filesystem/Git/provider state, ambiguous ownership or unsupported manifest behavior
 pauses or enters Needs Human. Preserve original uncertainty until reconciled; do not substitute a new attempt to
 hide an unresolved one. Cancellation stops before the next effect and reports any already-running effect truthfully;
@@ -81,9 +87,11 @@ source release automation or general-purpose workflow engine is included.
 
 ## Validation and permissions
 
-Require current server intent-specific creation/view/recovery/cleanup authority and real Workspace/Host/Runner
-scope. Independently check stage-specific filesystem/preparation/source-host/registration authority; profile
-selection and earlier confirmation cannot override revocation. Use expected revisions and shared resource fences,
+Each actual HTTP/Console/Runner entry authenticates and checks intent-specific creation/view/recovery/cleanup
+and Workspace/Host/Runner scope before configured bus dispatch. Stage entries independently admit filesystem,
+preparation, source-host and registration effects; profile selection and earlier confirmation cannot override
+current phase authority. Application does not repeat blanket caller permission admission or serialize ordinary
+permission revocation through database commit. Use expected revisions and shared resource fences,
 strict bounded input and secret-safe errors. External effects stay outside business transactions under ADR 0002.
 
 Apply ADR 0003/0004: protected reads/actions, volatile drafts, no-store safe responses, late-response/context fences
@@ -120,6 +128,12 @@ No credentials, source-host tokens, raw environment or hidden reasoning enter pr
 
 ### Approved TASK decomposition and current handoff
 
+TASK-00567 preserves the attempt's durable physical/provider recovery while separating ordinary Project/catalog
+creation and adapter admission. The split below remains complete, not fresh qualification or current Board evidence.
+TICKET-00024/00025 own Project/link/context policy; TASK-00575 owns registration source, and TASK-00569/00570 retain
+Harness/execution suppliers. No missing initial-mode, first-link, host or provider guarantee is cleared by prose.
+
+
 The maintainer approved seven slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. All are unranked features with blank PRs. Early admission, stage and cleanup
 participants precede their execution/browser consumers; these are concrete delivery blockers, not a new job platform.
@@ -138,7 +152,7 @@ TASK-00411/00414 stay `needs-info` for initial-mode and actual first-link/stage 
 resolve allocations. TASK-00413 gains TASK-00423 and becomes ready behind suppliers: only reference allocation
 resolves. TASK-00417 remains held for actual references and inherited host/process/provider support.
 TASK-00412/00415/00416 remain ready behind suppliers, not runtime-qualified. TASK-00422/00425 retain an unallocated
-new-Repository authority capability; TASK-00418/00420 retain distinct protected-operation mapping holds.
+new-Project authority capability; TASK-00418/00420 retain distinct protected-operation mapping holds.
 
 TASK-00404 now gains TASK-00411 and becomes ready behind suppliers: only its early attempt/reference allocation
 hold resolves. Actual catalog/admission/reference composition and TASK-00402's real managed-release prerequisite
@@ -170,7 +184,7 @@ closes future admission without rollback claims, and cleanup always requires sep
 Explicit preparation skip needs no preparation-network capability. Public installed/local-only creation needs no
 private-source or publication credentials, but still requires actual Git, registration and database context.
 TASK-00408's initial subject remains distinct from preparation changes. Profiles grant no authority; no fabricated
-Workflow, Agent, Repository, second resolver or new scheduler fills a missing participant. Optional support never
+Workflow, Agent, Project, second resolver or new scheduler fills a missing participant. Optional support never
 gates deterministic controls. TICKET-00103 retains completion receipt/Dashboard handoff and real integrated proof.
 
 Owned behavior tests, actual PostgreSQL/Runner/Git/provider integration, guidance and full gate remain within

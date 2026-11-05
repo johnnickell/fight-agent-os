@@ -89,7 +89,7 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 |---|---|---|
 | [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent |
 | [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | done |
-| [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | ready-for-agent |
+| [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | in-progress |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent |
 | [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent |
@@ -97,6 +97,13 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Area C, [TASK-00567](../tasks/00567-TASK.md#implementation-checkpoint--2026-11-05), is implemented and locally
+verified, awaiting independent Review/documentation QA, not accepted. Its 57 unfinished EPIC-00009/00010 records
+have explicit corrected or justified-unchanged dispositions in canonical ignored
+`.runs/tasks/TASK-00567/runs/coverage.md`; final inventory accounts for additions/archives. Real physical/provider
+recovery and all supplier holds remain. TASK-00571 receives that coverage, not deferred area-C repairs. Feature
+execution, source cutovers and this TICKET's complete-portfolio acceptance remain separate.
 
 Area B, [TASK-00566](../tasks/00566-TASK.md#accepted-implementation-checkpoint--2026-11-05), has independent
 Review ACCEPT and documentation QA PASS on `7c9666af4dde06e05c8505c56cb00685c58ce7ab`: 50 unfinished

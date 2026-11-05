@@ -23,7 +23,7 @@ A durable AI proposal is distinct from unsubmitted manual form state and grants 
 Submit only the exact allowlisted relative root filename, proposed complete content, expected current digest or
 expected absence, and necessary current checkout/context evidence. Creating a missing recognized file uses expected
 absence, not an assumed empty digest. Preview the full diff and effective-instruction consequence. Revalidate live
-Update repository instructions authority, actual designated checkout identity, containment, regular-file safety,
+Update Project instructions authority, actual designated checkout identity, containment, regular-file safety,
 branch/ownership, encoding/size, expected content state and conflicting operations immediately before one atomic
 write. The deterministic Runner applies exactly that admitted effect and rereads actual result digest/Git state
 before success is recorded. It cannot choose content, interpret prose as authority or pick another worktree.
@@ -40,7 +40,7 @@ permission is lost, preserve private form state across authentication teardown, 
 a conflict. A changed digest is not silently rebased under the original submission.
 
 Retain attributed mutation intent/outcome with actual initiating user, acting Agent for proposal provenance where
-applicable, exact selected file role/path, base/result digest, Repository/checkout/context/Harness/Skill references,
+applicable, exact selected file role/path, base/result digest, Project/checkout/context/Harness/Skill references,
 known Git result and stale consequence. Use durable admission and verified outcome/reconciliation around filesystem
 effects rather than a database transaction pretending to roll back a write. Unknown acknowledgement/process state
 requires inspection of the original effect before retry; a read/refresh must not repeat a write. Preserve uncertainty
@@ -49,7 +49,7 @@ when observed bytes alone cannot establish the original operation's outcome.
 Use existing TICKET-00025/00088/00090 context/session drift contracts. Only changes to the effective Pi instruction
 set stale relevant snapshots/sessions; an unloaded-file change updates evidence without unnecessary session
 invalidation unless composition changes. Preserve immutable historical snapshots and proposal/session lineage.
-Never silently reload Pi, update repository configuration, grant authority or continue an Agent session.
+Never silently reload Pi, update Project configuration, grant authority or continue an Agent session.
 
 Create/update/delete remains local filesystem state. Do not stage, commit, push, open/update a PR or merge on Save.
 Show dirty state and deliberate next actions. Publication and synchronization remain TICKET-00108/00109 with
@@ -75,7 +75,13 @@ writers, publication and sync under qualified shared ownership/currentness fence
 is not sufficient protection against a replacement during mutation. Recheck branch/context and expected state at
 the actual effect boundary; qualification must establish the selected atomic-write/delete guarantees and limits.
 
-Use ADR 0002 state/audit/intent transactions with external filesystem work outside them. Keep secret-bearing content
+Registered instruction-change command handlers own state/audit/intent coordination through generic
+TransactionalUnitOfWork and collection-like repositories on ADR 0002's shared connection; filesystem work stays
+outside those transactions. Entry adapters generate typed operation IDs, admit caller/operation/Project scope and
+dispatch void commands through configured buses. Separate registered queries return safe typed original-operation
+Views; HTTP/Console adapters own representation and failure mapping. Do not add a forwarding instruction service,
+Store/UoW or duplicate Application permission gate. Exact dispatch/physical currentness and conditional-write
+checks remain justified by the filesystem operation, not an ordinary revocation/commit serialization default. Keep secret-bearing content
 out of ordinary events/logs; retained proposals/content use their protected owners. ADR 0003/0004 guard loaders,
 actions and late responses, invalidate private state on authority loss and forbid automatic mutation replay after
 refresh. Render complete diffs safely with accessible confirmation/focus and explicit failed/partial/unknown states.
@@ -86,6 +92,8 @@ refresh. Render complete diffs safely with accessible confirmation/focus and exp
   digest protects replacement/deletion. Full diffs and deletion consequences precede human actions.
 - Races with external changes, changed checkout, revocation, unsafe files, publication and synchronization cannot
   overwrite unrelated work or report unverified success. Interrupted effects reconcile rather than replay blindly.
+- ID-bearing void mutation/result commands and separate typed status/conflict reads preserve the exact physical
+  recovery contract without making ordinary Project/configuration creation replayable.
 - Effective-set changes stale existing contexts/sessions without rewriting history or reloading them; unloaded-file
   edits do not falsely invalidate unchanged effective composition. Saved state remains uncommitted and unpublished.
 - Real browser keyboard/focus/dirty-leave/conflict behavior preserves the correct draft/proposal and authority
@@ -123,6 +131,12 @@ below allocates TASK records only, not instruction mutation, Agent continuation 
 
 ### Approved TASK decomposition and current handoff
 
+TASK-00567 reconciles Project and handler/adapter ownership while preserving exact Save/Delete and original-effect
+recovery. TASK-00432's protected mutation/custody/platform guarantees remain held; an Application transaction or
+ordinary admission rule cannot waive them. The approved split below is complete; older active-work observations
+are historical, not current Board evidence. Independent planning Review/documentation QA remain pending.
+
+
 The maintainer approved two slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. Both are unranked features with blank PRs, normally one independently reviewable PR.
 
@@ -149,7 +163,7 @@ Local Save preserves unrelated work without importing publication's clean-tree-o
 Commit owning state/audit/intent atomically before external filesystem work; then record actual reread outcomes and
 safe attributed provenance. Recover the original effect, never infer success from matching bytes, absence or exit
 status. Unknown outcome/custody stays held and refresh never repeats a write. Keep necessary delivery payloads
-protected, not ordinary logs/events or a second proposal/transcript store. Existing Repository/Harness guards own
+protected, not ordinary logs/events or a second proposal/transcript store. Existing Project/Harness guards own
 effective-set consequences; unloaded-file changes do not falsely stale unchanged composition. History stays
 immutable and no Pi reload, configuration update or Agent continuation follows.
 

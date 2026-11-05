@@ -49,7 +49,7 @@ launch; no success is inferred from exit alone or a missing process. Cancellatio
 controlled by TICKET-00101; this capability executes only its exact authorized, ownership-checked local effects.
 Never automatically delete a directory or hide unrelated changes to make recovery appear successful.
 
-Exclude catalog policy, another attempt state machine, GitHub publication, Repository registration, arbitrary
+Exclude catalog policy, another attempt state machine, GitHub publication, Project registration, arbitrary
 commands, AI-chosen paths/transformations, existing-content adoption, source releases and a coding Workflow/TASK
 claim. Reuse qualified deterministic Runner primitives without requiring completed Team/Agent execution.
 
@@ -72,8 +72,13 @@ conflicting preparation. Reject malformed names/branch inputs, command injection
 ambiguous ownership, stale plan or unexpected Git state. Bound all extraction, transformation, process and evidence
 operations; secret-safe errors must not expose provider credentials or unrelated host contents.
 
-Commit required stage intent before filesystem/process/Git effects and record verified outcomes separately under
-ADR 0002. Do not keep database transactions open across these effects or claim exactly-once external execution.
+Registered CreationAttempt stage handlers coordinate admitted generation/Git/preparation intent and required
+audit through collection-like persistence and generic shared-connection `TransactionalUnitOfWork`. The mechanical
+filesystem/Git/process adapters execute only committed bounded work and supply typed verified observations to
+registered result handlers; no broad generation forwarding service or Store/UoW owns the journey. Entry adapters
+own caller/operation/root admission and configured bus dispatch; protected effect phases retain their justified
+current-use and physical checks without adding an ordinary database revocation/commit lock. Commit required
+stage intent before filesystem/process/Git effects and record verified outcomes separately under ADR 0002. Do not keep database transactions open across these effects or claim exactly-once external execution.
 On uncertain retry, inspect original effect ownership before deciding anything remains safe to repeat.
 
 ## Acceptance and evidence
@@ -82,6 +87,8 @@ On uncertain retry, inspect original effect ownership before deciding anything r
   names, no copied secret/history/remotes, one selected branch and one original initial commit.
 - Traversal, symlink/root escape, pre-existing content, changed targets and concurrent destination collisions are
   refused without damaging unrelated work; incomplete owned stages remain attributable and recoverable.
+- ID-bearing void stage commands and separate typed result/status queries preserve real physical reconciliation;
+  ordinary Project registration does not gain a response-replay obligation from this journey.
 - Actual bounded preparation reports success, failed/unknown process outcomes and tracked changes honestly.
   Retry never hides effects or duplicates commits; skipping preparation remains an explicit recorded choice.
 - Owned generation/authorization/reconciliation tests and real Git/Runner integration support TICKET-00103's
@@ -104,6 +111,12 @@ On uncertain retry, inspect original effect ownership before deciding anything r
 
 ### Approved TASK decomposition and current handoff
 
+TASK-00567 aligns the stage contract above with the canonical handler/adapter boundaries. Physical generation,
+initial Git, preparation and cleanup recovery below remain required, not ordinary-create replay. The split is
+complete; its old active-work observations are historical. Supplier holds remain unchanged and independent
+Review/documentation QA of the planning correction are pending.
+
+
 The maintainer approved five slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. All are unranked features with blank PRs. Four local-generation capabilities carry
 their own reconciliation; the fifth executes separately authorized local cleanup, not deferred normal recovery.
@@ -125,7 +138,7 @@ Add only exact approved supplier IDs when allocated; no future blocker is invent
 
 TASK-00368 provides enrolled identity/capability facts, TASK-00073 approved-root access and TASK-00138 qualification,
 not an implemented protected host or arbitrary deterministic execution authority. Reuse precise early participants
-without fabricating a Workflow, TASK claim, Repository or Agent, moving a provisioner into creation, or requiring
+without fabricating a Workflow, TASK claim, Project or Agent, moving a provisioner into creation, or requiring
 completed Team/Agent/browser journeys. Existing terminal owners gain no reverse blocker or priority change.
 
 TICKET-00101 retains full preview/confirmation, attempt identity/transitions, delivery and explicit recovery/cleanup

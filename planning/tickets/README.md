@@ -107,7 +107,7 @@
 | [TICKET-00102](00102-TICKET.md) | Publish the confirmed initial project to GitHub | ready-for-agent | [EPIC-00009](../epics/00009-EPIC.md) |
 | [TICKET-00103](00103-TICKET.md) | Register the created checkout and complete the handoff | ready-for-agent | [EPIC-00009](../epics/00009-EPIC.md) |
 | [TICKET-00104](00104-TICKET.md) | Explain creation failures with bounded support assistance | ready-for-agent | [EPIC-00009](../epics/00009-EPIC.md) |
-| [TICKET-00105](00105-TICKET.md) | Inspect effective repository instructions | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |
+| [TICKET-00105](00105-TICKET.md) | Inspect effective Project instructions | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |
 | [TICKET-00106](00106-TICKET.md) | Save and delete instruction files safely | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |
 | [TICKET-00107](00107-TICKET.md) | Prepare bounded AI instruction suggestions | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |
 | [TICKET-00108](00108-TICKET.md) | Publish an instruction change through a recoverable PR | ready-for-agent | [EPIC-00010](../epics/00010-EPIC.md) |

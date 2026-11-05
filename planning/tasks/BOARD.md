@@ -38,14 +38,13 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 4 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
-| 4 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 7 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
@@ -308,7 +307,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00426](00426-TASK.md) | Deliver the durable creation receipt and Dashboard handoff | [TICKET-00103 — Register the created checkout and complete the handoff](../tickets/00103-TICKET.md) | ready-for-agent | [TASK-00416](00416-TASK.md), [TASK-00107](00107-TASK.md) | — |
 | — | [TASK-00427](00427-TASK.md) | Explain failures with versioned playbooks and safe diagnostics | [TICKET-00104 — Explain creation failures with bounded support assistance](../tickets/00104-TICKET.md) | ready-for-agent | [TASK-00075](00075-TASK.md), [TASK-00416](00416-TASK.md) | — |
 | — | [TASK-00429](00429-TASK.md) | Ask for support safely from the creation browser | [TICKET-00104 — Explain creation failures with bounded support assistance](../tickets/00104-TICKET.md) | ready-for-agent | [TASK-00428](00428-TASK.md) | — |
-| — | [TASK-00431](00431-TASK.md) | Browse effective instructions in the repository Dashboard | [TICKET-00105 — Inspect effective repository instructions](../tickets/00105-TICKET.md) | ready-for-agent | [TASK-00430](00430-TASK.md), [TASK-00107](00107-TASK.md) | — |
+| — | [TASK-00431](00431-TASK.md) | Browse effective instructions in the Project Dashboard | [TICKET-00105 — Inspect effective Project instructions](../tickets/00105-TICKET.md) | ready-for-agent | [TASK-00430](00430-TASK.md), [TASK-00107](00107-TASK.md) | — |
 | — | [TASK-00433](00433-TASK.md) | Edit and recover instruction changes in the Dashboard | [TICKET-00106 — Save and delete instruction files safely](../tickets/00106-TICKET.md) | ready-for-agent | [TASK-00432](00432-TASK.md), [TASK-00431](00431-TASK.md) | — |
 | — | [TASK-00434](00434-TASK.md) | Request and recover bounded instruction suggestions | [TICKET-00107 — Prepare bounded AI instruction suggestions](../tickets/00107-TICKET.md) | ready-for-agent | [TASK-00430](00430-TASK.md), [TASK-00332](00332-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00346](00346-TASK.md), [TASK-00354](00354-TASK.md) | — |
 | — | [TASK-00435](00435-TASK.md) | Review instruction suggestions in the existing Dashboard form | [TICKET-00107 — Prepare bounded AI instruction suggestions](../tickets/00107-TICKET.md) | ready-for-agent | [TASK-00434](00434-TASK.md), [TASK-00433](00433-TASK.md) | — |
@@ -422,7 +421,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00422](00422-TASK.md) | Inspect and bind registration/context feasibility | [TICKET-00103 — Register the created checkout and complete the handoff](../tickets/00103-TICKET.md) | needs-info | [TASK-00079](00079-TASK.md), [TASK-00082](00082-TASK.md), [TASK-00405](00405-TASK.md) | — |
 | — | [TASK-00425](00425-TASK.md) | Initialize configuration and resolve the first database context | [TICKET-00103 — Register the created checkout and complete the handoff](../tickets/00103-TICKET.md) | needs-info | [TASK-00424](00424-TASK.md), [TASK-00405](00405-TASK.md), [TASK-00103](00103-TASK.md) | — |
 | — | [TASK-00428](00428-TASK.md) | Request and recover a bounded support explanation | [TICKET-00104 — Explain creation failures with bounded support assistance](../tickets/00104-TICKET.md) | needs-info | [TASK-00427](00427-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00346](00346-TASK.md), [TASK-00354](00354-TASK.md) | — |
-| — | [TASK-00430](00430-TASK.md) | Inspect effective instructions through bounded designated-checkout queries | [TICKET-00105 — Inspect effective repository instructions](../tickets/00105-TICKET.md) | needs-info | [TASK-00082](00082-TASK.md), [TASK-00368](00368-TASK.md) | — |
+| — | [TASK-00430](00430-TASK.md) | Inspect effective instructions through bounded designated-checkout queries | [TICKET-00105 — Inspect effective Project instructions](../tickets/00105-TICKET.md) | needs-info | [TASK-00082](00082-TASK.md), [TASK-00368](00368-TASK.md) | — |
 | — | [TASK-00432](00432-TASK.md) | Save, delete and reconcile exact instruction-file changes | [TICKET-00106 — Save and delete instruction files safely](../tickets/00106-TICKET.md) | needs-info | [TASK-00430](00430-TASK.md), [TASK-00341](00341-TASK.md) | — |
 | — | [TASK-00436](00436-TASK.md) | Preview and admit exact instruction publication | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | needs-info | [TASK-00432](00432-TASK.md) | — |
 | — | [TASK-00437](00437-TASK.md) | Create and recover the selected-file commit | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | needs-info | [TASK-00436](00436-TASK.md) | — |
