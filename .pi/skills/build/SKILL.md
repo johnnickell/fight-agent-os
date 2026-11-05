@@ -44,7 +44,7 @@ retain referenced leaves and name the exact remaining action. Never substitute s
 ## Pin models, then launch fresh roles
 
 Explicit invocation choices override target bindings, then local defaults: retain configured provider; for
-`openai-codex`, Team Lead Sol/medium, Engineer and Review Sol/high, QA and Land Terra/high. Resolve the newest
+`openai-codex`, Team Lead Sol/medium, Engineer, Review, QA and Land Sol/high. Resolve the newest
 available stable numeric model in that requested family from installed Pi metadata; explicit exact IDs stay
 exact. Verify thinking support. No fallback/escalation/provider change or mid-delivery refresh. Pin the resolved
 provider/model/thinking per role for repairs/resume; an explicit human change preserves prior history. Record
@@ -68,6 +68,10 @@ Native Pi trust/resource discovery remains active; selecting a package does not 
 Read installed Pi [CLI/skills documentation](../../../harness/pi/README.md) as needed before integration changes.
 Native session-file birthtime, ancestry/custody and independent role admission remain unchanged. Observation is
 human-only/best-effort; missing visibility never authorizes relaunch or executor substitution.
+
+Use `--role engineer` for the Engineer running the `work` skill; use `review`, `qa` and `land` for the
+remaining stages. Role names are launcher inputs, not skill invocations. The monitor preserves the role in
+passive observation; it grants no workflow authority. Existing `work` monitor callers remain supported.
 
 Create a fresh private attempt with `request.md`. Include role, TASK, verified checkout/base/head, absolute owning
 skill/context/instruction paths, permitted effects, relevant evidence, pinned model/thinking, remaining repair

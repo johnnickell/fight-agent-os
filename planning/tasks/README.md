@@ -557,7 +557,7 @@
 | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | done | — |
 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | done | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | done | [TICKET-00129](../tickets/00129-TICKET.md) |
-| [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | ready-for-agent | — |
+| [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | done | — |
 | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | in-progress | — |
 | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | done | — |
 | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | done | — |
@@ -565,7 +565,7 @@
 | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | needs-info | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | done | [TICKET-00130](../tickets/00130-TICKET.md) |
-| [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
+| [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | done | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | done | [TICKET-00131](../tickets/00131-TICKET.md) |
 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
@@ -585,4 +585,5 @@
 | [TASK-00580](00580-TASK.md) | Correct activation and password capabilities | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | ready-for-agent | [TICKET-00136](../tickets/00136-TICKET.md) |
+| [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | done | — |
 <!-- /planning:records -->

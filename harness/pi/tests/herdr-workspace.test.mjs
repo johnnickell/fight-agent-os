@@ -384,13 +384,13 @@ test('Shutdown closes proven companions and refuses subsequent open', async (t) 
 });
 
 // Real Herdr includes the companion and its fixed Docker reader in one foreground group.
-function readerWorkspace({ child = {}, childOf = async () => true, group = 10, readerPids = [11] } = {}) {
+function readerWorkspace({ child = {}, childOf = async () => true, group = 10, readerPids = [11], metadataPids = [], children } = {}) {
   const pane = { pane_id: 'logs', terminal_id: 'log-terminal', tab_id: 'tab', workspace_id: 'workspace' };
   const docker = { pid: 11, name: 'docker', ...child };
   const workspace = new HerdrWorkspace({ cwd: '/workspace', sessionId: 'native', childOf,
-    probe: async () => ({ pid: 10, paneId: 'logs', readerPids }),
+    probe: async () => ({ pid: 10, paneId: 'logs', readerPids, metadataPids }),
     client: { async call(_group, action) {
-      return action === 'get' ? { pane } : { process_info: { shell_pid: 10, foreground_process_group_id: group, foreground_processes: [{ pid: 10, name: 'node' }, docker] } };
+      return action === 'get' ? { pane } : { process_info: { shell_pid: 10, foreground_process_group_id: group, foreground_processes: [{ pid: 10, name: 'node' }, ...(children ?? [docker])] } };
     } },
   });
   workspace.identity = { paneId: 'primary', tabId: 'tab', workspaceId: 'workspace' };
@@ -402,6 +402,20 @@ function readerWorkspace({ child = {}, childOf = async () => true, group = 10, r
 test('A live log companion retains ownership while its tracked, proven direct Docker child runs', async () => {
   const { workspace, owned } = readerWorkspace();
   assert.equal(await workspace.inspect(owned), 'healthy');
+});
+
+test('Stack-wide ownership admits sixteen proven log children plus one fixed metadata child, never more', async () => {
+  const readerPids = Array.from({ length: 16 }, (_, i) => i + 11), metadataPids = [27];
+  const children = [...readerPids.map(pid => ({ pid, name: 'docker' })), { pid: 27, name: 'git' }];
+  const f = readerWorkspace({ readerPids, metadataPids, children });
+  assert.equal(await f.workspace.inspect(f.owned), 'healthy');
+  for (const options of [
+    { readerPids: [...readerPids, 28], metadataPids, children: [...children, { pid: 28, name: 'docker' }] },
+    { readerPids, metadataPids: [27, 28], children: [...children, { pid: 28, name: 'git' }] },
+    { readerPids, metadataPids, children, childOf: async pid => pid !== 27 },
+  ]) {
+    const g = readerWorkspace(options); assert.equal(await g.workspace.inspect(g.owned), 'ambiguous');
+  }
 });
 
 test('A foreign/untracked Docker process or changed foreground group never grants log-pane ownership', async () => {

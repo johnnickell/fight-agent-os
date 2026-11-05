@@ -178,11 +178,22 @@ run `fight-workspace` in the intended checkout inside Herdr: native Pi starts an
 activity and verified Docker log companions without a blocking log form, follow-up slash command or model turn.
 Ordinary `pi` stays unchanged; `/fight-workspace [open|close]` remains manual open/recovery/close.
 Pi retains its editor, completion, colors, Markdown, dialogs, session and workflow authority. Actual native context
-and verified worktree metadata select only matching existing local Docker sources. An unambiguous verified source
-may open directly; ambiguity uses readable choices in the log pane. Missing logs or cancelling selection never
-blocks panes. Validated selected/pinned child or idle-primary context follows exact sources, never shared fallback.
+and registered-worktree metadata select only verified existing local Docker stacks. LOGS defaults to all main
+services at idle, follows eligible active agent stacks, and offers Follow active (`f`), Main pin (`m`) and Services
+All/subset (`s`). Services have distinguishing container prefixes and one bounded history. Multiple services need
+no picker; genuine project ambiguity remains inspected. A missing active stack is visibly unavailable, not hidden
+main fallback. Stack changes clear stale live/paused output and reset service filters. Missing logs or cancelling
+selection never blocks panes.
 Herdr owns layout/focus/resize only. Outside Herdr or with unavailable prerequisites, keep ordinary Pi;
 there is no automatic RPC-editor fallback.
+
+[TASK-00563's accepted LOGS candidate](planning/tasks/00563-TASK.md#accepted-implementation-checkpoint--2026-11-04)
+`9d9d952` has independent Review ACCEPT and visual/behavioral QA PASS (18 scenario groups / 18 inspected native
+captures), including the explicit persistent Sol/high QA/Land defaults and single-owner caller documentation.
+Publication/capture access and eligible cleanup are pending at this checkpoint; actual outcomes are in canonical
+ignored `.runs/tasks/TASK-00563/runs/land-delivery.md` and the TASK PR. Actual main/two-worktree tooling-stack
+observation is qualified, not full worktree HTTPS/auth startup (actual-name certificates missing), everyday
+installed-package rollout or upstream SDK Build cutover. Human merge remains separate.
 
 TASK-00512's native replacement A and repository-only RPC retirement B have independent technical acceptance and
 current independent QA PASS. Its accepted-candidate closeout is published in [PR #162](https://github.com/johnnickell/fight-agent-os/pull/162); final delivery verification and human merge remain separate. See the [current Land checkpoint](planning/tasks/00512-TASK.md#current-land-closeout--2026-10-25).

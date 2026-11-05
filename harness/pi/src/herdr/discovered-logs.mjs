@@ -1,19 +1,18 @@
-import { RuntimeLogs } from '../workspace/runtime-logs.mjs';
+import { RuntimeLogs, safeLog } from '../workspace/runtime-logs.mjs';
 import { LocalLogSources } from './local-log-sources.mjs';
 
 export const discoveryInterval = 3000;
-// Replacement may change the container lifecycle, never checkout/daemon/service authority.
-const sameSource = (a, b) => ['main', 'context', 'project', 'service', 'endpoint'].every(key => a[key] === b[key]) &&
+// Replacement may change membership/lifecycle, never checkout/daemon/project authority.
+const sameSource = (a, b) => ['main', 'context', 'project', 'endpoint'].every(key => a[key] === b[key]) &&
   JSON.stringify(a.socket) === JSON.stringify(b.socket) && JSON.stringify(a.checkout) === JSON.stringify(b.checkout);
-const sameGeneration = (a, b) => sameSource(a, b) && a.container === b.container && a.witness === b.witness;
+const sameGeneration = (a, b) => sameSource(a, b) && a.witness === b.witness;
 
 /** Keep discovery and optional selection entirely in the human-only companion */
 export class DiscoveredLogs {
   constructor(changed = () => {}, { sources = new LocalLogSources(), reader } = {}) {
     this.changed = changed; this.sources = sources;
-    this.reader = reader ?? (source => new RuntimeLogs(source, changed, { persist: false, pinGeneration: true,
-      label: 'VERIFIED LOCAL', endpoint: source.endpoint, verifySource: (container, endpoint) => sources.verify(source, container, endpoint) }));
-    this.entries = new Map(); this.readers = []; this.current = null; this.mode = 'follow';
+    this.reader = reader ?? (source => new RuntimeLogs(source, changed, { verifySource: () => sources.verify(source) }));
+    this.entries = new Map(); this.readers = []; this.current = null;
     this.generation = 0; this.transition = Promise.resolve(); this.notice = 'Looking for your local runtime…';
     this.refreshAt = 0; this.inputMode = { revision: 0, menu: false, selecting: false };
   }
@@ -26,24 +25,25 @@ export class DiscoveredLogs {
     this.inputMode = { revision: 0, menu: false, selecting: false };
     const previous = this.current; this.current = null;
     if (previous) {
-      const entry = this.entries.get(this.worktree); if (entry) entry.paused = previous.paused;
+      const entry = this.entries.get(this.entryKey); if (entry) entry.paused = previous.paused;
       this.clear(previous);
       const stopped = previous.stop(); this.transition = this.transition.then(() => stopped);
     }
     this.changed();
   }
-  rebind(worktree) {
+  rebind(worktree, { main = false } = {}) {
     this.hold();
     const generation = this.generation;
     this.transition = this.transition.then(async () => {
       if (this.disposed || generation !== this.generation) return;
-      this.worktree = worktree; this.held = false;
-      if (!this.entries.has(worktree)) {
+      this.worktree = worktree; this.main = main; this.entryKey = main ? 'main' : worktree; this.held = false;
+      if (!this.entries.has(this.entryKey)) {
         if (this.entries.size >= 9) throw Error('Worktree observation limit reached; reopen workspace for a fresh generation.');
-        this.entries.set(worktree, { choices: [], selected: null, notice: '', paused: false, closed: false, cancelled: false });
+        this.entries.set(this.entryKey, { choices: [], selected: null, notice: '', paused: false, closed: false, cancelled: false });
       }
-      const entry = this.entries.get(worktree);
-      if (entry.closed || entry.cancelled) { this.notice = 'Reader closed or selection cancelled; c reopens · s chooses logs.'; return; }
+      const entry = this.entries.get(this.entryKey);
+      entry.services = null; // Every stack/context switch resets Services to All
+      if (entry.closed || entry.cancelled) { this.notice = 'Reader closed or selection cancelled; c reopens · s Services.'; return; }
       await this.discover(entry, generation, false);
     }).catch(error => { if (this.valid(generation)) { this.notice = error.message; this.changed(); } });
     return this.transition;
@@ -52,7 +52,7 @@ export class DiscoveredLogs {
   /** Called only while HerdrLogs has freshly validated the current native/child selection */
   refresh({ force = false } = {}) {
     if (this.refreshPending) return this.refreshPending;
-    const entry = this.entries.get(this.worktree), generation = this.generation;
+    const entry = this.entries.get(this.entryKey), generation = this.generation;
     if (!this.valid(generation) || this.menu || !entry || entry.closed || entry.cancelled || !force && Date.now() < this.refreshAt) return this.transition;
     this.transition = this.transition.then(async () => {
       // A rebind or explicit action may still be scanning when this refresh is queued.
@@ -69,21 +69,26 @@ export class DiscoveredLogs {
   }
   async discover(entry, generation, explicit) {
     try {
-      const result = await this.sources.discover(this.worktree);
+      const result = await this.sources.discover(this.worktree, { main: this.main });
       if (!this.valid(generation)) return;
       entry.choices = result.choices; entry.notice = result.notice; this.notice = entry.notice;
       if (explicit) {
-        this.menu = entry.choices.length > 0; this.index = 0;
+        const fresh = entry.selected && entry.choices.find(choice => sameSource(choice, entry.selected));
+        if (fresh && !sameGeneration(fresh, entry.selected)) entry.services = null;
+        entry.selected = fresh ?? null;
+        this.menu = entry.selected ? 'services' : entry.choices.length > 0 ? 'projects' : false;
+        this.draft = new Set(entry.services ?? entry.selected?.services ?? []); this.index = 0;
         return;
       }
       let selected;
       if (entry.selected) {
         selected = entry.choices.find(choice => sameSource(choice, entry.selected));
-        if (!selected) this.notice = 'Selected source unavailable or its checkout/daemon authority changed; waiting for that source. Press s to choose another.';
+        if (!selected) this.notice = 'Selected stack unavailable or checkout/daemon authority changed; waiting for that stack. Retry discovery to inspect its identity.';
       } else if (entry.choices.length === 1) selected = entry.choices[0];
-      else if (entry.choices.length > 1) { this.menu = true; this.index = 0; }
+      else if (entry.choices.length > 1) { this.menu = 'projects'; this.index = 0; }
       if (!selected) { await this.stopCurrent(); return; }
       const unchanged = entry.selected && sameGeneration(entry.selected, selected);
+      if (!unchanged) entry.services = null;
       entry.selected = selected;
       if (unchanged && this.current?.open && this.current.state === 'following') return;
       if (this.current) entry.paused = this.current.paused;
@@ -105,12 +110,15 @@ export class DiscoveredLogs {
     // Every old process, including metadata, must settle before replacement admission.
     if (this.readers.some(reader => reader.processes.size)) { this.notice = 'Previous reader has not exited; no replacement started. Waiting for it to settle.'; return; }
     if (!entry.selected) return;
-    this.current = this.reader(entry.selected); this.readers = [this.current];
+    const members = entry.selected.members.filter(member => !entry.services || entry.services.includes(member.service));
+    this.current = this.reader({ ...entry.selected, members }); this.readers = [this.current];
+    entry.gaps = Math.min(Number.MAX_SAFE_INTEGER, (entry.gaps ?? -1) + 1);
+    this.current.gaps = entry.gaps;
     this.current.paused = entry.paused; this.current.frozen = entry.paused ? [] : null;
     this.current.open = true; await this.current.subscribe();
   }
   action(type, { canChoose = () => true } = {}) {
-    const generation = this.generation, entry = this.entries.get(this.worktree);
+    const generation = this.generation, entry = this.entries.get(this.entryKey);
     const inputMode = this.inputMode, revision = inputMode.revision;
     const acceptedMenu = this.menu || inputMode.selecting;
     if (!this.valid(generation) || !entry) return this.transition;
@@ -119,8 +127,11 @@ export class DiscoveredLogs {
       // Background ambiguity is not an explicit transition and cannot reinterpret input.
       const menu = revision !== inputMode.revision ? inputMode.menu : acceptedMenu;
       if (type === 'choose' && menu && (!canChoose() || this.valid(generation) && !this.menu)) return;
+      if (type === 'choose' && this.valid(generation) && this.menu === 'services' && !this.draft.size) {
+        this.notice = 'Choose at least one service, or All.'; this.changed(); return;
+      }
       if (type === 'select' || menu && (type === 'cancel' || type === 'choose')) {
-        inputMode.revision++; inputMode.menu = type === 'select';
+        inputMode.revision++; inputMode.menu = type === 'select' ? 'services' : false;
       }
       // Accepted controls belong to this entry, in queue order, even if its I/O authority is revoked.
       if (type === 'select' || !menu && (type === 'reconnect' || type === 'toggle')) {
@@ -137,11 +148,23 @@ export class DiscoveredLogs {
           if (this.valid(generation)) await this.discover(entry, generation, true);
         } finally { inputMode.selecting = false; }
       } else if (menu) {
-        if (type === 'cancel') { this.menu = false; this.notice = 'Selection cancelled; workspace stays open. Press s to choose logs.'; }
-        if (type === 'up') this.index = (this.index + entry.choices.length - 1) % entry.choices.length;
-        if (type === 'down') this.index = (this.index + 1) % entry.choices.length;
+        if (type === 'cancel') { this.menu = false; this.notice = 'Selection cancelled; workspace stays open. s Services · r retry stack discovery.'; }
+        const services = this.menu === 'services';
+        const count = services ? entry.selected.services.length + 1 : entry.choices.length;
+        if (type === 'up') this.index = (this.index + count - 1) % count;
+        if (type === 'down') this.index = (this.index + 1) % count;
+        if (type === 'mark' && services) {
+          if (this.index === 0) this.draft = new Set(entry.selected.services);
+          else {
+            const service = entry.selected.services[this.index - 1];
+            if (this.draft.has(service)) this.draft.delete(service); else this.draft.add(service);
+          }
+        }
         if (type === 'choose') {
-          entry.selected = entry.choices[this.index]; this.menu = false;
+          if (services) {
+            entry.services = this.draft.size === entry.selected.services.length ? null : [...this.draft].sort();
+          } else { entry.selected = entry.choices[this.index]; entry.services = null; }
+          this.menu = false;
           await this.open(entry, generation);
         }
       } else if (type === 'toggle' || type === 'reconnect') {
@@ -169,18 +192,26 @@ export class DiscoveredLogs {
     });
     return this.transition;
   }
-  unavailable() { return `${this.notice}\nAutomatic discovery waits for verified local sources · s choose · c close/open · r retry · Esc cancel`; }
+  unavailable() { return `${this.notice}\nAutomatic discovery waits for a verified stack · s Services · c close/open · r retry · Esc cancel`; }
+  filterLabel() { const entry = this.entries.get(this.entryKey); return entry?.services?.join(', ') ?? 'All'; }
   choice() {
     if (!this.menu) return null;
-    const entry = this.entries.get(this.worktree);
-    return { index: this.index, count: entry.choices.length, label: entry.choices[this.index].label, worktree: this.worktree };
+    const entry = this.entries.get(this.entryKey);
+    if (this.menu === 'services') {
+      const services = entry.selected.services;
+      return { kind: 'Services', index: this.index, count: services.length + 1,
+        label: this.index === 0 ? 'All — Space selects all services' : `${this.draft.has(services[this.index - 1]) ? '[x]' : '[ ]'} ${services[this.index - 1]}`,
+        selection: services.map(service => `${this.draft.has(service) ? '[x]' : '[ ]'} ${service}`).join('\n'),
+        notice: safeLog(this.notice), worktree: safeLog(entry.selected.main) };
+    }
+    return { kind: 'Stack', index: this.index, count: entry.choices.length, label: safeLog(entry.choices[this.index].label), worktree: safeLog(this.worktree) };
   }
   body() {
     const choice = this.choice();
     if (choice) {
-      return [`Choose logs ${choice.index + 1}/${choice.count} (existing local sources only)`,
+      return [`${choice.kind} ${choice.index + 1}/${choice.count} (verified local stack only)`,
         `> ${choice.label}`, `Checkout: ${choice.worktree}`,
-        '↑/↓ source · Enter choose · Esc cancel (panes stay open)'].join('\n');
+        '↑/↓ move · Space mark services · Enter apply · Esc cancel (panes stay open)'].join('\n');
     }
     return this.current?.body() ?? this.unavailable();
   }

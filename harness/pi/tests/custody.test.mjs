@@ -197,13 +197,27 @@ test('monitor admission combines private bootstrap, exact live ancestry, fixed p
   const runtime = join(cwd, 'var/terminal/monitors'); privateDirectory(runtime);
   const token = 'a'.repeat(64), pid = 9876, native = { pid: 8765, process: 'actual-native-lifetime', started: Number(process.hrtime.bigint() / 1000000n) - 1000, wallUs: Date.now() * 1000 - 1000000 };
   const monitor = fileURLToPath(new URL('../src/observation/run-stage.py', import.meta.url));
-  const identity = { task: 'TASK-00502', role: 'work', provider: 'openai-codex', model: 'gpt-6.1-sol', thinking: 'high', worktree: cwd, attempt: '/display-only/not-read' };
+  const identity = { task: 'TASK-00502', role: 'engineer', provider: 'openai-codex', model: 'gpt-6.1-sol', thinking: 'high', worktree: cwd, attempt: '/display-only/not-read' };
   const witness = { pid, nativePid: native.pid, nativeProcess: native.process, token, worktree: cwd, identity, heartbeat: 1, started: Number(process.hrtime.bigint() / 1000000n), created: Date.now(), process: `monitor-start python3 -u ${monitor} --ordinary-args` };
   const path = join(runtime, `${pid}-${token}.json`), message = { type: 'monitor', pid, token, worktree: cwd };
   const options = { inspect: value => value === pid ? witness.process : native.process, births: [{ pid, parent: 9000, bornUs: native.wallUs + 50000 }, { pid: 9000, parent: native.pid, bornUs: native.wallUs + 30000 }, { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000 }], registrations: () => `worktree ${cwd}\0` };
   assert.throws(() => monitorWitness(message, native, options), /ENOENT/);
   writeFileSync(path, JSON.stringify(witness), { mode: 0o600 });
   assert.deepEqual(monitorWitness(message, native, options).identity, identity);
+  for (const role of ['engineer', 'work', 'review', 'qa', 'land']) {
+    const current = { ...witness, identity: { ...identity, role } };
+    writeFileSync(path, JSON.stringify(current));
+    assert.deepEqual(monitorWitness(message, native, options).identity, current.identity);
+  }
+  for (const role of ['reviewer', 'build', 'software-engineer', 'unsupported', 'Engineer']) {
+    writeFileSync(path, JSON.stringify({ ...witness, identity: { ...identity, role } }));
+    assert.throws(() => monitorWitness(message, native, options), /refused/);
+  }
+  writeFileSync(path, JSON.stringify(witness));
+  assert.throws(() => monitorWitness(message, native, { ...options, inspect: value => value === pid ? witness.process.replace(monitor, '/foreign/run-stage.py') : native.process }), /refused/);
+  writeFileSync(path, JSON.stringify({ ...witness, process: witness.process.replace(monitor, '/foreign/run-stage.py') }));
+  assert.throws(() => monitorWitness(message, native, { ...options, inspect: value => value === pid ? witness.process.replace(monitor, '/foreign/run-stage.py') : native.process }), /refused/);
+  writeFileSync(path, JSON.stringify(witness));
   assert.throws(() => monitorWitness(message, { ...native, pid: 1234 }, options), /refused/);
   assert.throws(() => monitorWitness(message, { ...native, started: witness.started + 1 }, options), /refused/);
   assert.throws(() => monitorWitness(message, { ...native, started: undefined }, options), /refused/);

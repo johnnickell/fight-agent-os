@@ -11,14 +11,11 @@ export function installLogInput(input, logs, { closing, close, canChoose, scroll
       scroll(logs.logs.menu ? -delta : delta); changed(); return;
     }
     const action = { up: 'up', down: 'down', return: 'choose', enter: 'choose', escape: 'cancel' }[key.name] ??
-      { s: 'select', '[': 'previous', ']': 'next', '{': 'stack-previous', '}': 'stack-next', m: 'mode', p: 'pause', c: 'toggle', r: 'reconnect', i: 'info' }[text];
+      { s: 'select', ' ': 'mark', f: 'follow', m: 'main', p: 'pause', c: 'toggle', r: 'reconnect', i: 'info' }[text];
     if (!action || queued >= 16 || closing()) return;
     queued++; scroll(0, true);
-    // Discovery already owns a serial queue shared with rebind/refresh. Submit now so
-    // entry, generation and manual intent are bound before any later selection tick.
-    // Explicit legacy bindings retain their existing terminal-side serialization.
-    const pending = (logs.discovery ? logs.action(action, { canChoose }) :
-      actions.then(() => closing() ? undefined : logs.action(action))).catch(() => {
+    // Submit now: bind accepted controls to their current stack/generation before a later tick.
+    const pending = logs.action(action, { canChoose }).catch(() => {
       if (!closing()) logs.hold('UNAVAILABLE — reader action failed; reopen from native Pi');
     }).finally(() => { queued--; });
     actions = Promise.all([actions, pending]).then(() => {});
