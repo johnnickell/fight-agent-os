@@ -1,22 +1,22 @@
 ---
 id: TICKET-00025
 epic: EPIC-00005
-title: Resolve versioned repository context
+title: Resolve versioned Project context
 status: ready-for-agent
 ---
 
-# Resolve versioned repository context
+# Resolve versioned Project context
 
 ## Problem statement
 
-Every registered repository session needs one explainable immutable context without silently overriding application
+Every registered Project session needs one explainable immutable context without silently overriding application
 policy, registered configuration, or Pi-native local instructions. Live changes, service loss, and ambiguous
 conflicts must never refresh an active context invisibly or expand stale authority.
 
 ## Solution and boundaries
 
-Deliver a single application query that resolves a lean versioned `RepositoryContextSnapshot` from TICKET-00024
-identity and designated-checkout evidence, revisioned repository configuration, application-enforced restrictions,
+Deliver a single application query that resolves a lean versioned `ProjectContextSnapshot` from TICKET-00024
+identity and designated-checkout evidence, revisioned Project configuration, application-enforced restrictions,
 and recognized Pi context files. Retain the complete snapshot outside model context; expose a bounded projection
 and provenance suitable for the Dashboard and later Harness sessions without duplicating whole instruction files.
 
@@ -28,17 +28,17 @@ and fail-closed availability behavior. This requirement recognizes instruction f
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Revise repository configuration | `ReviseRepositoryConfiguration` | Preview current revision, validation, affected context fields, and active-session impact | `RepositoryConfigurationRevised` | A validated immutable revision records actor, reason, values, and provenance without rewriting local files |
-| Roll configuration back | `RestoreRepositoryConfigurationRevision` | Compare current and selected prior revisions | `RepositoryConfigurationRevisionRestored` | A new revision copies approved prior values; historical revisions remain unchanged |
-| Resolve repository context | N/A — read-only resolution query | `ResolveRepositoryContext` | N/A — resolution itself is not authority mutation | One typed snapshot binds Workspace, Repository, Host, Checkout, Worktree, planning mode, branch/base guidance, named checks, restrictions, instruction paths/digests, conflicts, revision, and availability |
+| Revise Project configuration | `ReviseProjectConfiguration` | Preview current revision, validation, affected context fields, and active-session impact | `ProjectConfigurationRevised` | A validated immutable revision records actor, reason, values, and provenance without rewriting local files |
+| Roll configuration back | `RestoreProjectConfigurationRevision` | Compare current and selected prior revisions | `ProjectConfigurationRevisionRestored` | A new revision copies approved prior values; historical revisions remain unchanged |
+| Resolve Project context | N/A — read-only resolution query | `ResolveProjectContext` | N/A — resolution itself is not authority mutation | One typed snapshot binds Workspace, Project, Host, Checkout, Worktree, planning mode, branch/base guidance, named checks, restrictions, instruction paths/digests, conflicts, revision, and availability |
 | Resolve a recognized conflict for one session | `RecordSessionContextChoice` where persistence is required | Preview each structured source and recommended narrowing choice | `SessionContextChoiceRecorded` | The chosen snapshot preserves or narrows authority for that session only |
-| Save a conflict choice for future sessions | `ReviseRepositoryConfiguration` | Revalidate the choice against current configuration and instruction digests | `RepositoryConfigurationRevised` | An authorized configuration manager creates a future revision; no instruction file is changed |
+| Save a conflict choice for future sessions | `ReviseProjectConfiguration` | Revalidate the choice against current configuration and instruction digests | `ProjectConfigurationRevised` | An authorized configuration manager creates a future revision; no instruction file is changed |
 | Detect context drift | N/A — comparison/projection operation | Compare bound snapshot with current configuration revision and effective instruction digests | N/A — drift is derived | Existing sessions become visibly stale and new authority-bearing operations stop without rewriting session history |
 | Continue during service loss | N/A — explicit local-mode choice | Query current service and cached snapshot availability | N/A — no authority event | New registered authority fails closed; an explicit unregistered/local session may proceed without Agent OS Planning authority |
 
 ## Validation and permissions
 
-Use a closed versioned schema with optional typed sections rather than arbitrary JSON. Validate repository binding,
+Use a closed versioned schema with optional typed sections rather than arbitrary JSON. Validate Project binding,
 planning mode, configured base and branch patterns, ordered named verification commands, recognized instruction
 locations/digests, and known restrictions. Do not parse arbitrary prose into enforceable policy or claim perfect
 conflict detection.
@@ -48,7 +48,7 @@ those controls. Local instructions and Skills may guide more strictly but cannot
 Recognized ambiguity in planning mode, branch/base guidance, or required verification pauses interactive creation
 or fails non-interactive creation with actionable diagnostics.
 
-Viewing resolved context, updating repository configuration, saving conflict choices, and rollback require separate
+Viewing resolved context, updating Project configuration, saving conflict choices, and rollback require separate
 server-side Permissions. Session-local choices may preserve or narrow the initiating actor's existing authority;
 they never widen it. Secrets, credential locators, internal service URLs, complete arbitrary plugin data, and
 unnecessary identifiers do not enter prompt projections.
@@ -73,13 +73,19 @@ unnecessary identifiers do not enter prompt projections.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00081](../tasks/00081-TASK.md) | Version repository configuration and rollback | ready-for-agent |
-| [TASK-00082](../tasks/00082-TASK.md) | Resolve deterministic repository context snapshots | ready-for-agent |
+| [TASK-00081](../tasks/00081-TASK.md) | Version Project configuration and rollback | ready-for-agent |
+| [TASK-00082](../tasks/00082-TASK.md) | Resolve deterministic Project context snapshots | ready-for-agent |
 | [TASK-00083](../tasks/00083-TASK.md) | Record narrowing context choices | ready-for-agent |
 | [TASK-00084](../tasks/00084-TASK.md) | Enforce snapshot drift and unavailable-authority boundaries | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+The target names above follow [standards](../../docs/engineering/STANDARDS.md#architecture), not today's runtime
+Repository API. Each entry owns caller/operation/Project-scope admission before configured bus dispatch; registered
+handlers own reusable context policy and revision/audit transactions, not a second permission gate. Ordinary
+admitted work may finish after revocation; the next request rechecks. Retain expected revisions, exact binding
+history and genuine context drift checks. Ordinary configuration writes do not promise original-result replay.
 
 Implements [WF-009 — Define repository context and policy precedence](../wayfinder/tickets/WF-009-define-repository-context-and-policy-precedence.md).
 It depends on TICKET-00024 identities and designated-checkout evidence. TICKET-00028 uses the explicit planning

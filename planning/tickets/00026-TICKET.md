@@ -10,53 +10,63 @@ status: ready-for-agent
 ## Problem statement
 
 Fight Agent OS needs one PostgreSQL-authoritative model for complete Wayfinder and EPIC → TICKET → TASK Planning.
-Generic documents, mutable Markdown rows, last-write-wins updates, or repository-global locking cannot preserve the
+Generic documents, mutable Markdown rows, last-write-wins updates, or Project-global locking cannot preserve the
 accepted identities, semantic history, hierarchy, criteria, dependencies, evidence, and lifecycle invariants.
 
 ## Solution and boundaries
 
+Apply [standards](../../docs/engineering/STANDARDS.md#architecture) to each aggregate/message/registered-handler
+home and safe typed query View; HTTP Data/Responders own representation. These are target contracts, not
+implemented namespaces/APIs. Required missing reads use qualified Common failure intent when available; optional
+discovery retains absent/unavailable/ambiguous states and internal faults remain internal. Do not invent supplier
+imports or change today's wire format before its qualified owning cutover.
+
 Deliver event-sourced aggregate roots for `WayfinderMap`, `WayfinderTicket`, `Epic`, `Ticket`, and `Task`, plus the
 independently revisioned Planning evidence artifacts `ResearchNote` and `Prototype`. Use Fight Common event-store
-contracts, application-owned metadata and idempotency, COMB-backed internal identities, immutable repository-local
+contracts, application-owned metadata and required audit, adapter-generated typed COMB-backed identities in void commands, immutable Project-local
 human references, semantic commands/events, transactionally current constraint projections, and rebuildable read
 projections.
 
 Acceptance criteria, decision points, use cases, evidence references, prototype findings, and similar subordinate
 concepts use stable child identities under their owning aggregate. Preserve the established lifecycle values,
-archive as an orthogonal state, automatic ancestor completion, standalone bug/chore TASKs, same-repository parentage, typed
-Wayfinder and TASK dependencies, and cross-repository TASK dependencies within the Workspace.
+archive as an orthogonal state, automatic ancestor completion, standalone bug/chore TASKs, same-Project parentage, typed
+Wayfinder and TASK dependencies, and cross-Project TASK dependencies within the Workspace.
 
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Create a Planning artifact | Intent-specific `CreateWayfinderMap`, `CreateWayfinderTicket`, `CreateEpic`, `CreateTicket`, `CreateTask`, `CreateResearchNote`, or `CreatePrototype` | Preview parent, reference allocation, uniqueness, lifecycle and dependency validity | Typed creation event such as `TaskCreated` | One aggregate stream, immutable internal identity and human reference/slug are created idempotently; parent and allocator constraints commit atomically |
+| Create a Planning artifact | Intent-specific `CreateWayfinderMap`, `CreateWayfinderTicket`, `CreateEpic`, `CreateTicket`, `CreateTask`, `CreateResearchNote`, or `CreatePrototype` | Preview parent, reference allocation, uniqueness, lifecycle and dependency validity | Typed creation event such as `TaskCreated` | One aggregate stream, immutable internal identity and human reference/slug are created with uniqueness enforcement; parent and allocator constraints commit atomically |
 | Revise structured Planning content | Section/child-specific commands against an expected aggregate version | Query current normalized sections, criteria, decisions and intervening revisions | Semantic events such as `EpicDestinationRevised` or `DecisionPointAccepted` | Complete normalized values or child changes append without keystroke, Markdown-diff, JSON-Patch, or generic-document events |
-| Change hierarchy or dependencies | Explicit reparent/add/remove dependency commands with reason and expected revisions | Preview same-repository parent rules, cycles, terminal state, active links and downstream impact | `PlanningArtifactReparented`, `DependencyAdded`, `DependencyRemoved` or type-specific equivalents | Valid relationships and command-critical constraint projections change transactionally; cycles and cross-boundary relationships fail |
+| Change hierarchy or dependencies | Explicit reparent/add/remove dependency commands with reason and expected revisions | Preview same-Project parent rules, cycles, terminal state, active links and downstream impact | `PlanningArtifactReparented`, `DependencyAdded`, `DependencyRemoved` or type-specific equivalents | Valid relationships and command-critical constraint projections change transactionally; cycles and cross-boundary relationships fail |
 | Transition lifecycle | Type-specific ready, needs-info, start, complete, wontfix, reopen, close-map/ticket and closeout commands | Explain transition prerequisites, child outcomes, criteria, impact and unresolved decisions | Type-specific semantic lifecycle events | Accepted child closure automatically closes eligible TICKET/EPIC ancestors in the same operation |
 | Record criteria and evidence | Add/revise/retire/satisfy/waive criterion and evidence commands | Query criteria, dispositions, provenance, related commits/artifacts/URLs and supersession | Criterion/evidence semantic events | Stable children retain actor, reason, time and immutable evidence links; waiver and correction remain explicit |
 | Archive or restore | Type-specific archive/restore commands | Preview terminal, child, parent and retained-link requirements | `PlanningArtifactArchived`, `PlanningArtifactRestored` or type-specific equivalents | Visibility changes independently of lifecycle; restore preserves prior state and may require parent restoration |
-| Read Planning history and hierarchy | N/A — read-only interactions | Repository hierarchy, aggregate detail/version/history, decisions, criteria, dependencies, evidence, archive and closeout readiness queries | N/A — reads emit no Domain events | Rebuildable views explain current state and provenance without treating projections as authority |
+| Read Planning history and hierarchy | N/A — read-only interactions | Project hierarchy, aggregate detail/version/history, decisions, criteria, dependencies, evidence, archive and closeout readiness queries | N/A — reads emit no Domain events | Rebuildable views explain current state and provenance without treating projections as authority |
 | Render authoritative Markdown | N/A — deterministic representation query | Query typed current Planning views and template revision | N/A — rendering is read-only | Copy-ready Markdown identifies authority, aggregate revision and template version and cannot be ingested as an ordinary update |
 
 ## Validation and permissions
 
-Allocate human references atomically per repository and artifact kind and never reuse them. A WayfinderTicket has
+Allocate human references atomically per Project and artifact kind and never reuse them. A WayfinderTicket has
 one map, a requirement TICKET one EPIC, and a TASK zero or one TICKET only under the existing standalone rules.
 Maps close only with resolved/delegated fog and approved handoff; WayfinderTickets require synthesized resolution;
 TICKET and EPIC completion follows [automatic parent completion](../CONVENTIONS.md#automatic-parent-completion)
 from authoritative child outcomes, including archived children, with no separate review or confirmation.
 Human authority remains required for new waivers and Won't Fix decisions, not repeating those decisions at a parent.
 
-Prevent dependency cycles across the Workspace. TASK `done` remains implementation acceptance, not independent
-Review, PR publication, merge, release, deployment, or certification. Won't Fix requires an explicit downstream
+Prevent dependency cycles across the Workspace. TASK `done` requires implementation acceptance and required verification, including independent Review and
+applicable QA; it does not assert PR publication, merge, release, deployment or certification. Won't Fix requires an explicit downstream
 impact plan; never cascade dependent TASK status or remove dependencies automatically. Active/non-terminal records cannot archive.
-Cross-repository moves create a linked replacement rather than rewriting ownership/history.
+Cross-Project moves create a linked replacement rather than rewriting ownership/history.
 
-Every command authenticates the actor, checks its intent-specific Permission and expected stream/constraint
-versions, and is idempotent by command identity. Stale commands return current version/intervening facts without
+Every entry adapter authenticates and checks intent-specific Permission and Project/Workspace admission before
+configured bus dispatch. Registered aggregate-owned handlers coordinate collection-like repositories, required
+audit, stream append and current constraints through generic `TransactionalUnitOfWork` on the exact shared
+connection; events dispatch after commit. Domain owns invariants. No mixed Store/UoW or second blanket
+Application/bus permission gate is prescribed. Ordinary admitted work may finish after revocation; subsequent
+requests check afresh. Commands retain complete expected stream/constraint versions. Stale commands return current version/intervening facts without
 silent merge. Viewing, creating, revising, relationships, lifecycle, criteria/evidence, waiver, closeout,
-archive/restore, redaction, and cross-repository relationships receive independently justified authorization.
+archive/restore, redaction, and cross-Project relationships receive independently justified authorization.
 Emergency redaction is narrow, attributed and tombstoned; it never becomes ordinary editing.
 
 ## Acceptance and evidence
@@ -64,7 +74,9 @@ Emergency redaction is narrow, attributed and tombstoned; it never becomes ordin
 - Every accepted Planning root and stable child has the required typed identity, ownership, immutable reference,
   stream history, current projection and provenance.
 - Semantic command tests cover accepted and rejected lifecycle, hierarchy, criteria, dependency, closeout,
-  archive/restore, idempotency, stale version, and authorization behavior.
+  archive/restore, expected-state no-ops, stale version, and entry-admission behavior. Ordinary creation/revision
+  does not promise original-response replay: a new attempt may conflict, and fresh authorized detail/list/history
+  reveals state and ID. Keep semantic event/child history and audit, not a separate original-result journal.
 - PostgreSQL integration tests prove atomic reference allocation, command-critical constraints, parent validity,
   dependency-cycle prevention, concurrent revisions and exact event/projection recovery where database behavior is
   authoritative.
@@ -95,5 +107,5 @@ Emergency redaction is narrow, attributed and tombstoned; it never becomes ordin
 Implements [WF-010 — Define the authoritative Planning domain and lifecycle](../wayfinder/tickets/WF-010-define-authoritative-planning-domain-and-lifecycle.md)
 and reuses [ADR 0001](../adr/0001-application-ownership-and-orchestration.md) plus
 [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md). It depends on the EPIC-00003 persistence
-foundation and the TICKET-00024 Repository identity contract; domain work may proceed once that contract is stable.
+foundation and the TICKET-00024 Project identity contract; domain work may proceed once that contract is stable.
 TICKET-00027 adds priority/eligibility, and TICKET-00028 owns Markdown import and authority switching.

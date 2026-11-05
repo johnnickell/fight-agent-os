@@ -32,14 +32,13 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 3 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 2 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
-| 3 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 4 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
@@ -60,7 +59,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00327](00327-TASK.md) | Reconcile and inspect managed static Skills | [TICKET-00086 — Manage versioned Harness resources](../tickets/00086-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00401](00401-TASK.md) | Administer the scoped starter catalog | [TICKET-00099 — Manage trusted immutable starter releases](../tickets/00099-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00462](00462-TASK.md) | Reconcile the four protected log capabilities | [TICKET-00113 — Diagnose current failures through authorized native Logs](../tickets/00113-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00498](00498-TASK.md) | Grant and revoke Project access for Users and Agents | [TICKET-00024 — Register Projects and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
@@ -86,12 +85,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 70 | [TASK-00073](00073-TASK.md) | Establish contained approved-root access | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00072](00072-TASK.md) | — |
 | 71 | [TASK-00074](00074-TASK.md) | Expose authorized installation capabilities and diagnostics | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00073](00073-TASK.md) | — |
 | 72 | [TASK-00075](00075-TASK.md) | Deliver the guided Planning installation journey | [TICKET-00023 — Operate the local Planning installation](../tickets/00023-TICKET.md) | ready-for-agent | [TASK-00074](00074-TASK.md) | — |
-| 76 | [TASK-00079](00079-TASK.md) | Confirm and designate checkout and worktree links | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00073](00073-TASK.md) | — |
-| 77 | [TASK-00080](00080-TASK.md) | Complete repository reconciliation and lifecycle operations | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00079](00079-TASK.md) | — |
-| 78 | [TASK-00081](00081-TASK.md) | Version repository configuration and rollback | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00080](00080-TASK.md), [TASK-00498](00498-TASK.md) | — |
-| 79 | [TASK-00082](00082-TASK.md) | Resolve deterministic repository context snapshots | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00081](00081-TASK.md) | — |
-| 80 | [TASK-00083](00083-TASK.md) | Record narrowing context choices | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00082](00082-TASK.md) | — |
-| 81 | [TASK-00084](00084-TASK.md) | Enforce snapshot drift and unavailable-authority boundaries | [TICKET-00025 — Resolve versioned repository context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00083](00083-TASK.md) | — |
+| 76 | [TASK-00079](00079-TASK.md) | Confirm and designate checkout and worktree links | [TICKET-00024 — Register Projects and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00073](00073-TASK.md) | — |
+| 77 | [TASK-00080](00080-TASK.md) | Complete Project reconciliation and lifecycle operations | [TICKET-00024 — Register Projects and designated checkouts](../tickets/00024-TICKET.md) | ready-for-agent | [TASK-00079](00079-TASK.md) | — |
+| 78 | [TASK-00081](00081-TASK.md) | Version Project configuration and rollback | [TICKET-00025 — Resolve versioned Project context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00080](00080-TASK.md), [TASK-00498](00498-TASK.md) | — |
+| 79 | [TASK-00082](00082-TASK.md) | Resolve deterministic Project context snapshots | [TICKET-00025 — Resolve versioned Project context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00081](00081-TASK.md) | — |
+| 80 | [TASK-00083](00083-TASK.md) | Record narrowing context choices | [TICKET-00025 — Resolve versioned Project context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00082](00082-TASK.md) | — |
+| 81 | [TASK-00084](00084-TASK.md) | Enforce snapshot drift and unavailable-authority boundaries | [TICKET-00025 — Resolve versioned Project context](../tickets/00025-TICKET.md) | ready-for-agent | [TASK-00083](00083-TASK.md) | — |
 | 82 | [TASK-00085](00085-TASK.md) | Establish event-sourced Wayfinder planning authority | [TICKET-00026 — Establish authoritative Planning artifacts and lifecycles](../tickets/00026-TICKET.md) | ready-for-agent | [TASK-00080](00080-TASK.md) | — |
 | 83 | [TASK-00086](00086-TASK.md) | Complete Wayfinder decisions and handoff readiness | [TICKET-00026 — Establish authoritative Planning artifacts and lifecycles](../tickets/00026-TICKET.md) | ready-for-agent | [TASK-00085](00085-TASK.md) | — |
 | 84 | [TASK-00087](00087-TASK.md) | Version research notes and prototype evidence | [TICKET-00026 — Establish authoritative Planning artifacts and lifecycles](../tickets/00026-TICKET.md) | ready-for-agent | [TASK-00085](00085-TASK.md), [TASK-00374](00374-TASK.md) | — |
@@ -113,7 +112,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 100 | [TASK-00103](00103-TASK.md) | Enforce database-only Planning consumers | [TICKET-00028 — Migrate and cut over Markdown Planning authority](../tickets/00028-TICKET.md) | ready-for-agent | [TASK-00102](00102-TASK.md) | — |
 | 102 | [TASK-00105](00105-TASK.md) | Explore the registered Planning workspace design | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00103](00103-TASK.md) | — |
 | 103 | [TASK-00106](00106-TASK.md) | Independently accept the Planning workspace handoff | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00105](00105-TASK.md) | — |
-| 104 | [TASK-00107](00107-TASK.md) | Deliver repository registration, selection, and context workspace | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00106](00106-TASK.md) | — |
+| 104 | [TASK-00107](00107-TASK.md) | Deliver Project registration, selection, and context workspace | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00106](00106-TASK.md) | — |
 | 105 | [TASK-00108](00108-TASK.md) | Browse complete Planning hierarchy and history | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00107](00107-TASK.md) | — |
 | 106 | [TASK-00109](00109-TASK.md) | Edit Planning through semantic forms | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00108](00108-TASK.md) | — |
 | 107 | [TASK-00110](00110-TASK.md) | Operate guarded lifecycle and relationship work | [TICKET-00029 — Deliver the registered Planning Dashboard](../tickets/00029-TICKET.md) | ready-for-agent | [TASK-00109](00109-TASK.md) | — |
@@ -576,8 +575,8 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 60 | [TASK-00060](00060-TASK.md) | Deliver pending-invitation status and recovery | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | done | — | [PR #204](https://github.com/johnnickell/fight-agent-os/pull/204) |
 | 67 | [TASK-00067](00067-TASK.md) | Add the read-only next-work router skill | — (standalone chore) | done | — | [PR #5](https://github.com/johnnickell/fight-agent-os/pull/5) |
 | 68 | [TASK-00068](00068-TASK.md) | Publish and clean isolated work during landing | — (standalone bug) | done | — | [PR #6](https://github.com/johnnickell/fight-agent-os/pull/6) |
-| 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #126](https://github.com/johnnickell/fight-agent-os/pull/126) |
-| 75 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | [TICKET-00024 — Register repositories and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #130](https://github.com/johnnickell/fight-agent-os/pull/130) |
+| 74 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | [TICKET-00024 — Register Projects and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #126](https://github.com/johnnickell/fight-agent-os/pull/126) |
+| 75 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | [TICKET-00024 — Register Projects and designated checkouts](../tickets/00024-TICKET.md) | done | — | [PR #130](https://github.com/johnnickell/fight-agent-os/pull/130) |
 | 112 | [TASK-00118](00118-TASK.md) | Expose a safe authorized user detail | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | done | — | [PR #200](https://github.com/johnnickell/fight-agent-os/pull/200) |
 | 118 | [TASK-00124](00124-TASK.md) | Expose guarded role and permission catalogs | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #133](https://github.com/johnnickell/fight-agent-os/pull/133) |
 | 119 | [TASK-00125](00125-TASK.md) | Manage custom role definitions without changing managed roles | [TICKET-00031 — Read authority catalogs and administer custom roles](../tickets/00031-TICKET.md) | done | — | [PR #141](https://github.com/johnnickell/fight-agent-os/pull/141) |

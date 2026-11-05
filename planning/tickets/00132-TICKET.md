@@ -88,7 +88,7 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent |
-| [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | ready-for-agent |
+| [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | in-progress |
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | ready-for-agent |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent |

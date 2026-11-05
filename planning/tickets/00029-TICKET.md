@@ -9,14 +9,14 @@ status: ready-for-agent
 
 ## Problem statement
 
-Authenticated users need one honest browser workspace for registered repository identity, resolved context, and
+Authenticated users need one honest browser workspace for registered Project identity, resolved context, and
 direct authoritative Planning operations. A UI that recreates Domain rules, masks stale state, provides generic
 document replacement, or shows fabricated Agent/session capability would be unsafe and misleading.
 
 ## Solution and boundaries
 
-Extend the EPIC-00004 authoritative application shell with a repository-scoped Planning workspace backed only by
-TICKET-00024 through TICKET-00028 commands and queries. Let users select a registered repository, inspect checkout
+Extend the EPIC-00004 authoritative application shell with a Project-scoped Planning workspace backed only by
+TICKET-00024 through TICKET-00028 commands and queries. Let users select a registered Project, inspect checkout
 and context state, browse complete Planning hierarchy/history, perform permission-filtered semantic edits and
 lifecycle operations, view Roadmap and canonical queue, and inspect current or archived records.
 
@@ -28,9 +28,9 @@ resumable browser Agent conversations and AI-authored proposals belong to the ne
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Select a registered repository | N/A — repository selection/navigation is read-only | List visible repositories; get registration, designated checkout, availability, planning mode and context summary | N/A — navigation emits no Domain event | URL/shareable repository scope changes without crossing authorization or carrying stale authority implicitly |
-| Inspect repository context | N/A — read-only interaction | Resolve current context summary, revision, instruction provenance, conflicts and availability | N/A — reading context emits no Domain event | User sees effective source facts, warnings, stale/unavailable reasons and permitted configuration actions |
-| Browse Planning | N/A — read-only interaction | Hierarchy, artifact detail/history, criteria/evidence, dependency, progress, archive and rendered-view queries | N/A — reads emit no Domain events | Complete repository Planning is progressively available without loading every history or hiding absent detail |
+| Select a registered Project | N/A — Project selection/navigation is read-only | List visible Projects; get registration, designated checkout, availability, planning mode and context summary | N/A — navigation emits no Domain event | URL/shareable Project scope changes without crossing authorization or carrying stale authority implicitly |
+| Inspect Project context | N/A — read-only interaction | Resolve current context summary, revision, instruction provenance, conflicts and availability | N/A — reading context emits no Domain event | User sees effective source facts, warnings, stale/unavailable reasons and permitted configuration actions |
+| Browse Planning | N/A — read-only interaction | Hierarchy, artifact detail/history, criteria/evidence, dependency, progress, archive and rendered-view queries | N/A — reads emit no Domain events | Complete Project Planning is progressively available without loading every history or hiding absent detail |
 | Edit Planning directly | Dispatch the exact TICKET-00026 semantic command represented by the form | Query current aggregate version, validation choices and impact preview | The owning Planning aggregate emits its semantic event | One reviewed field/section/child/relation changes or the stale command is rejected; no whole-document overwrite occurs |
 | Perform guarded lifecycle or relationship work | Dispatch exact closeout, reopen, wontfix, reparent, dependency, waiver, archive or restore command | Preview eligibility, downstream impact, child/evidence state and retained links | Owning aggregate events only | Required confirmation is explicit and no cascade, inferred status or hidden secondary mutation occurs |
 | View and reorder Roadmap/queue | Dispatch TICKET-00027 intent-specific reorder/override commands | Canonical Roadmap, queue, eligibility and explanation queries | TICKET-00027 semantic events | UI reflects server-confirmed ordering; rejected/stale drags return to authoritative state with reason |
@@ -40,13 +40,17 @@ resumable browser Agent conversations and AI-authored proposals belong to the ne
 ## Validation and permissions
 
 Use the existing typed `/api/v1` JSend, validation, safe-error, OpenAPI, current-principal, route, API-client,
-component, responsive, theme and security foundations. Every query and command revalidates server-side Permission,
-repository/Workspace scope, active lifecycle, expected revision and relevant current context/authority. Client route
+component, responsive, theme and security foundations. Every query/command entry revalidates caller, operation Permission and Project/Workspace scope before configured
+bus dispatch. Registered handlers enforce intrinsic active-lifecycle, expected-revision and current-context/mode
+invariants. No second blanket Application permission gate or ordinary revocation-through-commit lock is required.
+Safe typed Views cross the boundary; HTTP Data/Responders own serialization, not Domain. Ordinary creates carry
+adapter-generated typed IDs in void commands; known ID acknowledgement needs no post-command fetch. Lost
+responses use fresh authorized list/detail/history reads and uniqueness conflicts, not replayed original results. Client route
 or control visibility never grants access.
 
-Viewing repository registration, context, Planning, history/evidence and archive may have distinct scopes.
+Viewing Project registration, context, Planning, history/evidence and archive may have distinct scopes.
 Creating/revising records, relationships/dependencies, Roadmap/queue, lifecycle, closeout, waiver, archive/restore,
-configuration and migration/cutover use independently justified Permissions. Unknown/stale principal or repository
+configuration and migration/cutover use independently justified Permissions. Unknown/stale principal or Project
 scope fails closed. Safe API responses exclude filesystem details not needed by the actor, secrets, raw events,
 persistence models and unauthorized records.
 
@@ -79,7 +83,7 @@ failure and never imply that a client-side optimistic move succeeded before serv
 |---|---|---|
 | [TASK-00105](../tasks/00105-TASK.md) | Explore the registered Planning workspace design | ready-for-agent |
 | [TASK-00106](../tasks/00106-TASK.md) | Independently accept the Planning workspace handoff | ready-for-agent |
-| [TASK-00107](../tasks/00107-TASK.md) | Deliver repository registration, selection, and context workspace | ready-for-agent |
+| [TASK-00107](../tasks/00107-TASK.md) | Deliver Project registration, selection, and context workspace | ready-for-agent |
 | [TASK-00108](../tasks/00108-TASK.md) | Browse complete Planning hierarchy and history | ready-for-agent |
 | [TASK-00109](../tasks/00109-TASK.md) | Edit Planning through semantic forms | ready-for-agent |
 | [TASK-00110](../tasks/00110-TASK.md) | Operate guarded lifecycle and relationship work | ready-for-agent |
