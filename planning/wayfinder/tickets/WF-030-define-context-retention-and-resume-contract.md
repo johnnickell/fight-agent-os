@@ -6,6 +6,9 @@
 **Map:** [Complete Fight Agent OS vision](../complete-agent-os-vision-map.md)
 **Depends on:** —
 
+The [2026-11-05 amendment](../../epics/00006-EPIC.md#approved-native-pi-compaction-and-jev-retirement--2026-11-05)
+sets the current native Pi implementation direction. The original decision below remains historical context.
+
 ## Question
 
 What must survive compaction, how may Jev help select additional useful context, and what must be revalidated before
