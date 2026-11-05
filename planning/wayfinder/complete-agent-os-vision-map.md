@@ -273,6 +273,10 @@ The dated selected-slice handoffs below preserve their historical approvals and 
 this current handoff or the TASK Board's execution priority. All runtime implementation and qualification remain
 with their owning records.
 
+The [2026-11-05 compaction amendment](../epics/00006-EPIC.md#approved-native-pi-compaction-and-jev-retirement--2026-11-05)
+updates the historical handoff below. Native Pi is the baseline, the deterministic timing tiers remain planned,
+and Jev retirement has its own TASK.
+
 ### Completed handoff: Extend EPIC-00006 with Jev compaction and judgment workflows
 
 [EPIC-00006](../epics/00006-EPIC.md#jev-compaction-and-judgment-workflows--2026-10-08) now consumes the accepted

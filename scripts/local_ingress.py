@@ -182,13 +182,18 @@ def ready(safe):
     text([*compose(safe), 'exec', '-T', 'nginx', 'nginx', '-t'], safe)
 
 
-def herd_config(safe, included_worktrees=()):
+def herd_config(safe, included_worktrees=(), consumer_roots=()):
     """Render one scoped host include; installation/reload remain explicit operator effects"""
     validate_configuration(safe)
     front, port = listener_options(safe)
     require(front == 'herd', 'Select explicit setup --front-door herd --https-port PORT first')
     hosts = {'fight-agent-os.localhost'} | {identity(safe, Path(entry['path'])) + '.localhost'
                                            for entry in registrations(safe)[1:]}
+    from ingress_preview import target
+    for root in consumer_roots:
+        consumer, _, _ = target(root, None)
+        hosts.update(identity(consumer, Path(entry['path'])) + '.localhost'
+                     for entry in registrations(consumer)[1:])
     for selector in included_worktrees:
         require(Path(selector).is_absolute(), 'Included worktree requires an exact absolute checkout path')
         _, checkout, project, _ = resolve(safe, selector, removed=True)
@@ -216,7 +221,7 @@ def herd_config(safe, included_worktrees=()):
     print('Rendered only. Inspect conflicts, install one owned site include, syntax-check the FULL Herd configuration, then gracefully reload.')
 
 
-def live(safe, host, retry=False):
+def live(safe, host, retry=False, *, preview=False):
     check_leaf(safe, host)
     front, port = listener_options(safe)
     connections = [['--resolve', host + ':443:127.0.0.1']]
@@ -225,8 +230,9 @@ def live(safe, host, retry=False):
         # connect-to changes transport only, never TLS SNI, Host or browser origin.
         connections.insert(0, ['--connect-to', host + ':443:127.0.0.1:' + str(port)])
     retries = ['--retry', '5', '--retry-all-errors', '--retry-max-time', '60'] if retry else []
+    paths = ('/',) if preview else ('/', '/api/v1/auth/csrf')
     for connection in connections:
-        for suffix in ('/', '/api/v1/auth/csrf'):
+        for suffix in paths:
             text(['curl', '--noproxy', '*', '--fail', '--silent', '--show-error', '--connect-timeout', '3', '--max-time', '10',
                   *retries, *connection, '--output', '/dev/null', 'https://' + host + suffix], safe)
 
@@ -259,8 +265,14 @@ def operate(safe, action, bind_ports=False):
         ready(safe)
         config = text([*compose(safe), 'exec', '-T', 'nginx', 'nginx', '-T'], safe)
         hosts = sorted(set(re.findall(r'^    server_name ([a-z0-9-]+\.localhost);$', config, re.M)))
+        ids = text(['docker', 'ps', '-q', '--filter', 'label=com.docker.compose.service=fight-https-preview'], safe).splitlines()
+        preview_hosts = {entry.removeprefix('VIRTUAL_HOST=') for item in
+                         (query(['docker', 'inspect', *ids], safe) if ids else [])
+                         for entry in item['Config']['Env'] if entry.startswith('VIRTUAL_HOST=')}
+        agent_hosts = {'fight-agent-os.localhost'} | {identity(safe, Path(entry['path'])) + '.localhost'
+                                                      for entry in registrations(safe)[1:]}
         for host in hosts:
-            live(safe, host)
+            live(safe, host, preview=host in preview_hosts - agent_hosts)
         print(json.dumps({'services_ready': True, 'verified_application_origins': ['https://' + v for v in hosts],
                           'trust_client': 'curl default store', 'config': str(state(safe) / 'compose.json')}))
     else:
@@ -275,8 +287,15 @@ def operate(safe, action, bind_ports=False):
               (' Network removed; use setup before restarting.' if action == 'remove' else ' Network retained.'))
 
 
-def certificate_operation(root, action, selector):
-    if selector and Path(selector).is_absolute() and action in ('setup', 'remove'):
+def certificate_operation(root, action, selector, consumer_root=None):
+    if consumer_root is not None:
+        from ingress_preview import target
+        require(selector, 'Project preview certificates require an exact --worktree path')
+        consumer_safe, _, project = target(consumer_root, selector)
+        safe, _, _, _ = resolve(root)
+        require(consumer_safe != safe, 'Use the Agent OS certificate command for its own checkout')
+        host = project + '.localhost'
+    elif selector and Path(selector).is_absolute() and action in ('setup', 'remove'):
         # Explicit operator leaf preparation may precede disposable QA allocation;
         # exact original paths also remain useful after source retirement. This
         # resolves only the existing deterministic hostname, never creates source,
@@ -311,8 +330,9 @@ def certificate_operation(root, action, selector):
     elif action == 'status':
         check_leaf(safe, host)
         ready(safe)
-        live(safe, host)
-        print('Verified exact-name HTTPS root/CSRF with curl default trust: https://' + host)
+        live(safe, host, preview=consumer_root is not None)
+        scope = 'root' if consumer_root is not None else 'root/CSRF'
+        print('Verified exact-name HTTPS ' + scope + ' with curl default trust: https://' + host)
     elif action == 'remove':
         # Do not break a live route by unlinking keys beneath Nginx.
         if owned(safe):
@@ -334,26 +354,38 @@ def certificate_operation(root, action, selector):
 def main():
     os.umask(0o077)
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['setup', 'up', 'down', 'status', 'remove', 'certificate', 'herd-config'])
+    parser.add_argument('action', choices=['setup', 'up', 'down', 'status', 'remove', 'certificate', 'herd-config', 'preview'])
     parser.add_argument('--bind-ports', action='store_true')
     parser.add_argument('--front-door', choices=['independent', 'herd'], default='independent', help='setup only; Herd is optional')
     parser.add_argument('--https-port', type=int, help='setup only; explicit loopback high port in Herd mode')
     parser.add_argument('--certificate-action', choices=['setup', 'status', 'remove'])
     parser.add_argument('--worktree')
+    parser.add_argument('--consumer-root', action='append', type=Path, default=[],
+                        help='Canonical project checkout for certificate, preview or herd-config')
     parser.add_argument('--include-worktree', action='append', default=[], metavar='ABSOLUTE_PATH',
                         help='herd-config only; include an exact planned/retired checkout with an existing valid leaf; repeat for peers')
     args = parser.parse_args()
     require(not args.include_worktree or args.action == 'herd-config', 'Included names belong to herd-config only')
-    if args.action == 'certificate':
+    require(not args.consumer_root or args.action in ('certificate', 'preview', 'herd-config'),
+            'Consumer roots belong to certificate, preview or herd-config')
+    require(len(args.consumer_root) <= 1 or args.action == 'herd-config',
+            'Select one exact consumer root')
+    consumer_root = args.consumer_root[0] if args.consumer_root else None
+    if args.action == 'preview':
+        from ingress_preview import up
+        require(consumer_root is not None, 'Project preview requires --consumer-root')
+        safe, _, _, _ = resolve(ROOT)
+        up(safe, consumer_root, args.worktree)
+    elif args.action == 'certificate':
         require(args.certificate_action, 'Certificate action required')
-        certificate_operation(ROOT, args.certificate_action, args.worktree)
+        certificate_operation(ROOT, args.certificate_action, args.worktree, consumer_root)
     else:
         require(not args.worktree, 'Ingress is shared, not a worktree service')
         safe, _, _, _ = resolve(ROOT)
         if args.action == 'setup':
             setup(safe, args.front_door, args.https_port if args.https_port is not None else 443)
         elif args.action == 'herd-config':
-            herd_config(safe, args.include_worktree)
+            herd_config(safe, args.include_worktree, args.consumer_root)
         else:
             require(args.front_door == 'independent' and args.https_port is None, 'Listener selection belongs to setup only')
             operate(safe, args.action, args.bind_ports)

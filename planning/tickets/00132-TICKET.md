@@ -88,7 +88,7 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent |
-| [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | ready-for-agent |
+| [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | done |
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | ready-for-agent |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent |
@@ -97,6 +97,14 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Area B, [TASK-00566](../tasks/00566-TASK.md#accepted-implementation-checkpoint--2026-11-05), has independent
+Review ACCEPT and documentation QA PASS on `7c9666af4dde06e05c8505c56cb00685c58ce7ab`: 50 unfinished
+EPIC-00005 records corrected, three completed records preserved, no archived descendants. Its canonical coverage
+is input to TASK-00571, not complete-portfolio acceptance. Publication and eligible cleanup are pending at that
+checkpoint; current results are in canonical ignored `.runs/tasks/TASK-00566/runs/land.md` and the TASK PR.
+This TICKET remains open for its other children. The decomposition narrative and its unstarted/verification
+claims below are historical planning checkpoints, not current implementation status.
 
 John approved whole-portfolio planning reconciliation and this second requirement area in the six-TICKET split,
 then approved the seven-area TASK decomposition, now written as TASK-00565 through TASK-00571:

@@ -69,6 +69,13 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**TASK-00566 area-B acceptance checkpoint:** [The accepted TASK](tasks/00566-TASK.md#accepted-implementation-checkpoint--2026-11-05)
+records independent Review ACCEPT and documentation QA PASS on `7c9666af4dde06e05c8505c56cb00685c58ce7ab`.
+EPIC-00005's 50 unfinished planning records are corrected, three completed records preserved and no archived
+descendants found. TASK-00571 receives canonical area coverage; other areas/source delivery remain separate.
+Publication and eligible cleanup are pending at this checkpoint; current outcomes are in canonical ignored
+`.runs/tasks/TASK-00566/runs/land.md` and the TASK PR. Human merge remains separate.
+
 **TASK-00564 acceptance checkpoint:** Independent Review ACCEPT and nonvisual QA PASS cover candidate
 `c160a31ba985978633c904e8493c091c8a35d785`. Publication and final delivery checks were pending at this checkpoint;
 current results are in canonical ignored `.runs/tasks/TASK-00564/runs/land.md` and the TASK PR. Other EPIC slices
@@ -356,13 +363,13 @@ qualified restricted environment. The file-only prototype is not production read
 The [terminal execution contract](../docs/engineering/TERMINAL_EXECUTION.md) retains those implementation boundaries.
 
 The October 7 [incremental Harness milestone](epics/00006-EPIC.md#approved-incremental-harness-protection-and-retrieval--2026-10-07)
-retains deterministic controls, Jev screening and required file relevance screening at the initial 0.70 positive-read
-threshold. [Jev access](tickets/00037-TICKET.md), [tool guard](tickets/00038-TICKET.md) and
-[file screening](tickets/00039-TICKET.md) own that bounded local delivery. The accepted follow-on
-[checkpoint/resume](tickets/00040-TICKET.md), [compaction timing](tickets/00041-TICKET.md),
-[general judgments](tickets/00042-TICKET.md), [authorized analysis](tickets/00043-TICKET.md),
-[change quality](tickets/00044-TICKET.md) and [PHPUnit usefulness](tickets/00045-TICKET.md) decompositions retain
-their selected Pi targets, qualifications and completion evidence; this update does not retarget their runtimes.
+records the original delivery of deterministic controls and Jev screening. The
+[November 5 amendment](epics/00006-EPIC.md#approved-native-pi-compaction-and-jev-retirement--2026-11-05)
+uses native Pi for [compaction and verified resume](tickets/00040-TICKET.md), retains the
+[180k/210k/240k timing tiers](tickets/00041-TICKET.md), and plans [local Jev retirement](tasks/00586-TASK.md).
+The separate [general judgments](tickets/00042-TICKET.md), [authorized analysis](tickets/00043-TICKET.md),
+[change quality](tickets/00044-TICKET.md) and [PHPUnit usefulness](tickets/00045-TICKET.md) plans retain their
+recorded scope and evidence. Any future dependence on the local Jev integration needs a supplier decision.
 
 Detailed decomposition approvals, supplier mappings and publication checkpoints remain in their owning
 EPICs/TICKETs and Wayfinder maps rather than being duplicated here. Historical terminal-first priority statements
@@ -396,7 +403,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00019](epics/00019-EPIC.md) | Diagnose Agent OS operations and managed runs with live and archived logs | operational-diagnosis | ready-for-agent |
 | [EPIC-00020](epics/00020-EPIC.md) | Keep delivery handoffs synchronized through Land | land-owned-delivery-handoff-synchronization | done |
 | [EPIC-00021](epics/00021-EPIC.md) | Deploy and recover private Fight Agent OS in staging and production | first-private-production | ready-for-agent |
-| [EPIC-00022](epics/00022-EPIC.md) | Make feature architecture reviewable with Python diagrams | feature-architecture-review | ready-for-agent |
+| [EPIC-00022](epics/00022-EPIC.md) | Make feature architecture reviewable with Python diagrams | feature-architecture-review | done |
 | [EPIC-00023](epics/00023-EPIC.md) | Adopt canonical Fight contracts and refactor Agent OS around Project-owned CQRS | maintainable-project-owned-cqrs | ready-for-agent |
 <!-- /planning:epics -->
 

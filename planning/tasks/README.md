@@ -82,9 +82,9 @@
 | [TASK-00077](00077-TASK.md) | Accept the repository identity and link-consistency ADR | done | [TICKET-00024](../tickets/00024-TICKET.md) |
 | [TASK-00078](00078-TASK.md) | Register and inspect stable repositories | done | [TICKET-00024](../tickets/00024-TICKET.md) |
 | [TASK-00079](00079-TASK.md) | Confirm and designate checkout and worktree links | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
-| [TASK-00080](00080-TASK.md) | Complete repository reconciliation and lifecycle operations | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
-| [TASK-00081](00081-TASK.md) | Version repository configuration and rollback | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
-| [TASK-00082](00082-TASK.md) | Resolve deterministic repository context snapshots | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
+| [TASK-00080](00080-TASK.md) | Complete Project reconciliation and lifecycle operations | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
+| [TASK-00081](00081-TASK.md) | Version Project configuration and rollback | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
+| [TASK-00082](00082-TASK.md) | Resolve deterministic Project context snapshots | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
 | [TASK-00083](00083-TASK.md) | Record narrowing context choices | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
 | [TASK-00084](00084-TASK.md) | Enforce snapshot drift and unavailable-authority boundaries | ready-for-agent | [TICKET-00025](../tickets/00025-TICKET.md) |
 | [TASK-00085](00085-TASK.md) | Establish event-sourced Wayfinder planning authority | ready-for-agent | [TICKET-00026](../tickets/00026-TICKET.md) |
@@ -109,7 +109,7 @@
 | [TASK-00104](00104-TASK.md) | Migrate Fight Agent OS Planning authority | ready-for-human | [TICKET-00028](../tickets/00028-TICKET.md) |
 | [TASK-00105](00105-TASK.md) | Explore the registered Planning workspace design | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
 | [TASK-00106](00106-TASK.md) | Independently accept the Planning workspace handoff | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
-| [TASK-00107](00107-TASK.md) | Deliver repository registration, selection, and context workspace | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
+| [TASK-00107](00107-TASK.md) | Deliver Project registration, selection, and context workspace | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
 | [TASK-00108](00108-TASK.md) | Browse complete Planning hierarchy and history | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
 | [TASK-00109](00109-TASK.md) | Edit Planning through semantic forms | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
 | [TASK-00110](00110-TASK.md) | Operate guarded lifecycle and relationship work | ready-for-agent | [TICKET-00029](../tickets/00029-TICKET.md) |
@@ -167,12 +167,12 @@
 | [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
-| [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | needs-info | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
-| [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | needs-info | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00168](00168-TASK.md) | Enforce staged compaction at safe session boundaries | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
-| [TASK-00169](00169-TASK.md) | Evaluate compaction timing with Jev after each eligible turn | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
-| [TASK-00170](00170-TASK.md) | Inspect compaction history and annotate recovery incidents | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00169](00169-TASK.md) | Evaluate compaction timing with Jev after each eligible turn | needs-info | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00170](00170-TASK.md) | Inspect compaction history and annotate recovery incidents | needs-info | [TICKET-00041](../tickets/00041-TICKET.md) |
 | [TASK-00171](00171-TASK.md) | Expose authenticated typed judgments through MCP | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
 | [TASK-00172](00172-TASK.md) | Investigate large evidence sets through resumable stages | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
 | [TASK-00173](00173-TASK.md) | Reuse judgments when evidence and authority still match | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
@@ -500,7 +500,7 @@
 | [TASK-00495](00495-TASK.md) | Standardize Pi extension and integration naming | done | — |
 | [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | needs-info | [TICKET-00032](../tickets/00032-TICKET.md) |
 | [TASK-00497](00497-TASK.md) | Restore optional-Jev workspace startup and child QA instruction reads | done | — |
-| [TASK-00498](00498-TASK.md) | Grant and revoke Repository access for Users and Agents | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
+| [TASK-00498](00498-TASK.md) | Grant and revoke Project access for Users and Agents | ready-for-agent | [TICKET-00024](../tickets/00024-TICKET.md) |
 | [TASK-00499](00499-TASK.md) | Remove harness denials from native file reads | done | — |
 | [TASK-00500](00500-TASK.md) | Restore native file tools and use Terra for Land | done | — |
 | [TASK-00501](00501-TASK.md) | Restore local PHP diagnostics and bound development processes | done | — |
@@ -552,8 +552,8 @@
 | [TASK-00547](00547-TASK.md) | Record resource creation and drive cleanup from one lifecycle receipt | done | — |
 | [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | done | — |
 | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | done | [TICKET-00126](../tickets/00126-TICKET.md) |
-| [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | ready-for-agent | [TICKET-00127](../tickets/00127-TICKET.md) |
-| [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | ready-for-agent | [TICKET-00128](../tickets/00128-TICKET.md) |
+| [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | done | [TICKET-00127](../tickets/00127-TICKET.md) |
+| [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | done | [TICKET-00128](../tickets/00128-TICKET.md) |
 | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | done | — |
 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | done | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | done | [TICKET-00129](../tickets/00129-TICKET.md) |
@@ -568,7 +568,7 @@
 | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | done | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | done | [TICKET-00131](../tickets/00131-TICKET.md) |
 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
-| [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
@@ -588,4 +588,5 @@
 | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | done | — |
 | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | done | — |
 | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | in-progress | — |
+| [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | ready-for-agent | — |
 <!-- /planning:records -->

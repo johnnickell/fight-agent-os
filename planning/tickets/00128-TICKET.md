@@ -2,7 +2,7 @@
 id: TICKET-00128
 epic: EPIC-00022
 title: Show feature architecture on demand in Pi
-status: ready-for-agent
+status: done
 ---
 
 # Show feature architecture on demand in Pi
@@ -83,10 +83,16 @@ documentation alone.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00551](../tasks/00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | ready-for-agent |
+| [TASK-00551](../tasks/00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Current: [TASK-00551](../tasks/00551-TASK.md#independent-acceptance-checkpoint--2026-11-05) has independent
+Review ACCEPT and QA PASS on `ce7953678c63fb7e93ad48a31068ed567b1b1e1c` (10 PASS, two criterion-specific N/A).
+The on-demand skill and inspected browser fallback are accepted; human-inline display is unobserved in JSON.
+Publication/capture access and eligible cleanup are pending at this checkpoint; current delivery results are
+in canonical ignored `.runs/tasks/TASK-00551/runs/land/receipt.md` and the TASK PR. Acceptance is not merge.
 
 Accepted as the on-demand Pi visual explanation requirement for EPIC-00022. It complements existing architecture
 analysis and does not acquire implementation, documentation-publication, Git, or merge authority.

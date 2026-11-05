@@ -79,6 +79,35 @@ flows and route removal. Config scaffolding is NOT delivery. Task up fails clear
 falls back to main, and prints a usable URL only after verified HTTPS root/CSRF readiness. Task down and repeated
 teardown work without ingress. Do not claim browser-ready from Compose health alone.
 
+### Project worktree previews
+
+Projects with compatible worktree tooling and an `https_preview` profile can use the shared ingress supplier.
+The CodeIgniter, Laravel, Slim, Symfony and Yii starter repositories include the profile. Projects cloned
+from a starter inherit it and can update its service, network and port for their own Compose setup.
+Start the project's exact isolated checkout through its own dependency setup and `bin/up --worktree`.
+Use absolute paths for the project's primary and linked checkout, then run these commands from this
+repository's ingress-capable checkout:
+
+```sh
+./bin/ingress certificate --certificate-action setup --consumer-root "$project_root" --worktree "$checkout"
+./bin/ingress preview --consumer-root "$project_root" --worktree "$checkout"
+```
+
+Set up and start the ingress supplier separately. In Herd mode, between certificate setup and preview,
+rerender the existing owned include with `./bin/ingress herd-config --consumer-root "$project_root"`. Repeat
+`--consumer-root` for all projects that need to remain routed and carry forward any existing explicit
+`--include-worktree` selections. Inspect, install, syntax-check and reload the owned Herd include as usual.
+Preview checks the exact-name HTTPS root through the selected front door before printing its URL.
+
+The preview adds one TLS gateway to the worktree's existing Compose project. The ingress
+verifies TLS to that gateway, and the gateway forwards to the configured HTTP service on its private
+project network. The project's own `bin/down --worktree "$checkout"` stops the gateway and runtime
+together. An unsuccessful readiness check can leave the selected gateway running for diagnosis. Stop
+it through that same command. The supplier, shared network and certificate trust have their own lifecycle.
+Remove an unneeded preview leaf explicitly with `certificate --certificate-action remove` while the
+project worktree is still registered.
+
+
 ## Retire runtime, then finish the task
 
 Application roles and Worktrunk use the SAME `bin/down --worktree SELECTOR`. Only explicitly owned

@@ -39,6 +39,9 @@ target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_S
    source pattern or silently weaken policy; name the scoped correction/supplier owner when blocked.
    Reproduce confirmed bugs with a failing owning regression before repair.
    Test owned product behavior; qualify infrastructure with its own tools, not application tests of tooling.
+   For material ownership, dependency-direction or runtime-flow changes, prepare the relevant maintained
+   diagram and revision-linked authoring material under [PR diagram guidance](../../../docs/engineering/LANDING.md#architecture-diagrams-in-pr-descriptions);
+   omit an unhelpful diagram for non-material changes. This preparation grants no publication authority.
    Use [quality guidance](../../../docs/engineering/QUALITY.md) as needed and
    [Writing for Agents](../writing-for-agents/SKILL.md) for instruction changes. Keep affected current docs accurate.
 5. Run focused checks during iteration, planning refresh/check if changed, `git diff --check` and **one final full

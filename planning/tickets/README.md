@@ -26,8 +26,8 @@
 | [TICKET-00021](00021-TICKET.md) | Deliver Super Admin user and invitation operations | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00022](00022-TICKET.md) | Verify the integrated security and accessibility baseline | ready-for-agent | [EPIC-00004](../epics/00004-EPIC.md) |
 | [TICKET-00023](00023-TICKET.md) | Operate the local Planning installation | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
-| [TICKET-00024](00024-TICKET.md) | Register repositories and designated checkouts | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
-| [TICKET-00025](00025-TICKET.md) | Resolve versioned repository context | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
+| [TICKET-00024](00024-TICKET.md) | Register Projects and designated checkouts | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
+| [TICKET-00025](00025-TICKET.md) | Resolve versioned Project context | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
 | [TICKET-00026](00026-TICKET.md) | Establish authoritative Planning artifacts and lifecycles | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
 | [TICKET-00027](00027-TICKET.md) | Deliver the canonical Planning queue and Roadmap | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
 | [TICKET-00028](00028-TICKET.md) | Migrate and cut over Markdown Planning authority | ready-for-agent | [EPIC-00005](../epics/00005-EPIC.md) |
@@ -129,8 +129,8 @@
 | [TICKET-00124](00124-TICKET.md) | Back up and restore coherent application state | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
 | [TICKET-00125](00125-TICKET.md) | Promote and recover an explicitly approved release | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
 | [TICKET-00126](00126-TICKET.md) | Maintain source-verified Python diagrams beside feature documentation | done | [EPIC-00022](../epics/00022-EPIC.md) |
-| [TICKET-00127](00127-TICKET.md) | Review material architecture changes with diagrams in pull requests | ready-for-agent | [EPIC-00022](../epics/00022-EPIC.md) |
-| [TICKET-00128](00128-TICKET.md) | Show feature architecture on demand in Pi | ready-for-agent | [EPIC-00022](../epics/00022-EPIC.md) |
+| [TICKET-00127](00127-TICKET.md) | Review material architecture changes with diagrams in pull requests | done | [EPIC-00022](../epics/00022-EPIC.md) |
+| [TICKET-00128](00128-TICKET.md) | Show feature architecture on demand in Pi | done | [EPIC-00022](../epics/00022-EPIC.md) |
 | [TICKET-00129](00129-TICKET.md) | Adopt upstream Pi subagents with Fight observation | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00130](00130-TICKET.md) | Run local Build through upstream agents with browsable activity and stack logs | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00131](00131-TICKET.md) | Establish one authoritative architecture contract | done | [EPIC-00023](../epics/00023-EPIC.md) |
