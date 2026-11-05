@@ -415,7 +415,12 @@ Scratch and evidence belong under ignored `.runs/` subfolders; managed worktrees
 (such as a sibling `.worktrees/` directory, outside `.runs/`). Runtime sandboxing remains planned, not implied by the development Compose stack.
 
 For maintained feature architecture pictures, use the [source-verified diagram standard](docs/engineering/DIAGRAMS.md)
-and its explicit local `./bin/diagrams` setup/render commands. The
+and its explicit local `./bin/diagrams` setup/render commands.
+[TASK-00551's accepted `/skill:show-me`](planning/tasks/00551-TASK.md#independent-acceptance-checkpoint--2026-11-05)
+adds explicit bounded existing/proposed views in ignored scratch with inspected local Chrome fallback.
+Human-inline display remains unobserved in JSON/print; proposals are not implementation or approval.
+Publication/capture access and cleanup are pending at this checkpoint; actual delivery results are in
+canonical ignored `.runs/tasks/TASK-00551/runs/land/receipt.md` and the TASK PR. Human merge is separate. The
 [CSRF bootstrap example](docs/engineering/browser-auth-requests/README.md) shows actual PHP layer ownership with
 source and arrow traces; it is not runtime or security acceptance evidence.
 
