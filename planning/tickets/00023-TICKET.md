@@ -11,7 +11,7 @@ status: ready-for-agent
 
 An operator needs the accepted local runtime, approved project-root access, private Planning evidence storage, and
 task-based guidance before an authenticated registered Planning workspace can work reliably. Hidden host mutation,
-platform overclaims, or a second runtime path would undermine every later repository and Planning use case.
+platform overclaims, or a second runtime path would undermine every later Project and Planning use case.
 
 ## Solution and boundaries
 
@@ -49,7 +49,7 @@ appropriate installation-information authority; installation settings, root chan
 separately authorized operator capability and cannot be performed by client visibility alone.
 
 Offline cached capabilities may remain visibly usable, but setup, downloads, authentication, updates, migration,
-and repository registration that require live dependencies fail with a direct reason. Do not silently start,
+and Project registration that require live dependencies fail with a direct reason. Do not silently start,
 upgrade, reconfigure, or repair services from a read-only check.
 
 ## Acceptance and evidence
