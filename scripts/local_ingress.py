@@ -290,7 +290,7 @@ def operate(safe, action, bind_ports=False):
 def certificate_operation(root, action, selector, consumer_root=None):
     if consumer_root is not None:
         from ingress_preview import target
-        require(selector, 'Framework certificates require an exact --worktree path')
+        require(selector, 'Project preview certificates require an exact --worktree path')
         consumer_safe, _, project = target(consumer_root, selector)
         safe, _, _, _ = resolve(root)
         require(consumer_safe != safe, 'Use the Agent OS certificate command for its own checkout')
@@ -361,7 +361,7 @@ def main():
     parser.add_argument('--certificate-action', choices=['setup', 'status', 'remove'])
     parser.add_argument('--worktree')
     parser.add_argument('--consumer-root', action='append', type=Path, default=[],
-                        help='Canonical framework checkout for certificate, preview or herd-config')
+                        help='Canonical project checkout for certificate, preview or herd-config')
     parser.add_argument('--include-worktree', action='append', default=[], metavar='ABSOLUTE_PATH',
                         help='herd-config only; include an exact planned/retired checkout with an existing valid leaf; repeat for peers')
     args = parser.parse_args()
@@ -373,7 +373,7 @@ def main():
     consumer_root = args.consumer_root[0] if args.consumer_root else None
     if args.action == 'preview':
         from ingress_preview import up
-        require(consumer_root is not None, 'Framework preview requires --consumer-root')
+        require(consumer_root is not None, 'Project preview requires --consumer-root')
         safe, _, _, _ = resolve(ROOT)
         up(safe, consumer_root, args.worktree)
     elif args.action == 'certificate':

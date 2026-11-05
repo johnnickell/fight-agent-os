@@ -30,5 +30,5 @@ The candidate `bin/qa up/list/down` layer uses these same supplier paths. Work's
 qualification is recorded in TASK-00556; independent acceptance remains pending. Explicit end-of-session QA down does not alter Land's original cleanup timing.
 
 This rollout uses isolated feature worktrees and existing engineering instructions without new TASK documents.
-It covers Common, Agent OS, AccessControl and the five framework starters. `epic-legacy` is excluded by the
+It covers Common, Agent OS, AccessControl and the five starter projects. `epic-legacy` is excluded by the
 user's current scope. Implementation and direct qualification do not establish independent Review/QA acceptance.
