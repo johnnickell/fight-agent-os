@@ -12,11 +12,11 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 
 ### Current assessment handoff
 
-[TASK-00565](00565-TASK.md#repair-01-checkpoint--2026-11-05) preserves the exhaustive area-A planning correction
-and coverage evidence for TASK-00571. John's authorized Lifecycle synchronization repair passes focused checks
-(140 tests / 6 files); the one final gate instead failed in PHPStan's generated cache-file creation. Mandatory
-verification remains incomplete pending coordinator/tooling-owner disposition. Independent Review and affected
-QA remain pending. No acceptance is claimed.
+[TASK-00565](00565-TASK.md#cache-recovery-01-checkpoint--2026-11-05) preserves the exhaustive area-A correction
+and Lifecycle repair. Diagnosed generated-cache recovery passed unchanged focused PHPStan and the normal full
+25-phase gate (`20261105T202957Z-94`), including all 1,174 frontend tests. The bind-filesystem locking limitation
+remains disclosed, not repaired. Current canonical `cache-recovery-01-handoff.md` carries the subject/evidence and
+retained tooling runtime. Next: independent Review, then affected QA; no acceptance or publication is claimed.
 
 [TASK-00563](00563-TASK.md#accepted-implementation-checkpoint--2026-11-04) has independent Review ACCEPT and
 visual/behavioral QA PASS on amended candidate `9d9d952` (18 scenario groups / 18 inspected native captures).

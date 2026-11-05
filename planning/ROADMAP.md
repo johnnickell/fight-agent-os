@@ -69,13 +69,14 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00565 area-A Work — 2026-11-05:** [the repair-01 checkpoint](tasks/00565-TASK.md#repair-01-checkpoint--2026-11-05)
-preserves exhaustive unfinished identity/access/email-change/Feature/reference-plan correction and the coverage
-locator for TASK-00571. John's authorized Lifecycle synchronization repair passes 140 focused tests / 6 files;
-the one final gate instead failed in PHPStan generated cache-file creation. Mandatory verification remains
-incomplete pending coordinator/tooling-owner disposition. Independent Review and affected QA remain pending;
-no source/supplier/feature acceptance is inferred. Other area priorities/dependencies remain unchanged. The
-architecture-decomposition checkpoint below is historical; implementation routing stays with the Board.
+**TASK-00565 area-A Work — 2026-11-05:** [the cache-recovery checkpoint](tasks/00565-TASK.md#cache-recovery-01-checkpoint--2026-11-05)
+preserves exhaustive plan correction, TASK-00571 coverage and the authorized Lifecycle repair. Diagnosed cache
+recovery passed unchanged focused PHPStan and the normal full 25-phase gate (`20261105T202957Z-94`), including
+1,174 frontend tests. The filesystem locking limitation remains disclosed, not repaired. Current canonical
+`cache-recovery-01-handoff.md` owns subject/evidence and the retained tooling runtime. Next: independent Review,
+then affected QA; no source/supplier/feature acceptance or publication is inferred. Other area priorities and
+dependencies remain unchanged. The architecture-decomposition checkpoint below is historical; routing stays
+with the Board.
 
 **TASK-00564 acceptance checkpoint:** Independent Review ACCEPT and nonvisual QA PASS cover candidate
 `c160a31ba985978633c904e8493c091c8a35d785`. Publication and final delivery checks were pending at this checkpoint;

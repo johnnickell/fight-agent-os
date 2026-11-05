@@ -98,13 +98,13 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 
 ## Decisions and progress
 
-Current area-A Work: [TASK-00565](../tasks/00565-TASK.md#repair-01-checkpoint--2026-11-05) preserves the exhaustive
-62-record unfinished inspection plus completed TASK-00531 and canonical coverage locator for TASK-00571. John's
-narrowly authorized Lifecycle test synchronization repair passes 140 focused tests / 6 files. The one final gate
-instead failed in PHPStan generated cache-file creation; mandatory verification remains incomplete pending
-coordinator/tooling-owner disposition. Independent Review and affected QA remain pending; no source or supplier
-is accepted and sibling areas are not completed by this work. The decomposition/validation checkpoints below
-are historical, including their then-current inventory counts and unstarted-work statements.
+Current area-A Work: [TASK-00565](../tasks/00565-TASK.md#cache-recovery-01-checkpoint--2026-11-05) preserves the
+exhaustive 62-record unfinished inspection plus completed TASK-00531, TASK-00571 coverage and the authorized
+Lifecycle repair. Diagnosed cache recovery passed unchanged focused PHPStan and the normal full 25-phase gate
+(`20261105T202957Z-94`), including 1,174 frontend tests. The bind-filesystem locking limitation is disclosed, not
+repaired. Current canonical `cache-recovery-01-handoff.md` carries subject/evidence and retained tooling runtime.
+Next: independent Review, then affected QA; no source/supplier acceptance or sibling completion is claimed.
+The checkpoints below remain historical, including their original inventory counts and unstarted-work statements.
 
 John approved whole-portfolio planning reconciliation and this second requirement area in the six-TICKET split,
 then approved the seven-area TASK decomposition, now written as TASK-00565 through TASK-00571:
