@@ -66,6 +66,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | [TICKET-00127 — Review material architecture changes with diagrams in pull requests](../tickets/00127-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | [TICKET-00128 — Show feature architecture on demand in Pi](../tickets/00128-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | — (standalone bug) | ready-for-agent | — | — |
 
 ## Waiting
 
