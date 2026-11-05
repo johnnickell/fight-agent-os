@@ -204,12 +204,14 @@ test('monitor admission combines private bootstrap, exact live ancestry, fixed p
   assert.throws(() => monitorWitness(message, native, options), /ENOENT/);
   writeFileSync(path, JSON.stringify(witness), { mode: 0o600 });
   assert.deepEqual(monitorWitness(message, native, options).identity, identity);
-  for (const role of ['engineer', 'work', 'review', 'qa', 'land']) {
+  for (const [role, canonical] of [['engineer', 'engineer'], ['work', 'engineer'], ['Software Engineer', 'engineer'],
+    ['review', 'reviewer'], ['reviewer', 'reviewer'], ['senior-engineer', 'reviewer'],
+    ['qa', 'qa'], ['QA Engineer', 'qa'], ['land', 'land'], ['Release Manager', 'land']]) {
     const current = { ...witness, identity: { ...identity, role } };
     writeFileSync(path, JSON.stringify(current));
-    assert.deepEqual(monitorWitness(message, native, options).identity, current.identity);
+    assert.deepEqual(monitorWitness(message, native, options).identity, { ...current.identity, role: canonical });
   }
-  for (const role of ['reviewer', 'build', 'software-engineer', 'unsupported', 'Engineer']) {
+  for (const role of ['build', 'team-lead', 'unsupported', 'constructor', '__proto__']) {
     writeFileSync(path, JSON.stringify({ ...witness, identity: { ...identity, role } }));
     assert.throws(() => monitorWitness(message, native, options), /refused/);
   }
@@ -244,7 +246,7 @@ test('installed package admits its own fixed monitor without a provider checkout
   writeFileSync(join(runtime, `${pid}-${token}.json`), JSON.stringify(witness), { mode: 0o600 });
   const options = { inspect: value => value === pid ? witness.process : native.process,
     births: [{ pid, parent: 9000, bornUs: native.wallUs + 50000 }, { pid: 9000, parent: native.pid, bornUs: native.wallUs + 30000 }, { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000 }], registrations: () => `worktree ${cwd}\0` };
-  assert.deepEqual(monitorWitness({ type: 'monitor', pid, token, worktree: cwd }, native, options).identity, witness.identity);
+  assert.deepEqual(monitorWitness({ type: 'monitor', pid, token, worktree: cwd }, native, options).identity, { ...witness.identity, role: 'engineer' });
 });
 
 test('recycled device/inode cannot reuse a session witness, while append and serialized resume retain it', t => {

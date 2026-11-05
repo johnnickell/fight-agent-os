@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { clean } from '../workspace/presentation.mjs';
+import { engineerIdentity, stageBinding } from '../build/authority.mjs';
 
 export const upstreamTerminal = new Set(['completed', 'steered', 'aborted', 'stopped', 'error']);
 const text = value => clean(typeof value === 'string' ? value.slice(-2400) : '').replace(/\n/g, ' ').slice(-600);
@@ -93,10 +94,12 @@ export class SubagentObserver {
           if (typeof session.subscribe !== 'function' || typeof session.sessionManager?.getCwd !== 'function') {
             this.remove(id, 'live-session-api-unavailable'); continue;
           }
+          const stage = engineerIdentity(session, this.parent);
+          if (stageBinding(session.sessionManager) && !stage) { this.remove(id, 'trusted-stage-identity-unavailable'); continue; }
           run.session = session;
-          run.identity = { task: 'Unassigned', role: text(record.type) || 'subagent', provider: text(session.model?.provider) || 'unknown',
+          run.identity = { task: stage?.task ?? 'Unassigned', role: stage?.role ?? (text(record.type) || 'subagent'), provider: text(session.model?.provider) || 'unknown',
             model: text(session.model?.id) || 'unknown', thinking: text(session.thinkingLevel) || 'unknown',
-            worktree: realpathSync(session.sessionManager.getCwd()), attempt: id, assignment: text(record.description) || 'Assignment unavailable' };
+            worktree: realpathSync(session.sessionManager.getCwd()), attempt: stage?.attempt ?? id, assignment: text(record.description) || 'Assignment unavailable' };
           this.emit(run, `Observing ${text(record.description)}`);
           if (this.closed || this.runs.get(id) !== run) continue;
           run.unsubscribe = session.subscribe(event => {

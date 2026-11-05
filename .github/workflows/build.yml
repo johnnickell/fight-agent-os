@@ -37,6 +37,8 @@ jobs:
           printf 'PLAYWRIGHT_BROWSERS_PATH=%s\n' "$PLAYWRIGHT_BROWSERS_PATH" >> "$GITHUB_ENV"
           mkdir -p .runs/build/reports/client
           npm install --global "npm@$(node -p "require('./client/package.json').engines.npm")" --ignore-scripts --no-fund --no-audit
+          npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-fund --no-audit
+          npm --prefix harness/pi/vendor/pi-subagents ci --ignore-scripts --legacy-peer-deps --no-fund --no-audit
           # Qualify only the selected tool directories, not the runner's entire ambient PATH.
           printf 'FIGHT_BUILD_TOOL_PATH=%s:%s:/usr/local/bin:/usr/bin:/bin\n' \
             "$(dirname "$(command -v node)")" "$(dirname "$(command -v npm)")" >> "$GITHUB_ENV"

@@ -101,6 +101,11 @@ choice and separate Work invocation are still required. This is accepted plannin
 qualified supplier adoption or completed acceptance. Missing upstream capabilities hold affected adoption only;
 the EPIC owns precise amendments, exclusions and the completed-planning handoff.
 
+**TASK-00560 accepted Engineer checkpoint — 2026-11-05:** [the TASK](tasks/00560-TASK.md#accepted-implementation-checkpoint--2026-11-05)
+records independent Review ACCEPT and QA PASS on `c60eb6b` and a verified mechanical integration. Publication and
+final delivery checks remain pending at this checkpoint; current results are in
+`.runs/tasks/TASK-00560/runs/land/receipt.md`. TASK-00561 retains the independent-stage cutover.
+
 **TASK-00563 accepted LOGS checkpoint — 2026-11-04:** [the TASK](tasks/00563-TASK.md#accepted-implementation-checkpoint--2026-11-04)
 records independent Review ACCEPT and visual/behavioral QA PASS on amended candidate `9d9d952`, including the
 explicit Sol/high QA/Land defaults and sole-owner caller documentation. Publication/capture access and eligible

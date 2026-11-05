@@ -165,11 +165,20 @@ until an explicit, verified migration to the future project-scoped planning data
 
 Install the approved Fight welcome and compact working header for all your Pi sessions:
 
+Before starting the updated package, follow its [bundled-subagent profile/migration](harness/pi/SUBAGENTS.md#select-the-supported-profile)
+to avoid loading the old standalone companion alongside the bundled engine. Prepare local runtime dependencies explicitly:
+
 ```sh
+npm --prefix harness/pi ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
 pi install ./harness/pi
 ```
 
-Restart Pi, then use `/fight-header` to choose a presentation or `off` to restore its default header.
+TASK-00560 supplies an [opt-in SDK Engineer route](harness/pi/SUBAGENTS.md#opt-in-build-engineer),
+requiring an explicitly selected fresh native Build host and actual session-local authority. Its real Engineer/Herdr
+journey has independent Review and QA acceptance; delivery results are in `.runs/tasks/TASK-00560/runs/land/receipt.md`.
+This is not a default all-role cutover. Existing active Builds/shared installations stay untouched.
+
+Restart only the intended session at a safe boundary, then use `/fight-header` to choose a presentation or `off` to restore its default header.
 See the [package instructions](harness/pi/README.md) for quiet/ASCII modes and removal.
 The [managed terminal workflow](docs/engineering/TERMINAL_EXECUTION.md) is under implementation alongside
 browser and shared-foundation work under the [blended roadmap](planning/ROADMAP.md#approved-blended-delivery-strategy).

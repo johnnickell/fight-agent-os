@@ -5,6 +5,7 @@
 /.env
 /.runs/
 /node_modules/
+/harness/pi/node_modules/
 /client/node_modules/
 /client/dist/
 /public/build/

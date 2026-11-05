@@ -65,6 +65,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | [TICKET-00127 — Review material architecture changes with diagrams in pull requests](../tickets/00127-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | [TICKET-00128 — Show feature architecture on demand in Pi](../tickets/00128-TICKET.md) | ready-for-agent | — | — |
+| — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
 
 ## Waiting
 
@@ -335,7 +336,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00530](00530-TASK.md) | Recover production state through Managed PostgreSQL and Spaces | [TICKET-00124 — Back up and restore coherent application state](../tickets/00124-TICKET.md) | ready-for-agent | [TASK-00529](00529-TASK.md), [TASK-00528](00528-TASK.md) | — |
 | — | [TASK-00532](00532-TASK.md) | Stage and recover an exact release candidate | [TICKET-00125 — Promote and recover an explicitly approved release](../tickets/00125-TICKET.md) | ready-for-agent | [TASK-00529](00529-TASK.md) | — |
 | — | [TASK-00533](00533-TASK.md) | Promote the approved release and deliver browser Wayfinder | [TICKET-00125 — Promote and recover an explicitly approved release](../tickets/00125-TICKET.md) | ready-for-agent | [TASK-00532](00532-TASK.md), [TASK-00530](00530-TASK.md), [TASK-00362](00362-TASK.md), [TASK-00365](00365-TASK.md), [TASK-00367](00367-TASK.md) | — |
-| — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | [TASK-00560](00560-TASK.md) | — |
 
 ## Needs Info
 
@@ -455,7 +455,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00485](00485-TASK.md) | Support bounded authenticated log streaming and extraction | [TICKET-00117 — Operate and recover the observability installation](../tickets/00117-TICKET.md) | needs-info | [TASK-00483](00483-TASK.md), [TASK-00072](00072-TASK.md) | — |
 | — | [TASK-00493](00493-TASK.md) | Visually configure Workflow stages, Agent assignments and tool policies | [TICKET-00097 — Inspect and control execution through the sessions Dashboard](../tickets/00097-TICKET.md) | needs-info | [TASK-00139](00139-TASK.md), [TASK-00203](00203-TASK.md), [TASK-00390](00390-TASK.md), [TASK-00496](00496-TASK.md) | — |
 | — | [TASK-00496](00496-TASK.md) | Manage versioned standing execution policy | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | needs-info | — | — |
-| — | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | needs-info | — | — |
 
 ## Human Action
 
@@ -644,6 +643,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | — (standalone chore) | done | — | [PR #194](https://github.com/johnnickell/fight-agent-os/pull/194) |
 | — | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | — (standalone bug) | done | — | [PR #195](https://github.com/johnnickell/fight-agent-os/pull/195) |
 | — | [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | — (standalone bug) | done | — | [PR #196](https://github.com/johnnickell/fight-agent-os/pull/196) |
+| — | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | [PR #214](https://github.com/johnnickell/fight-agent-os/pull/214) |
 | — | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | [PR #207](https://github.com/johnnickell/fight-agent-os/pull/207) |
 | — | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | [PR #212](https://github.com/johnnickell/fight-agent-os/pull/212) |
 | — | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | — (standalone bug) | done | — | [PR #211](https://github.com/johnnickell/fight-agent-os/pull/211) |

@@ -22,11 +22,15 @@ draft and explicit pane-name/log-following amendments. This is local operator-au
 under EPIC-00006, not server-managed Execution, sandbox isolation or database-authoritative workflow delivery.
 
 - Keep Build as the sole stage/evidence coordinator; upstream owns SDK execution; Herdr observes. Disable
-  upstream workflow scheduling and automatic worktree management. Do not copy its execution engine.
+  upstream workflow scheduling and automatic worktree management. John's 2026-11-04 amendment permits maintaining
+  the single patched upstream engine as ordinary source inside `harness/pi/vendor/pi-subagents/`; do not build a
+  rewritten or parallel engine. Keep source attribution/license, a small reviewed delta and owning engine/Harness gates.
 - Bind each fresh stage session to trusted stage/TASK/checkout/attempt/effects before execution. Profiles, prompts,
   agent names and pane labels cannot grant independent stage authority. Do not mutate shared `process.env` to
   impersonate session-specific launcher identity. Qualify a supported initialization/parent-association mechanism;
-  missing capability holds the affected route, with a small upstream hook preferred over monkey patches/forks.
+  missing capability holds the affected route. John's separately approved in-repository vendor component supplies
+  the small host-setup/root-association hooks; it does not authorize monkey patches, active-installation changes or
+  clearing the real Engineer qualification hold.
 - Preserve per-role model/thinking pins, governing context, selected checkout, one Compose runtime, repair
   accounting, canonical reports and fresh independent Review/QA without inherited Engineer conversation.
   SDK terminal state is not stage acceptance; unavailable display never permits retry or executor substitution.
@@ -106,13 +110,32 @@ and distinguish fresh from qualified reused evidence, implementation acceptance,
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00560](../tasks/00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | needs-info |
+| [TASK-00560](../tasks/00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | done |
 | [TASK-00561](../tasks/00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent |
 | [TASK-00562](../tasks/00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | done |
 | [TASK-00563](../tasks/00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### TASK-00560 acceptance checkpoint — 2026-11-05
+
+[TASK-00560](../tasks/00560-TASK.md#accepted-implementation-checkpoint--2026-11-05) has independent Review
+ACCEPT and QA PASS on `c60eb6b`; its verified mechanical integration and fresh gate are recorded in the TASK.
+Publication and final delivery checks were pending at this checkpoint; current results are in
+`.runs/tasks/TASK-00560/runs/land/receipt.md`. TASK-00561 remains unfinished, so this parent remains open.
+The earlier progress statements below are historical checkpoints.
+
+TASK-00560's resumed 2026-11-04 Work now supplies the opt-in SDK Engineer bootstrap and controlled installed-SDK
+admission/lifecycle evidence. This is not completion: its genuine authorized native Engineer assignment, inspected
+Herdr activity and independent acceptance still remain. Build must use a fresh explicitly selected native host,
+without reloading the active parent or substituting a faux demonstration. Default/non-Engineer process callers
+remain live; TASK-00561 still owns all-role cutover and superseded launcher retirement.
+
+On 2026-11-04 John approved incorporating the patched upstream component into the existing GitHub repository and
+custom Harness, rather than requiring an external fork repository or upstream maintainer review. TASK-00560 owns
+this packaging prerequisite. Independent Fight review/QA, private installed qualification, actual Engineer execution
+and safe-boundary adoption remain separate; no Build default cutover, installation update or publication is authorized.
 
 ### TASK-00563 acceptance checkpoint — 2026-11-04
 

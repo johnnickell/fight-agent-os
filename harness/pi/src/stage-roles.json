@@ -1,0 +1,6 @@
+{
+  "engineer": ["engineer", "work", "software-engineer"],
+  "reviewer": ["reviewer", "review", "senior-engineer"],
+  "qa": ["qa", "qa-engineer"],
+  "land": ["land", "release-manager"]
+}
