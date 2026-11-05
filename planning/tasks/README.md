@@ -586,4 +586,5 @@
 | [TASK-00581](00581-TASK.md) | Correct credential recovery expiry and mail ownership | needs-info | [TICKET-00135](../tickets/00135-TICKET.md) |
 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | ready-for-agent | [TICKET-00136](../tickets/00136-TICKET.md) |
 | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | done | — |
+| [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | ready-for-agent | — |
 <!-- /planning:records -->
