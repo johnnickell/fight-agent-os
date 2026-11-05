@@ -19,7 +19,7 @@ traceable through an explicitly approved authority change.
 Deliver a deterministic complete-baseline importer and guarded authority-switch operation under the explicit modes
 from TICKET-00025. Inventory and digest one immutable source snapshot, rehearse import into a clean target, report
 every mapping/warning/rejection, and require a human-approved clean rehearsal. The final operation revalidates the
-same source, imports atomically, verifies the complete result, and changes repository Planning authority in one
+same source, imports atomically, verifies the complete result, and changes Project Planning authority in one
 transaction or leaves it unchanged.
 
 After cutover, database streams are sole write authority. Freeze source Markdown and render current Markdown on
@@ -31,13 +31,21 @@ only through a later separately approved, verified and human-merged change.
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
 | Inventory migration source | N/A — read-only migration preparation | `InspectMarkdownPlanningSource` | N/A — inspection creates no Planning event | A bounded immutable manifest records every authoritative file, digest, record/reference, relationship and generated/source classification |
-| Rehearse complete import | `RehearseMarkdownPlanningImport` against source manifest and empty target | Query mapping report, imported projections, invariant failures and canonical queue comparison | Rehearsal records are operational evidence, not authoritative Planning events | A disposable clean target contains the proposed streams/projections and a complete deterministic report without changing repository authority |
+| Rehearse complete import | `RehearseMarkdownPlanningImport` against source manifest and empty target | Query mapping report, imported projections, invariant failures and canonical queue comparison | Rehearsal records are operational evidence, not authoritative Planning events | A disposable clean target contains the proposed streams/projections and a complete deterministic report without changing Project authority |
 | Approve a rehearsal | `ApprovePlanningMigrationRehearsal` | Revalidate report completeness, source digest, target cleanliness and unresolved warnings | `PlanningMigrationRehearsalApproved` in migration authority, not imported aggregate history | Human approval binds one exact source/report revision and expires on any material change |
 | Cut over authority | `CutOverPlanningAuthority` | Revalidate source, approval, target, imported identities, invariants, projections and queue | `PlanningAuthorityChanged` plus imported baseline stream events carrying source provenance | All baseline streams, constraints and mode change commit atomically, or no authoritative effect remains |
 | Render current Markdown | N/A — deterministic representation query | Render typed Planning views, boards and indexes with authority/revision/template metadata | N/A — rendering is read-only | Users can inspect/export current Markdown without creating another writer or overwriting frozen source |
 | Diagnose or recover failure | N/A unless a new rehearsal is explicitly requested | Query failed stage, safe mismatch, retained evidence and unchanged authority | N/A — failed attempts do not imply success | Operator receives exact safe recovery steps; retry begins from a newly validated clean attempt when required |
 
 ## Validation and permissions
+
+Each entry owns caller authentication and operation/Project-scope admission before configured bus dispatch.
+Registered migration handlers own exact approved-subject checks and generic-UoW coordination on the shared
+connection. Keep migration attempt/mapping identity, retained report/approval, exact same-attempt recovery and
+cutover/first-write fences: these prevent partial authority or reminting imported identities, not ordinary-create
+response replay. Ordinary user permission revocation is not universally locked through commit; new phases admit
+current authority, and material approval-subject drift still invalidates approval. Follow shared standards for
+aggregate/repository/typed View ownership and adapter presentation without guessing future supplier APIs.
 
 Preserve existing human references while minting internal COMB identities. Import complete self-contained baseline
 events with source path/digest and migration actor/time provenance rather than pretending historical Markdown
@@ -51,7 +59,7 @@ partial import, projection mismatch and canonical-queue mismatch. Do not infer m
 drop unsupported records, allocate replacements silently, or update source during import.
 
 Inspection/rehearsal requires migration-preview authority. Approval and final cutover require distinct guarded
-repository Planning-authority Permission and explicit confirmation of source manifest, report, repository and
+Project Planning-authority Permission and explicit confirmation of source manifest, report, Project and
 current mode. A migration process cannot grant itself authority. Rendered Markdown is permission-filtered and
 contains no secrets. Rollback before cutover discards only proven rehearsal-owned data; after cutover there is no
 automatic fallback to Markdown writing.
@@ -88,23 +96,23 @@ automatic fallback to Markdown writing.
 
 ## Decisions and progress
 
-### Incoming new-Repository authority capability gap
+### Incoming new-Project authority capability gap
 
 TICKET-00103 now maps TASK-00422 early creation feasibility and TASK-00425 first configuration/context stages.
-Both retain `needs-info` for an exact new-Repository database-authority initialization supplier under this existing
+Both retain `needs-info` for an exact new-Project database-authority initialization supplier under this existing
 authority owner. TASK-00102 requires approved Markdown migration and TASK-00103 guards post-cutover consumers;
 neither currently supplies that distinct initialization operation. Allocate a bounded owner capability separately
 before qualifying these consumers; no supplier ID or new implementation TASK is invented by this coordination.
 
 The accepted creation requirement concerns only an exact newly generated registered subject, with explicit original
 consent, actual authoritative empty Planning state and existing central guards. It does not authorize migration of
-an existing Repository, fake rehearsal/approval, normal configuration mode edits, dual writers, a second mode engine,
+an existing Project, fake rehearsal/approval, normal configuration mode edits, dual writers, a second mode engine,
 Planning import or changing this project's Markdown authority. Existing cutover/recovery policy, TASK metadata and
 execution priorities stay unchanged. Early feasibility cannot depend on completed creation/browser acceptance.
 
 ### Original requirement handoff
 
 Implements [WF-011 — Prove the Markdown migration and authority switch](../wayfinder/tickets/WF-011-prove-markdown-migration-and-authority-switch.md).
-It depends on TICKET-00024 Repository identity, TICKET-00025 authority mode, TICKET-00026 complete Planning
+It depends on TICKET-00024 Project identity, TICKET-00025 authority mode, TICKET-00026 complete Planning
 semantics and TICKET-00027 canonical ordering/eligibility. The accepted cutover is required for final
 TICKET-00029 operation and every later coordinated Workflow.

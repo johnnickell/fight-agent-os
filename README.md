@@ -28,6 +28,12 @@ and retires eligible owned local Git/Docker/storage resources. Human merge remai
 pending-merge queue or routine post-merge planning maintenance. Planning checks stay offline; historical
 acceptance/publication checkpoints below are evidence, not current merge instructions.
 
+[TASK-00566's area-B planning correction](planning/tasks/00566-TASK.md#accepted-implementation-checkpoint--2026-11-05)
+has independent Review ACCEPT and documentation QA PASS on `7c9666af4dde06e05c8505c56cb00685c58ce7ab`.
+EPIC-00005's 50 unfinished records are corrected; product implementation, source suppliers and Markdown
+cutover remain separate. Publication and eligible cleanup are pending at this checkpoint; current outcomes are
+in canonical ignored `.runs/tasks/TASK-00566/runs/land.md` and the TASK PR. Human merge remains separate.
+
 [TASK-00548](planning/tasks/00548-TASK.md#accepted-implementation-checkpoint--2026-10-31) has independent
 Review ACCEPT and nonvisual QA PASS on `a7e062a` plus the exact owner-authorized ignore, committed as `15bf30f`.
 The complete 24-phase gate is qualified reused evidence. Publication and eligible cleanup are pending at this
