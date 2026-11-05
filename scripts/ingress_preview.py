@@ -1,4 +1,4 @@
-"""Connect an explicitly selected framework worktree to the shared ingress."""
+"""Connect an explicitly selected project worktree to the shared ingress."""
 import json
 import os
 from pathlib import Path
@@ -23,13 +23,13 @@ def target(root, selector):
 def up(supplier, root, selector):
     from local_ingress import NETWORK, NGINX, check_leaf, live, ready
 
-    require(selector is not None, 'Framework preview requires an exact --worktree path')
+    require(selector is not None, 'Project preview requires an exact --worktree path')
     safe, checkout, project = target(root, selector)
     profile = json.loads((checkout / 'etc/local-tooling.json').read_text()).get('https_preview')
-    require(isinstance(profile, dict), 'Selected project has no framework HTTPS preview profile')
+    require(isinstance(profile, dict), 'Selected project has no HTTPS preview profile')
     service, network, port = profile['service'], profile['network'], profile['port']
     require(all(isinstance(name, str) and re.fullmatch(r'[a-z0-9][a-z0-9-]*', name) for name in (service, network))
-            and type(port) is int and 1 <= port <= 65535, 'Invalid framework preview profile')
+            and type(port) is int and 1 <= port <= 65535, 'Invalid project preview profile')
 
     host = project + '.localhost'
     ready(supplier)
@@ -51,7 +51,7 @@ def up(supplier, root, selector):
     require(state.is_dir() and state == state.resolve(), 'Missing or aliased consumer runtime state')
     gateway = state / 'ingress-preview'
     config = gateway / 'config'
-    require(config == config.resolve(), 'Aliased framework gateway configuration')
+    require(config == config.resolve(), 'Aliased project gateway configuration')
     # Bind the directory so an atomic config rewrite never changes the mount inode.
     write_private(config / 'nginx.conf', f'''pid /tmp/nginx.pid;
 error_log stderr;
@@ -102,4 +102,4 @@ http {{
     run([*command, '--file', overlay, 'up', '--detach', '--no-deps', '--force-recreate',
          'fight-https-preview'], checkout)
     live(supplier, host, retry=True, preview=True)
-    print('Framework preview ready: https://' + host)
+    print('Project preview ready: https://' + host)
