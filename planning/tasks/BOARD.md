@@ -32,7 +32,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -640,6 +640,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | [TICKET-00126 — Maintain source-verified Python diagrams beside feature documentation](../tickets/00126-TICKET.md) | done | — | [PR #209](https://github.com/johnnickell/fight-agent-os/pull/209) |
 | — | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | — (standalone chore) | done | — | [PR #188](https://github.com/johnnickell/fight-agent-os/pull/188) |
 | — | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | — (standalone chore) | done | — | [PR #210](https://github.com/johnnickell/fight-agent-os/pull/210) |
+| — | [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | — (standalone chore) | done | — | — |
 | — | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | — (standalone chore) | done | — | [PR #194](https://github.com/johnnickell/fight-agent-os/pull/194) |
 | — | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | — (standalone bug) | done | — | [PR #195](https://github.com/johnnickell/fight-agent-os/pull/195) |
 | — | [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | — (standalone bug) | done | — | [PR #196](https://github.com/johnnickell/fight-agent-os/pull/196) |

@@ -1,6 +1,6 @@
 # Reopen a disposable TASK for human QA
 
-`bin/qa` is TASK-00556's candidate implementation, **awaiting independent Review/QA acceptance**.
+`bin/qa` has independent Review acceptance and behavioral QA PASS on TASK-00556's recorded candidate; publication and merge remain separate. See the [accepted checkpoint](../../planning/tasks/00556-TASK.md#accepted-implementation-checkpoint--2026-11-05).
 Work qualified default published and explicit revisions, isolated stacks, host Chrome activation/login and scoped
 cleanup on the existing macOS/Herd supplier. This is bounded host evidence, not other-platform certification.
 It is an operator convenience over Worktrunk, the existing isolated Compose project and shared HTTPS ingress.

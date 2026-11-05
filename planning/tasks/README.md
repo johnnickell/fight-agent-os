@@ -558,7 +558,7 @@
 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | done | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | done | [TICKET-00129](../tickets/00129-TICKET.md) |
 | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | done | — |
-| [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | in-progress | — |
+| [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | done | — |
 | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | done | — |
 | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | done | — |
 | [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | done | — |
