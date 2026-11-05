@@ -83,7 +83,7 @@ documentation alone.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00551](../tasks/00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | ready-for-agent |
+| [TASK-00551](../tasks/00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
