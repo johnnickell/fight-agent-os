@@ -129,7 +129,7 @@
 | [TICKET-00124](00124-TICKET.md) | Back up and restore coherent application state | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
 | [TICKET-00125](00125-TICKET.md) | Promote and recover an explicitly approved release | ready-for-agent | [EPIC-00021](../epics/00021-EPIC.md) |
 | [TICKET-00126](00126-TICKET.md) | Maintain source-verified Python diagrams beside feature documentation | done | [EPIC-00022](../epics/00022-EPIC.md) |
-| [TICKET-00127](00127-TICKET.md) | Review material architecture changes with diagrams in pull requests | ready-for-agent | [EPIC-00022](../epics/00022-EPIC.md) |
+| [TICKET-00127](00127-TICKET.md) | Review material architecture changes with diagrams in pull requests | done | [EPIC-00022](../epics/00022-EPIC.md) |
 | [TICKET-00128](00128-TICKET.md) | Show feature architecture on demand in Pi | ready-for-agent | [EPIC-00022](../epics/00022-EPIC.md) |
 | [TICKET-00129](00129-TICKET.md) | Adopt upstream Pi subagents with Fight observation | done | [EPIC-00006](../epics/00006-EPIC.md) |
 | [TICKET-00130](00130-TICKET.md) | Run local Build through upstream agents with browsable activity and stack logs | ready-for-agent | [EPIC-00006](../epics/00006-EPIC.md) |
