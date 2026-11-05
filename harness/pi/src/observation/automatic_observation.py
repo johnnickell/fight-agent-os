@@ -105,7 +105,7 @@ class AutomaticObservation:
                 self.stopped.wait(0.1)
             else:
                 return
-            self.status = "monitor-admission-unavailable"
+            self.status = "monitor-witness-unavailable"
             token = secrets.token_hex(32)
             runtime = worktree / "var/terminal/monitors"
             runtime.mkdir(parents=True, mode=0o700, exist_ok=True)
@@ -119,6 +119,7 @@ class AutomaticObservation:
                 os.chmod(witness, 0o600)
                 json.dump(value, file)
             self.witness = (witness, witness.stat().st_ino)
+            self.status = "monitor-endpoint-unavailable"
             endpoint = Path(route["primary"]) / "var/terminal/s" / (route["generation"].replace("-", "")[:24] + ".sock")
             info = endpoint.lstat()
             if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077 or info.st_dev != route["endpoint"]["dev"] or info.st_ino != route["endpoint"]["ino"]:
@@ -126,17 +127,29 @@ class AutomaticObservation:
             channel = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             channel.settimeout(remaining(0.5))
             local = os.path.relpath(endpoint)
+            self.status = "monitor-connect-unavailable"
             channel.connect(min((str(endpoint), local), key=lambda path: len(os.fsencode(path))))
+            self.status = "monitor-bootstrap-send-unavailable"
             channel.sendall((json.dumps(dict(type="monitor", pid=os.getpid(), token=token, worktree=str(worktree))) + "\n").encode())
             # Absolute admission deadline, not an activity-reset timeout.
             expires, reply = min(time.monotonic() + 1, deadline), b""
+            self.status = "monitor-admission-reply-timeout"
             while b"\n" not in reply and len(reply) < 128:
                 channel.settimeout(max(0.001, expires - time.monotonic()))
                 chunk = channel.recv(128 - len(reply))
-                if not chunk or time.monotonic() >= expires:
+                if not chunk:
+                    self.status = "monitor-admission-transport-closed"
+                    return
+                if time.monotonic() >= expires:
                     return
                 reply += chunk
-            if json.loads(reply) != dict(observed=True, pid=os.getpid()):
+            response = json.loads(reply)
+            self.status = "monitor-admission-reply-invalid"
+            if response != dict(observed=True, pid=os.getpid()):
+                reasons = {"monitor-bootstrap-refused", "monitor-witness-refused", "monitor-worktree-refused",
+                           "monitor-birth-refused", "monitor-lifetime-refused", "monitor-capacity-eight", "monitor-admission-refused"}
+                if isinstance(response, dict) and response.get("observed") is False and response.get("reason") in reasons:
+                    self.status = response["reason"]
                 return
             channel.setblocking(False)
             with self.lock:
