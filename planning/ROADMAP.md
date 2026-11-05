@@ -69,6 +69,13 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**TASK-00565 area-A Work — 2026-11-05:** [the implementation checkpoint](tasks/00565-TASK.md#work-implementation-checkpoint--2026-11-05)
+records exhaustive unfinished identity/access/email-change/Feature/reference-plan correction and the coverage
+locator for TASK-00571. The canonical gate failed in unchanged `LifecycleContinuity.test.tsx`; mandatory
+verification is incomplete pending coordinator/application-owner disposition. Independent Review and documentation
+QA remain pending; no source/supplier/feature acceptance is inferred. Other area priorities/dependencies remain unchanged. The architecture-decomposition
+checkpoint below is historical; implementation routing stays with the Board.
+
 **TASK-00564 acceptance checkpoint:** Independent Review ACCEPT and nonvisual QA PASS cover candidate
 `c160a31ba985978633c904e8493c091c8a35d785`. Publication and final delivery checks were pending at this checkpoint;
 current results are in canonical ignored `.runs/tasks/TASK-00564/runs/land.md` and the TASK PR. Other EPIC slices

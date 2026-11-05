@@ -87,7 +87,7 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent |
+| [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | in-progress |
 | [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | ready-for-agent |
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | ready-for-agent |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
@@ -97,6 +97,13 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Current area-A Work: [TASK-00565](../tasks/00565-TASK.md#work-implementation-checkpoint--2026-11-05) records the
+exhaustive 62-record unfinished inspection plus preserved completed TASK-00531, corrections and canonical ignored
+coverage locator for TASK-00571. The canonical gate failed in unchanged `LifecycleContinuity.test.tsx`; mandatory
+verification is incomplete pending coordinator/application-owner disposition. Independent Review/documentation QA
+remain pending; no source or supplier is qualified and sibling areas are not completed by this work. The decomposition/validation checkpoints below are
+historical, including their then-current inventory counts and unstarted-work statements.
 
 John approved whole-portfolio planning reconciliation and this second requirement area in the six-TICKET split,
 then approved the seven-area TASK decomposition, now written as TASK-00565 through TASK-00571:

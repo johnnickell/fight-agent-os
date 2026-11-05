@@ -12,6 +12,11 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 
 ### Current assessment handoff
 
+[TASK-00565](00565-TASK.md#work-implementation-checkpoint--2026-11-05) is in Work for the exhaustive area-A
+planning correction. Its canonical ignored coverage evidence feeds TASK-00571. The normal canonical gate
+failed in unchanged `LifecycleContinuity.test.tsx`; mandatory verification is incomplete pending coordinator/
+application-owner disposition. Independent Review and documentation QA remain pending. No acceptance is claimed.
+
 [TASK-00563](00563-TASK.md#accepted-implementation-checkpoint--2026-11-04) has independent Review ACCEPT and
 visual/behavioral QA PASS on amended candidate `9d9d952` (18 scenario groups / 18 inspected native captures).
 Publication/capture access and eligible cleanup are pending at this acceptance checkpoint; actual results and
@@ -32,13 +37,12 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 2 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 3 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 4 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |

@@ -105,7 +105,10 @@ The maintainer approved two independently reviewable paths:
 Both are unranked features, ready behind listed blockers. TASK-00294's Agent runtime is not a prerequisite.
 TASK-00295 owns the real `GET /api/v1/features` read for all currently authenticated Users, without Dashboard,
 testing or management Permission requirements. It composes package `ListFeatures` and `FeatureAvailability`
-through a justified complete-catalog Application operation, not another evaluator, renamed query or public gate.
+through a registered aggregate-owned QueryHandler for justified complete-catalog composition, not another
+evaluator, renamed query, broad forwarding service or public gate. Entry adapters own authentication and scope
+admission; typed safe camelCase Views cross outward to HTTP Data/Responders for snake_case JSON/status/headers
+under the [canonical read contract](../../docs/engineering/STANDARDS.md#safe-typed-reads-and-intentional-failures).
 
 The approved protocol is one bounded complete response, not browser-managed paging. Return explicit complete/count
 metadata only after buffering and validating every internal page and item. Include OFF and safe Feature identity,
