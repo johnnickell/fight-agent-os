@@ -46,6 +46,11 @@ it('ignores focus while still hidden and coalesces focus-before-visibility retur
   );
   const count = () => fetch.mock.calls.filter(([url]) => url.endsWith('/me')).length;
   try {
+    await screen.findByRole('main', { name: 'Dashboard' });
+    // Settle the real lazy outlet before exercising lifecycle events, not on RTL's polling budget.
+    await act(async () => {
+      await import('@/pages/DashboardPage');
+    });
     await screen.findByRole('heading', { name: 'Dashboard', level: 1 });
     const main = screen.getByRole('main');
     hidden = true;

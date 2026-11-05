@@ -12,10 +12,11 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 
 ### Current assessment handoff
 
-[TASK-00565](00565-TASK.md#work-implementation-checkpoint--2026-11-05) is in Work for the exhaustive area-A
-planning correction. Its canonical ignored coverage evidence feeds TASK-00571. The normal canonical gate
-failed in unchanged `LifecycleContinuity.test.tsx`; mandatory verification is incomplete pending coordinator/
-application-owner disposition. Independent Review and documentation QA remain pending. No acceptance is claimed.
+[TASK-00565](00565-TASK.md#repair-01-checkpoint--2026-11-05) preserves the exhaustive area-A planning correction
+and coverage evidence for TASK-00571. John's authorized Lifecycle synchronization repair passes focused checks
+(140 tests / 6 files); the one final gate instead failed in PHPStan's generated cache-file creation. Mandatory
+verification remains incomplete pending coordinator/tooling-owner disposition. Independent Review and affected
+QA remain pending. No acceptance is claimed.
 
 [TASK-00563](00563-TASK.md#accepted-implementation-checkpoint--2026-11-04) has independent Review ACCEPT and
 visual/behavioral QA PASS on amended candidate `9d9d952` (18 scenario groups / 18 inspected native captures).

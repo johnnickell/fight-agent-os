@@ -69,12 +69,13 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00565 area-A Work — 2026-11-05:** [the implementation checkpoint](tasks/00565-TASK.md#work-implementation-checkpoint--2026-11-05)
-records exhaustive unfinished identity/access/email-change/Feature/reference-plan correction and the coverage
-locator for TASK-00571. The canonical gate failed in unchanged `LifecycleContinuity.test.tsx`; mandatory
-verification is incomplete pending coordinator/application-owner disposition. Independent Review and documentation
-QA remain pending; no source/supplier/feature acceptance is inferred. Other area priorities/dependencies remain unchanged. The architecture-decomposition
-checkpoint below is historical; implementation routing stays with the Board.
+**TASK-00565 area-A Work — 2026-11-05:** [the repair-01 checkpoint](tasks/00565-TASK.md#repair-01-checkpoint--2026-11-05)
+preserves exhaustive unfinished identity/access/email-change/Feature/reference-plan correction and the coverage
+locator for TASK-00571. John's authorized Lifecycle synchronization repair passes 140 focused tests / 6 files;
+the one final gate instead failed in PHPStan generated cache-file creation. Mandatory verification remains
+incomplete pending coordinator/tooling-owner disposition. Independent Review and affected QA remain pending;
+no source/supplier/feature acceptance is inferred. Other area priorities/dependencies remain unchanged. The
+architecture-decomposition checkpoint below is historical; implementation routing stays with the Board.
 
 **TASK-00564 acceptance checkpoint:** Independent Review ACCEPT and nonvisual QA PASS cover candidate
 `c160a31ba985978633c904e8493c091c8a35d785`. Publication and final delivery checks were pending at this checkpoint;
