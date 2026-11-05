@@ -1,77 +1,67 @@
-// Owning real-Docker integration; run explicitly from a provider checkout with unused EVIDENCE.
-// All container lifecycle actions below belong to this fixture, never to the observer.
+// Direct real-Docker qualification, not native Pi/Herdr or independent QA evidence.
+// Run: node harness/pi/tests/native/late-runtime.mjs SELECTED_CHECKOUT OWNED_FIXTURE EVIDENCE
+// Both paths must already be registered and prepared through the explicit native resource procedure.
+// The fixture must initially be down. This probe operates only its three tooling services, never main.
+// Full TLS startup and native interaction remain separately required. Keep all runtime records human-only.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
 import { mkdirSync, realpathSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { resolve, join } from 'node:path';
 import { DiscoveredLogs } from '../../src/herdr/discovered-logs.mjs';
 
-const evidence = resolve(process.argv[2]); mkdirSync(evidence, { recursive: true });
-const root = join(evidence, 'target'), linked = join(evidence, 'linked'); mkdirSync(root);
-const execute = (command, args, options = {}) => execFileSync(command, args, { encoding: 'utf8', timeout: 20000, ...options }).trim();
-const git = args => execute('git', ['-C', root, ...args]);
-git(['init', '-b', 'main']); git(['-c', 'user.name=Harness Fixture', '-c', 'user.email=fixture@example.test', 'commit', '--allow-empty', '-m', 'fixture']);
-git(['worktree', 'add', '-b', 'fixture-linked', linked]);
-const checkout = realpathSync(linked), project = `task00538-${randomUUID().slice(0, 8)}`;
-const image = 'node@sha256:dd9d21971ec4395903fa6143c2b9267d048ae01ca6d3ea96f16cb30df6187d94';
-const containers = [], cases = [], cleanups = [];
-const logs = new DiscoveredLogs();
-const marker = 'OWNED_RUNTIME_RECORD';
-function create(service = 'web', mount = checkout) {
-  const id = execute('docker', ['run', '--detach', '--pull=never', '--network=none', '--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges:true', '--pids-limit=32', '--memory=64m', '--cpus=.25',
-    '--label', `com.docker.compose.project=${project}`, '--label', `com.docker.compose.service=${service}`, '--label', `com.docker.compose.project.working_dir=${checkout}`,
-    '--mount', `type=bind,source=${mount},target=/workspace,readonly`, image, 'node', '-e', `setInterval(() => console.log('${marker}'), 200)`]);
-  containers.push(id); return id;
-}
-async function until(predicate, label, timeout = 30000) {
-  const started = Date.now();
-  while (Date.now() - started < timeout) {
+const [selected, fixture, evidence] = process.argv.slice(2).map(value => realpathSync(value));
+assert.ok(selected && fixture && evidence && selected !== fixture, 'Explicit distinct registered checkouts/evidence required');
+mkdirSync(evidence, { recursive: true });
+const logs = new DiscoveredLogs(), cases = [];
+const runtime = (...args) => execFileSync(join(selected, 'bin/runtime'), ['--worktree', fixture, 'docker', 'compose', ...args], { cwd: selected, stdio: ['ignore', 'ignore', 'ignore'], timeout: 120000 });
+const record = label => cases.push({ label, passed: true });
+async function until(predicate, label, seconds = 60) {
+  const deadline = Date.now() + seconds * 1000;
+  while (Date.now() < deadline) {
     await logs.refresh();
-    if (predicate()) { cases.push({ label, elapsedMs: Date.now() - started }); return; }
+    if (predicate()) { record(label); return; }
     await new Promise(done => setTimeout(done, 250));
   }
   throw Error(`Timed out: ${label}`);
 }
+const mixed = () => new Set((logs.current?.history ?? []).map(line => line.split('/')[0])).size >= 2;
+let passed = false;
 try {
-  await logs.rebind(checkout); assert.equal(logs.current, null);
-  const first = create();
-  await until(() => logs.current?.state === 'following' && logs.current.body().includes(marker), 'late startup auto attaches');
-  assert.equal(logs.current.container, first);
-  await logs.action('pause'); const old = logs.current;
-  execute('docker', ['stop', '--time', '1', first]);
-  await until(() => logs.current === null, 'stop clears stale output');
-  assert.deepEqual(old.history, []); assert.equal(old.processes.size, 0);
-  execute('docker', ['start', first]);
-  await until(() => logs.current?.state === 'following', 'restart freshly verifies');
-  assert.equal(logs.current.paused, true); assert.deepEqual(logs.current.frozen, []);
-  execute('docker', ['rm', '--force', first]); const second = create();
-  await until(() => logs.current?.container === second && logs.current.state === 'following', 'replacement auto attaches same verified service');
-  const secondReader = logs.current;
+  await logs.rebind(selected, { main: true });
+  await until(() => logs.current?.state === 'following' && mixed(), 'main all-service mixed output without service picker');
+  const main = logs.current.source;
+  assert.ok(main.main === main.checkout.primary && main.members.length > 1, 'Main resolves through registered identity');
+  await logs.rebind(selected);
+  await until(() => logs.current?.state === 'following' && mixed(), 'selected worktree mixed output, including non-source-mounted database');
+  const selectedReader = logs.current;
+  await logs.refresh({ force: true });
+  assert.ok(logs.current === selectedReader, 'A second unrelated registration cannot steal this verified source'); record('unrelated worktree registration cannot steal selection');
+  await logs.action('select'); await logs.action('down'); await logs.action('mark'); await logs.action('choose');
+  assert.ok(logs.current.source.members.length < logs.current.source.services.length, 'Inspected service subset applies'); record('service subset');
+  await logs.rebind(fixture);
+  assert.ok(logs.current === null, 'Missing active fixture must not fall back to main'); record('active no-stack unavailable');
+  runtime('up', '-d', '--wait', 'web', 'postgres', 'postgres_test');
+  await until(() => logs.current?.state === 'following' && mixed(), 'late fixture startup automatically follows multiple services');
+  assert.ok(logs.filterLabel() === 'All', 'Stack switch resets filters'); record('stack switch resets All');
+  await logs.action('pause'); const previous = logs.current;
+  runtime('up', '-d', '--force-recreate', 'web');
+  await until(() => logs.current && logs.current !== previous && logs.current.state === 'following', 'container replacement freshly verifies complete stack');
+  assert.ok(previous.history.length === 0 && previous.frozen === null && previous.processes.size === 0, 'Previous live/frozen data and processes must be gone');
+  runtime('stop', 'postgres');
+  await until(() => logs.current?.source.stopped.includes('postgres'), 'stopped service is disclosed while remaining verified stack follows');
+  runtime('start', 'postgres');
+  await until(() => logs.current?.state === 'following' && !logs.current.source.stopped.length, 'restart freshly verifies service-set/lifecycle');
   await logs.action('toggle'); const count = logs.readers.length;
-  execute('docker', ['rm', '--force', second]); const third = create();
-  await new Promise(done => setTimeout(done, 3300)); await logs.refresh();
-  assert.equal(logs.current, secondReader); assert.equal(logs.current.open, false); assert.equal(logs.readers.length, count);
-  await logs.action('toggle'); assert.equal(logs.current.container, third);
-  const wrong = create('worker', realpathSync(root));
-  await logs.action('select'); assert.equal(logs.choice().count, 1, 'wrong-checkout mount must not enter choices');
-  await logs.action('cancel');
-  execute('docker', ['rm', '--force', third]); const fourth = create();
-  await new Promise(done => setTimeout(done, 3300)); await logs.refresh(); assert.equal(logs.current, null);
-  await logs.action('select'); await logs.action('choose'); assert.equal(logs.current.container, fourth);
-  const duplicate = create();
-  await until(() => logs.current === null, 'replicated service revokes source');
-  execute('docker', ['rm', '--force', duplicate, wrong]);
-  await until(() => logs.current?.container === fourth, 'ambiguity resolves only to prior pinned service');
-  // A source-context generation change always fences the old reader before any new discovery.
-  logs.hold(); assert.equal(logs.current, null); await logs.rebind(realpathSync(root)); assert.equal(logs.current, null);
-  cases.push({ label: 'manual close/cancel, wrong mounts, duplicate services and checkout change', passed: true });
-  console.log(JSON.stringify({ result: 'passed', cases }));
+  await logs.refresh({ force: true }); assert.ok(!logs.current.open && logs.readers.length === count, 'Manual close survives discovery'); record('manual close persists');
+  await logs.action('reconnect'); await until(() => logs.current?.state === 'following', 'explicit recovery');
+  await logs.rebind(selected, { main: true });
+  assert.ok(logs.current.source.main === main.main, 'Return to verified main'); record('return to main');
+  passed = true;
 } finally {
   await logs.close();
-  for (const id of containers) {
-    try { execute('docker', ['rm', '--force', id]); cleanups.push({ id, removed: true }); }
-    catch { cleanups.push({ id, alreadyAbsent: true }); }
-  }
-  writeFileSync(join(evidence, 'summary.json'), JSON.stringify({ project, image, checkout, containers, cases, cleanups, trackedReadersAfterClose: logs.readers.flatMap(reader => [...reader.processes].map(child => child.pid)) }, null, 2) + '\n');
+  // Caller owns SAME public bin/down and guarded Worktrunk removal after this display exits.
+  writeFileSync(join(resolve(evidence), 'summary.json'), JSON.stringify({ result: passed ? 'passed' : 'failed', selected, fixture, cases,
+    trackedReadersAfterClose: logs.readers.reduce((sum, reader) => sum + reader.processes.size, 0),
+    runtimeContentDisclosed: false, limits: 'Tooling stacks, not full TLS startup, native Herdr or independent acceptance' }, null, 2) + '\n');
 }
+console.log(JSON.stringify({ result: passed ? 'passed' : 'failed', cases: cases.length, runtimeContentDisclosed: false }));

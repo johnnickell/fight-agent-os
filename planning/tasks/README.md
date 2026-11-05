@@ -558,14 +558,14 @@
 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | done | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | done | [TICKET-00129](../tickets/00129-TICKET.md) |
 | [TASK-00555](00555-TASK.md) | Evaluate native Pi MCP before choosing an adapter prerequisite | done | — |
-| [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | ready-for-agent | — |
+| [TASK-00556](00556-TASK.md) | Recreate disposable worktree environments for on-demand human QA | done | — |
 | [TASK-00557](00557-TASK.md) | Reuse application builds across planning updates and explain cache decisions | done | — |
 | [TASK-00558](00558-TASK.md) | Retire owned fixture refs after their worktree source is gone | done | — |
 | [TASK-00559](00559-TASK.md) | Retire Land worktree configuration while preserving an unmerged branch | done | — |
 | [TASK-00560](00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | in-progress | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | done | [TICKET-00130](../tickets/00130-TICKET.md) |
-| [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | ready-for-agent | [TICKET-00130](../tickets/00130-TICKET.md) |
+| [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | done | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | done | [TICKET-00131](../tickets/00131-TICKET.md) |
 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |

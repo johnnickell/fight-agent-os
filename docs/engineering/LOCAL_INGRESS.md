@@ -37,16 +37,20 @@ only CHOWN/SETUID/SETGID capabilities for its native worker/temp-directory setup
 publishes loopback 80/443. Optional Herd mode publishes only one explicitly selected high loopback HTTPS port.
 Remote/TCP Docker endpoints and foreign reserved network/project ownership are refused, never adopted or stopped.
 
-## Explicit human preparation
+## Explicit operator preparation
 
-Run these commands from the selected implementation checkout. No command installs packages or changes DNS/hosts.
-Do not supply privilege passwords or private keys to an agent. Standard port binding may require a separately
-configured Docker Desktop/host privilege setting; the tool reports failure, never configures it or invokes sudo.
+Run these commands from the selected implementation checkout. Within authorized task scope, agents may prepare
+exact-name leaves using the existing CA and update the ownership-qualified Fight-only include with available
+supported tools/privilege. This is not implicit infrastructure enrollment by application startup. Global trust,
+DNS/hosts/settings changes and shared-service stop/restart remain outside routine task preparation.
+No command installs packages or changes DNS/hosts. Do not supply privilege passwords or private keys to an agent.
+Standard port binding may require a separately configured Docker Desktop/host privilege setting; the supplier
+tool reports failure, never configures it or invokes sudo.
 
 ```sh
 ./bin/ingress setup          # Inspect native ownership; write config and create only the external network
 mkcert -install             # HUMAN: explicit machine-wide trust decision, in your own terminal
-./bin/https setup --ingress  # HUMAN: main's fight-agent-os.localhost leaf; no implicit trust enrollment
+./bin/https setup --ingress  # Explicit main leaf using existing CA; no implicit trust enrollment
 ./bin/https setup --ingress --worktree /absolute/registered/worktree
 # Repeat the preceding command for the second registered worktree.
 ./bin/ingress up --bind-ports # HUMAN: explicitly authorize loopback 80/443 listeners
@@ -57,8 +61,13 @@ them before any certificate setup writes. macOS's system LibreSSL 3.3.6 lacks th
 select an already installed capable executable in the invoking shell, for example
 `export FIGHT_INGRESS_OPENSSL=/opt/homebrew/opt/openssl@3/bin/openssl` on the qualified macOS host; use the actual
 path on your host. Preserve that selection for ingress certificate status, application startup and ingress up.
-No automatic installation, PATH rewrite or equality-version gate is performed. OpenSSL 3.6.3 was capability-checked;
-actual-name leaves were subsequently generated with the existing trusted CA on the qualified host.
+No automatic installation, PATH rewrite or equality-version gate is performed.
+
+For [on-demand human QA](HUMAN_QA.md), explicit certificate setup/removal also accepts an exact absent future
+or retired absolute worktree path. It derives the SAME path-based hostname without allocating source/runtime
+or starting ingress; existing unknown paths and aliases are refused. QA up prints its future path when a leaf
+is missing. This remains explicit scoped preparation, not automatic trust or front-door enrollment. OpenSSL
+3.6.3 was capability-checked; actual-name leaves were generated with the existing trusted CA on the qualified host.
 
 The existing [TASK-00145 direct TLS flow](LOCAL_HTTPS.md) remains unchanged. The ingress extension reuses
 mkcert/OpenSSL, but does not invoke `mkcert -install`, rewrite `.env`, copy main keys or generate wildcards.
@@ -66,7 +75,8 @@ It copies only mkcert's **public** root certificate into `var/local-ingress/cert
 private key stays outside the repository and containers. Each exact-name leaf/key is owner-readable under
 `var/local-ingress/certs/<name>.localhost/`. An existing different CA is refused; coordinate consumers before
 CA rotation. Missing, mismatched, untrusted-to-the-shared-CA, invalid or less-than-one-day-valid leaves fail
-preflight. Leaf generation and enrollment are explicit human operations, not startup side effects.
+preflight. Leaf generation is an explicit scoped operator operation; machine trust enrollment remains a
+separate human decision. Neither is a startup side effect.
 
 `<project>.localhost` uses the stable checkout project returned by `./bin/runtime inspect` inside that worktree
 (or `./bin/runtime --worktree SELECTOR inspect` from main). Git registration resolves selectors; branch changes
@@ -102,21 +112,53 @@ sites, default servers, trust and other projects stay owned by their operators.
    `./bin/ingress setup` and `./bin/ingress up --bind-ports` after freeing the standard listeners legitimately.
 
 2. `herd-config` only renders canonical `var/local-ingress/herd.conf`. It enumerates Git-registered checkout
-   names with valid installed exact-only DNS-SAN leaves (no wildcard/alias SANs). It never reads application
-   environments or installs/reloads Herd. Inspect the result, then exclusively create ONE owned site file
-   `~/Library/Application Support/Herd/config/valet/Nginx/fight-local-ingress.conf` in Herd's existing HTTP-scope
-   include directory. Never overwrite an unrelated file or edit global config. `cp -n` followed by `cmp` can
-   install/verify the new file; inspect ownership first. Record its path, owner marker and digest in the handoff.
-   The adapter references only supplier-owned leaf/key/public-CA and header configuration paths under `var/`.
+   names with valid installed exact-only DNS-SAN leaves (no wildcard/alias SANs). Repeat
+   `--include-worktree /absolute/planned/checkout` to include exact absent future/retired paths with valid leaves;
+   this resolves the existing path-derived hostname without creating source, registration or runtime settings.
+   Explicit included names with missing/invalid leaves fail, rather than silently disappearing. It never reads
+   application environments or installs/reloads Herd. Preserve the previous generated file while its handoff
+   is still consumed. Treat the output as a candidate, not an authoritative inventory of loaded names.
 
-3. Validate the FULL existing Herd configuration using the installed Herd Nginx binary and actual `-c` path.
-   If root-owned files or privileged test binds require sudo, the human runs it in their own terminal. Never
-   request a password in an agent. Only after a successful full test, gracefully signal the verified existing
-   master with HUP (or native Nginx reload using its verified prefix/pid path); never restart/stop the service.
-   On the qualified macOS installation the binary is `/Applications/Herd.app/Contents/Resources/nginx-arm64`
-   and config is `$HOME/Library/Application Support/Herd/config/nginx/nginx.conf`. Run the test from canonical
-   `var/local-ingress/` so any native diagnostic pid file stays out of source. A scoped high-listener syntax
-   diagnostic is NOT a successful full service test or reload. Record full-test/reload state, not just file creation.
+   Inspect ONE site file `~/Library/Application Support/Herd/config/valet/Nginx/fight-local-ingress.conf` in
+   Herd's existing HTTP-scope include directory: regular non-symlink, owner, Fight-only canonical owner marker,
+   exact content/digest and every peer/certificate reference. Refuse unknown ownership/content or name conflicts.
+   Compare the candidate with that file; retain all main/peer/planned blocks not explicitly being retired,
+   including unregistered names still loaded or held by another handoff. Include their known exact paths in
+   rendering or preserve their verified unchanged blocks; never replace the file blindly with a smaller render.
+   Qualify full-test/reload capability before changing the installed include. Then use native tools to create
+   it exclusively when absent (`cp -n` plus `cmp`), or replace only the verified owned preimage while retaining
+   its rollback outside Herd's wildcard directory. Recheck concurrent changes before replacement. Never edit
+   global config or overwrite an unrelated file. Record path, owner marker, before/after digest and retained
+   names in the existing handoff. References stay under supplier-owned `var/` leaf/key/public-CA/header paths.
+
+3. Validate the FULL existing Herd configuration using the installed Herd Nginx binary and actual `-c` path,
+   from private task scratch (native tests can create diagnostic pid/temp files). On the qualified macOS host,
+   these are `/Applications/Herd.app/Contents/Resources/nginx-arm64` and
+   `$HOME/Library/Application Support/Herd/config/nginx/nginx.conf`; reverify the live root master command,
+   binary/config, pid and workers, rather than trusting a historical pid. Use native `-t -c` with existing
+   privilege; `sudo -n` is permitted when available. On macOS, explicit operator authorization may instead
+   use `/usr/bin/osascript` `do shell script` with `administrator privileges` for the exact bound test/reload
+   command. Credentials stay solely in the native OS authorization dialog, never chat/stdin/argv/logs. This
+   path was qualified on TASK-00556; it grants no persistent sudo rule, helper installation or service restart.
+   Bind the command to the freshly verified root master command/binary/config and global-config/owned-include
+   SHA-256 digests; check these before the full test and again before signaling that SAME master. Run from
+   private scratch, not a writable arbitrary privileged script. Respect denial/cancel and reconcile partial
+   effects before another attempt; never collect a password or broaden permissions.
+   Only after the installed candidate passes the full test, reverify the SAME master and gracefully HUP it
+   (or native reload with verified prefix/pid). Verify worker turnover and request behavior; signal success
+   alone is not a verified reload. Never restart/stop the service. On failure restore the exact owned preimage,
+   retain referenced files and report actual test/reload/rollback state; do not bypass a failed full test.
+
+   Discover supported native capabilities before declaring a hold. Installed Herd 2.0.3 CLI/MCP and application
+   scripting exposed no full-test/graceful-reload operation in TASK-00556's investigation; `herd restart nginx`
+   is restart, not reload, and CLI Nginx lint was unimplemented. Direct native Nginx supports test/reload, but
+   root-owned logs and root master signaling require actual privilege. A known `sudo -n` password denial is a
+   limit of that mechanism, not proof that native OS authorization is unavailable. Use the explicitly authorized
+   exact-operation native dialog path above when applicable; never retry unchanged sudo denial, invoke arbitrary
+   privileged helpers or change service configuration. If authorization is denied/cancelled or genuinely
+   unavailable, leave/restore the ownership-verified include, retain loaded leaves and hand off only the exact
+   remaining privileged test/reload action. No blanket human-only leaf/include rule applies. Scoped syntax checks,
+   generated files and docs alone never establish a successful full test, reload or browser readiness.
 
 4. Verify safe read-only existing `.test` requests before/after, then canonical Fight root/CSRF, exact original
    Host/SNI (including `:443` aliases), Origin, cookies/auth and default browser trust. Startup/status probe BOTH
@@ -135,6 +177,36 @@ removal. If privilege blocks reload, retain the referenced valid leaves and repo
 adapter completely, verify its recorded owner/content, unlink ONLY that exact owned include, full-test and
 HUP the same verified master. Do not delete shared trust, other site configs or the running Herd service.
 Supplier/application down never operates Herd. Keep leaves/header paths while a live or pending include needs them.
+
+## Scoped task preparation and retirement
+
+Build, Work and Land use this same process, not a role-specific ingress manager. Inspect existing supplier
+mode/port, services and consumers first; reuse a healthy shared supplier without setup/up/down merely to start
+or retire a worktree. Missing trust or supplier operation needs its owner's explicit action. For a planned QA
+checkout, obtain the exact full-OID path from `bin/qa up` preallocation output, then from the operator checkout:
+
+```sh
+./bin/https setup --ingress --worktree "$qa_path" # Exact absolute future path; existing CA only
+./bin/ingress herd-config --include-worktree "$qa_path" # Herd only; repeat for known planned peers
+# Inspect/preserve peers, qualify privilege, install, full-test and gracefully reload as above.
+./bin/qa up TASK-00556 --ref FULL_COMMIT_OID # Only after exact front-door preparation
+```
+
+Use the actual TASK/OID, not a guessed path or this example as acceptance evidence. In independent mode no
+Herd include is involved. Keep OpenSSL capability selection scoped to these invocations. Neither leaf setup
+nor rendering allocates a QA worktree; neither produces a ready URL. QA up/down itself never edits Herd.
+
+At session end, run exact `bin/qa down /absolute/qa/checkout`, or public `bin/down --worktree` plus the guarded
+Worktrunk remover for engineering/qualification source as applicable. Verify gateway/route and native resource
+removal without touching peers. Separately remove ONLY the retired name's owned Herd blocks, preserving every
+other consumer; full-test, gracefully reload and verify unload before exact leaf removal with
+`bin/https remove --ingress --worktree /absolute/original/path`. Do not blindly regenerate away unregistered peers.
+If reload is held, keep every
+referenced leaf/header/CA/config and report the exact remaining names/include/digest and recovery action;
+Docker/source retirement can still proceed. If a new leaf was never installed or loaded, discard its pending
+candidate references and verify no other config/consumer references it before exact leaf removal. Shared
+supplier services/network, existing CA/trust, unrelated names and caches remain protected. Record created,
+removed and held leaves/includes/routes separately from source/ref/runtime outcomes in the existing handoff.
 
 ## Start applications, not infrastructure
 

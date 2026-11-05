@@ -4,8 +4,9 @@ import { DiscoveredLogs } from '../src/herdr/discovered-logs.mjs';
 import { HerdrLogs } from '../src/herdr/logs.mjs';
 
 const source = (container = 'a', service = 'web', main = '/checkout') => ({
-  main, container, service, project: 'owned', endpoint: 'unix:///local.sock', socket: { inode: 1 },
+  main, container, service, project: service === 'web' ? 'owned' : 'alternate', endpoint: 'unix:///local.sock', socket: { inode: 1 },
   checkout: { root: main }, witness: container, label: `${service}/${container}`,
+  services: [service], members: [{ service, container }],
 });
 async function fixture(t) {
   let choices = [], error, calls = 0, active = 0, maximum = 0;
@@ -262,4 +263,23 @@ test('an unreaped reader blocks every automatic replacement', async t => {
   f.set([source('replacement')]); await f.refresh(); assert.equal(f.logs.current, null); assert.equal(f.readers.length, 1);
   assert.match(f.logs.body(), /not exited/); old.stop = stop; await old.stop();
   await f.refresh(); assert.equal(f.logs.current.source.container, 'replacement');
+});
+
+test('service/source menus visibly escape hostile path and project-label controls', async t => {
+  const f = await fixture(t), worktree = '/checkout\x1b]52;clipboard\x07\u202e';
+  f.set([{ ...source('a', 'web', worktree), label: 'label\x1b]52;clipboard\x07' }, source('b', 'worker', worktree)]);
+  await f.logs.rebind(worktree);
+  let choice = f.logs.choice();
+  assert.doesNotMatch(choice.worktree + choice.label, /[\x00-\x1f\x7f-\x9f\u202e]/);
+  assert.match(choice.label, /\\u001b/);
+  await f.logs.action('choose'); await f.logs.action('select'); choice = f.logs.choice();
+  assert.equal(choice.kind, 'Services');
+  assert.doesNotMatch(choice.worktree, /[\x00-\x1f\x7f-\x9f\u202e]/);
+});
+
+test('reconnect/filter readmissions disclose counted unknown gaps rather than resetting to zero', async t => {
+  const f = await fixture(t); f.set([source()]); await f.logs.rebind('/checkout');
+  assert.equal(f.logs.current.gaps, 0);
+  await f.logs.action('reconnect'); assert.equal(f.logs.current.gaps, 1);
+  await f.logs.action('select'); await f.logs.action('choose'); assert.equal(f.logs.current.gaps, 2);
 });

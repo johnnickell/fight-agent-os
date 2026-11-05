@@ -113,7 +113,7 @@ and distinguish fresh from qualified reused evidence, implementation acceptance,
 | [TASK-00560](../tasks/00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | in-progress |
 | [TASK-00561](../tasks/00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent |
 | [TASK-00562](../tasks/00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | done |
-| [TASK-00563](../tasks/00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | ready-for-agent |
+| [TASK-00563](../tasks/00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -128,6 +128,17 @@ On 2026-11-04 John approved incorporating the patched upstream component into th
 custom Harness, rather than requiring an external fork repository or upstream maintainer review. TASK-00560 owns
 this packaging prerequisite. Independent Fight review/QA, private installed qualification, actual Engineer execution
 and safe-boundary adoption remain separate; no Build default cutover, installation update or publication is authorized.
+
+### TASK-00563 acceptance checkpoint — 2026-11-04
+
+[TASK-00563](../tasks/00563-TASK.md#accepted-implementation-checkpoint--2026-11-04) has independent Review
+ACCEPT and visual/behavioral QA PASS on amended `9d9d952`; all seven LOGS criteria have executed coverage.
+The candidate also includes the explicit persistent Sol/high QA/Land defaults and single-owner caller docs.
+Publication/capture access and eligible cleanup are pending at this frozen checkpoint; actual results are in
+canonical ignored `.runs/tasks/TASK-00563/runs/land-delivery.md` and the TASK PR. Full worktree HTTPS/auth startup,
+everyday package rollout and SDK stage cutover are not claimed. TASK-00560/00561 remain unfinished, so this parent
+and EPIC remain open. The original planning approval/verification below is preserved history, not current execution
+or delivery evidence.
 
 John approved the new requirements and TASK split on 2026-11-02 in response to the isolated planning proposal,
 including AGENTS/LOGS naming and the additional stack-wide LOGS slice. Planning checkout is

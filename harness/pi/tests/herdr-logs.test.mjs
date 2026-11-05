@@ -1,460 +1,173 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
-import { mkdtempSync, mkdirSync, realpathSync, rmSync } from 'node:fs';
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { HerdrLogs, readLogConfiguration } from '../src/herdr/logs.mjs';
 import { installLogInput } from '../src/herdr/logs-input.mjs';
 import { NativeWorkspaceContext, serveLocal } from '../src/herdr/context.mjs';
-import { RuntimeLogs } from '../src/workspace/runtime-logs.mjs';
 
 const turn = () => new Promise(done => setImmediate(done));
-async function fixture(t, { multiple = false, shared = false, discovery = false } = {}) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'herdr-logs-')));
-  const a = join(root, 'a'), b = join(root, 'b'), missing = join(root, 'missing');
-  for (const directory of [a, b, missing]) mkdirSync(directory);
-  const primary = { cwd: a, sessionId: randomUUID(), sessionFile: null, pid: process.pid };
-  const native = new NativeWorkspaceContext(primary), binding = await native.start();
-  let value = { ...native.snapshot(), state: 'idle', worktree: a, child: null }, denied = false;
-  const token = randomUUID();
-  const endpoint = await serveLocal(query => {
-    if (denied || query?.token !== token || query.operation !== 'selection' || query.generation !== binding.generation) throw Error('Unavailable');
-    return { ...value, at: Date.now() };
-  });
-  const source = (main, project) => ({ main, context: 'local', project, service: 'web' });
-  native.logs = { discovery, tests: [source(a, 'test-a'), source(b, 'test-b'), ...(multiple ? [source(a, 'alternate')] : [])], shared: shared ? source(a, 'shared') : null,
-    companion: { port: endpoint.port, token } };
-  const config = await readLogConfiguration(binding), calls = [], streams = [], rows = new Map();
-  native.logs.tests.forEach((item, index) => rows.set(item.project, { id: String(index + 1).repeat(64), directory: item.main, service: 'web', state: 'running' }));
-  rows.set('shared', { id: 'e'.repeat(64), directory: a, service: 'web', state: 'running' });
-  const logs = new HerdrLogs(binding, config, () => {}, { sources: discovery ? {
-    async discover(main) {
-      return { notice: 'verified fixture inventory', choices: native.logs.tests.filter(item => item.main === main).map(item => ({
-        ...item, endpoint: 'unix:///controlled-endpoint.sock', socket: { inode: 1 }, checkout: { root: main },
-        container: rows.get(item.project).id, witness: rows.get(item.project).id, label: item.project,
-      })) };
-    }, async close() {},
-  } : undefined, reader: (source, changed) => new RuntimeLogs(source, changed, { persist: false, pinGeneration: true, spawnProcess: (command, args, options) => {
-    calls.push({ command, args, options });
-    const child = new EventEmitter(); child.pid = 1000 + calls.length; child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.signals = [];
-    child.kill = signal => { child.signals.push(signal); queueMicrotask(() => child.emit('close', null)); };
-    queueMicrotask(() => {
-      if (args.includes('logs')) { streams.push(child); return; }
-      if (args.includes('inspect')) child.stdout.write(JSON.stringify('unix:///controlled-endpoint.sock'));
-      else {
-        const project = args.find(arg => arg.startsWith('label=com.docker.compose.project='))?.split('=').at(-1);
-        child.stdout.write(JSON.stringify(rows.get(project)));
-      }
-      child.emit('close', 0);
-    });
-    return child;
-  } }) });
-  const refresh = async () => { await logs.tick(); await logs.logs.transition; await turn(); };
-  const select = (worktree, child = {}) => { value = { ...native.snapshot(), state: 'selected', worktree, child: { generation: randomUUID(), id: randomUUID(), worktree, lifecycle: 'running', state: 'connected', pinned: false, ...child } }; };
-  t.after(async () => { await logs.close(); native.close(); endpoint.close(); rmSync(root, { recursive: true, force: true }); });
-  return { logs, native, binding, config, a, b, missing, calls, streams, rows, refresh, select, deny: (value = true) => { denied = value; }, set: next => { value = next; } };
-}
-
-async function inputFixture(t, { menu = false } = {}) {
-  let worktree = '/A', childGeneration = 'one', block = false, release, calls = 0, ambiguous = menu;
-  const admissions = [], input = new PassThrough();
-  const logs = new HerdrLogs({ primary: { cwd: '/A' } }, { discovery: true, companion: {} }, () => {}, {
-    selection: async () => ({ generation: 'native', state: worktree ? 'selected' : 'unavailable', worktree,
-      child: { id: 'child', generation: childGeneration, pinned: false }, at: Date.now() }),
-    sources: { async discover(main) {
-      calls++;
-      if (block) { block = false; await new Promise(done => { release = done; }); }
-      const source = service => ({ main, context: 'local', project: 'owned', service, endpoint: 'unix:///local',
-        socket: {}, checkout: {}, container: service, witness: service, label: service });
-      return { choices: ambiguous && main === '/A' ? [source('web'), source('worker')] : [source('web')], notice: 'verified' };
+async function fixture(t) {
+  let value = { generation: 'native', state: 'idle', worktree: '/primary-linked', child: null }, choices = true, fail = false;
+  let block, release, calls = 0, narrow = false;
+  const readers = [], input = new PassThrough();
+  const logs = new HerdrLogs({ primary: { cwd: '/primary-linked', sessionId: 'parent' } }, { discovery: true, companion: {} }, () => {}, {
+    selection: async () => { if (fail) throw Error('native transport lost'); return { ...value, at: Date.now() }; },
+    sources: { processes: new Set(), async discover(worktree, { main }) {
+      calls++; if (block) { block = false; await new Promise(done => { release = done; }); }
+      const root = main ? '/canonical-main' : worktree;
+      const source = { main: root, context: 'local', project: root, endpoint: 'unix:///local.sock', socket: { inode: 1 }, checkout: { root },
+        witness: root, label: root, services: ['database', 'web'], members: [{ service: 'database', container: 'b' }, { service: 'web', container: 'a' }] };
+      return { choices: choices ? [source] : [], notice: 'Stack unavailable — no matching runtime; no main fallback' };
     }, async close() {} },
-    reader: source => ({ source, paused: false, history: [], processes: new Set(),
-      async subscribe() { admissions.push(source.main); this.state = 'following'; },
-      async stop() {}, async close() {},
-      async action(type) { if (type === 'pause') this.paused = !this.paused; },
-    }),
-  });
-  let narrow = false, closing = false;
-  const queue = installLogInput(input, logs, { closing: () => closing, close: async () => { closing = true; },
-    canChoose: () => !narrow, scroll() {}, changed() {} });
-  const settle = async () => { await queue.settled(); await logs.logs.transition; };
-  const select = async (next, generation = childGeneration) => {
-    worktree = next; childGeneration = generation; await logs.tick();
-  };
-  await select('/A'); await settle();
-  t.after(async () => { release?.(); await settle(); await logs.close(); input.destroy(); });
-  return { logs, queue, admissions, select, settle, calls: () => calls,
-    key: value => input.write(value), narrow: value => { narrow = value; }, ambiguous: value => { ambiguous = value; },
-    async block(value = 'r') {
-      release = null; block = true;
-      if (value === null) { logs.logs.refreshAt = 0; await logs.tick(); }
-      else input.write(value);
-      while (!release) await turn();
-      return () => release();
+    reader: source => {
+      const reader = { source, processes: new Set(), history: [], units: 0, paused: false, frozen: null,
+        async subscribe() { this.state = 'following'; this.processes.add({ pid: 1000 + readers.length }); },
+        async stop() { this.generation = (this.generation ?? 0) + 1; this.processes.clear(); },
+        async close() { await this.stop(); },
+        async action(type) { if (type === 'pause') { this.paused = !this.paused; this.frozen = this.paused ? [...this.history] : null; } },
+        summary() { return 'stack\nfollowing'; }, body() { return (this.paused ? this.frozen : this.history).join('\n'); }, view() { return this.body(); },
+      };
+      readers.push(reader); return reader;
     },
+  });
+  const queue = installLogInput(input, logs, { closing: () => false, close: () => {}, canChoose: () => !narrow, scroll() {}, changed() {} });
+  const settle = async () => { await queue.settled(); await logs.logs.transition; };
+  const tick = async () => { await logs.tick(); await settle(); };
+  const select = async (worktree, generation = randomUUID()) => {
+    value = { generation: 'native', state: worktree ? 'selected' : 'unavailable', worktree, child: { id: 'child', generation, pinned: false } }; await tick();
+  };
+  t.after(async () => { release?.(); await logs.close(); input.destroy(); });
+  return { logs, readers, input, queue, tick, select, settle, key: text => input.write(text), calls: () => calls,
+    idle: async () => { value = { generation: 'native', state: 'idle', worktree: '/primary-linked', child: null }; await tick(); },
+    available: next => { choices = next; }, fail: () => { fail = true; }, narrow: next => { narrow = next; },
+    async block() { block = true; release = null; input.write('r'); while (!release) await turn(); return () => release(); },
   };
 }
 
-test('terminal close accepted during reconnect belongs to the original checkout', async t => {
-  const f = await inputFixture(t), release = await f.block();
-  f.key('c'); await f.select('/B'); release(); await f.settle();
-  assert.equal(f.logs.logs.entries.get('/A').closed, true, 'A close must bind before the terminal queue waits');
-  assert.equal(f.logs.logs.entries.get('/B').closed, false, 'queued close must not transfer to B');
-  assert.equal(f.logs.logs.current.source.main, '/B');
-  await f.select('/A'); await f.settle();
-  assert.equal(f.logs.logs.current, null, 'returning to A is not manual recovery');
-  assert.deepEqual(f.admissions, ['/A', '/B']);
+test('native configuration admits only the sole current discovery caller, never legacy service declarations', async t => {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'logs-native-')));
+  const native = new NativeWorkspaceContext({ cwd: root, sessionId: randomUUID(), sessionFile: null, pid: process.pid });
+  const binding = await native.start(), token = randomUUID();
+  const companion = await serveLocal(() => ({}));
+  t.after(() => { native.close(); companion.close(); rmSync(root, { recursive: true, force: true }); });
+  native.logs = { discovery: true, companion: { port: companion.port, token } };
+  assert.equal((await readLogConfiguration(binding)).discovery, true);
+  native.logs = { tests: [], companion: { port: companion.port, token } }; await assert.rejects(readLogConfiguration(binding));
+  native.close(); await assert.rejects(readLogConfiguration(binding));
 });
 
-test('terminal buffered controls survive A to B to A and same-checkout child replacement in order', async t => {
-  for (const route of ['return-before-settlement', 'new-child']) {
-    for (const [keys, closed, paused] of [
-      ['c', true, false], ['pc', true, true], ['cp', true, true], ['ppc', true, false],
-      ['crc', true, false], ['ccp', false, true], ['rcp', true, true], ['crp', false, true],
-    ]) await t.test(`${route}: ${keys}`, async t => {
-      const f = await inputFixture(t), release = await f.block();
-      f.key(keys);
-      if (route === 'return-before-settlement') { await f.select('/B'); await f.select('/A'); }
-      else await f.select('/A', 'new-child');
-      release(); await f.settle();
-      const entry = f.logs.logs.entries.get('/A');
-      assert.equal(entry.closed, closed); assert.equal(entry.paused, paused);
-      assert.equal(f.calls(), closed ? 2 : 3, 'stale controls cannot scan or admit readers');
-      assert.deepEqual(f.admissions, closed ? ['/A'] : ['/A', '/A']);
-      if (!closed) assert.equal(f.logs.logs.current.paused, paused);
-      if (closed) {
-        assert.equal(f.logs.logs.current, null);
-        f.key('r'); await f.settle();
-        assert.equal(f.logs.logs.current.paused, paused, 'explicit recovery preserves pause');
-      }
-    });
-  }
+test('idle uses verified main, active uses only its own stack and Main pin survives activity/idle changes', async t => {
+  const f = await fixture(t); await f.tick();
+  assert.equal(f.logs.logs.current.source.main, '/canonical-main');
+  f.logs.logs.current.history.push('old-main'); await f.select('/worktree-a');
+  assert.equal(f.logs.logs.current.source.main, '/worktree-a'); assert.doesNotMatch(f.logs.view(), /old-main/);
+  f.key('m'); await f.settle(); assert.equal(f.logs.mode, 'main'); assert.equal(f.logs.logs.current.source.main, '/canonical-main');
+  const main = f.logs.logs.current;
+  await f.select('/worktree-b'); assert.equal(f.logs.logs.current, main, 'activity cannot steal Main');
+  await f.idle(); assert.equal(f.logs.logs.current, main); assert.match(f.logs.view(), /MAIN PIN/);
+  await f.select('/worktree-b'); f.key('f'); await f.settle();
+  assert.equal(f.logs.mode, 'follow'); assert.equal(f.logs.logs.current.source.main, '/worktree-b');
+  await f.idle(); assert.equal(f.logs.logs.current.source.main, '/canonical-main');
 });
 
-test('terminal cancellation and recovery remain original-entry menu intent after revocation', async t => {
-  for (const route of ['unchanged', 'other-checkout', 'return-before-settlement', 'new-child']) {
-    for (const keys of ['\x1b', 'p\x1b', '\x1bp', '\x1br', 's\x1b']) await t.test(`${route}: ${JSON.stringify(keys)}`, async t => {
-      const f = await inputFixture(t, { menu: true }), release = await f.block('s');
-      for (const key of keys) {
-        f.key(key);
-        // A standalone Esc is delivered only after readline rules out an ANSI sequence.
-        if (key === '\x1b') await new Promise(done => setTimeout(done, 550));
-      }
-      if (route === 'new-child') await f.select('/A', 'new-child');
-      else if (route !== 'unchanged') {
-        await f.select('/B');
-        if (route === 'return-before-settlement') await f.select('/A');
-      }
-      release(); await f.settle();
-      const recovered = keys === '\x1br', paused = keys === '\x1bp';
-      assert.equal(f.logs.logs.entries.get('/A').cancelled, !recovered, 'only explicit recovery after Escape clears cancellation');
-      assert.equal(f.logs.logs.entries.get('/A').paused, paused, 'pause after Escape is reader intent, before Escape is menu input');
-      if (route === 'other-checkout') {
-        assert.equal(f.logs.logs.entries.get('/B').cancelled, false);
-        assert.equal(f.logs.logs.current.source.main, '/B');
-      }
-      const extraScan = route === 'unchanged' ? recovered || keys === 's\x1b' : route === 'other-checkout' || recovered;
-      assert.equal(f.calls(), extraScan ? 3 : 2, 'obsolete menu input cannot discover');
-      assert.deepEqual(f.admissions, route === 'other-checkout' ? ['/B'] : []);
-      await f.select('/A'); await f.settle(); assert.equal(f.logs.logs.current, null);
-      f.key('s\x1b[B\r'); await f.settle();
-      assert.equal(f.logs.logs.current.source.service, 'worker', 'coalesced explicit selection recovers cancellation');
-    });
-  }
+test('unrelated registration cannot steal the active source; active missing stack never falls back', async t => {
+  const f = await fixture(t); await f.select('/worktree-a', 'same'); const old = f.logs.logs.current;
+  await f.tick(); assert.equal(f.logs.logs.current, old, 'no selection change means no switch');
+  f.available(false); await f.select('/late-worktree');
+  assert.equal(f.logs.logs.current, null); assert.match(f.logs.view(), /unavailable.*no matching runtime/i);
+  assert.equal(f.readers.at(-1).source.main, '/worktree-a');
+  f.available(true); f.logs.logs.refreshAt = 0; await f.tick();
+  assert.equal(f.logs.logs.current.source.main, '/late-worktree');
 });
 
-test('terminal queued selection preserves logical menu order independently of revoked discovery', async t => {
-  for (const blocker of ['reconnect', 'background']) {
-    for (const route of ['unchanged', 'new-child', 'return-before-settlement', 'other-checkout']) {
-      for (const [keys, cancelled, closed, paused] of [
-        ['s\x1b', true, false, false], ['scpr', false, false, false],
-        ['s\x1bpc', false, true, true], ['s\x1brp', false, false, true],
-        ['s\rp', false, false, true], ['s\rs\x1b', true, false, false],
-      ]) await t.test(`${blocker}/${route}: ${JSON.stringify(keys)}`, async t => {
-        const f = await inputFixture(t), release = await f.block(blocker === 'background' ? null : 'r');
-        for (const key of keys) {
-          f.key(key);
-          if (key === '\x1b') await new Promise(done => setTimeout(done, 550));
-        }
-        if (route === 'new-child') await f.select('/A', 'new-child');
-        else if (route !== 'unchanged') {
-          await f.select('/B');
-          if (route === 'return-before-settlement') await f.select('/A');
-        }
-        release(); await f.settle();
-        const entry = f.logs.logs.entries.get('/A');
-        assert.equal(entry.cancelled, cancelled, 'Escape after queued select retains cancellation');
-        assert.equal(entry.closed, closed, 'menu-only keys cannot acquire reader semantics');
-        assert.equal(entry.paused, paused, 'pause follows the accepted explicit menu/reader order');
-        if (route !== 'unchanged') {
-          assert.equal(f.calls(), route === 'other-checkout' || !closed && !cancelled ? 3 : 2,
-            'obsolete selection/choice/recovery cannot scan');
-          assert.deepEqual(f.admissions, route === 'other-checkout' ? ['/A', '/B'] :
-            closed || cancelled ? ['/A'] : ['/A', '/A'], 'obsolete I/O cannot admit readers');
-        }
-        if (route === 'other-checkout') {
-          const other = f.logs.logs.entries.get('/B');
-          assert.equal(other.closed || other.cancelled || other.paused, false);
-        }
-        if (cancelled || closed) {
-          await f.select('/A', 'return-child'); await f.settle();
-          assert.equal(f.logs.logs.current, null, 'new child/return is not explicit recovery');
-          f.key('r'); await f.settle();
-          assert.equal(f.logs.logs.current.paused, paused, 'explicit recovery retains pause');
-        }
-      });
-    }
-  }
+test('Services All/subset are inspected, stack changes reset All and clear live/frozen output', async t => {
+  const f = await fixture(t); await f.select('/worktree-a');
+  f.key('s'); await f.settle(); assert.equal(f.logs.logs.choice().kind, 'Services');
+  // All -> database -> web; deselect web and apply database only.
+  f.key('\x1b[B\x1b[B \r'); await f.settle();
+  assert.deepEqual(f.logs.logs.current.source.members.map(row => row.service), ['database']); assert.equal(f.logs.logs.filterLabel(), 'database');
+  f.logs.logs.current.history.push('stale'); f.key('p'); await f.settle();
+  await f.select('/worktree-b'); assert.equal(f.logs.logs.filterLabel(), 'All');
+  assert.equal(f.logs.logs.current.source.members.length, 2); assert.doesNotMatch(f.logs.view(), /stale/);
+  f.key('s \r'); await f.settle(); assert.equal(f.logs.logs.filterLabel(), 'All');
 });
 
-test('terminal keys accepted during explicit selection keep menu semantics before and after revocation', async t => {
-  for (const revoke of [false, true]) await t.test(`revoked: ${revoke}`, async t => {
-    const f = await inputFixture(t), release = await f.block('s');
-    f.key('pc'); f.key('\x1b'); await new Promise(done => setTimeout(done, 550));
-    if (revoke) await f.select('/A', 'new-child');
-    release(); await f.settle();
-    const entry = f.logs.logs.entries.get('/A');
-    assert.equal(entry.closed, false, 'toggle during explicit selection is not a reader close');
-    assert.equal(entry.paused, false, 'pause during explicit selection is menu input');
-    assert.equal(entry.cancelled, true, 'Escape cancels the original explicit selection');
-    await f.select('/A', 'return-child'); await f.settle();
-    assert.equal(f.logs.logs.current, null, 'cancelled selection cannot automatically recover');
-  });
-});
-
-test('terminal queued split choice preserves mode but cannot select obsolete discovery results', async t => {
-  for (const revoke of [false, true]) await t.test(`revoked: ${revoke}`, async t => {
-    const f = await inputFixture(t), release = await f.block(null);
-    f.ambiguous(true); f.key('s\x1b['); f.key('B\rp');
-    if (revoke) await f.select('/A', 'new-child');
-    release(); await f.settle();
-    assert.equal(f.logs.logs.current.source.service, revoke ? 'web' : 'worker',
-      'only a live explicit menu may change the pinned source');
-    assert.equal(f.logs.logs.current.paused, true, 'Enter exits logical menu before pause');
-    assert.equal(f.calls(), 3, 'stale selection does no extra discovery');
-  });
-});
-
-test('terminal queued Enter checks narrow eligibility at execution even when selection is revoked', async t => {
-  for (const revoke of [false, true]) await t.test(`revoked: ${revoke}`, async t => {
-    const f = await inputFixture(t), release = await f.block(null);
-    f.key('s\r'); f.narrow(true); f.key('pc');
-    if (revoke) await f.select('/A', 'new-child');
-    release(); await f.settle();
-    const entry = f.logs.logs.entries.get('/A');
-    assert.equal(entry.closed || entry.paused, false, 'rejected Enter leaves subsequent controls in menu mode');
-    if (revoke) assert.equal(f.calls(), 3, 'no obsolete choice/discovery runs');
-    else {
-      assert.equal(f.logs.logs.current, null); assert.ok(f.logs.logs.menu);
-      f.narrow(false); f.key('\r'); await f.settle();
-      assert.equal(f.logs.logs.current.source.service, 'web');
-    }
-  });
-});
-
-test('terminal split arrows, coalesced select/Enter/pause and narrow-pane choice retain menu semantics', async t => {
-  const f = await inputFixture(t, { menu: true });
-  f.narrow(true); f.key('\x1b['); f.key('B\r'); await f.settle();
-  assert.equal(f.logs.logs.index, 1); assert.equal(f.logs.logs.current, null);
-  assert.ok(f.logs.logs.menu, 'narrow pane cannot authorize a source');
+test('narrow panes cannot apply a choice; fragmented arrows and coalesced mark/Enter retain semantics', async t => {
+  const f = await fixture(t); await f.tick(); f.key('s'); await f.settle(); f.narrow(true);
+  f.key('\x1b['); f.key('B \r'); await f.settle();
+  assert.ok(f.logs.logs.menu); assert.equal(f.logs.logs.current, null);
   f.narrow(false); f.key('\r'); await f.settle();
-  assert.equal(f.logs.logs.current.source.service, 'worker');
-  f.key('s\x1b[B\rp'); await f.settle();
-  assert.equal(f.logs.logs.current.source.service, 'worker');
-  assert.equal(f.logs.logs.current.paused, true, 'pause after Enter is reader input');
-  f.key('sc'); await f.settle();
-  assert.equal(f.logs.logs.entries.get('/A').closed, false, 'reader toggle in an explicit menu is ignored');
+  assert.deepEqual(f.logs.logs.current.source.members.map(row => row.service), ['web']);
 });
 
-test('terminal controls are not reinterpreted by automatic ambiguity and held input grants nothing', async t => {
-  const f = await inputFixture(t), release = await f.block();
-  f.key('c'); f.ambiguous(true); release(); await f.settle();
-  assert.equal(f.logs.logs.entries.get('/A').closed, true); assert.equal(f.logs.logs.menu, false);
-  await f.select(null); f.key('cprsc'); await f.settle();
-  assert.equal(f.logs.logs.entries.get('/A').closed, true);
-  assert.equal(f.logs.logs.entries.get('/A').paused, false);
-  assert.equal(f.logs.logs.current, null);
-  await f.select('/A'); await f.settle(); assert.equal(f.logs.logs.current, null);
+test('accepted reader controls stay with original stack during queued discovery, then Main/Follow supersedes I/O', async t => {
+  for (const keys of ['c', 'pc', 'cp', 'ccp', 'crp']) await t.test(keys, async t => {
+    const f = await fixture(t); await f.select('/worktree-a');
+    const release = await f.block(); f.key(keys); await f.logs.action('main'); release(); await f.settle();
+    const old = f.logs.logs.entries.get('/worktree-a');
+    assert.equal(old.closed, keys === 'c' || keys === 'pc' || keys === 'cp');
+    assert.equal(old.paused, keys.includes('p'));
+    assert.equal(f.logs.logs.current.source.main, '/canonical-main'); assert.equal(f.logs.logs.current.paused, false);
+  });
 });
 
-test('terminal accepts at most sixteen pending actions without discarding accepted manual intent', async t => {
-  const f = await inputFixture(t), release = await f.block();
-  f.key('c'.repeat(16)); assert.equal(f.queue.pending(), 16, 'reconnect plus fifteen toggles; sixteenth toggle rejected');
-  await f.select('/B'); release(); await f.settle();
-  assert.equal(f.queue.pending(), 0);
-  assert.equal(f.logs.logs.entries.get('/A').closed, true, 'all fifteen accepted toggles retain order');
-  assert.equal(f.logs.logs.entries.get('/B').closed, false);
-  assert.deepEqual(f.admissions, ['/A', '/B']);
+test('queued cancellation is not lost on generation revocation and cannot cancel another stack', async t => {
+  const f = await fixture(t); await f.select('/worktree-a');
+  const release = await f.block(); f.key('s\x1b'); await new Promise(done => setTimeout(done, 550));
+  const moving = f.select('/worktree-b'); release(); await moving; await f.settle();
+  assert.equal(f.logs.logs.entries.get('/worktree-a').cancelled, true);
+  assert.equal(f.logs.logs.current.source.main, '/worktree-b');
+  await f.select('/worktree-a'); assert.equal(f.logs.logs.current, null);
+  f.key('r'); await f.settle(); assert.equal(f.logs.logs.current.source.main, '/worktree-a');
 });
 
-test('open-generation configuration is bounded, explicit and served only with actual native lifetime', async t => {
-  const f = await fixture(t);
-  assert.equal(f.calls.length, 0, 'Configuration alone starts no Docker process');
-  assert.equal(f.config.tests.length, 2);
-  assert.equal(f.config.tests[0].purpose, 'test');
-  assert.deepEqual(f.config.tests[0].allowedServices, ['web']);
-  f.native.logs.tests = Array(9).fill(f.native.logs.tests[0]);
-  await assert.rejects(readLogConfiguration(f.binding));
-  f.native.close(); await assert.rejects(readLogConfiguration(f.binding));
+test('lifetime loss/expiry clears output even under Main pin; no controls can revive an invalid generation', async t => {
+  const f = await fixture(t); await f.tick(); f.key('m'); await f.settle();
+  const old = f.logs.logs.current; old.history.push('private'); f.fail(); await f.tick();
+  assert.equal(f.logs.invalidated, true); assert.equal(f.logs.logs.current, null); assert.deepEqual(old.history, []);
+  const count = f.calls(); f.key('fmrsc'); await f.settle(); assert.equal(f.calls(), count);
+  assert.doesNotMatch(f.logs.view(), /private/);
+  const g = await fixture(t); await g.tick(); await new Promise(done => setTimeout(done, 1550));
+  assert.equal(g.logs.invalidated, true); assert.equal(g.logs.logs.current, null);
 });
 
-test('actual bounded loopback selection drives primary, child, pin and idle without per-switch configuration', async t => {
-  const f = await fixture(t); await f.refresh();
-  assert.equal(f.logs.logs.source.main, f.a);
-  f.streams[0].stdout.write('A-private-display-only\n'); await f.logs.action('pause');
-  f.select(f.b); await f.refresh();
-  assert.equal(f.logs.logs.source.main, f.b); assert.deepEqual(f.streams[0].signals, ['SIGTERM']);
-  f.streams[0].stdout.write('late-A\n'); f.streams.at(-1).stdout.write('B-only\n');
-  assert.doesNotMatch(f.logs.view(), /A-private|late-A/); assert.match(f.logs.view(), /B-only/);
-  f.select(f.b, { pinned: true, lifecycle: 'completed' }); await f.refresh();
-  assert.match(f.logs.view(), /PINNED/);
-  f.set({ ...f.native.snapshot(), state: 'idle', worktree: f.a, child: null }); await f.refresh();
-  assert.equal(f.logs.logs.source.main, f.a); assert.doesNotMatch(f.logs.view(), /B-only|A-private/);
-  assert.ok(f.calls.every(c => c.command === 'docker' && c.options.shell === false));
-  assert.ok(f.calls.every(c => !c.args.some(arg => ['up', 'restart', 'run', 'exec', 'compose'].includes(arg))));
+test('native process health exposes only bounded tracked PIDs, never runtime records', async t => {
+  const f = await fixture(t); await f.tick(); f.logs.logs.current.history.push('PRIVATE_DISPLAY');
+  assert.equal(f.logs.readerPids().length, 1); assert.deepEqual(f.logs.metadataPids(), []);
+  assert.doesNotMatch(JSON.stringify({ readerPids: f.logs.readerPids(), metadataPids: f.logs.metadataPids() }), /PRIVATE_DISPLAY/);
+  f.key('c'); await f.settle(); assert.deepEqual(f.logs.readerPids(), []);
 });
 
-for (const discovery of [false, true]) test(`healthy Herdr follow has no time cutoff (${discovery ? 'discovery' : 'explicit binding'})`, async t => {
-  const f = await fixture(t, { discovery });
-  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
-  try {
-    // Synthetic selection isolates this reader check from native admission. Renew its
-    // independent 1.5-second lease each second, rather than jumping over that guard.
-    f.logs.selection = async () => ({ ...f.native.snapshot(), state: 'idle', worktree: f.a, child: null, at: Date.now() });
-    await f.refresh();
-    const reader = f.logs.logs.current, stream = f.streams[0], count = f.calls.length;
-    for (let minute = 1; minute <= 61; minute++) {
-      for (let second = 0; second < 60; second++) { t.mock.timers.tick(1000); await f.refresh(); }
-      stream.stdout.write(`minute ${minute}\n`);
-      assert.equal(f.logs.invalidated, undefined);
-      assert.equal(f.logs.logs.current, reader); assert.equal(reader.state, 'following');
-      assert.equal(f.streams.length, 1); assert.deepEqual(stream.signals, []);
-      assert.equal(f.calls.length, count, 'healthy follow does not reopen or re-query the reader');
-      assert.equal(reader.history.at(-1), `minute ${minute}`);
-      if (minute === 15) await f.logs.action('pause');
-      if (minute === 16) {
-        assert.match(reader.body(), /minute 15/); assert.doesNotMatch(reader.body(), /minute 16/);
-        await f.logs.action('pause'); assert.match(reader.body(), /minute 16/);
-      }
-    }
-    await f.logs.action('toggle'); assert.deepEqual(stream.signals, ['SIGTERM']);
-    const closedCount = f.calls.length;
-    for (let second = 0; second < 4; second++) { t.mock.timers.tick(1000); await f.refresh(); }
-    assert.equal(f.calls.length, closedCount, 'manual close stays closed');
-    await f.logs.action('toggle'); await turn(); assert.equal(f.streams.length, 2);
-    await f.logs.action('reconnect'); await turn(); assert.equal(f.streams.length, 3);
-    assert.deepEqual(f.streams[1].signals, ['SIGTERM']);
-    f.logs.selection = async () => { throw Error('native parent lost'); };
-    await f.refresh();
-    assert.equal(f.logs.invalidated, true); assert.equal(f.logs.logs.current, null);
-    assert.deepEqual(f.streams[2].signals, ['SIGTERM']);
-    await f.logs.action('reconnect'); assert.equal(f.streams.length, 3, 'lost parent cannot retry');
-  } finally { await f.logs.close(); t.mock.timers.reset(); }
+test('input queue remains bounded at sixteen accepted actions', async t => {
+  const f = await fixture(t); await f.select('/worktree-a'); const release = await f.block();
+  f.key('c'.repeat(16)); assert.equal(f.queue.pending(), 16); release(); await f.settle();
+  assert.equal(f.queue.pending(), 0); assert.equal(f.logs.logs.entries.get('/worktree-a').closed, true);
 });
 
-test('ownership health reports only tracked reader PIDs and drops them after reaping', async t => {
-  const f = await fixture(t);
-  assert.deepEqual(f.logs.readerPids(), []);
-  await f.refresh();
-  f.streams[0].stdout.write('private-display-record\n');
-  assert.deepEqual(f.logs.readerPids(), [f.streams[0].pid]);
-  await f.logs.action('toggle');
-  assert.deepEqual(f.logs.readerPids(), []);
+test('empty service subsets are refused without changing menu semantics or admitting readers', async t => {
+  const f = await fixture(t); await f.tick();
+  f.key('s\x1b[B \x1b[B \r'); await f.settle();
+  assert.equal(f.logs.logs.menu, 'services'); assert.equal(f.logs.logs.current, null);
+  assert.match(f.logs.logs.choice().notice, /at least one service/);
+  f.key('pc'); await f.settle();
+  assert.equal(f.logs.logs.entries.get('main').closed, false, 'rejected Enter cannot reinterpret reader controls');
+  f.key('\x1b[B \r'); await f.settle();
+  assert.equal(f.logs.logs.filterLabel(), 'All');
 });
 
-test('a new child generation in the same worktree fences callbacks and frozen records', async t => {
-  const f = await fixture(t); f.select(f.a); await f.refresh();
-  const old = f.streams[0]; old.stdout.write('old-generation\n'); await f.logs.action('pause');
-  f.select(f.a); await f.refresh(); old.stdout.write('late-generation\n');
-  assert.equal(f.streams.length, 2); assert.deepEqual(old.signals, ['SIGTERM']);
-  assert.equal(f.logs.logs.current.paused, false); assert.doesNotMatch(f.logs.view(), /old-generation|late-generation/);
-});
-
-test('closed/unavailable child custody clears output and never falls back to primary or shared', async t => {
-  const f = await fixture(t, { shared: true }); f.select(f.b); await f.refresh();
-  f.streams[0].stdout.write('private-old\n');
-  f.set({ ...f.native.snapshot(), state: 'unavailable', worktree: null, child: null }); await f.refresh();
-  assert.equal(f.logs.logs.current, null); assert.equal(f.streams.length, 1);
-  assert.doesNotMatch(f.logs.view(), /private-old/); assert.match(f.logs.view(), /no primary\/shared fallback/);
-  for (const action of ['mode', 'toggle', 'reconnect']) await f.logs.action(action);
-  assert.equal(f.streams.length, 1);
-  f.select(f.b); await f.refresh(); assert.equal(f.logs.logs.source.main, f.b);
-});
-
-test('missing/ambiguous bindings require labelled human choices; shared remains visibly explicit', async t => {
-  const f = await fixture(t, { multiple: true, shared: true }); await f.refresh();
-  assert.equal(f.calls.length, 0); await f.logs.action('info'); assert.match(f.logs.view(), /alternate/);
-  await f.logs.action('stack-next'); assert.equal(f.logs.logs.source.project, 'test-a');
-  f.select(f.missing); await f.refresh(); assert.equal(f.logs.logs.source, null);
-  await f.logs.action('mode'); assert.equal(f.logs.logs.source.project, 'shared'); assert.match(f.logs.view(), /EXPLICIT SHARED/);
-  f.rows.get('shared').id = 'f'.repeat(64); const count = f.streams.length;
-  await f.logs.action('reconnect'); assert.equal(f.logs.logs.state, 'unavailable'); assert.equal(f.streams.length, count);
-  assert.match(f.logs.view(), /fresh human binding required/);
-  await f.logs.action('mode'); assert.equal(f.logs.logs.source, null);
-});
-
-test('pause drains bounded hostile records, close/reopen has honest gaps and container replacement refuses', async t => {
-  const f = await fixture(t); await f.refresh(); const reader = f.logs.logs.current;
-  f.streams[0].stdout.write('before-pause\n'); await f.logs.action('pause');
-  f.streams[0].stdout.write('\x1b]52;private\x07' + 'x'.repeat(10000) + '\n' + 'line\n'.repeat(400));
-  assert.ok(reader.history.length <= 300 && reader.units <= 32768); assert.ok(reader.omitted > 0 && reader.clipped > 0);
-  assert.deepEqual(reader.frozen, ['before-pause']);
-  await f.logs.action('pause'); assert.doesNotMatch(f.logs.view(), /\x1b|\x07/);
-  await f.logs.action('toggle'); assert.equal(reader.state, 'closed');
-  await f.logs.action('toggle'); assert.equal(reader.state, 'following'); assert.ok(reader.gaps >= 2);
-  f.rows.get('test-a').id = 'f'.repeat(64); const count = f.streams.length;
-  await f.logs.action('reconnect'); assert.equal(reader.state, 'unavailable'); assert.equal(f.streams.length, count);
-  assert.match(f.logs.view(), /generation changed/);
-});
-
-test('initial child discovery may settle within a finite bound without granting a source', async t => {
-  const f = await fixture(t); f.deny(); await f.refresh();
-  assert.notEqual(f.logs.invalidated, true); assert.equal(f.calls.length, 0);
-  f.deny(false); await f.refresh(); assert.equal(f.logs.logs.source.main, f.a);
-  const g = await fixture(t); g.deny(); g.logs.startupDeadline = Date.now() - 1; await g.refresh();
-  assert.equal(g.logs.invalidated, true); assert.equal(g.calls.length, 0);
-});
-
-test('a revoked source cannot be reopened by an in-flight reader action', async t => {
-  const f = await fixture(t); await f.refresh();
-  const old = f.logs.logs.current, stop = old.stop.bind(old); let finish;
-  old.stop = async () => { await stop(); await new Promise(done => { finish = done; }); };
-  const action = f.logs.action('reconnect');
-  while (!finish) await turn();
-  f.set({ ...f.native.snapshot(), state: 'closed', worktree: null, child: null });
-  // hold() invokes stop independently; both calls must settle, and neither may
-  // start a replacement from the action's old source generation.
-  old.stop = stop; await f.logs.tick(); const count = f.calls.length;
-  finish(); await action; await f.logs.logs.transition;
-  assert.equal(f.calls.length, count); assert.equal(f.logs.logs.current, null);
-});
-
-test('selection freshness expires and clears paused output even without another completed query', async t => {
-  const f = await fixture(t); await f.refresh();
-  f.streams[0].stdout.write('expired-source\n'); await f.logs.action('pause');
-  await new Promise(done => setTimeout(done, 1550));
-  assert.equal(f.logs.invalidated, true); assert.equal(f.logs.logs.current, null);
-  assert.doesNotMatch(f.logs.view(), /expired-source/);
-});
-
-test('malformed/lost native or selection lifetime permanently invalidates this display generation', async t => {
-  const f = await fixture(t); await f.refresh();
-  f.deny(); await f.refresh(); assert.equal(f.logs.invalidated, true); assert.equal(f.logs.logs.current, null);
-  const count = f.calls.length; await f.refresh(); await f.logs.action('reconnect'); assert.equal(f.calls.length, count);
-  assert.match(f.logs.view(), /reopen|recovers/);
-});
-
-test('unreaped readers block every replacement and close cannot be resurrected by late metadata', async t => {
-  const f = await fixture(t); await f.refresh();
-  const old = f.logs.logs.current, stream = f.streams[0], stop = old.stop.bind(old);
-  old.stop = async () => { old.generation++; };
-  f.select(f.b); await f.refresh(); assert.equal(f.logs.logs.current, null); assert.match(f.logs.view(), /has not exited/);
-  stream.emit('close', null); old.stop = stop;
-  let finish; f.logs.selection = () => new Promise(done => { finish = done; });
-  const pending = f.logs.tick(); await f.logs.close();
-  finish({ ...f.native.snapshot(), state: 'idle', worktree: f.a, child: null }); await pending;
-  assert.equal(f.logs.logs.current, null);
+test('Main and Follow reset service filters on stack switches and preserve explicit close intent', async t => {
+  const f = await fixture(t); await f.select('/worktree-a');
+  f.key('s\x1b[B \r'); await f.settle(); assert.equal(f.logs.logs.filterLabel(), 'web');
+  f.key('m'); await f.settle(); assert.equal(f.logs.logs.filterLabel(), 'All');
+  f.key('c'); await f.settle(); await f.select('/worktree-b');
+  assert.equal(f.logs.logs.current?.open, false, 'Main remains explicitly closed while activity changes');
+  f.key('f'); await f.settle(); assert.equal(f.logs.logs.current.source.main, '/worktree-b');
+  f.key('m'); await f.settle(); assert.equal(f.logs.logs.current, null, 'returning to Main is not recovery');
+  f.key('r'); await f.settle(); assert.equal(f.logs.logs.current.source.main, '/canonical-main');
+  f.key('f'); await f.settle(); await f.select('/worktree-a');
+  assert.equal(f.logs.logs.filterLabel(), 'All');
 });

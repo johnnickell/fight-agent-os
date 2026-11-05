@@ -60,7 +60,10 @@ data. The earlier TASK-00543 main-up failure was a regression, not an acceptable
 Review and QA acceptance on its integrated candidate; publication and final delivery checks remain separate.
 [TASK-00553](../../planning/tasks/00553-TASK.md)'s shared supplier also has independent Review and QA acceptance
 on its recorded candidate. Follow [shared local HTTPS operations](LOCAL_INGRESS.md) for explicit
-`bin/ingress setup/up/down/status/remove` and human actual-name certificate setup through `bin/https`.
+`bin/ingress setup/up/down/status/remove` and explicit actual-name certificate setup through `bin/https`.
+Its [scoped task process](LOCAL_INGRESS.md#scoped-task-preparation-and-retirement) owns tool-based leaf/front-door
+preparation and retirement: preserve peers, full-test/gracefully reload with existing privilege, and keep
+referenced leaves when reload is held. App teardown and source retirement remain independent of that hold.
 `bin/up --worktree SELECTOR` requires that separately operated supplier. `bin/up --shared-ingress` explicitly
 opts main into the same topology; ordinary main up never does. The optional existing-Herd mode in that runbook
 retains standard browser origins while publishing only a selected high supplier HTTPS port; it never makes
@@ -153,6 +156,15 @@ by surviving ref, recreate source or publish again for cleanup.
 If Land's own session consumes source, Build observes its real exit before source retirement from the safe
 checkout. Docker down itself does not need that exit. There is no post-worker receipt/PID cleanup helper. The
 existing Build ledger/handoff carries remaining effects and native locators, not another resource record.
+
+## On-demand human QA
+
+[Human QA operations](HUMAN_QA.md) describes TASK-00556's `bin/qa up/list/down` convenience layer.
+Independent Review and behavioral QA accepted the recorded candidate; publication and merge remain separate. Native `qa/task-NNNNN/FULL_OID` refs supply the
+small QA-purpose annotation; existing locators cover interruption. It uses this SAME project preparation,
+public down and guarded remover. Exact QA ref/OID proof substitutes only for owned QA removal's fixture ancestry
+proof, not Land delivery verification. Native non-force retained-ref policy, source guards and shared-resource
+protection remain unchanged. Original task cleanup does not wait for future QA; each QA session needs explicit down.
 
 ## Direct qualification
 

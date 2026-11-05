@@ -32,11 +32,20 @@ For Agent OS, the **one shared [resource procedure](../../../docs/engineering/RE
 prepares one explicit Compose project and all roles reuse it. Main up/down and registered `--worktree` up/down are separate;
 Docker lifecycle has no receipt/PID/worker-registration gate. Inspect actual handoffs/native resources, not
 per-stage proof trees. Missing browser prerequisites hold affected advancement, not explicit task teardown.
+For shared HTTPS, carry [scoped ingress preparation/retirement](../../../docs/engineering/LOCAL_INGRESS.md#scoped-task-preparation-and-retirement)
+in the child request: exact checkout/name, existing supplier mode/port, leaf/include ownership/digests and peer
+references. Have Work use supported tools/existing privilege for explicit task setup, including planned-name
+rendering before QA allocation. On explicitly authorized macOS hosts, use the runbook's native administrator
+dialog for an exact digest/master-bound test/HUP command; credentials stay in the OS dialog, no persistent
+permissions or restart. `sudo -n` denial alone does not prove that path unavailable. Respect cancellation and
+reconcile partial effects. Do not defer all leaf/include work to a human or silently enroll infrastructure.
+A verified full-config-test/graceful-reload privilege hold blocks browser readiness, not independent cleanup;
+retain referenced leaves and name the exact remaining action. Never substitute shared-service restart.
 
 ## Pin models, then launch fresh roles
 
 Explicit invocation choices override target bindings, then local defaults: retain configured provider; for
-`openai-codex`, Team Lead Sol/medium, Engineer and Review Sol/high, QA and Land Terra/high. Resolve the newest
+`openai-codex`, Team Lead Sol/medium, Engineer, Review, QA and Land Sol/high. Resolve the newest
 available stable numeric model in that requested family from installed Pi metadata; explicit exact IDs stay
 exact. Verify thinking support. No fallback/escalation/provider change or mid-delivery refresh. Pin the resolved
 provider/model/thinking per role for repairs/resume; an explicit human change preserves prior history. Record
@@ -136,6 +145,9 @@ canonical/target effective hooks and removes owned fixtures/worktrees unattended
 down hook, without persistent approval. Unknown/user/changed hooks hold source only, not Docker teardown;
 do not return a routine known-hook approval request to the operator. If original Land itself consumes source,
 observe its actual exit, then continue source-qualified Worktrunk cleanup from the canonical safe checkout.
+Verify task ingress retirement through that same runbook: app down removes its route; only scoped owned
+front-door blocks are unloaded with a full test/graceful reload before referenced leaf removal. Preserve peers
+and the shared supplier; report exact loaded/pending names and privilege holds separately from Docker/source.
 Use a fresh cleanup-only Land worker when required, with the same pinned model/ledger and ordinary trusted
 stage entry. No publication, new runtime or tracked edits in that continuation. Preserve active coordinator,
 unique source and real protections; never stop shared services/VMs. Report Docker and source holds separately.
