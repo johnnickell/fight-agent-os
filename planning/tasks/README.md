@@ -167,12 +167,12 @@
 | [TASK-00162](00162-TASK.md) | Screen individual files and require selective reads | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00163](00163-TASK.md) | Screen file sets with bounded discovery and cached judgments | done | [TICKET-00039](../tickets/00039-TICKET.md) |
 | [TASK-00164](00164-TASK.md) | Preserve required context through compaction and validated resume | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
-| [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00165](00165-TASK.md) | Select optional retained context with Jev | needs-info | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00166](00166-TASK.md) | Recover missing context through selective source reads | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
-| [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | ready-for-agent | [TICKET-00040](../tickets/00040-TICKET.md) |
+| [TASK-00167](00167-TASK.md) | Enforce checkpoint retention and recovery holds | needs-info | [TICKET-00040](../tickets/00040-TICKET.md) |
 | [TASK-00168](00168-TASK.md) | Enforce staged compaction at safe session boundaries | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
-| [TASK-00169](00169-TASK.md) | Evaluate compaction timing with Jev after each eligible turn | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
-| [TASK-00170](00170-TASK.md) | Inspect compaction history and annotate recovery incidents | ready-for-agent | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00169](00169-TASK.md) | Evaluate compaction timing with Jev after each eligible turn | needs-info | [TICKET-00041](../tickets/00041-TICKET.md) |
+| [TASK-00170](00170-TASK.md) | Inspect compaction history and annotate recovery incidents | needs-info | [TICKET-00041](../tickets/00041-TICKET.md) |
 | [TASK-00171](00171-TASK.md) | Expose authenticated typed judgments through MCP | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
 | [TASK-00172](00172-TASK.md) | Investigate large evidence sets through resumable stages | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
 | [TASK-00173](00173-TASK.md) | Reuse judgments when evidence and authority still match | ready-for-agent | [TICKET-00042](../tickets/00042-TICKET.md) |
@@ -553,7 +553,7 @@
 | [TASK-00548](00548-TASK.md) | Simplify local SDLC and leave no routine task residue | done | — |
 | [TASK-00549](00549-TASK.md) | Establish source-verified Python diagrams for a documented PHP feature | done | [TICKET-00126](../tickets/00126-TICKET.md) |
 | [TASK-00550](00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | done | [TICKET-00127](../tickets/00127-TICKET.md) |
-| [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | ready-for-agent | [TICKET-00128](../tickets/00128-TICKET.md) |
+| [TASK-00551](00551-TASK.md) | Create and qualify a Pi skill for on-demand architecture diagrams | done | [TICKET-00128](../tickets/00128-TICKET.md) |
 | [TASK-00552](00552-TASK.md) | Automatically reuse unchanged successful build receipts | done | — |
 | [TASK-00553](00553-TASK.md) | Deliver shared local HTTPS ingress for main and worktree stacks | done | [TICKET-00023](../tickets/00023-TICKET.md) |
 | [TASK-00554](00554-TASK.md) | Observe upstream Pi subagents in the Fight workspace | done | [TICKET-00129](../tickets/00129-TICKET.md) |
@@ -588,4 +588,5 @@
 | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | done | — |
 | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | done | — |
 | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | ready-for-agent | — |
+| [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | ready-for-agent | — |
 <!-- /planning:records -->
