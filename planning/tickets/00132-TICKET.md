@@ -98,12 +98,14 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 
 ## Decisions and progress
 
-Current area-A Work: [TASK-00565](../tasks/00565-TASK.md#cache-recovery-01-checkpoint--2026-11-05) preserves the
-exhaustive 62-record unfinished inspection plus completed TASK-00531, TASK-00571 coverage and the authorized
-Lifecycle repair. Diagnosed cache recovery passed unchanged focused PHPStan and the normal full 25-phase gate
-(`20261105T202957Z-94`), including 1,174 frontend tests. The bind-filesystem locking limitation is disclosed, not
-repaired. Current canonical `cache-recovery-01-handoff.md` carries subject/evidence and retained tooling runtime.
-Next: independent Review, then affected QA; no source/supplier acceptance or sibling completion is claimed.
+Current area-A Work: [TASK-00565](../tasks/00565-TASK.md#repair-02-checkpoint--2026-11-05) records bounded
+R1/R2 corrections after independent Review REVISE: actual invitation partial commits/recovery and existing `/me`
+supplier status, with future Feature integration still unqualified. Original 62-record unfinished inspection,
+completed TASK-00531/history, TASK-00571 coverage and the authorized Lifecycle repair remain. Fresh planning/direct
+checks pass; normal build automatically reuses original `20261105T202957Z-94` application evidence on clean
+`d47a72e`. The filesystem locking limitation remains unrepaired. Canonical `repair-02-handoff.md` owns current
+subject, supplemental coverage, warnings and SAME retained tooling runtime. Next: renewed independent Review,
+then affected QA; no acceptance, closure, publication or sibling completion is claimed.
 The checkpoints below remain historical, including their original inventory counts and unstarted-work statements.
 
 John approved whole-portfolio planning reconciliation and this second requirement area in the six-TICKET split,

@@ -69,12 +69,14 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
-**TASK-00565 area-A Work — 2026-11-05:** [the cache-recovery checkpoint](tasks/00565-TASK.md#cache-recovery-01-checkpoint--2026-11-05)
-preserves exhaustive plan correction, TASK-00571 coverage and the authorized Lifecycle repair. Diagnosed cache
-recovery passed unchanged focused PHPStan and the normal full 25-phase gate (`20261105T202957Z-94`), including
-1,174 frontend tests. The filesystem locking limitation remains disclosed, not repaired. Current canonical
-`cache-recovery-01-handoff.md` owns subject/evidence and the retained tooling runtime. Next: independent Review,
-then affected QA; no source/supplier/feature acceptance or publication is inferred. Other area priorities and
+**TASK-00565 area-A Work — 2026-11-05:** [the repair-02 checkpoint](tasks/00565-TASK.md#repair-02-checkpoint--2026-11-05)
+records bounded R1/R2 corrections after independent Review REVISE: actual invitation partial commits/recovery
+and existing `/me` supplier status, without qualifying future Feature integration. Original exhaustive coverage,
+TASK-00571 handoff, completed history and the authorized Lifecycle repair remain. Fresh planning/direct checks
+pass; normal build automatically reuses original `20261105T202957Z-94` application evidence on clean `d47a72e`.
+The filesystem locking limitation remains unrepaired. Canonical `repair-02-handoff.md` owns current subject,
+evidence, warnings and SAME retained tooling runtime. Next: renewed independent Review, then affected QA;
+no source/supplier/feature acceptance, closure or publication is inferred. Other area priorities and
 dependencies remain unchanged. The architecture-decomposition checkpoint below is historical; routing stays
 with the Board.
 

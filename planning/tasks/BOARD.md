@@ -12,11 +12,13 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 
 ### Current assessment handoff
 
-[TASK-00565](00565-TASK.md#cache-recovery-01-checkpoint--2026-11-05) preserves the exhaustive area-A correction
-and Lifecycle repair. Diagnosed generated-cache recovery passed unchanged focused PHPStan and the normal full
-25-phase gate (`20261105T202957Z-94`), including all 1,174 frontend tests. The bind-filesystem locking limitation
-remains disclosed, not repaired. Current canonical `cache-recovery-01-handoff.md` carries the subject/evidence and
-retained tooling runtime. Next: independent Review, then affected QA; no acceptance or publication is claimed.
+[TASK-00565](00565-TASK.md#repair-02-checkpoint--2026-11-05) records bounded Work corrections for independent
+Review R1/R2: actual invitation partial commits/recovery and existing `/me` supplier status. Exhaustive area-A
+coverage, completed history and the authorized Lifecycle repair remain. Fresh planning/direct checks pass;
+normal build automatically reuses original `20261105T202957Z-94` application evidence on clean `d47a72e`.
+The filesystem locking limitation remains unrepaired. Canonical `repair-02-handoff.md` owns current subject,
+coverage, warnings and SAME retained tooling runtime. Next: renewed independent Review, then affected QA;
+no acceptance, closure or publication is claimed.
 
 [TASK-00563](00563-TASK.md#accepted-implementation-checkpoint--2026-11-04) has independent Review ACCEPT and
 visual/behavioral QA PASS on amended candidate `9d9d952` (18 scenario groups / 18 inspected native captures).
