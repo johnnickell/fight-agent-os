@@ -71,9 +71,9 @@ a current human merge action. Other capability states are unchanged.
   [deterministic Pi tool policy](harness/pi/TOOL_POLICY.md), and a Fight-maintained MIT-licensed upstream SDK-agent
   engine under `vendor/pi-subagents/`. The Harness packages one engine and owns policy/observation, not a second
   scheduler. An explicitly selected SDK Engineer bootstrap now binds real session-local Work authority before
-  execution and reuses passive native observation. TASK-00560 still requires a real permitted native Engineer
-  assignment/Herdr evidence before independent Review; controlled SDK qualification is not completion. Default
-  and non-Engineer process callers remain live. Future typed Workflow clients, semantic tool screening and
+  execution and reuses passive native observation. TASK-00560's real permitted Engineer/Herdr journey has
+  independent Review and QA acceptance; delivery results are in `.runs/tasks/TASK-00560/runs/land/receipt.md`.
+  Default and non-Engineer process callers remain live. Future typed Workflow clients, semantic tool screening and
   qualified process isolation remain separate
 
 Fight Common and Fight Access Control remain Composer dependencies. The inherited `App` namespace and

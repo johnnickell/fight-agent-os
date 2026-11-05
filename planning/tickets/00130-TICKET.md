@@ -110,13 +110,21 @@ and distinguish fresh from qualified reused evidence, implementation acceptance,
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00560](../tasks/00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | in-progress |
+| [TASK-00560](../tasks/00560-TASK.md) | Execute a real Build Engineer stage through an upstream agent | done |
 | [TASK-00561](../tasks/00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | ready-for-agent |
 | [TASK-00562](../tasks/00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | done |
 | [TASK-00563](../tasks/00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### TASK-00560 acceptance checkpoint — 2026-11-05
+
+[TASK-00560](../tasks/00560-TASK.md#accepted-implementation-checkpoint--2026-11-05) has independent Review
+ACCEPT and QA PASS on `c60eb6b`; its verified mechanical integration and fresh gate are recorded in the TASK.
+Publication and final delivery checks were pending at this checkpoint; current results are in
+`.runs/tasks/TASK-00560/runs/land/receipt.md`. TASK-00561 remains unfinished, so this parent remains open.
+The earlier progress statements below are historical checkpoints.
 
 TASK-00560's resumed 2026-11-04 Work now supplies the opt-in SDK Engineer bootstrap and controlled installed-SDK
 admission/lifecycle evidence. This is not completion: its genuine authorized native Engineer assignment, inspected

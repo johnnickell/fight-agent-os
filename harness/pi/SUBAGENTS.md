@@ -57,10 +57,11 @@ at the parent tool boundary, so delegation under that selected policy is unavail
 
 ## Opt-in Build Engineer
 
-The bootstrap candidate adds **`--fight-build-engineer sdk`** and **`fight_build_engineer`** for one actual Engineer
+The opt-in route provides **`--fight-build-engineer sdk`** and **`fight_build_engineer`** for one actual Engineer
 assignment. It does not change the default executor or migrate Review/QA/Land; those process callers remain live
-until TASK-00561. Packaging or scripted SDK qualification alone does not satisfy TASK-00560. Its real native Work
-assignment, inspected Herdr captures and independent acceptance remain required.
+until TASK-00561. TASK-00560's real native Work assignment and inspected Herdr captures have independent Review and
+QA acceptance; delivery results are in `.runs/tasks/TASK-00560/runs/land/receipt.md`. Packaging or scripted SDK
+qualification alone is not that acceptance.
 
 ### Prepare a new native host
 
