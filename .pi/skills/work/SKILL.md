@@ -21,6 +21,16 @@ target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_S
    evidence, not permanent source copies; source/Git holds cannot suppress explicit Docker teardown. Use the
    shared guarded Worktrunk remover for owned fixtures too: the exact repository down hook runs unattended
    after effective-hook inspection, without persistent approval. Unknown/user/changed hooks retain source only.
+   For shared HTTPS, follow [scoped ingress preparation/retirement](../../../docs/engineering/LOCAL_INGRESS.md#scoped-task-preparation-and-retirement):
+   reuse the existing supplier, explicitly prepare exact leaves with its CA, render planned QA paths before
+   allocation, preserve peer blocks and use supported full-test/graceful-reload tools with existing privilege.
+   Routine authorized setup is not blanket human-only; no implicit trust/DNS/settings or shared-service restart.
+   On macOS, explicit authorization can use the runbook's native administrator dialog for an exact digest/master-
+   bound full-test/HUP command; credentials stay in the OS dialog, with no persistent permissions or restart.
+   A `sudo -n` denial alone does not block that path. Respect cancellation and reconcile partial effects.
+   Qualify genuinely missing capability/privilege and hold readiness honestly. On teardown remove the app route first;
+   retain referenced leaves until verified scoped unload/reload. Report exact created/removed/held names and
+   include digests independently of Docker/source cleanup.
 4. Implement only accepted behavior. For Agent OS PHP work, apply the shared
    [architecture contract](../../../docs/engineering/STANDARDS.md#architecture) and explicit ADR amendments,
    distinguishing approved target, current source and qualified supplier capabilities. Do not copy a conflicting

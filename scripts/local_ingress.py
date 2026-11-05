@@ -54,7 +54,7 @@ def check_leaf(safe, host):
     ca = state(safe) / 'certs/rootCA.pem'
     for path in (cert, key, ca):
         require(path.is_file() and not path.is_symlink() and path.stat().st_size,
-                'Missing regular actual-name leaf/key/CA; human: ./bin/https setup --ingress [--worktree SELECTOR]')
+                'Missing regular actual-name leaf/key/CA; explicitly run ./bin/https setup --ingress [--worktree SELECTOR]')
     openssl = openssl_tool()
     san = text([openssl, 'x509', '-in', cert, '-noout', '-ext', 'subjectAltName'], safe)
     require(san.splitlines()[1:] and ''.join(san.splitlines()[1:]).strip() == 'DNS:' + host,
@@ -182,13 +182,24 @@ def ready(safe):
     text([*compose(safe), 'exec', '-T', 'nginx', 'nginx', '-t'], safe)
 
 
-def herd_config(safe):
+def herd_config(safe, included_worktrees=()):
     """Render one scoped host include; installation/reload remain explicit operator effects"""
     validate_configuration(safe)
     front, port = listener_options(safe)
     require(front == 'herd', 'Select explicit setup --front-door herd --https-port PORT first')
-    hosts = ['fight-agent-os.localhost'] + [identity(safe, Path(entry['path'])) + '.localhost'
-                                           for entry in registrations(safe)[1:]]
+    hosts = {'fight-agent-os.localhost'} | {identity(safe, Path(entry['path'])) + '.localhost'
+                                           for entry in registrations(safe)[1:]}
+    for selector in included_worktrees:
+        require(Path(selector).is_absolute(), 'Included worktree requires an exact absolute checkout path')
+        _, checkout, project, _ = resolve(safe, selector, removed=True)
+        require(checkout == Path(selector) == checkout.resolve() and not checkout.is_symlink() and
+                (not checkout.exists() or any(entry['path'] == str(checkout) for entry in registrations(safe))),
+                'Unknown/aliased included checkout path')
+        host = project + '.localhost'
+        # Explicit future names must have valid leaves; never silently omit the
+        # very block needed before QA allocation/readiness can complete.
+        check_leaf(safe, host)
+        hosts.add(host)
     blocks = ['# Fight-only local ingress; owner: ' + str(safe) + '\n# Explicitly regenerate after leaf/name changes; never edit global Herd configuration.\n']
     template = (ROOT / 'etc/docker/ingress/herd.conf.tmpl').read_text()
     for host in sorted(hosts):
@@ -198,7 +209,7 @@ def herd_config(safe):
         # Quote native paths, never interpret operator path bytes as Nginx directives.
         require(not any(c in str(state(safe)) for c in '\\"\n\r$'), 'Unsupported Nginx configuration path')
         blocks.append(template.replace('@HOST@', host).replace('@STATE@', str(state(safe))).replace('@PORT@', str(port)))
-    require(len(blocks) > 1, 'No registered actual-name leaves; generate them explicitly first')
+    require(len(blocks) > 1, 'No registered/included actual-name leaves; generate them explicitly first')
     target = state(safe) / 'herd.conf'
     write_private(target, '\n'.join(blocks))
     print(str(target))
@@ -265,10 +276,20 @@ def operate(safe, action, bind_ports=False):
 
 
 def certificate_operation(root, action, selector):
-    safe, checkout, project, host = consumer(root, selector)
+    if selector and Path(selector).is_absolute() and action in ('setup', 'remove'):
+        # Explicit operator leaf preparation may precede disposable QA allocation;
+        # exact original paths also remain useful after source retirement. This
+        # resolves only the existing deterministic hostname, never creates source,
+        # runtime settings, trust or ingress. Refuse aliases/recreated unknown paths.
+        safe, checkout, project, entry = resolve(root, selector, removed=True)
+        require(checkout == checkout.resolve() and not checkout.is_symlink() and
+                (entry is not None or not checkout.exists()), 'Unknown/aliased certificate checkout path')
+        host = project + '.localhost'
+    else:
+        safe, checkout, project, host = consumer(root, selector)
     directory = certificates(safe, host)
     if action == 'setup':
-        # Explicit human invocation only. Preflight capabilities before any leaf/CA writes.
+        # Explicit scoped invocation only. Preflight capabilities before any leaf/CA writes.
         # Never mkcert -install, DNS or .env edits here.
         openssl_tool()
         text(['mkcert', '-version'], safe)
@@ -319,7 +340,10 @@ def main():
     parser.add_argument('--https-port', type=int, help='setup only; explicit loopback high port in Herd mode')
     parser.add_argument('--certificate-action', choices=['setup', 'status', 'remove'])
     parser.add_argument('--worktree')
+    parser.add_argument('--include-worktree', action='append', default=[], metavar='ABSOLUTE_PATH',
+                        help='herd-config only; include an exact planned/retired checkout with an existing valid leaf; repeat for peers')
     args = parser.parse_args()
+    require(not args.include_worktree or args.action == 'herd-config', 'Included names belong to herd-config only')
     if args.action == 'certificate':
         require(args.certificate_action, 'Certificate action required')
         certificate_operation(ROOT, args.certificate_action, args.worktree)
@@ -329,7 +353,7 @@ def main():
         if args.action == 'setup':
             setup(safe, args.front_door, args.https_port if args.https_port is not None else 443)
         elif args.action == 'herd-config':
-            herd_config(safe)
+            herd_config(safe, args.include_worktree)
         else:
             require(args.front_door == 'independent' and args.https_port is None, 'Listener selection belongs to setup only')
             operate(safe, args.action, args.bind_ports)
