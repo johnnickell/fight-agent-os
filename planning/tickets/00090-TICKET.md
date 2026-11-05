@@ -129,6 +129,10 @@ state and the selected transcript runtime explicitly; no dual writer or claim of
 
 ## Decisions and progress
 
+The [2026-11-05 amendment](../epics/00006-EPIC.md#approved-native-pi-compaction-and-jev-retirement--2026-11-05)
+updates the local supplier for TASK-00353 to TASK-00164's qualified native compaction and resume. TASK-00354
+still requires a resolved retention owner. Managed recovery and retention require their own qualification.
+
 ### Approved private-production reconciliation — 2026-10-24
 
 The rollout's per-user turn binding and conversation usage query are allocated to this existing conversation owner,

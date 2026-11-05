@@ -356,13 +356,13 @@ qualified restricted environment. The file-only prototype is not production read
 The [terminal execution contract](../docs/engineering/TERMINAL_EXECUTION.md) retains those implementation boundaries.
 
 The October 7 [incremental Harness milestone](epics/00006-EPIC.md#approved-incremental-harness-protection-and-retrieval--2026-10-07)
-retains deterministic controls, Jev screening and required file relevance screening at the initial 0.70 positive-read
-threshold. [Jev access](tickets/00037-TICKET.md), [tool guard](tickets/00038-TICKET.md) and
-[file screening](tickets/00039-TICKET.md) own that bounded local delivery. The accepted follow-on
-[checkpoint/resume](tickets/00040-TICKET.md), [compaction timing](tickets/00041-TICKET.md),
-[general judgments](tickets/00042-TICKET.md), [authorized analysis](tickets/00043-TICKET.md),
-[change quality](tickets/00044-TICKET.md) and [PHPUnit usefulness](tickets/00045-TICKET.md) decompositions retain
-their selected Pi targets, qualifications and completion evidence; this update does not retarget their runtimes.
+records the original delivery of deterministic controls and Jev screening. The
+[November 5 amendment](epics/00006-EPIC.md#approved-native-pi-compaction-and-jev-retirement--2026-11-05)
+uses native Pi for [compaction and verified resume](tickets/00040-TICKET.md), retains the
+[180k/210k/240k timing tiers](tickets/00041-TICKET.md), and plans [local Jev retirement](tasks/00586-TASK.md).
+The separate [general judgments](tickets/00042-TICKET.md), [authorized analysis](tickets/00043-TICKET.md),
+[change quality](tickets/00044-TICKET.md) and [PHPUnit usefulness](tickets/00045-TICKET.md) plans retain their
+recorded scope and evidence. Any future dependence on the local Jev integration needs a supplier decision.
 
 Detailed decomposition approvals, supplier mappings and publication checkpoints remain in their owning
 EPICs/TICKETs and Wayfinder maps rather than being duplicated here. Historical terminal-first priority statements

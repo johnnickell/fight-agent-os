@@ -6,6 +6,11 @@
 **Map:** [Complete Fight Agent OS vision](../complete-agent-os-vision-map.md)
 **Depends on:** [WF-030](WF-030-define-context-retention-and-resume-contract.md)
 
+The [2026-11-05 amendment](../../epics/00006-EPIC.md#approved-native-pi-compaction-and-jev-retirement--2026-11-05)
+retains the deterministic 180k/210k/240k targets on a native Pi baseline, including on a 500k window.
+TASK-00168 owns qualification and the per-model trigger. Jev judgments and expanded history are deferred.
+The original decision below preserves the earlier rationale.
+
 ## Question
 
 When should the Harness recommend or initiate context compaction for each Agent and sub-agent, and how should
