@@ -2,7 +2,7 @@
 id: TICKET-00127
 epic: EPIC-00022
 title: Review material architecture changes with diagrams in pull requests
-status: ready-for-agent
+status: done
 ---
 
 # Review material architecture changes with diagrams in pull requests
@@ -75,7 +75,7 @@ whole-TICKET dependency on the Pi skill is required.
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00550](../tasks/00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | ready-for-agent |
+| [TASK-00550](../tasks/00550-TASK.md) | Add conditional architecture diagrams to PR authoring and review guidance | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
