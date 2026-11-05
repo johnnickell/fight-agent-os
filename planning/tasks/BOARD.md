@@ -12,6 +12,13 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 
 ### Current assessment handoff
 
+[TASK-00585](00585-TASK.md#accepted-implementation-checkpoint--2026-11-05) has independent Review ACCEPT
+and visual/behavioral QA PASS on `3d324c7e` (10 groups; QA-01 resolved), with a mechanical advancing-base
+bridge. Publication/capture access and eligible cleanup are pending at this frozen checkpoint; actual results
+are in canonical ignored `.runs/tasks/TASK-00585/runs/land/receipt.md` and the implementation PR. PR #215 is
+merged planning-only history. Original incident attribution, mixed-source summary-count debt and shutdown
+uncertainty remain disclosed; no global rollout or all-role SDK cutover is claimed. Human merge is separate.
+
 [TASK-00566](00566-TASK.md#accepted-implementation-checkpoint--2026-11-05) has independent Review ACCEPT and
 documentation QA PASS on `7c9666af4dde06e05c8505c56cb00685c58ce7ab` (17 passed instruction scenarios; visual N/A).
 Its EPIC-00005 planning correction is accepted, not source delivery or complete-portfolio acceptance.
@@ -38,7 +45,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | — (standalone bug) | in-progress | — | [PR #215](https://github.com/johnnickell/fight-agent-os/pull/215) |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -655,4 +662,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | [PR #212](https://github.com/johnnickell/fight-agent-os/pull/212) |
 | — | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | — (standalone bug) | done | — | [PR #211](https://github.com/johnnickell/fight-agent-os/pull/211) |
 | — | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | — (standalone bug) | done | — | [PR #216](https://github.com/johnnickell/fight-agent-os/pull/216) |
+| — | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | — (standalone bug) | done | — | [PR #215](https://github.com/johnnickell/fight-agent-os/pull/215) |
 <!-- /planning:board -->
