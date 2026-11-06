@@ -47,8 +47,10 @@ through as ON or silently become OFF; map safe categories to responses/internal 
 raw repository errors. OFF/ineligible PREVIEW denial is 404; a storage outage is not disguised as a valid OFF.
 The package's ID-based binding decision is separate from active user/session resolution and Agent authentication;
 current request authority must be qualified. Browser `/me` is not Agent authorization. Route-public status must
-be explicit, not inferred from flag availability; direct command-bus and protected non-HTTP entry paths retain
-their own actor/target/delegation checks.
+be explicit, not inferred from flag availability; every actual non-HTTP entry adapter owns actor authentication and permission/target/delegation admission before
+configured bus dispatch. The [canonical contract](../../docs/engineering/STANDARDS.md#entry-admission-and-authorization-timing)
+requires no second blanket Application/bus gate; raw buses are trusted internal composition. Package ownership
+and business invariants remain enforced independently of transport admission.
 
 ## Acceptance and evidence
 

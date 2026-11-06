@@ -20,7 +20,15 @@ Produce a Markdown reference set from the actual qualified Agent OS implementati
 composition, current server authorization on HTTP/direct/worker entry paths, PostgreSQL shared transactions and
 expected-state/reference fences, Agent operation/cohort/restore controls, protected sink and recovery, human
 credential delivery, Feature lifecycle/runtime enforcement and safe response shaping. Keep package-owned policy
-and Agent OS-owned adapters/orchestration visibly distinct; these are references, not copied package implementations.
+and Agent OS-owned adapters/registered-handler coordination visibly distinct; these are references, not copied
+package implementations. Apply the [canonical contract](../../docs/engineering/STANDARDS.md#architecture) to
+examples: entry-owned authentication/permission/target admission, configured bus dispatch, aggregate-owned
+handlers, collection-like repositories and one generic transaction with explicit required audit. Do not present
+current duplicate Application gates, private handler dispatch or Role audit decorators as approved patterns.
+Ordinary creation carries an entry-generated typed ID in a void command and reconciles lost response by fresh
+queries/possible uniqueness conflict, not original-response replay. Typed safe camelCase Views cross outward to
+transport-owned presentation; qualify Common failures/HTTP support without guessed APIs, local generic aliases
+or competing classifiers. Preserve justified credential/email-change and other multi-resource recovery.
 
 For each in-scope family provide reproducible scenario prerequisites, safe inputs, commands, tool versions,
 expected and actual observations, redacted consumer receipt references and known limits. Describe significant

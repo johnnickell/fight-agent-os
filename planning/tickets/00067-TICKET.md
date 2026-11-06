@@ -45,7 +45,10 @@ changes, administrator confirmation bypass or role-name authorization belongs he
 
 Self-service requires active authenticated owner; cross-user request/cancel/status require a distinct current
 `SUPER_ADMIN_ONLY` Permission, package `EmailChangeAdministrationAuthorization` callback, fresh actor/target
-scope and action-specific server checks on HTTP, console and direct-bus entry paths. The managed tier restricts
+scope and action-specific admission at every actual HTTP, Console or other entry adapter before configured
+bus dispatch. Under the [canonical contract](../../docs/engineering/STANDARDS.md#entry-admission-and-authorization-timing),
+the raw bus is trusted internal infrastructure, not a public authentication boundary. Do not add a second blanket
+Application gate; keep package ownership/lifecycle invariants with their owner. The managed tier restricts
 assignment; `READ_USERS`, `UPDATE_USERS`, invitation rights, `ROLE_SUPER_ADMIN` alone or a browser projection do
 not authorize change. Canonicalize and validate a *different* address; package reservations, revisions, latest-
 grant and expiry fences prevent collision with existing Users, invitations and other changes, including races
@@ -56,7 +59,7 @@ responses; no silent overwrite. Audit distinguishes self request/cancel and admi
 
 - Real active owner and authorized Super Admin can request/cancel for permitted targets and inspect only their
   safe scope; anonymous, stale/disabled, missing Permission and cross-user self-service attempts fail closed
-  through browser, HTTP and direct dispatch.
+  through browser presentation and each actual server entry's admission, not an invented public raw-bus gate.
 - Real PostgreSQL conflict/race tests cover distinct-address rule, competing reservations, repeated requests,
   cancellation versus confirmation and correct pending/active address and generation outcomes. Request and
   cancellation never directly promote the destination.
@@ -135,8 +138,11 @@ new-mail delivery; **TASK-00281 does not depend on sending readiness or TASK-002
 remove the ability to cancel supported current authority. Cancellation preserves accepted request notices,
 does not promote an address and cannot recall already-sent mail. Required state/audit writes roll back together;
 post-commit event failure/lost acknowledgement may follow success and never authorizes blind mutation replay.
-The request command also supplies no client idempotency key; only supported original-result evidence can resolve
-uncertainty, not repeated equal input or the latest address alone.
+The request command also supplies no client idempotency key. Fresh authorized status reveals current state for
+explicit recovery, not an immutable original response; repeated equal input or the latest address alone does not
+prove the original result. Exact generation/recipient facts remain required for durable notices and successor-safe
+cancellation, not a generic replay ledger. Ordinary admission may precede concurrent revocation; the next request
+checks fresh authority, while reservation/generation and required audit/notice consistency remain atomic.
 
 TASK-00282 extends the existing user detail under independent route/action checks, explicit target/intent
 confirmation and current callback authority. Reuse the request/status/cancel primitives, not another pipeline.

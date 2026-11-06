@@ -28,7 +28,8 @@ expected full state and binding, advances no revision and emits no false change 
 under package policy and affects the next explicit availability check.
 
 Reconcile a distinct managed `ADMIN_SAFE` Feature-management Permission, initially assigned **only** to
-`ROLE_SUPER_ADMIN`, and enforce fresh actor/target/intent on all HTTP, CLI, worker and direct-bus paths. Tier
+`ROLE_SUPER_ADMIN`, and enforce fresh caller authentication, permission/target-scope and intent admission at all actual HTTP, CLI,
+worker and other entry adapters before configured bus dispatch. Tier
 eligibility is not automatic custom-Role or Agent delegation. Before enabling PREVIEW/ON, qualify complete
 preparation/current policy and registered runtime coverage through TICKET-00070/71; scanner success or a flag
 alone cannot authorize deployment or the underlying action. Warn and require explicit confirmation before
@@ -49,8 +50,11 @@ useful; no arbitrary or dummy Feature is seeded for acceptance.
 
 ## Validation and permissions
 
-Current effective management Permission and target/intent scope must be checked by shared Application policy
-on every entry, not only an Action attribute or browser guard. The testing Permission can have any eligible
+Each actual entry adapter checks current effective management Permission and target/intent scope before
+configured bus dispatch; HTTP declares its admission once on the Action. Under the [canonical contract](../../docs/engineering/STANDARDS.md#entry-admission-and-authorization-timing),
+there is no second blanket Application/bus permission gate, and ordinary admitted work may finish after concurrent
+permission revocation. Reusable rollout/active-repair business policy retains its Domain/Application owner;
+package Feature/reference/expected-state invariants and real deployment safety fences remain required. The testing Permission can have any eligible
 package-defined tier as a reference; its binding grants neither management nor protected direct Agent grants.
 Unknown/removed binding, malformed immutable name/status, stale/nonpositive revision, concurrent management
 or reference mutation and readiness failure are safe denials/conflicts, never overwritten. Final full-state

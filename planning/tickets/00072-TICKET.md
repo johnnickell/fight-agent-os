@@ -26,8 +26,10 @@ presented as the whole catalog is unacceptable. Empty *confirmed complete* catal
 Never expose hidden credential or management internals in this View.
 
 The frontend uses `available` to hide/gate relevant routes, navigation, controls and forms, **together** with
-the planned `/api/v1/me` current Permission **names** for ordinary Action rights. A tester in PREVIEW sees a
-complete capability only where both checks allow it; ineligible users do not see its controls. Refetch on
+the existing sole `/api/v1/me` current Permission-name supplier, integrated by
+[TASK-00049](../tasks/00049-TASK.md), for ordinary Action rights. Feature-catalog/browser integration remains
+planned and requires its own qualification; the existing principal supplier does not qualify that future use.
+A tester in PREVIEW sees a complete capability only where both checks allow it; ineligible users do not see its controls. Refetch on
 Feature setting/binding or principal authority changes using the existing single volatile authority context,
 bounded cache generation/freshness and protected-data invalidation. Unknown, stale, incomplete or failed
 reads suppress feature presentation; no local name-to-ID approximation or persisted/broadcast Feature authority.
@@ -105,7 +107,10 @@ The maintainer approved two independently reviewable paths:
 Both are unranked features, ready behind listed blockers. TASK-00294's Agent runtime is not a prerequisite.
 TASK-00295 owns the real `GET /api/v1/features` read for all currently authenticated Users, without Dashboard,
 testing or management Permission requirements. It composes package `ListFeatures` and `FeatureAvailability`
-through a justified complete-catalog Application operation, not another evaluator, renamed query or public gate.
+through a registered aggregate-owned QueryHandler for justified complete-catalog composition, not another
+evaluator, renamed query, broad forwarding service or public gate. Entry adapters own authentication and scope
+admission; typed safe camelCase Views cross outward to HTTP Data/Responders for snake_case JSON/status/headers
+under the [canonical read contract](../../docs/engineering/STANDARDS.md#safe-typed-reads-and-intentional-failures).
 
 The approved protocol is one bounded complete response, not browser-managed paging. Return explicit complete/count
 metadata only after buffering and validating every internal page and item. Include OFF and safe Feature identity,
