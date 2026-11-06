@@ -16,7 +16,7 @@ credential and current-use seams; a first Explorer demonstration alone cannot cl
 
 ## Solution and boundaries
 
-First register Fight Agent OS as a Repository with a designated checkout and versioned context, establish a
+First register Fight Agent OS as a Project with a designated checkout and versioned context, establish a
 Team, create its distinct Explorer and manually launch bounded authenticated Pi Harness exploration of that
 checkout. Return source-cited findings and uncertainty. The first Explorer is never unassigned, never a
 standalone disposable test identity, and does not wait for the Planning database cutover, complete browser
@@ -44,17 +44,22 @@ unaccepted; do not substitute a synthetic harness, seeded data or another EPIC's
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Explore registered source | Authorized manual bounded Agent launch through Harness | Current Team, Repository checkout/context, authenticated tools and scopes | Safe session/actual research result, not Planning mutation | Explorer returns cited findings without unauthorized edits |
+| Explore registered source | Authorized manual bounded Agent launch through Harness | Current Team, Project checkout/context, authenticated tools and scopes | Safe session/actual research result, not Planning mutation | Explorer returns cited findings without unauthorized edits |
 | Govern Planning | Existing browser Planning conversation and human Apply commands | Project Manager identity, context, current human/Agent authority and proposal revisions | Existing accepted Planning facts only after human action | Actual reviewed Planning progress, not self-approved model output |
 | Execute/review/publish work | Existing Workflow, review, QA, land and release/hotfix use cases | Selected TASK, roster, independent contributor history, qualified base/target and grants | Owning Workflow/release events only when committed/verified | Distinct roles produce authorized code, assessment, QA and PR/release effects with human controls |
 
 ## Validation and permissions
 
+Entry adapters admit the real human/Agent and Project/target scope before configured bus dispatch; existing
+registered aggregate-owned handlers retain Workflow/Planning/effect coordination and generic transaction/audit
+ownership. Safe typed owned projections join actual cross-owner facts, never wrap package Views merely to rename
+them. The ordinary admission contract does not recall admitted effects; credential, commitment, exact-subject and
+publication fences below remain for their concrete safety guarantees.
 Require each real Agent's distinct Team membership, template/profile/context revision, holder credential,
 current eligible direct Permissions and tool/grant scope at use; the initiating human retains their own
 decisions. The one Team remains authoritative for subsequent delegation; reviewer/QA independence and
 Hotfix/Release effect permissions cannot follow a template title. Reject stale claims, unavailable sandbox,
-wrong Repository/base, uncertain delivery and unqualified release targets. Record provider/model and session
+wrong Project/base, uncertain delivery and unqualified release targets. Record provider/model and session
 lineage without secrets. Manual Harness use is not an exemption from HMAC, broker, origin and host policy.
 
 ## Acceptance and evidence
@@ -64,7 +69,7 @@ lineage without secrets. Manual Harness use is not an exemption from HMAC, broke
 - Each of the other six roles performs its **intended** authorized path, including independent review/QA,
   actual controlled PR publication, confirmed hotfix and qualified project-specific release/deployment effects
   where required by EPIC-00014. Triage uses the authoritative human-selected TASK start, not autopick.
-- Record for every role its stable Agent/Team/Repository/template and credential operation/delivery/activation/
+- Record for every role its stable Agent/Team/Project/template and credential operation/delivery/activation/
   continuing-use identities, actual session/Workflow, tools/grants, distinct outcome and redacted provenance.
   Missing evidence or a blocked owner remains explicit, not a claim of complete Team operation.
 - Verify actual handoffs and safe denial/recovery with owned product behavior checks, real consumer tools and
@@ -153,8 +158,12 @@ runtime code, duplicate sessions or stage another release merely to fill this TA
 changed code, authority or participants; inherited receipts are not fresh proof. Every newly enabled writer/use
 participant still needs the applicable current shared-fence/cohort/runtime qualification before exposure.
 
-The generic managed Review/QA/publication capabilities missing from TASK-00207/00215 and the lower-level session,
-commitment, resource, base-inclusion and contribution primitives remain unmapped. TASK-00267–00269 are consumers,
+Generic managed Review/revision/acceptance/QA now map to TASK-00445 and TASK-00310–00313; publication maps to
+TASK-00314–00316. Protected evidence maps through TASK-00378, Workflow capacity through TASK-00369 and contribution
+facts through TASK-00375. Actual immutable-session/phase dispatch, complete manual commitment/base-inclusion and
+contribution-source composition remain held. TASK-00221/00225 now map applicable trusted merge/base-inclusion
+observation to TASK-00317; actual provider/effect/recovery composition remains unqualified. Mapping is not
+qualification. TASK-00267–00269 are consumers,
 not those suppliers; do not clear their holds or introduce reverse cycles through final role outcomes. A local
 Skill, template definition or EPIC-00008's terminal metadata proves none of this runtime. Creation, session/roster
 primitives and shared readiness do not depend on these final integrations. First manual Explorer remains independent
@@ -167,7 +176,7 @@ Workflow per candidate, not one per stage; these implementation TASKs create no 
 Missing qualified targets keep the required role outcomes open, not blanket N/A. A PR is neither published library
 nor deployed application. Human merge, signing and exact production-effect authority remain separate.
 
-Record each role's actual Agent/Team/Repository/template/profile/context, credential operation/delivery/activation/
+Record each role's actual Agent/Team/Project/template/profile/context, credential operation/delivery/activation/
 continuing-use, tools/grants and session/Workflow/outcome provenance in its existing owning evidence and completion
 notes. Required actual behavioral QA cannot be replaced by all-N/A paperwork; preserve legitimate criterion-level
 N/A without inventing a feature or incident. Capture applicable real UI states and qualify external tools directly;

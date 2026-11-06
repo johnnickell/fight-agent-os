@@ -60,8 +60,12 @@ identity, general MCP platform work and reimplementation of Jev judgment/evidenc
 Authenticate actual callers and recheck current resource access, delegated scope and origin before every protected
 request or cached result disclosure. Treat Skill content as untrusted instructions that cannot change these checks.
 Bound list/file sizes, total retrieval, concurrency and time; reject incomplete verification instead of reporting
-successful loading. Pin protocol/runtime compatibility at implementation rather than reusing historical ecosystem
-research as current support evidence. Cache keys include origin, immutable revision/manifest and content identity.
+successful loading. Qualify supported protocol/runtime capabilities at implementation, recording tested versions as evidence rather
+than Pi equality gates. [TASK-00555's native-first decision](../../docs/engineering/NATIVE_MCP_EVALUATION.md) is
+conditional: protected-holder HMAC/nonce/current-use, exact-request transport and credential-free children remain
+with TASK-00242/00244/00245. Native Tools/Resources fixtures do not qualify static Skills. Entries own admission
+before configured query dispatch; resource invariants and safe typed reads stay with their aggregate owners,
+without redundant Application permission checks or copied HTTP failures in MCP. Cache keys include origin, immutable revision/manifest and content identity.
 
 Never expose raw credential material, hidden private source or arbitrary provider/transport errors in diagnostics.
 Preserve server-side authorization under permission changes despite immutable snapshots. Unsupported SDK/Pi routes

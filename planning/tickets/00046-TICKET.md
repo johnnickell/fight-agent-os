@@ -20,17 +20,17 @@ store. Correcting a mistaken working belief should not reload an obsolete privat
   claims need no mandatory observation/inference taxonomy. Treat memory as context, not Planning, code, Workflow
   evidence or execution authority; do not create a speculative MemorySpace aggregate merely to store entries.
 - Give each actual Agent identity a **small Workspace-private general bank** for broadly applicable lessons and
-  repository/assignment-partitioned private working memory. The general bank cannot smuggle confidential
+  Project/assignment-partitioned private working memory. The general bank cannot smuggle confidential
   repository/TASK content into another assignment. Identity/template/display name alone grants no repository
   access. An identity has at most one active session under the accepted execution contract.
 - Let an Agent explicitly record, read, replace or clear its own current private working text under current
   assignment and scope. Keep safe change attribution without retaining prior private text by default. Do not
   ingest Pi checkpoints, raw transcripts or hidden reasoning, and do not turn a private change into a rewrite of
   an existing handoff or shared entry.
-- Offer the own-private operations through first-party, HMAC-authenticated MCP tools bound to application
-  commands/queries. Scope IDs in requests are targets, never authority. The service checks current Agent
-  identity, Permission, assignment, ownership and scope lifecycle; accept exact same-command retries without
-  a duplicate memory entry. No sandbox database connection, shared writable host-memory folder or global
+- Offer own-private operations through first-party MCP Tools: authenticate HMAC and admit Agent Permission,
+  assignment and Project target scope at the entry before configured command/query bus dispatch. MemoryEntry
+  retains intrinsic owner/lifecycle invariants. The adapter generates the typed entry ID for a void create;
+  enforce uniqueness and reconcile uncertain creates with fresh authorized reads, not an original-response log. No sandbox database connection, shared writable host-memory folder or global
   file-backed bank is authorized.
 - Preserve separately authorized private oversight: the exact managed `READ_PRIVATE_AGENT_MEMORIES` Permission
   is **not** `SUPER_ADMIN_ONLY`. An authorized Super Admin checks effective Permission and target access and
@@ -42,7 +42,7 @@ store. Correcting a mistaken working belief should not reload an obsolete privat
   applicable oversight path. No automatic age expiry, routine Agent deletion of shared history or bulk feed to
   a self-learning Agent follows from private storage.
 
-This requirement does not publish Workflow/TASK/Repository/Workspace guidance; TICKET-00047 and TICKET-00048
+This requirement does not publish Workflow/TASK/Project/Workspace guidance; TICKET-00047 and TICKET-00048
 own shared entries and promotion. TICKET-00050 owns exceptional safety removal and basic human inspection;
 its prohibited-content path must be available before live memory ingestion is claimed safe.
 
@@ -64,8 +64,9 @@ Reject forged/unknown scope IDs, unavailable or closed assignments for normal ac
 missing direct/effective Permission, cross-repository data in a general bank, and reads of another Agent's
 private content without the exact oversight authority. Apply current authorization to each MCP operation,
 including after revocation; do not rely on pinned templates, cached conversation text or request-supplied actor
-IDs. Bound entry text and source references without choosing schema sizes here. Duplicate uncertain writes
-resolve their original result; errors and audit metadata must not leak private text or credentials. ADR 0001
+IDs. Bound entry text and source references without choosing schema sizes here. Uncertain ordinary creates
+use fresh exact/list reads; expected-state correction/clear cannot overwrite a newer value. Errors and required
+handler-coordinated audit must not leak private text or credentials. ADR 0001
 owns Domain/Application/Adapter policy placement; ADR 0002 owns guarded PostgreSQL consistency and migrations.
 
 ## Acceptance and evidence

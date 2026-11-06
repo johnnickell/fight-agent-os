@@ -112,6 +112,14 @@ permissions; source contents and Jev judgments cannot authorize a sub-call. Thes
 do not make all web research a blocker on generic composition or static/SQL analysis, and web suppliers never depend
 on completed TASK-00174. No duplicate client, evaluator, authority or provider credential path is introduced.
 
+## Current supplier boundary — TASK-00569
+
+Inherit [TICKET-00042's current supplier/ownership contract](00042-TICKET.md#current-supplier-and-ownership-boundary--task-00569):
+surviving Jev qualification, conditional native MCP with unqualified HMAC/holder/child isolation, supported Pi
+capabilities rather than version gates, entry-owned current Project admission and configured bus dispatch.
+Each downstream MCP call is a new entry admission; this is not a redundant inner Application gate. Preserve
+actual mutation/paid-work reconciliation and SQL read-only/data-scope controls; no generic replay replacement.
+
 ## Sequencing and TASK readiness
 
 Consume TICKET-00042's authenticated shared entrypoint, typed result/provenance and budget contracts, plus existing

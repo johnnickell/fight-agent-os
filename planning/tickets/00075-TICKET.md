@@ -48,13 +48,17 @@ Exact schema, seed representation and transition mechanics belong to implementat
 ## Validation and permissions
 
 Protected setup and template administration require current intent-specific managed `SUPER_ADMIN_ONLY`
-management authority, granted only through the authoritative managed Super Admin Role, with target and scope
-validation. A role name, source file or template key is not caller authority. Server reads must respect installation,
-Workspace and registered-Repository scope; administrative access does not authorize disclosure to a provider.
+management authority, granted only through the authoritative managed Super Admin Role, admitted with Project/
+target scope by each supported entry adapter before bus dispatch. No duplicate Application gate or ordinary
+caller-revocation serialization is required. A role name, source file or template key is not caller authority. Server reads must respect installation,
+Workspace and registered-Project scope; administrative access does not authorize disclosure to a provider.
 Reject missing/invalid references, ambiguous identities and stale expected state. Preserve database uniqueness,
 shared transaction behavior and immutable historical content; unknown storage/commit outcomes require authoritative
-inspection before retry. Required state and audit evidence commit together, with external effects outside the
-transaction under ADR 0002. Template requests are not AccessControl grants; seeding issues no credential.
+inspection before retry. Registered AgentTemplate-owned handlers coordinate required state and audit through the generic
+`TransactionalUnitOfWork` and collection repositories on one connection, with external effects outside it.
+Use adapter-generated typed IDs in void creation commands; preserve controlled stable seed IDs and complete
+setup/provenance/no-overwrite invariants. Fresh setup/history reads resolve uncertainty without an original-response
+journal. Safe typed PHP Views are camelCase; entry adapters own protocol presentation. Template requests are not AccessControl grants; seeding issues no credential.
 
 ## Acceptance and evidence
 
@@ -87,7 +91,9 @@ transition or runtime authority was created by decomposition.
 
 TICKET-00034's accepted [TASK-00248](../tasks/00248-TASK.md) owns the reviewed starting catalog.
 [TASK-00299](../tasks/00299-TASK.md) now owns the approved single initialization/inspection outcome, consuming
-TASK-00248, TASK-00036's managed authority and TASK-00078's Workspace/Repository identities.
+TASK-00248, TASK-00036's managed authority and existing Workspace/Project identity contracts. TASK-00078's
+historical registration baseline is not a second identity owner; consume the canonical Project contract without
+adding a blanket source-refactor prerequisite.
 [TASK-00249](../tasks/00249-TASK.md) consumes this actual database authority for profile resolution, never the
 reverse. Keep one Harness template authority, no recurring source overwrites and no browser editor prerequisite
 for the initial catalog; whole TICKET-00034 or completed Agent/session journeys are not seed prerequisites.

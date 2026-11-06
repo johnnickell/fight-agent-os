@@ -30,7 +30,8 @@ Offer two distinct one-time human-confirmed operations:
   set, explicitly showing and confirming both additions and removals. Do not quietly drop invalid requested
   items and call the result synchronized.
 
-Revalidate the current actor, Agent, template selection, Permission IDs/tiers, Team/Repository scope, owner-approved
+Admit the current actor at the entry; handlers validate Agent, template selection, Permission IDs/tiers,
+Team/Project scope, owner-approved
 grant limits and expected state at mutation time, including no-ops. Use the package-owned assignment operations
 and actual shared transaction/reference fences. The chosen assignment commits atomically or fails; fresh state
 resolves an uncertain outcome before another attempt. Stale previews need refresh and renewed human confirmation,
@@ -53,16 +54,19 @@ introduced. Explicit permission reconciliation is separate from any future Agent
 ## Validation and permissions
 
 Direct-Permission assignment/reconciliation requires its distinct current managed `SUPER_ADMIN_ONLY`
-management Permission, held only through authoritative managed Super Admin membership, on every HTTP, CLI,
-worker and direct-bus path. Template-management rights alone do not authorize Agent assignment. An actor ID,
+management Permission, held only through authoritative managed Super Admin membership, on every HTTP, CLI
+or other supported entry adapter before configured bus dispatch; workers authenticate as themselves. The
+raw bus is trusted composition, not an independently authenticated public path. Template-management rights alone do not authorize Agent assignment. An actor ID,
 role name, signed request or captured preview is not current authority. Even Super Admin cannot assign
 `SUPER_ADMIN_ONLY` Permissions to an Agent; only eligible current `ADMIN_SAFE` direct Permissions are allowed.
 
 Protect final full expected-state comparison and complete-set tier/reference validation against concurrent
 Agent assignment, Permission removal/promotion, template selection and scope changes, including desired-state
 no-ops. Compose through supported package contracts without copied lifecycle policy, nested outer transactions
-or audit-repository side effects. A missing atomic authorization/assignment seam blocks exposure pending explicit
-owner resolution and qualification of the tagged locked package. Do not infer concurrency safety from preflight
+or audit-repository side effects. A missing supported complete-set/reference/reviewed-source-audit seam blocks exposure pending explicit owner
+resolution and qualification of the tagged locked package. Caller authentication/permission/Project admission stays
+at adapters; ordinary admitted reconciliation may finish after caller revocation. Retain complete assignment,
+tier/reference, expected-state and credential-writer fences for actual consistency, not a second Application gate. Do not infer concurrency safety from preflight
 reads or package fixtures. Safe failures distinguish denial, invalid set, stale preview, storage failure and
 uncertain commit; no false rollback, partial-success claim or name-based retargeting. Audit/projections exclude
 credentials, protected operation internals and unauthorized prompt/Permission details.
@@ -117,8 +121,10 @@ TASK-00256's distinct assignment authority and initial creation/assignment are u
 outcome owns versioned preview, Add Missing and Auto-sync, their explicit confirmations, recovery and evidence;
 no inspection-only, infrastructure or proof TASK is added.
 
-Status `needs-info` retains the supported atomic current-caller/target/template/scope authorization, complete-set
-assignment, required reviewed-source audit and outcome-recovery seam. The inspected public replacement command
+Status `needs-info` retains supported registered-handler complete-set assignment, template/Project-scope
+consistency, required reviewed-source audit and truthful fresh-query outcome handling. Use direct package messages
+and collection repositories with generic handler-owned transactions; no wrapper grant service or original-response
+journal. Ordinary caller-revocation serialization is not a supplier hold. The inspected public replacement command
 carries actor/Agent/expected assignment revision/IDs, not the full consumer review intent; its internal coordinator
 owns a transaction and its handler publishes afterward. Preflight checks, internal-coordinator calls, outer
 transactions or post-commit audit cannot supply the missing guarantee. No-op races require explicit qualification.

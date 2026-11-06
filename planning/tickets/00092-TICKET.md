@@ -15,7 +15,7 @@ and local skills do not provide that durable product journey.
 
 ## Solution and boundaries
 
-Extend [TICKET-00029](00029-TICKET.md)'s authenticated registered Planning Dashboard with repository-scoped durable
+Extend [TICKET-00029](00029-TICKET.md)'s authenticated registered Planning Dashboard with Project-scoped durable
 intake and conversations. Keep What do you want to build? prominent. Submission creates an intake, not a map;
 inspect existing maps/artifacts and recommend meaningful matches, then let the human choose continuation or new
 work. Do not attach, reparent or duplicate artifacts automatically.
@@ -64,7 +64,7 @@ repository instruction mutation. No standalone conversation demo or certificatio
 ### Approved first-production journey and model/usage presentation
 
 The first production milestone pairs verified database Planning cutover under TICKET-00028 with this real journey:
-sign in/select an authorized registered Repository; submit an idea and select matching or new work; review/edit/
+sign in/select an authorized registered Project; submit an idea and select matching or new work; review/edit/
 explicitly create a map when needed; work one HITL decision and explicitly Apply its result; leave and resume the
 same conversation with truthful progress and usage. Private discussion/drafts are not accepted state. This selects
 an initial acceptance scenario, not a reduction of the other accepted journeys or a new demo/readiness TASK.
@@ -100,7 +100,7 @@ Optional creation/instruction assistance, domain UI, ChatGPT and legacy replacem
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Start or continue intake | Create durable intake; explicitly select existing/new work | Registered Repository, current authority, existing artifacts and active conversations | Committed intake/operation facts, not automatic map creation | Durable question/intent under one Repository |
+| Start or continue intake | Create durable intake; explicitly select existing/new work | Registered Project, current authority, existing artifacts and active conversations | Committed intake/operation facts, not automatic map creation | Durable question/intent under one Project |
 | Conduct Planning with managed Agents | Submit answers, explicitly request next distinct operation, Create/Apply approved candidate | Current question, decisions, proposal, revisions, model choice and capability readiness | Existing conversation/answer/Planning facts from their owners | Authorized bounded work and human-approved artifacts |
 | Resume and inspect progress | Authorized attach; queries remain read-only | Safe status, known-unit counts, progressive authorized history and original outcomes | Attachment/progress observations; no invented completion event | Same durable journey with truthful interruption/conflict states |
 | Share or hand off | Explicit read/continue sharing or handoff command | Current ownership, recipient repository authority and allowed scope | Committed sharing/handoff facts | Deliberately bounded transcript/draft access, not public visibility |
@@ -109,8 +109,11 @@ Optional creation/instruction assistance, domain UI, ChatGPT and legacy replacem
 
 ## Validation and permissions
 
-Server operations enforce current intent-specific viewing, conversation, acceptance, sharing/handoff and guarded
-lifecycle permissions through Fight Access Control, never Role names. Browser presentation consumes current `/me`
+Every HTTP/MCP entry admits current intent-specific viewing, conversation, acceptance, sharing/handoff and
+Project-target scope through canonical Fight Access Control before configured bus dispatch, never Role names.
+Conversation/proposal/Planning handlers retain their own invariants, expected revisions and atomic audit, not a
+blanket inner permission gate. Responders map complete safe typed Views and qualified shared failure intent to
+HTTP; MCP retains its own mapping. The browser does not create another lifecycle facade or provider queue. Browser presentation consumes current `/me`
 and owning scope projections under ADR 0003/0004. Retire private data on authority/context change; stale callbacks
 cannot restore a logged-out identity or leak another conversation. Apply no-store, safe rendering, bounded inputs
 and pagination, exact current revisions and strict response decoding.
@@ -145,7 +148,7 @@ Human decisions remain required even during AFK work. Current revocation overrid
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00361](../tasks/00361-TASK.md) | Start and continue repository Planning intake | ready-for-agent |
+| [TASK-00361](../tasks/00361-TASK.md) | Start and continue Project Planning intake | ready-for-agent |
 | [TASK-00362](../tasks/00362-TASK.md) | Conduct Wayfinder interviews and create reviewed maps | ready-for-agent |
 | [TASK-00363](../tasks/00363-TASK.md) | Review and apply artifact Planning operations | ready-for-agent |
 | [TASK-00364](../tasks/00364-TASK.md) | Conduct bounded AFK Planning preparation | needs-info |
@@ -173,7 +176,7 @@ its application/browser behavior, actual acceptance evidence and operator guidan
 
 | Slice | Accepted owner | Delivered boundary |
 |---|---|---|
-| A | [TASK-00361](../tasks/00361-TASK.md) | Durable repository intake, existing-work recommendations and explicit continuation/new-work choice |
+| A | [TASK-00361](../tasks/00361-TASK.md) | Durable Project intake, existing-work recommendations and explicit continuation/new-work choice |
 | B | [TASK-00362](../tasks/00362-TASK.md) | Wayfinder answers/corrections, reviewed atomic map creation and truthful decision progress |
 | C | [TASK-00363](../tasks/00363-TASK.md) | Distinct artifact operations, editable previews, explicit atomic Apply and reviewed reconciliation |
 | D | [TASK-00364](../tasks/00364-TASK.md) | Bounded AFK preparation with actual stages, recovery and reviewable research/prototype findings |

@@ -253,8 +253,8 @@
 | [TASK-00248](00248-TASK.md) | Define the eight reviewed SDLC template specifications | ready-for-agent | [TICKET-00034](../tickets/00034-TICKET.md) |
 | [TASK-00249](00249-TASK.md) | Resolve exact role profiles with truthful capability availability | needs-info | [TICKET-00034](../tickets/00034-TICKET.md) |
 | [TASK-00250](00250-TASK.md) | Bind role selections to isolated immutable Agent sessions | needs-info | [TICKET-00034](../tickets/00034-TICKET.md) |
-| [TASK-00251](00251-TASK.md) | Establish authorized Teams on registered Repositories | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
-| [TASK-00252](00252-TASK.md) | Manage Repository associations and preferred Teams | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00251](00251-TASK.md) | Establish authorized Teams on registered Projects | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
+| [TASK-00252](00252-TASK.md) | Manage Project associations and preferred Teams | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
 | [TASK-00253](00253-TASK.md) | Enforce one-Team Agent membership and shared admission fences | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
 | [TASK-00254](00254-TASK.md) | Transfer idle Agents and remove associations safely | needs-info | [TICKET-00062](../tickets/00062-TICKET.md) |
 | [TASK-00255](00255-TASK.md) | Operate Team and roster administration in the browser | ready-for-agent | [TICKET-00062](../tickets/00062-TICKET.md) |
@@ -363,7 +363,7 @@
 | [TASK-00358](00358-TASK.md) | Explicitly create or apply reviewed Planning changes | ready-for-agent | [TICKET-00091](../tickets/00091-TICKET.md) |
 | [TASK-00359](00359-TASK.md) | Apply multi-record Planning proposals atomically | ready-for-agent | [TICKET-00091](../tickets/00091-TICKET.md) |
 | [TASK-00360](00360-TASK.md) | Reconcile rejected proposals without silent application | ready-for-agent | [TICKET-00091](../tickets/00091-TICKET.md) |
-| [TASK-00361](00361-TASK.md) | Start and continue repository Planning intake | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
+| [TASK-00361](00361-TASK.md) | Start and continue Project Planning intake | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
 | [TASK-00362](00362-TASK.md) | Conduct Wayfinder interviews and create reviewed maps | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
 | [TASK-00363](00363-TASK.md) | Review and apply artifact Planning operations | ready-for-agent | [TICKET-00092](../tickets/00092-TICKET.md) |
 | [TASK-00364](00364-TASK.md) | Conduct bounded AFK Planning preparation | needs-info | [TICKET-00092](../tickets/00092-TICKET.md) |
@@ -570,8 +570,8 @@
 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
-| [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
-| [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00572](00572-TASK.md) | Adopt Common DBAL transaction boundary for existing persistence | needs-info | [TICKET-00133](../tickets/00133-TICKET.md) |

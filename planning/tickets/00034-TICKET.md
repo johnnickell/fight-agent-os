@@ -30,8 +30,8 @@ this template TICKET does not become a second runtime implementation or unblock 
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Manage team template | Existing Harness template/reconciliation commands | Revisions, requested permissions, skills and model capability | Revision and authorized reconciliation facts | Future/managed-bound Agent configuration as explicitly approved |
-| Select role for work | Resolve effective Agent profile | Availability, independence and provenance | Existing session snapshot facts | Role-bound session with permission-filtered tools |
+| Supply reviewed team definitions | TASK-00299's single initial-seed operation; later publication/reconciliation stay with their owners | Exact revisions, requested Permissions, resources and model capability | Existing owning committed facts only | Database-owned starting templates; no recurring source writer or automatic Agent updates |
+| Select role for work | Existing owning session binding only after read-only profile resolution | Safe typed exact profile, availability, independence and provenance | Existing session snapshot facts | Role-bound session with permission-filtered tools, never a new resolver/launcher |
 
 ## Validation and permissions
 
