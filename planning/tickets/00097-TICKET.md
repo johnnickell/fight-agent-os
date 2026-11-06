@@ -228,11 +228,16 @@ actual TASK-00142/00373 recovery qualification; claim release still requires con
 TASK-00205/00265, not another Start form, normal-work confirmation, eligibility rule or pending engine. Its completion
 is not a prerequisite of independently useful lifecycle controls.
 
-TICKET-00098 now maps TASK-00398's independent usage/timing breakdowns, TASK-00399's separate allowance and
-TASK-00400's explainable forecasts/comparisons into these surfaces. All consume TASK-00391, with early TASK-00396/
-00397 facts transitively. TASK-00399 retains the unallocated qualified source/protected-refresh hold; shared quota
-is never a Repository balance and its absence blocks neither useful history nor forecasts. Early measured facts
-never depend on final Dashboard, TASK-00387 or live consumers. TASK-00320 consumes TASK-00400 for later PR-handoff
+[TICKET-00098's current handoff](00098-TICKET.md#approved-task-decomposition-and-current-handoff) maps
+TASK-00398's independent usage/timing breakdowns, TASK-00399's separate allowance and TASK-00400's explainable
+forecasts/comparisons into these surfaces. All consume TASK-00391, with early TASK-00396/00397 facts transitively.
+[TASK-00399](../tasks/00399-TASK.md) owns explicit refresh admission and sanitized observations; its accepted
+ordinary-key OpenRouter `GET /api/v1/key` source uses [TASK-00346](../tasks/00346-TASK.md)'s protected adapter and
+[TASK-00520](../tasks/00520-TASK.md)'s lifecycle/custody/current-generation contract inherited through
+TASK-00346/00344. Keep `needs-info` for actual source semantics, host/credential/lifecycle composition and
+current-authority refresh/disclosure qualification, not unallocated suppliers. Shared quota is never a Project balance;
+its absence blocks neither useful history nor forecasts. Early measured facts never depend on final Dashboard,
+TASK-00387 or live consumers. TASK-00320 consumes TASK-00400 for later PR-handoff
 forecasting; Review/QA/verdict/publication remains TICKET-00083 and Awaiting review is not acceptance or cleanup.
 
 Actual browser keyboard/focus/announcements, responsive light/dark, reduced motion, failure/recovery states and

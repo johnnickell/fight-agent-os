@@ -61,10 +61,13 @@ review/publication execution, a general metrics platform and a proof-only worklo
 ### Approved OpenRouter allowance mapping and independent Planning use
 
 For the initial hosted browser provider, the accepted source direction is OpenRouter's ordinary-key
-`GET /api/v1/key`, through TASK-00346's protected non-generative adapter for the selected user's exact environment
-connection/generation. TASK-00399 owns explicit bounded refresh admission, sanitized stored observations and
-current-authorized recorded queries/presentation. The source/adapter mapping is now accepted; live semantics,
-protected credential/storage/host composition and refresh acceptance remain unqualified. Keep `needs-info`.
+`GET /api/v1/key`, through [TASK-00346](../tasks/00346-TASK.md)'s protected non-generative adapter for the selected
+user's exact environment connection/generation. [TASK-00399](../tasks/00399-TASK.md) owns explicit bounded refresh
+admission, sanitized stored observations and current-authorized recorded queries/presentation.
+[TASK-00520](../tasks/00520-TASK.md) supplies lifecycle/custody/current-generation checks inherited through
+TASK-00346/00344. Source/adapter/lifecycle allocation is accepted; live field/reporting/reset/window semantics,
+protected credential/storage/host and lifecycle composition, and current-authority refresh/disclosure acceptance
+remain unqualified. Keep `needs-info`.
 
 Label each reported key cap/usage/budget/expiry/free-model figure by its actual units, scope, source/report time,
 reset/window where supplied and freshness. A key cap is not wallet balance or guaranteed capacity; null is not
@@ -81,7 +84,9 @@ This TICKET's TASK-00396/00391 integration remains Workflow-oriented. Standalone
 TICKET-00090/TASK-00352 and TICKET-00092/TASK-00365, reusing TASK-00345 original accounting. Do not fabricate a
 Workflow, duplicate a ledger or make optional allowance/forecast/history completion a browser Planning gate.
 TASK-00399 retains its existing Workflow presentation dependencies; its reusable account-scoped contract must not
-be confused with a completed standalone connection-settings UI. That lifecycle/UI allocation belongs to TICKET-00089.
+be confused with completed standalone connection settings. TICKET-00089 allocates lifecycle to TASK-00520 and
+optional settings allowance presentation to [TASK-00521](../tasks/00521-TASK.md). Allocation does not qualify either
+consumer or create a reverse dependency from lifecycle to optional allowance.
 
 ## Use cases
 
@@ -140,10 +145,12 @@ paid generation. Source failure leaves explicit stale/unavailable state without 
 ### Approved private-production reconciliation — 2026-10-24
 
 WF-044/049's source and ownership mapping is accepted: TASK-00346 supplies protected ordinary-key metadata,
-TASK-00399 admits refresh and owns sanitized observations; TASK-00343 remains nonsecret catalog policy. Add the
-real TASK-00346 supplier dependency to TASK-00399 without clearing its `needs-info` or changing priority. Actual
-source/host/connection lifecycle and current-authority qualification remain required. Historical statements below
-that the exact source/adapter is unallocated are superseded only for this mapping, not its operational holds.
+TASK-00399 admits refresh and owns sanitized observations; TASK-00343 remains nonsecret catalog policy. The
+TASK-00346 dependency is recorded in TASK-00399, and TASK-00520's accepted lifecycle/custody/current-generation
+allocation is inherited through TASK-00346/00344, as specified in
+[TASK-00399's coordination](../tasks/00399-TASK.md#coordination). Keep its `needs-info` and priority: actual source
+semantics, host/credential/lifecycle composition and current-authority refresh/disclosure qualification remain
+required. Earlier unallocated-source/adapter/lifecycle statements are historical, not current allocation work.
 Conversation query/UI allocation is now with TASK-00352/00365; this TICKET's Workflow/forecast scope is unchanged.
 See the [reconciliation receipt](../wayfinder/research/private-production-owner-reconciliation.md).
 
@@ -151,7 +158,8 @@ See the [reconciliation receipt](../wayfinder/research/private-production-owner-
 
 The maintainer approved five bounded slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. All are feature records with blank order/pr; A/B/C/E are `ready-for-agent` behind
-unfinished suppliers, while D retains its precise source/refresh mapping hold. Planning is not runtime readiness.
+unfinished suppliers, while D retains actual source/refresh/lifecycle qualification and composition holds, not an
+allocation gap. Planning is not runtime readiness.
 
 | Slice | Accepted owner | Exact known blockers | Delivered boundary |
 |---|---|---|---|
@@ -184,12 +192,17 @@ behind TASK-00316/00400. This resolves only its supplier-mapping hold. Actual la
 through PR handoff remains TASK-00320; base forecasting stops at Awaiting review and never reverse-depends on that
 consumer. TASK-00319's independent Review-history mapping hold and all transitive host/source/authority holds remain.
 
-**TASK-00399 remains `needs-info`.** Identify the supported provider/account/key source, precise reporting/reset/window
-semantics and exact protected credential/refresh supplier before readiness. No future ID is invented and neither
-OpenRouter nor Codex generation proves quota support. Only a mapped, actually qualified route may expose account
-facts; no source means unavailable and continued hold, not completed integration. Repository reads do not grant
-account disclosure. Ordinary reads never contact providers, inspect credentials or trigger generation. This optional
-source blocks neither usage/time, history, forecasting nor terminal execution.
+**[TASK-00399](../tasks/00399-TASK.md) remains `needs-info` for qualification/composition, not supplier allocation.**
+Qualify the accepted ordinary-key OpenRouter `GET /api/v1/key` source through
+[TASK-00346](../tasks/00346-TASK.md), including actual field meaning/units/coverage/reporting/reset/window behavior.
+Compose TASK-00399's bounded explicit refresh and sanitized observations with
+[TASK-00520](../tasks/00520-TASK.md)'s allocated lifecycle/custody/current-generation checks inherited through
+TASK-00346/00344; prove protected host/credential use and independent current-authority refresh/disclosure fences.
+TASK-00346/00350's host and authority holds remain. Neither OpenRouter nor Codex generation proves quota support;
+no hosted ChatGPT allowance supplier is selected or required. An unqualified source stays unavailable and held,
+not completed integration. Project/Workflow reads do not grant account disclosure. Ordinary reads never contact
+providers, inspect credentials or trigger generation. Optional allowance blocks neither usage/time, history,
+forecasting, terminal execution nor independent Planning/lifecycle delivery.
 
 All actual measurement/prediction/allowance copies join existing retention/redaction/current-restriction boundaries;
 durable totals and safe prediction basis remain history, separate from eligible bulky observations. No duplicate
@@ -239,8 +252,11 @@ application evidence, measured savings or statistical-accuracy claims.
 
 ### Earlier measurement allocation request and original requirement approval
 
-The request below predates approved TASK-00396/00397 and TASK-00400. Its measurement/forecast allocations are now
-mapped above; only TASK-00399's source/refresh allocation and independent qualification holds remain unresolved.
+The request below is historical: it predates approved TASK-00396/00397 and TASK-00400 and the accepted
+TASK-00346 source/adapter and TASK-00520 lifecycle allocations. Those mappings are resolved in the
+[current handoff](#approved-task-decomposition-and-current-handoff); actual source/host/credential/lifecycle
+composition and current-authority refresh/disclosure qualification remain held. The original request and receipts
+below are not instructions to repeat allocation.
 
 TICKET-00096 now maps TASK-00385 semantic projections, TASK-00386 actual safe activity, TASK-00387 stable search/
 summaries, TASK-00388 history-copy lifecycle participation and TASK-00389 committed live transport. This TICKET keeps

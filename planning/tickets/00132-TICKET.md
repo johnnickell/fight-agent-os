@@ -98,11 +98,14 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 
 ## Decisions and progress
 
-Area F, [TASK-00570](../tasks/00570-TASK.md#work-implementation-checkpoint--2026-11-06), has completed its Work
-planning amendments, not independent acceptance: 97 unfinished execution/review/triage/release records are accounted
-for (79 corrected / 18 justified unchanged), with six terminal records including TASK-00556 preserved. Canonical
-ignored coverage remains actively needed by TASK-00571. Real execution/host/supplier/independence and release-effect
-holds remain; Review/documentation QA are next after final Work verification. Other area owners remain independent.
+Area F, [TASK-00570](../tasks/00570-TASK.md#r1r2-work-repair-checkpoint--2026-11-06), is in Work repair for
+canonical Review v3 R1/R2 (REVISE, not acceptance): release-start entry versus atomic execution checks and truthful
+allocated-but-unqualified allowance handoffs. Shared cycle 1/5 is consumed. Coverage accounts for 97 unfinished
+records (79 corrected / 18 justified unchanged), with six terminal records including TASK-00556 preserved;
+canonical ignored coverage remains actively needed by TASK-00571. Real execution/host/supplier/independence and
+release-effect holds remain. Fresh repair docs/planning/whitespace checks and normal build pass, with application
+phases reused from the qualified original receipt. Renewed independent Review/documentation QA are next; no area
+or portfolio acceptance is inferred. Other area owners remain independent.
 
 Area C, [TASK-00567](../tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`; R1 is resolved,
