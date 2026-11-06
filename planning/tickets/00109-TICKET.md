@@ -56,7 +56,7 @@ An already reconciled update is not executed again or reported as a second new c
 retroactively authorize old queued work; current checks still apply.
 
 When synchronization changes recognized instruction content, update file evidence and stale open forms through the
-same expected-digest contract. Only effective Pi composition changes stale relevant RepositoryContextSnapshots/
+same expected-digest contract. Only effective Pi composition changes stale relevant ProjectContextSnapshots/
 Agent sessions through their existing owners. Preserve historical snapshots and durable proposals; never silently
 replace an edited browser form, reload Pi or resume an Agent. An unloaded-file change must not fabricate effective
 drift. Apply these contracts to actual observed outcomes rather than assuming every fetched commit changes context.
@@ -97,7 +97,14 @@ and every safety predicate under shared coordination. Validate bounded settings,
 network limits; reject unsupported or ambiguous branch relationships rather than guessing. Keep Git credentials
 protected and arbitrary output/secret-bearing paths out of events, logs and browser errors.
 
-Use ADR 0002 atomic state/audit/intent with external fetch/update outside transactions and verified outcome afterward.
+Entry adapters admit each actual human or scheduled principal's operation/Project scope and dispatch configured
+bus messages. Registered synchronization handlers coordinate exact check/update intents, collection-like
+persistence and required audit through generic TransactionalUnitOfWork; external fetch/update and physical
+verification stay outside the transaction, with results recorded afterward. Use typed entry-generated operation
+IDs, void commands and separate safe typed status/settings Views; transport adapters own JSON/CLI failures and
+presentation. The schedule configuration owner uses expected revisions and fresh reads, not immutable-response
+replay. Genuine fetch/update correlation, current scheduled delegation and physical exclusion remain required;
+no duplicate Application permission gate or ordinary revocation/commit lock follows.
 Apply ADR 0003/0004 protected loaders/actions, no-store, private-state invalidation and late-response fences. Reconnect
 reads durable state, not automatically retries a mutation. A race/failure must preserve unrelated content and honest
 uncertainty; no claim of exactly-once external effects or instantaneous client invalidation is implied.
@@ -110,6 +117,8 @@ uncertainty; no claim of exactly-once external effects or instantaneous client i
   cases refuse worktree update without stash/reset/rebase/switch/conflict repair. Unknown state remains blocked.
 - Concurrent save/publication/sync, target changes, restart and uncertain outcomes preserve original operation and
   unrelated work. Actual updated instruction digests stale forms and only effective changes stale sessions/context.
+- Handler-owned state/audit/intent and adapter-owned admission remain distinct from physical enforcement;
+  post-commit events alone do not make fetch/update durable or rollback-safe.
 - Complete real Fight Agent OS instruction-change evidence covers local save, exact PR handoff, separately human
   merged result and safe default sync. Each owning TICKET retains its focused evidence; no inherited receipt is
   labelled fresh application proof and no synthetic-only demonstration substitutes for the real journey.
@@ -156,6 +165,13 @@ These incoming mappings did not allocate sync TASKs; the subsequent approval bel
 approval nor decomposition qualifies schedule/actor/Git effects or creates operational authority.
 
 ### Approved TASK decomposition and current handoff
+
+TASK-00567 aligns Project/context and synchronization contracts while preserving original physical recovery and
+current scheduled authority. TICKET-00024/00025 retain identity/configuration/drift; TASK-00570 retains execution
+suppliers. TASK-00441–00443's exact transport, physical-update and scheduled-delegation holds remain. The complete
+split below is the allocation map; its old active-work and publication receipts are history, not current Board or
+fresh feature acceptance. Independent Review/documentation QA of this correction remain pending.
+
 
 The maintainer approved four slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. All are unranked features with blank PRs, normally one independently reviewable PR each.

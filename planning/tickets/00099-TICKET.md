@@ -67,8 +67,17 @@ SemVer ordering, schema/version, archive size/content, safe relative targets, un
 Reject traversal, unsafe archive entries and secret-bearing source URLs; never extract into a trusted project root
 or run source commands while validating. Do not broaden protected GitHub access into an arbitrary network proxy.
 
-Use PostgreSQL for owned identity, current selection, reference/retention and audit consistency under ADR 0002.
-Commit required intent before external retrieval; reconcile uncertain outcomes and verify bytes before declaring
+Model `StarterEntry` and its immutable installed releases under Workspace ownership. Catalog entry creation uses
+an entry-adapter-generated typed ID in a void command; registered handlers coordinate aggregate policy,
+collection-like persistence and required audit through generic `TransactionalUnitOfWork` on the shared connection.
+Metadata revisions and profile associations use complete expected state and fresh authorized reads after response
+loss, not original-response replay. Managed setup reconciles the fixed source set without overwriting later edits.
+Each entry adapter owns current operation/Workspace admission and configured bus dispatch; no duplicate inner gate
+or ordinary revocation/commit serialization is required. Query handlers return typed safe catalog/release Views;
+HTTP/Console adapters own presentation and failure mappings under the canonical standards.
+
+Snapshot installation is separately justified database/storage/provider recovery. Commit required install intent
+and audit before external retrieval; reconcile original install outcomes and verify bytes before declaring
 installation. Keep secrets and raw provider errors out of views, events and ordinary logs. Snapshot storage may
 reuse qualified private storage capabilities, but catalog eligibility and release retention remain this owner.
 
@@ -82,6 +91,8 @@ reuse qualified private storage capabilities, but catalog eligibility and releas
   never appear in snapshots or results.
 - At least one real managed stable release `>=1.0.0`, preferably `project-slim`, is installed with its valid manifest
   for TICKET-00103's actual create/register journey. Historical inspection or an empty catalog is not fresh evidence.
+- Ordinary catalog creation/revision uses ID-bearing void dispatch and fresh-query reconciliation; immutable
+  installation intent/results and attempt-reference fences remain specific to storage/provider recovery.
 - Owned catalog/manifest/PostgreSQL behavior tests, direct source/storage qualification and `./bin/build` pass.
   Do not test starter quality, package-manager internals, release tooling, configuration or generated file layout.
 
@@ -100,6 +111,12 @@ reuse qualified private storage capabilities, but catalog eligibility and releas
 ## Decisions and progress
 
 ### Approved TASK decomposition and current handoff
+
+TASK-00567 corrects ordinary metadata recovery above and TASK-00401/00405; TASK-00402–00404 retain durable
+installation and attempt-reference recovery. The approved split below remains the allocation map, not fresh
+supplier availability or today's active Board state. Project is the generated business identity; no Project is
+fabricated for Workspace-scoped catalog/profile access. Independent acceptance of this correction is pending.
+
 
 The maintainer approved five bounded slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. All are unranked feature records with blank PRs. A/D/E are now `ready-for-agent` behind
@@ -121,7 +138,7 @@ fails closed, with no automatic older-version fallback or trusted-byte replaceme
 
 TASK-00402 reuses TASK-00374's narrow qualified private-storage capability, not Workflow-specific Artifact admission
 as catalog authority. Snapshot scope, eligibility, reference/retention policy and actual Workspace integration stay
-here. No new Workflow, Repository, Agent or grant is fabricated to store source bytes; no second storage stack or
+here. No new Workflow, Project, Agent or grant is fabricated to store source bytes; no second storage stack or
 full browser installation is required. Public installation remains independent of TASK-00403 private access.
 
 **TASK-00402 remains `needs-info`** until fresh availability/provenance of a real managed stable release `>=1.0.0`
@@ -142,7 +159,7 @@ old bytes and attributed evidence; no automatic purge, compensation or project u
 
 TASK-00405 consumes TASK-00249/00299 rather than a second template registry or user-owned Harness preferences.
 TASK-00300 remains custom-template publication, not a mandatory completed editor for association primitives.
-Qualify actual Workspace-only read/reference composition before Repository creation; do not fabricate context or
+Qualify actual Workspace-only read/reference composition before Project creation; do not fabricate context or
 clear existing scoped-read/Triage holds. Recommendations and selected revisions remain distinct, independently
 versioned and non-authoritative: no Agent creation, Skill activation, Permission grant or source-driven profile.
 

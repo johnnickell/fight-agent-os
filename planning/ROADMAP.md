@@ -69,6 +69,14 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**TASK-00567 area-C acceptance checkpoint:** [The accepted TASK](tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06)
+records independent Review version 3 ACCEPT and documentation QA PASS on
+`125b4a85a1fe39457bb370f195d922cb89d30feb` (27 passed / 0 failed / 0 incomplete / 1 visual-TLS N/A).
+All 57 unfinished EPIC-00009/00010 records are accounted for (44 corrected / 13 justified unchanged);
+TASK-00571 receives canonical coverage. Feature implementation, supplier holds and whole-portfolio acceptance
+remain separate. Publication and eligible cleanup are pending at this checkpoint; current outcomes are in
+canonical ignored `.runs/tasks/TASK-00567/runs/land.md` and the TASK PR. Human merge remains separate.
+
 **TASK-00565 area-A acceptance — 2026-11-05:** [the accepted checkpoint](tasks/00565-TASK.md#accepted-implementation-checkpoint--2026-11-05)
 records independent Review ACCEPT and nonvisual QA PASS on clean `37613562`, mechanically integrated as
 `4642f018`; R1/R2 are resolved. Exhaustive coverage, TASK-00571's evidence handoff, completed history and the
@@ -409,7 +417,7 @@ The [external architecture study](research/atomic-lessons.md) remains evidence, 
 | [EPIC-00007](epics/00007-EPIC.md) | Coordinate one TASK through implementation | coordinator-builder-awaiting-review | ready-for-agent |
 | [EPIC-00008](epics/00008-EPIC.md) | Complete independent review and PR publication | review-publish-pr-handoff | in-progress |
 | [EPIC-00009](epics/00009-EPIC.md) | Create and register new projects | deterministic-project-creation | ready-for-agent |
-| [EPIC-00010](epics/00010-EPIC.md) | Edit repository instructions safely | repository-instruction-editing | ready-for-agent |
+| [EPIC-00010](epics/00010-EPIC.md) | Edit Project instructions safely | project-instruction-editing | ready-for-agent |
 | [EPIC-00011](epics/00011-EPIC.md) | Deliver durable scoped Agent memory | durable-agent-memory | ready-for-agent |
 | [EPIC-00012](epics/00012-EPIC.md) | Introduce TASK Triage and the direct hotfix route | task-triage-hotfix-routing | ready-for-agent |
 | [EPIC-00013](epics/00013-EPIC.md) | Support release TASKs and project-specific release Workflows | project-specific-release-workflows | ready-for-agent |

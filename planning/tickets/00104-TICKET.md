@@ -43,6 +43,13 @@ repeated paid generation or reset of consumed budgets. Browser/support Agent, Ru
 receive the provider key. Actual Agent identity and authority remain with existing Agent owners, not a new role
 with implicit administrator privilege.
 
+HTTP/Console entries own current viewing, AI-use and provider-disclosure admission and configured bus dispatch.
+Registered request/result handlers compose the existing conversation/provider owners, required audit and durable
+paid-request intent through their qualified shared transaction; collection-like repositories do not own admission
+or provider orchestration. Use entry-generated typed request IDs, void commands and separate safe typed advisory/
+status queries, with protocol presentation in adapters. No support forwarding service, parallel transcript store
+or duplicate Application permission gate is required.
+
 Record authorized assistance requests, evidence/playbook/Harness/provider/model revisions and protected durable
 results under the owning session/attempt contracts. Browser disconnect must not turn an answer into an effect or
 silently start another provider call. Current visibility and provider-disclosure permission apply independently;
@@ -93,6 +100,8 @@ revocation, malformed output and uncertain billing cannot trigger fallback or au
   access, distinguishes observations/inference and records provenance/usage without credentials or hidden reasoning.
 - Attempts to make assistance apply fixes, widen disclosure, retry, delete, authenticate or alter mounts are denied;
   humans still pass through current-state deterministic controls. Stale advice cannot bypass a new preview.
+- Original request correlation, reservation and uncertain billing remain genuine paid-provider recovery, not
+  an ordinary database-create replay rule; attempt/Workspace scope never requires a fabricated Project.
 - Missing provider/configuration, outage, budget exhaustion and interrupted conversation leave deterministic
   creation/recovery/guide/export usable and do not issue duplicate paid requests or claim unknown costs are zero.
 - Owned assistance/disclosure/authorization/client behavior tests, real qualified provider/browser evidence and
@@ -139,6 +148,12 @@ upload, credential access or operational authority.
 
 ### Approved TASK decomposition and current handoff
 
+TASK-00567 aligns the support consumer with Project vocabulary and the canonical admission/handler boundaries.
+TASK-00569 owns provider/conversation plans; no exact new API, release or owner approval is inferred here. The
+pre-registration attempt/Workspace Agent/snapshot/assignment hold and all protected-runtime holds remain. The split
+below is complete; earlier active-work observations are historical, not current Board state.
+
+
 The maintainer approved three slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. All are unranked features with blank PRs, normally one independently reviewable PR.
 
@@ -149,9 +164,9 @@ The maintainer approved three slices in `.runs/worktrees/ticket-00083-to-tasks` 
 | C | [TASK-00429](../tasks/00429-TASK.md) | TASK-00428 | Explicit browser disclosure/submission, same-conversation recovery and safe navigation to normal deterministic controls |
 
 TASK-00428 starts `needs-info`. TASK-00250/00339/00348 and their Agent/Team/current-authority owners require real
-Repository/checkout/context bindings, while creation failures can precede registration. Map an exact attempt/
+Project/checkout/context bindings, while creation failures can precede registration. Map an exact attempt/
 Workspace-scoped actual Agent, Harness snapshot and assignment supplier under those existing owners before exposure.
-No guessed supplier ID, fabricated Repository/context, borrowed human authority, unteamed/privileged support Agent
+No guessed supplier ID, fabricated Project/context, borrowed human authority, unteamed/privileged support Agent
 or second session engine resolves the gap. Selecting a development profile grants nothing. Existing Team/creation/
 current-use and protected host/broker/storage/provider holds remain. TASK-00427/00429 are ready behind unfinished/
 held dependencies, not runtime-qualified; model-free help does not depend on TASK-00428.

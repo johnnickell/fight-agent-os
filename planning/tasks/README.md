@@ -433,7 +433,7 @@
 | [TASK-00428](00428-TASK.md) | Request and recover a bounded support explanation | needs-info | [TICKET-00104](../tickets/00104-TICKET.md) |
 | [TASK-00429](00429-TASK.md) | Ask for support safely from the creation browser | ready-for-agent | [TICKET-00104](../tickets/00104-TICKET.md) |
 | [TASK-00430](00430-TASK.md) | Inspect effective instructions through bounded designated-checkout queries | needs-info | [TICKET-00105](../tickets/00105-TICKET.md) |
-| [TASK-00431](00431-TASK.md) | Browse effective instructions in the repository Dashboard | ready-for-agent | [TICKET-00105](../tickets/00105-TICKET.md) |
+| [TASK-00431](00431-TASK.md) | Browse effective instructions in the Project Dashboard | ready-for-agent | [TICKET-00105](../tickets/00105-TICKET.md) |
 | [TASK-00432](00432-TASK.md) | Save, delete and reconcile exact instruction-file changes | needs-info | [TICKET-00106](../tickets/00106-TICKET.md) |
 | [TASK-00433](00433-TASK.md) | Edit and recover instruction changes in the Dashboard | ready-for-agent | [TICKET-00106](../tickets/00106-TICKET.md) |
 | [TASK-00434](00434-TASK.md) | Request and recover bounded instruction suggestions | ready-for-agent | [TICKET-00107](../tickets/00107-TICKET.md) |
@@ -569,7 +569,7 @@
 | [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | done | [TICKET-00131](../tickets/00131-TICKET.md) |
 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
-| [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |

@@ -12,7 +12,7 @@
 | [EPIC-00007](00007-EPIC.md) | Coordinate one TASK through implementation | ready-for-agent | — |
 | [EPIC-00008](00008-EPIC.md) | Complete independent review and PR publication | in-progress | — |
 | [EPIC-00009](00009-EPIC.md) | Create and register new projects | ready-for-agent | — |
-| [EPIC-00010](00010-EPIC.md) | Edit repository instructions safely | ready-for-agent | — |
+| [EPIC-00010](00010-EPIC.md) | Edit Project instructions safely | ready-for-agent | — |
 | [EPIC-00011](00011-EPIC.md) | Deliver durable scoped Agent memory | ready-for-agent | — |
 | [EPIC-00012](00012-EPIC.md) | Introduce TASK Triage and the direct hotfix route | ready-for-agent | — |
 | [EPIC-00013](00013-EPIC.md) | Support release TASKs and project-specific release Workflows | ready-for-agent | — |

@@ -1,11 +1,11 @@
 ---
 id: TICKET-00105
 epic: EPIC-00010
-title: Inspect effective repository instructions
+title: Inspect effective Project instructions
 status: ready-for-agent
 ---
 
-# Inspect effective repository instructions
+# Inspect effective Project instructions
 
 ## Problem statement
 
@@ -26,14 +26,18 @@ Untracked or ignored content may still be loaded by Pi; explain its publication 
 ineffective or generated. Supply exact content/digest and safe evidence to TICKET-00106's form and TICKET-00107's
 separately authorized assistance. Reading a file never authorizes either use or provider disclosure automatically.
 
-Use the Repository's single designated local Worktree from TICKET-00024. Resolve its actual Repository/Host/Checkout/
+Use the Project's single designated local Worktree from TICKET-00024. Resolve its actual Project/Host/Checkout/
 Worktree identity, Git common directory/marker, registered path, approved-root containment, Runner eligibility and
 current ownership. Do not ask for a clone on each read, silently choose a substitute or access a Workflow-owned
 worktree. Explain moved, unavailable, unsafe, ambiguous or conflicting-operation state and its permitted next action.
 Existing registration/context owners remain authoritative; this product does not relink or repair a checkout.
 
 Keep the Runner mechanical: exact allowlisted enumeration, bounded reads, digest and filesystem/Git observation.
-Application policy interprets qualified effective-file semantics and authorizes access. Preserve actual observed
+The entry adapter authenticates and admits current View/Project scope before configured QueryBus dispatch.
+A registered query handler coordinates bounded observations and TICKET-00025's qualified effective-file policy,
+returning a safe typed instruction View, not an entity or persistence row. Application does not repeat caller
+permission admission. HTTP Data/Responders map camelCase members to snake_case JSON, status and safe failures;
+Console/protected Runner entries own their own admission and presentation. Preserve actual observed
 branch/commit, encoding/size, digest, context revision, Runner and provenance behind readable details. Do not expose
 unnecessary internal identifiers, absolute personal paths, storage locators or credentials. Observations are bounded
 facts at a point in time, not a reservation, current grant or guarantee that a later write will succeed.
@@ -44,7 +48,7 @@ source files, `.pi/SYSTEM.md`, `.pi/APPEND_SYSTEM.md`, Skills, settings, prompts
 provenance may explain composition without exposing other instruction bodies. Never parse prose into enforceable
 application policy or claim an unrecognized convention affects Pi.
 
-Reuse the authenticated repository Dashboard, context projection and visual components. Include truthful empty,
+Reuse the authenticated Project Dashboard, context projection and visual components. Include truthful empty,
 denied, stale, failed and unavailable states, accessible keyboard navigation and readable light/dark/narrow layouts.
 Do not create a repository tree, terminal, IDE, second context resolver or standalone inspection demonstration.
 Ordinary authorized reads use security/request logging, not a fabricated Domain event per view.
@@ -60,7 +64,7 @@ Ordinary authorized reads use security/request logging, not a fabricated Domain 
 
 ## Validation and permissions
 
-Require current View repository instructions authority and actual Repository/checkout scope on every metadata and
+Require current View Project instructions authority and actual Project/checkout scope on every metadata and
 content query. Use TICKET-00024/00025 identity/context and TICKET-00023 root contracts, not caller-selected absolute
 paths or a role-name shortcut. Validate strict bounded names, text shape and observation provenance; recheck unsafe
 or changed path/identity before reading. Source content is untrusted data and must be rendered inert.
@@ -76,6 +80,8 @@ work. Keep raw exceptions, credentials and unrelated content out of logs, teleme
   state under the qualified Pi runtime, including ignored/untracked and override cases without guessed precedence.
 - Unsafe paths/types/encoding/size, case ambiguity, moved/conflicting checkouts and denied/revoked authority refuse
   access without reading unrelated files or choosing another worktree.
+- Registered query dispatch and safe typed Views preserve adapter-owned admission/presentation without a
+  second Application permission gate or a Domain event for ordinary reads.
 - Exact authorized content/digest/provenance feeds editing and assistance consumers; stale observations never grant
   subsequent effects. Browser loading/empty/denied/unavailable and responsive/keyboard states use real results.
 - Owned inspection/classification/authorization/client behavior tests, direct actual Pi/Git/Runner qualification and
@@ -88,7 +94,7 @@ work. Keep raw exceptions, credentials and unrelated content out of logs, teleme
 | ID | Title | Status |
 |---|---|---|
 | [TASK-00430](../tasks/00430-TASK.md) | Inspect effective instructions through bounded designated-checkout queries | needs-info |
-| [TASK-00431](../tasks/00431-TASK.md) | Browse effective instructions in the repository Dashboard | ready-for-agent |
+| [TASK-00431](../tasks/00431-TASK.md) | Browse effective instructions in the Project Dashboard | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
@@ -109,13 +115,19 @@ allocates TASK records only, not operational authority.
 
 ### Approved TASK decomposition and current handoff
 
+TASK-00567 aligns Project/context references and read ownership above; TASK-00430 supplies the concrete query
+boundary and TASK-00431 remains its viewer. The protected read/custody and supported Pi-discovery qualifications
+remain required. The split below is complete, not current Board or fresh runtime evidence; earlier active-work
+observations are historical. No Pi implementation change is authorized by this planning correction.
+
+
 The maintainer approved two slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. Both are unranked features with blank PRs, normally one independently reviewable PR.
 
 | Slice | Accepted owner | Exact known blockers | Delivered boundary |
 |---|---|---|---|
 | A | [TASK-00430](../tasks/00430-TASK.md) | TASK-00082, TASK-00368; protected-read/custody supplier unallocated | Authorized designated-checkout enumeration/single-file query API, qualified effective labels and coherent content/digest/Git/provenance |
-| B | [TASK-00431](../tasks/00431-TASK.md) | TASK-00430, TASK-00107 | Recognized-file list and one-file read-only viewer in the existing repository Dashboard, with accessible truthful states |
+| B | [TASK-00431](../tasks/00431-TASK.md) | TASK-00430, TASK-00107 | Recognized-file list and one-file read-only viewer in the existing Project Dashboard, with accessible truthful states |
 
 TASK-00430 starts `needs-info` for the precise protected human-authorized instruction-read route and current
 checkout-custody participants under existing TICKET-00032/00093 execution/Runner owners. TASK-00082's discovery and
@@ -128,7 +140,7 @@ TASK-00431 is ready behind unfinished/held suppliers, not runtime-qualified.
 TASK-00430 reuses TASK-00082's sole context/discovery owner and its transitive roots/identity/lifecycle/configuration
 contracts. It qualifies actual supported Pi semantics rather than assuming historical precedence; unknown or
 unsupported behavior cannot receive a guessed Loaded label. The mechanical Runner returns bounded observations;
-Application interprets them under current View instructions authority. All five exact accepted names remain the
+the registered query handler interprets them after entry-owned View instructions admission. All five exact accepted names remain the
 allowlist. Digest and returned bytes describe the same bounded observation; physical containment must survive
 replacement races, not just lexical/stat checks. Reject unsafe paths/types/encoding/size/case and stale or conflicting
 identity/custody without reading unrelated files, relinking or selecting another checkout.

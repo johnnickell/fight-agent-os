@@ -16,7 +16,7 @@ work or borrowing managed Release Manager authority.
 ## Solution and boundaries
 
 Provide Create pull request as the default separate action after a local instruction change. Require current Publish
-repository changes authority and the designated checkout's exact registered identity, source, default base and
+Project changes authority and the designated checkout's exact registered identity, source, default base and
 eligible Runner. Reuse safe Git/provider capabilities, not EPIC-00008's managed Review/Release Manager state machine.
 No browser or instruction-writing Agent receives source-host credentials or authority to invoke this operation.
 
@@ -79,12 +79,18 @@ confirmation under the same rules, never permission inferred from this default P
 
 ## Validation and permissions
 
-Require current operation-specific human publication and source-host authority at exact Repository/checkout/remote
+Require current operation-specific human publication and source-host authority at exact Project/checkout/remote
 scope, independent of View, Update or AI-use grants. Validate bounded commit message, branch/ref/URL/provider and
 complete selected-file diff; reject command injection, changed source identity and any unpreviewed subject. Apply
 shared resource/currentness fences with save and sync; a publication preview is not permanent ownership.
 
-ADR 0002 governs required state/audit/intent and post-commit effects. Retry must reconcile original owned identities
+Registered instruction-publication handlers coordinate the publication aggregate's transitions, collection-like
+repositories, required audit and original effect intent through generic TransactionalUnitOfWork on one connection.
+Entry adapters own current human/Project/remote admission and configured bus dispatch, generating typed operation
+IDs for void commands. Separate registered status queries return safe typed publication Views; HTTP/Console
+adapters own representation and failure mapping, not a generic lifecycle service or Store/UoW. Each external phase
+retains its justified current-use/custody checks without a duplicate blanket Application permission gate or ordinary
+database revocation/commit lock. ADR 0002 governs required state/audit/intent and post-commit effects. Retry must reconcile original owned identities
 and unknown outcomes, not promise exactly-once provider calls. Preserve safe failure/correlation evidence without
 raw credentials/provider dumps. ADR 0003/0004 no-store, current-context response fences and no automatic business
 replay protect browser controls. Navigation to GitHub contains no credentials and does not broaden application grants.
@@ -97,6 +103,8 @@ replay protect browser controls. Navigation to GitHub contains no credentials an
   unsafe publication without hiding changes or weakening source/authority checks.
 - Lost acknowledgement, stage failures and restart retain correct commit/ref/PR identity and truthful partial
   outcomes. Retrying cannot create a duplicate commit/PR, overwrite another resource or expose source-host secrets.
+- Original commit/push/PR/return recovery remains specific to the confirmed multi-resource operation; ordinary
+  metadata/configuration requests reconcile through expected state and fresh authorized queries, not replay journals.
 - Verified return leaves default clean without proposal content; unsafe return holds visibly and protects unrelated
   work. Context/form freshness follows real effective-file changes, not a false claim that publication merged it.
 - Owned operation/authorization/PostgreSQL/client tests, separately authorized real Git/Runner/GitHub evidence and
@@ -137,6 +145,11 @@ publication path. These incoming mappings did not allocate publication TASKs; th
 Neither requirement approval nor decomposition qualifies Git/provider effects or grants operational authority.
 
 ### Approved TASK decomposition and current handoff
+
+TASK-00567 reconciles publication ownership and Project references without weakening subject/credential/physical
+safety. TASK-00570 retains protected execution suppliers; TASK-00436–00438's distinct holds remain. The split below
+is complete, not fresh supplier or current Board evidence; earlier active-work observations stay historical.
+
 
 The maintainer approved five slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. All are unranked features with blank PRs, normally one independently reviewable PR each.

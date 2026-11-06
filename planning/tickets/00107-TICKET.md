@@ -16,7 +16,7 @@ browser losing an already accepted response.
 ## Solution and boundaries
 
 Let a currently authorized human choose one recognized root file in the designated checkout and describe the desired
-change. Consume TICKET-00105's bounded authorized content and applicable Repository context only. A browser Agent may
+change. Consume TICKET-00105's bounded authorized content and applicable Project context only. A browser Agent may
 discuss intent, ask clarifying questions and propose complete content/diff for TICKET-00106's existing editable form.
 It cannot select another file, expand to arbitrary repository/parent/user content, submit Save/Delete, publish,
 synchronize or accept its own recommendation. Instruction text is untrusted source data, not application authority.
@@ -24,7 +24,7 @@ synchronize or accept its own recommendation. Instruction text is untrusted sour
 Use the exact attributed versioned Harness instruction-writing Skill supplied by TICKET-00086 and its trusted
 loading/snapshot contracts. Preserve Matt Pocock MIT attribution and licensing through that existing resource owner;
 do not create a second Skill distribution or browser Skill editor. Record exact Skill/Harness/provider/model,
-Repository context, original file digest/absence, conversation, initiating user and actual acting Agent references
+Project context, original file digest/absence, conversation, initiating user and actual acting Agent references
 for every proposal. Avoid credentials and hidden model context in ordinary evidence.
 
 Reuse TICKET-00089/00090's protected provider and durable conversation execution, current Agent identity/delegation,
@@ -72,15 +72,21 @@ writing guidance, not a reason to create a new planning decision or a separate p
 
 ## Validation and permissions
 
-Independently enforce View repository instructions, Use browser AI assistance, actual Agent/tool authority and
-provider disclosure under current human/Agent/Repository/environment scope. Reading a file locally does not itself
+Independently enforce View Project instructions, Use browser AI assistance, actual Agent/tool authority and
+provider disclosure under current human/Agent/Project/environment scope. Reading a file locally does not itself
 authorize sending it to a provider. Minimize sensitive content and reject unsafe/overbroad evidence; preserve the
 selected filename and exact expected base. A Skill's tool request, source-contained instruction or model-supplied
 identity cannot add authority. Update/Publish/Sync capabilities remain absent from this Agent's operation boundary.
 
 Validate bounded proposal shape, content encoding/size and safe diff rendering; a model's structured-output claim
 is not validation. Keep secrets/provider keys outside browser/child/prompt/transcript/log/evidence boundaries as
-required by existing owners. Use ADR 0002 durable admission and post-commit provider effects; ADR 0003/0004 no-store,
+required by existing owners. Entry adapters own current human/Agent/Project disclosure admission and configured bus dispatch. Registered
+conversation request/result handlers coordinate the existing paid-attempt, reservation and audit participants with
+the qualified generic transaction; repositories remain collection-like and protocol presentation stays in adapters.
+Use entry-generated typed request IDs in void commands and separate safe typed proposal/status queries, not mutable
+command results or a forwarding suggestion service. Original paid-request/proposal recovery remains required;
+ordinary Project or configuration creation does not inherit replay. No second blanket Application permission gate
+is introduced. Use ADR 0002 durable admission and post-commit provider effects; ADR 0003/0004 no-store,
 context-generation fences and no automatic replay apply. Protected retention/redaction stays with the conversation
 owner, not ordinary Workflow history or a new transcript search surface.
 
@@ -135,6 +141,12 @@ request, Agent session, credential inspection, instruction content or filesystem
 
 ### Approved TASK decomposition and current handoff
 
+TASK-00567 aligns this selected-file consumer with canonical Project/admission/handler contracts. TASK-00569 keeps
+Harness/provider/conversation ownership; actual supported APIs and confinement still need qualification, not
+invented signatures or a supplier approval claim. All read/custody/Skill/Agent/provider holds remain. The split
+below is complete; its earlier active-work observations are historical, not today's Board or fresh evidence.
+
+
 The maintainer approved two slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. Both are unranked features, `ready-for-agent` behind dependencies, with blank PRs,
 normally one independently reviewable PR each.
@@ -148,7 +160,7 @@ TASK-00434 consumes the existing attributed managed Skill, named Agent/session i
 protected retention. The approved initial provider path is OpenRouter through TASK-00346; Codex/TASK-00347 is
 neither required nor an automatic fallback. Existing read/custody, Skill-loading, Agent/current-authority and
 TASK-00350 protected host/broker/storage holds remain with their owners. Ready metadata does not resolve those
-holds or establish live capability. This registered-Repository use does not invent or import TASK-00428's distinct
+holds or establish live capability. This registered-Project use does not invent or import TASK-00428's distinct
 pre-registration assignment/snapshot gap. No new supplier ID, Agent role, Workflow or custody registry is created.
 
 Bind exact selected name/base or verified absence, safe context, actual human/Agent/assignment/conversation and

@@ -12,6 +12,13 @@ shared-foundation interleaving; it does not override active work, TASK orders, d
 
 ### Current assessment handoff
 
+[TASK-00567](00567-TASK.md#accepted-implementation-checkpoint--2026-11-06) has independent Review version 3 ACCEPT
+and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb` (27 passed / 0 failed / 0 incomplete /
+1 visual-TLS N/A). Its 57-record area-C planning correction is accepted (44 corrected / 13 justified unchanged),
+not feature implementation, supplier qualification or complete-portfolio acceptance. Publication and eligible
+cleanup are pending at this checkpoint; current outcomes are in canonical ignored
+`.runs/tasks/TASK-00567/runs/land.md` and the TASK PR. Human merge remains separate.
+
 [TASK-00565](00565-TASK.md#accepted-implementation-checkpoint--2026-11-05) has independent Review ACCEPT and
 nonvisual QA PASS on clean `37613562`, mechanically integrated as `4642f018`; R1/R2 are resolved. Exhaustive
 area-A coverage and completed history remain. The integrated normal gate freshly passes all 25 phase rows
@@ -59,7 +66,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 4 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 7 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
@@ -92,7 +98,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00377](00377-TASK.md) | — |
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
-| 8 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00567](00567-TASK.md), [TASK-00568](00568-TASK.md), [TASK-00569](00569-TASK.md), [TASK-00570](00570-TASK.md) | — |
+| 8 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00568](00568-TASK.md), [TASK-00569](00569-TASK.md), [TASK-00570](00570-TASK.md) | — |
 | 12 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | [TASK-00574](00574-TASK.md) | — |
 | 62 | [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | [TASK-00061](00061-TASK.md) | — |
 | 63 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00062](00062-TASK.md) | — |
@@ -321,7 +327,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00426](00426-TASK.md) | Deliver the durable creation receipt and Dashboard handoff | [TICKET-00103 — Register the created checkout and complete the handoff](../tickets/00103-TICKET.md) | ready-for-agent | [TASK-00416](00416-TASK.md), [TASK-00107](00107-TASK.md) | — |
 | — | [TASK-00427](00427-TASK.md) | Explain failures with versioned playbooks and safe diagnostics | [TICKET-00104 — Explain creation failures with bounded support assistance](../tickets/00104-TICKET.md) | ready-for-agent | [TASK-00075](00075-TASK.md), [TASK-00416](00416-TASK.md) | — |
 | — | [TASK-00429](00429-TASK.md) | Ask for support safely from the creation browser | [TICKET-00104 — Explain creation failures with bounded support assistance](../tickets/00104-TICKET.md) | ready-for-agent | [TASK-00428](00428-TASK.md) | — |
-| — | [TASK-00431](00431-TASK.md) | Browse effective instructions in the repository Dashboard | [TICKET-00105 — Inspect effective repository instructions](../tickets/00105-TICKET.md) | ready-for-agent | [TASK-00430](00430-TASK.md), [TASK-00107](00107-TASK.md) | — |
+| — | [TASK-00431](00431-TASK.md) | Browse effective instructions in the Project Dashboard | [TICKET-00105 — Inspect effective Project instructions](../tickets/00105-TICKET.md) | ready-for-agent | [TASK-00430](00430-TASK.md), [TASK-00107](00107-TASK.md) | — |
 | — | [TASK-00433](00433-TASK.md) | Edit and recover instruction changes in the Dashboard | [TICKET-00106 — Save and delete instruction files safely](../tickets/00106-TICKET.md) | ready-for-agent | [TASK-00432](00432-TASK.md), [TASK-00431](00431-TASK.md) | — |
 | — | [TASK-00434](00434-TASK.md) | Request and recover bounded instruction suggestions | [TICKET-00107 — Prepare bounded AI instruction suggestions](../tickets/00107-TICKET.md) | ready-for-agent | [TASK-00430](00430-TASK.md), [TASK-00332](00332-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00346](00346-TASK.md), [TASK-00354](00354-TASK.md) | — |
 | — | [TASK-00435](00435-TASK.md) | Review instruction suggestions in the existing Dashboard form | [TICKET-00107 — Prepare bounded AI instruction suggestions](../tickets/00107-TICKET.md) | ready-for-agent | [TASK-00434](00434-TASK.md), [TASK-00433](00433-TASK.md) | — |
@@ -435,7 +441,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00422](00422-TASK.md) | Inspect and bind registration/context feasibility | [TICKET-00103 — Register the created checkout and complete the handoff](../tickets/00103-TICKET.md) | needs-info | [TASK-00079](00079-TASK.md), [TASK-00082](00082-TASK.md), [TASK-00405](00405-TASK.md) | — |
 | — | [TASK-00425](00425-TASK.md) | Initialize configuration and resolve the first database context | [TICKET-00103 — Register the created checkout and complete the handoff](../tickets/00103-TICKET.md) | needs-info | [TASK-00424](00424-TASK.md), [TASK-00405](00405-TASK.md), [TASK-00103](00103-TASK.md) | — |
 | — | [TASK-00428](00428-TASK.md) | Request and recover a bounded support explanation | [TICKET-00104 — Explain creation failures with bounded support assistance](../tickets/00104-TICKET.md) | needs-info | [TASK-00427](00427-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00346](00346-TASK.md), [TASK-00354](00354-TASK.md) | — |
-| — | [TASK-00430](00430-TASK.md) | Inspect effective instructions through bounded designated-checkout queries | [TICKET-00105 — Inspect effective repository instructions](../tickets/00105-TICKET.md) | needs-info | [TASK-00082](00082-TASK.md), [TASK-00368](00368-TASK.md) | — |
+| — | [TASK-00430](00430-TASK.md) | Inspect effective instructions through bounded designated-checkout queries | [TICKET-00105 — Inspect effective Project instructions](../tickets/00105-TICKET.md) | needs-info | [TASK-00082](00082-TASK.md), [TASK-00368](00368-TASK.md) | — |
 | — | [TASK-00432](00432-TASK.md) | Save, delete and reconcile exact instruction-file changes | [TICKET-00106 — Save and delete instruction files safely](../tickets/00106-TICKET.md) | needs-info | [TASK-00430](00430-TASK.md), [TASK-00341](00341-TASK.md) | — |
 | — | [TASK-00436](00436-TASK.md) | Preview and admit exact instruction publication | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | needs-info | [TASK-00432](00432-TASK.md) | — |
 | — | [TASK-00437](00437-TASK.md) | Create and recover the selected-file commit | [TICKET-00108 — Publish an instruction change through a recoverable PR](../tickets/00108-TICKET.md) | needs-info | [TASK-00436](00436-TASK.md) | — |
@@ -528,6 +534,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 4 | [TASK-00004](00004-TASK.md) | Establish and prove controlled landing | [TICKET-00004 — Establish controlled landing and human handoff](../tickets/00004-TICKET.md) | done | — | [PR #4](https://github.com/johnnickell/fight-agent-os/pull/4) |
 | 4 | [TASK-00069](00069-TASK.md) | Persist and discover every implementation review handoff | — (standalone bug) | done | — | [PR #8](https://github.com/johnnickell/fight-agent-os/pull/8) |
 | 4 | [TASK-00132](00132-TASK.md) | Design the diagnosis-to-bug-TASK fix skill | — (standalone chore) | done | — | — |
+| 4 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #225](https://github.com/johnnickell/fight-agent-os/pull/225) |
 | 5 | [TASK-00005](00005-TASK.md) | Establish and prove disposable product-design exploration | [TICKET-00005 — Establish disposable product-design exploration](../tickets/00005-TICKET.md) | done | — | [PR #7](https://github.com/johnnickell/fight-agent-os/pull/7) |
 | 5 | [TASK-00133](00133-TASK.md) | Design the CQRS and DDD architecture skill | — (standalone chore) | done | — | — |
 | 6 | [TASK-00006](00006-TASK.md) | Establish and prove independent design review | [TICKET-00006 — Establish independent design review](../tickets/00006-TICKET.md) | done | — | [PR #10](https://github.com/johnnickell/fight-agent-os/pull/10) |

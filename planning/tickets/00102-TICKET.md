@@ -75,8 +75,12 @@ preview, not a reusable permission. Validate bounded names, description, branch/
 and command arguments; reject credential-bearing URLs, injection, changed targets and unsupported transitions.
 
 Use protected credentials only within the qualified adapter's invocation lifetime; never expose tokens, SSH keys,
-passphrases, raw provider errors or credential-store contents through browser, logs, events or receipts. Required
-state/audit/intent commits under ADR 0002 precede external Git/HTTP/CLI effects. Reconciliation uses actual provider
+passphrases, raw provider errors or credential-store contents through browser, logs, events or receipts. Registered CreationAttempt publication handlers coordinate collection-like persistence and required
+state/audit/intent with generic shared-connection `TransactionalUnitOfWork`; configured buses carry ID-bearing void
+stage commands and separate typed observation/status queries. Entry adapters own human operation/owner/target
+admission, while protected Git/GitHub adapters enforce exact credentials and physical/provider targets. There is
+no duplicate blanket Application permission gate, transaction-owning repository or forwarding publisher service.
+Required state/audit/intent commits under ADR 0002 precede external Git/HTTP/CLI effects. Reconciliation uses actual provider
 facilities; unavailable evidence remains unknown rather than an exactly-once promise or blind replay.
 
 ## Acceptance and evidence
@@ -87,6 +91,8 @@ facilities; unavailable evidence remains unknown rather than an exactly-once pro
   Preparation changes and unrelated content are neither committed nor published implicitly.
 - Collisions, SAML/scope/policy failures, revocation, outage, lost acknowledgement and partial push/default-branch
   results preserve local/remote resources and permit only reconciled safe retry or explicit continuation.
+- Publication retains original stage IDs, intent and verified partial outcomes specifically for remote/Git
+  recovery; ordinary database Project creation uses known IDs and fresh queries instead of response replay.
 - Local-only creation succeeds without this stage. Agents and generated code receive no source-host credentials;
   cleanup never follows automatically from failure or cancellation.
 - Owned adapter/authority/recovery tests, separately authorized real GitHub/Git evidence and `./bin/build` pass.
@@ -107,6 +113,12 @@ facilities; unavailable evidence remains unknown rather than an exactly-once pro
 ## Decisions and progress
 
 ### Approved TASK decomposition and current handoff
+
+TASK-00567 reconciles this publication contract without changing remote repository terminology or its real
+recovery/safety requirements. The complete allocation below and protected `gh`/Git holds remain; earlier active
+Board observations are historical. Project registration/context consume verified provider facts, not remote names
+as business identity. No provider guarantee or operational authorization is supplied by this correction.
+
 
 The maintainer approved four slices in `.runs/worktrees/ticket-00083-to-tasks` on
 `feature/ticket-00083-to-tasks`. All are unranked features with blank PRs. Remote configuration, initial push and

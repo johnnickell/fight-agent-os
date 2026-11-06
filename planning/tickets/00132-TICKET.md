@@ -89,7 +89,7 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 |---|---|---|
 | [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | done |
 | [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | done |
-| [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | ready-for-agent |
+| [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | done |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent |
 | [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent |
@@ -97,6 +97,25 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Area C, [TASK-00567](../tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
+Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`; R1 is resolved,
+with no open findings. QA: 27 passed / 0 failed / 0 incomplete / 1 visual-TLS N/A. All 57 unfinished
+EPIC-00009/00010 records are accounted for (44 corrected / 13 justified unchanged); canonical coverage remains
+actively needed by TASK-00571. Feature execution, precise supplier holds and complete-portfolio acceptance remain
+separate. Publication and eligible cleanup are pending at this checkpoint; current outcomes are in canonical
+ignored `.runs/tasks/TASK-00567/runs/land.md` and the TASK PR. This TICKET remains open for unfinished children.
+
+The following area-C repair paragraph is historical, not the current acceptance handoff.
+
+Area C, [TASK-00567](../tasks/00567-TASK.md#r1-repair-checkpoint--2026-11-05), repairs confirmed Review R1 by
+separating ordinary database designation from physical link/marker recovery while retaining attempt provenance
+and all consistency/safety/supplier guarantees. Renewed independent Review/documentation QA remain required;
+the initial candidate received REVISE, not acceptance. Its 57 unfinished EPIC-00009/00010 records
+have explicit corrected or justified-unchanged dispositions in canonical ignored
+`.runs/tasks/TASK-00567/runs/coverage.md`; final inventory accounts for additions/archives. Real physical/provider
+recovery and all supplier holds remain. TASK-00571 receives that coverage, not deferred area-C repairs. Feature
+execution, source cutovers and this TICKET's complete-portfolio acceptance remain separate.
 
 Current area-A acceptance: [TASK-00565](../tasks/00565-TASK.md#accepted-implementation-checkpoint--2026-11-05)
 has independent Review ACCEPT and nonvisual QA PASS on clean `37613562`, mechanically integrated as `4642f018`.
