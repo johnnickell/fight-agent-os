@@ -30,6 +30,19 @@ final readonly class BrowserSessionCookies
     }
 
     /**
+     * Returns clock-independent expiry for the exact refresh and nonce identities
+     *
+     * @return list<string>
+     */
+    public static function delete(): array
+    {
+        return [
+            self::REFRESH_NAME.'='.self::ATTRIBUTES.self::EXPIRED,
+            CsrfCookie::NAME.'='.self::ATTRIBUTES.self::EXPIRED
+        ];
+    }
+
+    /**
      * Maps only opaque refresh material to a session or bounded persistent cookie
      */
     public function refresh(#[SensitiveParameter] TokenSet $tokens): string
@@ -55,18 +68,5 @@ final readonly class BrowserSessionCookies
     public function rotateNonce(): string
     {
         return CsrfCookie::NAME.'='.bin2hex(random_bytes(32)).self::ATTRIBUTES;
-    }
-
-    /**
-     * Returns expiry for the exact refresh and nonce identities on terminal logout or failure
-     *
-     * @return list<string>
-     */
-    public static function delete(): array
-    {
-        return [
-            self::REFRESH_NAME.'='.self::ATTRIBUTES.self::EXPIRED,
-            CsrfCookie::NAME.'='.self::ATTRIBUTES.self::EXPIRED
-        ];
     }
 }
