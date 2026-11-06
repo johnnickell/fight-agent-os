@@ -9,5 +9,5 @@ fi
 
 ./bin/runtime docker compose exec -T web php scripts/openapi.php "$@"
 if [ "${1:-check}" = 'check' ]; then
-    exec ./bin/runtime docker compose exec -T web php vendor/bin/phpunit tests/Functional/Http tests/Unit/Http/ApiFailureMapperTest.php
+    exec ./bin/runtime docker compose exec -T web php vendor/bin/phpunit tests/Functional/Http tests/Integration/Http/SafeErrorBoundaryTest.php
 fi

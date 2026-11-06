@@ -1,3 +1,22 @@
+export type InvitationPartial = Readonly<{
+  userId: string | null;
+  assignment: 'confirmed' | 'unconfirmed' | 'unknown';
+  audit: 'confirmed' | 'unconfirmed';
+  delivery: Readonly<{
+    userId: string;
+    generation: string;
+    status:
+      | 'pending'
+      | 'claimed'
+      | 'retry_pending'
+      | 'delivered'
+      | 'permanent_failure'
+      | 'expired'
+      | 'invalidated';
+    expiresAt: string;
+  }> | null;
+}>;
+
 export type ApiFailureKind =
   | 'validation'
   | 'authentication'
@@ -9,6 +28,10 @@ export type ApiFailureKind =
   | 'method-not-allowed'
   | 'gone'
   | 'rate-limited'
+  | 'precondition'
+  | 'rule-violation'
+  | 'unavailable'
+  | 'uncertain'
   | 'system'
   | 'protocol'
   | 'network'
@@ -24,6 +47,7 @@ export type ApiFailure = Readonly<{
     correlationId: string | null;
     /** Untrusted bounded validation detail; only a feature with a matching public schema may display it */
     fields?: Readonly<Record<string, readonly string[]>>;
+    partialInvitation?: InvitationPartial;
   }>;
 }>;
 
@@ -36,10 +60,16 @@ export type ApiResult<T> =
 export function apiFailure(
   kind: ApiFailureKind,
   correlationId: string | null = null,
-  fields?: Readonly<Record<string, readonly string[]>>
+  fields?: Readonly<Record<string, readonly string[]>>,
+  partialInvitation?: InvitationPartial
 ): ApiFailure {
   return Object.freeze({
     ok: false,
-    error: Object.freeze({ kind, correlationId, ...(fields ? { fields } : {}) })
+    error: Object.freeze({
+      kind,
+      correlationId,
+      ...(fields ? { fields } : {}),
+      ...(partialInvitation ? { partialInvitation } : {})
+    })
   });
 }

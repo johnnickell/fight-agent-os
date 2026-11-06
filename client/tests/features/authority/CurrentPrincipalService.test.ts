@@ -133,19 +133,25 @@ describe('production current-principal service', () => {
   });
 
   it.each([
-    [401, 'Unauthorized.', 'terminal'],
-    [403, 'Forbidden.', 'protocol'],
-    [500, 'Internal server error.', 'network']
+    [401, 'Authentication required.', 'terminal'],
+    [403, 'Permission denied.', 'protocol'],
+    [500, 'Internal server error.', 'network'],
+    [503, 'Service unavailable.', 'network']
   ] as const)(
     'maps safe HTTP %i without restoration/retry inside the service',
     async (status, message, expected) => {
       const d = setup(
         vi.fn(() =>
           Promise.resolve(
-            new Response(JSON.stringify({ status: 'error', message }), {
-              status,
-              headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-            })
+            new Response(
+              JSON.stringify(
+                status >= 500 ? { status: 'error', message } : { status: 'fail', data: { message } }
+              ),
+              {
+                status,
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+              }
+            )
           )
         )
       );

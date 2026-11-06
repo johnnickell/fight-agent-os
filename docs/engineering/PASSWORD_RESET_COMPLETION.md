@@ -49,14 +49,16 @@ capacity and bounded retry/history/deadline guarantees are unchanged. This is no
 `AuthenticationService::resetPassword()` directly. The package owns current active identity, latest usable
 one-hour purpose-bound grant, credential verification, consume-once, Argon2id replacement, authentication
 version/revision advancement, all-target-session revocation, atomic audit and post-commit event. There is no
-consumer persistence shortcut or duplicate lifecycle policy. The unchanged lock qualifies Access Control
+consumer persistence shortcut or duplicate lifecycle policy. Original qualification used Access Control
 **v0.8.0**, source/lock `319738255e682d587642b67856039f882b9588d6`, and Common **v1.3.0**,
-`7de6cad6e8a9752973ad9f8e27e285b0c1510582` against the actual integration, not version arithmetic.
+`7de6cad6e8a9752973ad9f8e27e285b0c1510582` against the actual integration. TASK-00582's
+[safe-error cutover](SAFE_HTTP_ERRORS.md) selects Common v1.4.1 while retaining that Access Control version.
 
 Success is exactly HTTP 200, no-store `{"status":"success","data":{"completed":true}}`. No TokenSet, access,
 refresh, identity or grant metadata is returned; fresh sign-in is required. Invalid/unknown/used/expired/revoked/
-replaced/mismatched/raced grants share `409 Conflict.`. Candidate rejection uses only the published password
-message (422). Infrastructure failure is sanitized 500; post-commit event failure can leave a completed reset,
+replaced/mismatched/raced grants share 409 fail with `data.message: "State conflict."`. Candidate rejection uses only the published password
+message (422). Unknown infrastructure faults are sanitized 500; declared limiter unavailability is 503.
+A post-commit event failure can leave a completed reset,
 so neither server nor client automatically replays it. OpenAPI declares write-only sensitive fields and these limits.
 
 ## Target-scoped session retirement

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Api\V1\Repositories;
 
-use App\Application\Failure\AuthenticationRequired;
 use App\Domain\Workspace\RegistrationInputRejected;
 use App\Domain\Workspace\RegistrationSources;
 use App\Domain\Workspace\RepositoryId;
 use App\Domain\Workspace\SourceDescriptor;
 use App\Domain\Workspace\WorkspaceId;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Routing\RouteContext;
 use stdClass;

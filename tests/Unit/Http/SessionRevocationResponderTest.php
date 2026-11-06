@@ -32,16 +32,26 @@ final class SessionRevocationResponderTest extends TestCase
     #[DataProvider('failures')]
     public function testKnownFailure(string $class): void
     {
-        $response = $this->responder()->respond(
+        $next = $this->createStub(\Psr\Http\Server\RequestHandlerInterface::class);
+        $next->method('handle')->willReturnCallback(fn() => $this->responder()->respond(
             static function () use ($class): void {
                 throw new $class('private-sql-token-session-marker');
             }
+        ));
+        $response = \Tests\Support\ApiErrors::boundary(new \Monolog\Logger('test'))->process(
+            (new \Slim\Psr7\Factory\ServerRequestFactory())->createServerRequest(
+                'DELETE',
+                '/api/v1/me/sessions/target'
+            ),
+            $next
         );
         self::assertSame(409, $response->getStatusCode());
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
-        $expected = ['status' => 'error', 'message' => 'Conflict.'];
+        $expected = ['status' => 'fail', 'data' => ['message' => 'State conflict.']];
         if ($class === CurrentRefreshSessionRevocationException::class) {
-            $expected = ['status' => 'error', 'message' => 'Use Logout for the current session.', 'code' => 5801];
+            $expected = ['status' => 'fail', 'data' => [
+                'message' => 'Use Logout for the current session.', 'intent' => 'use_logout'
+            ]];
         }
         self::assertSame($expected, json_decode((string) $response->getBody(), true));
     }

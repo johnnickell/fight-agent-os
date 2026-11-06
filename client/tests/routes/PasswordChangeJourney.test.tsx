@@ -52,7 +52,11 @@ describe('password-change terminal application transition', () => {
         pending.resolve(
           outcome === 'success'
             ? jsonResponse({ changed: true })
-            : jsonResponse({ status: 'error', message: 'Unauthorized.' }, 401, false)
+            : jsonResponse(
+                { status: 'fail', data: { message: 'Authentication required.' } },
+                401,
+                false
+              )
         );
         await pending.promise;
       });

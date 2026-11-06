@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Application\Security\PasswordReset;
 
-use RuntimeException;
+use Fight\Common\Application\Error\Exception\RuleViolation;
 
 /**
  * Class ResetPasswordRejected
  *
  * Reports safe shared-policy feedback without retaining candidate material
  */
-final class ResetPasswordRejected extends RuntimeException
+final class ResetPasswordRejected extends RuleViolation
 {
     /**
      * Constructs ResetPasswordRejected

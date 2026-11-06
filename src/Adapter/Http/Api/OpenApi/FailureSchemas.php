@@ -9,7 +9,7 @@ use OpenApi\Attributes as OA;
 /**
  * Class FailureSchemas
  *
- * Describes existing safe failure representations and mapper-only schemas
+ * Describes deliberate Common refusal and server-error representations
  */
 #[OA\Schema(
     schema: 'ValidationFail',
@@ -77,47 +77,68 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Schema(
     schema: 'Error',
-    required: ['status', 'message'],
+    description: 'Expected 4xx refusal; the historical schema name does not select an error envelope',
+    required: ['status', 'data'],
     properties: [
-        new OA\Property(property: 'status', type: 'string', enum: ['error']),
-        new OA\Property(property: 'message', type: 'string', enum: [
-            'Bad request.', 'Unauthorized.', 'Forbidden.', 'Not found.', 'Method not allowed.',
-            'Conflict.', 'Gone.', 'Too many requests.', 'Internal server error.',
-            'Recovery outcome uncertain. Read invitation status before another operation.'
-        ])
+        new OA\Property(property: 'status', type: 'string', enum: ['fail']),
+        new OA\Property(property: 'data', required: ['message'], properties: [
+            new OA\Property(property: 'message', type: 'string', enum: [
+                'Invalid input.', 'Authentication required.', 'Permission denied.', 'Resource not found.',
+                'Method not allowed.', 'State conflict.', 'Resource gone.', 'Precondition failed.',
+                'Not acceptable.', 'Request too large.', 'Unsupported media type.', 'Rule violation.',
+                'Too many requests.'
+            ])
+        ], type: 'object', additionalProperties: false)
     ],
     type: 'object',
     additionalProperties: false
 )]
 #[OA\Schema(schema: 'BadRequestError', allOf: [
     new OA\Schema(ref: '#/components/schemas/Error'),
-    new OA\Schema(properties: [new OA\Property(property: 'message', enum: ['Bad request.'])])
+    new OA\Schema(properties: [new OA\Property(property: 'data', properties: [
+        new OA\Property(property: 'message', enum: ['Invalid input.'])
+    ])])
 ])]
 #[OA\Schema(schema: 'UnauthorizedError', allOf: [
     new OA\Schema(ref: '#/components/schemas/Error'),
-    new OA\Schema(properties: [new OA\Property(property: 'message', enum: ['Unauthorized.'])])
+    new OA\Schema(properties: [new OA\Property(property: 'data', properties: [
+        new OA\Property(property: 'message', enum: ['Authentication required.'])
+    ])])
 ])]
 #[OA\Schema(schema: 'ForbiddenError', allOf: [
     new OA\Schema(ref: '#/components/schemas/Error'),
-    new OA\Schema(properties: [new OA\Property(property: 'message', enum: ['Forbidden.'])])
+    new OA\Schema(properties: [new OA\Property(property: 'data', properties: [
+        new OA\Property(property: 'message', enum: ['Permission denied.'])
+    ])])
 ])]
-#[OA\Schema(schema: 'InternalError', allOf: [
-    new OA\Schema(ref: '#/components/schemas/Error'),
-    new OA\Schema(properties: [new OA\Property(property: 'message', enum: ['Internal server error.'])])
-])]
+#[OA\Schema(schema: 'InternalError', required: ['status', 'message'], properties: [
+    new OA\Property(property: 'status', type: 'string', enum: ['error']),
+    new OA\Property(property: 'message', type: 'string', enum: ['Internal server error.'])
+], type: 'object', additionalProperties: false)]
+#[OA\Schema(schema: 'UnavailableError', required: ['status', 'message'], properties: [
+    new OA\Property(property: 'status', type: 'string', enum: ['error']),
+    new OA\Property(property: 'message', type: 'string', enum: [
+        'Service unavailable.',
+        'Recovery outcome uncertain. Read invitation status before another operation.'
+    ])
+], type: 'object', additionalProperties: false)]
 #[OA\Schema(schema: 'NotFoundError', allOf: [
     new OA\Schema(ref: '#/components/schemas/Error'),
-    new OA\Schema(properties: [new OA\Property(property: 'message', enum: ['Not found.'])])
+    new OA\Schema(properties: [new OA\Property(property: 'data', properties: [
+        new OA\Property(property: 'message', enum: ['Resource not found.'])
+    ])])
 ])]
 #[OA\Schema(schema: 'MethodNotAllowedError', allOf: [
     new OA\Schema(ref: '#/components/schemas/Error'),
-    new OA\Schema(properties: [new OA\Property(property: 'message', enum: ['Method not allowed.'])])
+    new OA\Schema(properties: [new OA\Property(property: 'data', properties: [
+        new OA\Property(property: 'message', enum: ['Method not allowed.'])
+    ])])
 ])]
 #[OA\Response(
     response: 'BadRequest',
     description: <<<'TEXT'
         Bootstrap body/content-type or ambiguous cookie input gives JSend fail.
-        A query string gives JSend error. No malformed-JSON POST is claimed.
+        A query string gives the fixed Invalid input. JSend fail. No malformed-JSON POST is claimed.
         TEXT,
     headers: [
         new OA\Header(ref: '#/components/headers/NoStore', header: 'Cache-Control'),
@@ -144,6 +165,11 @@ use OpenApi\Attributes as OA;
     response: 'Unauthorized',
     description: 'Missing, invalid or no longer authoritative Bearer authentication',
     headers: [
+        new OA\Header(
+            header: 'WWW-Authenticate',
+            required: true,
+            schema: new OA\Schema(type: 'string', enum: ['Bearer'])
+        ),
         new OA\Header(ref: '#/components/headers/NoStore', header: 'Cache-Control'),
         new OA\Header(ref: '#/components/headers/CorrelationId', header: 'X-Correlation-ID')
     ],
@@ -183,10 +209,21 @@ use OpenApi\Attributes as OA;
     response: 'MethodNotAllowed',
     description: 'Unsupported method on a known API path',
     headers: [
+        new OA\Header(header: 'Allow', required: true, schema: new OA\Schema(type: 'string')),
         new OA\Header(ref: '#/components/headers/NoStore', header: 'Cache-Control'),
         new OA\Header(ref: '#/components/headers/CorrelationId', header: 'X-Correlation-ID')
     ],
     content: new OA\JsonContent(ref: '#/components/schemas/MethodNotAllowedError')
+)]
+#[OA\Response(
+    response: 'ServiceUnavailable',
+    description: 'Declared temporary unavailability; retry hints do not authorize replay or imply rollback',
+    headers: [
+        new OA\Header(header: 'Retry-After', schema: new OA\Schema(type: 'integer', minimum: 0)),
+        new OA\Header(ref: '#/components/headers/NoStore', header: 'Cache-Control'),
+        new OA\Header(ref: '#/components/headers/CorrelationId', header: 'X-Correlation-ID')
+    ],
+    content: new OA\JsonContent(ref: '#/components/schemas/UnavailableError')
 )]
 final class FailureSchemas
 {

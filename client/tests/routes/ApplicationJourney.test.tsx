@@ -55,7 +55,7 @@ describe('authoritative frame transitions', () => {
     const owner = session(['READ_OWN_SESSIONS']);
     const fetch = vi.fn(() =>
       Promise.resolve(
-        new Response(JSON.stringify({ status: 'error', message: 'Forbidden.' }), {
+        new Response(JSON.stringify({ status: 'fail', data: { message: 'Permission denied.' } }), {
           status: 403,
           headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
         })
@@ -83,7 +83,7 @@ describe('authoritative frame transitions', () => {
     const owner = session(['READ_USERS']);
     const fetch = vi.fn(() =>
       Promise.resolve(
-        new Response(JSON.stringify({ status: 'error', message: 'Forbidden.' }), {
+        new Response(JSON.stringify({ status: 'fail', data: { message: 'Permission denied.' } }), {
           status: 403,
           headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
         })

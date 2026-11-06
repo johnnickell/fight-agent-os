@@ -29,10 +29,12 @@ or ambiguous authority is not inferred from a port or forwarding header. Product
 physical duplicate-header rejection still require deployment qualification.
 
 Nonexistent, pending, disabled, deleted, wrong-password and email-throttled attempts all return **401**, exact
-JSend `{"status":"error","message":"Unauthorized."}`, no cookies and no identity-specific retry header.
+JSend `{"status":"fail","data":{"message":"Authentication required."}}`, `WWW-Authenticate: Bearer`,
+no cookies and no identity-specific retry header.
 They all traverse package password verification, using the configured Argon2id dummy hash for unavailable or
-throttled identities. Network/endpoint admission and storage outage return generic **429** with bounded
-1–900-second Retry-After independently of identity. Unexpected infrastructure/event failures remain sanitized
+throttled identities. Exhausted network/endpoint admission returns **429 fail** with bounded
+1–900-second Retry-After independently of identity. Limiter storage faults are **503 error** with a validated
+60-second availability hint, not a fabricated exhausted budget; see [safe API failures](SAFE_HTTP_ERRORS.md). Unexpected infrastructure/event failures remain sanitized
 500 and must not be assumed rolled back after a post-commit event failure. There is no automatic replay.
 
 Success reuses `SessionResponder`/`SessionAccessData`: only `access_token`, `issued_at`, `expires_at`, with

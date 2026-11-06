@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Application\Security\Activation;
 
-use App\Application\Failure\StateConflict;
 use App\Application\Security\Password\PasswordSetting;
 use Fight\AccessControl\Application\AccessControl\User\Security\AuthenticationService;
 use Fight\AccessControl\Application\AccessControl\User\Security\TokenSet;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Exception\ActivationGrantException;
 use Fight\AccessControl\Domain\AccessControl\User\Exception\UserNotPendingActivationException;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use LogicException;
 use SensitiveParameter;
 use Throwable;

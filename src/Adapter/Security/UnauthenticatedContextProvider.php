@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Adapter\Security;
 
-use App\Application\Failure\AuthenticationRequired;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContextProvider;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 
 /**
  * Class UnauthenticatedContextProvider

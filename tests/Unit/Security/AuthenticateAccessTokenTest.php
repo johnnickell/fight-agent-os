@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Security;
 
-use App\Application\Failure\AuthenticationRequired;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshCredential;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSession;
@@ -14,6 +13,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 19 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | [TICKET-00136 — Adopt shared failures and safe error presentation](../tickets/00136-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
@@ -27,7 +27,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 |---|---|---|---|---|---|---|
 | 8 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | — | — |
-| 19 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | [TICKET-00136 — Adopt shared failures and safe error presentation](../tickets/00136-TICKET.md) | ready-for-agent | — | — |
 | 61 | [TASK-00061](00061-TASK.md) | Deliver the ordinary web invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | — | — |
 | 113 | [TASK-00119](00119-TASK.md) | Guard user disable and enable transitions | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |
 | 116 | [TASK-00122](00122-TASK.md) | Authorize cross-user session inspection and revocation | [TICKET-00030 — Administer installation users and cross-user sessions](../tickets/00030-TICKET.md) | ready-for-agent | — | — |

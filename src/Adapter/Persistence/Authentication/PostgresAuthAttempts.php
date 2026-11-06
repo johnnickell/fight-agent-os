@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\Authentication;
 
-use App\Application\Failure\RateLimited;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
+use Fight\Common\Application\Error\Exception\RateLimitExceeded;
+use Fight\Common\Application\Error\Exception\ServiceUnavailable;
 use LogicException;
 use Throwable;
 
@@ -73,13 +74,13 @@ final readonly class PostgresAuthAttempts
                     $hits = array_values(array_filter($hits, static fn(int $hit): bool => $hit > $cutoff));
                     if (count($hits) >= $limit) {
                         $retry = (int) ceil(($hits[0] - $cutoff) / 1000000);
-                        throw new RateLimited(max(1, min(900, $retry)));
+                        throw new RateLimitExceeded(retryDelaySeconds: max(1, min(900, $retry)));
                     }
                     $histories[$key] = [...$hits, $now];
                 }
                 $count = (int) $this->connection->fetchOne('SELECT count(*) FROM auth_rate_limits');
                 if ($count + $missing > $this->capacity) {
-                    throw new RateLimited(min(900, $windowSeconds));
+                    throw new RateLimitExceeded(retryDelaySeconds: min(900, $windowSeconds));
                 }
                 foreach ($histories as $key => $hits) {
                     $this->connection->executeStatement(
@@ -91,10 +92,10 @@ SQL,
                     );
                 }
             });
-        } catch (RateLimited $failure) {
+        } catch (RateLimitExceeded $failure) {
             throw $failure;
         } catch (Throwable) {
-            throw new RateLimited(60);
+            throw new ServiceUnavailable(retryDelaySeconds: 60);
         }
     }
 

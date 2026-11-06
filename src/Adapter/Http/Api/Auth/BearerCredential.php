@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Adapter\Http\Api\Auth;
 
 use App\Adapter\Security\AccessToken\AccessJwt;
-use App\Application\Failure\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 

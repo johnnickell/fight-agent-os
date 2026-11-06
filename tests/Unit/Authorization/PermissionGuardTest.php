@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Authorization;
 
 use App\Application\Authorization\PermissionGuard;
-use App\Application\Failure\PermissionDenied;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\SecurityContext;
 use Fight\AccessControl\Domain\AccessControl\Authorization\AuthenticatedUserPrincipal;
 use Fight\AccessControl\Domain\AccessControl\Authorization\PrincipalPermission;
@@ -16,6 +15,7 @@ use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleName;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

@@ -6,8 +6,6 @@ namespace App\Adapter\Http\Action\Api\V1\Invitations;
 
 use App\Adapter\Http\Attribute\RequiresPermission;
 use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
-use App\Application\Failure\AuthenticationRequired;
-use App\Application\Failure\ResourceNotFound;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Domain\Invitation\InvitationOperation;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
@@ -15,6 +13,8 @@ use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\FindInvitatio
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\Query\InvitationDeliveryStatusView;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\ResourceNotFound;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Validation\Exception\ValidationException;
 use LogicException;

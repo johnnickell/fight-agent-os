@@ -78,7 +78,8 @@ final readonly class LoginAction
             new OA\Response(ref: '#/components/responses/Unauthorized', response: 401),
             new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
             new OA\Response(ref: '#/components/responses/BrowserAuthThrottled', response: 429),
-            new OA\Response(ref: '#/components/responses/InternalError', response: 500)
+            new OA\Response(ref: '#/components/responses/InternalError', response: 500),
+            new OA\Response(ref: '#/components/responses/ServiceUnavailable', response: 503)
         ]
     )]
     #[JsonBody]

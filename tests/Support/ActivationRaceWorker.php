@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
-use App\Application\Failure\StateConflict;
 use App\Application\Security\Activation\ActivateInvitation;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
 use Fight\AccessControl\Domain\AccessControl\ActivationGrant\ActivationGrantRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use RuntimeException;
 use Throwable;
 

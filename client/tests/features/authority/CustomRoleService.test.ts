@@ -18,7 +18,9 @@ function setup(status: number, data: unknown) {
         JSON.stringify(
           status < 300
             ? { status: 'success', data }
-            : { status: 'error', message: status === 409 ? 'Conflict.' : 'Internal server error.' }
+            : status === 409
+              ? { status: 'fail', data: { message: 'State conflict.' } }
+              : { status: 'error', message: 'Internal server error.' }
         ),
         { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
       )

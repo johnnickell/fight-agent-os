@@ -94,7 +94,10 @@ describe('real schema reset completion form', () => {
   it('offers explicit unavailable-schema retry, then generic unusable-link recovery', async () => {
     let available = false;
     const d = resetCompletionDependencies(
-      () => Promise.resolve(jsonResponse({ status: 'error', message: 'Conflict.' }, 409, false)),
+      () =>
+        Promise.resolve(
+          jsonResponse({ status: 'fail', data: { message: 'State conflict.' } }, 409, false)
+        ),
       () => (available ? jsonResponse(resetCompletionSchema) : jsonResponse(null))
     );
     // A malformed schema can never enable password submission.

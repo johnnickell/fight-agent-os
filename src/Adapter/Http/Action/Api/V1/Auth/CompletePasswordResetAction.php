@@ -119,7 +119,8 @@ final readonly class CompletePasswordResetAction
                 content: new OA\JsonContent(ref: '#/components/schemas/ValidationFail')
             ),
             new OA\Response(ref: '#/components/responses/InvitationThrottled', response: 429),
-            new OA\Response(ref: '#/components/responses/InternalError', response: 500)
+            new OA\Response(ref: '#/components/responses/InternalError', response: 500),
+            new OA\Response(ref: '#/components/responses/ServiceUnavailable', response: 503)
         ]
     )]
     #[JsonBody]

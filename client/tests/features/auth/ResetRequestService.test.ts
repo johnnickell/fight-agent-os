@@ -40,7 +40,9 @@ describe('reset request service', () => {
   it('renews only CSRF protection after refusal and never automatically replays a mutation', async () => {
     const post = vi
       .fn()
-      .mockResolvedValueOnce(jsonResponse({ status: 'error', message: 'Forbidden.' }, 403, false))
+      .mockResolvedValueOnce(
+        jsonResponse({ status: 'fail', data: { message: 'Permission denied.' } }, 403, false)
+      )
       .mockResolvedValue(resetAccepted());
     const deps = resetDependencies(post);
     expect(await deps.service.submit({ email: '' })).toMatchObject({

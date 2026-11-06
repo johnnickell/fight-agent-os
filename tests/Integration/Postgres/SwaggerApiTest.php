@@ -252,16 +252,14 @@ final class SwaggerApiTest extends TestCase
                 $record = $logs->getRecords()[0];
                 self::assertSame(Level::Error, $record->level);
                 self::assertSame('http-failure', $record->channel);
-                self::assertSame('Unhandled HTTP request failure.', $record->message);
+                self::assertSame('HTTP request failed.', $record->message);
                 self::assertMatchesRegularExpression(
                     '/\A[a-f0-9]{32}\z/',
                     $response->getHeaderLine('X-Correlation-ID')
                 );
                 self::assertSame([
-                    'correlation_id'     => $response->getHeaderLine('X-Correlation-ID'),
-                    'correlation_source' => 'generated',
-                    'request_method'     => 'GET',
-                    'exception_type'     => \RuntimeException::class
+                    'http_status'    => 500,
+                    'exception_type' => \RuntimeException::class
                 ], $record->context);
                 self::assertSame([], $record->extra);
                 self::assertIsString($record->formatted);

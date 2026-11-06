@@ -27,7 +27,7 @@ final readonly class PrivateOpenApiResponder
      */
     public function unavailable(): ResponseInterface
     {
-        return $this->responses->fromEnvelope(JSendEnvelope::error('Internal server error.'), 503, [
+        return $this->responses->fromEnvelope(JSendEnvelope::error('Service unavailable.'), 503, [
             'Cache-Control' => 'no-store', 'X-Content-Type-Options' => 'nosniff'
         ]);
     }

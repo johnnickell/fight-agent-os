@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapter\Http\Middleware\Api\Auth;
 
+use App\Adapter\Http\Api\Failure\FailureData;
 use App\Adapter\Security\HmacCsrfProofs;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
@@ -60,7 +61,7 @@ final readonly class CsrfBootstrapGuard implements MiddlewareInterface
     private function reject(int $status): ResponseInterface
     {
         return $this->responses->fromEnvelope(
-            JSendEnvelope::error($status === 403 ? 'Forbidden.' : 'Bad request.'),
+            JSendEnvelope::fail(new FailureData($status === 403 ? 'Permission denied.' : 'Invalid input.')),
             $status,
             ['Cache-Control' => 'no-store']
         );

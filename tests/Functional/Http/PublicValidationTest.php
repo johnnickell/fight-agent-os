@@ -154,10 +154,8 @@ final class PublicValidationTest extends TestCase
         self::assertStringNotContainsString('Private detail.', (string) $response->getBody());
         self::assertCount(1, $this->failureRecords->getRecords());
         self::assertSame([
-            'correlation_id'     => $response->getHeaderLine('X-Correlation-ID'),
-            'correlation_source' => 'generated',
-            'request_method'     => 'GET',
-            'exception_type'     => \RuntimeException::class
+            'http_status'    => 500,
+            'exception_type' => \RuntimeException::class
         ], $this->failureRecords->getRecords()[0]->context);
         self::assertSame(Level::Error, $this->failureRecords->getRecords()[0]->level);
         self::assertStringNotContainsString('Private detail.', $this->failureRecords->getRecords()[0]->message);

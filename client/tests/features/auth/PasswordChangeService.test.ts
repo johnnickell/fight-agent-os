@@ -64,7 +64,10 @@ describe('authenticated password-change service', () => {
     const d = passwordChangeDependencies(() =>
       Promise.resolve(
         jsonResponse(
-          { status: 'error', message: status === 409 ? 'Conflict.' : 'Unauthorized.' },
+          {
+            status: 'fail',
+            data: { message: status === 409 ? 'State conflict.' : 'Authentication required.' }
+          },
           status,
           false
         )
@@ -108,7 +111,9 @@ describe('authenticated password-change service', () => {
       expect(d.authority.getSnapshot().status).toBe(
         renewal === 'completed' ? 'authenticated' : 'loading'
       );
-      pending.resolve(jsonResponse({ status: 'error', message: 'Unauthorized.' }, 401, false));
+      pending.resolve(
+        jsonResponse({ status: 'fail', data: { message: 'Authentication required.' } }, 401, false)
+      );
       expect(await result).toMatchObject({ ok: false, error: { kind: 'authentication' } });
       expect(terminal).toHaveBeenCalledOnce();
       expect(d.tokens.getAccessToken()).toBeNull();
@@ -158,7 +163,9 @@ describe('authenticated password-change service', () => {
       }
       const state = d.authority.getSnapshot();
       const token = d.tokens.getAccessToken();
-      pending.resolve(jsonResponse({ status: 'error', message: 'Unauthorized.' }, 401, false));
+      pending.resolve(
+        jsonResponse({ status: 'fail', data: { message: 'Authentication required.' } }, 401, false)
+      );
       expect(await result).toMatchObject({ ok: false, error: { kind: 'authentication' } });
       expect(terminal).not.toHaveBeenCalled();
       expect(d.authority.getSnapshot()).toBe(state);

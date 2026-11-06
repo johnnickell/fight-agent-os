@@ -463,7 +463,11 @@ final class InvitationApiTest extends TestCase
         self::assertSame(0, (int) $this->connection->fetchOne(
             "SELECT count(*) FROM audit_evidence WHERE action = 'user.invitation_role_confirmed'"
         ));
-        self::assertSame([], $this->logs->getRecords());
+        self::assertCount(1, $this->logs->getRecords());
+        self::assertSame(
+            ['http_status' => 503, 'exception_type' => \App\Application\Failure\IncompleteInvitation::class],
+            $this->logs->getRecords()[0]->context
+        );
     }
 
     /**

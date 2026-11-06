@@ -7,8 +7,7 @@ namespace Tests\Unit\Invitation;
 use App\Application\Authorization\AuthenticatedPermissions;
 use App\Application\Authorization\PermissionGuard;
 use App\Application\Failure\IncompleteInvitation;
-use App\Application\Failure\PermissionDenied;
-use App\Application\Failure\StateConflict;
+use App\Application\Failure\InvitationConfirmationRequired;
 use App\Application\Invitation\ConsoleAssignmentPolicy;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Application\Invitation\IssueInvitation;
@@ -51,10 +50,11 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
-use Fight\Common\Domain\Exception\ValidationException;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
 use LogicException;
@@ -140,7 +140,7 @@ final class InvitationApiTest extends TestCase
                 false
             );
             self::fail('Missing confirmation was accepted.');
-        } catch (ValidationException) {
+        } catch (InvitationConfirmationRequired) {
             self::assertSame([], $this->admissions);
             self::assertSame([], $this->effects);
         }

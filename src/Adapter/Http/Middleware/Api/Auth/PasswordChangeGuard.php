@@ -7,7 +7,7 @@ namespace App\Adapter\Http\Middleware\Api\Auth;
 use App\Adapter\Http\Api\V1\Auth\AuthOperation;
 use App\Adapter\Security\Authentication\AuthAdmission;
 use App\Adapter\Security\HmacCsrfProofs;
-use App\Application\Failure\PermissionDenied;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;

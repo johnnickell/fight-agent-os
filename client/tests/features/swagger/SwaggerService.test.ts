@@ -133,7 +133,13 @@ describe('guarded documentation transport', () => {
     async (status) => {
       const f = await fixture();
       f.fetch.mockResolvedValue(
-        json({ status: 'error', message: status === 401 ? 'Unauthorized.' : 'Forbidden.' }, status)
+        json(
+          {
+            status: 'fail',
+            data: { message: status === 401 ? 'Authentication required.' : 'Permission denied.' }
+          },
+          status
+        )
       );
       await f.service.load(f.authority.captureScope());
       expect(f.fetch).toHaveBeenCalledTimes(1);
@@ -239,7 +245,7 @@ describe('guarded documentation transport', () => {
       const f = await fixture();
       f.fetch.mockImplementation(() =>
         outcome === 'failure'
-          ? Promise.resolve(json({ status: 'error', message: 'Forbidden.' }, 403))
+          ? Promise.resolve(json({ status: 'fail', data: { message: 'Permission denied.' } }, 403))
           : Promise.reject(new Error('private transport failure'))
       );
       const result = await f.service.execute(
@@ -269,7 +275,7 @@ describe('guarded documentation transport', () => {
     );
     const pending = f.service.execute({ url: '/api/v1/me' }, document, f.authority.captureScope());
     void f.authority.signal('credentials-changed');
-    resolve?.(json({ status: 'error', message: 'Unauthorized.' }, 401));
+    resolve?.(json({ status: 'fail', data: { message: 'Authentication required.' } }, 401));
     expect((await pending).text).toContain('retired');
     expect(f.lifecycle.accessRejected).not.toHaveBeenCalled();
   });

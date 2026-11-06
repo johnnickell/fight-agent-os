@@ -72,13 +72,13 @@ there is no old-response compatibility mode. Success does not prove inbox receip
 | 201 `success` | Issuance and its recorded steps established; not recipient receipt |
 | 200 `success` | Safe status read, or empty completed-command acknowledgement |
 | 400 `fail` | Invalid JSON/source/type/bound/allowlist or malformed UUID; no dispatch |
-| 401 `error` | Missing/invalid/stale authentication or rejected credential transport |
-| 403 `error` | Required permission absent or mutation target outside installation admission |
-| 404 `error` | Authorized status target unknown |
-| 409 `error` | Canonical/reservation conflict, policy drift, missing/ineligible recovery work or concurrent transition |
+| 401 `fail` | Missing/invalid/stale authentication or rejected credential transport |
+| 403 `fail` | Required permission absent or mutation target outside installation admission |
+| 404 `fail` | Authorized status target unknown |
+| 409 `fail` | Canonical/reservation conflict, policy drift, missing/ineligible recovery work or concurrent transition |
 | 422 `fail` | Missing/false elevation confirmation or invalid semantic domain input |
-| 429 `error` | Atomic operation budget/capacity exhausted; integer Retry-After |
-| 503 `fail` | Issuance partial/uncertain; inspect retained state, never automatically retry |
+| 429 `fail` | Atomic operation budget/capacity exhausted; integer Retry-After |
+| 503 `error` with safe `data` | Issuance partial/uncertain; inspect retained state, never automatically retry |
 | 503 `error` | Recovery coordination uncertain; inspect state, never automatically retry |
 | 500 `error` | Unexpected internal/dependency failure; safe correlation, no private diagnostics |
 
@@ -96,7 +96,8 @@ target, Role ID and membership_confirmed result. Crash/acknowledgement loss can 
 confirmed audit. An exception is not proof of rollback; no compensation, transparent retry or all-step atomicity
 is promised. Safe queries inspect current state, including after the write manager closes.
 
-For 503 issuance, retain correlation/known ID and stop automatic issuance. A trusted operator inspects identity,
+The [shared safe-error contract](SAFE_HTTP_ERRORS.md) owns exact category messages, headers, diagnostics and
+strict client decoding. For 503 issuance, retain correlation/known ID and stop automatic issuance. A trusted operator inspects identity,
 roles, audit and package delivery. Eligible ordinary membership can use the separately authorized console path;
 elevated or unknown-state repair needs investigation. Recovery below does not resume issuance assignment.
 

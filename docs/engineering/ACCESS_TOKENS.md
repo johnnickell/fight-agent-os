@@ -63,7 +63,7 @@ than session creation. It rechecks token expiry after store access. Store failur
 SQL/exception chains. It returns package `AuthenticationContext` without permission projection.
 
 TASK-00044's standalone `AccessTokenAuthentication` remains available for explicitly protected pipelines
-**inside** `ApiFailureMiddleware`. TASK-00117's registered API-v1 group uses `ApiActionSecurity` with the same
+**inside** `ApiResponseBoundary` and Common's safe error boundary; see [safe API failures](SAFE_HTTP_ERRORS.md). TASK-00117's registered API-v1 group uses `ApiActionSecurity` with the same
 extractor/authentication service, then constructs a fresh package `CurrentPrincipalProvider` per protected
 request. It overwrites authentication/current-principal/security attributes only after verified resolution;
 no shared caching provider or client-supplied authority is used. `/me` is the first protected operation.
@@ -79,7 +79,8 @@ a deployment must preserve raw headers and reject repeated physical headers at i
 bounded to 16 KiB, requires a seekable stream and preserves its cursor. Larger/streamed protected operations
 need an explicitly planned transport policy rather than silently bypassing inspection.
 
-Known refusals use generic JSend `401 Unauthorized.`, `Cache-Control: no-store`, and safe `X-Correlation-ID`.
+Known refusals use 401 JSend `fail` with `data.message: "Authentication required."`,
+`WWW-Authenticate: Bearer`, `Cache-Control: no-store`, and safe `X-Correlation-ID`.
 No token, claim, key, SQL, decoder diagnostic or authentication audit event is logged by this boundary.
 Existing approved public reads remain public. OpenAPI describes the real `/me` and login operations, not an unimplemented refresh
 journey or fabricated permission-protected resource route.

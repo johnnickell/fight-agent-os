@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Application\Authorization;
 
-use App\Application\Failure\PermissionDenied;
-use App\Application\Failure\ResourceNotFound;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionId;
 use Fight\AccessControl\Domain\AccessControl\Permission\PermissionName;
@@ -16,6 +14,8 @@ use Fight\AccessControl\Domain\AccessControl\Role\Query\GetRoleById;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\ListRoles;
 use Fight\AccessControl\Domain\AccessControl\Role\Query\RoleView;
 use Fight\AccessControl\Domain\AccessControl\Role\RoleId;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
+use Fight\Common\Application\Error\Exception\ResourceNotFound;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Domain\Repository\Pagination;
 use Fight\Common\Domain\Repository\ResultSet;

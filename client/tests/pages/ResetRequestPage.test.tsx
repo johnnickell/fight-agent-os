@@ -143,10 +143,16 @@ describe('real schema-backed reset request form', () => {
       status === 429
         ? 'Too many requests.'
         : status === 403
-          ? 'Forbidden.'
+          ? 'Permission denied.'
           : 'An internal error occurred.';
     const deps = resetDependencies(() =>
-      Promise.resolve(jsonResponse({ status: 'error', message }, status, false))
+      Promise.resolve(
+        jsonResponse(
+          status >= 500 ? { status: 'error', message } : { status: 'fail', data: { message } },
+          status,
+          false
+        )
+      )
     );
     render(<ResetRequestPage {...deps} />);
     await screen.findByLabelText('Email (required)');

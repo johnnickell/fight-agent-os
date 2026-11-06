@@ -6,8 +6,6 @@ namespace Tests\Unit\Authorization;
 
 use App\Adapter\Security\UnauthenticatedContextProvider;
 use App\Application\Authorization\AuthenticatedRoleAssignment;
-use App\Application\Failure\AuthenticationRequired;
-use App\Application\Failure\PermissionDenied;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
@@ -31,6 +29,8 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use PHPUnit\Framework\Attributes\DataProvider;

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Adapter\Persistence\Invitation;
 
-use App\Application\Failure\RateLimited;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Domain\Invitation\InvitationOperation;
 use App\Domain\Invitation\InvitationRatePolicy;
 use Doctrine\DBAL\Connection;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
+use Fight\Common\Application\Error\Exception\RateLimitExceeded;
 use LogicException;
 
 /**
@@ -56,13 +56,15 @@ SQL,
                 if ($row === false) {
                     ++$missing;
                 } elseif ((int) $row['attempts'] >= $this->policy->limit($operation)) {
-                    throw new RateLimited(max(1, min(86400, (int) $row['window_end'] - $now)));
+                    throw new RateLimitExceeded(retryDelaySeconds: max(1, min(86400, (int) $row['window_end'] - $now)));
                 }
             }
             $count = (int) $this->connection->fetchOne('SELECT count(*) FROM invitation_rate_limits');
             if ($count + $missing > $this->policy->capacity) {
                 $earliest = $this->connection->fetchOne('SELECT min(window_end) FROM invitation_rate_limits');
-                throw new RateLimited(max(1, min(86400, ($earliest === null ? $end : (int) $earliest) - $now)));
+                throw new RateLimitExceeded(
+                    retryDelaySeconds: max(1, min(86400, ($earliest === null ? $end : (int) $earliest) - $now))
+                );
             }
             foreach ($scopes as $scope) {
                 $this->connection->executeStatement(

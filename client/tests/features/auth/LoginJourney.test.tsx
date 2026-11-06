@@ -24,7 +24,11 @@ describe('document-scoped login retirement', () => {
       }
       if (url.endsWith('/me'))
         return Promise.resolve(
-          jsonResponse({ status: 'error', message: 'Unauthorized.' }, 401, false)
+          jsonResponse(
+            { status: 'fail', data: { message: 'Authentication required.' } },
+            401,
+            false
+          )
         );
       return Promise.resolve(loginSuccess());
     });

@@ -115,8 +115,8 @@ Unexpected notification/storage failure is an uncertain sanitized failure, not p
 | Outcome | HTTP and body |
 |---|---|
 | Target committed revoked | 200 `{"status":"success","data":null}` |
-| Current session | 409 `{"status":"error","message":"Use Logout for the current session.","code":5801}` |
-| Unknown, cross-user, idle/absolute-expired, already revoked or competing non-current target | Identical 409 `{"status":"error","message":"Conflict."}` |
+| Current session | 409 `{"status":"fail","data":{"message":"Use Logout for the current session.","intent":"use_logout"}}` |
+| Unknown, cross-user, idle/absolute-expired, already revoked or competing non-current target | Identical 409 `{"status":"fail","data":{"message":"State conflict."}}` |
 | Malformed target/body/query | Safe 400 validation, without lookup or value echo |
 | Missing/invalid authority; missing exact permission | Sanitized 401; 403 |
 

@@ -32,7 +32,11 @@ export class CurrentPrincipalService {
     if (result.ok) return { status: 'principal', principal: result.value };
     // Only the cache may apply this result: an old 401 must not end a newer session.
     if (result.error.kind === 'authentication') return { status: 'terminal' };
-    if (result.error.kind === 'network' || result.error.kind === 'system')
+    if (
+      result.error.kind === 'network' ||
+      result.error.kind === 'system' ||
+      result.error.kind === 'unavailable'
+    )
       return { status: 'network' };
     return { status: 'protocol' };
   };

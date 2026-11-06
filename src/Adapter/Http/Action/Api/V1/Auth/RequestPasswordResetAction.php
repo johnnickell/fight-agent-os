@@ -79,7 +79,8 @@ final readonly class RequestPasswordResetAction
             new OA\Response(ref: '#/components/responses/PublicValidationBadRequest', response: 400),
             new OA\Response(ref: '#/components/responses/Forbidden', response: 403),
             new OA\Response(ref: '#/components/responses/BrowserAuthThrottled', response: 429),
-            new OA\Response(ref: '#/components/responses/InternalError', response: 500)
+            new OA\Response(ref: '#/components/responses/InternalError', response: 500),
+            new OA\Response(ref: '#/components/responses/ServiceUnavailable', response: 503)
         ]
     )]
     #[JsonBody]

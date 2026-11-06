@@ -67,8 +67,8 @@ final class ApplicationSmokeTest extends TestCase
      */
     public static function misses(): iterable
     {
-        yield 'API prefix without route' => ['GET', '/api', 404, 'Not found.'];
-        yield 'unknown API route' => ['GET', '/api/v1/not-an-agent-os-route', 404, 'Not found.'];
+        yield 'API prefix without route' => ['GET', '/api', 404, 'Resource not found.'];
+        yield 'unknown API route' => ['GET', '/api/v1/not-an-agent-os-route', 404, 'Resource not found.'];
         yield 'unsupported method' => ['POST', '/api/v1/auth/csrf', 405, 'Method not allowed.'];
         yield 'unsupported preflight' => ['OPTIONS', '/api/v1/auth/csrf', 405, 'Method not allowed.'];
     }
@@ -90,12 +90,15 @@ final class ApplicationSmokeTest extends TestCase
         $response = $app->handle($request);
 
         ApiContract::assertRoutingFailure($response, $status, $status === 404 ? 'NotFound' : 'MethodNotAllowed');
+        if ($status === 405) {
+            self::assertSame('GET', $response->getHeaderLine('Allow'));
+        }
         self::assertSame($status, $response->getStatusCode());
         self::assertSame('application/json', $response->getHeaderLine('Content-Type'));
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
         self::assertMatchesRegularExpression('/\A[a-f0-9]{32}\z/', $response->getHeaderLine('X-Correlation-ID'));
         self::assertSame(
-            ['status' => 'error', 'message' => $message],
+            ['status' => 'fail', 'data' => ['message' => $message]],
             json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)
         );
     }

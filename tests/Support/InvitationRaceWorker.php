@@ -6,8 +6,6 @@ namespace Tests\Support;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\Invitation\PostgresInvitationRateLimiter;
-use App\Application\Failure\RateLimited;
-use App\Application\Failure\StateConflict;
 use App\Application\Invitation\IssueInvitation;
 use App\Domain\Invitation\InvitationMode;
 use App\Domain\Invitation\InvitationOperation;
@@ -26,6 +24,8 @@ use Fight\AccessControl\Domain\AccessControl\Role\RoleRepository;
 use Fight\AccessControl\Domain\AccessControl\User\Command\InvitePendingUser;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\RateLimitExceeded;
+use Fight\Common\Application\Error\Exception\StateConflict;
 use Fight\Common\Application\Messaging\Command\CommandFilter;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Messaging\Command\CommandMessage;
@@ -68,7 +68,7 @@ final class InvitationRaceWorker
                         isset($input['target']) ? UserId::fromString($input['target']) : null
                     );
                     echo "admitted\n";
-                } catch (RateLimited) {
+                } catch (RateLimitExceeded) {
                     echo "throttled\n";
                 }
             } else {

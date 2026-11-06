@@ -81,7 +81,8 @@ final readonly class RefreshAction
                 content: new OA\JsonContent(ref: '#/components/schemas/Error')
             ),
             new OA\Response(ref: '#/components/responses/BrowserAuthThrottled', response: 429),
-            new OA\Response(ref: '#/components/responses/InternalError', response: 500)
+            new OA\Response(ref: '#/components/responses/InternalError', response: 500),
+            new OA\Response(ref: '#/components/responses/ServiceUnavailable', response: 503)
         ]
     )]
     #[JsonBody]
@@ -96,8 +97,8 @@ final readonly class RefreshAction
             $result = $this->authentication->refresh($credential);
         } catch (RefreshSessionNotFoundException) {
             return $this->responder->terminal();
-        } catch (Throwable) {
-            return $this->responder->unavailable();
+        } catch (Throwable $failure) {
+            return $this->responder->unavailable($failure);
         }
 
         return $this->responder->respond($result);

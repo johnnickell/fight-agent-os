@@ -107,7 +107,7 @@ describe('volatile CSRF proof ownership', () => {
     fetch.mockReturnValue(pending.promise);
     const second = service.bootstrap();
     expect(service.current()).toBeNull();
-    pending.resolve(jsonResponse({ status: 'error', message: 'Forbidden.' }, 403));
+    pending.resolve(jsonResponse({ status: 'fail', data: { message: 'Permission denied.' } }, 403));
     expect(await second).toEqual(apiFailure('authorization', correlationId));
     expect(service.current()).toBeNull();
   });

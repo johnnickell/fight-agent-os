@@ -33,7 +33,12 @@ return static function (Container $container): void {
         ));
     $container->set(RefreshCookie::class, static fn(): RefreshCookie => new RefreshCookie());
     $container->set(SessionLifecycleResponder::class, static fn(Container $c): SessionLifecycleResponder =>
-        new SessionLifecycleResponder($c->get(SessionResponder::class), $c->get(JSendResponseFactory::class)));
+        new SessionLifecycleResponder(
+            $c->get(SessionResponder::class),
+            $c->get(JSendResponseFactory::class),
+            $c->get(\Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics::class),
+            $c->get(\Fight\Common\Adapter\Http\Error\SafeHttpErrorPolicy::class)
+        ));
     foreach ([RefreshAction::class, LogoutAction::class] as $action) {
         $container->set($action, static fn(Container $c): RefreshAction|LogoutAction => new $action(
             $c->get(AuthenticationService::class),

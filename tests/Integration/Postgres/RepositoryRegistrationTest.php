@@ -6,7 +6,6 @@ namespace Tests\Integration\Postgres;
 
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
-use App\Application\Failure\PermissionDenied;
 use App\Application\Workspace\BootstrapWorkspace;
 use App\Application\Workspace\GetRepositoryRegistration;
 use App\Application\Workspace\RegistrationAccess;
@@ -42,6 +41,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;

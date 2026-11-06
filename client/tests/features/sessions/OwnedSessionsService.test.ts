@@ -40,8 +40,8 @@ describe('OwnedSessionsService', () => {
         Promise.resolve(
           new Response(
             JSON.stringify({
-              status: 'error',
-              message: status === 401 ? 'Unauthorized.' : 'Forbidden.'
+              status: 'fail',
+              data: { message: status === 401 ? 'Authentication required.' : 'Permission denied.' }
             }),
             { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
           )

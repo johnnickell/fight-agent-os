@@ -143,7 +143,7 @@ final class RepositoryRegistrationRaceWorker
                     ], JSON_THROW_ON_ERROR)."\n";
                 } catch (RegistrationConflict $conflict) {
                     echo json_encode(['status' => 'conflict', 'reason' => $conflict->reason], JSON_THROW_ON_ERROR)."\n";
-                } catch (\App\Application\Failure\PermissionDenied) {
+                } catch (\Fight\Common\Application\Error\Exception\PermissionDenied) {
                     echo json_encode(['status' => 'denied'], JSON_THROW_ON_ERROR)."\n";
                 }
             }

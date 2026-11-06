@@ -13,7 +13,6 @@ use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
 use App\Application\Authorization\ReadAuthorityCatalogs;
-use App\Application\Failure\PermissionDenied;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use App\Domain\Authorization\InstallationManagedPolicy;
 use DateTimeImmutable;
@@ -42,6 +41,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Service\Container;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
@@ -725,13 +725,10 @@ SQL);
         $record = $logs->getRecords()[0];
         self::assertSame(Level::Error, $record->level);
         self::assertSame('http-failure', $record->channel);
-        self::assertSame('Unhandled HTTP request failure.', $record->message);
-        self::assertMatchesRegularExpression('/\A[a-f0-9]{32}\z/', $record->context['correlation_id']);
+        self::assertSame('HTTP request failed.', $record->message);
         self::assertSame([
-            'correlation_id'     => $record->context['correlation_id'],
-            'correlation_source' => 'generated',
-            'request_method'     => 'POST',
-            'exception_type'     => \RuntimeException::class
+            'http_status'    => 500,
+            'exception_type' => \RuntimeException::class
         ], $record->context);
         self::assertSame([], $record->extra);
         self::assertIsString($record->formatted);

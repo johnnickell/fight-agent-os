@@ -81,18 +81,18 @@ final class CsrfContractTest extends TestCase
         ];
         yield 'multiple cookie headers' => ['https://agent-os.test', ['Cookie' => ['a=b', 'c=d']], '', 400, 'fail'];
         yield 'oversize cookie' => ['https://agent-os.test', ['Cookie' => str_repeat('a', 4097)], '', 400, 'fail'];
-        yield 'insecure URI' => ['http://agent-os.test', [], '', 403, 'error'];
-        yield 'foreign URI' => ['https://other.test', [], '', 403, 'error'];
-        yield 'foreign Origin' => ['https://agent-os.test', ['Origin' => 'https://other.test'], '', 403, 'error'];
+        yield 'insecure URI' => ['http://agent-os.test', [], '', 403, 'fail'];
+        yield 'foreign URI' => ['https://other.test', [], '', 403, 'fail'];
+        yield 'foreign Origin' => ['https://agent-os.test', ['Origin' => 'https://other.test'], '', 403, 'fail'];
         yield 'duplicate Origin' => [
-            'https://agent-os.test', ['Origin' => ['https://agent-os.test', 'https://agent-os.test']], '', 403, 'error'
+            'https://agent-os.test', ['Origin' => ['https://agent-os.test', 'https://agent-os.test']], '', 403, 'fail'
         ];
-        yield 'cross-site Fetch' => ['https://agent-os.test', ['Sec-Fetch-Site' => 'cross-site'], '', 403, 'error'];
+        yield 'cross-site Fetch' => ['https://agent-os.test', ['Sec-Fetch-Site' => 'cross-site'], '', 403, 'fail'];
         yield 'duplicate Fetch' => [
-            'https://agent-os.test', ['Sec-Fetch-Site' => ['same-origin', 'same-origin']], '', 403, 'error'
+            'https://agent-os.test', ['Sec-Fetch-Site' => ['same-origin', 'same-origin']], '', 403, 'fail'
         ];
         yield 'preflight header' => [
-            'https://agent-os.test', ['Access-Control-Request-Method' => 'GET'], '', 403, 'error'
+            'https://agent-os.test', ['Access-Control-Request-Method' => 'GET'], '', 403, 'fail'
         ];
     }
 
@@ -130,7 +130,7 @@ final class CsrfContractTest extends TestCase
     }
 
     /**
-     * Rejects query input with the error variant rather than the validation fail variant
+     * Rejects query input with a fixed category fail rather than structured validation
      */
     public function test_that_query_rejection_matches_the_contract(): void
     {
@@ -143,7 +143,7 @@ final class CsrfContractTest extends TestCase
 
         ApiContract::assertBootstrap($response, 400);
         self::assertSame(
-            ['status' => 'error', 'message' => 'Bad request.'],
+            ['status' => 'fail', 'data' => ['message' => 'Invalid input.']],
             json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR)
         );
     }
@@ -187,10 +187,8 @@ final class CsrfContractTest extends TestCase
         );
         self::assertCount(1, $records->getRecords());
         self::assertSame([
-            'correlation_id'     => str_repeat('b', 32),
-            'correlation_source' => 'client',
-            'request_method'     => 'GET',
-            'exception_type'     => \RuntimeException::class
+            'http_status'    => 500,
+            'exception_type' => \RuntimeException::class
         ], $records->getRecords()[0]->context);
         self::assertSame(Level::Error, $records->getRecords()[0]->level);
         self::assertStringNotContainsString('Synthetic private dependency detail', $records->getRecords()[0]->message);

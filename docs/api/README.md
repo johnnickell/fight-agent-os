@@ -38,7 +38,7 @@ are rejected, and the command accepts no arbitrary scan/output path. Export neit
 rewrites source, loads application configuration, connects to services, or enables an HTTP route.
 
 `check` regenerates/validates in memory, requires byte-for-byte equality with the existing artifact, then runs
-focused real HTTP and failure-mapper tests. Missing/stale output fails with instructions to export; check never
+focused real HTTP and Common/consumer safe-boundary integration tests. Missing/stale output fails with instructions to export; check never
 repairs it. Both modes print the content SHA-256 only on success. Export failure returns nonzero with a safe
 stage diagnostic, cleans its temporary output, and does not replace the old artifact. **A retained file is not
 proof of a successful current export.** Correct the reported stage and rerun export/check; never package a stale
@@ -85,7 +85,8 @@ owning generator/validator, then the pinned PSR-7 validator compares actual resp
 It never trusts a pre-existing artifact or writes one. Existing coverage includes issuance, nonce reuse/replacement,
 body/content-type/cookie/query rejection, HTTPS/origin/Fetch Metadata rejection, preflight denial, routing misses
 and a failed dependency through the real bootstrap. Exact content type, no-store, safe correlation and absent
-CORS are checked separately. Mapper-only output remains checked at its existing unit boundary.
+CORS are checked separately. [Safe API failures](../engineering/SAFE_HTTP_ERRORS.md) owns the deliberate
+Common fail/error cutover, explicit protocol headers, one diagnostics sink and strict affected client contracts.
 
 `./bin/build` already runs these behavioral tests through PHPUnit; it does not export/package an artifact.
 Standalone artifact freshness/validation remains an explicit `./bin/openapi check` requirement until
@@ -124,8 +125,8 @@ nested fields or unsupported authority. Duplicate keys are still rejected at eve
 Actions and query input retain their former boundary; implicit conversions and other nested consumers remain deferred.
 
 The original qualification used `johnnickell/fight-common` **v1.2.0** source at
-`a2cd615d9b5064c9c30e994655536176249cd73b`; current installation is locked to **v1.3.0** at
-`7de6cad6e8a9752973ad9f8e27e285b0c1510582`. That package provides `Validation`, `RulesParser` and `ValidationService`. Qualification through the installed service
+`a2cd615d9b5064c9c30e994655536176249cd73b`; current installation is locked to **v1.4.1** at
+`a482c220d312d2ef7762c3f0d85d9fb76a7021fa`. That package provides `Validation`, `RulesParser` and `ValidationService`. Qualification through the installed service
 confirmed `required` distinguishes missing from present null, other single-field rules skip absent fields,
 `type[int]` accepts JSON integers but rejects query numeric strings, `type[bool]` accepts JSON booleans but
 rejects `"false"`, and `in_list[true,false]` accepts the exact query literals without truthy casting.

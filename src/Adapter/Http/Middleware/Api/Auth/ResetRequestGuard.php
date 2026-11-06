@@ -6,7 +6,7 @@ namespace App\Adapter\Http\Middleware\Api\Auth;
 
 use App\Adapter\Http\Attribute\JsonBody;
 use App\Adapter\Security\Authentication\AuthAdmission;
-use App\Application\Failure\PermissionDenied;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

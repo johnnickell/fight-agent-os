@@ -6,8 +6,8 @@ namespace App\Adapter\Security\Authentication;
 
 use App\Adapter\Http\Api\V1\Auth\AuthOperation;
 use App\Adapter\Persistence\Authentication\PostgresAuthAttempts;
-use App\Application\Failure\RateLimited;
 use Fight\AccessControl\Application\AccessControl\User\Service\LoginThrottle;
+use Fight\Common\Application\Error\Exception\RateLimitExceeded;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use InvalidArgumentException;
 use SensitiveParameter;
@@ -47,7 +47,7 @@ final readonly class AuthAdmission implements LoginThrottle
     {
         try {
             $this->attempts->consume([hash_hmac('sha256', 'email:'.$email->canonical(), $this->key) => 5], 900);
-        } catch (RateLimited) {
+        } catch (RateLimitExceeded) {
             return false;
         }
 
@@ -60,7 +60,7 @@ final readonly class AuthAdmission implements LoginThrottle
     public function endpoint(AuthOperation $operation, string $network): void
     {
         if (filter_var($network, FILTER_VALIDATE_IP) === false) {
-            throw new RateLimited(60);
+            throw new RateLimitExceeded(retryDelaySeconds: 60);
         }
         $endpointKey = hash_hmac('sha256', 'endpoint:'.$operation->value, $this->key);
         $peerKey = hash_hmac('sha256', 'network:'.$operation->value.':'.inet_pton($network), $this->key);
@@ -73,7 +73,7 @@ final readonly class AuthAdmission implements LoginThrottle
     public function passwordReset(#[SensitiveParameter] EmailAddress $email, string $network): void
     {
         if (filter_var($network, FILTER_VALIDATE_IP) === false) {
-            throw new RateLimited(60);
+            throw new RateLimitExceeded(retryDelaySeconds: 60);
         }
         $this->attempts->consume([
             hash_hmac('sha256', 'reset:endpoint', $this->key)                     => $this->endpointLimit,

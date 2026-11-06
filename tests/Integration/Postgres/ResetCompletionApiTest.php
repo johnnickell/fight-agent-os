@@ -182,7 +182,7 @@ final class ResetCompletionApiTest extends TestCase
             try {
                 $verifier->authenticate($prior->getAccessToken()->toString());
                 self::fail('Old access authority survived reset.');
-            } catch (\App\Application\Failure\AuthenticationRequired) {
+            } catch (\Fight\Common\Application\Error\Exception\AuthenticationRequired) {
                 // Expected authoritative rejection; reaching fail() above would fail this test.
             }
             try {
@@ -263,7 +263,7 @@ final class ResetCompletionApiTest extends TestCase
             ));
         }
         $body = $this->check($this->request($changes), 409);
-        self::assertSame(['status' => 'error', 'message' => 'Conflict.'], $body);
+        self::assertSame(['status' => 'fail', 'data' => ['message' => 'State conflict.']], $body);
         self::assertTrue(password_verify(
             $this->oldPassword,
             $this->connection->fetchOne('SELECT password_hash FROM users')
@@ -406,7 +406,9 @@ final class ResetCompletionApiTest extends TestCase
         $this->connection->executeStatement(
             'ALTER TABLE auth_rate_limits ADD CONSTRAINT completion_abort CHECK (false) NOT VALID'
         );
-        $this->check($this->request(), 429);
+        $unavailable = $this->request();
+        $this->check($unavailable, 503);
+        self::assertSame('60', $unavailable->getHeaderLine('Retry-After'));
         self::assertNull($this->connection->fetchOne('SELECT consumed_at FROM password_reset_grants'));
     }
 

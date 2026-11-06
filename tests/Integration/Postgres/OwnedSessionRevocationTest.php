@@ -8,7 +8,6 @@ use App\Adapter\Http\Api\Auth\RequestAuthenticationContext;
 use App\Adapter\Persistence\Guard\DatabaseTargetGuard;
 use App\Adapter\Persistence\RefreshSessionRecords;
 use App\Adapter\Security\AccessToken\AccessJwt;
-use App\Application\Failure\PermissionDenied;
 use App\Application\Security\AccessToken\AuthenticateAccessToken;
 use App\Application\Sessions\RevokeOwnedSession;
 use App\Domain\Authorization\InstallationManagedPolicy;
@@ -38,6 +37,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Command\CommandBus;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Service\Container;
@@ -240,13 +240,15 @@ final class OwnedSessionRevocationTest extends TestCase
         foreach ($ids as $id) {
             $response = $this->request($id->toString());
             $this->check($response, 409);
-            self::assertSame(['status' => 'error', 'message' => 'Conflict.'], $this->body($response));
+            self::assertSame(['status' => 'fail', 'data' => ['message' => 'State conflict.']], $this->body($response));
             self::assertStringNotContainsString($id->toString(), (string) $response->getBody());
         }
         $response = $this->request($this->current->getId()->toString());
         $this->check($response, 409);
         self::assertSame(
-            ['status' => 'error', 'message' => 'Use Logout for the current session.', 'code' => 5801],
+            ['status' => 'fail', 'data' => [
+                'message' => 'Use Logout for the current session.', 'intent' => 'use_logout'
+            ]],
             $this->body($response)
         );
         self::assertFalse($this->connection->fetchOne('SELECT revoked FROM refresh_sessions WHERE id = ?', [

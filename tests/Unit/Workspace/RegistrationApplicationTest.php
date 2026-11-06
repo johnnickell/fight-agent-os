@@ -6,7 +6,6 @@ namespace Tests\Unit\Workspace;
 
 use App\Application\Authorization\AuthenticatedPermissions;
 use App\Application\Authorization\PermissionGuard;
-use App\Application\Failure\PermissionDenied;
 use App\Application\Workspace\BootstrapWorkspace;
 use App\Application\Workspace\GetRepositoryRegistration;
 use App\Application\Workspace\ListRepositoryRegistrations;
@@ -47,6 +46,7 @@ use Fight\AccessControl\Domain\AccessControl\User\PasswordHash;
 use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
+use Fight\Common\Application\Error\Exception\PermissionDenied;
 use Fight\Common\Application\Messaging\Event\EventDispatcher;
 use Fight\Common\Application\Repository\TransactionalUnitOfWork;
 use Fight\Common\Domain\Value\Internet\EmailAddress;

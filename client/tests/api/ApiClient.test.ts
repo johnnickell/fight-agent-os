@@ -180,18 +180,25 @@ describe('shared API transport', () => {
   });
 
   it.each([
-    [400, 'Bad request.', 'bad-request'],
-    [401, 'Unauthorized.', 'authentication'],
-    [403, 'Forbidden.', 'authorization'],
-    [404, 'Not found.', 'not-found'],
+    [400, 'Invalid input.', 'bad-request'],
+    [401, 'Authentication required.', 'authentication'],
+    [403, 'Permission denied.', 'authorization'],
+    [404, 'Resource not found.', 'not-found'],
     [405, 'Method not allowed.', 'method-not-allowed'],
-    [409, 'Conflict.', 'conflict'],
-    [410, 'Gone.', 'gone'],
+    [409, 'State conflict.', 'conflict'],
+    [410, 'Resource gone.', 'gone'],
+    [412, 'Precondition failed.', 'precondition'],
+    [422, 'Rule violation.', 'rule-violation'],
     [429, 'Too many requests.', 'rate-limited'],
     [500, 'Internal server error.', 'system'],
-    [503, 'Internal server error.', 'system']
+    [503, 'Service unavailable.', 'unavailable']
   ] as const)('normalizes HTTP %s without returning server text', async (status, message, kind) => {
-    const { client, fetch } = setup(jsonResponse({ status: 'error', message }, status));
+    const { client, fetch } = setup(
+      jsonResponse(
+        status >= 500 ? { status: 'error', message } : { status: 'fail', data: { message } },
+        status
+      )
+    );
     expect(await client.get('/auth/csrf', decodeCsrfProof)).toEqual(
       apiFailure(kind, correlationId)
     );

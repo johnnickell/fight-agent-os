@@ -6,7 +6,6 @@ namespace Tests\Unit\Invitation;
 
 use App\Adapter\Http\Action\Api\V1\Invitations\ReadInvitationStatusAction;
 use App\Adapter\Http\Responder\Api\V1\Invitations\ReadInvitationStatusResponder;
-use App\Application\Failure\ResourceNotFound;
 use App\Application\Invitation\InvitationRateLimiter;
 use App\Domain\Invitation\InvitationOperation;
 use DateTimeImmutable;
@@ -19,6 +18,7 @@ use Fight\AccessControl\Domain\AccessControl\User\User;
 use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use Fight\Common\Application\Error\Exception\ResourceNotFound;
 use Fight\Common\Application\Messaging\Query\QueryBus;
 use Fight\Common\Domain\Value\Internet\EmailAddress;
 use LogicException;

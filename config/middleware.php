@@ -2,22 +2,18 @@
 
 declare(strict_types=1);
 
-use App\Adapter\Http\Api\Failure\ApiFailureMapper;
-use App\Adapter\Http\Middleware\Api\ApiFailureMiddleware;
-use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
+use App\Adapter\Http\Middleware\Api\ApiResponseBoundary;
+use App\Adapter\Http\Middleware\Api\NativeApiFailures;
 use Psr\Container\ContainerInterface;
 use Slim\App;
 
 /** @var App $app */
 /** @var ContainerInterface $container */
-// Slim executes last-in, first-out: API failures -> routing -> group security -> validation -> route.
-// The API middleware passes non-API paths through unchanged.
+// Slim is last-in, first-out: API scope/Common -> native translation -> routing -> admission -> validation -> Action.
+// Only Common handles/reports covered failures; these adapter middlewares pass non-API paths through.
 $app->addRoutingMiddleware();
-$app->add(new ApiFailureMiddleware(
-    new ApiFailureMapper(),
-    $container->get(JSendResponseFactory::class),
-    $container->get('http.failure.logger')
-));
+$app->add($container->get(NativeApiFailures::class));
+$app->add($container->get(ApiResponseBoundary::class));
 // Outermost fallback contains non-API misses without exposing or logging raw diagnostics.
 // API failures retain their correlated JSend handler above in every environment.
 $app->addErrorMiddleware(false, false, false);

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Application\Security\AccessToken;
 
-use App\Application\Failure\AuthenticationRequired;
 use Fight\AccessControl\Application\AccessControl\Authorization\Service\AuthenticationContext;
 use Fight\AccessControl\Application\AccessControl\Timing\Service\Clock;
 use Fight\AccessControl\Domain\AccessControl\RefreshSession\RefreshSessionId;
@@ -13,6 +12,7 @@ use Fight\AccessControl\Domain\AccessControl\User\UserId;
 use Fight\AccessControl\Domain\AccessControl\User\UserRepository;
 use Fight\AccessControl\Domain\AccessControl\User\UserState;
 use Fight\Common\Application\Auth\Security\TokenDecoder;
+use Fight\Common\Application\Error\Exception\AuthenticationRequired;
 use SensitiveParameter;
 use Throwable;
 

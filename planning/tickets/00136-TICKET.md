@@ -100,7 +100,7 @@ its complete behavior evidence; a mapper-only partial slice does not complete in
 <!-- planning:children -->
 | ID | Title | Status |
 |---|---|---|
-| [TASK-00582](../tasks/00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | ready-for-agent |
+| [TASK-00582](../tasks/00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress

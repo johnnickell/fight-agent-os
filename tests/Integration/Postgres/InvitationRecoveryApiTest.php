@@ -194,7 +194,7 @@ final class InvitationRecoveryApiTest extends TestCase
             self::assertSame(['user_id', 'status', 'expires_at', 'activation_delivery_id'], array_keys($data));
             self::assertSame('retry_pending', $data['status']);
         } else {
-            self::assertNull($data);
+            self::assertSame(['message' => 'Permission denied.'], $data);
             self::assertStringNotContainsString('pending@example.test', (string) $response->getBody());
         }
     }
@@ -861,7 +861,7 @@ SQL,
                 try {
                     $this->activate($credential);
                     self::fail('A replaced predecessor must never activate.');
-                } catch (\App\Application\Failure\StateConflict) {
+                } catch (\Fight\Common\Application\Error\Exception\StateConflict) {
                     self::assertSame('pending_activation', $this->connection->fetchOne(
                         'SELECT state FROM users WHERE id = ?',
                         [$this->target->toString()]
