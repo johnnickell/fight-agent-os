@@ -29,6 +29,11 @@ events without subscribers. Record meaningful started/completed/failed/retry/rep
 operation/correlation/Workflow/TASK/run/process identities. Handler return is not proof of transaction commit or
 publication. Use the existing shared bus/service graph; do not build a parallel dispatcher or telemetry protocol.
 Reset worker/request context, retain provenance, and never infer unavailable lineage from matching text or time.
+Bus filters do not cover successful static MCP providers or prove stream completion; TASK-00245/00335 own those
+adapter/provider boundaries. TASK-00453 records the distinction. Selected safe activity may feed Common's canonical
+recording through TASK-00386 under [TICKET-00096](00096-TICKET.md#canonical-observation-supplier-and-delivery--2026-11-06),
+with best-effort independent secondary Commands, not automatic collection from Logs or a second observation ledger.
+Common TASK-00205's typed facts are planned, not instrumentation or a transaction-participation guarantee.
 
 Keep one error-reporting owner per actual HTTP/worker/process boundary without deleting distinct observations of
 the same failure. Preserve current Common-backed public status, envelope, message, correlation and cache behavior

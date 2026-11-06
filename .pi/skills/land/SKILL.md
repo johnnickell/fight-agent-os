@@ -19,7 +19,11 @@ Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target 
    independence and actual live PR. An advancing base needs a proven mechanical bridge or fresh Work/Review/QA;
    never rewrite acceptance or a published branch. Preserve unrelated work and historical evidence.
 3. **Close out and publish only when authorized.** Reconcile applicable current TASK/parent/docs/handoffs;
-   generated Board changes only here unless separate authored planning is approved. Refresh/check planning,
+   generated Board changes only here unless separate authored planning is approved. Apply the
+   [authored routing boundary](../../../planning/CONVENTIONS.md#authored-routing-boundary): update/remove existing
+   relevant actions, never append per-TASK assessment/acceptance/delivery checkpoints or move them to Roadmap/README.
+   Preserve proof in the owning TASK/reports and delivery receipt/PR. No authored Board entry is required for acceptance
+   or publication. Refresh/check planning,
    inspect exact administrative diff and whitespace. [Reuse qualified gate evidence](../../../docs/engineering/EXECUTION.md#gate-evidence-reuse)
    rather than repeating it for metadata. Run `./bin/build` normally for automatic reuse; use `--force` for
    deliberate fresh execution and distinguish reused receipts from fresh evidence. Substantive changes need

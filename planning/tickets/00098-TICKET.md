@@ -21,6 +21,14 @@ reported. Identify facts so cumulative streaming reports are not repeatedly summ
 tool-model calls and cache activity separately when exposed. Keep provenance and explicit unavailable/partial states;
 never invent pricing or convert absence into zero. Hidden reasoning content is not usage metadata.
 
+Reuse [TICKET-00096's canonical Common observation supplier/delivery contract](00096-TICKET.md#canonical-observation-supplier-and-delivery--2026-11-06).
+Common TASK-00205's optional typed target/timing/result facts remain planned, not automatic producer capture,
+normalized accounting, stable history or transaction participation. TASK-00396/00397 retain original accounting,
+correction and timing-category policy; no mirrored raw ledger or duplicate Common values. Optional secondary
+capture/derived Commands may commit later or fail, while required liability/audit/intent stays with its owner.
+Missing telemetry remains incomplete coverage, not zero usage or released budget; qualify tagged contracts before
+adoption without adding consumer prerequisites to Common release.
+
 Separate wall elapsed, known active work, queue time, interruption and human wait using actual known boundaries.
 Retain ambiguity and incomplete intervals rather than infer exact duration from missing heartbeats/observations.
 Repeated/delayed events and restart must not double count, erase consumed work or fabricate a continuous run.
@@ -101,9 +109,10 @@ consumer or create a reverse dependency from lifecycle to optional allowance.
 
 Each producer/read entry authenticates the caller and admits operation/Project/Workflow scope before configured-
 bus dispatch; account refresh/disclosure has its own independent entry admission. Registered measurement handlers
-coordinate original accounting facts, required audit and projection progress on one generic shared connection,
-without repository-owned orchestration or a second ledger. Query handlers return safe typed usage/timing/allowance
-Views; adapters own numeric/protocol formatting. Source deduplication and uncertain provider liability remain
+coordinate each operation's owned accounting facts, required audit and corresponding projection progress on one
+generic shared connection, without repository-owned orchestration or a second ledger. Independent derived updates
+are not atomic with their source operation; view/progress consistency within each update remains required.
+Query handlers return safe typed usage/timing/allowance Views; adapters own numeric/protocol formatting. Source deduplication and uncertain provider liability remain
 real measurement/recovery invariants, not ordinary-create immutable-response replay. Broader
 provider/account scope requires its own safe disclosure authority; Project access alone is not account inspection.
 Validate bounded numeric quantities/units, currency, identity and reporting semantics; reject malformed or ambiguous

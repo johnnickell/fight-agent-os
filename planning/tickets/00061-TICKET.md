@@ -30,6 +30,14 @@ second MCP trust registry here; integrate their owners at this Agent authenticat
 No self-service key retrieval, direct Permission management, arbitrary external MCP origin, role-name grant or
 browser Agent credential is authorized.
 
+Consume AccessControl's existing TASK-00084 mixed-Tool binding owner through
+[TASK-00245's supplier contract](../tasks/00245-TASK.md#external-tool-supplier-and-scope): explicit mappings for
+Common-owned Tools, attributes for owned Tools, and rejection when both declare requirements on one Tool.
+Preserve exact complete registry identity, conjunctive nonempty requirements, one request-bound provider/context
+and fresh later requests. Binding creates no grants or data scope; TASK-00089/00090 remain separate scoped-read
+suppliers, including independently admitted protected detail and metadata-only results. Their implemented,
+accepted, tagged/minimum contracts remain to qualify; do not duplicate catalogs or assume the planned API shipped.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |

@@ -51,7 +51,9 @@ target's own gates. Follow the [portable access rule](../../../harness/pi/FILE_S
    repeating a passing suite for a role/commit/metadata change. Work cannot supply independent Review or QA.
 6. Record implementation/results in the TASK and a readable ignored handoff: branch/head, changed paths,
    fresh/reused evidence, Compose project/config and minimal teardown locator, removed/remaining native
-   resources, precise blockers and next action.
+   resources, precise blockers and next action. These are TASK/handoff evidence, not an authored Board update;
+   follow the [routing boundary](../../../planning/CONVENTIONS.md#authored-routing-boundary). Do not add an assessment,
+   acceptance or delivery-pending checkpoint to Board/Roadmap/README merely to record progress.
    Preserve evidence still needed by independent roles. Stage only owned paths, inspect the staged diff, commit
    and stop. No push, PR, approval, merge, release or deployment without separate authority.
 

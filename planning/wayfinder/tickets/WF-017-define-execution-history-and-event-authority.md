@@ -29,6 +29,22 @@ This decision defines execution aggregates, events, projections, reconciliation,
 
 John must choose retention/privacy expectations, how much raw tool/prompt content may be retained, and whether a resumed failed workflow remains the same top-level attempt. The recommendation should use one workflow session per coordinated TASK attempt, explicit phase attempts beneath it, application-owned transitions, and separately retained resumable Pi conversation references.
 
+## Canonical observation amendment — 2026-11-06
+
+John selected Common-owned canonical observations, best-effort event-driven capture and independently committed
+secondary Commands through application policy subscribers and configured buses. This supersedes the original
+resolution's application-owned observation ledger and statement that Common supplies no observation storage;
+those statements below retain their original decision context, not the current supplier choice.
+[TICKET-00096's mapping](../../tickets/00096-TICKET.md#canonical-observation-supplier-and-delivery--2026-11-06)
+owns current contracts, supplier evidence and remaining qualification decisions. Common TASK-00205 adds approved
+planning for optional typed target/timing/result facts, not implementation or tagged availability.
+
+Keep Workflow authority, durable semantic-event projections, normalized accounting and application-owned history
+queries. Optional capture gaps do not prove business outcomes or guaranteed convergence. Required audit, reference/
+hold participation, restriction fences and durable external-effect intent are not replaced by subscribers.
+No second mirrored ledger, automatic capture, new dependency edge, priority change or Common release prerequisite
+is introduced; the decision/map remain Closed and implementation acceptance remains separate.
+
 ## Resolution
 
 ### Workflow and related identities
