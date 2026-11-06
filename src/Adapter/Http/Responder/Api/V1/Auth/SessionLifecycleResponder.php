@@ -14,6 +14,7 @@ use Fight\Common\Application\Error\Exception\ServerError;
 use Fight\Common\Application\Error\Exception\ServiceUnavailable;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 use SensitiveParameter;
 use Throwable;
 
@@ -57,11 +58,17 @@ final readonly class SessionLifecycleResponder
      */
     public function terminal(): ResponseInterface
     {
-        return $this->sessions->clear($this->responses->fromEnvelope(
-            JSendEnvelope::fail(new FailureData('Authentication required.')),
-            401,
-            ['WWW-Authenticate' => 'Bearer']
-        ));
+        try {
+            $response = $this->responses->fromEnvelope(
+                JSendEnvelope::fail(new FailureData('Authentication required.')),
+                401,
+                ['WWW-Authenticate' => 'Bearer']
+            );
+        } catch (Throwable $failure) {
+            return $this->unavailable($failure);
+        }
+
+        return $this->sessions->clear($response);
     }
 
     /**
@@ -69,7 +76,13 @@ final readonly class SessionLifecycleResponder
      */
     public function loggedOut(): ResponseInterface
     {
-        return $this->sessions->clear($this->responses->fromEnvelope(JSendEnvelope::success(null), 200));
+        try {
+            $response = $this->responses->fromEnvelope(JSendEnvelope::success(null), 200);
+        } catch (Throwable $failure) {
+            return $this->unavailable($failure);
+        }
+
+        return $this->sessions->clear($response);
     }
 
     /**
@@ -88,6 +101,19 @@ final readonly class SessionLifecycleResponder
             [$status, $envelope, $headers] = $this->httpErrorPolicy->fallback();
         }
 
-        return $this->sessions->clear($this->responses->fromEnvelope($envelope, $status, $headers));
+        try {
+            $response = $this->responses->fromEnvelope($envelope, $status, $headers);
+        } catch (Throwable) {
+            // Recover rendering here, before the outer boundary can lose the required session effects.
+            // Reporting/projection failure above still gets this bounded rendering recovery, not another report.
+            try {
+                [$status, $envelope, $headers] = $this->httpErrorPolicy->fallback();
+                $response = $this->responses->fromEnvelope($envelope, $status, $headers);
+            } catch (Throwable) {
+                throw new RuntimeException('Unable to render safe HTTP error.');
+            }
+        }
+
+        return $this->sessions->clear($response);
     }
 }

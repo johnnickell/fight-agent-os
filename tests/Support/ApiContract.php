@@ -66,20 +66,6 @@ final class ApiContract
     }
 
     /**
-     * Checks mapper output at its own boundary rather than claiming an HTTP operation
-     *
-     * @param array<string, mixed> $body
-     */
-    public static function assertMappedBody(array $body, string $component): void
-    {
-        /**
-         * @var Schema $schema
-         */
-        $schema = self::schema()->components->schemas[$component];
-        (new SchemaValidator())->validate($body, $schema);
-    }
-
-    /**
      * Checks non-schema transport guarantees on real responses
      */
     private static function assertTransport(ResponseInterface $response, int $status): void

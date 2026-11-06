@@ -67,8 +67,12 @@ sole generic boundary presents/reports them. Refresh/logout keep their transport
 `SessionLifecycleResponder`: recoverable result conflict changes no cookie; terminal refresh clears both
 refresh/nonce identities and challenges authentication; logout clears them idempotently. A failure after Action
 entry clears browser cookies while leaving server outcome unconfirmed. It uses the same diagnostics sink and
-Common policy/fallback once; unknown faults stay 500, declared availability may be 503. Admission-time 429/503
-occurs before Action entry and does not silently clear cookies. A response cannot prove a prior effect rolled back.
+Common policy; unknown faults stay 500, declared availability may be 503. Direct response/stream creation has
+one local, non-reporting attempt to render Common's fixed fallback before applying both deletion cookies.
+Reporter failure does not consume that rendering recovery. Terminal/logout rendering faults enter the same
+cookie-clearing failure path. Permanent factory incapability escapes sanitized, without a response guarantee.
+Admission-time 429/503 occurs before Action entry and does not silently clear cookies. A response cannot prove
+a prior effect rolled back.
 
 ## Diagnostics and fallback limits
 
