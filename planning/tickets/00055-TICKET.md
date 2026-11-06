@@ -22,7 +22,7 @@ eligibility owner. A release TASK reaches `done` only after its project's requir
 follow-through are verified; a successful preparation or ordinary PR handoff is not release completion. Preserve
 separate implementation acceptance, PR/merge, signing, publication and deployment evidence.
 
-At Repository setup, version a project-owned policy/runbook reference with release type, supported release
+At Project setup, version a project-owned policy/runbook reference with release type, supported release
 line and branching strategy, source/target identities, environment or host/registry, expected certification,
 verification and rollback/forward requirements. Resolve the appropriate qualified procedure for the exact
 candidate; missing, contradictory, stale or unsupported facts stop with safe reasons. Extend the versioned
@@ -35,15 +35,18 @@ owns eligibility and project-policy boundaries, not execution, tagging or deploy
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
 | Create or revise one release TASK | Existing authorized Planning lifecycle/metadata commands extended for the new kind | Inspect candidate identity, status, scope and canonical eligibility reasons | Existing Planning revision/lifecycle facts | One standalone release record, without inventing a parent TICKET or a per-stage TASK |
-| Set or restore project release policy | Existing versioned Repository configuration operations | Preview effective release type, branch strategy, procedure, destinations, verification and change impact | Attributed Repository configuration revision/restore fact | A validated future policy revision, not an executed release or overwritten historical Workflow |
+| Set or restore project release policy | Existing versioned Project configuration operations | Preview effective release type, branch strategy, procedure, destinations, verification and change impact | Attributed Project configuration revision/restore fact | A validated future policy revision, not an executed release or overwritten historical Workflow |
 | Resolve release support | N/A — read-only policy and eligibility resolution | Exact TASK/context/configuration/catalog revisions and supported runbook | N/A — resolution alone emits no execution event | Typed route or safe unsupported reason; no claim, tag or deployment |
 
 The names identify owning capabilities, not additional Planning status values or preselected PHP message types.
 
 ## Validation and permissions
 
-Only actors with scoped Planning authority create/revise release TASKs; Repository-policy changes require their
-own server-side grant and revision checks. A model, TASK prose, selected profile or ordinary landing grant
+Only actors with scoped Planning authority create/revise release TASKs; Project-policy changes require their
+own entry-owned operation/scope admission and expected-revision checks. Registered Planning/configuration handlers
+coordinate their aggregates and collection-like repositories through the generic transaction boundary with required
+audit. Creation entries generate typed IDs for void commands; safe typed queries reconcile ordinary response loss.
+No blanket Application permission gate or ordinary-create result journal is required. A model, TASK prose, selected profile or ordinary landing grant
 cannot install a runbook, widen effect Permissions or choose an unapproved destination. Validate project
 identity, release candidate shape, policy version, supported route, branch targets and context currentness.
 Fail closed on missing or unavailable authority while explaining unsupported capability separately from an
@@ -56,7 +59,7 @@ Planning representations deliberately rather than rewriting history.
   parent TICKET, while existing feature/bug/chore TASKs retain their accepted meanings and queue order.
 - Canonical eligibility and the route catalog identify supported release work without making a `chore`
   executable as a release or adding a second readiness algorithm.
-- Repository setup and later revisions resolve an explicit project release policy; absent, stale or incompatible
+- Project setup and later revisions resolve an explicit project release policy; absent, stale or incompatible
   runbooks and destinations stop before any release effect, with explainable current revisions.
 - `done` for release work requires verified project-specific release completion; partial or uncertain effects
   remain visibly incomplete. No other TASK kind silently changes its completion semantics.

@@ -43,7 +43,11 @@ These are semantic use cases, not a predetermined deployment platform, protocol 
 
 ## Validation and permissions
 
-Separate Release Manager deployment grants from Team Lead preparation and ordinary PR landing. Bind all
+Separate Release Manager deployment grants from Team Lead preparation and ordinary PR landing. Entries own
+actual caller authentication and operation/Project/environment admission before configured-bus dispatch. Registered
+Workflow handlers coordinate deployment invariants, collection-like repositories, required audit and justified
+effect intent through one generic shared-connection transaction; provider effects follow commit. Safe typed Views
+carry health/target facts to transport-owned presentation, not raw provider responses or mutable command results. Bind all
 authority-bearing operations to live Permissions, candidate/artifact digest, environment, runbook/configuration
 revision, exact effect approval, time/cost limits and expected state. Keep deployment credentials out of
 Agent-visible environments, logs and prompts; project adapters reconcile at-least-once external effects
@@ -78,6 +82,13 @@ never merge unpublished/unrelated development into production.
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Current supplier handoff — TASK-00570
+
+TASK-00317 now maps shared trusted managed merge/base-inclusion observation and explicitly blocks TASK-00225.
+Keep its `needs-info` for actual application/provider/follow-through composition; TASK-00222's real enrolled
+application/environment/runbook/health hold remains separate. No library grant or hotfix action supplies application
+effects. Earlier unallocated-owner wording below is historical, not permission to duplicate an observer.
 
 Approved requirement split for [EPIC-00013](../epics/00013-EPIC.md), consuming
 [TICKET-00055](00055-TICKET.md)'s project policy and [TICKET-00056](00056-TICKET.md)'s bounded release grant.

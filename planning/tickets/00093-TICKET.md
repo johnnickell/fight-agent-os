@@ -31,7 +31,7 @@ Run three supervised one-shot consumers by default, each handling at most one Wo
 at most three concurrent Workflows by default under explicit bounded installation settings. Keep consumer topology
 configuration separate from revisioned authorized Workflow limits. Independent TASKs may proceed when actual Agent
 commitments, branch/worktree, temporary/session/Artifact namespaces and declared shared resources do not conflict.
-Use short checkout-administration locks and narrow policy resource claims, not a repository-wide execution lock.
+Use short checkout-administration locks and narrow policy resource claims, not a Project-wide execution lock.
 Blocked queued work must not prevent another safe eligible Workflow from using capacity.
 
 Use the existing execution owner's lease, custody and recovery operations; do not introduce another scheduler claim
@@ -70,8 +70,11 @@ stack, sandbox implementation, new Start engine, browser start flow or post-publ
 
 ## Validation and permissions
 
-Require current intent-specific operator/system authority, authenticated Runner identity, explicit installation and
-Repository scope, expected revisions and current Workflow grant/lease for every effect. Apply shared admission,
+Each entry authenticates the operator/system or Runner and admits operation/installation/Project scope before
+configured-bus dispatch. Registered Runner/Workflow handlers coordinate collection-like repositories, required
+audit/intent and expected revisions through one generic shared-connection transaction. Safe typed capability and
+status Views exclude credentials. Each new execution effect retains current Workflow grant/lease and custody
+fences; ordinary permission revocation need not serialize through an already-admitted database command. Apply shared admission,
 Agent-commitment and resource fences across participants; a per-TASK claim alone cannot prevent Agent double booking.
 Unknown capacity, stale capability reports, revoke/regrant or configuration drift must not admit stale work.
 

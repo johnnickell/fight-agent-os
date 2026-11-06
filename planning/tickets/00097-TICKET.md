@@ -11,11 +11,11 @@ status: ready-for-agent
 
 Humans need to find running or historical work, understand its exact outcome and evidence, and intervene through
 real authorized operations. A transcript feed, phase-heavy card grid or locally invented status cannot provide that
-control safely or at repository scale.
+control safely or at Project scale.
 
 ## Solution and boundaries
 
-Deliver the accepted compact repository-scoped Workflow table using the existing authenticated application shell
+Deliver the accepted compact Project-scoped Workflow table using the existing authenticated application shell
 and theme owner. Prioritize TASK/reference and Workflow identity, authoritative status, latest meaningful outcome
 and next action, branch/actual PR reference, start/freshness, known active duration/recorded usage and visibility
 action. No embedded phase lists, events, mini-timelines, transcript excerpts or per-row history polling. Narrow
@@ -29,10 +29,10 @@ never truncate older accessible history silently.
 
 Own explicit revision-checked Archive/Restore visibility operations and their per-row controls. They change no
 execution, claim, grant, approval or Planning lifecycle. Confirm active archive and keep that work visible through an
-independent repository Running now summary with a detail link. If that safeguard cannot be guaranteed, reject
+independent Project Running now summary with a detail link. If that safeguard cannot be guaranteed, reject
 active archive. Restore changes visibility only. Above the table show permission-filtered Running now, Needs Human,
-recent meaningful outcomes and recorded repository usage. Display qualified provider/account/key quota separately
-with its broader scope through TICKET-00098, never as a repository balance or fake installed capability.
+recent meaningful outcomes and recorded Project usage. Display qualified provider/account/key quota separately
+with its broader scope through TICKET-00098, never as a Project balance or fake installed capability.
 
 Provide four separately loaded detail sections:
 
@@ -81,7 +81,7 @@ sequence into storage. Instruction supplements follow explicit inheritance/repla
 role obligations. A future editor can extend supported compositions without another configuration store, but still
 needs approved transition semantics and validation. Layout remains non-authoritative.
 
-Reuse TICKET-00025/00052 for versioned Repository configuration/routes, TICKET-00032/00083 for owned execution
+Reuse TICKET-00025/00052 for versioned Project configuration/routes, TICKET-00032/00083 for owned execution
 stages and authority, TICKET-00061/00064 for current tool and Agent eligibility, TICKET-00075/00076 for published
 templates, TICKET-00088 for immutable snapshots, and TICKET-00096 for run facts. The application validates and
 publishes an attributable policy revision; existing runs retain their selected revision. Standing policy permits
@@ -89,7 +89,7 @@ routine future runs without repeated human confirmation. Unsupported stages/conn
 contracts are visible gaps, not browser-invented runtime capabilities.
 
 John also approved bounded transient retries and shared Review/QA repair loops with visible holds on exhaustion
-or uncertainty; installation constraints/defaults with permitted Repository overrides and run-only narrowing;
+or uncertainty; installation constraints/defaults with permitted Project overrides and run-only narrowing;
 and immutable run policy/instructions with current revocation/stop checks. New revisions apply to future runs;
 resume keeps its pinned revision, and adopting another revision requires a new eligible run. Team-level policy
 inheritance and in-place policy migration are deferred to v2. These are planning decisions, not implemented behavior.
@@ -98,20 +98,20 @@ Deliver inspection first, then typed draft edits, validation/diff and authorized
 same owners. [TASK-00493's decision record](../tasks/00493-TASK.md#approved-v1-policy-decisions) owns the details;
 its [supplier contract trace](../tasks/00493-TASK.md#supplier-contract-trace-and-remaining-holds) distinguishes
 existing planned boundaries from missing amendments. John accepted the [policy ownership boundary](../tasks/00493-TASK.md#approved-policy-ownership-boundary):
-Execution owns policy semantics and the installation-policy lifecycle; Repository configuration owns scoped
+Execution owns policy semantics and the installation-policy lifecycle; Project configuration owns scoped
 overrides; the editor consumes their shared validation/publication contracts. The separately approved
 [TASK-00496](../tasks/00496-TASK.md) now owns the installation-policy lifecycle under TICKET-00032; TASK-00139 and
 TASK-00493 gain its explicit prerequisite edge. Its [approved management boundary](../tasks/00496-TASK.md#approved-management-authority)
-restricts installation changes to protected Super Admin authority and Repository overrides to separate scoped
+restricts installation changes to protected Super Admin authority and Project overrides to separate scoped
 management; neither grants execution rights. Its [engineering Permission/participant map](../tasks/00496-TASK.md#engineering-investigation-permission-mapping)
 records the accepted five-right mapping and traces current writer paths, without implementation or runtime qualification.
 The [Repository access model](../tasks/00496-TASK.md#approved-repository-access-model) permits explicit human/Agent
 access, all repositories for Super Admin and the initial Workspace's repositories through `ROLE_WORKSPACE_ADMIN`.
 Use existing Role assignment/removal; separate Workspace assignment is deferred until multi-workspace functionality,
-not a new administrative-membership type or current blocker. Operation Permissions remain separate. Humans and Agents may read/revise/restore Repository configuration when granted the
+not a new administrative-membership type or current blocker. Operation Permissions remain separate. Humans and Agents may read/revise/restore Project configuration when granted the
 required rights and access; likely read-only Agent assignments are not a capability or assignment restriction.
 No additional principal-type gate is introduced. The approved [TASK-00498](../tasks/00498-TASK.md) now owns explicit
-Repository access grant/revoke and Workspace Admin integration through the existing catalog/Role assignment owners.
+Project access grant/revoke and Workspace Admin integration through the existing catalog/Role assignment owners.
 Its separate `ADMIN_SAFE` read/manage access Permissions imply no Role defaults or human/Agent grants. TASK-00081
 and TASK-00139 gain its approved prerequisite; this editor consumes through them. Installation policy remains an
 independent owner, with no reverse dependency on the editor, Start or completed Agent delivery.
@@ -147,8 +147,12 @@ No new Wayfinder map, TASK, v2 decomposition, source implementation or operation
 
 ## Validation and permissions
 
-Use current server intent-specific viewing/evidence/visibility/control authority and Repository scope, not Role names
-or UI visibility. Apply ADR 0003/0004 authentication, volatile state, no-store, strict decoding, invalidation and
+Each server entry authenticates and admits viewing/evidence/visibility/control operation and Project scope, not
+Role names or UI visibility. Dispatch existing commands/queries through configured buses; registered handlers own
+visibility invariants and required atomic audit through the generic transaction boundary. Safe typed Views feed
+transport presentation. Ordinary Archive/Restore uses expected visibility and fresh reads after response loss,
+not an original-response journal or permission-revocation/commit lock. Independent-running visibility remains a
+real consistency invariant; lifecycle controls retain justified external-effect recovery and quiescence. Apply ADR 0003/0004 authentication, volatile state, no-store, strict decoding, invalidation and
 late-response fences. Cancel/retire requests and clear private views on authority/context change; a live message or
 stale button never authorizes a command. Guard loaders/actions as well as rendering, revalidate expected state on
 server mutations and never automatically replay an uncertain business request after refresh.
@@ -224,11 +228,16 @@ actual TASK-00142/00373 recovery qualification; claim release still requires con
 TASK-00205/00265, not another Start form, normal-work confirmation, eligibility rule or pending engine. Its completion
 is not a prerequisite of independently useful lifecycle controls.
 
-TICKET-00098 now maps TASK-00398's independent usage/timing breakdowns, TASK-00399's separate allowance and
-TASK-00400's explainable forecasts/comparisons into these surfaces. All consume TASK-00391, with early TASK-00396/
-00397 facts transitively. TASK-00399 retains the unallocated qualified source/protected-refresh hold; shared quota
-is never a Repository balance and its absence blocks neither useful history nor forecasts. Early measured facts
-never depend on final Dashboard, TASK-00387 or live consumers. TASK-00320 consumes TASK-00400 for later PR-handoff
+[TICKET-00098's current handoff](00098-TICKET.md#approved-task-decomposition-and-current-handoff) maps
+TASK-00398's independent usage/timing breakdowns, TASK-00399's separate allowance and TASK-00400's explainable
+forecasts/comparisons into these surfaces. All consume TASK-00391, with early TASK-00396/00397 facts transitively.
+[TASK-00399](../tasks/00399-TASK.md) owns explicit refresh admission and sanitized observations; its accepted
+ordinary-key OpenRouter `GET /api/v1/key` source uses [TASK-00346](../tasks/00346-TASK.md)'s protected adapter and
+[TASK-00520](../tasks/00520-TASK.md)'s lifecycle/custody/current-generation contract inherited through
+TASK-00346/00344. Keep `needs-info` for actual source semantics, host/credential/lifecycle composition and
+current-authority refresh/disclosure qualification, not unallocated suppliers. Shared quota is never a Project balance;
+its absence blocks neither useful history nor forecasts. Early measured facts never depend on final Dashboard,
+TASK-00387 or live consumers. TASK-00320 consumes TASK-00400 for later PR-handoff
 forecasting; Review/QA/verdict/publication remains TICKET-00083 and Awaiting review is not acceptance or cleanup.
 
 Actual browser keyboard/focus/announcements, responsive light/dark, reduced motion, failure/recovery states and

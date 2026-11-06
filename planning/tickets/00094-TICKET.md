@@ -16,7 +16,7 @@ resume material from leaking through history or storage.
 ## Solution and boundaries
 
 Provide exact execution evidence and private Artifact capabilities for the existing TICKET-00032 handoff. Bind Git
-and check receipts to Workflow, approved TASK revision, Repository/Checkout/Worktree, role/Agent/session, context and
+and check receipts to Workflow, approved TASK revision, Project/Checkout/Worktree, role/Agent/session, context and
 Harness snapshots, configured base, full base/head commit IDs and complete changed-tree/status manifests. Preserve
 actual command/check identity, exit/result, fresh verification, warnings, limitations and selected ignored Artifact
 digests. A branch name, current working diff, model claim or future PR is not an immutable subject.
@@ -67,8 +67,11 @@ check against an unsafe target or passing content to a provider.
 
 ## Validation and permissions
 
-Authenticate actual producers and viewers; check current Workflow/Repository/assignment and sensitivity scope on
-both metadata and bytes. Templates, URLs and possession of an Artifact ID grant no access. Verify full subject,
+Each producer/read entry authenticates the actual caller and admits operation/Project/Workflow/assignment and
+sensitivity scope on metadata and bytes before configured-bus dispatch. Registered Artifact/evidence handlers
+coordinate aggregate invariants, collection-like repositories, required audit and transfer/delete intent through
+the generic shared-connection transaction boundary. Read handlers return safe typed subject/Artifact Views; each
+transport owns formatting/stream presentation. Transfer recovery remains justified by external storage effects. Templates, URLs and possession of an Artifact ID grant no access. Verify full subject,
 expected revision, source/content digest, ownership and bounds; reject stale/mismatched/partial evidence rather than
 quietly accept it. Recheck current references and holds at cleanup under owned transaction/fencing contracts.
 

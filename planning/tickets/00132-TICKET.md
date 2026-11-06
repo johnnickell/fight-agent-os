@@ -92,11 +92,30 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | done |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | done |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | done |
-| [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent |
+| [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | done |
 | [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Area F, [TASK-00570](../tasks/00570-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
+Review version 3 ACCEPT and documentation QA version 2 PASS on `226a054cef9812f84b674c1b73b990e5cbf96887`;
+R1/R2 are resolved, no open findings. QA: 26 passed / 0 failed / 0 incomplete / 1 visual/HTTPS N/A. All 97 unfinished
+records are accounted for (79 corrected / 18 justified unchanged), with six terminal records preserved. Canonical
+coverage remains actively needed by TASK-00571. Feature/supplier qualification and complete-portfolio acceptance
+remain separate. Publication and eligible cleanup are pending at this checkpoint; current outcomes are in canonical
+ignored `.runs/tasks/TASK-00570/runs/land.md` and the TASK PR. This TICKET stays open for unfinished children.
+
+The following area-F repair paragraph is historical, not the current acceptance handoff.
+
+Area F, [TASK-00570](../tasks/00570-TASK.md#r1r2-work-repair-checkpoint--2026-11-06), is in Work repair for
+canonical Review v3 R1/R2 (REVISE, not acceptance): release-start entry versus atomic execution checks and truthful
+allocated-but-unqualified allowance handoffs. Shared cycle 1/5 is consumed. Coverage accounts for 97 unfinished
+records (79 corrected / 18 justified unchanged), with six terminal records including TASK-00556 preserved;
+canonical ignored coverage remains actively needed by TASK-00571. Real execution/host/supplier/independence and
+release-effect holds remain. Fresh repair docs/planning/whitespace checks and normal build pass, with application
+phases reused from the qualified original receipt. Renewed independent Review/documentation QA are next; no area
+or portfolio acceptance is inferred. Other area owners remain independent.
 
 Area E, [TASK-00569](../tasks/00569-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and complete documentation QA PASS on `3bd959f2168fc41ec0f4900e71557f1eaa9928b3`;

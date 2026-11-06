@@ -161,8 +161,9 @@ participant still needs the applicable current shared-fence/cohort/runtime quali
 Generic managed Review/revision/acceptance/QA now map to TASK-00445 and TASK-00310–00313; publication maps to
 TASK-00314–00316. Protected evidence maps through TASK-00378, Workflow capacity through TASK-00369 and contribution
 facts through TASK-00375. Actual immutable-session/phase dispatch, complete manual commitment/base-inclusion and
-contribution-source composition remain held; release merge-observation suppliers remain unallocated. Mapping is
-not qualification. TASK-00267–00269 are consumers,
+contribution-source composition remain held. TASK-00221/00225 now map applicable trusted merge/base-inclusion
+observation to TASK-00317; actual provider/effect/recovery composition remains unqualified. Mapping is not
+qualification. TASK-00267–00269 are consumers,
 not those suppliers; do not clear their holds or introduce reverse cycles through final role outcomes. A local
 Skill, template definition or EPIC-00008's terminal metadata proves none of this runtime. Creation, session/roster
 primitives and shared readiness do not depend on these final integrations. First manual Explorer remains independent

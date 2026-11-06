@@ -15,8 +15,8 @@ message with Workflow authority. Recovery and user decisions cannot depend on an
 ## Solution and boundaries
 
 Consume the existing event-sourced Workflow's compact semantic events, exact phase/process/session identities and
-verified evidence. TICKET-00032 retains authoritative Commands, expected stream versions, exact command-result
-idempotency, grants/claims/leases, transactional dispatch and handoff decisions through Awaiting review. Use the
+verified evidence. TICKET-00032 retains authoritative Commands, expected stream versions, operation-specific durable dispatch/recovery
+identities, grants/claims/leases, transactional dispatch and handoff decisions through Awaiting review. Use the
 qualified Fight Common event-store/projector contracts and application metadata rather than another event protocol
 or importing raw Pi JSONL. Preserve actual actor, Command, causation/correlation and delegated-user provenance.
 
@@ -43,8 +43,8 @@ Integrate TICKET-00098's measured usage/time/forecast facts with their own fresh
 raw streaming deltas here. Projection progress/failure is not aggregate truth; expose stale/partial/unavailable
 states and do not reconstruct authoritative transitions from telemetry.
 
-Provide bounded server queries for safe repository-scoped Workflow metadata search, stable cursor history and
-selected-phase drill-down. Search safe TASK/title, Workflow/Repository/status and actual PR-reference metadata
+Provide bounded server queries for safe Project-scoped Workflow metadata search, stable cursor history and
+selected-phase drill-down. Search safe TASK/title, Workflow/Project/status and actual PR-reference metadata
 across the entire selected Current or Archived result, never just a rendered page and never private content.
 Start a new stable result on changed search/archive/explicit refresh, ordered by last meaningful activity and
 Workflow identity. Preserve every accessible history item through pagination rather than arbitrary silent caps.
@@ -70,7 +70,11 @@ history through their owners; absence of a Review is not approval or a synthetic
 
 ## Validation and permissions
 
-Require current intent-specific Workflow/Repository/evidence visibility and actual authenticated producer scope.
+Each read/producer entry authenticates and admits operation/Project/Workflow/evidence scope before configured-bus
+dispatch. Registered query handlers return safe typed history/activity Views, never raw rows; transport adapters
+own representation. Projection handlers coordinate collection-like persistence, progress and required audit through
+one generic shared-connection transaction, not a Store/UoW or independent repository commit. Semantic Workflow
+invariants remain with Workflow; projection positions and observations create no authority.
 Validate typed IDs, parentage, bounded safe fields, schema/version and expected currentness without accepting a
 model-supplied identity as provenance. State/telemetry timestamps do not authorize a transition. Keep shared
 transaction and required audit boundaries under ADR 0002; notifications occur only after projection commit.
@@ -86,7 +90,7 @@ not cross Mercure. Status queries cannot launch replay or external work as a rea
   phase/Agent parentage and tool metadata, without transcripts or excerpts in any supported history/search route.
 - Duplicate/reordered/missing observations, projector interruption and rebuild preserve correct source authority
   and honest partial/freshness states; safe history remains accessible beyond a single page.
-- Whole-result metadata search and cursor changes behave consistently; cross-Repository/read revocation and
+- Whole-result metadata search and cursor changes behave consistently; cross-Project/read revocation and
   redaction remain enforced in queries, cached views, evidence links and live delivery.
 - Mercure loss/reconnect reloads committed durable state; old notifications cannot manufacture a transition or
   revive retired client authority. Existing execution recovery still works without optional telemetry.

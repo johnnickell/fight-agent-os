@@ -15,12 +15,12 @@ merging without current authority and conflict checks risks corrupting active de
 
 ## Solution and boundaries
 
-After a trusted observation verifies that the exact hotfix PR was merged into the Repository-configured
+After a trusted observation verifies that the exact hotfix PR was merged into the Project-configured
 production base, offer **one Yes/button** to authorize merging that fix back into the configured development
 base inside the **same hotfix Workflow history**. Recheck source/target identities, policy, grant and provider
 state before the effect; run the applicable integration checks, verify the resulting branch state and persist
 actual outcome. No second TASK, new Workflow, repeated branching-strategy confirmation, automatic PR merge or
-unbounded merge grant. A trunk-based Repository without a separate development base has no merge-back action.
+unbounded merge grant. A trunk-based Project without a separate development base has no merge-back action.
 
 This narrowly extends the ordinary WF-015 PR-handoff stop policy for the hotfix's post-PR operation: any claim
 already released at PR handoff is **not** silently reacquired. The operation is scoped to the existing hotfix
@@ -39,7 +39,10 @@ when the subject or effect changes.
 
 ## Validation and permissions
 
-A human Yes/button grants only the named merge-back effect for the exact hotfix and branch identities. Triage,
+The entry authenticates the human, checks operation/Project/target scope and dispatches through configured buses.
+Registered Workflow handlers coordinate aggregate invariants, collection-like persistence, required audit and
+justified branch-effect intent through one generic transaction authority. Safe typed previews/results are mapped
+by each transport; they do not return raw entities or handler-mutated commands. A human Yes/button grants only the named merge-back effect for the exact hotfix and branch identities. Triage,
 Hotfix Engineer and UI presentation do not inherit generic merge authority. Protected-branch rules and any
 required review/PR approval remain separately enforced; if direct merge is not permitted, use the approved
 project branch procedure with its own authority without treating the click as PR approval. Validate live
@@ -49,7 +52,7 @@ history into production, force-update a branch, or create a new Workflow to hide
 
 ## Acceptance and evidence
 
-- A verified production merge on a configured GitFlow Repository offers one quick scoped action; a pending,
+- A verified production merge on a configured GitFlow Project offers one quick scoped action; a pending,
   closed-unmerged, stale, inaccessible or wrong-target PR does not.
 - The action verifies the result on the configured development base with current branch identities and checks,
   preserves newer development work, and reports completion only from observed evidence. Trunk-based projects
@@ -71,6 +74,13 @@ history into production, force-update a branch, or create a new Workflow to hide
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Current supplier handoff — TASK-00570
+
+TASK-00317 now owns shared managed merge/base-inclusion observation and is an explicit TASK-00209 prerequisite.
+Keep TASK-00209 `needs-info` for actual hotfix/provider composition; allocation is not qualification or merge
+authority. TASK-00210 keeps the separately human-authorized post-PR effect and released-claim boundary. The earlier
+unallocated-supplier statements below are historical; no new observer, TASK or approval phase is introduced.
 
 Approved requirement split for [EPIC-00012](../epics/00012-EPIC.md) under
 [WF-028](../wayfinder/tickets/WF-028-define-triage-dispatch-and-hotfix-role-boundaries.md). Consumes the hotfix
