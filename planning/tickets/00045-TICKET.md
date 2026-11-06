@@ -87,6 +87,13 @@ ADR 0002; neither this inquiry nor SQL-read permission grants test-execution or 
 - Compare useful review direction, cost/latency and complete/incomplete coverage on representative workloads. Test
   owned assessment/reporting behavior only; qualify PHPUnit/runtime integrations through their owning tools.
 
+## Current supplier boundary — TASK-00569
+
+Use [TICKET-00042's current supplier/ownership contract](00042-TICKET.md#current-supplier-and-ownership-boundary--task-00569),
+including surviving Jev qualification, protected MCP/HMAC/holder holds and supported installed Pi rather than
+the old fixed runtime target. Advisor activation remains separate from ordinary required execution/review gates;
+assessment never authorizes provider/test execution, seeded tooling failures or test deletion.
+
 ## Sequencing and TASK readiness
 
 Consume TICKET-00042 and existing review/architectural-review seams. Reuse compatible TICKET-00044 subject/coverage

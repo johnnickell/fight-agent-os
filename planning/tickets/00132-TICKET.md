@@ -91,12 +91,41 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | done |
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | done |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | done |
-| [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent |
+| [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | done |
 | [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent |
 | [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Area E, [TASK-00569](../tasks/00569-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
+Review version 3 ACCEPT and complete documentation QA PASS on `3bd959f2168fc41ec0f4900e71557f1eaa9928b3`;
+R1 is resolved with no open findings. QA: 26 passed / 0 failed / 0 incomplete / 1 visual/browser/TLS N/A.
+All 111 unfinished records are accounted for (87 corrected / 24 justified unchanged); 28 terminal exclusions,
+including completed TASK-00555, remain unchanged. Canonical coverage/inventories/dispositions/contract traces remain
+actively needed by TASK-00571 outside disposable source. No area-E repair is deferred. Real provider recovery,
+exact human Apply, semantic revisions, snapshots, privacy/retention and precise authority/supplier holds survive.
+Land's normal gate freshly validates planning and automatically reuses original application receipt
+`20261106T135329Z-20`; original dirty-precommit subject/counts/warnings/gaps remain in the TASK and Work handoff.
+Publication/final delivery verification and eligible cleanup are pending at this checkpoint; current outcomes are
+in canonical ignored `.runs/tasks/TASK-00569/runs/land.md` and the TASK PR. Human merge is separate. This TICKET
+remains open for unfinished children; no feature, supplier, sibling or whole-portfolio acceptance is inferred.
+
+The following area-E repair paragraph is historical, not the current acceptance handoff.
+
+Area E, [TASK-00569](../tasks/00569-TASK.md#r1-repair-and-verification--2026-11-06), has locally repaired
+Review version 3 R1: pure memory queries are separated from existing audited inspection commands and safe result
+reads after required audit. TASK-00186's real audit-TASK and other authority/supplier holds remain. Renewed
+independent Review and documentation QA are pending; the initial candidate received REVISE, not acceptance.
+The TASK remains in progress.
+Its refreshed live/archive inventory has 111 unfinished records (87 corrected / 24 justified unchanged), plus
+28 terminal exclusions including completed TASK-00555's conditional native-first evaluation. Canonical coverage
+under `.runs/tasks/TASK-00569/runs/` is retained for TASK-00571 outside disposable source. Real paid-work recovery,
+semantic Apply, snapshots, scoped retention and precise supplier holds remain. Direct docs/planning/whitespace
+checks pass. The repair's normal canonical build passes with fresh planning and automatically reused application
+phases from the original 25-phase receipt (`20261106T135329Z-20`); original dirty-precommit subject, counts,
+warnings and coverage gaps remain in the TASK and canonical Work handoff. No feature/supplier acceptance or
+sibling completion.
 
 Area D, [TASK-00568](../tasks/00568-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and complete documentation QA PASS on `fa28fd79eee6b7ce11d13a2d80901177bd16c04c`;

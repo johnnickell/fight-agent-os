@@ -16,13 +16,13 @@ conversation authorities or borrow unprotected local credentials when managed wo
 ## Solution and boundaries
 
 Provide the protected Harness conversation/execution capability for explicit bounded manual assignments and browser
-Planning consumers. A separate human assignment identifies objective, acting named Agent, authorized Repository/
+Planning consumers. A separate human assignment identifies objective, acting named Agent, authorized Project/
 checkout/context, tool/effect bounds, allowed provider/model and finite limits. Agent creation or client attachment
 never starts work automatically. Preserve initiating human, acting Agent, Team and real holder identity through
 current authenticated delegation. Manual use needs no fabricated TASK Workflow or database Planning cutover.
 
 Persist input before delegated work starts. Maintain stable conversation/submission/attempt identities, exact
-Harness/Repository snapshot bindings, accepted answers, pending questions, proposal references, progress and
+Harness/Project snapshot bindings, accepted answers, pending questions, proposal references, progress and
 internal Pi-session lineage. Keep one bounded active Agent turn per conversation with durable admission/currentness
 and single-owner fencing. Concurrent client input produces an explicit serialized outcome or conflict, not two
 executions. Browser/terminal are clients of the same authorized conversation, not new Agents or credential holders.
@@ -87,8 +87,14 @@ readable Planning; admission retains its authoritative limits independently of d
 
 ## Validation and permissions
 
-Require current human assignment/visibility authority independently of Agent-management rights. Each protected
-operation rechecks live Agent direct Permissions, human delegation, Team/Repository scope, credential activation,
+Each HTTP/Console/MCP entry authenticates its real caller and admits current human assignment/visibility and
+Project target independently of Agent-management rights before configured bus dispatch. No blanket inner
+Application admission filter is required. Conversation handlers retain intrinsic input/turn ownership, generations,
+immutable bindings and actual runtime/provider acting-window consistency; they coordinate collection-like
+persistence, required audit and justified intent through generic UoW. Safe typed status/history Views use
+protocol-specific failure mapping. Ordinary assignment/conversation identity creation uses adapter-generated typed
+IDs in void commands with uniqueness/fresh-query reconciliation, not immutable response logs. Each protected
+operation rechecks live Agent direct Permissions, human delegation, Team/Project scope, credential activation,
 current host/session constraints and relevant claim/lease state when a real Workflow exists. Never infer Workflow
 authority for manual work. Missing qualified host/origin/provider controls deny rather than use unrestricted Pi tools.
 
@@ -197,7 +203,7 @@ without a reverse dependency or blanket web requirement on local-only recovery. 
 
 Pi Durable evaluation belongs inside TASK-00350 and actual integration/recovery, not a proof-only TASK. Pin exact
 source/runtime/extensions/storage and record concrete gaps before an alternative. Preserve the separately approved
-Pi 1.1.0 local checkpoint/compaction/retention scope of TASK-00164/00168/00167; managed compatibility needs fresh
+local native checkpoint/compaction and deferred retention scope of TASK-00164/00168/00167; managed compatibility needs fresh
 qualification, not a silent upgrade or duplicated policy. Runtime durability does not execute while powered off,
 renew approval, prove external exactly-once effects or grant cross-machine migration.
 

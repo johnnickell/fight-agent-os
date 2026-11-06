@@ -48,21 +48,24 @@ can read shared history, nor does it authorize hidden Pi reasoning export.
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Inspect authorized memory | N/A — read-only | Query shared or separately permitted private current/history and safe lineage | Safe private-access audit observation where required | No new instruction, access grant or memory mutation |
+| Inspect authorized shared memory | N/A — pure read where no access audit is required; otherwise use TASK-00189's explicit audited inspection | Authorized bounded shared current/history and safe lineage Views; required-audit results only after audit succeeds | N/A for pure read; safe attributed access audit where required | No new instruction, access grant or memory-content mutation |
+| Inspect separately permitted private memory | Existing audited inspection command from [TASK-00186](../tasks/00186-TASK.md) | Separate safe typed inspection result read only after required audit succeeds | Safe attributed private-access audit without private text | Protected content disclosed only to the admitted principal; no publication or access grant |
 | Correct within owned scope | Append linked correction/retraction or change own current private text through owning operation | Inspect current entry, sources and ownership | Correction or retraction recorded under owning lifecycle | Attributed history remains; obsolete guidance stops being current |
 | Inspect promotion outcomes | N/A — read-only | Query proposal rationale and linked accepted/rejected publication | N/A — inspection does not publish | Rejected text stays out of ordinary Agent context |
 | Remove prohibited content | Authorize exceptional safety removal with reason and target | Resolve linked copies, derived views and export/backup reach | Safety removal and safe audit fact recorded | Forbidden bytes are removed or access blocked pending verified remediation; safe metadata remains |
 
 ## Validation and permissions
 
-Validate current authenticated user/Agent identity, direct/effective Permission, target Repository/Workspace and
-ownership before exposing titles, snippets, history, private content or mutation controls. Server checks are
+Each HTTP/Console/MCP entry authenticates its actual caller and admits current Permission, Project/Workspace
+target and ownership scope before configured bus dispatch or disclosure. MemoryEntry/promotion owners retain
+intrinsic lifecycle/lineage and quarantine invariants; no blanket Application/bus permission gate is added. Server checks are
 binding; browser controls and role labels are only presentation. Apply separate authorization to safety removal,
 record bounded secret-free reasons and results, and reject stale target/derived copies rather than return removed
 content. Do not allow ordinary Agent roles to invoke permanent shared deletion or bypass mandatory Workflow
 handoffs. Safe failure when part of a required removal is not yet verified must block further disclosure of
-that payload; transaction and recoverable external effects follow ADR 0001/0002 rather than assuming one
-atomic database transaction erases provider-held bytes.
+that payload; registered handlers coordinate quarantine/state/required audit using the generic transaction and collection-like
+repositories. Safe typed status Views and protocol-specific failures preserve incomplete remediation; external
+copy/backup effects retain durable intent/reconciliation, not a claim that one DB transaction erases provider bytes.
 
 ## Acceptance and evidence
 

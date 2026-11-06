@@ -9,7 +9,7 @@ status: ready-for-agent
 
 ## Problem statement
 
-A locally useful observation cannot become Repository or Workspace guidance merely because an Agent wrote it.
+A locally useful observation cannot become Project or Workspace guidance merely because an Agent wrote it.
 Broader readers need attributed, independently assessed lessons whose source and limits remain visible, with
 rejected proposals preserved for authorized learning rather than reused as instructions.
 
@@ -30,14 +30,16 @@ rejected proposals preserved for authorized learning rather than reused as instr
 - Link later corrections/retractions to published entries and alert the owners of broader derived entries and
   summaries when a source changes. Do not automatically rewrite or invalidate a broader conclusion supported
   by independent evidence. Allow stewards to assess contradictory lessons against actual sources rather than
-  automatically merge or suppress them. Retry of the same proposal/review/publication operation does not
-  duplicate its result; distinct proposals remain attributed.
-- Keep project memory anchored to `RepositoryId` in its Workspace. A small private general bank is **not**
+  automatically merge or suppress them. Adapter-generated typed proposal/entry IDs, uniqueness of publication
+  per accepted proposal and expected decision/source revisions prevent duplicates. Void commands reconcile
+  through fresh authorized state/lineage queries, not immutable original-response bookkeeping; distinct proposals
+  remain attributed.
+- Keep Project memory anchored to the registered `ProjectId` in its Workspace. A small private general bank is **not**
   Workspace-shared guidance; an Engineer cannot promote its own note by writing directly to a wider scope.
   Source code describes current behavior; published Planning describes approved intent. A memory must report
   their discrepancy rather than claim either is amended by publication.
 
-This TICKET does not invent a new Project identity, require adjacent-level promotion, automatically approve
+This TICKET does not invent a memory-specific Project identity, require adjacent-level promotion, automatically approve
 proposals, replace Planning approval or specify Jev selection thresholds. TICKET-00050 owns the human-visible
 history and exceptional safety-removal path; it does not become another publication authority.
 
@@ -47,24 +49,26 @@ history and exceptional safety-removal path; it does not become another publicat
 |---|---|---|---|---|
 | Propose broader guidance | Propose publication with source, target and applicability reason | Resolve permitted source and target | Promotion proposed | Attributed pending proposal only, no broader entry or access grant |
 | Assess a proposal | Accept or reject with rationale under target ownership | Inspect source, independently checked evidence and conflicting guidance | Proposal accepted or rejected | Rejection remains history only; acceptance permits separately attributed publication |
-| Publish an accepted lesson | Publish new target-scope entry from accepted proposal | Resolve current target authority and checked evidence | Broader entry published | Linked Repository/Workspace guidance without rewriting the source |
+| Publish an accepted lesson | Publish new target-scope entry from accepted proposal | Resolve current target authority and checked evidence | Broader entry published | Linked Project/Workspace guidance without rewriting the source |
 | Reassess changed source | Correct/retract own published entry after source-change notification | Inspect lineage and current source/evidence | Derived owner notified; correction or retraction recorded when chosen | No silent rewrite of independently supported entries |
 
 ## Validation and permissions
 
-Check current source read and target write authority independently at the relevant operation; enforce target
-Repository/Workspace ownership and live assignment/Permission rather than trusting a proposed scope or prose
+Check current source read and target write authority independently at the relevant operation; enforce
+Project/Workspace target admission at each authenticated entry before configured bus dispatch, with intrinsic
+proposal/source/entry ownership and decision invariants in the aggregate, rather than trusting proposed scope or prose
 embedded in an entry. A steward's model-readable source is untrusted data, never an instruction to execute,
 approve or expand authority. Reject invalid/removed source links and missing applicability/evidence rationale
-safely; record an explicit unknown or disputed basis rather than fabricating verification. Attribute decisions
-and deduplicate exact retries. Rejected proposals are excluded from ordinary MCP guidance, though a separately
-authorized audit/self-learning path may inspect them. TICKET-00050's safety removal takes precedence when a
+safely; record an explicit unknown or disputed basis rather than fabricating verification. Registered handlers
+coordinate decision/publication, collection-like repositories and required audit on the shared transaction;
+events follow commit. Adapters present safe typed proposal/entry Views. Rejected proposals are excluded from
+ordinary MCP guidance, though a separately authorized audit/self-learning path may inspect them. TICKET-00050's safety removal takes precedence when a
 source contains prohibited material.
 
 ## Acceptance and evidence
 
 - Demonstrate one Engineer proposal accepted by a separately authorized owner and published as a new linked
-  Repository or Workspace entry; deny direct broader publication by the Engineer.
+  Project or Workspace entry; deny direct broader publication by the Engineer.
 - Demonstrate attributed rejection without deleting or surfacing the proposal as ordinary guidance, direct
   versus adjacent target choice, duplicate retry behavior and independent assessment of source evidence.
 - Demonstrate a later source correction notifying derived owners without silently editing the published entry

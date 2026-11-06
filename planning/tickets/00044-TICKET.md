@@ -76,6 +76,13 @@ rules; deterministic checks retain their own receipts rather than being inferred
 - Exercise unavailable/invalid/budget-exhausted outcomes: handoff carries gaps while ordinary review and required
   gates remain enforced. Test owned assessment/reporting behavior, not model prompt text or quality-tool wiring.
 
+## Current supplier boundary — TASK-00569
+
+Use [TICKET-00042's current supplier/ownership contract](00042-TICKET.md#current-supplier-and-ownership-boundary--task-00569),
+including a surviving qualified Jev path, protected MCP/HMAC/holder holds and capability-qualified installed Pi,
+not the historical fixed runtime target. These holds affect advisor activation, not ordinary Engineer handoff
+or independent review. No score, profile or unavailable hook grants operation or stage authority.
+
 ## Sequencing and TASK readiness
 
 Consume TICKET-00042's typed evaluation and source/result contracts and existing Engineer/reviewer handoff seams.

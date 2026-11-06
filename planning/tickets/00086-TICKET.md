@@ -15,7 +15,7 @@ source files masquerading as runtime authority. Managed updates must preserve cu
 ## Solution and boundaries
 
 Within Harness, provide type-specific Skills, themes, prompts and personas with stable logical identities,
-immutable revision bytes, current selections, provenance and Workspace or registered-Repository scope. Do not
+immutable revision bytes, current selections, provenance and Workspace or registered-Project scope. Do not
 force different resource invariants into a generic aggregate. PostgreSQL owns runtime selections and revisions;
 use current state plus immutable history, not event sourcing by default. Reserve packaged `agent-os-*` names for
 bootstrap resources and keep general development Skills database-authoritative for trusted MCP delivery.
@@ -58,8 +58,12 @@ reserved-name misuse, missing or cross-scope references, unresolved collisions a
 Skills are static; no dynamic expansion or executable policy may grant authority. Skill `allowed-tools` is a
 non-authoritative request, not a Permission source.
 
-Use real PostgreSQL uniqueness/reference/current-selection protection, atomic required audit and rollback under
-ADR 0002. Model resource-reference contracts precisely enough for later publication owners to hold their required
+Type-specific aggregate commands use configured buses and registered handlers coordinating collection-like
+repositories, selection/reference consistency and required audit through generic UoW on the shared connection.
+Entries own authentication and current Permission/Project-target admission, without a second Application gate.
+Ordinary custom creates carry adapter-generated typed IDs in void commands; uniqueness and fresh authorized reads
+reconcile lost responses without original-response logs. Managed reconciliation remains keyed digest/no-op behavior,
+not ordinary-create replay. Use real PostgreSQL reference/current-selection protection and rollback under ADR 0002. Model resource-reference contracts precisely enough for later publication owners to hold their required
 fences; read-only resolution alone is not proof of atomic template publication. Source reconciliation, custom
 editing, retirement and rollback must preserve immutable bytes already referenced by snapshots or Agents.
 Keep secrets and unauthorized resource bodies out of ordinary logs/events. Provider disclosure remains separate.

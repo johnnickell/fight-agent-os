@@ -82,6 +82,24 @@ contracts directly under ADR 0001 rather than renamed copies; PHP retains author
 - Qualify supported MCP/Pi delivery, exact evaluator/schema and actual source handling. Test owned judgment/progress
   behavior and qualify infrastructure directly; a demo or model confidence is not correctness evidence.
 
+## Current supplier and ownership boundary — TASK-00569
+
+The [November 5 retirement amendment](../epics/00006-EPIC.md#approved-native-pi-compaction-and-jev-retirement--2026-11-05)
+requires a concrete surviving Jev supplier decision and fresh provider/disclosure/budget qualification before
+activating Jev-dependent judgments. Completed local evaluator receipts do not prove a retained managed service.
+TICKET-00043/00044/00045 and their children inherit this precise hold, not a dependency on completing retirement
+or a native compaction prerequisite. Advisory outages still allow ordinary handoff/review with explicit gaps.
+
+Use supported installed Pi capabilities and record tested versions as evidence, not the historical Pi 1.1.0
+planning target as a gate. [TASK-00555's conditional native-first MCP result](../../docs/engineering/NATIVE_MCP_EVALUATION.md)
+does not qualify protected-holder HMAC/nonce/current-use, trusted TLS/origin or credential-free children;
+TASK-00242/00244/00245 retain those actual contracts. Each MCP entry owns current caller/Project admission
+before configured bus dispatch; source containment, separate egress and real paid-evaluation reservations remain.
+Registered PHP judgment/progress handlers coordinate owned state/required audit through generic UoW and
+collection-like repositories; safe typed results/failures map in adapters. Pi keeps capability modules/native
+hooks and no second scheduler, PHP-folder import or blanket Application permission gate. Retain actual staged
+progress, uncertain billed attempts and provenance; ordinary metadata creation is not response replay.
+
 ## Sequencing and TASK readiness
 
 Consume needed TICKET-00037/00039 slices independently of compaction. TICKET-00043 builds operational evidence
