@@ -99,11 +99,20 @@ standalone certification/demo application. Existing local development provider c
 ## Validation and permissions
 
 Require current intent-specific installation authority for policy/environment settings, current ownership and
-connection-management authority for self-service operations, and actual human/Agent, assignment, Repository/
+connection-management authority for self-service operations, and actual human/Agent, assignment, Project/
 environment, host and selected user-connection authority for work. Authenticate protected participants;
 model-supplied principal/account IDs or administrative access do not authorize egress. Reject disallowed choices,
 unsafe redirects, unbounded input, malformed/partial output and stale attempt callbacks. Structured consumer
 validation remains with its owning proposal/use case, not a provider's claim of valid JSON.
+
+Each actual HTTP/Console/MCP entry admits its caller/Project target before configured dispatch; no blanket
+Application permission filter. ProviderAttempt handlers retain operation-specific disclosure, reservation,
+connection-generation and dispatch/settlement consistency, using direct canonical Fight contracts and descriptive
+injected dependencies. They coordinate required audit and durable intent through one generic UoW; collection-like
+repositories do not become queues or transaction managers. Safe typed status Views and qualified Common failure
+intent map separately per protocol. Ordinary catalog/connection creation uses adapter-ID-bearing void commands
+and fresh queries, not original-response logs; paid attempts and encrypted retained-key custody keep their justified
+recovery/secret-handling contracts, including synchronous non-serializable sensitive input where required.
 
 Treat model output as untrusted data; it cannot alter tool scope, limits, publication or provider configuration.
 Sanitize provider errors and preserve no-store/private-response boundaries. Apply ADR 0001 ownership and ADR 0002

@@ -23,7 +23,7 @@ rather than redesigning its welcome/header.
 
 Keep machine-local connection profiles separate from revisioned database-backed user Harness profiles. Connections
 select the endpoint, expected host-assigned installation/origin identity, protected credential-store handles,
-environment and release/development mode. Repository content cannot redirect or establish a trusted connection.
+environment and release/development mode. Git repository content cannot redirect or establish a trusted connection.
 User profiles contain non-secret resource selections, theme, aliases, prompts/persona, model defaults and update
 preferences, with ownership, immutable revisions and expected-state protection. Neither profile grants authority.
 
@@ -68,15 +68,19 @@ No Pi version gate, host/runtime qualification or existing credential boundary i
 
 ## Validation and permissions
 
-Authorize profile reads/writes against the current user and installation/Workspace/Repository scope. Bound fields
+Authorize profile reads/writes against the current user and installation/Workspace/Project scope. Bound fields
 and reference collections; reject stale revisions, unsupported releases, missing references and substituted origins.
 Validate endpoint/environment configuration without returning arbitrary private configuration. Recheck actual
 credential readiness through its owner; a saved handle is not proof of delivery, activation or permitted use.
 
 Keep raw keys, provider authentication, machine paths, repository context and personal preferences out of releases.
 Keep secrets out of database profiles, browser output, model context, session files, `.env`, logs and observations.
-Use ADR 0001 ownership and ADR 0002 atomic state/audit rules for owned persistence; external package/store effects
-occur outside business transactions. Uncertain changes require exact-state inspection, not silent replacement.
+Use the [shared architecture contract](../../docs/engineering/STANDARDS.md#architecture). HarnessProfile
+handlers coordinate aggregate behavior, collection-like persistence and required audit through generic UoW;
+creation entries generate typed IDs for void commands and uncertain ordinary creates use fresh authorized reads,
+not response journals. HTTP/Console/MCP entries admit current user/Project scope before configured bus dispatch
+and map safe typed Views/failures; no duplicate Application gate. External package/store effects retain exact-state
+recovery outside DB transactions. Native Pi package/configuration ownership remains separate.
 
 ## Acceptance and evidence
 

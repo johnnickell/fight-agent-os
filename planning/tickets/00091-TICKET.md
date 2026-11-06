@@ -17,7 +17,7 @@ single-artifact changes and atomic multi-record decomposition.
 
 Provide protected durable proposal attempts/results through the existing Harness execution boundary, separate from
 authoritative Planning revisions and unsaved browser edits. Bind admitted attempts to initiating human and acting
-Agent, Repository/target or exact new-artifact intent, operation, base revisions, draft/selection generations,
+Agent, Project/target or exact new-artifact intent, operation, base revisions, draft/selection generations,
 conversation/submission, immutable snapshots and provider/model. Persist required intent/audit before external
 work; retain original request/attempt identity through response loss, cancellation and recovery.
 
@@ -38,7 +38,9 @@ Require explicit human Create/Apply against current expected aggregate/queue rev
 Planning operations as direct editing. Make Tickets/Make Tasks proposals apply atomically: any stale member,
 invalid relationship, missing permission or domain failure rejects the entire change. Persist required accepted
 state, audit and effect intent atomically; record actual committed Planning facts, not model-authored success.
-Use stable command identities; resolve uncertain apply before offering another. Proposal completion is not TASK
+Retain exact proposal/version-to-accepted-change linkage and expected semantic revisions; resolve uncertain
+Apply with fresh authorized Planning/acceptance queries before another mutation, not an immutable HTTP-response
+journal. Creation adapters generate typed aggregate/member IDs for void commands and owning reference allocation. Proposal completion is not TASK
 execution, review acceptance, PR publication or merge.
 
 Retain conversation/proposal history after conflict. Offer optional AI-assisted reconciliation using exact base,
@@ -70,10 +72,12 @@ changes may be lost on refresh; durable server proposal recovery does not promis
 ## Validation and permissions
 
 Authorize proposing, reading drafts, accepting revisions and guarded lifecycle operations independently against
-current initiating-human authority and real acting-Agent delegation. Preserve Team/Repository/target scope and
-owner-first visibility. Profiles, Skill text or a model's claimed approval cannot authorize Create/Apply. Every
-final mutation revalidates domain invariants, references and expected revisions under the Planning owner; no client
-validation, schema-valid model response or stale snapshot replaces server authorization.
+current initiating-human authority and real acting-Agent delegation. Preserve Team/Project/target scope and
+owner-first visibility. Profiles, Skill text or a model's claimed approval cannot authorize Create/Apply. Each actual entry admits current human Permission/Project-target scope before configured bus dispatch, without
+a second blanket Application gate. Registered aggregate-owned handlers revalidate domain invariants, complete
+references and expected semantic revisions, coordinating collection-like persistence, acceptance linkage and
+required audit through generic UoW on the shared connection. Facts dispatch after commit. No client validation,
+schema-valid model response or stale snapshot replaces entry admission; safe typed Views/failures map per protocol.
 
 Bound content/collections, reject unknown IDs/types and sanitize errors. Provider calls use
 [TICKET-00089](00089-TICKET.md)'s separate disclosure/budget/currentness contract outside business transactions.

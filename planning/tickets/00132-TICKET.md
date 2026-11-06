@@ -91,12 +91,22 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | done |
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | done |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
-| [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent |
+| [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | in-progress |
 | [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent |
 | [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Area E, [TASK-00569](../tasks/00569-TASK.md), has prepared and locally verified the Harness/proposal/memory
+planning correction; its TASK remains in progress.
+Its refreshed live/archive inventory has 111 unfinished records (87 corrected / 24 justified unchanged), plus
+28 terminal exclusions including completed TASK-00555's conditional native-first evaluation. Canonical coverage
+under `.runs/tasks/TASK-00569/runs/` is retained for TASK-00571 outside disposable source. Real paid-work recovery,
+semantic Apply, snapshots, scoped retention and precise supplier holds remain. Direct docs/planning/whitespace
+checks pass and the normal canonical build freshly passes all 25 phase rows (`20261106T135329Z-20`), with warnings
+and coverage gaps recorded in the TASK. Independent Review/documentation QA remain pending; no feature/supplier
+acceptance or sibling completion.
 
 Area C, [TASK-00567](../tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`; R1 is resolved,

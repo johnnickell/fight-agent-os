@@ -14,7 +14,7 @@ profiles, package updates or provider changes must not silently change the behav
 
 ## Solution and boundaries
 
-Resolve one exact immutable HarnessSnapshot beside the RepositoryContextSnapshot for every participating Agent
+Resolve one exact immutable HarnessSnapshot beside the ProjectContextSnapshot for every participating Agent
 session. Record connection/profile revisions, exact package source/version/digest, executable extension versions,
 selected type-specific resource revisions, aliases/collision choices, host-assigned origin identities, Skill URIs
 and complete manifests, chosen provider and requested model. Record reported model/response identity as attributed
@@ -36,7 +36,7 @@ An explicit authorized continuation resolves a new snapshot and links old/new se
 proposals survive but must be revalidated. Unchanged reconnect requires no new snapshot or acceptance ceremony.
 Resource rollback likewise affects future resolution, not historical bytes or active sessions.
 
-Pinned content does not pin grants. Current human/Agent Permissions, delegation, Team/Repository/host scope,
+Pinned content does not pin grants. Current human/Agent Permissions, delegation, Team/Project/host scope,
 credential activation and applicable claim/lease authority may narrow or revoke use immediately. Unavailable
 current authority denies protected work even if all snapshot bytes are retained. Provider changes never fail over
 silently and must follow the same explicit continuation boundary.
@@ -75,8 +75,11 @@ No existing host/continuation hold is cleared. See the
 
 Authorize snapshot creation/read/continuation against the real principal, assignment and repository, not supplied
 identity strings. Bound resource/reference sets and validate complete immutable references and selection generations;
-changed-away-and-back current selections cannot make stale approval valid. Preserve shared transaction/reference
-fences and atomic required audit for owned binding state under ADR 0002. External resolution cannot occur inside a
+changed-away-and-back current selections cannot make stale approval valid. Registered snapshot handlers coordinate collection-like persistence, immutable binding/reference invariants and
+required audit through generic UoW on the shared connection. Creation entries generate typed snapshot/binding IDs
+in void commands; unique session/binding relationships and fresh authorized lineage queries reconcile ordinary
+retention, not an immutable response journal. Entries own current Permission/Project-scope admission before bus
+dispatch. Preserve business reference fences, not blanket revocation-through-commit serialization. External resolution cannot occur inside a
 long business transaction; validate current exact references at the final owned commit.
 
 Snapshots expose only authorized details. Live operations recheck current authority and provider disclosure through
@@ -115,7 +118,7 @@ protected brokers and loaders can consume them without circular dependencies.
 | Slice | Accepted owner | Delivered boundary |
 |---|---|---|
 | A | [TASK-00339](../tasks/00339-TASK.md) | Deterministic authorized exact Harness configuration and safe reproducibility/readiness inspection |
-| B | [TASK-00340](../tasks/00340-TASK.md) | Immutable snapshot retention/binding with reference fencing, atomic required audit and original-outcome recovery |
+| B | [TASK-00340](../tasks/00340-TASK.md) | Immutable snapshot retention/binding with reference fencing, atomic required audit and fresh-query recovery |
 | C | [TASK-00341](../tasks/00341-TASK.md) | Exact drift/currentness inspection and reusable guard for new protected operations |
 | D | [TASK-00342](../tasks/00342-TASK.md) | Actual runtime binding/reconnect, explicit linked continuation and separately attributed reported identity |
 

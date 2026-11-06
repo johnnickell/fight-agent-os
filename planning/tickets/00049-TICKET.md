@@ -17,8 +17,8 @@ exact-source read, evidence of completeness or permission to see more than the a
 
 - Reuse the accepted private, shared and promotion Application reads and exact-entry first-party MCP tools from
   TICKET-00046 through TICKET-00048; do not build a duplicate memory authority, database credential or second
-  MCP implementation just for Jev. HMAC identifies the invoking Agent; the application checks current scope
-  IDs, permission, assignment and lifecycle for each requested memory operation. MCP Tools suffice; no
+  MCP implementation just for Jev. The MCP adapter authenticates HMAC and checks current Project target,
+  permission and assignment before configured query dispatch; MemoryEntry retains intrinsic lifecycle rules. MCP Tools suffice; no
   preloaded MCP Resource or host-memory mount is required.
 - Start an Agent with concise memory-use instructions and its authoritative TASK/role handoff. It retrieves
   memory as needed, without mandatory preloading. An optional small start index is a later measured choice,
@@ -44,7 +44,9 @@ exact-source read, evidence of completeness or permission to see more than the a
   analogy. Provider egress must protect secrets and prohibited payloads without granting Jev normal Agent
   Permissions or broad independent database access.
 
-TICKET-00039 owns repository-file screening; TICKET-00043 and its future use cases own SQL and application
+The [current Jev supplier decision](../epics/00011-EPIC.md#current-architecture-and-supplier-boundary--task-00569)
+is required before activating this lookup; historical evaluator delivery alone is not surviving managed support.
+Known-ID reads remain independent. TICKET-00039 owns repository-file screening; TICKET-00043 and its future use cases own SQL and application
 analysis. This TICKET imposes no new blanket SQL/file restrictions, chooses no embedding provider and creates
 no autonomous Agent able to traverse another principal's memory. Prohibited-content removal belongs to
 TICKET-00050.

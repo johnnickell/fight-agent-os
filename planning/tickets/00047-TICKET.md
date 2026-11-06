@@ -20,8 +20,10 @@ access respects the Workflow and TASK lifecycle.
   an assigned Team Lead can append attributed TASK summaries starting with the first Workflow. Separate failed,
   resumed or successive Workflows keep their own memory. Agents keep their private phase/working notes; required
   attributed phase handoffs/outcomes remain under the Workflow contract, not memory.
-- Accept explicitly scoped, idempotent shared append, correction, supersession and retraction intents through
-  the first-party HMAC/MCP operations. Preserve order and authorship; do not edit another Agent's original text
+- Accept explicitly scoped shared append, correction, supersession and retraction intents through
+  first-party HMAC/MCP entries. Entries own authentication and current permission/target admission before bus
+  dispatch; MemoryEntry handlers coordinate intrinsic lineage/order and required audit atomically. Ordinary
+  appends use adapter-generated typed IDs in void commands, uniqueness and fresh-query reconciliation. Preserve order and authorship; do not edit another Agent's original text
   or erase attributed shared history. Ordinary guidance excludes retracted claims; permitted historical
   inspection can still find them. Similar or contradictory notes remain separately attributed for assessment.
 - An Engineer can read shared Phase/Workflow/TASK entries relevant to its **current** assignment but loses normal
@@ -39,7 +41,7 @@ access respects the Workflow and TASK lifecycle.
   authorship cannot expand a receiving Agent's permissions or replace the exact review subject, criteria,
   checks and prior findings required by the handoff contract.
 
-This TICKET does not publish Repository/Workspace guidance, decide promotion proposals (TICKET-00048), enable
+This TICKET does not publish Project/Workspace guidance, decide promotion proposals (TICKET-00048), enable
 Jev question lookup (TICKET-00049), or implement a separate formal handoff system. Safety removal and the basic
 human oversight path belong to TICKET-00050 and must be available before unsafe live ingestion is claimed safe.
 
@@ -56,7 +58,8 @@ human oversight path belong to TICKET-00050 and must be available before unsafe 
 
 Validate current Agent identity, direct/effective Permission, owned target scope, Workflow/TASK state, assignment
 and safe source references at each operation. A guessed Workflow/TASK ID, Team Lead title, earlier access or a
-prior handoff cannot grant shared write/read rights. Same-command retry returns its original append; a distinct
+prior handoff cannot grant shared write/read rights. A repeated entry identity cannot duplicate an append; fresh authorized reads reveal current state after a
+lost response, without an immutable response journal. Expected revisions protect linked corrections; a distinct
 append is ordered rather than silently merged. Deny Engineer cross-Workflow reads after closure and normal Team
 Lead reads after TASK completion without hiding Project Manager or authorized audit/history access. Bound
 returned content and safe audit metadata; never expose another Agent's private thoughts through shared results.

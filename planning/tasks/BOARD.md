@@ -60,14 +60,13 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
 | 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
-| 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 7 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 11 | [TASK-00574](00574-TASK.md) | Give Workspace bootstrap and reference generation explicit owners | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | — | — |
 | 19 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | [TICKET-00136 — Adopt shared failures and safe error presentation](../tickets/00136-TICKET.md) | ready-for-agent | — | — |
@@ -274,7 +273,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00358](00358-TASK.md) | Explicitly create or apply reviewed Planning changes | [TICKET-00091 — Prepare and explicitly apply structured Planning proposals](../tickets/00091-TICKET.md) | ready-for-agent | [TASK-00357](00357-TASK.md) | — |
 | — | [TASK-00359](00359-TASK.md) | Apply multi-record Planning proposals atomically | [TICKET-00091 — Prepare and explicitly apply structured Planning proposals](../tickets/00091-TICKET.md) | ready-for-agent | [TASK-00358](00358-TASK.md) | — |
 | — | [TASK-00360](00360-TASK.md) | Reconcile rejected proposals without silent application | [TICKET-00091 — Prepare and explicitly apply structured Planning proposals](../tickets/00091-TICKET.md) | ready-for-agent | [TASK-00359](00359-TASK.md) | — |
-| — | [TASK-00361](00361-TASK.md) | Start and continue repository Planning intake | [TICKET-00092 — Deliver the browser Planning Agent journey](../tickets/00092-TICKET.md) | ready-for-agent | [TASK-00114](00114-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00352](00352-TASK.md) | — |
+| — | [TASK-00361](00361-TASK.md) | Start and continue Project Planning intake | [TICKET-00092 — Deliver the browser Planning Agent journey](../tickets/00092-TICKET.md) | ready-for-agent | [TASK-00114](00114-TASK.md), [TASK-00250](00250-TASK.md), [TASK-00352](00352-TASK.md) | — |
 | — | [TASK-00362](00362-TASK.md) | Conduct Wayfinder interviews and create reviewed maps | [TICKET-00092 — Deliver the browser Planning Agent journey](../tickets/00092-TICKET.md) | ready-for-agent | [TASK-00361](00361-TASK.md), [TASK-00359](00359-TASK.md) | — |
 | — | [TASK-00363](00363-TASK.md) | Review and apply artifact Planning operations | [TICKET-00092 — Deliver the browser Planning Agent journey](../tickets/00092-TICKET.md) | ready-for-agent | [TASK-00361](00361-TASK.md), [TASK-00360](00360-TASK.md) | — |
 | — | [TASK-00365](00365-TASK.md) | Resume stop and abandon Planning conversations | [TICKET-00092 — Deliver the browser Planning Agent journey](../tickets/00092-TICKET.md) | ready-for-agent | [TASK-00361](00361-TASK.md), [TASK-00353](00353-TASK.md) | — |
