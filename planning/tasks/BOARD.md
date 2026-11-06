@@ -543,7 +543,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 4 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #225](https://github.com/johnnickell/fight-agent-os/pull/225) |
 | 5 | [TASK-00005](00005-TASK.md) | Establish and prove disposable product-design exploration | [TICKET-00005 — Establish disposable product-design exploration](../tickets/00005-TICKET.md) | done | — | [PR #7](https://github.com/johnnickell/fight-agent-os/pull/7) |
 | 5 | [TASK-00133](00133-TASK.md) | Design the CQRS and DDD architecture skill | — (standalone chore) | done | — | — |
-| 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | — |
+| 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #227](https://github.com/johnnickell/fight-agent-os/pull/227) |
 | 6 | [TASK-00006](00006-TASK.md) | Establish and prove independent design review | [TICKET-00006 — Establish independent design review](../tickets/00006-TICKET.md) | done | — | [PR #10](https://github.com/johnnickell/fight-agent-os/pull/10) |
 | 6 | [TASK-00134](00134-TASK.md) | Design the project-alignment adopt skill | — (standalone chore) | done | — | — |
 | 7 | [TASK-00007](00007-TASK.md) | Adopt and prove the stable dependency graph | [TICKET-00007 — Stabilize application dependencies and smoke baseline](../tickets/00007-TICKET.md) | done | — | — |
