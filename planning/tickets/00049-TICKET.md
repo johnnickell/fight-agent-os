@@ -18,16 +18,19 @@ exact-source read, evidence of completeness or permission to see more than the a
 - Reuse the accepted private, shared and promotion Application reads and exact-entry first-party MCP tools from
   TICKET-00046 through TICKET-00048; do not build a duplicate memory authority, database credential or second
   MCP implementation just for Jev. The MCP adapter authenticates HMAC and checks current Project target,
-  permission and assignment before configured query dispatch; MemoryEntry retains intrinsic lifecycle rules. MCP Tools suffice; no
-  preloaded MCP Resource or host-memory mount is required.
+  permission and assignment before configured command/query dispatch; MemoryEntry retains intrinsic lifecycle rules.
+  Required-audit inspection consumes TASK-00186's private oversight or TASK-00189's historical contract, with
+  a separate safe typed result read only after successful audit, never audit writes hidden in a query. MCP Tools
+  suffice; no preloaded MCP Resource or host-memory mount is required.
 - Start an Agent with concise memory-use instructions and its authoritative TASK/role handoff. It retrieves
   memory as needed, without mandatory preloading. An optional small start index is a later measured choice,
   not a prerequisite or implicit permission. Exact reads return original entry text and its source/revision/
   status under the caller's current authority, not Jev-generated prose.
 - Offer typed Jev yes/no and predeclared-choice questions about one memory or memories in a permitted scope.
-  For many entries, allow Level 9-style selection of matching entry IDs followed by separate ordinary exact
-  reads as needed. Jev evaluates eligible source content on behalf of the existing caller; it is not another
-  Agent, a free-form summarizer, an independent SQL reader or an authorization service. Its judgments never
+  For many entries, allow Level 9-style selection of matching entry IDs followed by separate exact-source
+  operations as needed: pure reads without required audit, or the existing audited inspection and safe result read.
+  Jev evaluates eligible source content on behalf of the existing caller; it is not another Agent, a free-form
+  summarizer, an independent SQL reader or an authorization service. Its judgments never
   ingest, correct or promote memory.
 - Preserve the selected memory/source revision, evaluator/question and observed outcome so the caller can
   tell which entries were judged. Normal helpful-memory lookup excludes retracted claims, pending and rejected
@@ -57,8 +60,9 @@ TICKET-00050.
 |---|---|---|---|---|
 | Ask about one permitted entry | N/A — judgment does not mutate memory | Typed Jev yes/no or choice over exact authorized entry/revision | Judgment completed or failed observation | Bounded authorized provider request; typed outcome/known failure, no Agent-context source dump |
 | Find entries in an authorized scope | N/A — selection is read-only | Typed question over scoped entries; return matching IDs or actual failure | Selection completed or failed with cause | Only permitted IDs, judgments and safe source references; no memory writes or context bulk load |
-| Read selected source | N/A — read-only | Exact entry read through existing scoped MCP operation | N/A — read does not change memory | Authorized original text/provenance enters the Agent's context only when requested |
-| Continue after Jev outage | N/A — no fallback mutation | Known-ID exact read if application is available | Provider failure observation | No fabricated negative, offline cache or silent fallback search |
+| Read selected source without required access audit | N/A — pure read | Exact safe typed entry View through existing scoped MCP operation | N/A — no access-audit mutation | Authorized original text/provenance enters the Agent's context only when requested |
+| Inspect selected source requiring access audit | Existing audited inspection command from TASK-00186 for private oversight or TASK-00189 where historical access requires audit | Separate safe typed result read only after required audit succeeds | Safe attributed access audit without private text | No disclosure on required-audit failure; selection does not grant access |
+| Continue after Jev outage | No fallback mutation; retain existing audited inspection command where access requires audit | Known-ID pure read or separate safe audited result read if application is available | Provider failure observation; required access audit on its owning inspection path | No fabricated negative, offline cache, audit bypass or silent fallback search |
 
 ## Validation and permissions
 
