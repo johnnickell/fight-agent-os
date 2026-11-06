@@ -36,6 +36,10 @@ than silently changing what existing clients interpret.
 - Deliberately reconcile JSend fail/error shapes, HTTP status, relevant headers, safe validation data and affected
   browser/API consumers. Common expected failures use fail; update current client contracts, OpenAPI/validation
   representations and tests instead of retaining dual modes or fallback classifiers solely for compatibility.
+- Reconcile the diagnostics consumer under [TASK-00452](../tasks/00452-TASK.md)'s TASK-00571 amendment: preserve
+  this approved wire cutover and qualify useful producer-safe private diagnostics through the one safe sink, not
+  the superseded mapper or a second raw reporter. Missing safe enrichment holds that diagnostics claim only;
+  public non-disclosure, raw-input exclusion and exact reporting ownership remain mandatory.
 - Keep exactly one redaction-aware diagnostic reporting path and truthful safe handling when reporting/projection
   fails. Unknown Throwable gets safe server-failure treatment; do not classify by arbitrary message/code/cause or
   forward private exceptions to an unredacted logger. Use the qualified package behavior rather than copying it.
