@@ -546,7 +546,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 5 | [TASK-00133](00133-TASK.md) | Design the CQRS and DDD architecture skill | — (standalone chore) | done | — | — |
 | 6 | [TASK-00006](00006-TASK.md) | Establish and prove independent design review | [TICKET-00006 — Establish independent design review](../tickets/00006-TICKET.md) | done | — | [PR #10](https://github.com/johnnickell/fight-agent-os/pull/10) |
 | 6 | [TASK-00134](00134-TASK.md) | Design the project-alignment adopt skill | — (standalone chore) | done | — | — |
-| 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | — |
+| 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #226](https://github.com/johnnickell/fight-agent-os/pull/226) |
 | 7 | [TASK-00007](00007-TASK.md) | Adopt and prove the stable dependency graph | [TICKET-00007 — Stabilize application dependencies and smoke baseline](../tickets/00007-TICKET.md) | done | — | — |
 | 8 | [TASK-00008](00008-TASK.md) | Replace inherited receipts with the Agent OS smoke baseline | [TICKET-00007 — Stabilize application dependencies and smoke baseline](../tickets/00007-TICKET.md) | done | — | [PR #12](https://github.com/johnnickell/fight-agent-os/pull/12) |
 | 9 | [TASK-00009](00009-TASK.md) | Accept the application ownership and orchestration ADR | [TICKET-00008 — Establish application ownership and orchestration boundaries](../tickets/00008-TICKET.md) | done | — | [PR #13](https://github.com/johnnickell/fight-agent-os/pull/13) |
