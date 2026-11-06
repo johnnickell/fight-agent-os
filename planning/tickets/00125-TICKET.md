@@ -39,7 +39,7 @@ TICKET-00028's immutable inventory/digests, rehearsal, exact approval, complete 
 retained frozen Markdown. TICKET-00026/00027 retain semantics/order. Until verified approved cutover Markdown stays
 authoritative: no partial import, dual writer, automatic archive or second migration engine.
 
-First production must deliver the existing database-backed browser Wayfinder journey: authorized Repository,
+First production must deliver the existing database-backed browser Wayfinder journey: authorized Project,
 explicit matching/new map choice, initiating user's protected OpenRouter connection, one HITL decision and explicit
 Apply, then durable reconnect with truthful progress/usage. Consume TICKET-00089/00090/00092 and the reconciled
 model/default/continuation/accounting requirements. Missing optional allowance is unavailable, not zero/unlimited
@@ -74,6 +74,12 @@ managed coding workers, legacy retirement and a standalone readiness/certificati
 | Roll back or request restore | Compatible bounded application rollback, otherwise separate human recovery decision | Current schema compatibility, exact candidate and recovery point/data loss | Actual observed recovery state, not inferred completion | Application rollback without data rewind, or separately approved TICKET-00124 restoration |
 
 ## Validation and permissions
+
+TASK-00571 applies [EPIC-00021's architecture/cutover amendment](../epics/00021-EPIC.md#architecture-and-cutover-reconciliation--task-00571):
+use the canonical registered Project/ProjectId and existing semantic handlers, not another release-owned registry.
+Application breaking changes need no compatibility mode, but needed data/history and supplier package obligations
+remain. Exact artifact promotion, paid/mail liabilities, coherent restore and current-schema/security/authority-mode
+rollback checks are genuine multi-resource guarantees, not ordinary-create replay bookkeeping to delete.
 
 Check current exact target/artifact/configuration/schema and applicable approval before effects. Production
 credentials remain in their protected operational owners, never ordinary Agent-visible environment/arguments,
@@ -213,5 +219,6 @@ records integrated-base verification and the full-build limitation: no dedicated
 Earlier counts/no-commit/no-push checkpoints remain historical. Private receipts are preserved outside the disposable
 worktree at the canonical base under ignored `.runs/handoffs/private-production-rollout-publication/`.
 
-Next: Human review/merge decision for PR #161. `/skill:next` remains read-only Board-based execution selection;
-no implementation starts automatically.
+The PR #161/open/publication recommendation above is a dated historical checkpoint, not verified live state.
+Next: `/skill:next` for read-only current Board selection in the selected registered checkout; no automatic Work,
+repeated publication or historical merge action follows.

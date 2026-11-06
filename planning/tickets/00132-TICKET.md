@@ -93,10 +93,16 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | done |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | done |
 | [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | done |
-| [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent |
+| [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | in-progress |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Current final-area work: [TASK-00571](../tasks/00571-TASK.md#work-implementation-checkpoint--2026-11-06) implements
+area-G amendments and refreshed combined coverage, including later MCP/observability changes and additions/status
+transitions. Its own independent Review/documentation QA remain pending. The six accepted area checkpoints below
+are bounded inputs, not acceptance of subsequent deltas or this whole TICKET. Preserve their canonical evidence
+until final coverage consumers finish; this TICKET stays open until the real last child is accepted and closed.
 
 Area F, [TASK-00570](../tasks/00570-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and documentation QA version 2 PASS on `226a054cef9812f84b674c1b73b990e5cbf96887`;
@@ -246,5 +252,6 @@ check assigns all 532 currently unfinished records to exactly one of the seven n
 coverage assignment, not actual requirements or corrected conformity. No product build was run for this
 planning-only update, and none of the seven correction TASKs has started.
 
-Remaining TICKET decomposition and the next target are owned by
-[EPIC-00023's current handoff](../epics/00023-EPIC.md#progress); this accepted seven-area plan starts no implementation.
+The original remaining-decomposition recommendation is historical: EPIC-00023's six TASK decompositions are now
+complete under its [current handoff](../epics/00023-EPIC.md#progress). Current Board routing owns execution selection;
+this seven-area decomposition neither supplies source/supplier qualification nor accepts its own implementation.
