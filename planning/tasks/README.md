@@ -569,7 +569,7 @@
 | [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | done | [TICKET-00131](../tickets/00131-TICKET.md) |
 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
-| [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | in-progress | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
