@@ -40,14 +40,18 @@ Files preserved by the generation manifest remain source content rather than aut
 Do not remove/archive source Markdown or assert that registration alone qualifies all database Planning behavior.
 Actual mode/context capabilities must be implemented and verified before this completion stage succeeds.
 
-Treat registration, checkout-link and configuration/context results as individually reconciled stages under the
+Treat registration, checkout-link, designation and configuration/context results as individually reconciled stages under the
 attempt's original identities. After lost acknowledgement or restart, inspect exact previously committed outcomes
 before retry; never duplicate a Project, Checkout link or configuration/context revision. Ordinary RegisterProject
 uses the attempt's known ProjectId, required audit and uniqueness, not an immutable original-response journal.
 After response loss, fresh authorized GetProjectById/ListProjects queries establish authoritative state; compare
 the known identity and confirmed facts before resuming. A name/source match cannot adopt another Project. Keep
-exact original results for physical link/marker phases and retain stage observations/context provenance in the
-attempt; ordinary configuration handlers need not implement a second response-replay protocol. Registration/
+exact original results for physical link/marker phases. Designation is an ordinary expected-state database change:
+its handler commits only the Project's designated Worktree reference/revision/required audit, enforcing linked-target
+relationship/availability and one-designated-Worktree consistency. After response loss, fresh authorized current/
+history reads reconcile it, not immutable original-response replay or blind reapplication against newer state.
+Retain the attempt's admitted designation stage and observed outcome/revision/provenance alongside context
+provenance; ordinary designation/configuration handlers need no second response-replay protocol. Registration/
 context failure preserves local and optional remote state, with exact retained resources and an allowed next action. Registration emits its owner's
 events; this consumer does not rename/re-emit them into another identity protocol.
 
@@ -80,7 +84,7 @@ silently rolled back by deleting records after another stage fails.
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Register and link the generated checkout | ID-bearing void RegisterProject, then existing link/designation commands through configured buses | Fresh typed ProjectView plus exact physical-operation status and current Git/Host/source/marker evidence | ProjectRegistered and existing link facts after actual commits, not aliases | One stable Project and separately recoverable physical links |
+| Register, link and designate the generated checkout | ID-bearing void RegisterProject, then existing link and ordinary DesignateWorktree commands through configured buses | Fresh typed ProjectView/designation current/history reads; exact physical-operation status and current Git/Host/source/marker evidence | ProjectRegistered, existing link facts and WorktreeDesignated after actual commits, not aliases | One stable Project, separately recoverable physical links and an expected-state designated Worktree reference |
 | Establish initial context | Existing configuration initialization/revision command, then context resolution query | Current configuration, branch/profile/instruction evidence and mode capability | Existing committed configuration facts; resolution itself is read-only | Exact new Project configuration and resolved database-mode context |
 | Recover incomplete finalization | Original-attempt reconciliation and only the missing authorized owner operation | Exact committed results, current evidence and authority | Confirmed owned stage/recovery facts | No duplicate identity, link or revision; earlier effects retained |
 | Inspect completion receipt | N/A — read-only | Authorized immutable subject/provenance, outcomes, warnings and resources | N/A — reading creates no authority | Durable truthful completion or explicit partial result |
@@ -106,8 +110,10 @@ permission-filtered and secret-free. Browser navigation follows ADR 0003/0004 cu
 
 - Real local-only and private GitHub creation end in one correctly identified registered checkout and exact initial
   database-authoritative context, with a complete attributable receipt and no imported/created Planning records.
-- ID-bearing void registration and safe typed Project queries reconcile response loss without requiring ordinary
-  original-response replay; physical link/marker results and the attempt's stage/context provenance remain durable.
+- ID-bearing void registration and ordinary expected-state designation reconcile response loss through fresh
+  authorized typed current/history reads, without original-response replay. Designation retains reference/revision/
+  required audit and one-designated-Worktree consistency; physical link/marker original results and the attempt's
+  designation observations/stage/context provenance remain durable.
 - Original confirmation covers first-link effects; conflicts, missing mode capability and changed authority fail
   safely. Restart/uncertain registration/context outcomes cannot duplicate identities, links or revisions.
 - Actual required managed release and real project evidence cover fresh Git, preparation outcome, registration,
@@ -134,7 +140,8 @@ permission-filtered and secret-free. Browser navigation follows ADR 0003/0004 cu
 ### Approved TASK decomposition and current handoff
 
 TASK-00567 aligns finalization with TICKET-00024/00025's amended Project contract and TASK-00575's registration
-cutover. TASK-00424/00425 now distinguish ordinary database reconciliation from exact physical-stage recovery.
+cutover. TASK-00424/00425 distinguish ordinary registration/designation/configuration reconciliation from exact
+physical link/marker recovery; the attempt retains designation observations/provenance, not an owner response journal.
 No source API or initial database-mode capability is supplied here; TASK-00422/00425 retain that precise hold.
 The complete split below remains the allocation map, not current Board or fresh runtime evidence. Independent
 acceptance of this planning correction is pending; earlier active-work observations remain historical.
@@ -147,7 +154,7 @@ precede final stage and browser consumers; real integrated acceptance stays with
 |---|---|---|---|
 | A | [TASK-00422](../tasks/00422-TASK.md) | TASK-00079, TASK-00082, TASK-00405; initial database-mode supplier unallocated | Read-only finalization feasibility and original intent-to-later-evidence first-link binding |
 | B | [TASK-00423](../tasks/00423-TASK.md) | TASK-00080, TASK-00083, TASK-00412 | Actual registration/link/configuration/context reference protection and durable shared exclusion |
-| C | [TASK-00424](../tasks/00424-TASK.md) | TASK-00423, TASK-00408 | Exact generated Project registration, physical link/designation and original-effect reconciliation |
+| C | [TASK-00424](../tasks/00424-TASK.md) | TASK-00423, TASK-00408 | Exact generated Project registration and ordinary designation with fresh-read reconciliation; physical link/marker original-operation recovery |
 | D | [TASK-00425](../tasks/00425-TASK.md) | TASK-00424, TASK-00405, TASK-00103; new-Project authority initializer unallocated | Existing initial configuration and first verified database-context composition |
 | E | [TASK-00426](../tasks/00426-TASK.md) | TASK-00416, TASK-00107; D transitively through TASK-00414 | Durable receipt, deliberate registered Dashboard handoff and real integrated creation/recovery acceptance |
 
@@ -170,11 +177,14 @@ prompts. Changed effects/evidence require TASK-00416's revised confirmation. TAS
 reference producers and early TASK-00412 gates, never completed cleanup adapters or final browser/receipt acceptance.
 It does not fabricate a session/context choice to retain references. Unknown coverage protects resources.
 
-TASK-00424/00425 consume early participants and each reconcile their original owner effects. Registration/link/
-designation/configuration/mode results stay attributable and independently recoverable; marker effects follow the
-existing durable owner outside business transactions. Names/paths/source similarity and matching current values do
-not prove original-operation identity. Unknown outcomes hold before retry; preserve prior local/remote resources
-and history. No duplicate registration/link/revision, automatic compensation or re-emitted owner event protocol.
+TASK-00424/00425 consume early participants and reconcile each stage through its actual owner. Ordinary registration/
+designation/configuration use fresh authorized state/history reads with known IDs and complete expected state;
+the attempt retains admitted stages and observed outcomes/provenance without imposing owner response journals.
+Physical link/marker results retain original-operation identity, durable intent and fencing outside business
+transactions. Names/paths/source similarity cannot adopt another identity, and matching current values alone
+cannot prove an original physical operation. Unknown outcomes hold before retry; preserve prior local/remote
+resources and history. No duplicate registration/link/revision, blind designation write, automatic compensation
+or re-emitted owner event protocol. Initial-mode capability and all other supplier holds remain.
 
 Use real shared PostgreSQL participants for complete expected state, resource/reference exclusions and atomic
 state/audit/justified stage intent. Entry adapters establish current intent-specific rights; physical phases

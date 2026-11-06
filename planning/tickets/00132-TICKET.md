@@ -98,8 +98,10 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 
 ## Decisions and progress
 
-Area C, [TASK-00567](../tasks/00567-TASK.md#implementation-checkpoint--2026-11-05), is implemented and locally
-verified, awaiting independent Review/documentation QA, not accepted. Its 57 unfinished EPIC-00009/00010 records
+Area C, [TASK-00567](../tasks/00567-TASK.md#r1-repair-checkpoint--2026-11-05), repairs confirmed Review R1 by
+separating ordinary database designation from physical link/marker recovery while retaining attempt provenance
+and all consistency/safety/supplier guarantees. Renewed independent Review/documentation QA remain required;
+the initial candidate received REVISE, not acceptance. Its 57 unfinished EPIC-00009/00010 records
 have explicit corrected or justified-unchanged dispositions in canonical ignored
 `.runs/tasks/TASK-00567/runs/coverage.md`; final inventory accounts for additions/archives. Real physical/provider
 recovery and all supplier holds remain. TASK-00571 receives that coverage, not deferred area-C repairs. Feature
