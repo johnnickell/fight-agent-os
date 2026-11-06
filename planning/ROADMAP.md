@@ -69,6 +69,15 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**TASK-00569 area-E acceptance checkpoint:** [The accepted TASK](tasks/00569-TASK.md#accepted-implementation-checkpoint--2026-11-06)
+records independent Review version 3 ACCEPT and documentation QA PASS on
+`3bd959f2168fc41ec0f4900e71557f1eaa9928b3` (26 passed / 0 failed / 0 incomplete / 1 visual/browser/TLS N/A).
+All 111 unfinished EPIC-00006/00011 records are accounted for (87 corrected / 24 justified unchanged), with
+28 terminal exclusions preserved, including completed TASK-00555. Canonical coverage remains for TASK-00571;
+feature implementation, supplier/authority holds and whole-portfolio acceptance remain separate. Publication/final
+delivery verification and eligible cleanup are pending at this checkpoint; current outcomes are in canonical ignored
+`.runs/tasks/TASK-00569/runs/land.md` and the TASK PR. Human merge remains separate; no post-merge planning chore.
+
 **TASK-00567 area-C acceptance checkpoint:** [The accepted TASK](tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06)
 records independent Review version 3 ACCEPT and documentation QA PASS on
 `125b4a85a1fe39457bb370f195d922cb89d30feb` (27 passed / 0 failed / 0 incomplete / 1 visual-TLS N/A).
