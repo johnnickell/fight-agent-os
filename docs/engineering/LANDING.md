@@ -123,8 +123,10 @@ target's paths and bindings; shared provider links do not authorize edits in a d
 Land closes the independently accepted TASK, eligible parents and applicable authored current documentation
 in this delivery. There is no tracked delivery marker/table, persistent awaiting-merge section, routine
 reconciliation mode or post-merge maintenance obligation. A TASK's `pr` records publication history, not a
-current merge action. Freeze truthful acceptance/publication-pending checkpoints and point delivery results
-to the durable ignored receipt and actual PR; do not maintain a competing tracked live ledger.
+current merge action. Keep truthful acceptance checkpoints in the owning TASK and delivery results in the durable
+ignored receipt and actual PR. Apply the [authored routing boundary](../../planning/CONVENTIONS.md#authored-routing-boundary):
+reconcile existing actionable pointers, never append acceptance/publication-pending journals to Board/Roadmap/README.
+An absent or already-correct routing action needs no new entry; do not maintain a competing tracked live ledger.
 
 Require [exact live PR evidence](HANDOFFS.md#live-delivery-handoff-evaluation) during publication and explicit
 resume. Preserve exact repository/default/base/head/OID, independent Review/QA and accepted-candidate bridge.
@@ -156,19 +158,19 @@ acceptance/publication and canonical reports. These provider instructions grant 
    current handoffs to the evidenced stage, then roll up eligible parents and refresh derived views with the
    target's owning planning command. Preserve requirements, priorities, dependencies, Won't Fix decisions and
    unrelated work. Never edit canonical Review/QA reports, accepted-candidate provenance or historical completion/
-   delivery-pending checkpoint text to manufacture later evidence. If a checkpoint can be mistaken for today's
-   instruction, add a clearly separate current-section pointer or historical-context qualifier outside that
-   checkpoint, leaving its original evidence intact. Factual stage/PR-locator maintenance may accompany permitted
+   delivery-pending evidence in owning records to manufacture later evidence. Update or remove an ended current
+   routing pointer rather than append another checkpoint. Redundant authored Board summaries may be removed when
+   the owning TASK retains their evidence; do not transplant them to README/Roadmap. A genuine pending decision
+   needs only its source-linked target, phase/decision and owner. Factual stage/PR-locator maintenance may accompany permitted
    administrative closeout; changing executable workflow rules, requirements, implementation or acceptance is
    not metadata. Apply the [closeout contract](#acceptance-candidate-and-administrative-closeout): substantive
    edits require a new acceptance candidate and independent review, not a broadened Land repair exception.
-4. **Freeze truthful wording, verify delivery.** Before the final metadata commit, make current handoffs explicit
-   about what is established and what remains pending. For example: “A accepted; publication/final-head checks
-   pending at this checkpoint; current delivery result and next action: <durable receipt/actual PR>.” Use real
-   locators, not that placeholder. While proof is pending, the current action is evidence recovery through Land,
-   not an unconditional human-merge instruction. Put later delivery results in the ignored receipt and PR body;
-   do not change a historical pending checkpoint or create another tracked commit solely to certify B's success.
-   If current tracked wording already points to that live result and remains truthful, leave it unchanged.
+4. **Freeze truthful wording, verify delivery.** Before the final metadata commit, the owning TASK records the
+   accepted candidate and still-pending publication/final-head checks with real receipt/PR locators. This is not
+   a requirement to add that checkpoint to navigation surfaces. While proof is pending, evidence recovery through
+   Land remains the next action, not unconditional human merge. Put later delivery results in the ignored receipt
+   and PR body; do not change historical source evidence or create another tracked commit solely to certify B's
+   success. If an applicable current routing pointer is already truthful and concise, leave it unchanged.
    A failed/pending required check retains the draft/resources and precise hold under Verify and publish.
 5. **Check and report consistency.** Inspect the effective diff and every inventoried current handoff after
    refresh, checking authored sections separately from generated blocks. After the final push verify the actual

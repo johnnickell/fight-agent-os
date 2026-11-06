@@ -20,12 +20,13 @@ identities, grants/claims/leases, transactional dispatch and handoff decisions t
 qualified Fight Common event-store/projector contracts and application metadata rather than another event protocol
 or importing raw Pi JSONL. Preserve actual actor, Command, causation/correlation and delegated-user provenance.
 
-Capture selected sanitized operational activity in a separately identified application-owned observation ledger.
+Capture selected sanitized operational activity through Common's canonical observation recording Commands and
+retain application-owned Workflow relationships and projections, not a second mirrored observation ledger.
 Relate facts to actual Workflow, PhaseAttempt, ProcessAttempt, role/Agent/conversation, tool or external-operation
-identities. Record available producer/receipt times, safe intent/target summary, start/end, duration, outcome/exit,
-failure classification and permission-filtered evidence references. Redact before persistence and projection;
-arguments, shell commands, paths, environment, provider payloads and output are not intrinsically safe. Omit unsafe
-fields; bounded safe output lives in separately authorized Artifacts, not unbounded observation bodies.
+identities. Select safe source values before persistence and projection; arguments, shell commands, paths,
+environment, provider payloads and output are not intrinsically safe. Omit unsafe fields; bounded safe output
+lives in separately authorized Artifacts, not unbounded observation bodies. The supplier mapping below separates
+existing contracts, approved additions and application responsibilities.
 
 Do not ingest, index, search or expose raw prompts, assistant/model responses, compiled instructions, thinking,
 provider signatures, transcripts, message excerpts or native JSONL as execution history. Protected Harness/Pi
@@ -37,8 +38,9 @@ exists, retain provenance and explicit incomplete/unknown state, and never inven
 tool ran. No custom global observation sequence, spool, telemetry service or complete-transcript reconstruction is
 required. Recovery uses authoritative state and reconciled evidence even when every optional observation is absent.
 
-Build idempotent rebuildable PostgreSQL Workflow list/detail, phase/activity, evidence-link and live-summary views
-under at-least-once delivery. Keep authoritative decisions visually and structurally distinct from observations.
+Build idempotent rebuildable PostgreSQL Workflow list/detail, phase/activity, evidence-link and live-summary views.
+Qualified semantic-event projectors retain their at-least-once contract; optional observation notifications do not
+inherit it. Keep authoritative decisions visually and structurally distinct from observations.
 Integrate TICKET-00098's measured usage/time/forecast facts with their own freshness/provenance rather than summing
 raw streaming deltas here. Projection progress/failure is not aggregate truth; expose stale/partial/unavailable
 states and do not reconstruct authoritative transitions from telemetry.
@@ -58,11 +60,60 @@ Exclude another Workflow event store/state machine, forecast authority, raw tran
 platform, browser component implementation and managed Review/publication behavior. Later phases extend this same
 history through their owners; absence of a Review is not approval or a synthetic verdict.
 
+### Canonical observation supplier and delivery — 2026-11-06
+
+The maintainer selected Common-owned observations with best-effort capture and independent secondary Command
+transactions. This supersedes the original application-ledger direction, not Workflow authority or required
+transaction/audit/reference/lifecycle guarantees. Application policy subscribers dispatch through the configured
+CommandBus after source commit; each secondary handler owns its transaction. Do not wrap Common Commands in a
+caller transaction, call private handlers or hide audit policy in transaction/repository decorators.
+
+| Fact or capability | Supplier and retained consumer responsibility |
+|---|---|
+| Canonical activity and identity | Existing Common `Observation::forActivity()`, `PhaseActivity`, `RecordPhaseObservation` and admitted reads; reuse directly, without mirrored raw observations or parallel package values. |
+| Optional safe target/timing/result | [Common TASK-00205](https://github.com/johnnickell/fight-common/blob/8f69f701102f246c0f77000d46bd4238f8f56455/planning/tasks/00205-TASK.md) plans `PhaseActivity::execution()` with `ActivityExecution`, `ActivityTarget`, `ActivityTiming` and `ActivityResult`; reuse existing `ObservationOccurrence`/`Duration`. `activity.execution` remains planned, not available in the inspected source or installed lock. |
+| Workflow/process attribution and target revision | TASK-00386 binds trusted application relationships; a safe capability/name is not a raw URI/path or proof of lineage. Do not duplicate Common target/time/result types or encode missing structured facts in summary prose. |
+| Evidence links, required audit and restrictions | Existing TASK-00378/00379/00380 owners and TASK-00388 integration; a post-commit subscriber cannot manufacture atomic holds, required references or safe disclosure/removal fences. |
+| Stable history/search | TASK-00387 owns the application snapshot/cursor projection. Common's live offset pages may repeat/skip under change and do not supply a response-wide snapshot or durable catch-up checkpoint. |
+| Usage and known timing categories | TASK-00396/00397 and original accounting owners retain normalization, corrections, overlap/category policy and durable totals; typed observed return/throw/exit is not business success. |
+| Privacy and live delivery | TASK-00388 owns actual copy/restriction participation; Common protected-body removal is not safe-metadata purge, tombstones or full retention/redaction. Mercure and durable application queries remain separate from MCP subscriptions. |
+
+Planned nested `activity.execution` facts leave activity Observation top-level start/end null and outcome unknown;
+they do not change latest session/phase state or establish Workflow success.
+
+Use stable producer/source observation identities and exact-content retry semantics; source start and terminal
+facts have distinct immutable identities. Duplicate subscriber delivery must not duplicate application effects or
+overwrite newer revisions. Common dispatches reference-only `ObservationRecorded` after commit; matching retained
+retries do not redispatch it. A dispatch exception can follow a committed observation. Do not infer rollback,
+complete capture or reliable replay from a returned/failed dispatcher or a void Command.
+
+Optional policy delivery failures must not change the source operation's result or retry its business work.
+Retain explicit incomplete/stale/unknown coverage and bounded non-recursive failure reporting; gaps can remain
+until a justified, bounded reconciliation against authoritative retained facts. Neither convergence nor crash-complete
+capture is promised. No generic reconciliation service, new outbox or automatic query-side repair is required.
+Reconciliation cannot reconstruct vanished facts or treat server receipt time as a global sequence.
+
+Required audit, holds/references, restriction generations and durable external-effect intent keep their original
+owning guarantees. Qualify actual Common admission/storage/read participation before exposing linked evidence or
+allowing cleanup; missing participation preserves bytes or denies the affected route. The exact cross-owner
+reference/hold and safe-metadata purge integration remains an implementation decision/qualification hold, not
+something TASK-00205 or a subscriber supplies. Stable projection catch-up/rebuild enumeration also needs a qualified
+source contract; Common's live page/offset bounds and post-commit events alone do not prove complete rebuild.
+
+Supplier inspection: remote Common develop is `8f69f701102f246c0f77000d46bd4238f8f56455`; its changes since
+`60d66b30` are planning only, with the existing recorder/read implementation unchanged. The latest observed remote
+Common tag is v1.4.1 (`a482c220d312d2ef7762c3f0d85d9fb76a7021fa`), without execution Tools/scoped-read ports.
+Agent OS still locks Common v1.3.0 and Access Control v0.8.0. Implementation requires actually qualified,
+independently accepted, tagged contracts and supported-minimum/source/lock evidence; this inspection is not runtime
+qualification or permission to update dependencies. TASK-00205 adds no transaction participation or automatic
+capture. Preserve statuses, orders and local dependency edges; neither Agent OS nor AccessControl adoption is a
+Common release prerequisite. [TASK-00245](../tasks/00245-TASK.md#external-tool-supplier-and-scope) owns binding/scoped-read adoption.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Record safe activity | Admit bounded sanitized observation with actual producer identity | Current provenance, scope, known identity and retention category | Non-authoritative operational observations | Safe ledger entry, never Workflow advancement |
+| Record safe activity | Existing Common recording Command through configured bus, optionally from an application policy subscriber | Current provenance, scope, known identity and retention category | Reference-only Common recording fact after its commit | Canonical observation or explicit capture gap, never Workflow advancement |
 | Project/rebuild committed state | Owning projection processing/rebuild operation | Authoritative events, prior projection position and exact evidence | Committed projection notifications, not new Domain decisions | Idempotent derived views; source authority unchanged |
 | Inspect Workflow/phase history | N/A — read-only | Bounded safe list/search/detail/activity queries | N/A — reading cannot repair or transition work | Authorized exact state plus explicitly partial observations |
 | Follow live updates | Authorized subscribe/reconnect; no business mutation | Durable current projection and freshness before following updates | Committed safe projection notifications | Best-effort timely visibility, never authority from transport |
@@ -76,8 +127,9 @@ own representation. Projection handlers coordinate collection-like persistence, 
 one generic shared-connection transaction, not a Store/UoW or independent repository commit. Semantic Workflow
 invariants remain with Workflow; projection positions and observations create no authority.
 Validate typed IDs, parentage, bounded safe fields, schema/version and expected currentness without accepting a
-model-supplied identity as provenance. State/telemetry timestamps do not authorize a transition. Keep shared
-transaction and required audit boundaries under ADR 0002; notifications occur only after projection commit.
+model-supplied identity as provenance. State/telemetry timestamps do not authorize a transition. Keep each owning
+operation's shared transaction and required audit boundaries under ADR 0002; optional capture/projection may commit
+later and is not atomic with the source operation. Notifications occur only after the corresponding commit.
 
 Bound query/filter/cursor and event payload sizes, enforce stable pagination and access for each result/evidence
 link, and reject cross-scope or stale cursor use safely. UI/query caches cannot leak previously authorized private

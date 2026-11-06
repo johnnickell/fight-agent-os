@@ -32,6 +32,17 @@ corrections. A missing supplier holds only its affected integration, not unrelat
 retain their own compatibility obligations; deliberate Agent OS breaks still require needed-data preservation,
 migration or explicitly authorized disposal.
 
+## Planned canonical observations and MCP binding
+
+[TICKET-00096's supplier mapping](../../planning/tickets/00096-TICKET.md#canonical-observation-supplier-and-delivery--2026-11-06)
+selects Common-owned canonical observations, best-effort secondary recording Commands and application-owned Workflow
+relationships/projections, not a mirrored raw ledger. Common TASK-00205 is approved planning for optional typed
+activity target/timing/result facts, not implementation acceptance or tagged availability. Required audit/reference/
+lifecycle guarantees and richer history/accounting remain separate consumer obligations with explicit holds.
+[TASK-00245](../../planning/tasks/00245-TASK.md#external-tool-supplier-and-scope) consumes AccessControl TASK-00084's
+approved map-plus-attributes design and separate TASK-00089/00090 scoped reads; current source remains attribute-only.
+These are planned integrations, not installed capabilities, grants, dependency updates or Common release gates.
+
 ## Current automated boundary
 
 Run the focused owning tool:

@@ -94,6 +94,13 @@ rollback from an exception. An event does not make email, filesystem, Git or rem
 durable or exactly once. Required external effects retain their justified intent/reconciliation contracts;
 state actual attempt/delivery and post-commit uncertainty guarantees, not guarantees inferred from CQRS.
 
+Cross-use-case automation may use policy subscribers to submit secondary Commands through configured buses, each
+with its own handler-owned transaction. Optional observability/derived state may lag or remain missing without
+changing the original business result or retrying its work. Use stable source identities, idempotent consumers,
+explicit incomplete coverage and justified bounded reconciliation; post-commit events alone promise neither durable
+delivery nor convergence. This does not move required audit, safety restrictions, required reference/hold writes
+or durable external-effect intent out of their owning guarantees. Do not infer rollback from a post-commit failure.
+
 Common's DBAL-only transaction API and explicit Access Control Role-handler audit are capability prerequisites
 to qualify, not imports to guess. The current `RoleMutationUnitOfWork` consumer decorator is a correction target,
 not the approved audit design. Preserve required Role mutation/audit atomicity until its separately owned

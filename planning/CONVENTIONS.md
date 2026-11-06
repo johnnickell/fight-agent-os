@@ -37,7 +37,9 @@ stop without invoking a workflow or changing files. Missing indexes are reported
 
 During authorized planning updates, keep current Board/Roadmap handoffs source-linked and concise: target,
 phase, pending decision/owner. Keep Wayfinder inventory/frontier pointers current. These are navigation aids,
-not another backlog or proof of delivery. Preserve generated sections and all historical decisions.
+not another backlog or proof of delivery. Preserve generated sections and historical decisions in their owning
+records; do not preserve redundant Board journals as routing instructions. Follow the
+[authored routing boundary](#authored-routing-boundary).
 
 Routing sources: [TASK Board](tasks/BOARD.md), [Wayfinder inventory](wayfinder/README.md), [Roadmap](ROADMAP.md).
 
@@ -184,6 +186,23 @@ and title. Artifact and blocker IDs are visible links. Archives have separate in
 For "What's next?" or `/ask-matt`, return the current human decision/question and active TASK; otherwise return
 the first executable TASK in Ready Frontier. Do not start a second TASK merely because its ID is lower. If there
 is no executable work, say so. Execution priority is authored in record metadata rather than generated rows.
+
+### Authored routing boundary
+
+The Board's authored introduction contains navigation and only current human decisions or actionable work-selection
+holds. Do not add a “Current assessment handoff” section, per-TASK acceptance/publication checkpoints, candidate
+hashes, Review/QA counts, delivery-pending narratives or ignored receipt inventories, including under another heading.
+Keep acceptance, warnings and historical proof in the owning TASK and canonical reports; live delivery/cleanup
+results belong in the active ignored handoff and actual PR. Generated Recently Closed rows remain unchanged.
+
+Work, Build and Land synchronize only actionable routing facts when the next decision/action changes; completing,
+accepting or publishing a TASK does not require a new authored Board entry. Remove ended/redundant routing pointers
+rather than prepend a new checkpoint or carry them as preserved history. Keep a genuinely pending human decision
+source-linked and brief: target, decision/phase and owner. Never infer merge or erase the underlying hold.
+
+Roadmap and README may describe current strategy/capabilities, not mirror a per-TASK delivery journal. Do not move
+removed Board material there. Preserving historical evidence means retaining owning records/reports, not copying
+checkpoints into navigation surfaces. No live PR sweep, delivery queue or post-merge maintenance is required.
 
 `ROADMAP.md` retains strategy and milestone narrative; its EPIC status table is generated. Standalone chores
 appear on the Board without inventing an EPIC. Live EPICs and TICKETs have generated child tables. Archived

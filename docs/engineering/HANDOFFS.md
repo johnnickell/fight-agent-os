@@ -61,7 +61,9 @@ For an open-PR QA invocation, the observed PR URL can be the resume target; reso
 Land owns accepted TASK/current-doc closeout during publication. Keep live delivery results in the durable
 ignored receipt and actual PR, not tracked delivery markers/tables or a persistent awaiting-merge queue. A PR
 link is publication history, not proof of current state; no routine post-merge planning maintenance is required.
-Preserve independent reports, historical facts and separate planning/decomposition handoffs. Planning stays offline.
+Preserve independent reports and historical facts in their owning records, plus genuine planning/decomposition
+handoffs. Apply the [authored routing boundary](../../planning/CONVENTIONS.md#authored-routing-boundary): no per-TASK
+acceptance/delivery journal on the Board or copied into Roadmap/README. Planning stays offline.
 
 Work and Build carry native [resource observations](LANDING.md#inventory-and-preserve) in their existing
 handoffs to Land: Git checkout/ref/published OIDs, Compose project/config/minimal teardown locator, current native
@@ -85,8 +87,10 @@ ordinary one-TASK Land still does not sweep unrelated subjects.
 
 During authorized normal publication, Land applies [current subject handoff synchronization](LANDING.md#synchronize-current-subject-handoffs)
 to applicable authored current Board/Roadmap/README handoffs as well as source records, parent rollups and derived
-views. A historical acceptance/delivery-pending checkpoint is not today's instruction: preserve it and canonical
-reports, and distinguish the current stage/action with an evidenced current section or durable result locator.
+views. A historical acceptance/delivery-pending checkpoint is not today's instruction: preserve source TASK evidence
+and canonical reports, not redundant Board copies. Update/remove an existing actionable pointer when necessary;
+do not create an assessment section or prepend a new checkpoint to record acceptance, publication or cleanup.
+Use the TASK/PR and ignored handoff for that evidence, with only genuine current decisions in routing surfaces.
 Missing proof or unresolved contradictory handoffs need a precise hold, not an inferred merge, unrelated repair
 or another metadata commit merely to certify final-head success. Recommendations and read-only routing do not
 perform this reconciliation or acquire Land authority. There is no background watcher, post-exit update or
