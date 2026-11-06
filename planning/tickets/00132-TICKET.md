@@ -100,11 +100,15 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 
 Area D, [TASK-00568](../tasks/00568-TASK.md), has a Work implementation checkpoint, not independent acceptance.
 All 63 unfinished EPIC-00014/00017 records are accounted for: 53 corrected / 10 justified unchanged, no archived
-descendants. Actual requirements, acceptance and current supplier handoffs are repaired; credential/restoration/
-writer safety and human template authority remain. Canonical ignored `.runs/tasks/TASK-00568/runs/coverage.md`
-remains needed by TASK-00571. Fresh 25-phase application evidence and fresh planning checks are recorded in the
-TASK; final gate qualification and retained resources are in its Work handoff. Independent Review/documentation
-QA are next. No feature/supplier/runtime acceptance or complete-portfolio closure is inferred.
+descendants. Initial candidate `3f1017ad0ecedef2e0df4a9ba3ddec02660a786a` received Review version 3 REVISE for R1's
+surviving atomic caller-authorization hold. Bounded Work repair reconciles TASK-00256/00300 and related TASK-00259
+handoffs with TASK-00303: adapter caller admission, retained complete-set/reference/template-scope/expected-state
+and required reviewed-source audit holds, including no-ops. Credential/restoration/writer safety, statuses, edges
+and human template authority remain. Canonical ignored `.runs/tasks/TASK-00568/runs/coverage.md` remains needed
+by TASK-00571. Original fresh 25-phase application evidence, fresh repair docs/planning checks and normal gate
+qualification with honest application reuse are recorded in the TASK/Work handoff, alongside retained resources
+and warnings/gaps. Renewed independent Review, then documentation QA, are required; Work does not accept R1.
+No feature/supplier/runtime acceptance or complete-portfolio closure is inferred.
 
 Area C, [TASK-00567](../tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`; R1 is resolved,
