@@ -196,6 +196,12 @@ Read the [foundation brief](planning/FOUNDATION.md), [planning conventions](plan
 [TASK Board](planning/tasks/BOARD.md). Use your preferred planning skills in the terminal; saved artifacts follow
 **EPIC → TICKET → TASK**, with dependency-ordered SUBTASKs during implementation.
 
+For already accepted work with an existing open PR, explicit
+[`/skill:sync TASK-NNNNN`](.pi/skills/sync/SKILL.md) delegates merge integration to fresh Engineer and automatic
+PR refresh to fresh Land. It reuses existing dispatch and original independent reports; intent-preserving code
+conflicts alone do not repeat Review/QA. New implementation still uses ordinary Build/independent acceptance.
+Sync requires native Harness admission; discovering the skill does not update an installed package.
+
 Use the [ubiquitous language](docs/UBIQUITOUS_LANGUAGE.md) for human Roles, Agent Team roles, Permissions and
 Repository access. Fresh project skills live in [.pi/skills/](.pi/skills/README.md). Markdown remains authoritative
 until an explicit, verified migration to the future project-scoped planning database.

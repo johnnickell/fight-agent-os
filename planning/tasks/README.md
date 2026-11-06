@@ -589,4 +589,5 @@
 | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | done | — |
 | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | done | — |
 | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | ready-for-agent | — |
+| [TASK-00587](00587-TASK.md) | Deliver local Sync from accepted TASK to refreshed PR | in-progress | [TICKET-00137](../tickets/00137-TICKET.md) |
 <!-- /planning:records -->

@@ -184,9 +184,9 @@ reattached refs and unavailable inventories retain their existing source/deliver
 recreated original path is held after Docker teardown. Never redirect the original path to another worktree
 by surviving ref, recreate source or publish again for cleanup.
 
-If Land's own session consumes source, Build observes its real exit before source retirement from the safe
-checkout. Docker down itself does not need that exit. There is no post-worker receipt/PID cleanup helper. The
-existing Build ledger/handoff carries remaining effects and native locators, not another resource record.
+If Land's own session consumes source, the owning Build or Sync coordinator observes its real exit before
+source retirement from the safe checkout. Docker down itself does not need that exit. There is no post-worker receipt/PID cleanup helper. The
+existing coordinator ledger/handoff carries remaining effects and native locators, not another resource record.
 
 ## Runtime-free qualification fixtures
 

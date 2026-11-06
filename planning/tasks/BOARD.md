@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| None | — | — | — | — | — | — |
+| — | [TASK-00587](00587-TASK.md) | Deliver local Sync from accepted TASK to refreshed PR | [TICKET-00137 — Coordinate accepted TASK synchronization through PR refresh](../tickets/00137-TICKET.md) | in-progress | — | — |
 
 ## Ready Frontier
 

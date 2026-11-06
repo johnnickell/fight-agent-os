@@ -17,6 +17,11 @@ workflow metadata, optional discovery and conservative legacy reconciliation. Pr
 authority change, with explicit conversion of historical timeboxed profiles. Use ordinary Pi and the owning provider's
 `/skill:build TASK-NNNNN`: shell/Git/checks use ordinary Pi execution without Jev command screening or confirmations.
 Jev is optional: no setup, credentials or enrollment is required for normal native tools. Shell can bypass relevance screening and same-user state is not confined.
+Explicit [`/skill:sync TASK-NNNNN`](../../.pi/skills/sync/SKILL.md) selects accepted-work coordination with
+`skill: sync` / `effect: coordination`, using that same process dispatcher for fresh Engineer then Land.
+It requires current independent acceptance and an existing open PR; it is not Build authority or the SDK Engineer
+route. Skill discovery does not update a separately installed Harness; adopt reviewed source explicitly before
+native invocation when Sync admission is missing.
 See the profile's [launcher contract](FILE_SCREENING_PROFILE.md#coverage-and-normal-build). Limited live synthetic
 boundary evidence exists; representative investigations, visual proof and independent acceptance remain pending.
 Local checks do not establish production readiness. Both protected profiles share a

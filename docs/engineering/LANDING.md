@@ -64,7 +64,9 @@ Independent review must use the recorded decision, not a builder's interpretatio
 
 With that contract established, the finite sequence is A → accepted A → closeout B → verified B → cleanup.
 Acceptance evidence identifies A; delivery evidence identifies B. No tracked commit is needed after B succeeds.
-An additional reconciliation or non-administrative change creates a new acceptance candidate, not an exception.
+A genuinely new implementation creates a new acceptance candidate. Behavior-preserving base integration can
+retain acceptance under [advancing-base reconciliation](#reconcile-an-advancing-base), including code conflicts;
+non-administrative does not by itself mean new behavior.
 
 ## Draft publication to obtain hosted evidence
 
@@ -102,16 +104,39 @@ indefinitely; report queued/unavailable evidence and resume when new results or 
 
 The accepted report anchors **review provenance**, not a requirement that `develop` remain frozen. If the feature branch is still based on the reviewed base, reconcile it with current `develop` when needed:
 
-1. Record reviewed base/head and current base/head. Require a clean target and a usable canonical `accept` report for the original snapshot. Check remote publication first: a local unpublished branch may be rebased; a published branch must be updated without rewriting published history (for example, merge `develop`) or left for the hosting platform. Explain the choice if the user asked specifically for a rebase that would need a force push.
-2. Reconcile conflicts in generated planning views by regenerating them from authoritative records. For overlapping configuration or other files, inspect both sides and the final effective result; do not silently choose one side. Preserve both TASKs' behavior. Use `git range-diff` where applicable, compare the old reviewed change with the new-base effective diff, and inspect changes on the new base that interact with the TASK. An identical patch alone is not proof against changed dependencies.
-3. Record a concise provenance bridge: old and new base/head OIDs, conflict resolutions, effective implementation differences, dependency interactions, and fresh focused results and the full-gate receipt assessment under [gate evidence reuse](EXECUTION.md#gate-evidence-reuse). If only mechanical integration (including generated views and independent registrations) changed and the reviewed behavior remains intact, the independent `accept` remains applicable. A semantic implementation change, unproven interaction, unexpected scope change, or failing check requires a new independent review of the new target; preserve the branch and stop publication. Never rewrite the original review to pretend it reviewed the new OIDs.
+1. Record accepted/current base/head and published OID. Require a clean selected target, canonical independent
+   Review ACCEPT and applicable QA PASS or justified criterion-specific N/A covering the accepted work. Inspect
+   intervening changes/bridges; missing evidence, unreviewed behavior or a newer failure cannot inherit an older pass.
+   Fetch and merge the verified policy base (`origin/develop` for Agent OS). Never rebase or force-push this route.
+2. Inspect incoming and accepted TASK intent, relevant non-conflicting interactions and the effective result.
+   Resolve meaningful code/configuration overlap to retain both behaviors, never blind whole-side selection.
+   Preserve authored planning changes, then regenerate derived views from authoritative records. Compare the
+   accepted change with the new-base effective diff; identical patches alone do not establish dependency safety.
+3. Record old/new base/head, concise nontrivial resolutions, effective differences/interactions and focused
+   results in the existing ignored handoff. Commit the integration and run normal `./bin/build` on the candidate
+   under [gate evidence reuse](EXECUTION.md#gate-evidence-reuse), naming original receipts and warnings. Required
+   hosted/final-head checks remain binding. Behavior-preserving integration can retain original acceptance even
+   with code conflicts; do not require fresh Review/QA solely for overlap. Preserve original report bytes and
+   actual subjects, never rewrite them to claim assessment of new OIDs.
+4. Stop for incompatible intended behaviors (human decision), a discovered defect (repair owner), genuinely new
+   behavior (normal implementation/independent acceptance), or failed/unavailable required verification (check/
+   evidence owner). Missing applicability needs its concrete evidence action, not automatic repair or an invented
+   accept. New implementation still requires normal gates, independent Review and affected QA.
 
 Example: two independent TASKs update the Board, an index or completion notes. Preserve both source records,
 regenerate derived views, inspect the effective diff and run required checks. Existing acceptance remains usable;
 no second model review, extra human approval step or revision-cycle charge is required solely for that conflict.
 A Markdown requirement, authority rule or behavioral contract change is substantive and does not get this exception.
 
-Landing can resolve mechanical conflicts but not repair an implementation defect. If reconciliation cannot complete safely, stop with the exact conflict and hand off to `work` and then `review` as needed. Rebase/merge must never force-update a published branch.
+Landing can perform behavior-preserving integration, not implementation repair. For explicit
+[`/skill:sync TASK-NNNNN`](../../.pi/skills/sync/SKILL.md), the real Sync coordinator delegates integration to fresh
+Work and automatically delegates successful verification to fresh Land through the existing process dispatcher.
+Land checks the integration-only scope, candidate/gate evidence and original independent reports without acting
+as another full Review/QA stage. It retains target binding, exact live PR/base/head/remote checks, relevant
+closeout, hosted/final-head requirements and resource procedures below. Sync requires an existing OPEN PR:
+update that same PR by non-force push, never create/replace/retarget it. If the base advances again, apply this
+same bounded policy and verify the resulting candidate, or hold with the concrete remaining integration action.
+An ended PR uses its existing owner/recovery route, never automatic replacement.
 
 ## Synchronize current subject handoffs
 
@@ -411,9 +436,11 @@ rescinding A's acceptance or requiring another review.
 A queued, unavailable or infrastructure-failed final run leaves delivery incomplete: retain B, draft status and
 resources, disclose the cause, and retry the same head when authorized. Do not toggle `done` just to record run
 state. A run demonstrating an implementation defect invalidates acceptance: stop landing, route to `work` to
-reopen the TASK and repair it, then require new verification and independent review. A non-administrative B or
-unproven interaction likewise stops for fresh review; it cannot inherit A's completion claim. Any later commit
-changes the delivery candidate and requires its own applicable final-head proof. Never use A's green run for B.
+reopen the TASK and repair it, then require new verification and independent review. Genuinely new behavior
+cannot inherit A's completion claim. Behavior-preserving base integration follows the
+[advancing-base boundary](#reconcile-an-advancing-base), not an automatic Review/QA rerun for code conflicts;
+missing interaction evidence holds its concrete owner/action. Any later commit changes the delivery candidate
+and requires its own applicable final-head proof. Never use A's green run for B.
 
 After final push, query the hosting service: PR open, base `develop`, intended head branch, remote head equal to local `HEAD`. Authentication failure, failed required checks, publication failure, or remote-head mismatch blocks a successful landing; preserve the worktree. No approval or merge occurs here.
 
@@ -446,7 +473,7 @@ separate explicitly requested operation. Return per-subject removed/retained/hel
 
 ### Executable local operation
 
-Land, Build and Worktrunk use the [explicit Compose resource procedure](RESOURCE_LIFECYCLE.md).
+Land, Build, Sync and Worktrunk use the [explicit Compose resource procedure](RESOURCE_LIFECYCLE.md).
 `bin/down --worktree SELECTOR` disposes task Docker resources BEFORE source/config deletion. Main down retains
 main persistent data. Native Git effects remain separate from Docker and publication. No resource ledger,
 worker/PID receipt gate, parallel cleaner or archive; these tools are not shell enforcement or OS isolation.

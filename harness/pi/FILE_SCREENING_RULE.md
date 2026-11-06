@@ -48,8 +48,8 @@ Select the task and intended checkout in the interactive invocation, for example
 choice, not another enrollment or approval. Git registration makes a selected future Work checkout available to optional discovery. Fresh sessions default to their containing registered checkout; trusted Build launchers pass task and checkout.
 The selected checkout records task ownership; it is not a native file-tool permission gate. See the complete [skill/effect inventory](FILE_SCREENING_PROFILE.md#installed-skill-effects).
 
-The trusted launcher phase or explicit user `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land` selects the
-role. Only interactive user input changes it automatically; model/extension and RPC prompt text cannot promote
+The trusted launcher phase or explicit user `/skill:work`, `/skill:review`, `/skill:qa`, `/skill:land`,
+`/skill:build` or `/skill:sync` selects the role. Only interactive user input changes it automatically; model/extension and RPC prompt text cannot promote
 the role. The operator can use `/file-screening role engineer|reviewer|qa|land`. Inspect `/file-screening` for the
 active role. On every startup/reload, an explicit trusted launcher takes precedence. Otherwise, the latest
 session-wide selection survives tree navigation and restart when its session identity and launcher provenance
@@ -58,8 +58,8 @@ operator selects a workflow. A fresh unassigned local session defaults to Engine
 optional discovery; correct the storage problem and reload to recover it. Native reads, writes and edits remain available.
 
 Use `file_screening_status.workflow` to identify the selected skill, effect, task, checkout and mode.
-The top-level `phase` is the workflow role: Build uses `phase: qa` with `skill: build` and
-`effect: coordination`. That is a valid coordinator, not a QA-worker mismatch. Do not request a relaunch
+The top-level `phase` is the workflow role: Build and Sync use `phase: qa` with their selected `skill`
+and `effect: coordination`. That is a valid coordinator, not a QA-worker mismatch. Do not request a relaunch
 or role promotion based on `phase` alone. See the [status contract](FILE_SCREENING_PROFILE.md#installed-skill-effects).
 
 - Engineer (`work`): read and edit normal project files, including `.env.example` and project `.pi/skills`.
@@ -67,7 +67,9 @@ or role promotion based on `phase` alone. See the [status contract](FILE_SCREENI
   checkout, plus `.runs/tasks/<TASK-ID>/runs/` scratch. The base report remains authoritative.
 - QA: read files, execute checks/probes and use appropriate Git operations; write probes/evidence under `.runs`,
   without repairing source or tests. Its report directory is `.runs/qa/<TASK-ID>/`; Build uses
-  `.runs/build/<TASK-ID>/` for coordination and cannot edit source. All have task-owned execution scratch.
+  `.runs/build/<TASK-ID>/` for coordination and cannot edit source. Sync shares that task lock/evidence
+  convention, delegating accepted-work integration to fresh Engineer then existing-PR delivery to fresh Land.
+  All have task-owned execution scratch.
 - Land: read/edit project files and perform authorized Git delivery work.
 
 For an explicitly assigned release review/QA subject, the provider's release-acceptance protocol substitutes

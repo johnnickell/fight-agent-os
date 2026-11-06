@@ -152,7 +152,7 @@ prohibit overwriting another run. Query/trace and status/preview/dry-run modes p
 | `work` | Ordinary files in the selected implementation checkout, including planning, skills and `.env.example` |
 | `review` | `.runs/reviews/<TASK-ID>/` reports/history at base or selected checkout; explicit release subjects use the release report contract below |
 | `qa` | `.runs/qa/<TASK-ID>/` evidence/captures at base or selected checkout; explicit release subjects use the release report contract below |
-| `build` | `.runs/build/<TASK-ID>/` requests/ledger at base or selected checkout; no source promotion |
+| `build`, `sync` | Shared `.runs/build/<TASK-ID>/` requests/ledger/subject lock at base or selected checkout; no source promotion |
 | `land` | Selected checkout reconciliation, base `planning/` delivery metadata and owned task evidence |
 | `next`, `audit`, `architecture`, `security-audit`, `adopt` | Inspection and owned task evidence only |
 | `fix` | Selected `planning/tasks/` and `planning/ROADMAP.md` after record creation is authorized |
@@ -188,10 +188,14 @@ the canonical base even when only a linked worktree was enrolled. Native tools u
 symlinks/hardlinks and runtime resources; this does not authorize unrelated changes or disclosure.
 
 `file_screening_status` reports the selected `workflow.skill`, `effect`, `taskId`, `checkout` and `mode`.
-Its `phase` is the workflow role: Build deliberately uses `qa` with the `coordination` effect. This does
-not make Build a QA worker or prevent child dispatch. `workflow.launcherRole` records the startup role
+Its `phase` is the workflow role: Build and Sync deliberately use `qa` with the `coordination` effect. This
+does not make either coordinator a QA worker or prevent child dispatch. `workflow.launcherRole` records the startup role
 (`null` for an unassigned interactive launcher), not the current skill. Diagnose a workflow mismatch from
-the selected skill and scope, never from `phase: qa` alone; do not promote Build to Engineer or Land.
+the selected skill and scope, never from `phase: qa` alone; do not promote a coordinator to Engineer or Land.
+Sync accepts exactly one `TASK-NNNNN` and optional absolute `--checkout`; missing/multiple subjects or extra
+options refuse selection. Only explicit interactive input selects it, never RPC/extension prompts. It uses the
+existing process dispatcher for fresh Engineer then Land, not the Build-only SDK tool; its
+[owning skill](../../.pi/skills/sync/SKILL.md) checks acceptance, integration scope and the existing open PR.
 
 The reusable owning native probe is `tests/native/worktree-access.mjs`: pass an existing installed Pi
 `node_modules` directory and an ignored evidence directory. It uses real disposable Git worktrees, native
