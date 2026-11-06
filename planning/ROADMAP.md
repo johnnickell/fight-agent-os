@@ -69,6 +69,14 @@ Wayfinder decisions merely because their downstream delivery remains unimplement
 
 ## Current planning handoff
 
+**TASK-00585 accepted repair checkpoint — 2026-11-05:** [the TASK](tasks/00585-TASK.md#accepted-implementation-checkpoint--2026-11-05)
+records independent Review ACCEPT and visual/behavioral QA PASS on `3d324c7e` (10 groups; QA-01 resolved),
+with a mechanical advancing-base bridge. Publication/capture access and eligible cleanup are pending at this
+checkpoint; actual results are in canonical ignored `.runs/tasks/TASK-00585/runs/land/receipt.md` and its
+implementation PR, not historical planning PR #215. The bounded input/admission/compact-display/timeout repair
+does not establish original incident attribution, correct existing summary-count debt, guarantee descendant
+shutdown or deliver TASK-00561's all-role SDK cutover. Human merge and any global rollout remain separate.
+
 **TASK-00566 area-B acceptance checkpoint:** [The accepted TASK](tasks/00566-TASK.md#accepted-implementation-checkpoint--2026-11-05)
 records independent Review ACCEPT and documentation QA PASS on `7c9666af4dde06e05c8505c56cb00685c58ce7ab`.
 EPIC-00005's 50 unfinished planning records are corrected, three completed records preserved and no archived
