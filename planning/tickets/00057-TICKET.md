@@ -44,7 +44,11 @@ runbook, not a universal package release script.
 ## Validation and permissions
 
 Release Manager has separate direct source-host/registry authority; Team Lead coordinates without acquiring its
-credentials. Before each effect, recheck current grant, exact certified commit/version/tag, remote identity,
+credentials. Each invocation entry authenticates and admits operation/Project/target scope before configured-bus
+dispatch. Registered Workflow handlers own release invariants, collection-like persistence and required atomic
+audit/effect intent through a generic transaction boundary; external publication follows commit. Safe typed Views
+supply exact-candidate observations, with transport-specific presentation. Library compatibility/versioning and
+consumer obligations follow the target package's policy, not Agent OS's application breaking-change allowance. Before each effect, recheck current grant, exact certified commit/version/tag, remote identity,
 runbook revision, prior effects and required checks. Reject mismatched signer, conflicting or lightweight tag
 where signing is required, retargeted/advanced release line, changed assets or unauthorized publication.
 External effects follow durable intent, verified result and reconciled uncertainty; no force-push, tag rewrite,
@@ -78,6 +82,13 @@ plan; no effect derives authority from a Jev classification or ordinary `land` g
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Current supplier handoff — TASK-00570
+
+TASK-00317 now maps the shared trusted managed merge/base-inclusion observer and explicitly blocks TASK-00221.
+Keep TASK-00221 `needs-info` for actual library/provider/follow-through recovery composition and the target
+package's compatibility, certification and publishing obligations. The hotfix action supplies no release grant;
+no missing supplier is inferred delivered from this allocation. Earlier unallocated-owner wording below is historical.
 
 Approved requirement split for [EPIC-00013](../epics/00013-EPIC.md), consuming
 [TICKET-00055](00055-TICKET.md)'s project policy and [TICKET-00056](00056-TICKET.md)'s exact-candidate

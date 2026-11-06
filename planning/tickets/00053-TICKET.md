@@ -16,7 +16,7 @@ already started on a development base may also become an emergency after new evi
 ## Solution and boundaries
 
 For an urgent `bugfix` proposal, show the incident scope and verified production base resolved from
-[TICKET-00052](00052-TICKET.md)'s Repository strategy, then require **one quick human emergency confirmation**
+[TICKET-00052](00052-TICKET.md)'s Project strategy, then require **one quick human emergency confirmation**
 before start/claim. Do not ask the human to confirm the branching strategy again. Start a separate bounded
 hotfix Workflow directly with the existing senior-capability Hotfix Engineer; the initiating human or named
 incident owner receives progress, blockers and scope decisions without a hidden Team Lead stage. PHP owns
@@ -36,7 +36,7 @@ second concurrent executor. Post-PR merge-back is owned by [TICKET-00054](00054-
 
 | Use case | Commands | Queries | Events | Expected side effects |
 |---|---|---|---|---|
-| Confirm and start a hotfix | Confirm emergency scope/base; authoritative start with separate bounded grant | Current TASK/category/priority, Repository production base, live grant and eligibility | Emergency confirmation and existing start/claim/dispatch facts | One hotfix Workflow with isolated repairer and direct human contact |
+| Confirm and start a hotfix | Confirm emergency scope/base; authoritative start with separate bounded grant | Current TASK/category/priority, Project production base, live grant and eligibility | Emergency confirmation and existing start/claim/dispatch facts | One hotfix Workflow with isolated repairer and direct human contact |
 | Complete independent hotfix review and handoff | Existing phase/handoff and authorized publication operations | Exact changed subject, checks, findings, QA and authority | Repair/review/QA/publication facts on the hotfix Workflow | Reviewed, verified, published PR against configured production base; no approval, merge or deployment |
 | Escalate a started normal bugfix | Pause, safely transfer ownership under new emergency grant, start linked Workflow | Existing claim, attempts, resources, process/effect state and approved incident scope | Pause, authorized reconciliation and linked-start facts | Same TASK, preserved old history and at most one active executor, without development-base contamination |
 
@@ -45,7 +45,10 @@ creating a parallel evidence or authorization system.
 
 ## Validation and permissions
 
-Only an authorized human confirms emergency treatment; urgency from Jev is a recommendation, not permission.
+The entry authenticates the human and admits emergency operation/Project scope before configured-bus dispatch;
+urgency from Jev is a recommendation, not permission. Workflow handlers own emergency consent, exclusive transfer,
+required atomic audit/intent and expected-state invariants through the generic transaction boundary. Safe typed
+incident/Workflow Views feed adapter-owned presentation. No blanket inner permission layer is introduced.
 A hotfix Agent's senior capability does not grant independent review of its own contribution. Different
 credentials/sessions and actual contributor checks protect the Senior Engineer verdict. Validate exact TASK,
 context/configuration/base, grant, limits, claim, isolation and handoff snapshots at every authority-bearing

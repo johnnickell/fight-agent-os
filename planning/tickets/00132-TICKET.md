@@ -92,11 +92,17 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | done |
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent |
-| [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent |
+| [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | in-progress |
 | [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Area F, [TASK-00570](../tasks/00570-TASK.md#work-implementation-checkpoint--2026-11-06), has completed its Work
+planning amendments, not independent acceptance: 97 unfinished execution/review/triage/release records are accounted
+for (79 corrected / 18 justified unchanged), with six terminal records including TASK-00556 preserved. Canonical
+ignored coverage remains actively needed by TASK-00571. Real execution/host/supplier/independence and release-effect
+holds remain; Review/documentation QA are next after final Work verification. Other area owners remain independent.
 
 Area C, [TASK-00567](../tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`; R1 is resolved,

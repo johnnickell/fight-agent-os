@@ -40,7 +40,12 @@ Operation names describe accepted responsibilities, not newly invented transport
 
 ## Validation and permissions
 
-PHP remains authoritative for claims, grants, transitions, evidence eligibility and bounded effects. Distinct
+Workflow/Review Domain owns claims, grants, transitions, evidence eligibility and bounded-effect invariants.
+Registered handlers coordinate their collection-like repositories, required audit and justified intent through one
+generic shared-connection transaction. Entries authenticate and admit operation/Project/target scope, dispatch via
+configured buses and present safe typed Views. No blanket inner admission layer or ordinary revocation/commit
+serialization is added. Ordinary record creation uses adapter-generated typed IDs and void commands with fresh
+query reconciliation; exact acceptance subjects, phase idempotency and external publication recovery remain. Distinct
 role credentials, independent fresh sessions, current exact-subject evidence and existing privacy/disclosure
 rules apply. Missing, stale, contradictory or uncertain facts hold rather than replaying effects or weakening
 checks. Authorized publication proceeds without another human approval; merge, release and deployment remain
@@ -75,6 +80,18 @@ new generic supplier TASKs establish ownership, not runtime qualification.
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+### Current supplier reconciliation — TASK-00570
+
+TASK-00319 now explicitly consumes TASK-00392 Changes/Evidence, TASK-00393 Activity and TASK-00394 controls,
+transitively the shared Dashboard/history/query/live owners. Keep `needs-info` for actual later-phase producer,
+privacy, applicability and runtime composition; the allocation gap alone is resolved. TASK-00317 supplies the
+shared observer to hotfix TASK-00209 and release TASK-00221/00225, with each consumer retaining its real effect/
+provider hold and distinct authority. No supplier gains a reverse dependency or blanket upstream gate.
+
+TASK-00316 now follows the current Docker-first public down/guarded Worktrunk lifecycle and native non-force ref
+policy. Verified publication is separate from a narrow cleanup hold; failure/cancellation is not permanent resource
+retention. Independent acceptance, exact PR/candidate evidence and actual protected capabilities are unchanged.
 
 ### Approved TASK decomposition and current handoff
 

@@ -68,7 +68,7 @@ scope expansion or unresolved policy decision escalates. Implement and verify th
 
 John approved [TASK-00496 — Manage versioned standing execution policy](../tasks/00496-TASK.md) as a bounded
 administrative application/console outcome under this TICKET. Execution owns installation-policy semantics,
-immutable publication/restore/revocation and shared validation/admission participants; Repository configuration
+immutable publication/restore/revocation and shared validation/admission participants; Project configuration
 retains scoped overrides. The visual editor consumes these contracts without owning another policy engine.
 
 TASK-00496 is unranked and `needs-info`, blocked by TASK-00036, TASK-00078 and TASK-00138. TASK-00139 and TASK-00493
@@ -82,10 +82,12 @@ the model without enabling arbitrary nodes now. Explicit policy memberships and 
 writer/transaction/audit composition belongs to the existing implementation owners. Allocation and design approval
 enable no runtime. Other dependencies and terminal-first scope are unchanged; TASK-00495 remains the naming chore.
 
-John subsequently approved [TASK-00498](../tasks/00498-TASK.md), under TICKET-00024, as the Repository access
+John subsequently approved [TASK-00498](../tasks/00498-TASK.md), under TICKET-00024, as the Project access
 supplier and added it to TASK-00139's prerequisites. It owns explicit human/Agent access grant/revoke, not Start,
 configuration or installation policy. Start consumes current access independently of its operation Permission and
-coordinates access changes within its grant/claim/reservation/dispatch transaction. TASK-00496 remains independent
+admits current Project access at the entry, then commits coherent policy/grant/claim/reservation/dispatch state.
+Explicit policy revocation and execution-ownership fences still govern each new protected effect; ordinary access
+revocation need not serialize through an already-admitted command's commit. TASK-00496 remains independent
 of access-management delivery; no reverse dependency on Start, Teams or the editor is introduced. Working concurrency
 and retry behavior belong to normal implementation, not a new preliminary qualification phase.
 
@@ -173,9 +175,12 @@ Names describe semantic operations; exact PHP classes and schemas belong to impl
 
 ## Validation and permissions
 
-Domain owns grants, claims, transitions and resource ownership. Application coordinates typed capabilities;
-Adapter implements filesystem, Git, processes, check containers and Pi integration. All protected entry paths
-share application policy regardless of MCP exposure. Record redacted evidence; source snapshots and permission
+Workflow Domain owns grants, claims, transitions and resource ownership. Registered CommandHandlers coordinate
+aggregate behavior, collection-like repositories, required audit and durable intents through the generic shared-
+connection transaction boundary. Every HTTP, Console, MCP and worker entry authenticates and admits operation/
+Project/target scope before configured-bus dispatch; no blanket inner permission layer is added. Adapters implement
+filesystem, Git, processes, check containers, Pi and presentation of safe typed read Views. Per-effect grant,
+lease and custody checks protect actual execution/recovery, not ordinary permission-revocation/commit serialization. Record redacted evidence; source snapshots and permission
 checks must survive correction, retries and takeover without stale writes or stale check-result acceptance.
 
 This TICKET does not authorize a production launch or claim that the prototype implements managed identities.

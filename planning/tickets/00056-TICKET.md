@@ -45,8 +45,11 @@ Names describe semantic interactions and reuse existing WF-015 authority, not ne
 
 ## Validation and permissions
 
-PHP revalidates canonical release eligibility, TASK/context/policy revisions, actor and role Permissions,
-Workflow claim, independent evidence, budgets and exact candidate at start and before any new effect. Team
+Each entry authenticates and admits the actor's operation/Project/target scope before configured-bus dispatch.
+Registered Workflow handlers coordinate claim, release eligibility, TASK/context/policy revisions, independent
+evidence, budgets, exact candidate and bounded effect grants with required audit/intent on one generic shared-
+connection transaction boundary. Actual effect adapters enforce the current protected capability and ownership;
+this is not a blanket inner permission gate. Safe typed release Views remain separate from protocol output. Team
 Lead coordinates, while Release Manager receives separate direct effect grants; role titles, prompts, Jev or
 UI requests do not grant authority. Approvals are attributed, bounded and invalid on material subject drift.
 Do not capture human signing keys, passphrases or raw credentials in prompts, child processes or receipts.

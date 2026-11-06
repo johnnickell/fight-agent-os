@@ -28,7 +28,7 @@ bytes, decompression, content types, elapsed time and aggregate work. Never use 
 permission or allow provider/server redirects to disclose credentials to another origin.
 
 Consume TICKET-00061's real current Agent authentication, delegated authority and tool availability plus
-TICKET-00087's first-party origin boundary. Preserve the actual invoking human/Agent, assignment, Repository and
+TICKET-00087's first-party origin boundary. Preserve the actual invoking human/Agent, assignment, Project and
 environment scope on every request. The broker performs the permitted operation, not arbitrary HTTP proxying or
 arbitrary HMAC signing. Direct Brave API/MCP access and raw provider credentials stay unavailable to Pi. Shell network
 remains default-deny under TICKET-00032; this tool is not a network bypass switch.
@@ -90,8 +90,11 @@ This is the accepted research seam for useful scoped work, not a prerequisite on
 
 ## Validation and permissions
 
-Require separate current intent-specific search and retrieval Permissions and applicable human/Workflow delegation,
-scope, host constraints and disclosure policy. Check at real entry/invocation, not only cached tool discovery. A
+The MCP, Console or HTTP invocation entry checks separate current search/retrieval Permissions, Project/assignment
+scope, applicable human/Workflow delegation, host constraints and outbound/evaluator disclosure before configured-
+bus dispatch. Registered query handlers coordinate descriptive injected search/retrieval capabilities and safe typed
+results; adapters own provider I/O and transport presentation. Required audit/usage uses its owning generic
+transaction boundary; external calls stay outside it. No blanket inner authentication/permission layer is added. Check at real entry/invocation, not only cached tool discovery. A
 Skill, alias, source-contained instruction or UI visibility is not authority. Fail closed on missing current authority
 or unsafe/ambiguous destination; a denied request must not retry through another tool or direct shell route.
 

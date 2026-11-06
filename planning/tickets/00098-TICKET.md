@@ -10,7 +10,7 @@ status: ready-for-agent
 ## Problem statement
 
 Humans need to understand recorded cost, elapsed work and likely remaining time without mistaking missing usage
-for zero, shared account capacity for a repository budget, or an Agent's guess for measured completion evidence.
+for zero, shared account capacity for a Project budget, or an Agent's guess for measured completion evidence.
 
 ## Solution and boundaries
 
@@ -26,9 +26,9 @@ Retain ambiguity and incomplete intervals rather than infer exact duration from 
 Repeated/delayed events and restart must not double count, erase consumed work or fabricate a continuous run.
 Observed account/billing uncertainty remains unknown, not proof of refunded or released budget.
 
-Provide permission-filtered repository/Workflow usage summaries, and separately expose provider/account/credential-key
+Provide permission-filtered Project/Workflow usage summaries, and separately expose provider/account/credential-key
 allowance or quota only through an actually qualified safe provider source. Label source, broader scope, report time,
-reset/window and partial/unavailable state. A shared quota is not the selected Repository's balance. Do not infer
+reset/window and partial/unavailable state. A shared quota is not the selected Project's balance. Do not infer
 remaining capacity from local usage, scrape credentials/account pages or display key material. Absent qualified quota
 support remains visibly unavailable and does not block useful execution/usage presentation.
 
@@ -55,7 +55,7 @@ forecast or final Dashboard. EPIC-00008/TICKET-00083 later extends forecasting t
 of this first slice and no Review outcome is predicted into authority.
 
 Exclude billing/payment management, account enrollment, additional generative providers, quota claims without
-qualified sources, cross-Repository private disclosure, automatic grant/budget extension, completion guarantees,
+qualified sources, cross-Project private disclosure, automatic grant/budget extension, completion guarantees,
 review/publication execution, a general metrics platform and a proof-only workload.
 
 ### Approved OpenRouter allowance mapping and independent Planning use
@@ -75,7 +75,7 @@ borrow Pi credentials. Missing/unsupported values stay unavailable rather than g
 Fight's `/api/v1/me/provider-connections/{connection_id}/allowance` direction exposes recorded safe facts only;
 explicit refresh is a separate bounded operation. Default page loads, reconnect and usage queries do not refresh
 allowance. Model-catalog on-load refresh under TICKET-00089 is a separate metadata operation, not implicit quota
-permission. Private connection/account access is independent of Repository, Workflow and conversation access.
+permission. Private connection/account access is independent of Project, Workflow and conversation access.
 
 This TICKET's TASK-00396/00391 integration remains Workflow-oriented. Standalone conversation usage belongs to
 TICKET-00090/TASK-00352 and TICKET-00092/TASK-00365, reusing TASK-00345 original accounting. Do not fabricate a
@@ -94,8 +94,13 @@ be confused with a completed standalone connection-settings UI. That lifecycle/U
 
 ## Validation and permissions
 
-Require actual authenticated producer identity and current Workflow/Repository visibility for facts/results. Broader
-provider/account scope requires its own safe disclosure authority; Repository access alone is not account inspection.
+Each producer/read entry authenticates the caller and admits operation/Project/Workflow scope before configured-
+bus dispatch; account refresh/disclosure has its own independent entry admission. Registered measurement handlers
+coordinate original accounting facts, required audit and projection progress on one generic shared connection,
+without repository-owned orchestration or a second ledger. Query handlers return safe typed usage/timing/allowance
+Views; adapters own numeric/protocol formatting. Source deduplication and uncertain provider liability remain
+real measurement/recovery invariants, not ordinary-create immutable-response replay. Broader
+provider/account scope requires its own safe disclosure authority; Project access alone is not account inspection.
 Validate bounded numeric quantities/units, currency, identity and reporting semantics; reject malformed or ambiguous
 reports rather than coerce them into measured success. Corrections retain provenance, not silent historical overwrite.
 
@@ -109,7 +114,7 @@ paid generation. Source failure leaves explicit stale/unavailable state without 
 
 - Real execution receipts retain requested/reported identity, actual usage/currency/cost and unavailable distinctions;
   cumulative/duplicate/reordered reports, interruptions and restart produce honest non-duplicated totals.
-- Known time categories remain separate; gaps never become invented active duration. Repository rollups and any
+- Known time categories remain separate; gaps never become invented active duration. Project rollups and any
   qualified provider/account/key quota display correct scope/freshness; missing quota remains unavailable.
 - A real Workflow shows a qualified updating range through Awaiting review, including increases, human wait,
   pause, sparse history and insufficient evidence. Predictions cannot advance state, extend limits or clear holds.

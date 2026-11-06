@@ -27,7 +27,7 @@ for human resolution. When Jev is unavailable or cannot classify, label a fallba
 declared kind for a **normal route only**; priority becomes unknown and no hotfix is inferred. Missing,
 unsupported or inconsistent kind stops rather than guessing. A human may separately request a diagnosis of an
 incomplete TASK without making it executable. This requirement owns classification, not the route catalog,
-start, claim, Repository branch configuration, or a release kind.
+start, claim, Project branch configuration, or a release kind.
 
 ## Use cases
 
@@ -41,7 +41,10 @@ These names are semantic descriptions, not preselected PHP types or another Plan
 
 ## Validation and permissions
 
-The Triage Agent has only its own direct Permissions and approved source disclosure. Its template, prompt and
+The diagnosis/classification entry authenticates the actual caller and admits operation, Project/target and
+provider-disclosure scope before configured-bus dispatch. Registered query/command handlers coordinate owned
+classification facts and safe typed Views; a disposition is an ordinary audited database write with expected
+recommendation revision, not an immutable original-response journal. The Triage Agent has only its own direct Permissions and approved source disclosure. Its template, prompt and
 Jev output do not authorize work, change scope/priority, claim, grant, or resolve eligibility. Apply bounded
 question/source/time/spend limits and validated typed outcomes; TASK text is untrusted. Tie each result and
 human disposition to TASK, Planning/context/eligibility and rubric/evaluator revisions; stale judgments are
