@@ -288,6 +288,8 @@ def run(args):
         progress = Progress(args.role, log, args.screening_dispatch, observation)
         progress.emit(f"Starting {args.task} — {args.provider}/{args.model}, thinking={args.thinking}")
         child = None
+        selector = None
+        forced_code = 0
         code = 1
         try:
             child = subprocess.Popen(command, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
@@ -311,7 +313,6 @@ def run(args):
             diagnostic_buffer = b""
             stop_at = progress.started + args.timeout
             termination_at = None
-            forced_code = 0
             while selector.get_map() or child.poll() is None:
                 now = time.monotonic()
                 if observation:
@@ -320,9 +321,9 @@ def run(args):
                     forced_code = cancelled[0] or 124
                     progress.emit("Cancellation requested" if cancelled[0] else "Stage timed out")
                     termination_at = now
-                    stop_group(child, signal.SIGTERM)
+                    stop_group(child, signal.SIGTERM, progress, errors)
                 if termination_at is not None and now - termination_at >= 5:
-                    stop_group(child, signal.SIGKILL)
+                    stop_group(child, signal.SIGKILL, progress, errors)
                     # An escaped descendant is not guaranteed stopped; do not hang on its pipe.
                     break
                 for key, _ in selector.select(timeout=0.2):
@@ -357,7 +358,7 @@ def run(args):
                     progress.heartbeat()
             selector.close()
             if forced_code:
-                stop_group(child, signal.SIGKILL)
+                stop_group(child, signal.SIGKILL, progress, errors)
             pi_code = child.wait(timeout=5)
             (attempt / "pi-exit-code").write_text(str(pi_code) + "\n")
             code = forced_code or (pi_code if pi_code >= 0 else 128 - pi_code)
@@ -368,24 +369,29 @@ def run(args):
             # Do not render exception text, provider diagnostics or malformed source to the terminal.
             progress.emit(f"Stage monitor failed ({type(error).__name__}); inspect private logs")
             errors.write((type(error).__name__ + "\n").encode())
-            code = cancelled[0] or 1
+            code = forced_code or cancelled[0] or 1
         finally:
+            if selector is not None:
+                selector.close()
             if child is not None:
                 if code:
-                    stop_group(child, signal.SIGTERM)
+                    stop_group(child, signal.SIGTERM, progress, errors)
                     try:
                         child.wait(timeout=5)
                     except subprocess.TimeoutExpired:
-                        stop_group(child, signal.SIGKILL)
-                        child.wait(timeout=5)
-                    # The leader may exit before children in its group.
-                    stop_group(child, signal.SIGKILL)
+                        stop_group(child, signal.SIGKILL, progress, errors)
+                        try:
+                            child.wait(timeout=5)
+                        except subprocess.TimeoutExpired as error:
+                            shutdown_diagnostic(progress, errors, child, "wait", "leader-unreaped", error=error)
+                    # Never signal a numeric group again after reaping its leader.
                 if child.stdout:
                     child.stdout.close()
                 if child.stderr:
                     child.stderr.close()
                 if not (attempt / "pi-exit-code").exists():
-                    (attempt / "pi-exit-code").write_text(str(child.returncode) + "\n")
+                    pi_code = "unknown" if child.returncode is None else str(child.returncode)
+                    (attempt / "pi-exit-code").write_text(pi_code + "\n")
             (attempt / "final.txt").write_text(progress.final)
             (attempt / "exit-code").write_text(str(code) + "\n")
             progress.lifecycle = "completed" if code == 0 else "failed"
@@ -396,11 +402,33 @@ def run(args):
     return code
 
 
-def stop_group(child, signum):
+def shutdown_diagnostic(progress, errors, child, operation, reason, signum=None, error=None):
+    """Retain finite safe shutdown facts, never exception prose or an all-stopped claim"""
+    record = {"operation": operation, "reason": reason, "pid": child.pid}
+    if signum is not None:
+        record["signal"] = int(signum)
+    if error is not None:
+        record.update(error=type(error).__name__, errno=getattr(error, "errno", None))
+    errors.write((json.dumps(record) + "\n").encode())
+    errors.flush()
+    progress.emit(f"Process-group shutdown unverified ({reason}); descendants may remain; inspect private stderr.log")
+
+
+def stop_group(child, signum, progress, errors):
+    # Popen retains exclusive child identity only until wait/poll reaps it. A late
+    # numeric group may be absent, denied or reused; never use it as authority.
+    if child.returncode is not None:
+        shutdown_diagnostic(progress, errors, child, "killpg", "leader-exited", signum)
+        return
     try:
+        if os.getpgid(child.pid) != child.pid:
+            shutdown_diagnostic(progress, errors, child, "killpg", "group-changed", signum)
+            return
         os.killpg(child.pid, signum)
     except ProcessLookupError:
         pass
+    except OSError as error:
+        shutdown_diagnostic(progress, errors, child, "killpg", "signal-unavailable", signum, error)
 
 
 def main():

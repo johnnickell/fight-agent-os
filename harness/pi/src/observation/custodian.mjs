@@ -88,14 +88,30 @@ export function monitorWitness(message, native, { inspect = processIdentity, bir
   const registered = registrations(worktree);
   if (!registered.split('\0').includes(`worktree ${worktree}`)) throw new Error('Unregistered monitor worktree');
   const lineage = births ?? JSON.parse(execFileSync('python3', [fileURLToPath(new URL('./process-birth.py', import.meta.url)), String(message.pid), String(native.pid)], { encoding: 'utf8', timeout: 500, maxBuffer: 8192 }));
-  if (!Number.isSafeInteger(native.wallUs) || Math.abs((Date.now() - native.wallUs / 1000) - (Number(process.hrtime.bigint() / 1000000n) - native.started)) > 10 ||
-      !Array.isArray(lineage) || lineage.length < 2 || lineage.length > 32 || lineage[0]?.pid !== message.pid || lineage.at(-1)?.pid !== native.pid ||
-      lineage.some((entry, index) => !Number.isSafeInteger(entry.pid) || !Number.isSafeInteger(entry.bornUs) || entry.bornUs < 0 || entry.bornUs > Date.now() * 1000 + 1000 || index < lineage.length - 1 && entry.parent !== lineage[index + 1].pid) ||
-      lineage.at(-1).bornUs > native.wallUs || lineage.at(-2).bornUs < native.wallUs + 20000) throw new Error('Executor birth does not establish this native context');
+  // Kernel mach births share the qualified raw monotonic clock with context/monitor
+  // stamps. Wall time may slew during a long-lived native session; never translate
+  // an executor birth through that mutable offset to establish context membership.
+  if (!Array.isArray(lineage) || lineage.length < 2 || lineage.length > 32 || lineage[0]?.pid !== message.pid || lineage.at(-1)?.pid !== native.pid ||
+      lineage.some((entry, index) => !Number.isSafeInteger(entry.pid) || !Number.isSafeInteger(entry.bornUs) || entry.bornUs < 0 || entry.bornUs > Date.now() * 1000 + 1000 ||
+        !Number.isSafeInteger(entry.bornMonotonicMs) || entry.bornMonotonicMs < 0 || entry.bornMonotonicMs > Number(process.hrtime.bigint() / 1000000n) ||
+        index < lineage.length - 1 && (entry.parent !== lineage[index + 1].pid || entry.bornMonotonicMs < lineage[index + 1].bornMonotonicMs)) ||
+      lineage.at(-1).bornMonotonicMs > native.started || lineage.at(-2).bornMonotonicMs < native.started + 20) throw new Error('Executor birth does not establish this native context');
   // Recheck live identities after the kernel snapshot; no payload selects an execution ancestor.
   if (inspect(message.pid) !== witness.process || inspect(native.pid) !== native.process) throw new Error('Native descendant lifetime changed');
   // Normalize only AFTER the same fixed-monitor, native-lifetime and ancestry checks.
   return { ...witness, identity: { ...witness.identity, role: stageRole(witness.identity.role) } };
+}
+// Closed reason vocabulary only: never echo exceptions, witness contents or client data.
+export function monitorRefusal(error) {
+  return new Map([
+    ['Invalid monitor bootstrap', 'monitor-bootstrap-refused'],
+    ['Monitor witness replaced', 'monitor-witness-refused'],
+    ['Monitor witness refused', 'monitor-witness-refused'],
+    ['Unregistered monitor worktree', 'monitor-worktree-refused'],
+    ['Executor birth does not establish this native context', 'monitor-birth-refused'],
+    ['Native descendant lifetime changed', 'monitor-lifetime-refused'],
+    ['Observation capacity reached', 'monitor-capacity-eight'],
+  ]).get(error?.message) ?? 'monitor-admission-refused';
 }
 export function retainedPreferences(root, parentFile, now = Date.now()) {
   const retained = [];
@@ -174,7 +190,10 @@ export function startCustodian({ primary, parent, parentFile, pendingParentFile,
           lifetime = setTimeout(() => socket.destroy(), limits.lifetime);
           // Admission acknowledgement only; no command, cancellation or child-facing data.
           socket.write(JSON.stringify({ observed: true, pid: request.pid }) + '\n');
-        } catch { socket.destroy(); return; }
+        } catch (error) {
+          // Keep the absolute deadline: a refused peer may leave its write half open.
+          socket.end(JSON.stringify({ observed: false, reason: monitorRefusal(error) }) + '\n'); return;
+        }
       }
     });
   });

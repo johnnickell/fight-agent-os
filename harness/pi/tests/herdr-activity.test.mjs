@@ -42,6 +42,15 @@ test('native coalesced/split navigation and standalone Esc decode to pane-local 
   paging.write('\x1b[5~\x1b[6~'); paging.end(); assert.deepEqual(pages, [5, -5]);
 });
 
+test('CSI-u Enter/Escape press encodings, split/coalesced, stay pane-local; modified/release keys do not act', () => {
+  const input = new PassThrough(), actions = [];
+  installActivityInput(input, { action: type => actions.push(type), close() { assert.fail('must not close'); }, page() { assert.fail('must not page'); } });
+  input.write('\x1b[13u\x1b[27u\x1b[13;1u');
+  input.write('\x1b['); input.write('27;'); input.write('1u');
+  input.write('\x1b[27;5u\x1b[13;2u\x1b[27;1:3u'); input.end();
+  assert.deepEqual(actions, ['enter', 'back', 'enter', 'back']);
+});
+
 test('AGENTS list/detail/back stays pane-local and preserves selected identity', async t => {
   const f = await fixture(t); await f.activity.tick();
   const selected = f.activity.children.selected;

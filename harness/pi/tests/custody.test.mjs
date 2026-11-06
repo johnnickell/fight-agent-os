@@ -1,14 +1,16 @@
 import test from 'node:test';
+import { fork } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, randomUUID, sign } from 'node:crypto';
 import fs from 'node:fs';
 import { recycledInode } from './helpers/session-file.mjs';
 import { chmodSync, lstatSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { createServer } from 'node:net';
+import { createConnection, createServer } from 'node:net';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { challenge, candidates, custodianScript, directory, endpointPath, privateDirectory, pruneCandidates, sessionFileIdentity } from '../src/observation/custody.mjs';
+import { challenge, candidates, custodianScript, directory, endpointPath, privateDirectory, pruneCandidates, sessionFileIdentity, processIdentity } from '../src/observation/custody.mjs';
 import { NativeObservation } from '../src/observation/native-observation.mjs';
+import * as custodian from '../src/observation/custodian.mjs';
 import { startCustodian, applyProgress, bindParentFile, monitorWitness } from '../src/observation/custodian.mjs';
 
 async function fixture(t, respond) {
@@ -185,6 +187,43 @@ test('custodian promotion requires the expected real native file and cannot down
   assert.throws(() => bindParentFile(path, witness), /witness refused/);
 });
 
+test('refusal replies retain the absolute bootstrap deadline when a client leaves its write half open', { skip: process.platform !== 'darwin' }, async t => {
+  const cwd = realpathSync(mkdtempSync('/tmp/fc-refused-'));
+  const entry = join(cwd, '@earendil-works/pi-coding-agent/dist/cli.js');
+  fs.mkdirSync(dirname(entry), { recursive: true }); writeFileSync(entry, '');
+  const file = join(cwd, 'session'); writeFileSync(file, 'controlled native-parent witness');
+  const parent = randomUUID(), generation = randomUUID();
+  const child = fork(custodianScript, [generation], { cwd, stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
+  t.after(() => { child.kill('SIGTERM'); rmSync(cwd, { recursive: true, force: true }); });
+  await new Promise((accept, reject) => {
+    const timer = setTimeout(() => reject(new Error('Controlled custodian not ready')), 3000);
+    child.once('message', () => { clearTimeout(timer); accept(); });
+    child.send({ type: 'initialize', primary: cwd, parent, parentFile: sessionFileIdentity(file), generation,
+      native: { pid: process.pid, process: processIdentity(process.pid), entry, mode: 'tui',
+        started: Number(process.hrtime.bigint() / 1000000n), wallUs: Date.now() * 1000 } });
+  });
+  const socket = createConnection({ path: endpointPath(cwd, parent, generation), allowHalfOpen: true });
+  t.after(() => socket.destroy());
+  await new Promise((accept, reject) => {
+    let refused = false;
+    const timer = setTimeout(() => reject(new Error('Refused half-open socket outlived bootstrap deadline')), 1800);
+    // A half-open TCP peer learns that the server released its read half on its next write.
+    const probe = setTimeout(() => socket.write('x'), 1200);
+    socket.on('error', () => {});
+    socket.on('data', chunk => { refused ||= chunk.toString().includes('monitor-bootstrap-refused'); });
+    socket.on('connect', () => socket.write(JSON.stringify({ type: 'monitor' }) + '\n'));
+    socket.on('close', () => { clearTimeout(timer); clearTimeout(probe); refused ? accept() : reject(new Error('Missing refusal reply')); });
+  });
+});
+
+test('monitor refusals expose only finite reason codes, never exception text or child data', () => {
+  assert.equal(typeof custodian.monitorRefusal, 'function');
+  assert.equal(custodian.monitorRefusal(new Error('Executor birth does not establish this native context')), 'monitor-birth-refused');
+  assert.equal(custodian.monitorRefusal(new Error('Observation capacity reached')), 'monitor-capacity-eight');
+  assert.equal(custodian.monitorRefusal(new Error('private witness contents must never escape')), 'monitor-admission-refused');
+  assert.equal(custodian.monitorRefusal(null), 'monitor-admission-refused');
+});
+
 test('terminal progress cannot resurrect a completed observed child', () => {
   const registration = { sequence: 0, history: [], units: 0, omitted: 0 };
   applyProgress(registration, { sequence: 1, text: 'done', lifecycle: 'completed', exitCode: 0 });
@@ -200,7 +239,10 @@ test('monitor admission combines private bootstrap, exact live ancestry, fixed p
   const identity = { task: 'TASK-00502', role: 'engineer', provider: 'openai-codex', model: 'gpt-6.1-sol', thinking: 'high', worktree: cwd, attempt: '/display-only/not-read' };
   const witness = { pid, nativePid: native.pid, nativeProcess: native.process, token, worktree: cwd, identity, heartbeat: 1, started: Number(process.hrtime.bigint() / 1000000n), created: Date.now(), process: `monitor-start python3 -u ${monitor} --ordinary-args` };
   const path = join(runtime, `${pid}-${token}.json`), message = { type: 'monitor', pid, token, worktree: cwd };
-  const options = { inspect: value => value === pid ? witness.process : native.process, births: [{ pid, parent: 9000, bornUs: native.wallUs + 50000 }, { pid: 9000, parent: native.pid, bornUs: native.wallUs + 30000 }, { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000 }], registrations: () => `worktree ${cwd}\0` };
+  const options = { inspect: value => value === pid ? witness.process : native.process, births: [
+    { pid, parent: 9000, bornUs: native.wallUs + 50000, bornMonotonicMs: native.started + 50 },
+    { pid: 9000, parent: native.pid, bornUs: native.wallUs + 30000, bornMonotonicMs: native.started + 30 },
+    { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000, bornMonotonicMs: native.started - 1000 }], registrations: () => `worktree ${cwd}\0` };
   assert.throws(() => monitorWitness(message, native, options), /ENOENT/);
   writeFileSync(path, JSON.stringify(witness), { mode: 0o600 });
   assert.deepEqual(monitorWitness(message, native, options).identity, identity);
@@ -224,14 +266,35 @@ test('monitor admission combines private bootstrap, exact live ancestry, fixed p
   assert.throws(() => monitorWitness(message, { ...native, started: witness.started + 1 }, options), /refused/);
   assert.throws(() => monitorWitness(message, { ...native, started: undefined }, options), /refused/);
   assert.throws(() => monitorWitness(message, native, { ...options, births: [{ pid, parent: 1111, bornUs: native.wallUs + 50000 }, { pid: 1111, parent: 1, bornUs: native.wallUs + 30000 }] }), /native context/);
-  assert.throws(() => monitorWitness(message, native, { ...options, births: options.births.map(entry => entry.pid === 9000 ? { ...entry, bornUs: native.wallUs - 1000000 } : entry) }), /birth/);
-  assert.throws(() => monitorWitness(message, native, { ...options, births: options.births.map(entry => entry.pid === 9000 ? { ...entry, bornUs: native.wallUs + 1000 } : entry) }), /birth/);
+  assert.throws(() => monitorWitness(message, native, { ...options, births: options.births.map(entry => entry.pid === 9000 ? { ...entry, bornMonotonicMs: native.started - 1000 } : entry) }), /birth/);
+  assert.throws(() => monitorWitness(message, native, { ...options, births: options.births.map(entry => entry.pid === 9000 ? { ...entry, bornMonotonicMs: native.started + 1 } : entry) }), /birth/);
+  for (const bad of [undefined, null, -1, 0.5, Number(process.hrtime.bigint() / 1000000n) + 100000]) {
+    assert.throws(() => monitorWitness(message, native, { ...options, births: options.births.map(entry => ({ ...entry, bornMonotonicMs: bad })) }), /birth/);
+  }
+  assert.throws(() => monitorWitness(message, native, { ...options, births: options.births.map(entry => entry.pid === native.pid ? { ...entry, bornMonotonicMs: native.started + 1 } : entry) }), /birth/);
   assert.throws(() => monitorWitness(message, native, { ...options, registrations: () => 'worktree /unrelated\0' }), /Unregistered/);
   assert.throws(() => monitorWitness(message, native, { ...options, inspect: () => 'reused-pid-lifetime' }), /refused/);
   writeFileSync(path, JSON.stringify({ ...witness, token: 'b'.repeat(64) }));
   assert.throws(() => monitorWitness(message, native, options), /refused/);
   writeFileSync(path, JSON.stringify({ ...witness, created: 1 }));
   assert.throws(() => monitorWitness(message, native, options), /refused/);
+});
+
+test('monitor birth admission is independent of wall-clock slewing in a long-lived native context', t => {
+  const cwd = realpathSync(mkdtempSync('/tmp/fc-clock-')); t.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const runtime = join(cwd, 'var/terminal/monitors'); privateDirectory(runtime);
+  const token = 'd'.repeat(64), pid = 9876;
+  const now = Number(process.hrtime.bigint() / 1000000n);
+  const native = { pid: 8765, process: 'actual-native-lifetime', started: now - 1000, wallUs: Date.now() * 1000 - 1100000 };
+  const monitor = fileURLToPath(new URL('../src/observation/run-stage.py', import.meta.url));
+  const witness = { pid, nativePid: native.pid, nativeProcess: native.process, token, worktree: cwd,
+    identity: { task: 'TASK-00585', role: 'reviewer', provider: 'configured', model: 'configured', thinking: 'high', worktree: cwd, attempt: '/display-only' },
+    heartbeat: 1, started: now, created: Date.now(), process: `monitor-start python3 -u ${monitor} --ordinary-args` };
+  writeFileSync(join(runtime, `${pid}-${token}.json`), JSON.stringify(witness), { mode: 0o600 });
+  const births = [{ pid, parent: native.pid, bornUs: native.wallUs + 100000, bornMonotonicMs: native.started + 50 },
+    { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000, bornMonotonicMs: native.started - 1000 }];
+  const options = { inspect: value => value === pid ? witness.process : native.process, births, registrations: () => `worktree ${cwd}\0` };
+  assert.equal(monitorWitness({ type: 'monitor', pid, token, worktree: cwd }, native, options).identity.role, 'reviewer');
 });
 
 test('installed package admits its own fixed monitor without a provider checkout sibling', t => {
@@ -245,7 +308,9 @@ test('installed package admits its own fixed monitor without a provider checkout
     heartbeat: 1, started: Number(process.hrtime.bigint() / 1000000n), created: Date.now(), process: `monitor-start python3 -u ${monitor} --ordinary-args` };
   writeFileSync(join(runtime, `${pid}-${token}.json`), JSON.stringify(witness), { mode: 0o600 });
   const options = { inspect: value => value === pid ? witness.process : native.process,
-    births: [{ pid, parent: 9000, bornUs: native.wallUs + 50000 }, { pid: 9000, parent: native.pid, bornUs: native.wallUs + 30000 }, { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000 }], registrations: () => `worktree ${cwd}\0` };
+    births: [{ pid, parent: 9000, bornUs: native.wallUs + 50000, bornMonotonicMs: native.started + 50 },
+      { pid: 9000, parent: native.pid, bornUs: native.wallUs + 30000, bornMonotonicMs: native.started + 30 },
+      { pid: native.pid, parent: 1, bornUs: native.wallUs - 1000000, bornMonotonicMs: native.started - 1000 }], registrations: () => `worktree ${cwd}\0` };
   assert.deepEqual(monitorWitness({ type: 'monitor', pid, token, worktree: cwd }, native, options).identity, { ...witness.identity, role: 'engineer' });
 });
 

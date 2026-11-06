@@ -65,7 +65,12 @@ private source bodies, hidden provider settings or unauthorized personal data. R
 replaying its operation; any fresh scenario preserves owning actor/target/delegation, confirmation, environment
 and effect controls. Apply [ADR 0001](../adr/0001-application-ownership-and-orchestration.md) and
 [ADR 0002](../adr/0002-postgresql-consistency-and-durable-effects.md) when assessing package ownership and
-transaction/recovery claims. This documentation adds no Permission, principal, transaction or event mechanism.
+transaction/recovery claims, as amended by the [canonical architecture contract](../../docs/engineering/STANDARDS.md#architecture).
+Distinguish entry-owned caller permission/target admission from package business invariants, configured bus dispatch
+from private handler calls, generic handler-owned transaction/explicit audit from repository or UoW orchestration,
+and current-state creation recovery from an original-response replay guarantee. Preserve genuine credential,
+email-change, physical and publication recovery. This documentation adds no Permission, principal, transaction or
+event mechanism.
 
 ## Acceptance and evidence
 

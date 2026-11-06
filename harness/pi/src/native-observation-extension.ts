@@ -1,10 +1,13 @@
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { fileURLToPath } from 'node:url';
+import { truncateToWidth } from '@earendil-works/pi-tui';
+import { installStagePresentation } from './observation/stage-presentation.mjs';
 import { NativeObservation } from './observation/native-observation.mjs';
 import { SubagentObserver } from './observation/subagents.mjs';
 
 /** Observe actual native session lifetime without participating in execution */
 export default function installNativeObservation(pi: ExtensionAPI) {
+  installStagePresentation(pi, { truncateToWidth });
   pi.events.on('fight:workspace-observer-resource', (accept: unknown) => {
     if (typeof accept === 'function') accept(fileURLToPath(import.meta.url));
   });

@@ -77,6 +77,24 @@ TASK-00571 receives canonical coverage. Feature implementation, supplier holds a
 remain separate. Publication and eligible cleanup are pending at this checkpoint; current outcomes are in
 canonical ignored `.runs/tasks/TASK-00567/runs/land.md` and the TASK PR. Human merge remains separate.
 
+**TASK-00565 area-A acceptance — 2026-11-05:** [the accepted checkpoint](tasks/00565-TASK.md#accepted-implementation-checkpoint--2026-11-05)
+records independent Review ACCEPT and nonvisual QA PASS on clean `37613562`, mechanically integrated as
+`4642f018`; R1/R2 are resolved. Exhaustive coverage, TASK-00571's evidence handoff, completed history and the
+Lifecycle readiness repair remain. The integrated normal gate freshly passes all 25 phase rows
+(`20261105T215954Z-11835`), not reused application execution. The filesystem locking limitation remains
+unrepaired. Publication/final delivery checks and eligible cleanup are pending at this checkpoint; actual results
+are in canonical ignored `.runs/tasks/TASK-00565/runs/land-receipt.md` and the TASK PR. Human merge is separate;
+no sibling/source/supplier/Feature acceptance is inferred. Other priorities/dependencies remain unchanged.
+The architecture-decomposition checkpoint below is historical; routing stays with the Board.
+
+**TASK-00585 accepted repair checkpoint — 2026-11-05:** [the TASK](tasks/00585-TASK.md#accepted-implementation-checkpoint--2026-11-05)
+records independent Review ACCEPT and visual/behavioral QA PASS on `3d324c7e` (10 groups; QA-01 resolved),
+with a mechanical advancing-base bridge. Publication/capture access and eligible cleanup are pending at this
+checkpoint; actual results are in canonical ignored `.runs/tasks/TASK-00585/runs/land/receipt.md` and its
+implementation PR, not historical planning PR #215. The bounded input/admission/compact-display/timeout repair
+does not establish original incident attribution, correct existing summary-count debt, guarantee descendant
+shutdown or deliver TASK-00561's all-role SDK cutover. Human merge and any global rollout remain separate.
+
 **TASK-00566 area-B acceptance checkpoint:** [The accepted TASK](tasks/00566-TASK.md#accepted-implementation-checkpoint--2026-11-05)
 records independent Review ACCEPT and documentation QA PASS on `7c9666af4dde06e05c8505c56cb00685c58ce7ab`.
 EPIC-00005's 50 unfinished planning records are corrected, three completed records preserved and no archived

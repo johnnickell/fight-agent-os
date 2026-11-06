@@ -19,6 +19,21 @@ not feature implementation, supplier qualification or complete-portfolio accepta
 cleanup are pending at this checkpoint; current outcomes are in canonical ignored
 `.runs/tasks/TASK-00567/runs/land.md` and the TASK PR. Human merge remains separate.
 
+[TASK-00565](00565-TASK.md#accepted-implementation-checkpoint--2026-11-05) has independent Review ACCEPT and
+nonvisual QA PASS on clean `37613562`, mechanically integrated as `4642f018`; R1/R2 are resolved. Exhaustive
+area-A coverage and completed history remain. The integrated normal gate freshly passes all 25 phase rows
+(`20261105T215954Z-11835`); the filesystem locking limitation remains unrepaired. Publication/final delivery
+checks and eligible cleanup are pending at this checkpoint; actual results are in canonical ignored
+`.runs/tasks/TASK-00565/runs/land-receipt.md` and the TASK PR. Human merge remains separate; no sibling,
+source/supplier/Feature qualification is inferred. Work selection stays with the generated sections below.
+
+[TASK-00585](00585-TASK.md#accepted-implementation-checkpoint--2026-11-05) has independent Review ACCEPT
+and visual/behavioral QA PASS on `3d324c7e` (10 groups; QA-01 resolved), with a mechanical advancing-base
+bridge. Publication/capture access and eligible cleanup are pending at this frozen checkpoint; actual results
+are in canonical ignored `.runs/tasks/TASK-00585/runs/land/receipt.md` and the implementation PR. PR #215 is
+merged planning-only history. Original incident attribution, mixed-source summary-count debt and shutdown
+uncertainty remain disclosed; no global rollout or all-role SDK cutover is claimed. Human merge is separate.
+
 [TASK-00566](00566-TASK.md#accepted-implementation-checkpoint--2026-11-05) has independent Review ACCEPT and
 documentation QA PASS on `7c9666af4dde06e05c8505c56cb00685c58ce7ab` (17 passed instruction scenarios; visual N/A).
 Its EPIC-00005 planning correction is accepted, not source delivery or complete-portfolio acceptance.
@@ -51,7 +66,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| 2 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 5 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 6 | [TASK-00569](00569-TASK.md) | Reconcile Harness, proposal and memory plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
 | 7 | [TASK-00570](00570-TASK.md) | Reconcile execution and delivery-workflow plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | — | — |
@@ -74,7 +88,6 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00507](00507-TASK.md) | Assess low-friction native-session origin hardening | [TICKET-00110 — Work in a Pi terminal workspace with agent activity and live Docker logs](../tickets/00110-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00522](00522-TASK.md) | Package a runnable immutable production application | [TICKET-00121 — Build an immutable production application artifact](../tickets/00121-TICKET.md) | ready-for-agent | — | — |
 | — | [TASK-00561](00561-TASK.md) | Complete independent Build delivery through upstream agents and retire replaced launchers | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | ready-for-agent | — | — |
-| — | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | — (standalone bug) | ready-for-agent | — | [PR #215](https://github.com/johnnickell/fight-agent-os/pull/215) |
 | — | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | — (standalone chore) | ready-for-agent | — | — |
 
 ## Waiting
@@ -85,7 +98,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 4 | [TASK-00140](00140-TASK.md) | Prepare and recover owned worktrees containers and test databases | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00139](00139-TASK.md), [TASK-00374](00374-TASK.md) | — |
 | 5 | [TASK-00141](00141-TASK.md) | Delegate one TASK through Team Lead and Software Engineer in Pi | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00140](00140-TASK.md), [TASK-00264](00264-TASK.md), [TASK-00377](00377-TASK.md) | — |
 | 6 | [TASK-00142](00142-TASK.md) | Prove parallel TASK isolation and interrupted execution recovery | [TICKET-00032 — Start and recover TASK execution in an isolated local workspace](../tickets/00032-TICKET.md) | ready-for-agent | [TASK-00141](00141-TASK.md) | — |
-| 8 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00565](00565-TASK.md), [TASK-00568](00568-TASK.md), [TASK-00569](00569-TASK.md), [TASK-00570](00570-TASK.md) | — |
+| 8 | [TASK-00571](00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | ready-for-agent | [TASK-00568](00568-TASK.md), [TASK-00569](00569-TASK.md), [TASK-00570](00570-TASK.md) | — |
 | 12 | [TASK-00575](00575-TASK.md) | Cut registration and inspection over to Project-owned CQRS | [TICKET-00134 — Register and inspect Projects through aggregate-owned CQRS](../tickets/00134-TICKET.md) | ready-for-agent | [TASK-00574](00574-TASK.md) | — |
 | 62 | [TASK-00062](00062-TASK.md) | Deliver the confirmed elevated invitation journey | [TICKET-00021 — Deliver Super Admin user and invitation operations](../tickets/00021-TICKET.md) | ready-for-agent | [TASK-00061](00061-TASK.md) | — |
 | 63 | [TASK-00063](00063-TASK.md) | Establish the production-like HTTPS security envelope | [TICKET-00022 — Verify the integrated security and accessibility baseline](../tickets/00022-TICKET.md) | ready-for-agent | [TASK-00062](00062-TASK.md) | — |
@@ -514,6 +527,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | 2 | [TASK-00518](00518-TASK.md) | Verify live handoffs and route corrections to Land | [TICKET-00119 — Route delivery handoffs using verified current state](../tickets/00119-TICKET.md) | done | — | [PR #169](https://github.com/johnnickell/fight-agent-os/pull/169) |
 | 2 | [TASK-00519](00519-TASK.md) | Adopt integrated delivery reconciliation across the nine active projects | [TICKET-00120 — Align the nine active projects with current delivery handoffs](../tickets/00120-TICKET.md) | done | — | [PR #175](https://github.com/johnnickell/fight-agent-os/pull/175) |
 | 2 | [TASK-00539](00539-TASK.md) | Make invitation API throttle tests deterministic | — (standalone bug) | done | — | [PR #184](https://github.com/johnnickell/fight-agent-os/pull/184) |
+| 2 | [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #223](https://github.com/johnnickell/fight-agent-os/pull/223) |
 | 3 | [TASK-00003](00003-TASK.md) | Establish and prove independent implementation review | [TICKET-00003 — Establish independent implementation review](../tickets/00003-TICKET.md) | done | — | [PR #2](https://github.com/johnnickell/fight-agent-os/pull/2) |
 | 3 | [TASK-00131](00131-TASK.md) | Design the project-local audit skill | — (standalone chore) | done | — | — |
 | 3 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | [TICKET-00132 — Reconcile every unfinished product plan](../tickets/00132-TICKET.md) | done | — | [PR #222](https://github.com/johnnickell/fight-agent-os/pull/222) |
@@ -663,4 +677,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | [TICKET-00130 — Run local Build through upstream agents with browsable activity and stack logs](../tickets/00130-TICKET.md) | done | — | [PR #212](https://github.com/johnnickell/fight-agent-os/pull/212) |
 | — | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | — (standalone bug) | done | — | [PR #211](https://github.com/johnnickell/fight-agent-os/pull/211) |
 | — | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | — (standalone bug) | done | — | [PR #216](https://github.com/johnnickell/fight-agent-os/pull/216) |
+| — | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | — (standalone bug) | done | — | [PR #224](https://github.com/johnnickell/fight-agent-os/pull/224) |
 <!-- /planning:board -->

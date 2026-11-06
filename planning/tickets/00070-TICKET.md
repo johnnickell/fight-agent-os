@@ -110,13 +110,16 @@ TICKET-00074 retains actual deployment-overlap/current-observation qualification
 
 TASK-00291 supplies protected synchronous package `ProvisionFeatures` with explicit trusted operator, exact
 candidate/target and the configured nullable default. Only a missing name makes that default required; empty or
-all-existing inventories preserve package unused-default behavior. All new definitions commit OFF together with
-owning-package IDs; existing identities/settings/bindings/revisions, including broken definitions, are untouched.
+all-existing inventories preserve package unused-default behavior. All new definitions commit OFF together; existing identities/settings/bindings/revisions, including broken
+definitions, are untouched. Apply the [canonical creation contract](../../docs/engineering/STANDARDS.md#creation-identity-and-recovery):
+creation entry composition generates typed IDs with owning factories and carries them in void commands. Qualify
+supported package batch participation; do not guess a signature, preserve internal ID generation as normative,
+or duplicate provisioning policy to bridge a missing capability. Missing support holds this consumer only.
 No Permission, membership, grant, automatic repair or runtime registration is created by provisioning.
 
 This actual use case completes Feature-specific reference qualification across add/replace/remove, Permission/
-Role/Agent writes and TASK-00036's managed-policy preview/reconcile. Reuse the shared canonical connection,
-transaction-duration fence, full expected-state/no-op checks, positive revisions, canonical uniqueness and
+Role/Agent writes and TASK-00036's managed-policy preview/reconcile. Reuse registered-handler coordination through the generic `TransactionalUnitOfWork` on the shared owning
+connection, with explicit required audit and collection-like repositories, and the transaction-duration fence, full expected-state/no-op checks, positive revisions, canonical uniqueness and
 unpaginated all-status reference lookup. Include actual whole-pass rollback, competing provisioners, rebind/
 removal/no-op races and beyond-page removal conflicts. Preserve applicable cohort-first authority ordering without
 a new fence owner, complete live-Agent prerequisite or bypass of unavailable Agent operation contracts. Later

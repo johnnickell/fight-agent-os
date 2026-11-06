@@ -567,7 +567,7 @@
 | [TASK-00562](00562-TASK.md) | Browse live and completed agents in the Herdr AGENTS pane | done | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00563](00563-TASK.md) | Follow the active Compose stack with stack-wide logs and simple service filters | done | [TICKET-00130](../tickets/00130-TICKET.md) |
 | [TASK-00564](00564-TASK.md) | Publish the canonical architecture contract and reconcile its callers | done | [TICKET-00131](../tickets/00131-TICKET.md) |
-| [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
+| [TASK-00565](00565-TASK.md) | Reconcile identity, access and Feature plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00566](00566-TASK.md) | Reconcile Workspace and Planning plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00567](00567-TASK.md) | Reconcile project creation and instruction-management plans | done | [TICKET-00132](../tickets/00132-TICKET.md) |
 | [TASK-00568](00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent | [TICKET-00132](../tickets/00132-TICKET.md) |
@@ -587,6 +587,6 @@
 | [TASK-00582](00582-TASK.md) | Adopt Common failures and cut HTTP error handling over end to end | ready-for-agent | [TICKET-00136](../tickets/00136-TICKET.md) |
 | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | done | — |
 | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | done | — |
-| [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | ready-for-agent | — |
+| [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | done | — |
 | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | ready-for-agent | — |
 <!-- /planning:records -->

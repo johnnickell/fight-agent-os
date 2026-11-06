@@ -49,7 +49,11 @@ An actual Feature's later cleanup chore belongs to its actual owner when it beco
 ## Validation and permissions
 
 Use the distinct current Feature-management Permission plus qualified cleanup/current-scope and target/intent
-authority for privileged retirement on every HTTP, CLI, worker and direct-bus path. Testing Permission and ON
+admission for privileged retirement at every actual HTTP, CLI, worker or other entry adapter before configured
+bus dispatch. Follow the [canonical admission contract](../../docs/engineering/STANDARDS.md#entry-admission-and-authorization-timing):
+no duplicate blanket Application gate or raw-bus authentication surface. Exact CURRENT absence, protected
+activation observation, full-state comparison and reference release are justified retirement business consistency,
+not a universal permission-revocation/commit lock. Testing Permission and ON
 status are not removal rights. UI confirmation occurs only for an actual current candidate; stale state,
 unknown ID, deployment overlap, incomplete/current-reference presence or a final expected-state mismatch must
 not be silently repaired or forced. Permission removal/policy reconciliation remains reference-fenced through
