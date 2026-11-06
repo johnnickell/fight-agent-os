@@ -84,7 +84,7 @@ apply unchanged; a signature is not independent native-origin attestation or OS 
 | Companion input | Display-only effect |
 |---|---|
 | Up/Down, `[` / `]` | Choose verified live/retained completed siblings in displayed order; explicit selection is stable |
-| Enter / Esc | Open bounded details **inside AGENTS** / return to its list; main is unchanged |
+| Enter / Esc | Open bounded details **inside AGENTS** / return to its list; main is unchanged. Legacy keys and unmodified CSI-u `13u`/`13;1u` and `27u`/`27;1u` presses are recognized; modified/release encodings do not act |
 | `f` | Pin/unpin; a pin retains completion/disconnection labels; unpin recomputes activity |
 | `p` | Freeze progress while draining bounded snapshots and counting subsequent records; lifecycle stays live |
 | `c` / `r` | Close/reopen readers / explicitly rediscover; no child relaunch |
@@ -108,6 +108,16 @@ Terminal-default text follows the companion terminal's foreground/background, in
 Narrow views keep compact status/selection headers. Ellipses and paging disclose clipping; help and details reveal
 full bounded identities. Dots/checkmarks distinguish live, completed, failed and disconnected states without
 invented token/cost metrics.
+
+#### Compact ordinary process-stage rows
+
+On hosts supporting `registerToolRenderer`, simple ordinary Python stage launches show a compact `● Agent`
+role/TASK/attempt row and one tool-lifecycle line in Pi's native tool shell. The renderer does not replace bash,
+change its output/model context, register a child or infer observation health from shell output. Working means
+that the process tool is running; finished is not independent acceptance. Native tool expansion reveals the
+attempt and the last twelve sanitized, clipped output lines. Other tools, ordinary shell commands and complex
+shell scripts retain their existing renderers. A host without this public renderer capability retains native
+presentation; no executor or global installation is replaced. Concurrent tool calls retain separate native rows.
 
 #### Separate main-pane viewer
 
@@ -635,15 +645,19 @@ Ambiguous nearest native routes are unavailable, never guessed. Its private `var
 binds fixed provider monitor PID/start, native PID/start, identity and a fresh random token. Daemon admission
 rechecks that witness, fixed monitor path, actual ancestry (at most 32 levels), canonical Git-registered worktree,
 freshness and token replay. Qualified shared raw-clock monitor/context stamps plus public macOS `proc_pidinfo`
-kernel lineage/birth evidence reject a delayed monitor or surviving old executor from a later context in the same
-Pi process. The direct native child in that lineage must unambiguously postdate the context (20 ms safety band);
-clock discontinuity over 10 ms, old/ambiguous executor birth or unavailable kernel evidence means unavailable
-association, never a guessed session. Task/cwd/command text/process proximity/model-written IDs alone grant no membership.
+lineage and `proc_pid_rusage` immutable mach birth ticks reject a delayed monitor or surviving old executor from a
+later context in the same Pi process. The direct native child in that lineage must unambiguously postdate the
+context (20 ms safety band). Kernel and Python raw clocks must share their domain; missing/ambiguous births,
+changed process lifetime or unsupported clocks mean unavailable association, never a guessed session. Ordinary
+wall-clock slewing during a long-lived session is not executor identity: birth admission does not translate through
+the mutable wall/raw offset. Fresh witness timestamps remain separately bounded. Task/cwd/command text/process proximity/model-written IDs alone grant no membership.
 This bootstrap still trusts local provider processes; it is not independent origin attestation (R1 below).
 
 The monitor's separate nonblocking stream contains only existing safe progress. No command or cancellation
 protocol exists. Discovery/acknowledgement is finite and optional; import/setup/connection failure leaves the
-ordinary monitor and its child unchanged. A dropped terminal record means unknown/disconnected, not invented
+ordinary monitor and its child unchanged. Fixed reason-only diagnostics distinguish witness/endpoint/connect,
+bootstrap send, admission-reply timeout/closure/invalidity and explicit daemon policy refusals; no exception text,
+identity payload or private transcript is returned. A dropped terminal record means unknown/disconnected, not invented
 success. The daemon retains random attempt IDs, immutable admitted identity, monotonic monitor start order and safe
 bounded history. Progress cannot create membership or rewrite identity. Ordinary executors without qualifying
 local fixed-monitor ancestry and unambiguous current-context executor birth, unsupported platforms, missing provider monitor installation or stale/ambiguous

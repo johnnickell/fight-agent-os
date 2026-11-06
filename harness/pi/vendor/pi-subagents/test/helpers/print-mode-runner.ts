@@ -14,8 +14,11 @@
  * print-mode host does.
  *
  * It is the pi-subagents analogue of pi-chonky-step's `src/agent.ts` headless
- * runner: same shape (DefaultResourceLoader → createAgentSession → prompt loop),
- * and crucially it replicates pi-chonky-step's SUBAGENT HOLD CONDITION — the
+ * runner: same shape (DefaultResourceLoader → createAgentSession → prompt loop).
+ * Faux behavioral runs supply the source factory through the SDK's inline API;
+ * the explicit file-loading smoke and live runs load the file entrypoint. This
+ * avoids repeating jiti's source resolution for every isolated behavioral cwd.
+ * It crucially replicates pi-chonky-step's SUBAGENT HOLD CONDITION — the
  * `dequeueFollowUpMessages` monkey-patch that blocks the parent agent loop until
  * background subagents complete (via the `Symbol.for("pi-subagents:manager")`
  * global the extension publishes). Without that patch, `session.prompt()`
@@ -66,6 +69,7 @@ import {
   SessionManager,
   SettingsManager,
 } from "@earendil-works/pi-coding-agent";
+import subagentsExtension from "../../src/index.js";
 import { fauxModelBackend } from "./faux-model-backend.js";
 import { getModel, registerFauxProvider } from "./pi-ai.js";
 
@@ -133,6 +137,8 @@ export interface RunPrintModeOptions {
   timeoutMs?: number;
   /** Abort the parent (and forwarded children) externally. */
   signal?: AbortSignal;
+  /** Exercise file loading explicitly; live runs always use the file entrypoint. */
+  loadFromFile?: boolean;
   /** Additional extension paths loaded only for this test run. */
   extensionPaths?: string[];
   /** Called once after the real parent session is created and extensions are bound. */
@@ -345,7 +351,14 @@ export async function runPrintMode(options: RunPrintModeOptions): Promise<PrintM
   const loader = new DefaultResourceLoader({
     cwd,
     agentDir,
-    additionalExtensionPaths: [EXTENSION_PATH, ...(options.extensionPaths ?? [])],
+    // Behavioral faux runs need fresh extension state, not a second transpiler's
+    // module graph on every fresh cwd. Keep real discovery and additional file
+    // extensions; the file-loading smoke and live runs exercise the entrypoint.
+    extensionFactories: live || options.loadFromFile ? [] : [subagentsExtension],
+    additionalExtensionPaths: [
+      ...(live || options.loadFromFile ? [EXTENSION_PATH] : []),
+      ...(options.extensionPaths ?? []),
+    ],
     systemPromptOverride: () => options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT,
     appendSystemPromptOverride: () => [],
     noPromptTemplates: true,

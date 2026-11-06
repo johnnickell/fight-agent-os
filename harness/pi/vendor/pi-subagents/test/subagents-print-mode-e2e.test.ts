@@ -81,8 +81,9 @@ describe.skipIf(LIVE)("subagents print-mode e2e (scripted faux, real pi-mono)", 
     expect(invocation?.thinking).not.toBe("");
   });
 
-  it("spawns a FOREGROUND subagent and routes its real output back to the parent", async () => {
+  it("loads the file entrypoint and routes a FOREGROUND child's real output back to the parent", async () => {
     run = await runPrintMode({
+      loadFromFile: true,
       prompt: "Delegate the greeting to a subagent.",
       respond: routeBySession({
         parentInitial: agentCall({

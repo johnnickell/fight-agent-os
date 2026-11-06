@@ -169,6 +169,15 @@ until an explicit, verified migration to the future project-scoped planning data
 
 ## Fight terminal
 
+[TASK-00585's accepted repair](planning/tasks/00585-TASK.md#accepted-implementation-checkpoint--2026-11-05)
+adds pane-local extended Enter/Esc, compact ordinary process-stage Agent rows, clock-drift-safe admission and
+truthful timeout finalization. Independent Review ACCEPT and visual/behavioral QA PASS cover `3d324c7e`
+(10 groups; QA-01 resolved), with a mechanical advancing-base bridge. Publication/capture access and eligible
+cleanup are pending at this checkpoint; actual outcomes are in canonical ignored
+`.runs/tasks/TASK-00585/runs/land/receipt.md` and the new implementation PR, not planning PR #215.
+Original incident attribution, existing mixed-source summary-count debt and descendant-shutdown uncertainty
+remain disclosed. This does not update installed/active sessions or deliver the all-role SDK cutover.
+
 Install the approved Fight welcome and compact working header for all your Pi sessions:
 
 Before starting the updated package, follow its [bundled-subagent profile/migration](harness/pi/SUBAGENTS.md#select-the-supported-profile)
