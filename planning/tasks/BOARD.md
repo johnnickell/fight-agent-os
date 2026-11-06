@@ -19,7 +19,7 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 
 | Order | TASK ID | Title | Parent TICKET | Status | Blocked by | PR |
 |---|---|---|---|---|---|---|
-| — | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | — (standalone chore) | in-progress | — | — |
+| None | — | — | — | — | — | — |
 
 ## Ready Frontier
 
@@ -636,4 +636,5 @@ Use the generated sections below to choose the next executable TASK. See the [fo
 | — | [TASK-00583](00583-TASK.md) | Observe Build Engineer stages with consistent role names | — (standalone bug) | done | — | [PR #211](https://github.com/johnnickell/fight-agent-os/pull/211) |
 | — | [TASK-00584](00584-TASK.md) | Retire runtime-free qualification worktrees through guarded cleanup | — (standalone bug) | done | — | [PR #216](https://github.com/johnnickell/fight-agent-os/pull/216) |
 | — | [TASK-00585](00585-TASK.md) | Restore Build agent handoff and compact stage status | — (standalone bug) | done | — | [PR #224](https://github.com/johnnickell/fight-agent-os/pull/224) |
+| — | [TASK-00586](00586-TASK.md) | Retire Jev from the active Fight Pi harness | — (standalone chore) | done | — | — |
 <!-- /planning:board -->
