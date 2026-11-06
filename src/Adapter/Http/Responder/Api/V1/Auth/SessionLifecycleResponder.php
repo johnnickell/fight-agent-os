@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Adapter\Http\Responder\Api\V1\Auth;
 
 use App\Adapter\Http\Api\Failure\FailureData;
+use App\Adapter\Http\Api\V1\Auth\SessionResponseFailure;
 use Fight\AccessControl\Application\AccessControl\User\Security\RefreshOutcome;
 use Fight\AccessControl\Application\AccessControl\User\Security\RefreshResult;
 use Fight\Common\Adapter\Http\Error\SafeHttpDiagnostics;
@@ -14,7 +15,6 @@ use Fight\Common\Application\Error\Exception\ServerError;
 use Fight\Common\Application\Error\Exception\ServiceUnavailable;
 use Fight\Common\Application\Http\JSend\JSendEnvelope;
 use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
 use SensitiveParameter;
 use Throwable;
 
@@ -64,11 +64,11 @@ final readonly class SessionLifecycleResponder
                 401,
                 ['WWW-Authenticate' => 'Bearer']
             );
+
+            return $this->sessions->clear($response);
         } catch (Throwable $failure) {
             return $this->unavailable($failure);
         }
-
-        return $this->sessions->clear($response);
     }
 
     /**
@@ -77,12 +77,10 @@ final readonly class SessionLifecycleResponder
     public function loggedOut(): ResponseInterface
     {
         try {
-            $response = $this->responses->fromEnvelope(JSendEnvelope::success(null), 200);
+            return $this->sessions->clear($this->responses->fromEnvelope(JSendEnvelope::success(null), 200));
         } catch (Throwable $failure) {
             return $this->unavailable($failure);
         }
-
-        return $this->sessions->clear($response);
     }
 
     /**
@@ -102,18 +100,17 @@ final readonly class SessionLifecycleResponder
         }
 
         try {
-            $response = $this->responses->fromEnvelope($envelope, $status, $headers);
+            return $this->sessions->clear($this->responses->fromEnvelope($envelope, $status, $headers));
         } catch (Throwable) {
-            // Recover rendering here, before the outer boundary can lose the required session effects.
+            // Keep direct recovery bounded; the outer boundary retains deletion if this attempt also fails.
             // Reporting/projection failure above still gets this bounded rendering recovery, not another report.
             try {
                 [$status, $envelope, $headers] = $this->httpErrorPolicy->fallback();
-                $response = $this->responses->fromEnvelope($envelope, $status, $headers);
+
+                return $this->sessions->clear($this->responses->fromEnvelope($envelope, $status, $headers));
             } catch (Throwable) {
-                throw new RuntimeException('Unable to render safe HTTP error.');
+                throw new SessionResponseFailure();
             }
         }
-
-        return $this->sessions->clear($response);
     }
 }

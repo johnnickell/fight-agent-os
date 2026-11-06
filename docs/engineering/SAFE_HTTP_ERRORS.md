@@ -23,7 +23,9 @@ Slim invokes middleware last-in, first-out. `config/middleware.php` composes:
 
 1. Sanitized, non-reporting Slim outer fallback.
 2. `ApiResponseBoundary`: exact `/api` or `/api/` scope, validated/generated correlation, Common safe boundary,
-   and final `Cache-Control: no-store` / `X-Correlation-ID` on successful and failed covered responses.
+   and final `Cache-Control: no-store` / `X-Correlation-ID` on successful and failed covered responses. A fresh
+   per-invocation handler guard observes only the typed session-deletion obligation before Common catches it;
+   any successful outer recovery then retains both deletion cookies. It neither classifies nor reports failures.
 3. `NativeApiFailures`: only explicit supported Slim/package/owned Domain protocol translations.
 4. Routing, then matched-Action security, declared-input validation, endpoint guards and Action/Responder.
 
@@ -67,10 +69,16 @@ sole generic boundary presents/reports them. Refresh/logout keep their transport
 `SessionLifecycleResponder`: recoverable result conflict changes no cookie; terminal refresh clears both
 refresh/nonce identities and challenges authentication; logout clears them idempotently. A failure after Action
 entry clears browser cookies while leaving server outcome unconfirmed. It uses the same diagnostics sink and
-Common policy; unknown faults stay 500, declared availability may be 503. Direct response/stream creation has
-one local, non-reporting attempt to render Common's fixed fallback before applying both deletion cookies.
-Reporter failure does not consume that rendering recovery. Terminal/logout rendering faults enter the same
-cookie-clearing failure path. Permanent factory incapability escapes sanitized, without a response guarantee.
+Common policy; unknown faults stay 500, declared availability may be 503. Direct rendering/cookie application has
+one local, non-reporting attempt to render Common's fixed fallback with both deletion cookies. If that also fails,
+`SessionResponseFailure` carries only the fixed sanitized escape and the required deletion meaning, not a private
+cause. The API boundary's invocation-local guard observes this narrow signal before rethrowing it to Common.
+After any successful Common recovery, the boundary adds both exact deletions, regardless of which bounded
+rendering attempt succeeds. No extra retry is added. Reporter failure does not consume local rendering recovery.
+Terminal/logout rendering faults enter the same clearing path. The guard is created for each invocation and is
+not stored in a shared service, static variable or request registry; return and escape cannot leak its flag into
+a subsequent request. If Common cannot create a response within its existing bounds, escape remains sanitized,
+without a response guarantee. Common may offer the distinct sanitized signal once, never the original failure again.
 Admission-time 429/503 occurs before Action entry and does not silently clear cookies. A response cannot prove
 a prior effect rolled back.
 

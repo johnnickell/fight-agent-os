@@ -6,7 +6,9 @@ namespace Tests\Support;
 
 use App\Adapter\Http\Api\Failure\PublicFailureProjector;
 use App\Adapter\Http\Api\Failure\RedactedHttpDiagnostics;
+use App\Adapter\Http\Api\V1\Auth\BrowserSessionCookies;
 use App\Adapter\Http\Middleware\Api\ApiResponseBoundary;
+use DateTimeImmutable;
 use Fight\Common\Adapter\Http\Error\SafeHttpErrorPolicy;
 use Fight\Common\Adapter\Http\Psr17\JSendResponseFactory;
 use Fight\Common\Adapter\Middleware\Psr15\SafeJSendErrorMiddleware;
@@ -33,6 +35,6 @@ final class ApiErrors
             $policy,
             new RedactedHttpDiagnostics($logger, $policy),
             new PublicFailureProjector()
-        ));
+        ), new BrowserSessionCookies(new AccessClock(new DateTimeImmutable())));
     }
 }

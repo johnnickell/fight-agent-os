@@ -68,6 +68,56 @@ final class SessionLifecycleFallbackTest extends TestCase
     }
 
     /**
+     * Supplies combined local exhaustion and outer recovery with independent reporter failures
+     *
+     * @return iterable<string, array{string, bool}>
+     */
+    public static function outerRecoveryCases(): iterable
+    {
+        foreach (['response-then-stream', 'response-twice'] as $broken) {
+            foreach ([false, true] as $reporter) {
+                yield $broken.'-'.(int) $reporter => [$broken, $reporter];
+            }
+        }
+    }
+
+    /**
+     * Retains exact deletion effects when only the actual outer boundary can recover rendering
+     */
+    #[DataProvider('outerRecoveryCases')]
+    public function testOuterRecoveryClearsCookies(string $broken, bool $reporter): void
+    {
+        $response = $this->invoke($broken, true, $reporter, false);
+        $this->assertCleared($response);
+        self::assertSame(['status' => 'error', 'message' => 'Internal server error.'], json_decode(
+            (string) $response->getBody(),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        ));
+    }
+
+    /**
+     * Retains deletion effects when Common's final rendering attempt is the one that succeeds
+     */
+    public function testOuterFallbackRecoveryClearsCookies(): void
+    {
+        $this->assertCleared($this->invoke('response-thrice', true, false, false));
+    }
+
+    /**
+     * Retains terminal and logout effects after exhausting their local rendering attempts
+     */
+    public function testTerminalAndLogoutOuterRecovery(): void
+    {
+        foreach (['terminal', 'loggedOut'] as $operation) {
+            foreach ([false, true] as $reporter) {
+                $this->assertCleared($this->invoke('response-thrice', true, $reporter, false, operation: $operation));
+            }
+        }
+    }
+
+    /**
      * Retains terminal and logout effects when their initial response cannot render
      */
     #[DataProvider('recoveryCases')]
@@ -93,6 +143,18 @@ final class SessionLifecycleFallbackTest extends TestCase
             512,
             JSON_THROW_ON_ERROR
         ));
+    }
+
+    /**
+     * Keeps a rendering failure on the conflict path from acquiring deletion obligations
+     */
+    public function testConflictRenderingRecoveryDoesNotClearCookies(): void
+    {
+        foreach ([false, true] as $reporter) {
+            $response = $this->invoke('response', true, $reporter, false, operation: 'conflict');
+            self::assertSame(500, $response->getStatusCode());
+            self::assertSame([], $response->getHeader('Set-Cookie'));
+        }
     }
 
     /**
@@ -142,7 +204,14 @@ final class SessionLifecycleFallbackTest extends TestCase
         $responseFactory = $this->createStub(ResponseFactoryInterface::class);
         $responseFactory->method('createResponse')->willReturnCallback(
             static function (int $code) use ($broken, $permanent, &$responseCalls): ResponseInterface {
-                if ($broken === 'response' && (++$responseCalls === 1 || $permanent)) {
+                ++$responseCalls;
+                $failures = match ($broken) {
+                    'response', 'response-then-stream' => 1,
+                    'response-twice' => 2,
+                    'response-thrice' => 3,
+                    default => 0
+                };
+                if ($failures > 0 && ($responseCalls <= $failures || $permanent)) {
                     throw new RuntimeException('private response diagnostic');
                 }
 
@@ -152,7 +221,8 @@ final class SessionLifecycleFallbackTest extends TestCase
         $streamFactory = $this->createStub(StreamFactoryInterface::class);
         $streamFactory->method('createStream')->willReturnCallback(
             static function (string $content) use ($broken, $permanent, &$streamCalls): StreamInterface {
-                if ($broken === 'stream' && (++$streamCalls === 1 || $permanent)) {
+                ++$streamCalls;
+                if (in_array($broken, ['stream', 'response-then-stream'], true) && ($streamCalls === 1 || $permanent)) {
                     throw new RuntimeException('private stream diagnostic');
                 }
 
@@ -161,7 +231,11 @@ final class SessionLifecycleFallbackTest extends TestCase
         );
         $sink = $this->createMock(SafeHttpDiagnostics::class);
         // A permanent local escape can be caught once by the actual outer Common boundary.
-        $offers = $operation === 'conflict' ? 0 : ($permanent && $outer ? 2 : 1);
+        $exhausted = in_array($broken, ['response-then-stream', 'response-twice', 'response-thrice'], true);
+        $offers = ($permanent || $exhausted) && $outer ? 2 : 1;
+        if ($operation === 'conflict') {
+            $offers = $broken === 'none' ? 0 : 1;
+        }
         $sink->expects(self::exactly($offers))->method('report')->willReturnCallback(
             static function (Throwable $offered) use ($reporter): void {
                 if ($reporter) {
@@ -171,8 +245,9 @@ final class SessionLifecycleFallbackTest extends TestCase
         );
         $responses = new JSendResponseFactory($responseFactory, $streamFactory);
         $policy = new SafeHttpErrorPolicy(true);
+        $cookies = new BrowserSessionCookies(new AccessClock(new DateTimeImmutable()));
         $lifecycle = new SessionLifecycleResponder(
-            new SessionResponder($responses, new BrowserSessionCookies(new AccessClock(new DateTimeImmutable()))),
+            new SessionResponder($responses, $cookies),
             $responses,
             $sink,
             $policy
@@ -194,12 +269,26 @@ final class SessionLifecycleFallbackTest extends TestCase
             $policy,
             $sink,
             new PublicFailureProjector()
-        ));
-        $response = $boundary->process(
-            (new ServerRequestFactory())->createServerRequest('POST', '/api/v1/auth/logout')
-                ->withHeader('X-Correlation-ID', 'private=secret'),
-            $handler
-        );
+        ), $cookies);
+        try {
+            $response = $boundary->process(
+                (new ServerRequestFactory())->createServerRequest('POST', '/api/v1/auth/logout')
+                    ->withHeader('X-Correlation-ID', 'private=secret'),
+                $handler
+            );
+        } finally {
+            // Reuse the same boundary after both returned responses and no-response escapes.
+            $next = $this->createStub(RequestHandlerInterface::class);
+            $next->method('handle')->willReturn((new ResponseFactory())->createResponse(204));
+            $control = $boundary->process(
+                (new ServerRequestFactory())->createServerRequest('GET', '/api/v1/control'),
+                $next
+            );
+            self::assertSame(204, $control->getStatusCode());
+            self::assertSame([], $control->getHeader('Set-Cookie'));
+            self::assertSame('no-store', $control->getHeaderLine('Cache-Control'));
+            self::assertMatchesRegularExpression('/\A[a-f0-9]{32}\z/D', $control->getHeaderLine('X-Correlation-ID'));
+        }
         self::assertMatchesRegularExpression('/\A[a-f0-9]{32}\z/D', $response->getHeaderLine('X-Correlation-ID'));
 
         return $response;
