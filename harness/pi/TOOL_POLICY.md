@@ -69,12 +69,11 @@ admit a declared operation; they do not constrain what trusted script code does 
 
 ## Runtime compatibility
 
-The shared guard accepts stable `>=1.2.0 <2.0.0`; it does not pin each Pi minor/patch release. Both this policy
-and enrolled file screening require successful registration of `session_start`, `tool_call`,
-`session_before_switch`, `session_before_fork`, `session_before_tree` and `session_shutdown`. Each registration
-must return Pi's unsubscribe function. This deterministic policy additionally requires `user_bash`; enrolled
-file screening leaves shell native after TASK-00492 and does not register that hook. File screening requires `before_agent_start`, `input`, `getSettings` and `appendEntry`.
-Both require callable `on`, `registerTool`, `getAllTools`, `getActiveTools`, `setActiveTools` and `getFlag` APIs.
+The deterministic policy guard accepts stable `>=1.2.0 <2.0.0`; it does not pin each Pi minor/patch release.
+It requires successful registration of `session_start`, `tool_call`, `user_bash`, `session_before_switch`,
+`session_before_fork`, `session_before_tree` and `session_shutdown`. Each registration must return Pi's
+unsubscribe function. It also requires callable `on`, `registerTool`, `getAllTools`, `getActiveTools`,
+`setActiveTools` and `getFlag` APIs.
 Missing acknowledgements/capabilities keep activation unavailable with `unsupported-runtime-or-hooks`; presence
 of `on` alone or a hard-coded `hooks: true` is not sufficient. Native tool factories remain required imports.
 
