@@ -2,7 +2,7 @@
 id: TICKET-00132
 epic: EPIC-00023
 title: Reconcile every unfinished product plan
-status: ready-for-agent
+status: done
 ---
 
 # Reconcile every unfinished product plan
@@ -93,16 +93,19 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | done |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | done |
 | [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | done |
-| [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | in-progress |
+| [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | done |
 <!-- /planning:children -->
 
 ## Decisions and progress
 
-Current final-area work: [TASK-00571](../tasks/00571-TASK.md#work-implementation-checkpoint--2026-11-06) implements
-area-G amendments and refreshed combined coverage, including later MCP/observability changes and additions/status
-transitions. Its own independent Review/documentation QA remain pending. The six accepted area checkpoints below
-are bounded inputs, not acceptance of subsequent deltas or this whole TICKET. Preserve their canonical evidence
-until final coverage consumers finish; this TICKET stays open until the real last child is accepted and closed.
+Portfolio reconciliation is accepted under [TASK-00571](../tasks/00571-TASK.md#accepted-implementation-checkpoint--2026-11-06),
+including area-G amendments, all later cross-area deltas, additions and status transitions. All seven actual children
+are done, so ordinary parent rollup closes this TICKET. Accepted coverage is 745 records / 521 unfinished /
+224 preserved terminals; closing the final child and this parent yields 519 unfinished / 226 terminals, an
+administrative status bridge rather than renewed independent acceptance. Source corrections, feature execution,
+actual supplier qualification and EPIC-00023's remaining slices are separate and unfinished. Preserve canonical
+six-area evidence until final coverage consumers finish. Existing sibling/repair/planning checkpoints below retain
+their historical scope and counts; their open-parent statements are not current routing instructions.
 
 Area F, [TASK-00570](../tasks/00570-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and documentation QA version 2 PASS on `226a054cef9812f84b674c1b73b990e5cbf96887`;
