@@ -27,6 +27,12 @@ Composition is shared through [`http_failures.php`](../../../config/application/
 relative links navigate current source; the source commit above pins this diagram's actual inspected snapshot.
 Behavioral evidence is in the TASK/Work handoff, not inferred from these arrows.
 
+**Represented-flow bridge to `ff4630c050ae9d1e47003bef15cb8f82f0023e83`:** the later correction removes the
+boundary's eager clock-backed cookie-service constructor dependency and calls the existing fixed deletion
+operation as pure `BrowserSessionCookies::delete()`. Step 11's identities, guard observation, bounded Common
+recovery and every represented runtime arrow are unchanged. Container construction is outside this view; the
+image remains pinned to its inspected source rather than relabeled or needlessly regenerated.
+
 ## Scope and omissions
 
 This picture shows the **thrown** API failure path and the narrow exhausted-session-rendering branch, not the
