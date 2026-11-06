@@ -22,6 +22,11 @@ private bounded query operations rather than another viewer. Select sources/time
 verified catalog, show estimated size/coverage and known gaps, and label collection-time versus event-time basis.
 Unknown estimates need bounded discovery; caller-supplied bucket keys, paths, tenants or URLs are never accepted.
 
+The creation entry generates the typed restore identity and dispatches the existing ID-bearing void restore
+Command through the configured bus. The registered restore handler coordinates its aggregate, collection-like
+persistence, required audit and durable import intent on one generic transaction. Safe typed status Views and
+transport-owned mapping expose outcomes. TASK-00571 explicitly retains same-restore idempotency because reservation,
+process launch, storage import and cleanup span resources; this is not an ordinary-create response journal.
 An explicit idempotent restore request records requester, selected segment identities, current limits and expiry.
 Resolve original-command uncertainty before retry; no automatic mutation replay after refresh/reconnect. Worker
 admission/execution must recheck current authority and policy, verify archived segments again and stream bounded
@@ -191,6 +196,7 @@ independent review, commit, publication or rebase occurred. Changes remain uncom
 reconciliation remain required before commit/publication. Historical backend/import evidence is not fresh application
 acceptance; actual launcher, resource and owner mechanisms remain gated.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/`, following
+The original decomposition verification and uncommitted/publication statements above are historical.
+Next: `/skill:next` in the current selected registered checkout, following
 [TICKET-00117's completed planning handoff](00117-TICKET.md#approved-task-decomposition-and-current-handoff).
 Consult the Board read-only; no implementation or runtime authority follows.

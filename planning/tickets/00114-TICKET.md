@@ -68,6 +68,16 @@ assertion. This controlled privacy operation is not pipeline redaction.
 Exclude off-machine backup, generic storage administration, index snapshots, transcript ingestion and browser restore/
 extraction UI. Local-only protection accepts host/storage loss; it does not certify power-loss durability or recovery.
 
+### Lifecycle ownership — TASK-00571 amendment
+
+Existing archive/copy/policy aggregates retain their invariants under EPIC-00019's architecture contract. Registered
+handlers coordinate collection-like repositories, required safe audit and justified durable intent through one
+generic shared-connection transaction; repositories do not commit or return provider/HTTP responses. Use configured
+buses, explicit typed read Views and actual entry admission. Ordinary retention configuration uses expected revisions
+and fresh current/history queries after response loss, not immutable original-response bookkeeping. Capture/archive
+transfer, verification, deletion and recovery retain their separately justified original-operation evidence and
+full external-effect fences. Success facts follow commit; an external failure does not undo an earlier commit.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
@@ -206,6 +216,7 @@ the five receiver blocker lists. These are planning receipts only: no implementa
 upstream/ID reconciliation remain required before commit/publication. Fetched invitation-email delivery is not
 claimed as application evidence in this older checkout.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/`, following
+The original decomposition verification and uncommitted/publication statements above are historical.
+Next: `/skill:next` in the current selected registered checkout, following
 [TICKET-00117's completed planning handoff](00117-TICKET.md#approved-task-decomposition-and-current-handoff).
 Consult the Board read-only; no implementation or runtime authority follows.

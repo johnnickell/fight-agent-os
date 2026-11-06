@@ -130,6 +130,11 @@ supplies C's native design; C never reverse-blocks that design. D consumes the q
 restore admission/import/retirement. E consumes TASK-00072's actual shared ingress; A–D do not inherit its completed
 browser chain. F/G below are later consumers, never early operator/runtime suppliers.
 
+TASK-00571 reconciles operator ownership: Console/MCP/HTTP and enrolled worker entries establish the actual trusted
+caller/capability and operation/target scope, then dispatch real business intents through configured buses. Registered
+handlers own policy coordination and required state/audit/intent transactions; fixed process/storage adapters carry
+mechanical effects outside them. Do not turn a worker loop/preflight into a fake Domain command, generic service or
+second permission gate. QueryHandlers return safe typed installation/status Views, with presentation at the entry.
 Existing preservation/privacy and execution owners retain their business authority. TASK-00379/00380's actual early
 policy/restriction participants and TASK-00140/00141's context/registration/lifetime bindings remain unresolved where
 not delivered; these seven new TASKs cannot manufacture them. Keep affected records `needs-info` until actual mechanisms
@@ -140,7 +145,7 @@ Downloads retain the approved two-installation/one-requester shared read/export 
 queued transfer output. TASK-00480 reuses the qualified export path with its own restored-scope/expiry evidence.
 No second runtime, admission pool, authority store or operational grant follows from these mappings.
 
-[TICKET-00110](00110-TICKET.md)'s human-only main-checkout Docker log pane and existing terminal-first work stay
+[TICKET-00110](00110-TICKET.md)'s separately owned human-only native Docker log pane and existing terminal-first work stay
 independent: neither waiting for this release nor certifying its full pipeline. Registered-project runtime logs,
 JavaScript errors and transcripts remain excluded; general metrics, tracing, external alerting, error grouping,
 off-machine operational archives and non-admin delegation remain deferred without speculative TASKs.
@@ -218,6 +223,8 @@ Work and Ready Frontier sections are byte-for-byte unchanged from the pre-edit B
 Info and two Waiting entries. No tracked prior TASK/TICKET source changed, and the final other-worktree check found
 no new-ID collisions. The earlier fetched 17-ref inventory remains an allocation snapshot, not a reservation.
 
+The verification and uncommitted/publication statements in this original decomposition checkpoint are historical;
+use the current Board in the selected registered checkout for selection, not the retired planning checkout.
 These are planning receipts only. No implementation, live content access, runtime/retention/resource qualification,
 full `./bin/build`, independent review/QA, commit, publication or rebase occurred. Changes remain uncommitted; full
 build and upstream/ID reconciliation remain required before commit/publication. Actual owner/native mechanisms and

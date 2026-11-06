@@ -24,7 +24,9 @@ No ordinary null sink, sampling, severity threshold or channel gap may discard i
 is not whole-record byte enforcement; cooperate with the collector's qualified reversible framing rather than
 silently truncate stored originals. SQL statement logging is not required.
 
-Observe all application command/query invocations and event dispatch, including nested/non-HTTP/worker paths and
+Keep native logger/formatter/runtime integration in Adapter; actual business lifecycle coordination stays in its
+registered handler under EPIC-00019's architecture amendment. Technical emission needs no fake business Command or
+aggregate. Observe all application command/query invocations and event dispatch, including nested/non-HTTP/worker paths and
 events without subscribers. Record meaningful started/completed/failed/retry/replay distinctions and actual available
 operation/correlation/Workflow/TASK/run/process identities. Handler return is not proof of transaction commit or
 publication. Use the existing shared bus/service graph; do not build a parallel dispatcher or telemetry protocol.
@@ -36,9 +38,13 @@ with best-effort independent secondary Commands, not automatic collection from L
 Common TASK-00205's typed facts are planned, not instrumentation or a transaction-participation guarantee.
 
 Keep one error-reporting owner per actual HTTP/worker/process boundary without deleting distinct observations of
-the same failure. Preserve current Common-backed public status, envelope, message, correlation and cache behavior
-under [TICKET-00010](00010-TICKET.md) and TASK-00020. Do not adopt incompatible opt-in safe middleware/reporter solely
-for logging. Producer-side secret avoidance is required: no deliberate credential emission, unrestricted payload
+the same failure. Preserve the qualified public status, envelope, message, correlation and cache behavior actually in use.
+TASK-00020 is historical baseline evidence; [TASK-00582](../tasks/00582-TASK.md) separately owns the approved Common
+safe-boundary/client cutover. TASK-00571 reconciles this consumer: logging does not freeze the old error envelope,
+select another middleware or add a competing reporter. HTTP enrichment uses the one qualified redaction-aware sink,
+never forwards prohibited raw Throwable/request/context to a formatter, and retains producer-side secret avoidance.
+If useful required diagnostics cannot be supplied safely, hold that enrichment for the actual supplier/producer owner;
+metadata-only fallback is not complete exception-diagnosis acceptance. Do not bypass safety with a second raw reporter. Producer-side secret avoidance is required: no deliberate credential emission, unrestricted payload
 or object dumps, stack arguments or locals. Preserve already emitted content without pipeline redaction; this does
 not weaken existing credential/audit/evidence owners or authorize transcripts/prompts/hidden reasoning.
 
@@ -154,6 +160,7 @@ and no matching new TASK IDs in other registered worktrees. These are planning c
 Full `./bin/build`, runtime qualification, implementation, review, commit and publication were not performed.
 Changes remain uncommitted in the approved worktree; full build remains required before commit/publication.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/`, following
+The original producer-decomposition verification and uncommitted/publication statements above are historical.
+Next: `/skill:next` in the current selected registered checkout, following
 [TICKET-00117's completed planning handoff](00117-TICKET.md#approved-task-decomposition-and-current-handoff).
 Consult the Board read-only; this recommendation starts no implementation and waives no producer gates.
