@@ -66,10 +66,15 @@ publication are excluded.
 
 ## Validation and permissions
 
-Require current protected template-management authority for the human and independently valid delegated
-Agent/tool/provider authority on every request and result read. The assisting Agent has only eligible direct
+Each actual entry adapter admits current protected template-management authority and Project/target scope for
+the human before configured bus dispatch; independently validate delegated Agent/tool/provider authority at its
+owning entry. No duplicate Application admission gate or ordinary permission-revocation serialization is required.
+Registered proposal/attempt-owned handlers coordinate durable state and required audit through the generic
+transaction boundary and collection repositories. Return safe typed candidate/status Views for this actual
+cross-owner purpose; protocol presentation stays at adapters. Exact paid-attempt correlation, billing uncertainty
+and cancellation fences remain independently required, unlike ordinary template-create replay. The assisting Agent has only eligible direct
 Permissions; it cannot hold the `SUPER_ADMIN_ONLY` publication right. Reading local content does not authorize
-provider disclosure. Restrict context to approved Repository scope, minimize private inputs and enforce protected
+provider disclosure. Restrict context to approved Project scope, minimize private inputs and enforce protected
 credential handling, bounded input/output, time, concurrency and spend through the existing provider owner.
 
 Validate structured candidate content and references; malformed, partial or hallucinated Permission requests
@@ -85,7 +90,7 @@ details and arbitrary provider errors out of browser responses, model context, l
 - A real qualified provider produces a persona-based prompt and desired Permission proposal; the administrator
   can inspect/edit both and explicitly publish through the ordinary editor. Record actual provider/model and
   scoped consumer evidence; unavailable metadata is not invented.
-- Prompt-injection attempts, fabricated/protected Permissions, cross-Repository content and direct Agent
+- Prompt-injection attempts, fabricated/protected Permissions, cross-Project content and direct Agent
   publication attempts cannot expand authority or disclosure. Human approval still undergoes current validation.
 - Delayed responses, concurrent human edits, revocation, cancellation, disconnect and provider failure preserve
   draft ownership and safe recovery without hidden publication, credential exposure or silent provider fallback.
@@ -141,7 +146,7 @@ at that management-decomposition stage; the subsequent approved split is recorde
 TICKET-00076 now maps [TASK-00300](../tasks/00300-TASK.md)'s actual human editor/review/publication boundary.
 Consume that specific outcome, not completed TASK-00301 ancestor review/rollback or the whole parent TICKET.
 TASK-00300 retains its candidate-validation/reference-fencing and inherited resource/Agent holds. AI proposals use
-its same exact human draft/review and original-publication outcome path; they never create a second publisher,
+its same exact human draft/review and fresh-query publication recovery path; they never create a second publisher,
 self-approve or gate manual editing on the Feature. Actual provider/Harness admission/recovery remains here.
 
 ### Approved TASK decomposition

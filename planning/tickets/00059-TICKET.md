@@ -16,8 +16,8 @@ actual shared, persisted, current-only operation/cohort boundary before protecte
 
 ## Solution and boundaries
 
-Implement and qualify both package-declared Agent and Agent-operation repositories on the canonical PostgreSQL
-transaction, including complete original-operation/request and successor correlation, exact revisions, reserved
+Implement and qualify the package-owned Agent and Agent-operation collection repositories under registered
+aggregate-owned handlers and one generic `TransactionalUnitOfWork` on the canonical PostgreSQL connection, including complete original-operation/request and successor correlation, exact revisions, reserved
 slots, immutable destination binding, authority epochs, tombstones, ordered write and audit persistence. Resolve
 one authoritative cohort with the actual locally installed compatible participants, positive monotonic
 generation and an **independent** admission/restoration witness bound to the live storage incarnation. Fence
@@ -43,7 +43,10 @@ selected, actually locked package; do not rewrite older receipts.
 
 ## Validation and permissions
 
-Use package current-contract APIs and invariant checks, not duplicate Domain state policy. Shared cohort,
+Use qualified package contracts directly, not App aliases, private handler calls or duplicate Domain state
+policy. Entry adapters own caller authentication and Project/target admission; business handlers own required
+state/audit coordination. The cohort/epoch fences here protect credential correlation, delivery acknowledgement,
+restoration and writer compatibility, not a universal ordinary-request revocation/commit guarantee. Shared cohort,
 Permission/reference and target fences cover no-ops and every same-connection participant; missing storage,
 invalid versions, mismatched generations/witness, outages or uncertain commit fail closed without repository
 messages or guessed absence. Trusted operator authority guards cohort and restoration; ordinary Agent or Super

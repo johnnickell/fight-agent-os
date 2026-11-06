@@ -90,13 +90,21 @@ freeze. The approved requirement covers the complete portfolio, not just a repre
 | [TASK-00565](../tasks/00565-TASK.md) | Reconcile identity, access and Feature plans | done |
 | [TASK-00566](../tasks/00566-TASK.md) | Reconcile Workspace and Planning plans | done |
 | [TASK-00567](../tasks/00567-TASK.md) | Reconcile project creation and instruction-management plans | done |
-| [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | ready-for-agent |
+| [TASK-00568](../tasks/00568-TASK.md) | Reconcile managed Agent, Team and template plans | in-progress |
 | [TASK-00569](../tasks/00569-TASK.md) | Reconcile Harness, proposal and memory plans | ready-for-agent |
 | [TASK-00570](../tasks/00570-TASK.md) | Reconcile execution and delivery-workflow plans | ready-for-agent |
 | [TASK-00571](../tasks/00571-TASK.md) | Reconcile operations and architecture plans and close portfolio coverage | ready-for-agent |
 <!-- /planning:children -->
 
 ## Decisions and progress
+
+Area D, [TASK-00568](../tasks/00568-TASK.md), has a Work implementation checkpoint, not independent acceptance.
+All 63 unfinished EPIC-00014/00017 records are accounted for: 53 corrected / 10 justified unchanged, no archived
+descendants. Actual requirements, acceptance and current supplier handoffs are repaired; credential/restoration/
+writer safety and human template authority remain. Canonical ignored `.runs/tasks/TASK-00568/runs/coverage.md`
+remains needed by TASK-00571. Fresh 25-phase application evidence and fresh planning checks are recorded in the
+TASK; final gate qualification and retained resources are in its Work handoff. Independent Review/documentation
+QA are next. No feature/supplier/runtime acceptance or complete-portfolio closure is inferred.
 
 Area C, [TASK-00567](../tasks/00567-TASK.md#accepted-implementation-checkpoint--2026-11-06), has independent
 Review version 3 ACCEPT and documentation QA PASS on `125b4a85a1fe39457bb370f195d922cb89d30feb`; R1 is resolved,
