@@ -7,7 +7,7 @@ description: Independently challenge a TASK, PR or versioned release candidate a
 
 Resolve [project context](../../../docs/engineering/PROJECT_CONTEXT.md), target instructions and
 [review standards](../../../docs/engineering/REVIEW.md). Follow the
-[portable access rule](../../../harness/pi/FILE_SCREENING_RULE.md); provider policy never replaces target-owned gates.
+[native workflow rule](../../../harness/pi/WORKFLOW_RULE.md); provider policy never replaces target-owned gates.
 For `release <version>` or an assigned release PR, first apply
 [release acceptance](../release/references/acceptance.md), substituting its subject, criteria, version-4 report
 and canonical version path. Never guess a TASK from recent history or use TASK routing for a release subject.

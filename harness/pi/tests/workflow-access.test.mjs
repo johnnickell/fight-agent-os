@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { WorkflowAccess } from '../src/jev/workflow-access.mjs';
+import { WorkflowAccess } from '../src/workflow/access.mjs';
 import { randomUUID } from 'node:crypto';
 
 const entry = data => ({ type: 'custom', customType: 'fight-workflow-role-v2', data });
@@ -38,27 +38,21 @@ test('selection is persisted before authority changes and failed persistence can
   const revision = access.revision;
   assert.throws(() => access.select('land', () => { throw Error('Cannot persist'); }), /Cannot persist/);
   assert.equal(access.role, 'reviewer'); assert.equal(access.revision, revision);
-  assert.throws(() => access.assertWrite('/project/source.php', '/project'), { code: 'workflow-write-restricted' });
   let persisted;
   access.input('/skill:land TASK-00488', 'interactive', role => { persisted = role; assert.equal(access.role, 'reviewer'); });
   assert.equal(persisted, 'land'); assert.equal(access.role, 'land'); assert.equal(access.revision, revision + 1);
 });
 
-test('operator workflow selections bind role writes without model or RPC promotion', () => {
+test('operator workflow selections bind responsibilities without model or RPC promotion', () => {
   const access = new WorkflowAccess('review');
-  access.assertWrite('/project/.runs/reviews/report.md', '/project');
-  for (const path of ['/project/source.php', '/project/.runs-other/report.md', '/other/.runs/report.md']) {
-    assert.throws(() => access.assertWrite(path, '/project'));
-  }
   for (const source of ['extension', 'rpc']) access.input('/skill:work TASK-00001', source);
   assert.equal(access.role, 'reviewer');
   access.input('/skill:work TASK-00001', 'interactive');
   assert.equal(access.role, 'engineer');
-  access.assertWrite('/project/source.php', '/project');
   access.input('/skill:qa TASK-00001', 'interactive');
-  assert.throws(() => access.assertWrite('/project/source.php', '/project'), { code: 'workflow-write-restricted' });
+  assert.equal(access.role, 'qa');
   access.select('land');
-  access.assertWrite('/project/source.php', '/project');
+  assert.equal(access.role, 'land');
   for (const value of ['anything', 'constructor', '__proto__']) {
     assert.throws(() => access.select(value), { code: 'unknown-workflow-role' });
     assert.throws(() => new WorkflowAccess(value), { code: 'unknown-workflow-role' });
@@ -66,4 +60,21 @@ test('operator workflow selections bind role writes without model or RPC promoti
   assert.equal(new WorkflowAccess('Senior Engineer').role, 'reviewer');
   assert.equal(new WorkflowAccess('QA-Engineer').role, 'qa');
   assert.equal(new WorkflowAccess('Release Manager').role, 'land');
+});
+
+test('workflow checkpoints preserve subject, selected checkout and query/status effects', () => {
+  const sessionId = randomUUID();
+  const access = new WorkflowAccess('local', { checkout: '/project/linked' });
+  access.input('/skill:build TASK-00586 --checkout /project/selected', 'interactive');
+  const restore = () => WorkflowAccess.restore({ sessionId, entries: [{ type: 'custom',
+    customType: 'fight-workflow-role-v3', data: access.checkpoint(sessionId) }] });
+  assert.equal(restore().skill, 'build'); assert.equal(restore().role, 'qa');
+  assert.equal(restore().taskId, 'TASK-00586'); assert.equal(restore().checkout, '/project/selected');
+  access.input('/skill:research EPIC-00006 query', 'interactive');
+  assert.equal(restore().mode, 'query'); assert.equal(restore().role, 'reviewer');
+  access.input('/skill:release v0.4.0 status', 'interactive');
+  assert.equal(restore().taskId, '0.4.0'); assert.equal(restore().mode, 'status');
+  assert.throws(() => access.input('/skill:release not-a-version', 'interactive'), { code: 'workflow-subject-required' });
+  assert.throws(() => access.input('/skill:work TASK-00586 --checkout relative', 'interactive'), { code: 'workflow-checkout-required' });
+  assert.equal(restore().skill, 'release');
 });

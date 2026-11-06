@@ -41,10 +41,7 @@ export class PiRpc extends EventEmitter {
       let newline;
       while ((newline = stderr.indexOf('\n')) >= 0) {
         const line = stderr.slice(0, newline); stderr = stderr.slice(newline + 1);
-        if (line.startsWith('Fight screening status: ')) {
-          try { this.emit('policy', JSON.parse(line.slice('Fight screening status: '.length))); }
-          catch { this.emit('failure', new Error('Malformed Harness status')); }
-        } else if (/Failed to load extension|extension error/i.test(line)) this.emit('failure', new Error('Pi extension failed to load'));
+        if (/Failed to load extension|extension error/i.test(line)) this.emit('failure', new Error('Pi extension failed to load'));
       }
       if (stderr.length > 65536) { stderr = ''; this.emit('failure', new Error('Pi diagnostic line exceeded limit')); }
     });

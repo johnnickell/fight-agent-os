@@ -2,13 +2,13 @@
   "name": "@fight/agent-os-pi",
   "version": "0.1.0",
   "private": true,
-  "description": "Fight Agent OS terminal identity, Jev judgments, file screening and opt-in deterministic tool policy for Pi",
+  "description": "Fight Agent OS native workflow, terminal identity, passive observation and opt-in deterministic tool policy for Pi",
   "license": "MIT",
   "type": "module",
   "keywords": ["pi-package"],
   "engines": {"node": ">=22"},
   "bin": {"fight-workspace": "bin/fight-workspace"},
-  "files": ["bin/", "src/", "agents/", "profiles/", "vendor/pi-subagents/src/", "vendor/pi-subagents/package.json", "vendor/pi-subagents/LICENSE", "vendor/pi-subagents/README.md", "vendor/pi-subagents/docs/",  "SUBAGENTS.md", "README.md", "WORKSPACE.md", "JUDGMENTS.md", "FILE_SCREENING.md", "FILE_SCREENING_PROFILE.md", "FILE_SCREENING_RULE.md", "TOOL_POLICY.md", "LICENSE"],
+  "files": ["bin/", "src/", "agents/", "profiles/", "vendor/pi-subagents/src/", "vendor/pi-subagents/package.json", "vendor/pi-subagents/LICENSE", "vendor/pi-subagents/README.md", "vendor/pi-subagents/docs/",  "SUBAGENTS.md", "README.md", "WORKSPACE.md", "WORKFLOW.md", "WORKFLOW_RULE.md", "TOOL_POLICY.md", "LICENSE"],
   "scripts": {"test": "node --test tests/*.test.mjs"},
   "dependencies": {
     "croner": "^10.0.1",
@@ -19,5 +19,5 @@
     "@earendil-works/pi-tui": "*",
     "typebox": "*"
   },
-  "pi": {"subagents": {"agents": ["./agents"]}, "extensions": ["./src/build-engineer-extension.ts", "./vendor/pi-subagents/src/index.ts", "./src/header-extension.ts", "./src/jev-extension.ts", "./src/tool-policy-extension.ts", "./src/native-observation-extension.ts", "./src/herdr-workspace-extension.ts"]}
+  "pi": {"subagents": {"agents": ["./agents"]}, "extensions": ["./src/build-engineer-extension.ts", "./vendor/pi-subagents/src/index.ts", "./src/header-extension.ts", "./src/workflow-extension.ts", "./src/tool-policy-extension.ts", "./src/native-observation-extension.ts", "./src/herdr-workspace-extension.ts"]}
 }
