@@ -57,6 +57,20 @@ Exclude Grafana/iframe/frontend-code adoption, another credential store, raw log
 non-admin delegation, arbitrary backend discovery/tenant selection/push/delete/flush APIs and public response changes.
 Archive restore and bulk extraction remain TICKET-00115/00116; their shared read/authority contracts are supplied early.
 
+### Entry and query ownership — TASK-00571 amendment
+
+Under [EPIC-00019's architecture reconciliation](../epics/00019-EPIC.md#architecture-reconciliation--task-00571),
+HTTP/Console/MCP entries establish the actual caller and admit READ_LOGS plus the operation/target scope before
+configured QueryBus dispatch. Registered query handlers coordinate bounded log/coverage selection and safe typed
+Views through inward capabilities; private Loki/transport credentials and representation stay in Adapter. Do not
+hide a second caller-authentication gate in Application or return raw provider rows/HTTP arrays as Views.
+
+Fresh private-release and stream-batch authority checks remain mandatory at the actual disclosure boundary, using
+the existing authoritative resolver and preservation participants, not repeated reads of a cached request principal.
+These operation-specific ongoing-disclosure checks are not ordinary mutation/revocation serialization. Required
+access audit, if any, uses its explicit owning operation before protected release, never business mutation hidden
+inside a pure query. Existing finite technical read-slot accounting remains admission infrastructure.
+
 ## Use cases
 
 | Use case | Commands | Queries | Events | Expected side effects |
@@ -189,6 +203,7 @@ and updates TASK-00459's blockers. Existing active work, first ready selection a
 These are planning receipts only: no implementation, runtime qualification, full `./bin/build`, review, commit or
 publication was performed. Changes remain uncommitted; full build remains required before commit/publication.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/`, following
+The original decomposition verification and uncommitted/publication statements above are historical.
+Next: `/skill:next` in the current selected registered checkout, following
 [TICKET-00117's completed planning handoff](00117-TICKET.md#approved-task-decomposition-and-current-handoff).
 Consult the Board read-only; no implementation or runtime authority follows.

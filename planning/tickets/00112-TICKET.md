@@ -179,6 +179,7 @@ These are planning receipts only. No implementation, runtime qualification, full
 publication was performed. All changes remain uncommitted in the approved worktree; full build remains required
 before commit/publication. Actual design/supervision/preservation/source/destination mechanisms remain gated.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/`, following
+The original decomposition verification and uncommitted/publication statements above are historical.
+Next: `/skill:next` in the current selected registered checkout, following
 [TICKET-00117's completed planning handoff](00117-TICKET.md#approved-task-decomposition-and-current-handoff).
 Consult the Board read-only without waiving qualification or starting implementation.

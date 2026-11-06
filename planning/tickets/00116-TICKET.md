@@ -186,6 +186,7 @@ independent review, commit, publication or rebase occurred. Changes remain uncom
 reconciliation remain required before commit/publication. Actual transfer/runtime/current-owner mechanisms remain
 gated; historical synthetic backend evidence is not fresh extraction acceptance.
 
-Next: `/skill:next` in `.runs/worktrees/observability-planning/`, following
+The original decomposition verification and uncommitted/publication statements above are historical.
+Next: `/skill:next` in the current selected registered checkout, following
 [TICKET-00117's completed planning handoff](00117-TICKET.md#approved-task-decomposition-and-current-handoff).
 Consult the Board read-only; no implementation or runtime authority follows.
